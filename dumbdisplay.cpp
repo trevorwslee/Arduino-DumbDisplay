@@ -162,12 +162,16 @@ void DDLayer::visibility(bool visible) {
 void DDLayer::opacity(int opacity) {
   _sendCommand1(layerId, "opacity", String(opacity));
 }
-void DDLayer::backgroundcolor(long color) {
+void DDLayer::backgroundColor(long color) {
   _sendCommand1(layerId, "bgcolor", "#" + String(color, 16));
 }
-void DDLayer::backgroundcolor(const String& color) {
+void DDLayer::backgroundColor(const String& color) {
   _sendCommand1(layerId, "bgcolor", color);
 }
+void DDLayer::noBackgroundColor() {
+  _sendCommand0(layerId, "nobgcolor");
+}
+
 
 
 void MicroBitLayer::showIcon(MBIcon icon) {

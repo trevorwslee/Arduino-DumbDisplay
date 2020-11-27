@@ -1,7 +1,7 @@
 #ifndef dumbdisplay_h
 #define dumbdisplay_h
 
-#include <SoftwareSerial.h>
+#define DUMBDISPLAY_BAUD 115200
 
 class DDInputOutput {
   public:
@@ -24,30 +24,10 @@ class DDInputOutput {
     DDInputOutput(bool enableSerial) {
       this->enableSerial = enableSerial;
       if (enableSerial)
-        Serial.begin(115200);
-
+        Serial.begin(DUMBDISPLAY_BAUD);
     }
   protected:
     bool enableSerial;
-};
-
-class DDSoftwareSerialIO: public DDInputOutput {
-  public:
-    DDSoftwareSerialIO(SoftwareSerial* pSS, bool enableSerial): DDInputOutput(enableSerial) {
-      this->pSS = pSS;
-      pSS->begin(115200);
-    }
-    bool available() {
-      return pSS->available();
-    }
-    char read() {
-      return pSS->read();
-    } 
-    void print(const char *p) {
-      pSS->print(p); 
-    }
-  private:
-    SoftwareSerial* pSS;  
 };
 
 
@@ -56,8 +36,9 @@ class DDLayer {
     void visibility(bool visible);
     /* opacity: 0 - 255 */
     void opacity(int opacity);
-    void backgroundcolor(long color);
-    void backgroundcolor(const String& color);
+    void backgroundColor(long color);
+    void backgroundColor(const String& color);
+    void noBackgroundColor();
   protected:
     DDLayer(const String& layerId) {
       this->layerId = String(layerId);

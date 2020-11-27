@@ -1,5 +1,4 @@
-#include <SoftwareSerial.h>
-#include "dumbdisplay.h"
+#include "ssdumbdisplay.h"
 
 
 
@@ -16,13 +15,29 @@ void setup() {
   dumbdisplay.connect();
   pMbLayer = dumbdisplay.createMicroBitLayer(5, 5);
 
-  pMbLayer->backgroundcolor("12-34-56");
+}
 
+int loopCount = 0;
+void loop() {
+  if (loopCount == 10) {
+    pMbLayer->clearScreen();
+    loopCount = 0;
+  }
+  if (loopCount == 0)
+    basic();
+  pMbLayer->showNumber(loopCount);
+  loopCount++;
+  delay(1000);
+}
+
+void basic() {
+  pMbLayer->backgroundColor("12-34-56");
   pMbLayer->ledColor(0xff00ff);
 
   pMbLayer->showLeds("|.#.#|####");
   delay(2000);
 
+  pMbLayer->backgroundColor("lightyellow");
   pMbLayer->ledColor("green");
 
   pMbLayer->toggle(1, 2);
@@ -32,21 +47,11 @@ void setup() {
   pMbLayer->plot(1, 2);
   delay(1000);
 
+  pMbLayer->noBackgroundColor();
   pMbLayer->showIcon(SmallDiamond);
   delay(1000);
   pMbLayer->showNumber(8);
   delay(1000);
   pMbLayer->showString("a,b,c");
   delay(5000);
-}
-
-int loopCount = 0;
-void loop() {
-  delay(1000);
-  if (loopCount == 10) {
-    pMbLayer->clearScreen();
-    loopCount = 0;
-  }
-  pMbLayer->showNumber(loopCount);
-  loopCount++;
 }
