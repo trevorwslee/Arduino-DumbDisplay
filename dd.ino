@@ -4,7 +4,7 @@
 
 
 
-DumbDisplay dumbdisplay(new DDInputOutput(new SoftwareSerial(2,3)));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
 MicroBitLayer* pMbLayer = NULL;
 
 void setup() {

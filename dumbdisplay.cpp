@@ -2,35 +2,14 @@
 #include "dumbdisplay.h"
 
 
-// class DDInputOutput {
-//   public:
-//     DDInputOutput(SoftwareSerial* pSS) {
-//       this->pSS = pSS;
-//       pSS->begin(115200);
-//     }
-//     inline bool available() {
-//       return pSS->available();
-//     }
-//     inline char read() {
-//       return pSS->read();
-//     } 
-//     inline void print(const char *p) {
-//       pSS->print(p); 
-//     }
-//   private:
-//     SoftwareSerial* pSS;  
-// };
-
 class DDReceivedData {
   public: 
-    DDReceivedData(/*DDInputOutput* pIO*/) {
-      //this->pIO = pIO;
+    DDReceivedData() {
     }
     bool available();
     String& get();
     void clear();
   private:
-    //DDInputOutput* pIO;  
     String data;  
 };
 
@@ -41,9 +20,6 @@ DDInputOutput* _IO = NULL;
 
 
 
-// DDReceivedData::DDReceivedData(DDInputOutput* pIO) {
-//   this->pIO = pIO;
-// }
 bool DDReceivedData::available() {
   bool done = false;
   if (_IO->available()) {
@@ -94,7 +70,7 @@ DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
 }
 void DumbDisplay::connect() {
   long nextTime = 0;
-  DDReceivedData receivedData/*(pIO)*/;
+  DDReceivedData receivedData;
   while (true) {
     long now = millis();
     if (now > nextTime) {
@@ -129,14 +105,14 @@ void DumbDisplay::connect() {
 }
 
 void MicroBitLayer::showNum(int num) {
-  _sendCommand1(/*pIO, */layerId, "shn", String(num));
+  _sendCommand1(layerId, "shn", String(num));
 }
 
 MicroBitLayer* DumbDisplay::createMicroBitLayer(int width, int height) {
   int lid = _NextLid++;
   String layerId = String(lid);
-  _sendCommand3(/*pIO, */layerId, "SU", String("mb"), String(width), String(height));
-  return new MicroBitLayer(/*pIO, */layerId);
+  _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
+  return new MicroBitLayer(layerId);
 }
 
 
