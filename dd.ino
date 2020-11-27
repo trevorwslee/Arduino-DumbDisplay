@@ -16,8 +16,13 @@ void setup() {
   dumbdisplay.connect();
   pMbLayer = dumbdisplay.createMicroBitLayer(5, 5);
 
+
+  pMbLayer->ledColor(0xff00ff);
+
   pMbLayer->showLeds("|.#.#|####");
   delay(2000);
+
+  pMbLayer->ledColor("green");
 
   pMbLayer->toggle(1, 2);
   delay(1000);

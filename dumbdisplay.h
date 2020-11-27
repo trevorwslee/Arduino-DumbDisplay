@@ -82,6 +82,8 @@ class MicroBitLayer: public DDLayer {
     void toggle(int x, int y);
     void showLeds(const String& ledPattern);
     void clearScreen();
+    void ledColor(long color);
+    void ledColor(const String& color);
   private:
     int width;
     int height;  

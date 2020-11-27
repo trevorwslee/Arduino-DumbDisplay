@@ -183,6 +183,12 @@ void MicroBitLayer::showLeds(const String& ledPattern) {
 void MicroBitLayer::clearScreen() {
   _sendCommand0(layerId, "cs");
 }
+void MicroBitLayer::ledColor(long color) {
+  _sendCommand1(layerId, "ledc", "#" + String(color, 16));
+}
+void MicroBitLayer::ledColor(const String& color) {
+  _sendCommand1(layerId, "ledc", color);
+}
 
 MicroBitLayer* DumbDisplay::createMicroBitLayer(int width, int height) {
   int lid = _NextLid++;
