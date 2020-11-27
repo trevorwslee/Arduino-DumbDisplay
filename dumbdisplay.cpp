@@ -47,12 +47,28 @@ int _NextLid = 0;
 DDInputOutput* _IO = NULL;  
 
 
+void _sendCommand0(String& layerId, const char *command) {
+  _IO->print(layerId.c_str());
+  _IO->print(".");
+  _IO->print(command);
+  _IO->print("\n");
+}  
 void _sendCommand1(String& layerId, const char *command, const String& param1) {
   _IO->print(layerId.c_str());
   _IO->print(".");
   _IO->print(command);
   _IO->print(":");
   _IO->print(param1.c_str());
+  _IO->print("\n");
+}  
+void _sendCommand2(String& layerId, const char *command, const String& param1, const String& param2) {
+  _IO->print(layerId.c_str());
+  _IO->print(".");
+  _IO->print(command);
+  _IO->print(":");
+  _IO->print(param1.c_str());
+  _IO->print(",");
+  _IO->print(param2.c_str());
   _IO->print("\n");
 }  
 void _sendCommand3(String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
@@ -80,7 +96,7 @@ if (DEBUG_SERIAL) Serial.println("connect ...");
     IOProxy* pSerialIOProxy = NULL;
     DDInputOutput *pSIO = NULL;
     if (_IO->allowSerial()) {
-      pSIO = new DDInputOutput(true);
+      pSIO = new DDInputOutput();
       pSerialIOProxy = new IOProxy(pSIO);
     }
 if (DEBUG_SERIAL) Serial.println("connected");    
@@ -140,15 +156,39 @@ if (DEBUG_SERIAL) Serial.println("connected");
   }
 }
 
-void MicroBitLayer::showNum(int num) {
+void MicroBitLayer::showIcon(MBIcon icon) {
+  _sendCommand1(layerId, "shi", String(icon));
+}
+void MicroBitLayer::showArrow(MBArrow arrow) {
+  _sendCommand1(layerId, "sha", String(arrow));
+}
+void MicroBitLayer::showNumber(int num) {
   _sendCommand1(layerId, "shn", String(num));
+}
+void MicroBitLayer::showString(const String& str) {
+  _sendCommand1(layerId, "shs", str);
+}
+void MicroBitLayer::plot(int x, int y) {
+  _sendCommand2(layerId, "pl", String(x), String(y));
+}
+void MicroBitLayer::unplot(int x, int y) {
+  _sendCommand2(layerId, "upl", String(x), String(y));
+}
+void MicroBitLayer::toggle(int x, int y) {
+  _sendCommand2(layerId, "tggl", String(x), String(y));
+}
+void MicroBitLayer::showLeds(const String& ledPattern) {
+  _sendCommand1(layerId, "shledpat", ledPattern);
+}
+void MicroBitLayer::clearScreen() {
+  _sendCommand0(layerId, "cs");
 }
 
 MicroBitLayer* DumbDisplay::createMicroBitLayer(int width, int height) {
   int lid = _NextLid++;
   String layerId = String(lid);
   _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
-  return new MicroBitLayer(layerId);
+  return new MicroBitLayer(layerId, width, height);
 }
 
 

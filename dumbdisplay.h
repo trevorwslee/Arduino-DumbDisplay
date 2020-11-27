@@ -5,11 +5,7 @@
 
 class DDInputOutput {
   public:
-    DDInputOutput(bool enableSerial) {
-      this->enableSerial = enableSerial;
-      if (enableSerial)
-        Serial.begin(115200);
-
+    DDInputOutput(): DDInputOutput(true) {
     }
     inline bool allowSerial() {
       return enableSerial;
@@ -23,6 +19,13 @@ class DDInputOutput {
     virtual void print(const char *p) {
       if (enableSerial)
         Serial.print(p);
+    }
+  protected:
+    DDInputOutput(bool enableSerial) {
+      this->enableSerial = enableSerial;
+      if (enableSerial)
+        Serial.begin(115200);
+
     }
   protected:
     bool enableSerial;
@@ -58,12 +61,30 @@ class DDLayer {
 };
 
 
+enum MBArrow { North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest };
+enum MBIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, Surprised,
+              Silly, Fabulous, Meh, TShirt, Rollerskate, Duck, House, Tortoise, Butterfly, StickFigure,
+              Ghost, Sword, Giraffe, Skull, Umbrella, Snake, Rabbit, Cow, QuarterNote, EigthNote,
+              Pitchfork, Target, Triangle, LeftTriangle, Chessboard, Diamond, SmallDiamond, Square, SmallSquare, Scissors,
+        };
 class MicroBitLayer: public DDLayer {
   public:
-    MicroBitLayer(const String& layerId): DDLayer(layerId) {
+    MicroBitLayer(const String& layerId, int width, int height): DDLayer(layerId) {
+      this->width = width;
+      this->height = height;
     }
-    void showNum(int num);
-
+    void showIcon(MBIcon icon);
+    void showArrow(MBArrow arrow);
+    void showNumber(int num);
+    void showString(const String& str);
+    void plot(int x, int y);
+    void unplot(int x, int y);
+    void toggle(int x, int y);
+    void showLeds(const String& ledPattern);
+    void clearScreen();
+  private:
+    int width;
+    int height;  
 };
 
 class DumbDisplay {

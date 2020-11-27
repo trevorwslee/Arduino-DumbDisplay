@@ -16,10 +16,31 @@ void setup() {
   dumbdisplay.connect();
   pMbLayer = dumbdisplay.createMicroBitLayer(5, 5);
 
-  pMbLayer->showNum(8);
+  pMbLayer->showLeds("|.#.#|####");
+  delay(2000);
+
+  pMbLayer->toggle(1, 2);
+  delay(1000);
+  pMbLayer->unplot(1, 2);
+  delay(1000);
+  pMbLayer->plot(1, 2);
+  delay(1000);
+
+  pMbLayer->showIcon(SmallDiamond);
+  delay(1000);
+  pMbLayer->showNumber(8);
+  delay(1000);
+  pMbLayer->showString("a,b,c");
+  delay(5000);
 }
 
+int loopCount = 0;
 void loop() {
-  
-
+  delay(1000);
+  if (loopCount == 10) {
+    pMbLayer->clearScreen();
+    loopCount = 0;
+  }
+  pMbLayer->showNumber(loopCount);
+  loopCount++;
 }
