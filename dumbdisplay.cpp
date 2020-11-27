@@ -156,6 +156,20 @@ if (DEBUG_SERIAL) Serial.println("connected");
   }
 }
 
+void DDLayer::visibility(bool visible) {
+  _sendCommand1(layerId, "visible", visible ? "1" : "0");
+}
+void DDLayer::opacity(int opacity) {
+  _sendCommand1(layerId, "opacity", String(opacity));
+}
+void DDLayer::backgroundcolor(long color) {
+  _sendCommand1(layerId, "bgcolor", "#" + String(color, 16));
+}
+void DDLayer::backgroundcolor(const String& color) {
+  _sendCommand1(layerId, "bgcolor", color);
+}
+
+
 void MicroBitLayer::showIcon(MBIcon icon) {
   _sendCommand1(layerId, "shi", String(icon));
 }

@@ -16,6 +16,7 @@ void setup() {
   dumbdisplay.connect();
   pMbLayer = dumbdisplay.createMicroBitLayer(5, 5);
 
+  pMbLayer->backgroundcolor("12-34-56");
 
   pMbLayer->ledColor(0xff00ff);
 

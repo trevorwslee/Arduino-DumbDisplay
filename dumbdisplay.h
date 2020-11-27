@@ -52,6 +52,12 @@ class DDSoftwareSerialIO: public DDInputOutput {
 
 
 class DDLayer {
+  public:
+    void visibility(bool visible);
+    /* opacity: 0 - 255 */
+    void opacity(int opacity);
+    void backgroundcolor(long color);
+    void backgroundcolor(const String& color);
   protected:
     DDLayer(const String& layerId) {
       this->layerId = String(layerId);
