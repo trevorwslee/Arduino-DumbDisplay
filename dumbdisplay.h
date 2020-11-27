@@ -46,9 +46,10 @@ class DDLayer {
     /* set no layer background color */
     void noBackgroundColor();
   protected:
-    DDLayer(const String& layerId) {
-      this->layerId = String(layerId);
-    }
+    DDLayer(int layerId);
+    // DDLayer(int layerId) {
+    //   this->layerId = String(layerId);
+    // }
   protected:
     String layerId;  
 };
@@ -60,9 +61,10 @@ enum MBIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, S
               Ghost, Sword, Giraffe, Skull, Umbrella, Snake, Rabbit, Cow, QuarterNote, EigthNote,
               Pitchfork, Target, Triangle, LeftTriangle, Chessboard, Diamond, SmallDiamond, Square, SmallSquare, Scissors,
         };
+
 class MicroBitLayer: public DDLayer {
   public:
-    MicroBitLayer(const String& layerId): DDLayer(layerId) {
+    MicroBitLayer(int layerId): DDLayer(layerId) {
     }
     /* show Microbit icon */
     void showIcon(MBIcon icon);
@@ -92,11 +94,16 @@ class MicroBitLayer: public DDLayer {
     void ledColor(const String& color);
 };
 
+class TurtleLayer: public DDLayer {
+  public:
+    TurtleLayer(int layerId): DDLayer(layerId) {
+    }
+};
+
+
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO);
-    /* setup a connect */
-    void connect();
     /* create a Microbit layer */
     MicroBitLayer* createMicroBitLayer(int width, int height);
 };

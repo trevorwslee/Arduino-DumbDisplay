@@ -46,6 +46,7 @@ void IOProxy::print(const char *p) {
 
 
 
+bool _Connected = false;
 int _NextLid = 0;
 DDInputOutput* _IO = NULL;  
 
@@ -82,10 +83,9 @@ void _sendCommand3(String& layerId, const char *command, const String& param1, c
 }  
 
 
-DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
-  _IO = pIO;
-}
-void DumbDisplay::connect() {
+void _Connect() {
+  if (_Connected)
+    return;
   {
     long nextTime = 0;
     IOProxy ioProxy(_IO);
@@ -148,8 +148,27 @@ void DumbDisplay::connect() {
       }
     }
   }
+  _Connected = true;
 }
 
+
+
+DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
+  _IO = pIO;
+}
+
+MicroBitLayer* DumbDisplay::createMicroBitLayer(int width, int height) {
+  _Connect();
+  int lid = _NextLid++;
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
+  return new MicroBitLayer(lid);
+}
+
+
+DDLayer::DDLayer(int layerId) {
+  this->layerId = String(layerId);
+}
 void DDLayer::visibility(bool visible) {
   _sendCommand1(layerId, "visible", TO_BOOL(visible));
 }
@@ -202,12 +221,6 @@ void MicroBitLayer::ledColor(const String& color) {
   _sendCommand1(layerId, "ledc", color);
 }
 
-MicroBitLayer* DumbDisplay::createMicroBitLayer(int width, int height) {
-  int lid = _NextLid++;
-  String layerId = String(lid);
-  _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
-  return new MicroBitLayer(layerId);
-}
 
 
 

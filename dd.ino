@@ -12,7 +12,6 @@ void setup() {
     Serial.begin(115200);
   }
   
-  dumbdisplay.connect();
   pMbLayer = dumbdisplay.createMicroBitLayer(5, 5);
 
 }
