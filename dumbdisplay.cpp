@@ -151,18 +151,26 @@ void _Connect() {
   _Connected = true;
 }
 
-
+int _AllocLayerId() {
+  _Connect();
+  return _NextLid++;
+}
 
 DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
   _IO = pIO;
 }
 
 MicroBitLayer* DumbDisplay::createMicroBitLayer(int width, int height) {
-  _Connect();
-  int lid = _NextLid++;
+  int lid = _AllocLayerId();
   String layerId = String(lid);
   _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
   return new MicroBitLayer(lid);
+}
+TurtleLayer* DumbDisplay::createTurtleLayer(int width, int height) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("turtle"), String(width), String(height));
+  return new TurtleLayer(lid);
 }
 
 
@@ -174,6 +182,9 @@ void DDLayer::visibility(bool visible) {
 }
 void DDLayer::opacity(int opacity) {
   _sendCommand1(layerId, "opacity", String(opacity));
+}
+void DDLayer::clear() {
+  _sendCommand0(layerId, "clear");
 }
 void DDLayer::backgroundColor(long color) {
   _sendCommand1(layerId, "bgcolor", HEX_COLOR(color));
@@ -211,14 +222,36 @@ void MicroBitLayer::toggle(int x, int y) {
 void MicroBitLayer::showLeds(const String& ledPattern) {
   _sendCommand1(layerId, "shledpat", ledPattern);
 }
-void MicroBitLayer::clearScreen() {
-  _sendCommand0(layerId, "cs");
-}
+// void MicroBitLayer::clearScreen() {
+//   _sendCommand0(layerId, "cs");
+// }
 void MicroBitLayer::ledColor(long color) {
   _sendCommand1(layerId, "ledc", HEX_COLOR(color));
 }
 void MicroBitLayer::ledColor(const String& color) {
   _sendCommand1(layerId, "ledc", color);
+}
+
+void TurtleLayer::forward(int distance, bool draw) {
+  _sendCommand1(layerId, draw ? "fd" : "dlfd", String(distance));
+}
+void TurtleLayer::backward(int distance, bool draw) {
+  _sendCommand1(layerId, draw ? "bk" : "dlbk", String(distance));
+}
+void TurtleLayer::leftTurn(int angle) {
+  _sendCommand1(layerId, "lt", String(angle));
+}
+void TurtleLayer::rightTurn(int angle) {
+  _sendCommand1(layerId, "rt", String(angle));
+}
+void TurtleLayer::circle(int radius) {
+  _sendCommand1(layerId, "circle", String(radius));
+}
+void TurtleLayer::home(bool draw) {
+  _sendCommand0(layerId, draw ? "home" : "jhome");
+}
+void TurtleLayer::goTo(int x, int y, bool draw) {
+  _sendCommand2(layerId, draw ? "goto" : "hto", String(x), String(y));
 }
 
 

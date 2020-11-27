@@ -39,6 +39,8 @@ class DDLayer {
     /* set layer opacity */
     /* - 0 to 255 */
     void opacity(int opacity);
+    /* clear the layer */
+    void clear();
     /* set layer background color with RGB */
     void backgroundColor(long color);
     /* set layer background color with common "color name" */
@@ -86,26 +88,35 @@ class MicroBitLayer: public DDLayer {
     /* - '|': delimit a row */
     /* - e.g. "#|.#|..#" -- 3 rows */
     void showLeds(const String& ledPattern);
-    /* clear layer screen */
-    void clearScreen();
-    /* set layer LED color with RGB */
+    // /* clear layer screen */
+    // void clearScreen();
+    // /* set layer LED color with RGB */
     void ledColor(long color);
     /* set layer LED color with common "color name" */
     void ledColor(const String& color);
 };
 
+
 class TurtleLayer: public DDLayer {
   public:
     TurtleLayer(int layerId): DDLayer(layerId) {
     }
+    void forward(int distance, bool draw = true);
+    void backward(int distance, bool draw = true);
+    void leftTurn(int angle);
+    void rightTurn(int angle);
+    void circle(int radius);
+    void TurtleLayer::home(bool draw = true);
+    void TurtleLayer::goTo(int x, int y, bool draw = true);
 };
-
 
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO);
-    /* create a Microbit layer */
+    /* create a Microbit layer; 1st time will block waiting for connection */
     MicroBitLayer* createMicroBitLayer(int width, int height);
+    /* create a Turtle layer; 1st time will block waiting for connection */
+    TurtleLayer* createTurtleLayer(int width, int height);
 };
 
 
