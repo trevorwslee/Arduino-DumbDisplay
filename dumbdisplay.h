@@ -5,6 +5,7 @@
 
 class DDInputOutput {
   public:
+    /* Serial IO mechanism */ 
     DDInputOutput(): DDInputOutput(true) {
     }
     inline bool allowSerial() {
@@ -33,11 +34,16 @@ class DDInputOutput {
 
 class DDLayer {
   public:
+    /* set layer visibility */
     void visibility(bool visible);
-    /* opacity: 0 - 255 */
+    /* set layer opacity */
+    /* - 0 to 255 */
     void opacity(int opacity);
+    /* set layer background color with RGB */
     void backgroundColor(long color);
+    /* set layer background color with common "color name" */
     void backgroundColor(const String& color);
+    /* set no layer background color */
     void noBackgroundColor();
   protected:
     DDLayer(const String& layerId) {
@@ -56,30 +62,42 @@ enum MBIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, S
         };
 class MicroBitLayer: public DDLayer {
   public:
-    MicroBitLayer(const String& layerId, int width, int height): DDLayer(layerId) {
-      this->width = width;
-      this->height = height;
+    MicroBitLayer(const String& layerId): DDLayer(layerId) {
     }
+    /* show Microbit icon */
     void showIcon(MBIcon icon);
+    /* show Microbit arrow */
     void showArrow(MBArrow arrow);
+    /* show number; scroll if more than a single digit; but you get to control timing by using delay() */
     void showNumber(int num);
+    /* show string; scroll if more than a single character; but you get to control timing by using delay() */
     void showString(const String& str);
+    /* turn on LED @ (x, y) */
     void plot(int x, int y);
+    /* turn off LED @ (x, y) */
     void unplot(int x, int y);
+    /* toggle LED @ (x, y) on / off */
     void toggle(int x, int y);
+    /* turn LEDs on by "pattern" */
+    /* - '.': off */
+    /* - '#': on */
+    /* - '|': delimit a row */
+    /* - e.g. "#|.#|..#" -- 3 rows */
     void showLeds(const String& ledPattern);
+    /* clear layer screen */
     void clearScreen();
+    /* set layer LED color with RGB */
     void ledColor(long color);
+    /* set layer LED color with common "color name" */
     void ledColor(const String& color);
-  private:
-    int width;
-    int height;  
 };
 
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO);
+    /* setup a connect */
     void connect();
+    /* create a Microbit layer */
     MicroBitLayer* createMicroBitLayer(int width, int height);
 };
 
