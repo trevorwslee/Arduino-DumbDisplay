@@ -5,14 +5,32 @@
 
 class DDInputOutput {
   public:
-    virtual bool available();
-    virtual char read();
-    virtual void print(const char *p);
+    DDInputOutput(bool enableSerial) {
+      this->enableSerial = enableSerial;
+      if (enableSerial)
+        Serial.begin(115200);
+
+    }
+    inline bool allowSerial() {
+      return enableSerial;
+    }
+    virtual bool available() {
+      return enableSerial && Serial.available();
+    }
+    virtual char read() {
+      return enableSerial ? Serial.read() : 0;
+    }
+    virtual void print(const char *p) {
+      if (enableSerial)
+        Serial.print(p);
+    }
+  protected:
+    bool enableSerial;
 };
 
 class DDSoftwareSerialIO: public DDInputOutput {
   public:
-    DDSoftwareSerialIO(SoftwareSerial* pSS): DDInputOutput() {
+    DDSoftwareSerialIO(SoftwareSerial* pSS, bool enableSerial): DDInputOutput(enableSerial) {
       this->pSS = pSS;
       pSS->begin(115200);
     }
