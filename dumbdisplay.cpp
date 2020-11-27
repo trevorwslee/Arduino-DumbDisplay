@@ -47,41 +47,35 @@ int _NextLid = 0;
 DDInputOutput* _IO = NULL;  
 
 
-void _sendCommand0(String& layerId, const char *command) {
+void _sendCommand(String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3) {
   _IO->print(layerId.c_str());
   _IO->print(".");
   _IO->print(command);
+  if (pParam1 != NULL) {
+    _IO->print(":");
+    _IO->print(pParam1->c_str());
+    if (pParam2 != NULL) {
+      _IO->print(",");
+      _IO->print(pParam2->c_str());
+      if (pParam3 != NULL) {
+        _IO->print(",");
+        _IO->print(pParam3->c_str());
+      }
+    }
+  }
   _IO->print("\n");
+}  
+void _sendCommand0(String& layerId, const char *command) {
+  _sendCommand(layerId, command, NULL, NULL, NULL);
 }  
 void _sendCommand1(String& layerId, const char *command, const String& param1) {
-  _IO->print(layerId.c_str());
-  _IO->print(".");
-  _IO->print(command);
-  _IO->print(":");
-  _IO->print(param1.c_str());
-  _IO->print("\n");
+  _sendCommand(layerId, command, &param1, NULL, NULL);
 }  
 void _sendCommand2(String& layerId, const char *command, const String& param1, const String& param2) {
-  _IO->print(layerId.c_str());
-  _IO->print(".");
-  _IO->print(command);
-  _IO->print(":");
-  _IO->print(param1.c_str());
-  _IO->print(",");
-  _IO->print(param2.c_str());
-  _IO->print("\n");
+  _sendCommand(layerId, command, &param1, &param2, NULL);
 }  
 void _sendCommand3(String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
-  _IO->print(layerId.c_str());
-  _IO->print(".");
-  _IO->print(command);
-  _IO->print(":");
-  _IO->print(param1.c_str());
-  _IO->print(",");
-  _IO->print(param2.c_str());
-  _IO->print(",");
-  _IO->print(param3.c_str());
-  _IO->print("\n");
+  _sendCommand(layerId, command, &param1, &param2, &param3);
 }  
 
 
