@@ -49,7 +49,7 @@ class DDLayer {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
-    String& getLayerId() { return layerId; }
+    const String& getLayerId() { return layerId; }
   protected:
     DDLayer(int layerId);
     // DDLayer(int layerId) {
@@ -212,6 +212,10 @@ class LcdDDLayer: public DDLayer {
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO);
+    /* explicitly make connection -- blocking */
+    /* - implicitly called when creating a layer */
+    /* - also setup "pin frame" to be x-units by y-units (default 100x100) */
+    void connect(int xUnitCount = 100, int yUnitCount = 100);
     /* create a Microbit layer; 1st time will block waiting for connection */
     MbDDLayer* createMicrobitLayer(int width = 5, int height = 5);
     /* create a Turtle layer; 1st time will block waiting for connection */
@@ -219,7 +223,8 @@ class DumbDisplay {
     /* create a LED-grid layer; given col count and row count */
     /* - a LED can be formed by sub-LED-grid; given sub-col count and sub-row count */
     LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
-    LcdDDLayer* createLcdLayer(int colCount, int rowCount, int charHeight = 9, const String& fontName = "");
+    /* create a LCD layer */
+    LcdDDLayer* createLcdLayer(int colCount, int rowCount, int charHeight = 0, const String& fontName = "");
     void deleteLayer(DDLayer *pLayer);
 };
 

@@ -213,7 +213,7 @@ void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 LcdDDLayer *pLcdLayer = NULL;
 void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
-    pLcdLayer = dumbdisplay.createLcdLayer(22, 3, 12, "Courier");
+    pLcdLayer = dumbdisplay.createLcdLayer(18, 3, 16, "Courier");
     pLcdLayer->pixelColor("red");
     pLcdLayer->bgPixelColor(DD_RGB_COLOR(200, 200, 200));
     pLcdLayer->backgroundColor(DD_HEX_COLOR(0x111111));
@@ -221,7 +221,7 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   pLcdLayer->setCursor(0, 0);
   pLcdLayer->print("stepCount:" + String(stepCount));
   pLcdLayer->writeLine("Hi friend!", 1, "C");
-  pLcdLayer->writeLine("Здравствуй สวัสดี 你好", 2, "R");
+  pLcdLayer->writeLine("Bună Привіт 你好", 2, "R");
 }
 
 

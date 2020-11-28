@@ -9,6 +9,7 @@
 //#define HEX_COLOR(color) ("#" + String(color, 16))
 #define TO_BOOL(val) (val ? "1" : "0")
 
+
 class IOProxy {
   public: 
     IOProxy(DDInputOutput *pIO) {
@@ -52,7 +53,7 @@ int _NextLid = 0;
 DDInputOutput* _IO = NULL;  
 
 
-void _sendCommand(String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5) {
+void _sendCommand(const String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5) {
   _IO->print(layerId.c_str());
   _IO->print(".");
   _IO->print(command);
@@ -78,22 +79,22 @@ void _sendCommand(String& layerId, const char *command, const String* pParam1, c
   }
   _IO->print("\n");
 }  
-void _sendCommand0(String& layerId, const char *command) {
+void _sendCommand0(const String& layerId, const char *command) {
   _sendCommand(layerId, command, NULL, NULL, NULL, NULL, NULL);
 }  
-void _sendCommand1(String& layerId, const char *command, const String& param1) {
+void _sendCommand1(const String& layerId, const char *command, const String& param1) {
   _sendCommand(layerId, command, &param1, NULL, NULL, NULL, NULL);
 }  
-void _sendCommand2(String& layerId, const char *command, const String& param1, const String& param2) {
+void _sendCommand2(const String& layerId, const char *command, const String& param1, const String& param2) {
   _sendCommand(layerId, command, &param1, &param2, NULL, NULL, NULL);
 }  
-void _sendCommand3(String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
+void _sendCommand3(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
   _sendCommand(layerId, command, &param1, &param2, &param3, NULL, NULL);
 }  
-void _sendCommand4(String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4) {
+void _sendCommand4(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4) {
   _sendCommand(layerId, command, &param1, &param2, &param3, &param4, NULL);
 }
-void _sendCommand5(String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5) {
+void _sendCommand5(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5) {
   _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5);
 }
 
@@ -180,7 +181,12 @@ int _AllocLayerId() {
 DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
   _IO = pIO;
 }
-
+void DumbDisplay::connect(int xUnitCount, int yUnitCount) {
+  _Connect();
+  // if (xUnitCount != 100 || yUnitCount != 100) {
+  //   _sendCommand2("", "SUPI", String(xUnitCount), String(yUnitCount));
+  // }
+}
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
 #ifdef DD_DEBUG          
   if (!_IO->allowSerial()) Serial.println("createMicrobitLayer"); 
