@@ -57,21 +57,21 @@ class DDLayer {
 };
 
 
-enum MBArrow { North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest };
-enum MBIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, Surprised,
+enum MbArrow { North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest };
+enum MbIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, Surprised,
               Silly, Fabulous, Meh, TShirt, Rollerskate, Duck, House, Tortoise, Butterfly, StickFigure,
               Ghost, Sword, Giraffe, Skull, Umbrella, Snake, Rabbit, Cow, QuarterNote, EigthNote,
               Pitchfork, Target, Triangle, LeftTriangle, Chessboard, Diamond, SmallDiamond, Square, SmallSquare, Scissors,
         };
 
-class MicroBitLayer: public DDLayer {
+class MbDDLayer: public DDLayer {
   public:
-    MicroBitLayer(int layerId): DDLayer(layerId) {
+    MbDDLayer(int layerId): DDLayer(layerId) {
     }
     /* show Microbit icon */
-    void showIcon(MBIcon icon);
+    void showIcon(MbIcon icon);
     /* show Microbit arrow */
-    void showArrow(MBArrow arrow);
+    void showArrow(MbArrow arrow);
     /* show number; scroll if more than a single digit; but you get to control timing by using delay() */
     void showNumber(int num);
     /* show string; scroll if more than a single character; but you get to control timing by using delay() */
@@ -97,9 +97,9 @@ class MicroBitLayer: public DDLayer {
 };
 
 
-class TurtleLayer: public DDLayer {
+class TurtleDDLayer: public DDLayer {
   public:
-    TurtleLayer(int layerId): DDLayer(layerId) {
+    TurtleDDLayer(int layerId): DDLayer(layerId) {
     }
     /* forward; with pen or not */
     void forward(int distance, bool withPen = true);
@@ -153,9 +153,9 @@ class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO);
     /* create a Microbit layer; 1st time will block waiting for connection */
-    MicroBitLayer* createMicroBitLayer(int width, int height);
+    MbDDLayer* createMicrobitLayer(int width, int height);
     /* create a Turtle layer; 1st time will block waiting for connection */
-    TurtleLayer* createTurtleLayer(int width, int height);
+    TurtleDDLayer* createTurtleLayer(int width, int height);
 };
 
 

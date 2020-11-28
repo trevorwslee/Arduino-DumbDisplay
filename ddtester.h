@@ -19,21 +19,21 @@ template <typename T> class DDTesterImpl: public DDTester {
     T *pLayer;  
 };
 
-class MbTester: DDTesterImpl<MicroBitLayer> {
+class MbDDTester: DDTesterImpl<MbDDLayer> {
   public:
-    MbTester(MicroBitLayer *pMbLayer): DDTesterImpl(pMbLayer) {
+    MbDDTester(MbDDLayer *pMbLayer): DDTesterImpl(pMbLayer) {
     }   
     void testStep(int stepCount); 
 };
 
-class TurtleTester: DDTesterImpl<TurtleLayer> {
+class TurtleDDTester: DDTesterImpl<TurtleDDLayer> {
   public:
-    TurtleTester(TurtleLayer *pMbLayer): DDTesterImpl(pMbLayer) {
+    TurtleDDTester(TurtleDDLayer *pMbLayer): DDTesterImpl(pMbLayer) {
     }    
     void testStep(int stepCount);
 };
 
-MbTester* CreateMbTester(DumbDisplay& dumbdisplay);
-TurtleTester* CreateTurtleTester(DumbDisplay& dumbdisplay);
+MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay);
+TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay);
 
 #endif

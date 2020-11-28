@@ -10,10 +10,10 @@ DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
 
 DDTester ddTester;
 #ifdef MB
-MbTester *pMbTester = NULL;
+MbDDTester *pMbTester = NULL;
 #endif
 #ifdef TURTLE
-TurtleTester *pTurtleTester = NULL;
+TurtleDDTester *pTurtleTester = NULL;
 #endif
 
 void setup() {

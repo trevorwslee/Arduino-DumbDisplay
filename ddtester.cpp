@@ -1,17 +1,17 @@
 #include "ddtester.h"
 
 
-MbTester* CreateMbTester(DumbDisplay& dumbdisplay) {
-  MicroBitLayer *pMbLayer = dumbdisplay.createMicroBitLayer(5, 5);;
-  return new MbTester(pMbLayer);
+MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay) {
+  MbDDLayer *pMbLayer = dumbdisplay.createMicrobitLayer(5, 5);;
+  return new MbDDTester(pMbLayer);
 }
-TurtleTester* CreateTurtleTester(DumbDisplay& dumbdisplay) {
-  TurtleLayer *pTurtleLayer = dumbdisplay.createTurtleLayer(251, 201);
-  return new TurtleTester(pTurtleLayer);
+TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay) {
+  TurtleDDLayer *pTurtleLayer = dumbdisplay.createTurtleLayer(251, 201);
+  return new TurtleDDTester(pTurtleLayer);
 }
 
 
-void MbTester::testStep(int stepCount) {
+void MbDDTester::testStep(int stepCount) {
     int count = stepCount % 10;
     if (count == 0) {
       pLayer->clear();
@@ -47,7 +47,7 @@ void MbTester::testStep(int stepCount) {
     delay(1000);
 }
 
-void TurtleTester::testStep(int stepCount) {
+void TurtleDDTester::testStep(int stepCount) {
   if (stepCount == 0) {
     pLayer->clear();
     pLayer->setHeading(random(360));
