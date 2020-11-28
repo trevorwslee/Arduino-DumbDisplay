@@ -24,14 +24,21 @@ class MbDDTester: DDTesterImpl<MbDDLayer> {
   public:
     MbDDTester(MbDDLayer *pMbLayer): DDTesterImpl(pMbLayer) {
     }   
-    void testStep(int stepCount); 
+    void testStep(DumbDisplay& dumbdisplay, int stepCount); 
 };
 
 class TurtleDDTester: DDTesterImpl<TurtleDDLayer> {
   public:
     TurtleDDTester(TurtleDDLayer *pMbLayer): DDTesterImpl(pMbLayer) {
     }    
-    void testStep(int stepCount);
+    void testStep(DumbDisplay& dumbdisplay, int stepCount);
+};
+
+class LedGridDDTester: DDTester {
+  public:
+    LedGridDDTester(): DDTester() {
+    }    
+    void testStep(DumbDisplay& dumbdisplay, int stepCount);
 };
 
 

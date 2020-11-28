@@ -155,10 +155,10 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 
 
 
-void MbDDTester::testStep(int stepCount) {
+void MbDDTester::testStep(DumbDisplay& dumbdisplay, int stepCount) {
   debugMbTestStep(pLayer, stepCount);
 }
-void TurtleDDTester::testStep(int stepCount) {
+void TurtleDDTester::testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount > 0) {
     if (stepCount >= 24) {
       standardTurtleTestStep(pLayer, stepCount == 24);
@@ -167,6 +167,13 @@ void TurtleDDTester::testStep(int stepCount) {
     }
   } else {
     debugTurtleTestStep(pLayer, stepCount);
+  }
+}
+
+LedGridDDLayer *pLedGridLayer = NULL;
+void LedGridDDTester::testStep(DumbDisplay& dumbdisplay, int stepCount) {
+  int init = stepCount = 10;
+  if (init == 0) {
   }
 }
 
