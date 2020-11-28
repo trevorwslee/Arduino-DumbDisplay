@@ -298,8 +298,8 @@ void TurtleDDLayer::isoscelesTriangle(int side, int angle) {
 void TurtleDDLayer::polygon(int side, int vertexCount) {
   _sendCommand2(layerId, "poly", String(side), String(vertexCount));
 }
-void TurtleDDLayer::enclosedPolygon(int radius, int vertexCount) {
-  _sendCommand2(layerId, "cpoly", String(radius), String(vertexCount));
+void TurtleDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
+  _sendCommand2(layerId, inside ? "cpolyin" : "cpoly", String(radius), String(vertexCount));
 }
 void TurtleDDLayer::write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? "drawtext" : "write", text);

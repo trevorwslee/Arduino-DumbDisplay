@@ -33,5 +33,6 @@ void loop() {
 #ifdef MB
   pMbTester->testStep(stepCount);
 #endif
+  delay(1000);
   stepCount++;
 }

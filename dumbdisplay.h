@@ -2,6 +2,7 @@
 #define dumbdisplay_h
 
 #define DUMBDISPLAY_BAUD 115200
+#define DD_RGB(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
 
 class DDInputOutput {
   public:
@@ -139,13 +140,16 @@ class TurtleDDLayer: public DDLayer {
     void oval(int width, int height, bool centered = false);
     /* draw triangle (SAS) */
     void triangle(int side1, int angle, int side2);
+    /* draw isosceles triangle; given size and angle */
     void isoscelesTriangle(int side, int angle);
     /* draw rectangle; centered or not */
     void rectangle(int width, int height, bool centered = false);
     /* draw polygon given side and vertex count */
     void polygon(int side, int vertexCount);
-    /* draw polygon "enclosed" in a virtual centered cirtle; given circle radius and vertex count */
-    void enclosedPolygon(int radius, int vertexCount);
+    /* draw polygon enclosed in an imaginary centered circle */
+    /* - given circle radius and vertex count */
+    /* - whether inside the circle or not */ 
+    void centeredPolygon(int radius, int vertexCount, bool inside = false);
     /* write text; draw means draw the text (honor heading) */
     void write(const String& text, bool draw = false);
 };

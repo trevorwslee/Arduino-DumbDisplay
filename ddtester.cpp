@@ -41,12 +41,9 @@ void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
       delay(1000);
       pLayer->showString("a,b,c");
       delay(5000);
-
     }
     
     pLayer->showNumber(count);
-
-    delay(1000);
 }
 
 void debugTurtleTestStep(TurtleDDLayer *pLayer, int stepCount) {
@@ -63,9 +60,7 @@ void debugTurtleTestStep(TurtleDDLayer *pLayer, int stepCount) {
     pLayer->leftTurn(48);
     pLayer->forward(88);
     pLayer->home(false);
-    delay(1000);
   }
-  delay(1000);
 }
 
 void shapeTurtleTestStep(TurtleDDLayer *pLayer, int stepCount) {
@@ -83,7 +78,7 @@ void shapeTurtleTestStep(TurtleDDLayer *pLayer, int stepCount) {
     pLayer->leftTurn(20);
     pLayer->forward(20);
 
-    int shape = stepCount % 11;
+    int shape = stepCount % 12;
     switch (shape) {
       case 0:
         pLayer->circle(50);
@@ -107,18 +102,21 @@ void shapeTurtleTestStep(TurtleDDLayer *pLayer, int stepCount) {
         pLayer->polygon(50, 5);
         break;
       case 7:
-        pLayer->enclosedPolygon(55, 5);
+        pLayer->centeredPolygon(55, 5);
         break;
       case 8:
-        pLayer->oval(60, 80);
+        pLayer->centeredPolygon(55, 5, true);
         break;
       case 9:
-        pLayer->oval(60, 80, true);
+        pLayer->oval(60, 80);
         break;
       case 10:
+        pLayer->oval(60, 80, true);
+        break;
+      case 11:
         for (int size = 3; size <= 10; size++) {
             pLayer->clear();
-            pLayer->enclosedPolygon(40, size);   
+            pLayer->centeredPolygon(40, size, false);   
             pLayer->circle(40, true);
             delay(500);
         }
@@ -126,9 +124,33 @@ void shapeTurtleTestStep(TurtleDDLayer *pLayer, int stepCount) {
     }
     pLayer->rightTurn(90);
     pLayer->forward(100);
-
 }
 
+int r = random(0, 255);
+int g = 128;
+int b = 0;
+void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
+  if (firstStep) {
+    pLayer->clear();
+    pLayer->setHeading(0);
+    pLayer->home(false);
+    pLayer->fillColor("lemonchiffon");
+    pLayer->penFilled(true);
+    pLayer->centeredPolygon(73, 6, true);
+    pLayer->penFilled(false);
+    pLayer->penSize(1);
+    pLayer->circle(79, true);
+  }
+  pLayer->penColor(DD_RGB(r, g, b));
+  pLayer->circle(27);
+  pLayer->rectangle(90, 20);
+  pLayer->rightTurn(10);
+  b = b + 20;
+  if (b > 255) {
+      b = 0;
+      r = random(0, 255);
+  }
+}
 
 
 
@@ -136,9 +158,14 @@ void MbDDTester::testStep(int stepCount) {
   debugMbTestStep(pLayer, stepCount);
 }
 void TurtleDDTester::testStep(int stepCount) {
-  if (stepCount > 1) 
-    shapeTurtleTestStep(pLayer, stepCount);
-  else
+  if (stepCount > 0) {
+    if (stepCount >= 24) {
+      standardTurtleTestStep(pLayer, stepCount == 24);
+    } else {
+      shapeTurtleTestStep(pLayer, stepCount);
+    }
+  } else {
     debugTurtleTestStep(pLayer, stepCount);
+  }
 }
 
