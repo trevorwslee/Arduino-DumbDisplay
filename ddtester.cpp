@@ -217,7 +217,7 @@ void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
     if (hori)
       pLedGridLayer->horizontalBar(4);
     else
-      pLedGridLayer->verticalBar(4);
+      pLedGridLayer->verticalBar(4, true);
   }
 }
 
@@ -227,12 +227,12 @@ void StandardDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bo
   int stepCount = 0;
   while (true) {
     if (!enableSerial) Serial.println("loop");
-    if (ledGrid)
-      LedGridDDTester_testStep(dumbdisplay, stepCount);  
-    if (turtle)  
-      TurtleDDTester_testStep(dumbdisplay, stepCount);
     if (mb)
       MbDDTester_testStep(dumbdisplay, stepCount);
+    if (turtle)  
+      TurtleDDTester_testStep(dumbdisplay, stepCount);
+    if (ledGrid)
+      LedGridDDTester_testStep(dumbdisplay, stepCount);  
     delay(1000);
     stepCount++;
   }

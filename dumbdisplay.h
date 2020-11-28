@@ -165,10 +165,10 @@ class LedGridDDLayer: public DDLayer {
     void turnOff(int x = 0, int y = 0);
     /* toggle LED @ (x, y) */
     void toggle(int x = 0, int y = 0);
-    /* turn on LEDs to form a horizontal "bar" */ 
-    void horizontalBar(int count);
+    /* turn on LEDs to form a horizontal "bar" */
+    void horizontalBar(int count, bool rightToLeft = false);
     /* turn on LEDs to form a vertical "bar" */ 
-    void verticalBar(int count);
+    void verticalBar(int count, bool bottomToTop = false);
     /* set LED on color */ 
     void onColor(long color);
     /* set LED on color */ 

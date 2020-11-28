@@ -17,8 +17,8 @@ void loop() {
   }
   //pSS->println("SS");
   //delay(1000);
-  bool mb = true;
-  bool turtle = true;
+  bool mb = false;
+  bool turtle = false;
   bool ledGrid = true;
   StandardDDTestLoop(enableSerial, TheDumbDisplay, mb, turtle, ledGrid);
 }

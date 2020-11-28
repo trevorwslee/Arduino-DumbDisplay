@@ -350,11 +350,11 @@ void LedGridDDLayer::turnOff(int x, int y) {
 void LedGridDDLayer::toggle(int x, int y) {
   _sendCommand2(layerId, "ledtoggle", String(x), String(y));
 }
-void LedGridDDLayer::horizontalBar(int count) {
-  _sendCommand1(layerId, "ledhoribar", String(count));
+void LedGridDDLayer::horizontalBar(int count, bool rightToLeft) {
+  _sendCommand2(layerId, "ledhoribar", String(count), TO_BOOL(rightToLeft));
 }
-void LedGridDDLayer::verticalBar(int count) {
-  _sendCommand1(layerId, "ledvertbar", String(count));
+void LedGridDDLayer::verticalBar(int count, bool bottomToTop) {
+  _sendCommand2(layerId, "ledvertbar", String(count), TO_BOOL(bottomToTop));
 }
 void LedGridDDLayer::onColor(long color) {
   _sendCommand1(layerId, "ledoncolor", HEX_COLOR(color));
