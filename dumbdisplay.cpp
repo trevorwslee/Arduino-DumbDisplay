@@ -54,8 +54,10 @@ DDInputOutput* _IO = NULL;
 
 
 void _sendCommand(const String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5) {
-  _IO->print(layerId.c_str());
-  _IO->print(".");
+  if (layerId != "") {
+    _IO->print(layerId.c_str());
+    _IO->print(".");
+  }
   _IO->print(command);
   if (pParam1 != NULL) {
     _IO->print(":");
@@ -183,9 +185,9 @@ DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
 }
 void DumbDisplay::connect(int xUnitCount, int yUnitCount) {
   _Connect();
-  // if (xUnitCount != 100 || yUnitCount != 100) {
-  //   _sendCommand2("", "SUPI", String(xUnitCount), String(yUnitCount));
-  // }
+  if (xUnitCount != 100 || yUnitCount != 100) {
+    _sendCommand2("", "SUPI", String(xUnitCount), String(yUnitCount));
+  }
 }
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
 #ifdef DD_DEBUG          
