@@ -6,7 +6,7 @@
 
 #define HAND_SHAKE_GAP 500
 
-#define HEX_COLOR(color) ("#" + String(color, 16))
+//#define HEX_COLOR(color) ("#" + String(color, 16))
 #define TO_BOOL(val) (val ? "1" : "0")
 
 class IOProxy {
@@ -223,9 +223,9 @@ void DDLayer::opacity(int opacity) {
 void DDLayer::clear() {
   _sendCommand0(layerId, "clear");
 }
-void DDLayer::backgroundColor(long color) {
-  _sendCommand1(layerId, "bgcolor", HEX_COLOR(color));
-}
+// void DDLayer::backgroundColor(long color) {
+//   _sendCommand1(layerId, "bgcolor", HEX_COLOR(color));
+// }
 void DDLayer::backgroundColor(const String& color) {
   _sendCommand1(layerId, "bgcolor", color);
 }
@@ -262,9 +262,9 @@ void MbDDLayer::showLeds(const String& ledPattern) {
 // void MicroBitLayer::clearScreen() {
 //   _sendCommand0(layerId, "cs");
 // }
-void MbDDLayer::ledColor(long color) {
-  _sendCommand1(layerId, "ledc", HEX_COLOR(color));
-}
+// void MbDDLayer::ledColor(long color) {
+//   _sendCommand1(layerId, "ledc", HEX_COLOR(color));
+// }
 void MbDDLayer::ledColor(const String& color) {
   _sendCommand1(layerId, "ledc", color);
 }
@@ -299,15 +299,15 @@ void TurtleDDLayer::penDown() {
 void TurtleDDLayer::penSize(int size) {
   _sendCommand1(layerId, "pensize", String(size));
 }
-void TurtleDDLayer::penColor(long color) {
-  _sendCommand1(layerId, "pencolor", HEX_COLOR(color));
-}
+// void TurtleDDLayer::penColor(long color) {
+//   _sendCommand1(layerId, "pencolor", HEX_COLOR(color));
+// }
 void TurtleDDLayer::penColor(const String& color) {
   _sendCommand1(layerId, "pencolor", color);
 }
-void TurtleDDLayer::fillColor(long color) {
-  _sendCommand1(layerId, "fillcolor", HEX_COLOR(color));
-}
+// void TurtleDDLayer::fillColor(long color) {
+//   _sendCommand1(layerId, "fillcolor", HEX_COLOR(color));
+// }
 void TurtleDDLayer::fillColor(const String& color) {
   _sendCommand1(layerId, "fillcolor", color);
 }
@@ -356,15 +356,15 @@ void LedGridDDLayer::horizontalBar(int count, bool rightToLeft) {
 void LedGridDDLayer::verticalBar(int count, bool bottomToTop) {
   _sendCommand2(layerId, "ledvertbar", String(count), TO_BOOL(bottomToTop));
 }
-void LedGridDDLayer::onColor(long color) {
-  _sendCommand1(layerId, "ledoncolor", HEX_COLOR(color));
-}
+// void LedGridDDLayer::onColor(long color) {
+//   _sendCommand1(layerId, "ledoncolor", HEX_COLOR(color));
+// }
 void LedGridDDLayer::onColor(const String& color) {
   _sendCommand1(layerId, "ledoncolor", color);
 }
-void LedGridDDLayer::offColor(long color) {
-  _sendCommand1(layerId, "ledoffcolor", HEX_COLOR(color));
-}
+// void LedGridDDLayer::offColor(long color) {
+//   _sendCommand1(layerId, "ledoffcolor", HEX_COLOR(color));
+// }
 void LedGridDDLayer::offColor(const String& color) {
   _sendCommand1(layerId, "ledoffcolor", color);
 }

@@ -2,13 +2,13 @@
 #include "ddtester.h"
 
 boolean enableSerial = true;
-SoftwareSerial *pSS = new SoftwareSerial(2,3);
-DumbDisplay TheDumbDisplay(new DDSoftwareSerialIO(pSS, enableSerial));
+//SoftwareSerial *pSS = new SoftwareSerial(2,3);
+DumbDisplay TheDumbDisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), enableSerial));
 
 void setup() {
   if (!enableSerial)
     Serial.begin(115200);
-  pSS->begin(115200);  
+  //pSS->begin(115200);  
 }
 
 void loop() {
@@ -17,8 +17,8 @@ void loop() {
   }
   //pSS->println("SS");
   //delay(1000);
-  bool mb = false;
-  bool turtle = false;
+  bool mb = true;
+  bool turtle = true;
   bool ledGrid = true;
   BasicDDTestLoop(enableSerial, TheDumbDisplay, mb, turtle, ledGrid);
 }

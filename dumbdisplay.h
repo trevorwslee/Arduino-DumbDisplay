@@ -2,7 +2,8 @@
 #define dumbdisplay_h
 
 #define DUMBDISPLAY_BAUD 115200
-#define DD_RGB(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
+#define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
+#define DD_HEX_COLOR(color) ("#" + String(color, 16))
 
 class DDInputOutput {
   public:
@@ -42,8 +43,8 @@ class DDLayer {
     void opacity(int opacity);
     /* clear the layer */
     void clear();
-    /* set layer background color with RGB */
-    void backgroundColor(long color);
+    // /* set layer background color with RGB */
+    // void backgroundColor(long color);
     /* set layer background color with common "color name" */
     void backgroundColor(const String& color);
     /* set no layer background color */
@@ -93,7 +94,7 @@ class MbDDLayer: public DDLayer {
     // /* clear layer screen */
     // void clearScreen();
     // /* set layer LED color with RGB */
-    void ledColor(long color);
+    // void ledColor(long color);
     /* set layer LED color with common "color name" */
     void ledColor(const String& color);
 };
@@ -123,12 +124,12 @@ class TurtleDDLayer: public DDLayer {
     void penDown();
     /* set pen size */
     void penSize(int size);
-    /* set pen color */
-    void penColor(long color);
+    // /* set pen color */
+    // void penColor(long color);
     /* set pen color */
     void penColor(const String& color);
-    /* set fill color */
-    void fillColor(long color);
+    // /* set fill color */
+    // void fillColor(long color);
     /* set fill color */
     void fillColor(const String& color);
     /* set no fill color */
@@ -169,17 +170,24 @@ class LedGridDDLayer: public DDLayer {
     void horizontalBar(int count, bool rightToLeft = false);
     /* turn on LEDs to form a vertical "bar" */ 
     void verticalBar(int count, bool bottomToTop = false);
-    /* set LED on color */ 
-    void onColor(long color);
+    // /* set LED on color */ 
+    // void onColor(long color);
     /* set LED on color */ 
     void onColor(const String& color);
-    /* set LED off color */ 
-    void offColor(long color);
+    // /* set LED off color */ 
+    // void offColor(long color);
     /* set LED off color */ 
     void offColor(const String& color);
     /* set no LED off color */ 
     void noOffColor();
 };
+
+class LcdDDLayer: public DDLayer {
+  public:
+    LcdDDLayer(int layerId): DDLayer(layerId) {
+    }
+};
+
 
 
 class DumbDisplay {
@@ -192,6 +200,7 @@ class DumbDisplay {
     /* create a LED-grid layer; given col count and row count */
     /* - a LED can be formed by sub-LED-grid; given sub-col count and sub-row count */
     LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
+    LcdDDLayer* createLcdLayer();
     void deleteLayer(DDLayer *pLayer);
 };
 

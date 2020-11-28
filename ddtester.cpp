@@ -1,25 +1,13 @@
 #include "ddtester.h"
 
 
-// MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay) {
-//   MbDDLayer *pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
-//   return new MbDDTester(pMbLayer);
-// }
-
-// TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay) {
-//    TurtleDDLayer *pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
-//    pTurtleLayer->penColor("blue");
-//     return new TurtleDDTester(pTurtleLayer);
-// }
-
-
 void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
     int count = stepCount % 10;
     if (count == 0) {
       pLayer->clear();
 
       pLayer->backgroundColor("12-34-56");
-      pLayer->ledColor(0xff00ff);
+      pLayer->ledColor(DD_HEX_COLOR(0xff00ff));
 
       pLayer->showLeds("|.#.#|####");
       delay(2000);
@@ -142,7 +130,7 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
     pLayer->penSize(1);
     pLayer->circle(79, true);
   }
-  pLayer->penColor(DD_RGB(r, g, b));
+  pLayer->penColor(DD_RGB_COLOR(r, g, b));
   pLayer->circle(27);
   pLayer->rectangle(90, 20);
   pLayer->rightTurn(10);
