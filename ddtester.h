@@ -5,27 +5,27 @@
 #include "dumbdisplay.h"
 
 
-class DDTester {
-  public:
-    virtual void testStep(int stepCount) {
-    }
-};
+// class DDTester {
+//   public:
+//     virtual void testStep(int stepCount) {
+//     }
+// };
 
-template <typename T> class DDTesterImpl: public DDTester {
-  protected:
-    DDTesterImpl(T *pLayer): DDTester() {
-      this->pLayer = pLayer;
-    }
-  protected:
-    T *pLayer;  
-};
+// template <typename T> class DDTesterImpl: public DDTester {
+//   protected:
+//     DDTesterImpl(T *pLayer): DDTester() {
+//       this->pLayer = pLayer;
+//     }
+//   protected:
+//     T *pLayer;  
+// };
 
-class MbDDTester: DDTesterImpl<MbDDLayer> {
-  public:
-    MbDDTester(MbDDLayer *pMbLayer): DDTesterImpl(pMbLayer) {
-    }   
-    void testStep(DumbDisplay& dumbdisplay, int stepCount); 
-};
+// class MbDDTester: DDTesterImpl<MbDDLayer> {
+//   public:
+//     MbDDTester(MbDDLayer *pMbLayer): DDTesterImpl(pMbLayer) {
+//     }   
+//     void testStep(DumbDisplay& dumbdisplay, int stepCount); 
+// };
 
 // class TurtleDDTester: DDTesterImpl<TurtleDDLayer> {
 //   public:
@@ -42,7 +42,7 @@ class MbDDTester: DDTesterImpl<MbDDLayer> {
 // };
 
 
-MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay);
+//MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay);
 //TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay);
 
 void StandardDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle);

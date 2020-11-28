@@ -1,10 +1,10 @@
 #include "ddtester.h"
 
 
-MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay) {
-  MbDDLayer *pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
-  return new MbDDTester(pMbLayer);
-}
+// MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay) {
+//   MbDDLayer *pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
+//   return new MbDDTester(pMbLayer);
+// }
 
 // TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay) {
 //    TurtleDDLayer *pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
@@ -155,8 +155,12 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 
 
 
-void MbDDTester::testStep(DumbDisplay& dumbdisplay, int stepCount) {
-  debugMbTestStep(pLayer, stepCount);
+MbDDLayer *pMbLayer = NULL;
+void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
+  if (stepCount == 0) {
+    pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
+  }
+  debugMbTestStep(pMbLayer, stepCount);
 }
 
 TurtleDDLayer *pTurtleLayer = NULL;
@@ -201,14 +205,16 @@ void StandardDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bo
   //TurtleDDTester *pTurtleTester = NULL;
   // if (turtle)
   //     pTurtleTester = CreateTurtleTester(dumbdisplay);
-  MbDDTester *pMbTester = NULL;
-  if (mb)  
-    pMbTester = CreateMbTester(dumbdisplay);
+  // MbDDTester *pMbTester = NULL;
+  // if (mb)  
+  //   pMbTester = CreateMbTester(dumbdisplay);
   int stepCount = 0;
   while (true) {
     if (!enableSerial) Serial.println("loop");
-    if (pMbTester != NULL) 
-      pMbTester->testStep(dumbdisplay, stepCount);
+    if (mb)
+      MbDDTester_testStep(dumbdisplay, stepCount);
+    // if (pMbTester != NULL) 
+    //   pMbTester->testStep(dumbdisplay, stepCount);
     if (turtle)  
       TurtleDDTester_testStep(dumbdisplay, stepCount);
     // if (pTurtleTester != NULL)  
