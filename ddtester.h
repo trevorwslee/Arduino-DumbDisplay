@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include "dumbdisplay.h"
 
+
 class DDTester {
   public:
     virtual void testStep(int stepCount) {
@@ -33,7 +34,13 @@ class TurtleDDTester: DDTesterImpl<TurtleDDLayer> {
     void testStep(int stepCount);
 };
 
+
 MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay);
 TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay);
+
+void StandardDDTestLoop(DumbDisplay& dumbdisplay, bool mb, bool turtle);
+
+
+
 
 #endif

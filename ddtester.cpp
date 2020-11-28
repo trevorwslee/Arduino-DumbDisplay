@@ -1,17 +1,6 @@
 #include "ddtester.h"
 
 
-MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay) {
-  MbDDLayer *pMbLayer = dumbdisplay.createMicrobitLayer(5, 5);;
-  return new MbDDTester(pMbLayer);
-}
-
-TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay) {
-  TurtleDDLayer *pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
-  pTurtleLayer->penColor("blue");
-  return new TurtleDDTester(pTurtleLayer);
-}
-
 
 void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
     int count = stepCount % 10;
@@ -169,3 +158,33 @@ void TurtleDDTester::testStep(int stepCount) {
   }
 }
 
+
+
+MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay) {
+  MbDDLayer *pMbLayer = dumbdisplay.createMicrobitLayer(5, 5);;
+  return new MbDDTester(pMbLayer);
+}
+
+TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay) {
+  TurtleDDLayer *pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
+  pTurtleLayer->penColor("blue");
+  return new TurtleDDTester(pTurtleLayer);
+}
+
+void StandardDDTestLoop(DumbDisplay& dumbdisplay, bool mb, bool turtle) {
+  TurtleDDTester *pTurtleTester = NULL;
+  MbDDTester *pMbTester = NULL;
+  if (turtle) 
+    pTurtleTester = CreateTurtleTester(dumbdisplay);
+  if (mb)  
+    pMbTester = CreateMbTester(dumbdisplay);
+  int stepCount = 0;
+  while (true) {
+    if (pMbTester != NULL) 
+      pMbTester->testStep(stepCount);
+    if (pTurtleTester != NULL)  
+      pTurtleTester->testStep(stepCount);
+    delay(1000);
+    stepCount++;
+  }
+}
