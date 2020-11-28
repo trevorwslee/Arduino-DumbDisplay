@@ -292,6 +292,9 @@ void TurtleDDLayer::rectangle(int width, int height, bool centered) {
 void TurtleDDLayer::triangle(int side1, int angle, int side2) {
   _sendCommand3(layerId, "trisas", String(side1), String(angle), String(side2));
 }
+void TurtleDDLayer::isoscelesTriangle(int side, int angle) {
+  _sendCommand2(layerId, "trisas", String(side), String(angle));
+}
 void TurtleDDLayer::polygon(int side, int vertexCount) {
   _sendCommand2(layerId, "poly", String(side), String(vertexCount));
 }

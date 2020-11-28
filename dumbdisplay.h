@@ -139,6 +139,7 @@ class TurtleDDLayer: public DDLayer {
     void oval(int width, int height, bool centered = false);
     /* draw triangle (SAS) */
     void triangle(int side1, int angle, int side2);
+    void isoscelesTriangle(int side, int angle);
     /* draw rectangle; centered or not */
     void rectangle(int width, int height, bool centered = false);
     /* draw polygon given side and vertex count */
