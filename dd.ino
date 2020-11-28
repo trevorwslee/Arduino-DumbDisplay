@@ -8,7 +8,9 @@ void setup() {
 }
 
 void loop() {
-  StandardDDTestLoop(dumbdisplay, true, true);
+  bool mb = true;
+  bool turtle = true;
+  StandardDDTestLoop(dumbdisplay, mb, turtle);
 }
 
 

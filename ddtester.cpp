@@ -1,6 +1,17 @@
 #include "ddtester.h"
 
 
+MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay) {
+  MbDDLayer *pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
+  return new MbDDTester(pMbLayer);
+}
+
+TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay) {
+  TurtleDDLayer *pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
+  pTurtleLayer->penColor("blue");
+  return new TurtleDDTester(pTurtleLayer);
+}
+
 
 void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
     int count = stepCount % 10;
@@ -123,6 +134,7 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
     pLayer->clear();
     pLayer->setHeading(0);
     pLayer->home(false);
+    pLayer->backgroundColor("azure");
     pLayer->fillColor("lemonchiffon");
     pLayer->penFilled(true);
     pLayer->centeredPolygon(73, 6, true);
@@ -159,23 +171,12 @@ void TurtleDDTester::testStep(int stepCount) {
 }
 
 
-
-MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay) {
-  MbDDLayer *pMbLayer = dumbdisplay.createMicrobitLayer(5, 5);;
-  return new MbDDTester(pMbLayer);
-}
-
-TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay) {
-  TurtleDDLayer *pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
-  pTurtleLayer->penColor("blue");
-  return new TurtleDDTester(pTurtleLayer);
-}
-
 void StandardDDTestLoop(DumbDisplay& dumbdisplay, bool mb, bool turtle) {
   TurtleDDTester *pTurtleTester = NULL;
   MbDDTester *pMbTester = NULL;
-  if (turtle) 
+  if (turtle) {
     pTurtleTester = CreateTurtleTester(dumbdisplay);
+  }
   if (mb)  
     pMbTester = CreateMbTester(dumbdisplay);
   int stepCount = 0;
