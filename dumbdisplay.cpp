@@ -202,7 +202,7 @@ TurtleDDLayer* DumbDisplay::createTurtleLayer(int width, int height) {
 LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int subColCount, int subRowCount) {
   int lid = _AllocLayerId();
   String layerId = String(lid);
-  _sendCommand3(layerId, "SU", String("ledgrid"), String(colCount), String(rowCount));
+  _sendCommand5(layerId, "SU", String("ledgrid"), String(colCount), String(rowCount), String(subColCount), String(subRowCount));
   return new LedGridDDLayer(lid);
 }
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
@@ -355,6 +355,21 @@ void LedGridDDLayer::horizontalBar(int count) {
 }
 void LedGridDDLayer::verticalBar(int count) {
   _sendCommand1(layerId, "ledvertbar", String(count));
+}
+void LedGridDDLayer::onColor(long color) {
+  _sendCommand1(layerId, "ledoncolor", HEX_COLOR(color));
+}
+void LedGridDDLayer::onColor(const String& color) {
+  _sendCommand1(layerId, "ledoncolor", color);
+}
+void LedGridDDLayer::offColor(long color) {
+  _sendCommand1(layerId, "ledoffcolor", HEX_COLOR(color));
+}
+void LedGridDDLayer::offColor(const String& color) {
+  _sendCommand1(layerId, "ledoffcolor", color);
+}
+void LedGridDDLayer::noOffColor() {
+  _sendCommand0(layerId, "ledoffcolor");
 }
 
 

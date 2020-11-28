@@ -45,7 +45,7 @@
 //MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay);
 //TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay);
 
-void StandardDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle);
+void StandardDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGrid);
 
 
 

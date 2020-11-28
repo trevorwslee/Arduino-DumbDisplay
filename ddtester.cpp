@@ -181,44 +181,58 @@ void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 }
 
 LedGridDDLayer *pLedGridLayer = NULL;
+bool hori = false;
 void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
-  int init = stepCount = 10;
+  int init = stepCount % 6;
   if (init == 0) {
-    if (pLedGridLayer != NULL) {
+    if (pLedGridLayer != NULL)
       dumbdisplay.deleteLayer(pLedGridLayer);
-      int colCount = 10;
-      int rowCount = 3;
-      pLedGridLayer = dumbdisplay.createLedGridLayer(colCount, rowCount, 5, 3); 
+    hori = random(2) == 1;
+    int colCount;
+    int rowCount;
+    int subColCount;
+    int subRowCount;
+    if (hori) {
+      colCount = 10;
+      rowCount = 4;
+      subColCount = 4;
+      subRowCount = 2;
+    } else {
+      colCount = 4;
+      rowCount = 8;
+      subColCount = 2;
+      subRowCount = 4;
     }
+    pLedGridLayer = dumbdisplay.createLedGridLayer(colCount, rowCount, subColCount, subRowCount); 
+    pLedGridLayer->offColor("lightgray");
   }
-  if (stepCount % 3 == 0)
+  int c = stepCount % 4;
+  if (c == 0)
     pLedGridLayer->toggle(2, 3);
-  else if (stepCount % 3 == 1)
+  else if (c == 1)
     pLedGridLayer->turnOn(2, 3);
-  else
+  else if (c == 2)
     pLedGridLayer->turnOff(2, 3);
+  else {
+    if (hori)
+      pLedGridLayer->horizontalBar(4);
+    else
+      pLedGridLayer->verticalBar(4);
+  }
 }
 
 
-void StandardDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle) {
+void StandardDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGrid) {
   if (!enableSerial) Serial.println("start");
-  //TurtleDDTester *pTurtleTester = NULL;
-  // if (turtle)
-  //     pTurtleTester = CreateTurtleTester(dumbdisplay);
-  // MbDDTester *pMbTester = NULL;
-  // if (mb)  
-  //   pMbTester = CreateMbTester(dumbdisplay);
   int stepCount = 0;
   while (true) {
     if (!enableSerial) Serial.println("loop");
-    if (mb)
-      MbDDTester_testStep(dumbdisplay, stepCount);
-    // if (pMbTester != NULL) 
-    //   pMbTester->testStep(dumbdisplay, stepCount);
+    if (ledGrid)
+      LedGridDDTester_testStep(dumbdisplay, stepCount);  
     if (turtle)  
       TurtleDDTester_testStep(dumbdisplay, stepCount);
-    // if (pTurtleTester != NULL)  
-    //   pTurtleTester->testStep(dumbdisplay, stepCount);
+    if (mb)
+      MbDDTester_testStep(dumbdisplay, stepCount);
     delay(1000);
     stepCount++;
   }
