@@ -202,10 +202,11 @@ void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   else if (c == 2)
     pLedGridLayer->turnOff(2, 3);
   else {
+    bool reverseSense = random(2) == 0;
     if (hori)
-      pLedGridLayer->horizontalBar(4);
+      pLedGridLayer->horizontalBar(4, reverseSense);
     else
-      pLedGridLayer->verticalBar(4, true);
+      pLedGridLayer->verticalBar(4, reverseSense);
   }
 }
 

@@ -5,7 +5,6 @@
 #include "dumbdisplay.h"
 
 
-
 void BasicDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGrid);
 
 
