@@ -7,9 +7,9 @@ MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay) {
 }
 
 TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay) {
-  TurtleDDLayer *pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
-  pTurtleLayer->penColor("blue");
-  return new TurtleDDTester(pTurtleLayer);
+   TurtleDDLayer *pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
+   pTurtleLayer->penColor("blue");
+    return new TurtleDDTester(pTurtleLayer);
 }
 
 
@@ -158,40 +158,59 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 void MbDDTester::testStep(DumbDisplay& dumbdisplay, int stepCount) {
   debugMbTestStep(pLayer, stepCount);
 }
-void TurtleDDTester::testStep(DumbDisplay& dumbdisplay, int stepCount) {
+
+TurtleDDLayer *pTurtleLayer = NULL;
+void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
+  if (stepCount == 0) {
+    pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
+    pTurtleLayer->penColor("blue");
+  }
   if (stepCount > 0) {
     if (stepCount >= 24) {
-      standardTurtleTestStep(pLayer, stepCount == 24);
+      standardTurtleTestStep(pTurtleLayer, stepCount == 24);
     } else {
-      shapeTurtleTestStep(pLayer, stepCount);
+      shapeTurtleTestStep(pTurtleLayer, stepCount);
     }
   } else {
-    debugTurtleTestStep(pLayer, stepCount);
+    debugTurtleTestStep(pTurtleLayer, stepCount);
   }
 }
 
 LedGridDDLayer *pLedGridLayer = NULL;
-void LedGridDDTester::testStep(DumbDisplay& dumbdisplay, int stepCount) {
+void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   int init = stepCount = 10;
   if (init == 0) {
+    if (pLedGridLayer != NULL) {
+      dumbdisplay.deleteLayer(pLedGridLayer);
+      int colCount = 10;
+      int rowCount = 3;
+      pLedGridLayer = dumbdisplay.createLedGridLayer(colCount, rowCount, 5, 3); 
+    }
   }
+  if (stepCount % 3 == 0)
+    pLedGridLayer->toggle(2, 3);
+  else if (stepCount % 3 == 1)
+    pLedGridLayer->turnOn(2, 3);
+  else
+    pLedGridLayer->turnOff(2, 3);
 }
 
 
-void StandardDDTestLoop(DumbDisplay& dumbdisplay, bool mb, bool turtle) {
+void StandardDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle) {
+  if (!enableSerial) Serial.println("start");
   TurtleDDTester *pTurtleTester = NULL;
   MbDDTester *pMbTester = NULL;
-  if (turtle) {
-    pTurtleTester = CreateTurtleTester(dumbdisplay);
-  }
+  if (turtle)
+      pTurtleTester = CreateTurtleTester(dumbdisplay);
   if (mb)  
     pMbTester = CreateMbTester(dumbdisplay);
   int stepCount = 0;
   while (true) {
+    if (!enableSerial) Serial.println("loop");
     if (pMbTester != NULL) 
-      pMbTester->testStep(stepCount);
+      pMbTester->testStep(dumbdisplay, stepCount);
     if (pTurtleTester != NULL)  
-      pTurtleTester->testStep(stepCount);
+      pTurtleTester->testStep(dumbdisplay, stepCount);
     delay(1000);
     stepCount++;
   }

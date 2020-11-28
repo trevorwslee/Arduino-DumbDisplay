@@ -2,11 +2,12 @@
 #include "dumbdisplay.h"
 
 
+//#define DD_DEBUG
+
 #define HAND_SHAKE_GAP 500
 
 #define HEX_COLOR(color) ("#" + String(color, 16))
 #define TO_BOOL(val) (val ? "1" : "0")
-
 
 class IOProxy {
   public: 
@@ -116,6 +117,11 @@ void _Connect() {
         ioProxy.print("ddhello\n");
         if (pSerialIOProxy != NULL) 
           pSerialIOProxy->print("ddhello\n");
+#ifdef DD_DEBUG          
+        if (!_IO->allowSerial()) {
+          Serial.println("handshake:ddhello");
+        }  
+#endif        
         nextTime = now + HAND_SHAKE_GAP;
       }
       bool fromSerial = false;
@@ -176,7 +182,13 @@ DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
 }
 
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
+#ifdef DD_DEBUG          
+  if (!_IO->allowSerial()) Serial.println("createMicrobitLayer"); 
+#endif
   int lid = _AllocLayerId();
+#ifdef DD_DEBUG          
+  if (!_IO->allowSerial()) Serial.println("allocated layer id"); 
+#endif
   String layerId = String(lid);
   _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
   return new MbDDLayer(lid);
