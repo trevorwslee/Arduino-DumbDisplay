@@ -20,7 +20,7 @@ void loop() {
   bool mb = false;
   bool turtle = false;
   bool ledGrid = true;
-  StandardDDTestLoop(enableSerial, TheDumbDisplay, mb, turtle, ledGrid);
+  BasicDDTestLoop(enableSerial, TheDumbDisplay, mb, turtle, ledGrid);
 }
 
 

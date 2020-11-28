@@ -222,7 +222,7 @@ void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 }
 
 
-void StandardDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGrid) {
+void BasicDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGrid) {
   if (!enableSerial) Serial.println("start");
   int stepCount = 0;
   while (true) {
