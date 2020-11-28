@@ -48,6 +48,7 @@ class DDLayer {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
+    String& getLayerId() { return layerId; }
   protected:
     DDLayer(int layerId);
     // DDLayer(int layerId) {
@@ -154,15 +155,35 @@ class TurtleDDLayer: public DDLayer {
     void write(const String& text, bool draw = false);
 };
 
+class LedGridDDLayer: public DDLayer {
+  public:
+    LedGridDDLayer(int layerId): DDLayer(layerId) {
+    }
+    /* turn on LED @ (x, y) */
+    void turnOn(int x = 0, int y = 0);
+    /* turn off LED @ (x, y) */
+    void turnOff(int x = 0, int y = 0);
+    /* toggle LED @ (x, y) */
+    void toggle(int x = 0, int y = 0);
+    /* turn on  LEDs to form a horizontal "bar" */ 
+    void horizontalBar(int count);
+    /* turn on  LEDs to form a vertical "bar" */ 
+    void verticalBar(int count);
+};
+
+
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO);
     /* create a Microbit layer; 1st time will block waiting for connection */
-    MbDDLayer* createMicrobitLayer(int width, int height);
+    MbDDLayer* createMicrobitLayer(int width = 5, int height = 5);
     /* create a Turtle layer; 1st time will block waiting for connection */
     TurtleDDLayer* createTurtleLayer(int width, int height);
+    /* create a LED-grid layer; given col count and row count */
+    /* - a LED can be formed by sub-LED-grid; given sub-col count and sub-row count */
+    LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
+    void deleteLayer(DDLayer *pLayer);
 };
-
 
 
 #endif

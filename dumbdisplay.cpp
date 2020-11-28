@@ -51,7 +51,7 @@ int _NextLid = 0;
 DDInputOutput* _IO = NULL;  
 
 
-void _sendCommand(String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3) {
+void _sendCommand(String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5) {
   _IO->print(layerId.c_str());
   _IO->print(".");
   _IO->print(command);
@@ -64,23 +64,38 @@ void _sendCommand(String& layerId, const char *command, const String* pParam1, c
       if (pParam3 != NULL) {
         _IO->print(",");
         _IO->print(pParam3->c_str());
+        if (pParam4 != NULL) {
+          _IO->print(",");
+          _IO->print(pParam4->c_str());
+          if (pParam5 != NULL) {
+            _IO->print(",");
+            _IO->print(pParam5->c_str());
+          }
+        }
       }
     }
   }
   _IO->print("\n");
 }  
 void _sendCommand0(String& layerId, const char *command) {
-  _sendCommand(layerId, command, NULL, NULL, NULL);
+  _sendCommand(layerId, command, NULL, NULL, NULL, NULL, NULL);
 }  
 void _sendCommand1(String& layerId, const char *command, const String& param1) {
-  _sendCommand(layerId, command, &param1, NULL, NULL);
+  _sendCommand(layerId, command, &param1, NULL, NULL, NULL, NULL);
 }  
 void _sendCommand2(String& layerId, const char *command, const String& param1, const String& param2) {
-  _sendCommand(layerId, command, &param1, &param2, NULL);
+  _sendCommand(layerId, command, &param1, &param2, NULL, NULL, NULL);
 }  
 void _sendCommand3(String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
-  _sendCommand(layerId, command, &param1, &param2, &param3);
+  _sendCommand(layerId, command, &param1, &param2, &param3, NULL, NULL);
 }  
+void _sendCommand4(String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4) {
+  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, NULL);
+}
+void _sendCommand5(String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5) {
+  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5);
+}
+
 
 
 void _Connect() {
@@ -171,6 +186,16 @@ TurtleDDLayer* DumbDisplay::createTurtleLayer(int width, int height) {
   String layerId = String(lid);
   _sendCommand3(layerId, "SU", String("turtle"), String(width), String(height));
   return new TurtleDDLayer(lid);
+}
+LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int subColCount, int subRowCount) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("ledgrid"), String(colCount), String(rowCount));
+  return new LedGridDDLayer(lid);
+}
+void DumbDisplay::deleteLayer(DDLayer *pLayer) {
+  _sendCommand0(pLayer->getLayerId(), "DEL");
+  delete pLayer;
 }
 
 
@@ -303,6 +328,21 @@ void TurtleDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
 }
 void TurtleDDLayer::write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? "drawtext" : "write", text);
+}
+void LedGridDDLayer::turnOn(int x, int y) {
+  _sendCommand2(layerId, "ledon", String(x), String(y));
+}
+void LedGridDDLayer::turnOff(int x, int y) {
+  _sendCommand2(layerId, "ledoff", String(x), String(y));
+}
+void LedGridDDLayer::toggle(int x, int y) {
+  _sendCommand2(layerId, "ledtoggle", String(x), String(y));
+}
+void LedGridDDLayer::horizontalBar(int count) {
+  _sendCommand1(layerId, "ledhoribar", String(count));
+}
+void LedGridDDLayer::verticalBar(int count) {
+  _sendCommand1(layerId, "ledvertbar", String(count));
 }
 
 
