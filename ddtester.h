@@ -27,12 +27,12 @@ class MbDDTester: DDTesterImpl<MbDDLayer> {
     void testStep(DumbDisplay& dumbdisplay, int stepCount); 
 };
 
-class TurtleDDTester: DDTesterImpl<TurtleDDLayer> {
-  public:
-    TurtleDDTester(TurtleDDLayer *pMbLayer): DDTesterImpl(pMbLayer) {
-    }    
-    void testStep(DumbDisplay& dumbdisplay, int stepCount);
-};
+// class TurtleDDTester: DDTesterImpl<TurtleDDLayer> {
+//   public:
+//     TurtleDDTester(TurtleDDLayer *pMbLayer): DDTesterImpl(pMbLayer) {
+//     }    
+//     void testStep(DumbDisplay& dumbdisplay, int stepCount);
+// };
 
 // class LedGridDDTester: DDTester {
 //   public:
@@ -43,7 +43,7 @@ class TurtleDDTester: DDTesterImpl<TurtleDDLayer> {
 
 
 MbDDTester* CreateMbTester(DumbDisplay& dumbdisplay);
-TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay);
+//TurtleDDTester* CreateTurtleTester(DumbDisplay& dumbdisplay);
 
 void StandardDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle);
 

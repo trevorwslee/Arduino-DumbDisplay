@@ -18,7 +18,7 @@ void loop() {
   //pSS->println("SS");
   //delay(1000);
   bool mb = true;
-  bool turtle = false;
+  bool turtle = true;
   StandardDDTestLoop(enableSerial, TheDumbDisplay, mb, turtle);
 }
 
