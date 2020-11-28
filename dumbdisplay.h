@@ -186,6 +186,25 @@ class LcdDDLayer: public DDLayer {
   public:
     LcdDDLayer(int layerId): DDLayer(layerId) {
     }
+    void print(const String& text);
+    void home();
+    void setCursor(int x, int y);
+    void cursor();
+    void noCursor();
+    void autoscroll();
+    void noAutoscroll();
+    void display();
+    void noDisplay();
+    void scrollDisplayLeft();
+    void scrollDisplayRight();
+    /* write text as a line, width alignment 'L', 'C', or 'R' */
+    void writeLine(const String& text, int col = 1, const String& align = "L");
+    /* set pixel color */
+    void pixelColor(const String &color);
+    /* set "background" (off) pixel color */
+    void bgPixelColor(const String &color);
+    /* set no "background" (off) pixel color */
+    void noBgPixelColor();
 };
 
 
@@ -200,7 +219,7 @@ class DumbDisplay {
     /* create a LED-grid layer; given col count and row count */
     /* - a LED can be formed by sub-LED-grid; given sub-col count and sub-row count */
     LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
-    LcdDDLayer* createLcdLayer();
+    LcdDDLayer* createLcdLayer(int colCount, int rowCount, int charHeight = 9, const String& fontName = "");
     void deleteLayer(DDLayer *pLayer);
 };
 

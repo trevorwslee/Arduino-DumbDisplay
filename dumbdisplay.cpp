@@ -205,6 +205,12 @@ LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int 
   _sendCommand5(layerId, "SU", String("ledgrid"), String(colCount), String(rowCount), String(subColCount), String(subRowCount));
   return new LedGridDDLayer(lid);
 }
+LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeight, const String& fontName) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand5(layerId, "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
+  return new LcdDDLayer(lid);
+}
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
   delete pLayer;
@@ -372,6 +378,52 @@ void LedGridDDLayer::noOffColor() {
   _sendCommand0(layerId, "ledoffcolor");
 }
 
+
+void LcdDDLayer::print(const String& text) {
+  _sendCommand1(layerId, "print", text);
+}
+void LcdDDLayer::home() {
+  _sendCommand0(layerId, "home");
+}
+void LcdDDLayer::setCursor(int x, int y) {
+  _sendCommand2(layerId, "setcursor", String(x), String(y));
+}
+void LcdDDLayer::cursor() {
+  _sendCommand1(layerId, "cursor", TO_BOOL(true));
+}
+void LcdDDLayer::noCursor() {
+  _sendCommand1(layerId, "cursor", TO_BOOL(false));
+}
+void LcdDDLayer::autoscroll() {
+  _sendCommand1(layerId, "autoscroll", TO_BOOL(true));
+}
+void LcdDDLayer::noAutoscroll() {
+  _sendCommand1(layerId, "autoscroll", TO_BOOL(false));
+}
+void LcdDDLayer::display() {
+  _sendCommand1(layerId, "display", TO_BOOL(true));
+}
+void LcdDDLayer::noDisplay() {
+  _sendCommand1(layerId, "display", TO_BOOL(false));
+}
+void LcdDDLayer::scrollDisplayLeft() {
+  _sendCommand0(layerId, "scrollleft");
+}
+void LcdDDLayer::scrollDisplayRight() {
+  _sendCommand0(layerId, "scrollright");
+}
+void LcdDDLayer::writeLine(const String& text, int col, const String& align) {
+  _sendCommand3(layerId, "writeline", String(col), align, text);
+}
+void LcdDDLayer::pixelColor(const String &color) {
+  _sendCommand1(layerId, "pixelcolor", color);
+}
+void LcdDDLayer::bgPixelColor(const String &color) {
+  _sendCommand1(layerId, "bgpixelcolor", color);
+}
+void LcdDDLayer::noBgPixelColor() {
+  _sendCommand0(layerId, "bgpixelcolor");
+}
 
 
 

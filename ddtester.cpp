@@ -210,8 +210,22 @@ void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   }
 }
 
+LcdDDLayer *pLcdLayer = NULL;
+void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
+  if (stepCount == 0) {
+    pLcdLayer = dumbdisplay.createLcdLayer(22, 3, 12, "Courier");
+    pLcdLayer->pixelColor("red");
+    pLcdLayer->bgPixelColor(DD_RGB_COLOR(200, 200, 200));
+    pLcdLayer->backgroundColor(DD_HEX_COLOR(0x111111));
+  }
+  pLcdLayer->setCursor(0, 0);
+  pLcdLayer->print("stepCount:" + String(stepCount));
+  pLcdLayer->writeLine("Hi friend!", 1, "C");
+  pLcdLayer->writeLine("Здравствуй สวัสดี 你好", 2, "R");
+}
 
-void BasicDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGrid) {
+
+void BasicDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGrid, bool lcd) {
   if (!enableSerial) Serial.println("start");
   int stepCount = 0;
   while (true) {
@@ -222,6 +236,8 @@ void BasicDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool 
       TurtleDDTester_testStep(dumbdisplay, stepCount);
     if (ledGrid)
       LedGridDDTester_testStep(dumbdisplay, stepCount);  
+    if (lcd)
+      LcdDDTester_testStep(dumbdisplay, stepCount);
     delay(1000);
     stepCount++;
   }
