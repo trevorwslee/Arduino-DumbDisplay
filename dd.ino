@@ -10,30 +10,28 @@ DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
 
 DDTester ddTester;
 #ifdef MB
-MicroBitLayer* pMbLayer = NULL;
+MbTester *pMbTester = NULL;
 #endif
 #ifdef TURTLE
-TurtleLayer* pTurtleLayer = NULL;
+TurtleTester *pTurtleTester = NULL;
 #endif
 
 void setup() {
 #ifdef TURTLE
-  pTurtleLayer = dumbdisplay.createTurtleLayer(251, 201);
-  CreateTurtleTester(dumbdisplay);
+  pTurtleTester = CreateTurtleTester(dumbdisplay);
 #endif
 #ifdef MB
-  pMbLayer = dumbdisplay.createMicroBitLayer(5, 5);
-  CreateMbTester(dumbdisplay);
+  pMbTester = CreateMbTester(dumbdisplay);
 #endif
 }
 
 int stepCount = 0;
 void loop() {
 #ifdef TURTLE
-  ddTester.turtleTestStep(pTurtleLayer, stepCount);
+  pTurtleTester->testStep(stepCount);
 #endif
 #ifdef MB
-  ddTester.mbTestStep(pMbLayer, stepCount);
+  pMbTester->testStep(stepCount);
 #endif
   stepCount++;
 }

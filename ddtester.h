@@ -6,9 +6,8 @@
 
 class DDTester {
   public:
-    virtual void testStep(int stepCount);
-    void mbTestStep(MicroBitLayer *pMbLayer, int stepCount);
-    void turtleTestStep(TurtleLayer *pTurtleLayer, int stepCount);
+    virtual void testStep(int stepCount) {
+    }
 };
 
 template <typename T> class DDTesterImpl: public DDTester {
@@ -26,6 +25,7 @@ class MbTester: DDTesterImpl<MicroBitLayer> {
     }   
     void testStep(int stepCount); 
 };
+
 class TurtleTester: DDTesterImpl<TurtleLayer> {
   public:
     TurtleTester(TurtleLayer *pMbLayer): DDTesterImpl(pMbLayer) {

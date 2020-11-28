@@ -10,63 +10,57 @@ TurtleTester* CreateTurtleTester(DumbDisplay& dumbdisplay) {
   return new TurtleTester(pTurtleLayer);
 }
 
+
 void MbTester::testStep(int stepCount) {
-
-}
-void TurtleTester::testStep(int stepCount) {
-
-}
-
-void DDTester::mbTestStep(MicroBitLayer* pMbLayer, int stepCount) {
     int count = stepCount % 10;
     if (count == 0) {
-      pMbLayer->clear();
+      pLayer->clear();
 
-      pMbLayer->backgroundColor("12-34-56");
-      pMbLayer->ledColor(0xff00ff);
+      pLayer->backgroundColor("12-34-56");
+      pLayer->ledColor(0xff00ff);
 
-      pMbLayer->showLeds("|.#.#|####");
+      pLayer->showLeds("|.#.#|####");
       delay(2000);
 
-      pMbLayer->backgroundColor("lightyellow");
-      pMbLayer->ledColor("green");
+      pLayer->backgroundColor("lightyellow");
+      pLayer->ledColor("green");
 
-      pMbLayer->toggle(1, 2);
+      pLayer->toggle(1, 2);
       delay(1000);
-      pMbLayer->unplot(1, 2);
+      pLayer->unplot(1, 2);
       delay(1000);
-      pMbLayer->plot(1, 2);
+      pLayer->plot(1, 2);
       delay(1000);
 
-      pMbLayer->noBackgroundColor();
-      pMbLayer->showIcon(SmallDiamond);
+      pLayer->noBackgroundColor();
+      pLayer->showIcon(SmallDiamond);
       delay(1000);
-      pMbLayer->showNumber(8);
+      pLayer->showNumber(8);
       delay(1000);
-      pMbLayer->showString("a,b,c");
+      pLayer->showString("a,b,c");
       delay(5000);
 
     }
     
-    pMbLayer->showNumber(count);
+    pLayer->showNumber(count);
 
     delay(1000);
 }
 
-void DDTester::turtleTestStep(TurtleLayer* pTurtleLayer, int stepCount) {
+void TurtleTester::testStep(int stepCount) {
   if (stepCount == 0) {
-    pTurtleLayer->clear();
-    pTurtleLayer->setHeading(random(360));
+    pLayer->clear();
+    pLayer->setHeading(random(360));
     if (random(2) == 0)
-      pTurtleLayer->home();
+      pLayer->home();
     else  
-      pTurtleLayer->goTo(10, -10);
-    pTurtleLayer->forward(50);
-    pTurtleLayer->rightTurn(25);
-    pTurtleLayer->backward(32);
-    pTurtleLayer->leftTurn(48);
-    pTurtleLayer->forward(88);
-    pTurtleLayer->home(false);
+      pLayer->goTo(10, -10);
+    pLayer->forward(50);
+    pLayer->rightTurn(25);
+    pLayer->backward(32);
+    pLayer->leftTurn(48);
+    pLayer->forward(88);
+    pLayer->home(false);
     delay(1000);
   }
   delay(1000);
