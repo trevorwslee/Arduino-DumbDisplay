@@ -101,13 +101,52 @@ class TurtleLayer: public DDLayer {
   public:
     TurtleLayer(int layerId): DDLayer(layerId) {
     }
-    void forward(int distance, bool draw = true);
-    void backward(int distance, bool draw = true);
+    /* forward; with pen or not */
+    void forward(int distance, bool withPen = true);
+    /* backward; with pen or not */
+    void backward(int distance, bool withPen = true);
+    /* left turn */
     void leftTurn(int angle);
+    /* right turn */
     void rightTurn(int angle);
-    void circle(int radius);
-    void TurtleLayer::home(bool draw = true);
-    void TurtleLayer::goTo(int x, int y, bool draw = true);
+    /* go home (0, 0); with pen or not */
+    void home(bool withPen = true);
+    /* go to (x, y); with pen or not */
+    void goTo(int x, int y, bool withPen = true);
+    /* set heading angle */
+    void setHeading(int angle);
+    /* pen up */
+    void penUp();
+    /* pen down */
+    void penDown();
+    /* set pen size */
+    void penSize(int size);
+    /* set pen color */
+    void penColor(long color);
+    /* set pen color */
+    void penColor(const String& color);
+    /* set fill color */
+    void fillColor(long color);
+    /* set fill color */
+    void fillColor(const String& color);
+    /* set no fill color */
+    void noFillColor();
+    /* set pen filled or not; if filled, shape drawn will be filled */
+    void penFilled(bool filled);
+    /* draw circle; centered or not */
+    void circle(int radius, bool centered = false);
+    /* draw oval; centered or not */
+    void oval(int width, int height, bool centered = false);
+    /* draw triangle (SAS) */
+    void triangle(int side1, int angle, int side2);
+    /* draw rectangle; centered or not */
+    void rectangle(int width, int height, bool centered = false);
+    /* draw polygon given side and vertex count */
+    void polygon(int side, int vertexCount);
+    /* draw polygon "enclosed" in a virtual centered cirtle; given circle radius and vertex count */
+    void enclosedPolygon(int radius, int vertexCount);
+    /* write text; draw means draw the text (honor heading) */
+    void write(const String& text, bool draw = false);
 };
 
 class DumbDisplay {

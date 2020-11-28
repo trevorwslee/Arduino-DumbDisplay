@@ -232,11 +232,11 @@ void MicroBitLayer::ledColor(const String& color) {
   _sendCommand1(layerId, "ledc", color);
 }
 
-void TurtleLayer::forward(int distance, bool draw) {
-  _sendCommand1(layerId, draw ? "fd" : "dlfd", String(distance));
+void TurtleLayer::forward(int distance, bool withPen) {
+  _sendCommand1(layerId, withPen ? "fd" : "dlfd", String(distance));
 }
-void TurtleLayer::backward(int distance, bool draw) {
-  _sendCommand1(layerId, draw ? "bk" : "dlbk", String(distance));
+void TurtleLayer::backward(int distance, bool withPen) {
+  _sendCommand1(layerId, withPen ? "bk" : "dlbk", String(distance));
 }
 void TurtleLayer::leftTurn(int angle) {
   _sendCommand1(layerId, "lt", String(angle));
@@ -244,14 +244,62 @@ void TurtleLayer::leftTurn(int angle) {
 void TurtleLayer::rightTurn(int angle) {
   _sendCommand1(layerId, "rt", String(angle));
 }
-void TurtleLayer::circle(int radius) {
-  _sendCommand1(layerId, "circle", String(radius));
+void TurtleLayer::home(bool withPen) {
+  _sendCommand0(layerId, withPen ? "home" : "jhome");
 }
-void TurtleLayer::home(bool draw) {
-  _sendCommand0(layerId, draw ? "home" : "jhome");
+void TurtleLayer::goTo(int x, int y, bool withPen) {
+  _sendCommand2(layerId, withPen ? "goto" : "hto", String(x), String(y));
 }
-void TurtleLayer::goTo(int x, int y, bool draw) {
-  _sendCommand2(layerId, draw ? "goto" : "hto", String(x), String(y));
+void TurtleLayer::setHeading(int angle) {
+  _sendCommand1(layerId, "seth", String(angle));
+}
+void TurtleLayer::penUp() {
+  _sendCommand0(layerId, "pu");
+}
+void TurtleLayer::penDown() {
+  _sendCommand0(layerId, "pd");
+}
+void TurtleLayer::penSize(int size) {
+  _sendCommand1(layerId, "pensize", String(size));
+}
+void TurtleLayer::penColor(long color) {
+  _sendCommand1(layerId, "pencolor", HEX_COLOR(color));
+}
+void TurtleLayer::penColor(const String& color) {
+  _sendCommand1(layerId, "pencolor", color);
+}
+void TurtleLayer::fillColor(long color) {
+  _sendCommand1(layerId, "fillcolor", HEX_COLOR(color));
+}
+void TurtleLayer::fillColor(const String& color) {
+  _sendCommand1(layerId, "fillcolor", color);
+}
+void TurtleLayer::noFillColor() {
+  _sendCommand0(layerId, "nofillcolor");
+}
+void TurtleLayer::penFilled(bool filled) {
+  _sendCommand1(layerId, "pfilled", TO_BOOL(filled));
+}
+void TurtleLayer::circle(int radius, bool centered) {
+  _sendCommand1(layerId, centered ? "ccircle" : "circle", String(radius));
+}
+void TurtleLayer::oval(int width, int height, bool centered) {
+  _sendCommand2(layerId, centered ? "coval" : "oval", String(width), String(height));
+}
+void TurtleLayer::rectangle(int width, int height, bool centered) {
+  _sendCommand2(layerId, centered ? "crect" : "rect", String(width), String(height));
+}
+void TurtleLayer::triangle(int side1, int angle, int side2) {
+  _sendCommand3(layerId, "trisas", String(side1), String(angle), String(side2));
+}
+void TurtleLayer::polygon(int side, int vertexCount) {
+  _sendCommand2(layerId, "poly", String(side), String(vertexCount));
+}
+void TurtleLayer::enclosedPolygon(int radius, int vertexCount) {
+  _sendCommand2(layerId, "cpoly", String(radius), String(vertexCount));
+}
+void TurtleLayer::write(const String& text, bool draw) {
+  _sendCommand1(layerId, draw ? "drawtext" : "write", text);
 }
 
 
