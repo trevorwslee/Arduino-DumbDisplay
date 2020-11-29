@@ -1,8 +1,10 @@
 #include "ssdumbdisplay.h"
 #include "ddtester.h"
 
+
 boolean enableSerial = true;
-DumbDisplay TheDumbDisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), enableSerial));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), enableSerial));
+
 
 void setup() {
   if (!enableSerial)
@@ -17,7 +19,7 @@ void loop() {
   bool turtle = true;
   bool ledGrid = true;
   bool lcd = true;
-  BasicDDTestLoop(TheDumbDisplay, mb, turtle, ledGrid, lcd);
+  BasicDDTestLoop(dumbdisplay, mb, turtle, ledGrid, lcd);
 }
 
 

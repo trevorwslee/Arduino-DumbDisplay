@@ -198,7 +198,7 @@ class LcdDDLayer: public DDLayer {
     void scrollDisplayLeft();
     void scrollDisplayRight();
     /* write text as a line, width alignment 'L', 'C', or 'R' */
-    void writeLine(const String& text, int col = 1, const String& align = "L");
+    void writeLine(const String& text, int y = 0, const String& align = "L");
     /* set pixel color */
     void pixelColor(const String &color);
     /* set "background" (off) pixel color */
@@ -224,7 +224,7 @@ class DumbDisplay {
     /* - a LED can be formed by sub-LED-grid; given sub-col count and sub-row count */
     LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
     /* create a LCD layer */
-    LcdDDLayer* createLcdLayer(int colCount, int rowCount, int charHeight = 0, const String& fontName = "");
+    LcdDDLayer* createLcdLayer(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */

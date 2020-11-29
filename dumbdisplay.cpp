@@ -423,8 +423,8 @@ void LcdDDLayer::scrollDisplayLeft() {
 void LcdDDLayer::scrollDisplayRight() {
   _sendCommand0(layerId, "scrollright");
 }
-void LcdDDLayer::writeLine(const String& text, int col, const String& align) {
-  _sendCommand3(layerId, "writeline", String(col), align, text);
+void LcdDDLayer::writeLine(const String& text, int y, const String& align) {
+  _sendCommand3(layerId, "writeline", String(y), align, text);
 }
 void LcdDDLayer::pixelColor(const String &color) {
   _sendCommand1(layerId, "pixelcolor", color);
