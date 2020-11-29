@@ -186,7 +186,7 @@ DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
 void DumbDisplay::connect(int xUnitCount, int yUnitCount) {
   _Connect();
   if (xUnitCount != 100 || yUnitCount != 100) {
-    _sendCommand2("", "SUPI", String(xUnitCount), String(yUnitCount));
+    _sendCommand2("", "SUPF", String(xUnitCount), String(yUnitCount));
   }
 }
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
@@ -218,6 +218,9 @@ LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeig
   String layerId = String(lid);
   _sendCommand5(layerId, "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
   return new LcdDDLayer(lid);
+}
+void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
+  _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");

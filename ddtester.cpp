@@ -142,11 +142,15 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 }
 
 
+bool Pinned = false;
+
 
 MbDDLayer *pMbLayer = NULL;
 void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
+    if (Pinned) 
+      dumbdisplay.pinLayer(pMbLayer, 50, 50, 50, 50);
   }
   debugMbTestStep(pMbLayer, stepCount);
 }
@@ -155,6 +159,8 @@ TurtleDDLayer *pTurtleLayer = NULL;
 void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
+    if (Pinned) 
+      dumbdisplay.pinLayer(pTurtleLayer, 0, 50, 50, 50);
     pTurtleLayer->penColor("blue");
   }
   if (stepCount > 0) {
@@ -214,6 +220,8 @@ LcdDDLayer *pLcdLayer = NULL;
 void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pLcdLayer = dumbdisplay.createLcdLayer(18, 3, 16, "Courier");
+    if (Pinned) 
+      dumbdisplay.pinLayer(pLcdLayer, 0, 0, 100, 50);
     pLcdLayer->pixelColor("red");
     pLcdLayer->bgPixelColor(DD_RGB_COLOR(200, 200, 200));
     pLcdLayer->backgroundColor(DD_HEX_COLOR(0x111111));
@@ -225,11 +233,15 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 }
 
 
-void BasicDDTestLoop(bool enableSerial, DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGrid, bool lcd) {
-  if (!enableSerial) Serial.println("start");
+void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGrid, bool lcd) {
+  int testCount = 0;
+  if (mb) testCount++;
+  if (turtle) testCount++;
+  if (ledGrid) testCount++;
+  if (lcd) testCount++;
+  Pinned = testCount > 1;
   int stepCount = 0;
   while (true) {
-    if (!enableSerial) Serial.println("loop");
     if (mb)
       MbDDTester_testStep(dumbdisplay, stepCount);
     if (turtle)  

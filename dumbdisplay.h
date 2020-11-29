@@ -225,6 +225,10 @@ class DumbDisplay {
     LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
     /* create a LCD layer */
     LcdDDLayer* createLcdLayer(int colCount, int rowCount, int charHeight = 0, const String& fontName = "");
+    /* pin a layer @ some position of an imaginary grid of units */
+    /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
+    /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
+    void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     void deleteLayer(DDLayer *pLayer);
 };
 
