@@ -89,6 +89,7 @@ Now, you may use the LED-grid as a "bar-meter", like
 
 ### *LEDs and LCD (nested "auto pinning of layers")*
 
+  ```
   #include <ssdumbdisplay.h>
 
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
