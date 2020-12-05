@@ -1,11 +1,9 @@
-# DumbDisplay Arduino Library
+# DumbDisplay Arduino Library (V0.1.0)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as output gadgets for your Arduino experiments.
 
-| LEDs + LCD | LEDs + LCD              | Turtle |
-|            | ("Bar-Meter")           |        |
-|            | (nested "auto pinning") |        |
-|------------|-------------------------|--------|
+| LEDs + LCD | LCD + LEDs ("Bar Meter") | Turtle |
+|------------|--------------------------|--------|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddledlcd.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddturtle.png)|
 
 
@@ -121,6 +119,9 @@ Now, you may use the LED-grid as a "bar-meter", like
       lcd = dumbdisplay.createLcdLayer(16, 2);
       
       // configure to "auto pin" the different layers 
+      // -- end result of DD_AP_XXX(...) is the layout spec "H(V(0+1+2)+V(3+5)+4)"
+      // -- . H/V: layout direction
+      // -- . 0/1/2/3/4/5: layer id
       dumbdisplay.configAutoPin(DD_AP_HORI_3(
                                   DD_AP_VERT_3(rled->getLayerId(), gled->getLayerId(), bled->getLayerId()),
                                   DD_AP_VERT_2(hmeter->getLayerId(), lcd->getLayerId()),
@@ -171,5 +172,18 @@ Now, you may use the LED-grid as a "bar-meter", like
   }
 ```
 
+For reference, please look into the declarations of the different related classes in the header files.
+
+# Thank You!
+
+Greeting from the author Trevor Lee:
+
+> Be good! Be happy!
+> Peace be with you!
+> Jesus loves you!
 
 
+# Change History
+
+V0.1.0
+- initial release

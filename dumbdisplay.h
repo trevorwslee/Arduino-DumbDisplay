@@ -23,24 +23,17 @@ class DDInputOutput {
     /* Serial IO mechanism (i.e. connecting via USB) */ 
     DDInputOutput(): DDInputOutput(false, true) {
     }
-    // inline bool allowSerial() {
-    //   return enableSerial;
-    // }
     bool isBackupBySerial() {
       return backupBySerial;
     }
     virtual bool available() {
       return Serial.available();
-//      return enableSerial && Serial.available();
     }
     virtual char read() {
       return Serial.read();
-      //return enableSerial ? Serial.read() : 0;
     }
     virtual void print(const char *p) {
         Serial.print(p);
-      //if (enableSerial)
-        //Serial.print(p);
     }
     virtual void preConnect() {
       if (setupForSerial)
@@ -83,11 +76,6 @@ class DDLayer {
     String layerId;  
 };
 
-
-// String DDAutoPinHorizontal();
-// String DDAutoPinHorizontal(int lc, const String& lids...);
-// String DDAutoPinVertical();
-// String DDAutoPinVertical(int lc, const String& lids...);
 
 enum MbArrow { North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest };
 enum MbIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, Surprised,
@@ -249,7 +237,9 @@ class DumbDisplay {
     /* configure "auto pinning of layers" with the layer spec provided */
     /* - horizontal: H(*) */
     /* - vertical: V(*) */
-    /* - or make use of DD_AP_XXX macros */
+    /* - or nested, like H(0+V(1+2)+3)*/
+    /* - where 0/1/2/3 are the layer ids  */
+    /* - consider using the macros DD_AP_XXX */
     void configAutoPin(const String& layoutSpec);
     /* create a Microbit layer; 1st time will block waiting for connection */
     MbDDLayer* createMicrobitLayer(int width = 5, int height = 5);
