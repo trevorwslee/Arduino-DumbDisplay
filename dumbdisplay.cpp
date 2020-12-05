@@ -9,6 +9,9 @@
 #define TO_BOOL(val) (val ? "1" : "0")
 
 
+namespace DDImpl {
+
+
 class IOProxy {
   public: 
     IOProxy(DDInputOutput *pIO) {
@@ -178,6 +181,17 @@ int _AllocLayerId() {
   _Connect();
   return _NextLid++;
 }
+
+
+}
+
+
+//*************/
+/** EXPORTED **/
+//*************/
+
+
+using namespace DDImpl;
 
 DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
   _IO = pIO;
