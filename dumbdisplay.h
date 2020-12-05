@@ -21,33 +21,39 @@
 class DDInputOutput {
   public:
     /* Serial IO mechanism (i.e. connecting via USB) */ 
-    DDInputOutput(): DDInputOutput(true) {
+    DDInputOutput(): DDInputOutput(false, true) {
     }
-    inline bool allowSerial() {
-      return enableSerial;
-    }
-    virtual bool backupBySerial() {
-      return false;
+    // inline bool allowSerial() {
+    //   return enableSerial;
+    // }
+    bool isBackupBySerial() {
+      return backupBySerial;
     }
     virtual bool available() {
-      return enableSerial && Serial.available();
+      return Serial.available();
+//      return enableSerial && Serial.available();
     }
     virtual char read() {
-      return enableSerial ? Serial.read() : 0;
+      return Serial.read();
+      //return enableSerial ? Serial.read() : 0;
     }
     virtual void print(const char *p) {
-      if (enableSerial)
         Serial.print(p);
+      //if (enableSerial)
+        //Serial.print(p);
     }
-  protected:
-    DDInputOutput(bool enableSerial) {
-      this->enableSerial = enableSerial;
-      if (enableSerial)
+    virtual void preConnect() {
+      if (setupForSerial)
         Serial.begin(DUMBDISPLAY_BAUD);
     }
   protected:
-    //bool enableSerial;
-    bool enableSerial;
+    DDInputOutput(bool backupBySerial, bool setupForSerial) {
+      this->backupBySerial = backupBySerial;
+      this->setupForSerial = setupForSerial;
+    }
+  protected:
+    bool backupBySerial;
+    bool setupForSerial;
 };
 
  

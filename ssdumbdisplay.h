@@ -9,12 +9,8 @@ class DDSoftwareSerialIO: public DDInputOutput {
   public:
     /* Software Serial IO mechanism */
     /* - enableSerial: enable Serial as well or not (if enabled, connecting via USB will also work) */
-    DDSoftwareSerialIO(SoftwareSerial* pSS, bool enableSerial = false): DDInputOutput(enableSerial) {
+    DDSoftwareSerialIO(SoftwareSerial* pSS, bool enableSerial = false): DDInputOutput(enableSerial, enableSerial) {
       this->pSS = pSS;
-      pSS->begin(DUMBDISPLAY_BAUD);
-    }
-    bool backupBySerial() {
-      return enableSerial;
     }
     bool available() {
       return pSS->available();
@@ -24,6 +20,10 @@ class DDSoftwareSerialIO: public DDInputOutput {
     } 
     void print(const char *p) {
       pSS->print(p); 
+    }
+    void preConnect() {
+      DDInputOutput::preConnect();
+      pSS->begin(DUMBDISPLAY_BAUD);
     }
   private:
     SoftwareSerial* pSS;  

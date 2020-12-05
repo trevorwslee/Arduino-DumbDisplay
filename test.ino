@@ -4,6 +4,7 @@
 
 boolean enableSerial = true;
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), enableSerial));
+//DumbDisplay dumbdisplay(new DDInputOutput());
 
 
 void setup() {
