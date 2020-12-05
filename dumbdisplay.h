@@ -26,6 +26,9 @@ class DDInputOutput {
     inline bool allowSerial() {
       return enableSerial;
     }
+    virtual bool backupBySerial() {
+      return false;
+    }
     virtual bool available() {
       return enableSerial && Serial.available();
     }
@@ -43,6 +46,7 @@ class DDInputOutput {
         Serial.begin(DUMBDISPLAY_BAUD);
     }
   protected:
+    //bool enableSerial;
     bool enableSerial;
 };
 

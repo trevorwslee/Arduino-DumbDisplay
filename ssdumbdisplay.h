@@ -13,6 +13,9 @@ class DDSoftwareSerialIO: public DDInputOutput {
       this->pSS = pSS;
       pSS->begin(DUMBDISPLAY_BAUD);
     }
+    bool backupBySerial() {
+      return enableSerial;
+    }
     bool available() {
       return pSS->available();
     }

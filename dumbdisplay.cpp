@@ -112,7 +112,7 @@ void _Connect() {
     IOProxy ioProxy(_IO);
     IOProxy* pSerialIOProxy = NULL;
     DDInputOutput *pSIO = NULL;
-    if (_IO->allowSerial()) {
+    if (_IO->backupBySerial()/*_IO->allowSerial()*/) {
       pSIO = new DDInputOutput();
       pSerialIOProxy = new IOProxy(pSIO);
     }
