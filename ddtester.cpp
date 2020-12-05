@@ -1,6 +1,8 @@
 #include "ddtester.h"
 
 
+namespace DDTester {
+
 void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
     int count = stepCount % 10;
     if (count == 0) {
@@ -144,7 +146,6 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 
 bool Pinned = false;
 
-
 MbDDLayer *pMbLayer = NULL;
 void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
@@ -232,6 +233,9 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   pLcdLayer->writeLine("Bună Привіт 你好", 2, "R");
 }
 
+}
+
+using namespace DDTester;
 
 void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGrid, bool lcd) {
   int testCount = 0;
@@ -259,3 +263,4 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGri
     stepCount++;
   }
 }
+

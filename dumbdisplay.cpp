@@ -2,7 +2,6 @@
 #include "dumbdisplay.h"
 
 
-//#define DD_DEBUG
 
 #define HAND_SHAKE_GAP 500
 
