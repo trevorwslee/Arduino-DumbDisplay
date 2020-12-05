@@ -8,8 +8,8 @@
 class DDSoftwareSerialIO: public DDInputOutput {
   public:
     /* Software Serial IO mechanism */
-    /* - enableSerial: enable Serial as well or not */
-    DDSoftwareSerialIO(SoftwareSerial* pSS, bool enableSerial): DDInputOutput(enableSerial) {
+    /* - enableSerial: enable Serial as well or not (if enabled, connecting via USB will also work) */
+    DDSoftwareSerialIO(SoftwareSerial* pSS, bool enableSerial = false): DDInputOutput(enableSerial) {
       this->pSS = pSS;
       pSS->begin(DUMBDISPLAY_BAUD);
     }

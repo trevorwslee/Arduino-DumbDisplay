@@ -2,12 +2,25 @@
 #define dumbdisplay_h
 
 #define DUMBDISPLAY_BAUD 115200
+
 #define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
 
+#define DD_AP_HORI "H(*)"
+#define DD_AP_VERT "V(*)"
+#define DD_AP_HORI_2(id1, id2) ("H(" + id1 + "+" + id2 + ")")
+#define DD_AP_VERT_2(id1, id2) ("V(" + id1 + "+" + id2 + ")")
+#define DD_AP_HORI_3(id1, id2, id3) ("H(" + id1 + "+" + id2 + "+" + id3 + ")")
+#define DD_AP_VERT_3(id1, id2, id3) ("V(" + id1 + "+" + id2 + "+" + id3 + ")")
+#define DD_AP_HORI_4(id1, id2, id3, id4) ("H(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + ")")
+#define DD_AP_VERT_4(id1, id2, id3, id4) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + ")")
+#define DD_AP_HORI_5(id1, id2, id3, id4, id5) ("H(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")")
+#define DD_AP_VERT_5(id1, id2, id3, id4, id5) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")")
+
+
 class DDInputOutput {
   public:
-    /* Serial IO mechanism */ 
+    /* Serial IO mechanism (i.e. connecting via USB) */ 
     DDInputOutput(): DDInputOutput(true) {
     }
     inline bool allowSerial() {
@@ -33,6 +46,7 @@ class DDInputOutput {
     bool enableSerial;
 };
 
+ 
 
 class DDLayer {
   public:
@@ -59,6 +73,11 @@ class DDLayer {
     String layerId;  
 };
 
+
+// String DDAutoPinHorizontal();
+// String DDAutoPinHorizontal(int lc, const String& lids...);
+// String DDAutoPinVertical();
+// String DDAutoPinVertical(int lc, const String& lids...);
 
 enum MbArrow { North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest };
 enum MbIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, Surprised,
@@ -169,7 +188,7 @@ class LedGridDDLayer: public DDLayer {
     /* turn on LEDs to form a horizontal "bar" */
     void horizontalBar(int count, bool rightToLeft = false);
     /* turn on LEDs to form a vertical "bar" */ 
-    void verticalBar(int count, bool bottomToTop = false);
+    void verticalBar(int count, bool bottomToTop = true);
     // /* set LED on color */ 
     // void onColor(long color);
     /* set LED on color */ 
@@ -213,9 +232,15 @@ class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO);
     /* explicitly make connection -- blocking */
-    /* - implicitly called when creating a layer */
-    /* - also setup "pin frame" to be x-units by y-units (default 100x100) */
-    void connect(int xUnitCount = 100, int yUnitCount = 100);
+    /* - implicitly called when configure or create a layer */
+    void connect();
+    /* configure "pin frame" to be x-units by y-units (default 100x100) */
+    void configPinFrame(int xUnitCount = 100, int yUnitCount = 100);
+    /* configure "auto pinning of layers" with the layer spec provided */
+    /* - horizontal: H(*) */
+    /* - vertical: V(*) */
+    /* - or make use of DD_AP_XXX macros */
+    void configAutoPin(const String& layoutSpec);
     /* create a Microbit layer; 1st time will block waiting for connection */
     MbDDLayer* createMicrobitLayer(int width = 5, int height = 5);
     /* create a Turtle layer; 1st time will block waiting for connection */

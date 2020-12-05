@@ -183,11 +183,18 @@ int _AllocLayerId() {
 DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
   _IO = pIO;
 }
-void DumbDisplay::connect(int xUnitCount, int yUnitCount) {
+void DumbDisplay::connect() {
+  _Connect();
+}
+void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
   _Connect();
   if (xUnitCount != 100 || yUnitCount != 100) {
-    _sendCommand2("", "SUPF", String(xUnitCount), String(yUnitCount));
+    _sendCommand2("", "CFGPF", String(xUnitCount), String(yUnitCount));
   }
+}
+void DumbDisplay::configAutoPin(const String& layoutSpec) {
+  _Connect();
+  _sendCommand1("", "CFGAP", layoutSpec);
 }
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
 #ifdef DD_DEBUG          
@@ -226,6 +233,42 @@ void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
   delete pLayer;
 }
+
+
+// class DDAutoPinBuilder {
+//   public:
+//     DDAutoPinBuilder& start(bool horizontal);
+//     DDAutoPinBuilder& end();
+//     const String& build();
+//   private:
+//     String layoutSpec; 
+//     int level;
+//     int count;
+// };
+
+// DDAutoPinBuilder& DDAutoPinBuilder::start(bool horizontal) {
+//   if (count > 0)
+//     layoutSpec = layoutSpec + ",";
+//   layoutSpec = layoutSpec + (horizontal ? "H" : "V") + "(";
+//   return *this;
+// }
+
+
+// String DDAutoPinHorizontal() { return "H(*)"; }
+// String DDAutoPinVertical() { return "V(*)"; }
+// String DDAutoPinHorizontal(int lc, const String& lids...)  {
+//   return _DDAutoPinHorizontal("H", lc, lids);
+// }
+// String _DDAutoPinHorizontal(const String& oper, int lc, const String& lids...)  {
+//   va_list args;
+//   va_start(args, lids);
+//   String layoutSpec = oper;
+//   for (int i = 0; i < lc; lc++) {
+//     int lid =  va_arg(lids, int);
+//   }
+// }
+
+
 
 
 DDLayer::DDLayer(int layerId) {

@@ -239,7 +239,12 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGri
   if (turtle) testCount++;
   if (ledGrid) testCount++;
   if (lcd) testCount++;
-  Pinned = testCount > 1;
+  bool autoPin = false;
+  if (autoPin) {
+    dumbdisplay.configAutoPin(DD_AP_HORI);
+  } else {
+    Pinned = testCount > 1;
+  }
   int stepCount = 0;
   while (true) {
     if (mb)
