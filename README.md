@@ -42,7 +42,6 @@ With a DumbDisplay object, you are ready to use it, first by creating some a LED
 
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
 
-  ```
   void setup() {
       // configure to "auto pin (layout) layers" in the vertical direction
       dumbdisplay.configAutoPin(DD_AP_VERT);
@@ -66,7 +65,6 @@ With a DumbDisplay object, you are ready to use it, first by creating some a LED
       pLcd->setCursor(2, 1);
       pLcd->print("How are you!");
   }
-  ```
 
 
 
@@ -89,7 +87,6 @@ Now, you may use the LED-grid as a "bar-meter", like
       // set the "bar" to 64 (ie. 64 of total 128)
       hmeter->horizontalBar(64);
   }
-  ```
 
 
 ### *LEDs and LCD (nested "auto pinning of layers")*
@@ -172,7 +169,6 @@ Now, you may use the LED-grid as a "bar-meter", like
       if (random(2) == 0)
         bled->toggle();
   }
-  ```
 
 
 
