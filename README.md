@@ -30,6 +30,9 @@ For Arduino, you have two options for making connection with DumbDisplay Android
 * Via SoftwareSerial
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
   - setup a `dumbdisplay` -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true))`
+    . where 2 and 3 are pins used by the SoftwareSerial
+
+    
 
 
 
