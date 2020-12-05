@@ -2,8 +2,10 @@
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as output gadgets for your Arduino experiments.
 
-| LEDs + LCD | LEDs + LCD | Turtle |
-|------------|------------|--------|
+| LEDs + LCD | LEDs + LCD              | Turtle |
+|            | ("Bar-Meter")           |        |
+|            | (nested "auto pinning") |        |
+|------------|-------------------------|--------|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddledlcd.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddturtle.png)|
 
 
@@ -168,5 +170,6 @@ Now, you may use the LED-grid as a "bar-meter", like
         bled->toggle();
   }
 ```
+
 
 
