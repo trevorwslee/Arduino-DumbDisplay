@@ -37,6 +37,7 @@ For Arduino, you have two options for making connection with DumbDisplay Android
 
 With a DumbDisplay object, you are ready to use it, first by creating some a LED-grid, and a LCD layer, like
 
+  ```
   #include <ssdumbdisplay.h>
 
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
@@ -65,6 +66,7 @@ With a DumbDisplay object, you are ready to use it, first by creating some a LED
       pLcd->setCursor(2, 1);
       pLcd->print("How are you!");
   }
+  ```
 
 
 
@@ -87,6 +89,7 @@ Now, you may use the LED-grid as a "bar-meter", like
       // set the "bar" to 64 (ie. 64 of total 128)
       hmeter->horizontalBar(64);
   }
+  ```
 
 
 ### *LEDs and LCD (nested "auto pinning of layers")*
@@ -169,6 +172,7 @@ Now, you may use the LED-grid as a "bar-meter", like
       if (random(2) == 0)
         bled->toggle();
   }
+  ```
 
 
 
