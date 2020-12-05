@@ -58,6 +58,8 @@ class DDLayer {
     /* set layer opacity */
     /* - 0 to 255 */
     void opacity(int opacity);
+    void padding(int left, int top, int right, int bottom);
+    void noPadding();
     /* clear the layer */
     void clear();
     // /* set layer background color with RGB */
@@ -214,7 +216,7 @@ class LcdDDLayer: public DDLayer {
     void noDisplay();
     void scrollDisplayLeft();
     void scrollDisplayRight();
-    /* write text as a line, width alignment 'L', 'C', or 'R' */
+    /* write text as a line, with alignment 'L', 'C', or 'R' */
     void writeLine(const String& text, int y = 0, const String& align = "L");
     /* set pixel color */
     void pixelColor(const String &color);

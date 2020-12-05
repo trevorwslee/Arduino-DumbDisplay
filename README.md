@@ -1,10 +1,10 @@
-# DumbDisplay Arduino Library (V0.1.0)
+# DumbDisplay Arduino Library (v0.1.0)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as output gadgets for your Arduino experiments.
 
-| LEDs + LCD | LCD + LEDs ("Bar Meter") | Turtle |
-|------------|--------------------------|--------|
-|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddledlcd.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddturtle.png)|
+| LEDs + LCD | LCD + LEDs ("Bar Meter")  | LCD + LEDs ("Pin Layers") | Turtle |
+|------------|---------------------------|---------------------------|--------|
+|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddledlcd.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpin.png)||![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddturtle.png)|
 
 
 # Description
@@ -185,5 +185,5 @@ Greeting from the author Trevor Lee:
 
 # Change History
 
-V0.1.0
+v0.1.0
 - initial release
