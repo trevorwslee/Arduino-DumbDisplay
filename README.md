@@ -41,6 +41,7 @@ With a DumbDisplay object, you are ready to use it, first by creating some a LED
 
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
 
+  ```
   void setup() {
       // configure to "auto pin (layout) layers" in the vertical direction
       dumbdisplay.configAutoPin(DD_AP_VERT);
@@ -71,19 +72,20 @@ With a DumbDisplay object, you are ready to use it, first by creating some a LED
 
 Now, you may use the LED-grid as a "bar-meter", like
 
+  ```
   #include <ssdumbdisplay.h>
 
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
 
   void setup() {
-    LedGridDDLayer *hmeter = NULL;
+      LedGridDDLayer *hmeter = NULL;
 
-    // create LED layers that will be used for "horizontal bar-meter"
-    // with max "bar" size 128
-    hmeter = dumbdisplay.createLedGridLayer(128, 1, 1, 5);
+      // create LED layers that will be used for "horizontal bar-meter"
+      // with max "bar" size 128
+      hmeter = dumbdisplay.createLedGridLayer(128, 1, 1, 5);
 
-    // set the "bar" to 64 (ie. 64 of total 128)
-    hmeter->horizontalBar(64);
+      // set the "bar" to 64 (ie. 64 of total 128)
+      hmeter->horizontalBar(64);
   }
 
 
@@ -104,68 +106,68 @@ Now, you may use the LED-grid as a "bar-meter", like
   int count = 20;
 
   void setup() {
-    // create R + G + B LED layers
-    rled = dumbdisplay.createLedGridLayer();
-    gled = dumbdisplay.createLedGridLayer();
-    bled = dumbdisplay.createLedGridLayer();
+      // create R + G + B LED layers
+      rled = dumbdisplay.createLedGridLayer();
+      gled = dumbdisplay.createLedGridLayer();
+      bled = dumbdisplay.createLedGridLayer();
 
-    // create LED layers that will be used for "horizontal bar-meter"
-    hmeter = dumbdisplay.createLedGridLayer(2 * count, 1, 1, 5);
-    // create LED layers that will be used for "vertical bar-meter"
-    vmeter = dumbdisplay.createLedGridLayer(1, 2 * count, 5, 1);
-  
-    // create a LCD layers with 2 rows of 16 characters
-    lcd = dumbdisplay.createLcdLayer(16, 2);
-
-    // configure to "auto pin" the different layers 
-    dumbdisplay.configAutoPin(DD_AP_HORI_3(
-                                DD_AP_VERT_3(rled->getLayerId(), gled->getLayerId(), bled->getLayerId()),
-                                DD_AP_VERT_2(hmeter->getLayerId(), lcd->getLayerId()),
-                                vmeter->getLayerId()));
-
+      // create LED layers that will be used for "horizontal bar-meter"
+      hmeter = dumbdisplay.createLedGridLayer(2 * count, 1, 1, 5);
+      // create LED layers that will be used for "vertical bar-meter"
+      vmeter = dumbdisplay.createLedGridLayer(1, 2 * count, 5, 1);
     
-    // setup RGB leds color and turn them on
-    rled->onColor("red");
-    gled->onColor("green");
-    bled->onColor("blue");
-    rled->turnOn();
-    gled->turnOn();
-    bled->turnOn();
+      // create a LCD layers with 2 rows of 16 characters
+      lcd = dumbdisplay.createLcdLayer(16, 2);
 
-    // set "bar meters" colors
-    hmeter->onColor("blue");
-    hmeter->offColor("yellow");
-    hmeter->backgroundColor("black");
-    vmeter->onColor("green");
-    vmeter->offColor("lightgray");
-    vmeter->backgroundColor("blue");
+      // configure to "auto pin" the different layers 
+      dumbdisplay.configAutoPin(DD_AP_HORI_3(
+                                  DD_AP_VERT_3(rled->getLayerId(), gled->getLayerId(), bled->getLayerId()),
+                                  DD_AP_VERT_2(hmeter->getLayerId(), lcd->getLayerId()),
+                                  vmeter->getLayerId()));
 
-    // set LCD colors and print out something
-    lcd->pixelColor("red");
-    lcd->bgPixelColor("lightgreen");
-    lcd->backgroundColor("black");
-    lcd->print("hello world");  
-    lcd->setCursor(0, 1);
-    lcd->print("how are you?");
+      
+      // setup RGB leds color and turn them on
+      rled->onColor("red");
+      gled->onColor("green");
+      bled->onColor("blue");
+      rled->turnOn();
+      gled->turnOn();
+      bled->turnOn();
+
+      // set "bar meters" colors
+      hmeter->onColor("blue");
+      hmeter->offColor("yellow");
+      hmeter->backgroundColor("black");
+      vmeter->onColor("green");
+      vmeter->offColor("lightgray");
+      vmeter->backgroundColor("blue");
+
+      // set LCD colors and print out something
+      lcd->pixelColor("red");
+      lcd->bgPixelColor("lightgreen");
+      lcd->backgroundColor("black");
+      lcd->print("hello world");  
+      lcd->setCursor(0, 1);
+      lcd->print("how are you?");
   }
 
   void loop() {
-    delay(1000);
-    if (random(2) == 0) {
-      lcd->scrollDisplayLeft();
-      count--;
-    } else {  
-      lcd->scrollDisplayRight();
-      count++;
-    }
-    hmeter->horizontalBar(count);
-    vmeter->verticalBar(count);
-    if (random(2) == 0)
-      rled->toggle();
-    if (random(2) == 0)
-      gled->toggle();
-    if (random(2) == 0)
-      bled->toggle();
+      delay(1000);
+      if (random(2) == 0) {
+        lcd->scrollDisplayLeft();
+        count--;
+      } else {  
+        lcd->scrollDisplayRight();
+        count++;
+      }
+      hmeter->horizontalBar(count);
+      vmeter->verticalBar(count);
+      if (random(2) == 0)
+        rled->toggle();
+      if (random(2) == 0)
+        gled->toggle();
+      if (random(2) == 0)
+        bled->toggle();
   }
 
 
