@@ -2,10 +2,6 @@
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as output gadgets for your Arduino experiments.
 
-| LEDs + LCD | LCD + LEDs ("Bar Meter")  | LCD + LEDs ("Pin Layers") | Turtle |
-|------------|---------------------------|---------------------------|--------|
-|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddledlcd.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddturtle.png)|
-
 
 # Description
 
@@ -22,6 +18,7 @@ The app can accept connection via
 
 # Sample Code
 
+
 For Arduino, you have two options for making connection with DumbDisplay Android app.
 
 * Via Serial
@@ -33,62 +30,60 @@ For Arduino, you have two options for making connection with DumbDisplay Android
     ; where 2 and 3 are pins used by the SoftwareSerial
 
 
-### *LEDs and LCD*
+| LEDs + LCD | Nested "auto pin layers"  | LCD + LEDs ("Pin Layers") | Controlled "pin" layers (LEDs + Turtle) |
+|------------|---------------------------|---------------------------|-----------------------------------------|
+|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddledlcd.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|
+
+
+
+### *LEDs and LCD* -- ScreenShot 1
 
 With a DumbDisplay object, you are ready to proceed, first by creating some a LED-grid, and a LCD layer, like
 
 ```
   #include <ssdumbdisplay.h>
-  
+
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
-  
+
   void setup() {
       // configure to "auto pin (layout) layers" in the vertical direction
       dumbdisplay.configAutoPin(DD_AP_VERT);
       
       // create a LED layer
-      LedGridDDLayer *pLed = dumbdisplay.createLedGridLayer(3, 1);
-      // create a LCD layer
-      LcdDDLayer * pLcd = dumbdisplay.createLcdLayer();
-      
+      LedGridDDLayer *led = dumbdisplay.createLedGridLayer(3, 1);
       // turn on LEDs
-      pLed->onColor("red");
-      pLed->turnOn(0, 0);
-      pLed->onColor("green");
-      pLed->turnOn(1, 0);
-      pLed->onColor("blue");
-      pLed->turnOn(2, 0);
-      
-      // print messages to LCD
-      pLcd->setCursor(2, 0);
-      pLcd->print("Hello There!");
-      pLcd->setCursor(2, 1);
-      pLcd->print("How are you!");
-  }
-```
+      led->onColor("red");
+      led->turnOn(0, 0);
+      led->onColor("green");
+      led->turnOn(1, 0);
+      led->onColor("blue");
+      led->turnOn(2, 0);
 
-### *LCD and LEDs (as "Bar-Meter")*
-
-Now, you may use the LED-grid as a "bar-meter", like
-
-```
-  #include <ssdumbdisplay.h>
-  
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
-  
-  void setup() {
-      LedGridDDLayer *hmeter = NULL;
-      
       // create LED layers that will be used for "horizontal bar-meter"
-      // with max "bar" size 128
-      hmeter = dumbdisplay.createLedGridLayer(128, 1, 1, 5);
-      
-      // set the "bar" to 64 (ie. 64 of total 128)
-      hmeter->horizontalBar(64);
+      // with max "bar" size 32
+      LedGridDDLayer *barmeter = dumbdisplay.createLedGridLayer(32, 1, 1, 5);
+      barmeter->onColor("darkblue");
+      barmeter->offColor("lightgreen");
+      // set the "bar" to 10 (ie. 10 of total 32)
+      barmeter->horizontalBar(10);
+
+
+      // create a LCD layer
+      LcdDDLayer * lcd = dumbdisplay.createLcdLayer();
+      // write to LCD write messages (as lines)
+      // notice that "C" means center-align
+      lcd->writeLine("Hello There!", 0, "C");
+      lcd->writeLine("How are you?", 1, "C");
+
+  }
+
+  void loop() {
   }
 ```
 
-### *LEDs and LCD (nested "auto pinning of layers")*
+### *Nested "auto pin layers"* -- Screenshot 2
+
+Auto pinning of layers is not only restricted to a single direction. In fact, it can be nested, like
 
 ```
   #include <ssdumbdisplay.h>
@@ -169,6 +164,83 @@ Now, you may use the LED-grid as a "bar-meter", like
         gled->toggle();
       if (random(2) == 0)
         bled->toggle();
+  }
+```
+
+### *Controlled "pin" layers (LEDs + Turtle)* -- Screenshot 4
+
+To showcase Turtle, as well as more controller way of "pinning" layers
+
+```
+  #include <ssdumbdisplay.h>
+
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
+
+  TurtleDDLayer *turtle = NULL;
+  int r = random(0, 255);
+  int g = 128;
+  int b = 0;
+
+  void setup() {
+      // create a Turtle layer with size 240 x 190
+      turtle = dumbdisplay.createTurtleLayer(240, 190);
+      // setup Turtle layer
+      turtle->backgroundColor("azure");
+      turtle->fillColor("lemonchiffon");
+      turtle->penSize(1);
+      turtle->penFilled(true);
+      // initially draw something on the Turtle layer (will change some settings)
+      turtle->centeredPolygon(70, 6, true);
+      turtle->penFilled(false);
+      turtle->circle(80, true);
+
+      // create 4 LEDs -- left-top, right-top, right-bottom and left-bottom 
+      LedGridDDLayer* ltLed = dumbdisplay.createLedGridLayer();
+      LedGridDDLayer* rtLed = dumbdisplay.createLedGridLayer();
+      LedGridDDLayer* rbLed = dumbdisplay.createLedGridLayer();
+      LedGridDDLayer* lbLed = dumbdisplay.createLedGridLayer();
+
+      // set LEDs background color
+      ltLed->backgroundColor("green");
+      rtLed->backgroundColor("green");
+      rbLed->backgroundColor("green");
+      lbLed->backgroundColor("green");
+
+      // turn ON the LEDs
+      ltLed->turnOn();
+      rtLed->turnOn();
+      rbLed->turnOn();
+      lbLed->turnOn();
+
+      // config "pin frame" to be 290 units x 250 units
+      // 290: 25 + 240 + 25
+      // 240: 25 + 190 + 25
+      dumbdisplay.configPinFrame(290, 240);
+
+      // pin top-left LED @ (0, 0) with size (25, 25)
+      dumbdisplay.pinLayer(ltLed, 0, 0, 25, 25);
+      // pin top-right LED @ (265, 0) with size (25, 25)
+      dumbdisplay.pinLayer(rtLed, 265, 0, 25, 25);
+      // pin right-bottom LED @ (265, 215) with size (25, 25)
+      dumbdisplay.pinLayer(rbLed, 265, 215, 25, 25);
+      // pin left-bottom LED @ (0, 215) with size (25, 25)
+      dumbdisplay.pinLayer(lbLed, 0, 215, 25, 25);
+
+      // pin Turtle @ (25, 25) with size (240, 190)
+      dumbdisplay.pinLayer(turtle, 25, 25, 240, 190);
+  }
+
+  void loop() {
+      delay(1000);
+      turtle->penColor(DD_RGB_COLOR(r, g, b));
+      turtle->circle(27);
+      turtle->rectangle(90, 20);
+      turtle->rightTurn(10);
+      b = b + 20;
+      if (b > 255) {
+          b = 0;
+          r = random(0, 255);
+      }
   }
 ```
 
