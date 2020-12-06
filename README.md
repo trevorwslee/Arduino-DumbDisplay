@@ -30,9 +30,9 @@ For Arduino, you have two options for making connection with DumbDisplay Android
     ; where 2 and 3 are pins used by the SoftwareSerial
 
 
-| LEDs + LCD | Nested "auto pin layers"  | LCD + LEDs ("Pin Layers") | Controlled "pin" layers (LEDs + Turtle) |
-|------------|---------------------------|---------------------------|-----------------------------------------|
-|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddledlcd.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|
+| LEDs + LCD | Nested "auto pin layers"  | Manual "pin" layers (LEDs + Turtle) |
+|------------|---------------------------|--------------------------------------|
+|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddledlcdbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|
 
 
 
@@ -167,7 +167,7 @@ Auto pinning of layers is not only restricted to a single direction. In fact, it
   }
 ```
 
-### *Controlled "pin" layers (LEDs + Turtle)* -- Screenshot 4
+### *Manual "pin" layers (LEDs + Turtle)* -- Screenshot 3
 
 To showcase Turtle, as well as more controller way of "pinning" layers
 
