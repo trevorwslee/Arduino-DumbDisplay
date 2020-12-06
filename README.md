@@ -36,8 +36,10 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   - doing so will **automatically set Serial baud rate to 115200**, and **you should not be using Serial for other purposes**
 * Via SoftwareSerial
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
-  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true))` -- where 2 and 3 are pins used by the SoftwareSerial
-  - SoftwareSerial will be **automatically set to 115200 baud**; i.e. if Bluetooth (like HC-06) is used, **HC-06 baud rate need be set to 115200**, and **you should not be using that SoftwareSerial for other purposes**
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 9600))`  
+    - 2 and 3 are the pins used by SoftwareSerial
+    - **the default baud rate for SoftwareSerial is 115200**, which seems to work better from my own testing (with HC-06)
+  - **You should not be using that SoftwareSerial for other purposes**
 
 
 With a DumbDisplay object, you are ready to proceed coding, like
@@ -45,7 +47,7 @@ With a DumbDisplay object, you are ready to proceed coding, like
 ```
   #include <ssdumbdisplay.h>
 
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
   LedGridDDLayer *led;
 
   void setup() {
@@ -63,19 +65,19 @@ With a DumbDisplay object, you are ready to proceed coding, like
 ## More Samples
 
 
-| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin layers"  | 4. Manual "pin" layers (LEDs + Turtle) |
+| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) |
 |--|--|--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmb.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|
 
 
-### *Micro:bit* -- Screenshot 1
+### Screenshot 1 -- *Micro:bit*
 
 A more interesting sample would be like
 
 ```
   #include <ssdumbdisplay.h>
 
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
 
   MbDDLayer *mb;
   int heading;
@@ -103,14 +105,14 @@ A more interesting sample would be like
   }
 ```
 
-### *LEDs + "Bar Meter" + LCD* -- Screenshot 2
+### Screenshot 2 -- *LEDs + "Bar Meter" + LCD*
 
 Even more interesting sample would be like
 
 ```
   #include <ssdumbdisplay.h>
 
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
 
   void setup() {
       // configure to "auto pin (layout) layers" in the vertical direction -- V(*)
@@ -147,14 +149,14 @@ Even more interesting sample would be like
 ```
 
 
-### *Nested "auto pin layers"* -- Screenshot 3
+### Screenshot 3 -- *Nested "auto pin" layers*
 
 Auto pinning of layers is not restricted to a single direction. In fact, it can be nested, like
 
 ```
   #include <ssdumbdisplay.h>
   
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
   
   LedGridDDLayer *rled;
   LedGridDDLayer *gled;
@@ -233,14 +235,14 @@ Auto pinning of layers is not restricted to a single direction. In fact, it can 
   }
 ```
 
-### *Manual "pin" layers (LEDs + Turtle)* -- Screenshot 4
+### Screenshot 4 -- *Manual "pin" layers (LEDs + Turtle)*
 
 To showcase Turtle, as well as the more controller way of "pinning" layers
 
 ```
   #include <ssdumbdisplay.h>
 
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
 
   TurtleDDLayer *turtle = NULL;
   int r = random(0, 255);

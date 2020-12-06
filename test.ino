@@ -2,8 +2,9 @@
 #include "ddtester.h"
 
 
+unsigned long baud = DUMBDISPLAY_BAUD;
 boolean enableSerial = true;
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), enableSerial));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), baud, enableSerial));
 //DumbDisplay dumbdisplay(new DDInputOutput());
 
 
