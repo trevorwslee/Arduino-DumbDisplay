@@ -22,6 +22,8 @@ The app can accept connection via
 * Serial (USB connected via OTG adapter)
 
 
+Sorry that I only have Arduino Uno, and therefore the library is only tested with Arduino Uno.
+
 
 # Sample Code
 
@@ -31,11 +33,11 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
 * Via Serial
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
-  - doing some will automatically set Serial baud rate to 115200
+  - doing so will **automatically set Serial baud rate to 115200**, and **you should not be using Serial for other purposes**
 * Via SoftwareSerial
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true))` -- where 2 and 3 are pins used by the SoftwareSerial
-  - SoftwareSerial will be automatically set to 115200 baud; i.e. if Bluetooth (e.g. HC-06) is used, it's baud rate need be set to 115200
+  - SoftwareSerial will be **automatically set to 115200 baud**; i.e. if Bluetooth (like HC-06) is used, **HC-06 baud rate need be set to 115200**, and **you should not be using that SoftwareSerial for other purposes**
 
 
 With a DumbDisplay object, you are ready to proceed coding, like
@@ -61,14 +63,49 @@ With a DumbDisplay object, you are ready to proceed coding, like
 ## More Samples
 
 
-| LEDs + "Bar Meter" + LCD | Nested "auto pin layers"  | Manual "pin" layers (LEDs + Turtle) |
-|--------------------------|---------------------------|-------------------------------------|
-|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|
+| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin layers"  | 4. Manual "pin" layers (LEDs + Turtle) |
+|--|--|--|--|
+|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmb.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|
 
 
-### *LEDs + "Bar Meter" + LCD* -- ScreenShot 1
+### *Micro:bit* -- Screenshot 1
 
 A more interesting sample would be like
+
+```
+  #include <ssdumbdisplay.h>
+
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
+
+  MbDDLayer *mb;
+  int heading;
+
+  void setup() {
+    // create Micro:bit layer
+    mb = dumbdisplay.createMicrobitLayer();
+    // set background color
+    mb->backgroundColor(DD_HEX_COLOR(0xF4A460));
+  }
+
+  void loop() {
+    // set LED color
+    String ledColor = DD_RGB_COLOR(128, 15 * heading, 255);
+    mb->ledColor(ledColor);
+
+    // show arrow
+    MbArrow arrow = static_cast<MbArrow>(heading);  
+    mb->showArrow(arrow);
+
+    heading++;
+    if (heading == 8)
+      heading = 0;
+    delay(1000);
+  }
+```
+
+### *LEDs + "Bar Meter" + LCD* -- Screenshot 2
+
+Even more interesting sample would be like
 
 ```
   #include <ssdumbdisplay.h>
@@ -110,7 +147,7 @@ A more interesting sample would be like
 ```
 
 
-### *Nested "auto pin layers"* -- Screenshot 2
+### *Nested "auto pin layers"* -- Screenshot 3
 
 Auto pinning of layers is not restricted to a single direction. In fact, it can be nested, like
 
@@ -119,12 +156,12 @@ Auto pinning of layers is not restricted to a single direction. In fact, it can 
   
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
   
-  LedGridDDLayer *rled = NULL;
-  LedGridDDLayer *gled = NULL;
-  LedGridDDLayer *bled = NULL;
-  LedGridDDLayer *hmeter = NULL;
-  LedGridDDLayer *vmeter = NULL;
-  LcdDDLayer *lcd = NULL;
+  LedGridDDLayer *rled;
+  LedGridDDLayer *gled;
+  LedGridDDLayer *bled;
+  LedGridDDLayer *hmeter;
+  LedGridDDLayer *vmeter;
+  LcdDDLayer *lcd;
   
   int count = 20;
   
@@ -196,7 +233,7 @@ Auto pinning of layers is not restricted to a single direction. In fact, it can 
   }
 ```
 
-### *Manual "pin" layers (LEDs + Turtle)* -- Screenshot 3
+### *Manual "pin" layers (LEDs + Turtle)* -- Screenshot 4
 
 To showcase Turtle, as well as the more controller way of "pinning" layers
 
