@@ -10,6 +10,8 @@
 // define DD_DEBUG if need to use Serial to debug
 //#define DD_DEBUG
 
+#define FLUSH_AFTER_SEND_COMMAND true
+
 namespace DDImpl {
 
 
@@ -83,6 +85,8 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
     }
   }
   _IO->print("\n");
+  if (FLUSH_AFTER_SEND_COMMAND)
+    _IO->flush();
 }  
 void _sendCommand0(const String& layerId, const char *command) {
   _sendCommand(layerId, command, NULL, NULL, NULL, NULL, NULL);

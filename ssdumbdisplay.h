@@ -27,6 +27,9 @@ class DDSoftwareSerialIO: public DDInputOutput {
       DDInputOutput::preConnect();
       pSS->begin(baud/*DUMBDISPLAY_BAUD*/);
     }
+    void flush() {
+      pSS->flush();
+    }
   private:
     unsigned long baud;
     SoftwareSerial* pSS;  

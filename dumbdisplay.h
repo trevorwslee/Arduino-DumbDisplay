@@ -35,6 +35,9 @@ class DDInputOutput {
     virtual void print(const char *p) {
         Serial.print(p);
     }
+    virtual void flush() {
+      Serial.flush();
+    }
     virtual void preConnect() {
       if (setupForSerial)
         Serial.begin(DUMBDISPLAY_BAUD);

@@ -38,7 +38,7 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 9600))`  
     - 2 and 3 are the pins used by SoftwareSerial
-    - **the default baud rate for SoftwareSerial is 115200**, which seems to work better from my own testing (with HC-06)
+    - **the default baud rate is 115200**, which seems to work better from my own testing [with HC-06]
   - **You should not be using that SoftwareSerial for other purposes**
 
 
