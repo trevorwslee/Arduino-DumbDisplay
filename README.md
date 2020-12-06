@@ -5,9 +5,9 @@ DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual
 
 # Description
 
-Instead of connecting real gadgets to your Arduino for outputing experiment results, you can make use of DumbDisplay for the purpose, to display virtual gadagets on your Android phone.
+Instead of connecting real gadgets to your Arduino for outputing experiment results, you can make use of DumbDisplay for the purpose, to realize virtual gadagets on your Android phone.
 
-Doing so may save you a few Arduino pins for other experiment needs. You may want to defer buying / connecting real output gadgets until later stage of your experiment.
+Doing so you may defer buying / connecting real output gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
 
 A few types of output layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
@@ -18,15 +18,15 @@ A few types of output layers can be created:
 You can install the free DumbDisplay app (v0.3.2 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
-* SoftwareSerial (Bluetooth via HC-06 @ 115200 baud)
+* SoftwareSerial (e.g. Bluetooth via HC-06)
 * Serial (USB connected via OTG adapter)
 
-
-Sorry that I only have Arduino Uno, and therefore the library is only tested with Arduino Uno.
+Notes:
+* Sorry that I only have Arduino Uno, and therefore the library is only tested with Arduino Uno.
+* In case DumbDisply does not "handshake" with your Arduion correctly, you can try resetting your Adruino.
 
 
 # Sample Code
-
 
 For Arduino, you have two options for connecting the DumbDisplay Android app.
 
@@ -47,7 +47,7 @@ With a DumbDisplay object, you are ready to proceed coding, like
 ```
   #include <ssdumbdisplay.h>
 
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD));
   LedGridDDLayer *led;
 
   void setup() {
@@ -77,7 +77,7 @@ A more interesting sample would be like
 ```
   #include <ssdumbdisplay.h>
 
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD));
 
   MbDDLayer *mb;
   int heading;
@@ -112,7 +112,7 @@ Even more interesting sample would be like
 ```
   #include <ssdumbdisplay.h>
 
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD));
 
   void setup() {
       // configure to "auto pin (layout) layers" in the vertical direction -- V(*)
@@ -156,7 +156,7 @@ Auto pinning of layers is not restricted to a single direction. In fact, it can 
 ```
   #include <ssdumbdisplay.h>
   
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD));
   
   LedGridDDLayer *rled;
   LedGridDDLayer *gled;
