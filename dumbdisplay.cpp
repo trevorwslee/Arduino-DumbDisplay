@@ -5,7 +5,6 @@
 
 #define HAND_SHAKE_GAP 500
 
-//#define HEX_COLOR(color) ("#" + String(color, 16))
 #define TO_BOOL(val) (val ? "1" : "0")
 
 
@@ -187,6 +186,7 @@ int _AllocLayerId() {
 }
 
 
+
 //*************/
 /** EXPORTED **/
 //*************/
@@ -247,40 +247,6 @@ void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
   delete pLayer;
 }
-
-
-// class DDAutoPinBuilder {
-//   public:
-//     DDAutoPinBuilder& start(bool horizontal);
-//     DDAutoPinBuilder& end();
-//     const String& build();
-//   private:
-//     String layoutSpec; 
-//     int level;
-//     int count;
-// };
-
-// DDAutoPinBuilder& DDAutoPinBuilder::start(bool horizontal) {
-//   if (count > 0)
-//     layoutSpec = layoutSpec + ",";
-//   layoutSpec = layoutSpec + (horizontal ? "H" : "V") + "(";
-//   return *this;
-// }
-
-
-// String DDAutoPinHorizontal() { return "H(*)"; }
-// String DDAutoPinVertical() { return "V(*)"; }
-// String DDAutoPinHorizontal(int lc, const String& lids...)  {
-//   return _DDAutoPinHorizontal("H", lc, lids);
-// }
-// String _DDAutoPinHorizontal(const String& oper, int lc, const String& lids...)  {
-//   va_list args;
-//   va_start(args, lids);
-//   String layoutSpec = oper;
-//   for (int i = 0; i < lc; lc++) {
-//     int lid =  va_arg(lids, int);
-//   }
-// }
 
 
 

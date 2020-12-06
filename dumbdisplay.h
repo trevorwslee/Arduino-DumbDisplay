@@ -62,8 +62,6 @@ class DDLayer {
     void noPadding();
     /* clear the layer */
     void clear();
-    // /* set layer background color with RGB */
-    // void backgroundColor(long color);
     /* set layer background color with common "color name" */
     void backgroundColor(const String& color);
     /* set no layer background color */
@@ -71,9 +69,6 @@ class DDLayer {
     const String& getLayerId() { return layerId; }
   protected:
     DDLayer(int layerId);
-    // DDLayer(int layerId) {
-    //   this->layerId = String(layerId);
-    // }
   protected:
     String layerId;  
 };
@@ -110,10 +105,6 @@ class MbDDLayer: public DDLayer {
     /* - '|': delimit a row */
     /* - e.g. "#|.#|..#" -- 3 rows */
     void showLeds(const String& ledPattern);
-    // /* clear layer screen */
-    // void clearScreen();
-    // /* set layer LED color with RGB */
-    // void ledColor(long color);
     /* set layer LED color with common "color name" */
     void ledColor(const String& color);
 };
@@ -143,12 +134,8 @@ class TurtleDDLayer: public DDLayer {
     void penDown();
     /* set pen size */
     void penSize(int size);
-    // /* set pen color */
-    // void penColor(long color);
     /* set pen color */
     void penColor(const String& color);
-    // /* set fill color */
-    // void fillColor(long color);
     /* set fill color */
     void fillColor(const String& color);
     /* set no fill color */
@@ -189,12 +176,8 @@ class LedGridDDLayer: public DDLayer {
     void horizontalBar(int count, bool rightToLeft = false);
     /* turn on LEDs to form a vertical "bar" */ 
     void verticalBar(int count, bool bottomToTop = true);
-    // /* set LED on color */ 
-    // void onColor(long color);
     /* set LED on color */ 
     void onColor(const String& color);
-    // /* set LED off color */ 
-    // void offColor(long color);
     /* set LED off color */ 
     void offColor(const String& color);
     /* set no LED off color */ 
