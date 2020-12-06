@@ -1,19 +1,26 @@
 # DumbDisplay Arduino Library (v0.1.0)
 
-DumbDisplay Ardunio Library enables you to utilize your Android phone as output gadgets for your Arduino experiments.
+DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets for your Arduino experiments.
 
 
 # Description
 
-Instead of connecting real output gadgets to you Arduino for output your experiment results, you can make use of DumbDisplay for the purposes. Don't so may save you a few pins for your use by your other experiment need.
+Instead of connecting real output gadgets to your Arduino for outputing experiment results, you can make use of DumbDisplay for the purpose, to display virtual gadagets on your Android phone.
 
+Doing so may save you a few Arduino pins for other experiment needs. You may defer buying / connecting real output gadgets until later stage of your experiment.
 
-You can install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
+Currently, serveral types of output layers can be created:
+* LED-grid, which can also be used to simulate "bar-meter"
+* LCD
+* Micro:bit-like canvas
+* Turtle-like canvas
 
+You can install the free DumbDisplay app  (v0.3.2 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth via HC-06 @ 115200 baud)
 * Serial (USB connected with OTG adapter)
+
 
 
 # Sample Code
@@ -23,10 +30,10 @@ For Arduino, you have two options for making connection with DumbDisplay Android
 
 * Via Serial
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
-  - setup a `dumbdisplay` -- `DumbDisplay dumbdisplay(new DDInputOutput())`
+  - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
 * Via SoftwareSerial
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
-  - setup a `dumbdisplay` -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true))`
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true))`
     ; where 2 and 3 are pins used by the SoftwareSerial
 
 
@@ -38,7 +45,7 @@ For Arduino, you have two options for making connection with DumbDisplay Android
 
 ### *LEDs + "Bar Meter" + LCD * -- ScreenShot 1
 
-With a DumbDisplay object, you are ready to proceed, first by creating some a LED-grid, and a LCD layer, like
+With a DumbDisplay object, you are ready to proceed, first by some layers, like
 
 ```
   #include <ssdumbdisplay.h>
@@ -59,7 +66,7 @@ With a DumbDisplay object, you are ready to proceed, first by creating some a LE
       led->onColor("blue");
       led->turnOn(2, 0);
 
-      // create LED layers that will be used for "horizontal bar-meter"
+      // create another LED layers that will be used for "horizontal bar-meter"
       // with max "bar" size 32
       LedGridDDLayer *barmeter = dumbdisplay.createLedGridLayer(32, 1, 1, 5);
       barmeter->onColor("darkblue");
@@ -67,23 +74,22 @@ With a DumbDisplay object, you are ready to proceed, first by creating some a LE
       // set the "bar" to 10 (ie. 10 of total 32)
       barmeter->horizontalBar(10);
 
-
       // create a LCD layer
       LcdDDLayer * lcd = dumbdisplay.createLcdLayer();
       // write to LCD write messages (as lines)
       // notice that "C" means center-align
       lcd->writeLine("Hello There!", 0, "C");
       lcd->writeLine("How are you?", 1, "C");
-
   }
 
   void loop() {
   }
 ```
 
+
 ### *Nested "auto pin layers"* -- Screenshot 2
 
-Auto pinning of layers is not only restricted to a single direction. In fact, it can be nested, like
+Auto pinning of layers is not restricted to a single direction. In fact, it can be nested, like
 
 ```
   #include <ssdumbdisplay.h>
@@ -169,7 +175,7 @@ Auto pinning of layers is not only restricted to a single direction. In fact, it
 
 ### *Manual "pin" layers (LEDs + Turtle)* -- Screenshot 3
 
-To showcase Turtle, as well as more controller way of "pinning" layers
+To showcase Turtle, as well as the more controller way of "pinning" layers
 
 ```
   #include <ssdumbdisplay.h>
@@ -244,7 +250,7 @@ To showcase Turtle, as well as more controller way of "pinning" layers
   }
 ```
 
-For reference, please look into the declarations of the different related classes in the header files. Mostly dumbdisplay.h -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/dumbdisplay.h
+For reference, please look into the declarations of the different related classes in the header files; mostly dumbdisplay.h -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/dumbdisplay.h
 
 
 # Thank You!
