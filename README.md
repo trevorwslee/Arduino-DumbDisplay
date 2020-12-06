@@ -30,13 +30,13 @@ For Arduino, you have two options for making connection with DumbDisplay Android
     ; where 2 and 3 are pins used by the SoftwareSerial
 
 
-| LEDs + LCD | Nested "auto pin layers"  | Manual "pin" layers (LEDs + Turtle) |
-|------------|---------------------------|--------------------------------------|
+| LEDs + "Bar Meter" + LCD | Nested "auto pin layers"  | Manual "pin" layers (LEDs + Turtle) |
+|--------------------------|---------------------------|-------------------------------------|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|
 
 
 
-### *LEDs and LCD* -- ScreenShot 1
+### *LEDs + "Bar Meter" + LCD * -- ScreenShot 1
 
 With a DumbDisplay object, you are ready to proceed, first by creating some a LED-grid, and a LCD layer, like
 
