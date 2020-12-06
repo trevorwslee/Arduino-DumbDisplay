@@ -244,7 +244,8 @@ To showcase Turtle, as well as more controller way of "pinning" layers
   }
 ```
 
-For reference, please look into the declarations of the different related classes in the header files.
+For reference, please look into the declarations of the different related classes in the header files. Mostly dumbdisplay.h -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/dumbdisplay.h
+
 
 # Thank You!
 
