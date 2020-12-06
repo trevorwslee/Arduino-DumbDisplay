@@ -5,36 +5,60 @@ DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual
 
 # Description
 
-Instead of connecting real output gadgets to your Arduino for outputing experiment results, you can make use of DumbDisplay for the purpose, to display virtual gadagets on your Android phone.
+Instead of connecting real gadgets to your Arduino for outputing experiment results, you can make use of DumbDisplay for the purpose, to display virtual gadagets on your Android phone.
 
-Doing so may save you a few Arduino pins for other experiment needs. You may defer buying / connecting real output gadgets until later stage of your experiment.
+Doing so may save you a few Arduino pins for other experiment needs. You may want to defer buying / connecting real output gadgets until later stage of your experiment.
 
-Currently, serveral types of output layers can be created:
+A few types of output layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
 * LCD
 * Micro:bit-like canvas
 * Turtle-like canvas
 
-You can install the free DumbDisplay app  (v0.3.2 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
+You can install the free DumbDisplay app (v0.3.2 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
-* SoftwareSerial (e.g. Bluetooth via HC-06 @ 115200 baud)
-* Serial (USB connected with OTG adapter)
+* SoftwareSerial (Bluetooth via HC-06 @ 115200 baud)
+* Serial (USB connected via OTG adapter)
 
 
 
 # Sample Code
 
 
-For Arduino, you have two options for making connection with DumbDisplay Android app.
+For Arduino, you have two options for connecting the DumbDisplay Android app.
 
 * Via Serial
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
+  - doing some will automatically set Serial baud rate to 115200
 * Via SoftwareSerial
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
-  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true))`
-    ; where 2 and 3 are pins used by the SoftwareSerial
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true))` -- where 2 and 3 are pins used by the SoftwareSerial
+  - SoftwareSerial will be automatically set to 115200 baud; i.e. if Bluetooth (e.g. HC-06) is used, it's baud rate need be set to 115200
+
+
+With a DumbDisplay object, you are ready to proceed coding, like
+
+```
+  #include <ssdumbdisplay.h>
+
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
+  LedGridDDLayer *led;
+
+  void setup() {
+      // create a LED layer
+      led = dumbdisplay.createLedGridLayer();
+  }
+
+  void loop() {
+      led->toggle(0, 0);
+      delay(1000);
+  }
+```
+
+
+## More Samples
 
 
 | LEDs + "Bar Meter" + LCD | Nested "auto pin layers"  | Manual "pin" layers (LEDs + Turtle) |
@@ -42,10 +66,9 @@ For Arduino, you have two options for making connection with DumbDisplay Android
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|
 
 
+### *LEDs + "Bar Meter" + LCD* -- ScreenShot 1
 
-### *LEDs + "Bar Meter" + LCD * -- ScreenShot 1
-
-With a DumbDisplay object, you are ready to proceed, first by some layers, like
+A more interesting sample would be like
 
 ```
   #include <ssdumbdisplay.h>
@@ -53,7 +76,7 @@ With a DumbDisplay object, you are ready to proceed, first by some layers, like
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), true));
 
   void setup() {
-      // configure to "auto pin (layout) layers" in the vertical direction
+      // configure to "auto pin (layout) layers" in the vertical direction -- V(*)
       dumbdisplay.configAutoPin(DD_AP_VERT);
       
       // create a LED layer

@@ -7,6 +7,8 @@
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
+// define DD_DEBUG if need to use Serial to debug
+//#define DD_DEBUG
 
 namespace DDImpl {
 
@@ -123,9 +125,7 @@ void _Connect() {
         if (pSerialIOProxy != NULL) 
           pSerialIOProxy->print("ddhello\n");
 #ifdef DD_DEBUG          
-        if (!_IO->allowSerial()) {
-          Serial.println("handshake:ddhello");
-        }  
+        Serial.println("handshake:ddhello");
 #endif        
         nextTime = now + HAND_SHAKE_GAP;
       }
@@ -139,6 +139,9 @@ void _Connect() {
       }
       if (available) {
         String& data = fromSerial ? pSerialIOProxy->get() : ioProxy.get();
+#ifdef DD_DEBUG          
+        Serial.println("handshake:data-" + data);
+#endif        
         if (data == "ddhello") {
           if (fromSerial) {
             _IO = pSIO;
@@ -211,13 +214,7 @@ void DumbDisplay::configAutoPin(const String& layoutSpec) {
   _sendCommand1("", "CFGAP", layoutSpec);
 }
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
-#ifdef DD_DEBUG          
-  if (!_IO->allowSerial()) Serial.println("createMicrobitLayer"); 
-#endif
   int lid = _AllocLayerId();
-#ifdef DD_DEBUG          
-  if (!_IO->allowSerial()) Serial.println("allocated layer id"); 
-#endif
   String layerId = String(lid);
   _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
   return new MbDDLayer(lid);
