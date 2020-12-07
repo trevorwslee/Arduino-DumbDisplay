@@ -9,8 +9,9 @@
 // define DD_DEBUG if need to use Serial to debug
 //#define DD_DEBUG
 
+#define DEBUG_WITH_LED
+
 #define FLUSH_AFTER_SEND_COMMAND true
-#define TOGGLE_DEBUG_LED_AFTER_COMMAND true
 
 namespace DDImpl {
 
@@ -57,17 +58,18 @@ bool _Connected = false;
 int _NextLid = 0;
 DDInputOutput* _IO = NULL;
 
+#ifdef DEBUG_WITH_LED
 int _DebugLedPin = -1;
-
+#endif
 
 
 void _sendCommand(const String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5) {
-  if (TOGGLE_DEBUG_LED_AFTER_COMMAND) {
-    int debugLedPin = _DebugLedPin;
-    if (debugLedPin != -1) {
-      digitalWrite(debugLedPin, HIGH);
-    }
-  }  
+#ifdef DEBUG_WITH_LED
+  int debugLedPin = _DebugLedPin;
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, HIGH);
+  }
+#endif   
   if (layerId != "") {
     _IO->print(layerId.c_str());
     _IO->print(".");
@@ -97,23 +99,11 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
   if (FLUSH_AFTER_SEND_COMMAND) {
     _IO->flush();
   }
-  if (TOGGLE_DEBUG_LED_AFTER_COMMAND) {
-    int debugLedPin = _DebugLedPin;
-    if (debugLedPin != -1) {
-      digitalWrite(debugLedPin, LOW);
-    }
+#ifdef DEBUG_WITH_LED
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, LOW);
+#endif
   }  
-  // if (TOGGLE_DEBUG_LED_AFTER_COMMAND) {
-  //   int debugLedPin = _DebugLedPin;
-  //   if (debugLedPin != -1) {
-  //     bool ledOn = digitalRead(debugLedPin) == HIGH;
-  //     if (ledOn) {
-  //       digitalWrite(debugLedPin, LOW);
-  //     } else {
-  //       digitalWrite(debugLedPin, HIGH);
-  //     }
-  //   }
-  // }  
 }  
 void _sendCommand0(const String& layerId, const char *command) {
   _sendCommand(layerId, command, NULL, NULL, NULL, NULL, NULL);
@@ -139,8 +129,16 @@ void _sendCommand5(const String& layerId, const char *command, const String& par
 void _Connect() {
   if (_Connected)
     return;
+  _IO->preConnect();
+#ifdef DEBUG_WITH_LED
+  int debugLedPin = _DebugLedPin;  
+  bool debugLedOn;
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, HIGH);
+    debugLedOn = true;
+  }
+#endif
   {
-    _IO->preConnect();
     long nextTime = 0;
     IOProxy ioProxy(_IO);
     IOProxy* pSerialIOProxy = NULL;
@@ -152,6 +150,12 @@ void _Connect() {
     while (true) {
       long now = millis();
       if (now > nextTime) {
+#ifdef DEBUG_WITH_LED
+    if (debugLedPin != -1) {
+      debugLedOn = !debugLedOn;
+      digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
+    }
+#endif
         ioProxy.print("ddhello\n");
         if (pSerialIOProxy != NULL) 
           pSerialIOProxy->print("ddhello\n");
@@ -197,6 +201,12 @@ void _Connect() {
     while (true) {
       long now = millis();
       if (now > nextTime) {
+#ifdef DEBUG_WITH_LED
+    if (debugLedPin != -1) {
+      debugLedOn = !debugLedOn;
+      digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
+    }
+#endif
         ioProxy.print(">init>:Arduino\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
@@ -209,6 +219,11 @@ void _Connect() {
     }
   }
   _Connected = true;
+#ifdef DEBUG_WITH_LED
+    if (debugLedPin != -1) {
+      digitalWrite(debugLedPin, LOW);
+    }
+#endif
 }
 
 int _AllocLayerId() {
@@ -276,10 +291,12 @@ void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   delete pLayer;
 }
 void DumbDisplay::debugSetup(int debugLedPin) {
-  if (TOGGLE_DEBUG_LED_AFTER_COMMAND) {
-    pinMode(debugLedPin, OUTPUT);
+#ifdef DEBUG_WITH_LED
+  if (debugLedPin != -1) {
+     pinMode(debugLedPin, OUTPUT);
    }
   _DebugLedPin = debugLedPin;
+#endif  
 }
 
 
