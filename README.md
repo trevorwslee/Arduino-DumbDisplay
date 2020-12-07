@@ -31,10 +31,18 @@ Notes:
 For Arduino, you have two options for connecting the DumbDisplay Android app.
 
 * Via Serial
+  ```
+    #include "#include <dumbdisplay.h>"
+    DumbDisplay dumbdisplay(new DDInputOutput());
+  ```
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - doing so will **automatically set Serial baud rate to 115200**, and **you should not be using Serial for other purposes**
 * Via SoftwareSerial
+  ```
+    #include "#include <ssdumbdisplay.h>"
+    DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 9600));
+  ```
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 9600))`  
     - 2 and 3 are the pins used by SoftwareSerial
