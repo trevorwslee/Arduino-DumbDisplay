@@ -1,6 +1,6 @@
-# DumbDisplay Arduino Library (v0.1.0)
+# DumbDisplay Arduino Library (v0.1.1)
 
-DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets for your Arduino experiments.
+DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets for your Arduino / ESP32 experiments.
 
 
 # Description
@@ -22,7 +22,7 @@ The app can accept connection via
 * Serial (USB connected via OTG adapter)
 
 Notes:
-* Sorry that I only have Arduino Uno, and therefore the library is only tested with Arduino Uno.
+* Sorry that since I only have Arduino Uno, therefore the library is only tested with Arduino Uno (and partly with ESP32).
 * In case DumbDisply does not "handshake" with your Arduion correctly, you can try resetting your Adruino.
 
 
@@ -30,16 +30,36 @@ Notes:
 
 For Arduino, you have two options for connecting the DumbDisplay Android app.
 
-* Via Serial
+* Via Serial 
+  ```
+    #include "#include <dumbdisplay.h>"
+    DumbDisplay dumbdisplay(new DDInputOutput());
+  ```
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - doing so will **automatically set Serial baud rate to 115200**, and **you should not be using Serial for other purposes**
 * Via SoftwareSerial
+  ```
+    #include "#include <ssdumbdisplay.h>"
+    DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 9600));
+  ```
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 9600))`  
     - 2 and 3 are the pins used by SoftwareSerial
     - **the default baud rate is 115200**, which seems to work better from my own testing [with HC-06]
   - **You should not be using that SoftwareSerial for other purposes**
+* Via **ESP32** BluetoothSerial (Experimental)
+  ```
+    #define DD_4_ESP32
+    #include <esp32dumbdisplay.h>
+    DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true));
+  ```
+  - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
+  - include esp32dumbdisplay.h -- `#include <esp32dumbdisplay.h>`
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true))`  
+    - "ESP32" is name used by BluetoothSerial
+  - **You should not be using BluetoothSerial for other purposes**
+  - In my own testing, the bluetooth communication will hang from time to time.
 
 
 With a DumbDisplay object, you are ready to proceed coding, like
@@ -75,7 +95,7 @@ With a DumbDisplay object, you are ready to proceed coding, like
 A more interesting sample would be like
 
 ```
-  #include <ssdumbdisplay.h>
+  #include "ssdumbdisplay.h"
 
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD));
 
@@ -110,7 +130,7 @@ A more interesting sample would be like
 Even more interesting sample would be like
 
 ```
-  #include <ssdumbdisplay.h>
+  #include "ssdumbdisplay.h"
 
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD));
 
@@ -154,7 +174,7 @@ Even more interesting sample would be like
 Auto pinning of layers is not restricted to a single direction. In fact, it can be nested, like
 
 ```
-  #include <ssdumbdisplay.h>
+  #include "ssdumbdisplay.h"
   
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD));
   
@@ -240,7 +260,7 @@ Auto pinning of layers is not restricted to a single direction. In fact, it can 
 To showcase Turtle, as well as the more controller way of "pinning" layers
 
 ```
-  #include <ssdumbdisplay.h>
+  #include "ssdumbdisplay.h"
 
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
 
@@ -327,6 +347,9 @@ Greeting from the author Trevor Lee:
 
 
 # Change History
+
+v0.1.1
+- added ESP32 "experimental" support
 
 v0.1.0
 - initial release

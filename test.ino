@@ -1,5 +1,10 @@
+// UNO built-in LED -- 13
+// ESP32 built-in LED -- 2
+
+
 #include "ssdumbdisplay.h"
 #include "ddtester.h"
+
 
 
 unsigned long baud = DUMBDISPLAY_BAUD;
@@ -11,6 +16,7 @@ DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), baud, en
 void setup() {
   if (!enableSerial)
     Serial.begin(115200);
+  dumbdisplay.debugSetup(13);
 }
 
 void loop() {

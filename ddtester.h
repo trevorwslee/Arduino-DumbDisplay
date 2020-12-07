@@ -1,7 +1,7 @@
 #ifndef ddtester_h
 #define ddtester_h
 
-#include "Arduino.h"
+//#include "Arduino.h"
 #include "dumbdisplay.h"
 
 

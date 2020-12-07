@@ -2,13 +2,14 @@
 #include "dumbdisplay.h"
 
 
-
 #define HAND_SHAKE_GAP 500
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
 // define DD_DEBUG if need to use Serial to debug
 //#define DD_DEBUG
+
+#define DEBUG_WITH_LED
 
 #define FLUSH_AFTER_SEND_COMMAND true
 
@@ -55,10 +56,20 @@ void IOProxy::print(const char *p) {
 
 bool _Connected = false;
 int _NextLid = 0;
-DDInputOutput* _IO = NULL;  
+DDInputOutput* _IO = NULL;
+
+#ifdef DEBUG_WITH_LED
+int _DebugLedPin = -1;
+#endif
 
 
 void _sendCommand(const String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5) {
+#ifdef DEBUG_WITH_LED
+  int debugLedPin = _DebugLedPin;
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, HIGH);
+  }
+#endif   
   if (layerId != "") {
     _IO->print(layerId.c_str());
     _IO->print(".");
@@ -85,8 +96,14 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
     }
   }
   _IO->print("\n");
-  if (FLUSH_AFTER_SEND_COMMAND)
+  if (FLUSH_AFTER_SEND_COMMAND) {
     _IO->flush();
+  }
+#ifdef DEBUG_WITH_LED
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, LOW);
+#endif
+  }  
 }  
 void _sendCommand0(const String& layerId, const char *command) {
   _sendCommand(layerId, command, NULL, NULL, NULL, NULL, NULL);
@@ -112,8 +129,16 @@ void _sendCommand5(const String& layerId, const char *command, const String& par
 void _Connect() {
   if (_Connected)
     return;
+  _IO->preConnect();
+#ifdef DEBUG_WITH_LED
+  int debugLedPin = _DebugLedPin;  
+  bool debugLedOn;
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, HIGH);
+    debugLedOn = true;
+  }
+#endif
   {
-    _IO->preConnect();
     long nextTime = 0;
     IOProxy ioProxy(_IO);
     IOProxy* pSerialIOProxy = NULL;
@@ -125,6 +150,12 @@ void _Connect() {
     while (true) {
       long now = millis();
       if (now > nextTime) {
+#ifdef DEBUG_WITH_LED
+    if (debugLedPin != -1) {
+      debugLedOn = !debugLedOn;
+      digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
+    }
+#endif
         ioProxy.print("ddhello\n");
         if (pSerialIOProxy != NULL) 
           pSerialIOProxy->print("ddhello\n");
@@ -170,6 +201,12 @@ void _Connect() {
     while (true) {
       long now = millis();
       if (now > nextTime) {
+#ifdef DEBUG_WITH_LED
+    if (debugLedPin != -1) {
+      debugLedOn = !debugLedOn;
+      digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
+    }
+#endif
         ioProxy.print(">init>:Arduino\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
@@ -182,6 +219,11 @@ void _Connect() {
     }
   }
   _Connected = true;
+#ifdef DEBUG_WITH_LED
+    if (debugLedPin != -1) {
+      digitalWrite(debugLedPin, LOW);
+    }
+#endif
 }
 
 int _AllocLayerId() {
@@ -241,14 +283,21 @@ LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeig
   _sendCommand5(layerId, "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
   return new LcdDDLayer(lid);
 }
-void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
+void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
   delete pLayer;
 }
-
+void DumbDisplay::debugSetup(int debugLedPin) {
+#ifdef DEBUG_WITH_LED
+  if (debugLedPin != -1) {
+     pinMode(debugLedPin, OUTPUT);
+   }
+  _DebugLedPin = debugLedPin;
+#endif  
+}
 
 
 

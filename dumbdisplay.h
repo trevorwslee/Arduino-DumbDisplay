@@ -1,6 +1,14 @@
 #ifndef dumbdisplay_h
 #define dumbdisplay_h
 
+
+#ifdef DD_4_ESP32
+#include <esp_spp_api.h>
+#include "HardwareSerial.h"
+#endif
+
+
+
 #define DUMBDISPLAY_BAUD 115200
 
 #define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
@@ -16,6 +24,7 @@
 #define DD_AP_VERT_4(id1, id2, id3, id4) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + ")")
 #define DD_AP_HORI_5(id1, id2, id3, id4, id5) ("H(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")")
 #define DD_AP_VERT_5(id1, id2, id3, id4, id5) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")")
+
 
 
 class DDInputOutput {
@@ -243,6 +252,7 @@ class DumbDisplay {
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     void deleteLayer(DDLayer *pLayer);
+    void debugSetup(int debugLedPin);
 };
 
 
