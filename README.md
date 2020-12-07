@@ -54,8 +54,8 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
     #include <esp32dumbdisplay.h>
     DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true));
  ```
-  - **MUST** define `DD_4_ESP32`
-  - include esp32dumbdisplay.h -- `<esp32dumbdisplay.h>`
+  - **MUST** define `DD_4_ESP32` before `#include` -- `#define DD_4_ESP32`
+  - include esp32dumbdisplay.h -- `#include <esp32dumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true))`  
     - "ESP32" is name used BluetoothSerial
   - **You should not be using BluetoothSerial for other purposes**
