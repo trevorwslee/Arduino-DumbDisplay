@@ -2,7 +2,6 @@
 #include "dumbdisplay.h"
 
 
-
 #define HAND_SHAKE_GAP 500
 
 #define TO_BOOL(val) (val ? "1" : "0")
@@ -11,6 +10,7 @@
 //#define DD_DEBUG
 
 #define FLUSH_AFTER_SEND_COMMAND true
+#define TOGGLE_DEBUG_LED_AFTER_COMMAND true
 
 namespace DDImpl {
 
@@ -55,10 +55,19 @@ void IOProxy::print(const char *p) {
 
 bool _Connected = false;
 int _NextLid = 0;
-DDInputOutput* _IO = NULL;  
+DDInputOutput* _IO = NULL;
+
+int _DebugLedPin = -1;
+
 
 
 void _sendCommand(const String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5) {
+  if (TOGGLE_DEBUG_LED_AFTER_COMMAND) {
+    int debugLedPin = _DebugLedPin;
+    if (debugLedPin != -1) {
+      digitalWrite(debugLedPin, HIGH);
+    }
+  }  
   if (layerId != "") {
     _IO->print(layerId.c_str());
     _IO->print(".");
@@ -85,8 +94,26 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
     }
   }
   _IO->print("\n");
-  if (FLUSH_AFTER_SEND_COMMAND)
+  if (FLUSH_AFTER_SEND_COMMAND) {
     _IO->flush();
+  }
+  if (TOGGLE_DEBUG_LED_AFTER_COMMAND) {
+    int debugLedPin = _DebugLedPin;
+    if (debugLedPin != -1) {
+      digitalWrite(debugLedPin, LOW);
+    }
+  }  
+  // if (TOGGLE_DEBUG_LED_AFTER_COMMAND) {
+  //   int debugLedPin = _DebugLedPin;
+  //   if (debugLedPin != -1) {
+  //     bool ledOn = digitalRead(debugLedPin) == HIGH;
+  //     if (ledOn) {
+  //       digitalWrite(debugLedPin, LOW);
+  //     } else {
+  //       digitalWrite(debugLedPin, HIGH);
+  //     }
+  //   }
+  // }  
 }  
 void _sendCommand0(const String& layerId, const char *command) {
   _sendCommand(layerId, command, NULL, NULL, NULL, NULL, NULL);
@@ -241,14 +268,19 @@ LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeig
   _sendCommand5(layerId, "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
   return new LcdDDLayer(lid);
 }
-void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
+void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
   delete pLayer;
 }
-
+void DumbDisplay::debugSetup(int debugLedPin) {
+  if (TOGGLE_DEBUG_LED_AFTER_COMMAND) {
+    pinMode(debugLedPin, OUTPUT);
+   }
+  _DebugLedPin = debugLedPin;
+}
 
 
 
