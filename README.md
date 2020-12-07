@@ -1,6 +1,6 @@
 # DumbDisplay Arduino Library (v0.1.0)
 
-DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets for your Arduino experiments.
+DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets for your Arduino / ESP32 experiments.
 
 
 # Description
@@ -22,7 +22,7 @@ The app can accept connection via
 * Serial (USB connected via OTG adapter)
 
 Notes:
-* Sorry that I only have Arduino Uno, and therefore the library is only tested with Arduino Uno.
+* Sorry that since I only have Arduino Uno, therefore the library is only tested with Arduino Uno (and partly with ESP32).
 * In case DumbDisply does not "handshake" with your Arduion correctly, you can try resetting your Adruino.
 
 
@@ -48,7 +48,7 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
     - 2 and 3 are the pins used by SoftwareSerial
     - **the default baud rate is 115200**, which seems to work better from my own testing [with HC-06]
   - **You should not be using that SoftwareSerial for other purposes**
-* Via **ESP32** BluetoothSerial
+* Via **ESP32** BluetoothSerial (Experimental)
   ```
     #define DD_4_ESP32
     #include <esp32dumbdisplay.h>
@@ -57,8 +57,10 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
   - include esp32dumbdisplay.h -- `#include <esp32dumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true))`  
-    - "ESP32" is name used BluetoothSerial
+    - "ESP32" is name used by BluetoothSerial
   - **You should not be using BluetoothSerial for other purposes**
+  - In my own testing, the bluetooth communication will hang from time to time.
+
 
 With a DumbDisplay object, you are ready to proceed coding, like
 
