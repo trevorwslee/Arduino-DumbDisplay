@@ -30,7 +30,7 @@ Notes:
 
 For Arduino, you have two options for connecting the DumbDisplay Android app.
 
-* Via Serial
+* Via Serial 
   ```
     #include "#include <dumbdisplay.h>"
     DumbDisplay dumbdisplay(new DDInputOutput());
@@ -48,13 +48,13 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
     - 2 and 3 are the pins used by SoftwareSerial
     - **the default baud rate is 115200**, which seems to work better from my own testing [with HC-06]
   - **You should not be using that SoftwareSerial for other purposes**
-* View **ESP32** BluetoothSerial
+* Via **ESP32** BluetoothSerial
   ```
     #define DD_4_ESP32
     #include <esp32dumbdisplay.h>
     DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true));
- ```
-  - **MUST** define `DD_4_ESP32` before `#include` -- `#define DD_4_ESP32`
+  ```
+  - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
   - include esp32dumbdisplay.h -- `#include <esp32dumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true))`  
     - "ESP32" is name used BluetoothSerial
