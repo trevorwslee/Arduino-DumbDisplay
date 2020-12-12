@@ -481,6 +481,9 @@ void GraphicalDDLayer::rightTurn(int angle) {
 void GraphicalDDLayer::setHeading(int angle) {
   _sendCommand1(layerId, "seth", String(angle));
 }
+void GraphicalDDLayer::setCursor(int x, int y) {
+  _sendCommand2(layerId, "setcursor", String(x), String(y));
+}
 void GraphicalDDLayer::penSize(int size) {
   _sendCommand1(layerId, "pensize", String(size));
 }

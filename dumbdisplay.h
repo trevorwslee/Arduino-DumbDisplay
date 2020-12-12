@@ -233,6 +233,8 @@ class GraphicalDDLayer: public DDLayer {
     void rightTurn(int angle);
     /* set heading angle */
     void setHeading(int angle);
+    /* set cursor */
+    void setCursor(int x, int y);
     /* set pen size */
     void penSize(int size);
     /* set pen color */

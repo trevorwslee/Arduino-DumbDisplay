@@ -145,6 +145,70 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 }
 
 
+void shapeGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
+    pLayer->clear();
+    pLayer->setCursor(100,100);
+    pLayer->setHeading(0);
+    pLayer->penColor("darkred");
+    pLayer->penSize(2);
+
+    bool filled = stepCount > 10;
+    if (filled) {
+        pLayer->fillColor("green");
+    }
+
+    pLayer->leftTurn(20);
+    pLayer->forward(20);
+
+    int shape = stepCount % 12;
+    switch (shape) {
+      case 0:
+        pLayer->circle(50);
+        break;
+      case 1:
+        pLayer->rectangle(80, 60);
+        break;
+      case 2:
+        pLayer->triangle(80, 50, 40);
+        break;
+      case 3:
+        pLayer->isoscelesTriangle(50, 65);
+        break;
+      case 4:
+        pLayer->circle(55, true);
+        break;
+      case 5:
+        pLayer->rectangle(60, 70, true);
+        break;
+      case 6:
+        pLayer->polygon(50, 5);
+        break;
+      case 7:
+        pLayer->centeredPolygon(55, 5);
+        break;
+      case 8:
+        pLayer->centeredPolygon(55, 5, true);
+        break;
+      case 9:
+        pLayer->oval(60, 80);
+        break;
+      case 10:
+        pLayer->oval(60, 80, true);
+        break;
+      case 11:
+        for (int size = 3; size <= 10; size++) {
+            pLayer->clear();
+            pLayer->centeredPolygon(40, size, false);   
+            pLayer->circle(40, true);
+            delay(500);
+        }
+        break;
+    }
+    pLayer->rightTurn(90);
+    pLayer->forward(100);
+}
+
+
 bool Pinned = false;
 bool AutoPin = true;
 
@@ -153,14 +217,16 @@ MbDDLayer *pMbLayer = NULL;
 TurtleDDLayer *pTurtleLayer = NULL;
 LedGridDDLayer *pLedGridLayer = NULL;
 LcdDDLayer *pLcdLayer = NULL;
+GraphicalDDLayer *pGraphicalLayer = NULL;
 
 void LcdDDTester_autoPinLayers(DumbDisplay& dumbdisplay) {
-  if (pMbLayer == NULL || pTurtleLayer == NULL || pLedGridLayer == NULL || pLcdLayer == NULL) {
+  if (pMbLayer == NULL || pTurtleLayer == NULL || pLedGridLayer == NULL || pLcdLayer == NULL || pGraphicalLayer == NULL) {
     dumbdisplay.configAutoPin(DD_AP_HORI);
   } else {  
-    dumbdisplay.configAutoPin(DD_AP_VERT_2(
+    dumbdisplay.configAutoPin(DD_AP_VERT_3(
                                 DD_AP_HORI_2(pMbLayer->getLayerId(), pTurtleLayer->getLayerId()),
-                                DD_AP_HORI_2(pLedGridLayer->getLayerId(), pLcdLayer->getLayerId())
+                                pLcdLayer->getLayerId(),
+                                DD_AP_HORI_2(pLedGridLayer->getLayerId(), pGraphicalLayer->getLayerId())
                               ));
   }
 }
@@ -269,8 +335,21 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   }
   pLcdLayer->setCursor(0, 0);
   pLcdLayer->print("stepCount:" + String(stepCount));
-  pLcdLayer->writeLine("Hi friend!", 1, "C");
+  pLcdLayer->writeLine(((stepCount / 10) % 2 == 0) ? "朋友" : "Hi friend", 1, "C");
   pLcdLayer->writeLine("Bună Привіт 你好", 2, "R");
+}
+
+void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
+  if (stepCount == 0) {
+    pGraphicalLayer = dumbdisplay.createGraphicalLayer(215, 215);
+    if (Pinned) {
+      if (AutoPin) {
+        LcdDDTester_autoPinLayers(dumbdisplay);
+      }
+    }
+    pGraphicalLayer->penColor("blue");
+  }
+  shapeGraphicalTestStep(pGraphicalLayer, stepCount);
 }
 
 
@@ -280,12 +359,20 @@ using namespace DDTesterImpl;
 
 
 
-void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGrid, bool lcd) {
+void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
+
+  bool mb = true;
+  bool turtle = true;
+  bool ledGrid = true;
+  bool lcd = true;
+  bool graphical = true;
+
   int testCount = 0;
   if (mb) testCount++;
   if (turtle) testCount++;
   if (ledGrid) testCount++;
   if (lcd) testCount++;
+  if (graphical) testCount++;
 
 
   Pinned = testCount > 1;
@@ -301,6 +388,8 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGri
       LedGridDDTester_testStep(dumbdisplay, stepCount);  
     if (lcd)
       LcdDDTester_testStep(dumbdisplay, stepCount);
+    if (graphical)
+      GraphicalDDTester_testStep(dumbdisplay, stepCount);
     delay(1000);
     stepCount++;
   }

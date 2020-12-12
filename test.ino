@@ -32,12 +32,7 @@ void loop() {
     // if DD not using Serial, print something to Serial
     Serial.println("hello");
   }
-
-  bool mb = true;
-  bool turtle = true;
-  bool ledGrid = true;
-  bool lcd = true;
-  BasicDDTestLoop(dumbdisplay, mb, turtle, ledGrid, lcd);
+  BasicDDTestLoop(dumbdisplay);
 }
 
 
