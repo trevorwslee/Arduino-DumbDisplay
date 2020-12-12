@@ -61,7 +61,6 @@ class DDInputOutput {
     bool setupForSerial;
 };
 
- 
 
 class DDLayer {
   public:
@@ -168,11 +167,12 @@ class TurtleDDLayer: public DDLayer {
     void polygon(int side, int vertexCount);
     /* draw polygon enclosed in an imaginary centered circle */
     /* - given circle radius and vertex count */
-    /* - whether inside the circle or not */ 
+    /* - whether inside the imaginary circle or outside of it */ 
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
     /* write text; draw means draw the text (honor heading) */
     void write(const String& text, bool draw = false);
 };
+
 
 class LedGridDDLayer: public DDLayer {
   public:
@@ -221,6 +221,44 @@ class LcdDDLayer: public DDLayer {
     void noBgPixelColor();
 };
 
+class GraphicalDDLayer: public DDLayer {
+  public:
+    GraphicalDDLayer(int layerId): DDLayer(layerId) {
+    }
+    /* forward; with pen or not */
+    void forward(int distance);
+    /* left turn */
+    void leftTurn(int angle);
+    /* right turn */
+    void rightTurn(int angle);
+    /* set heading angle */
+    void setHeading(int angle);
+    /* set pen size */
+    void penSize(int size);
+    /* set pen color */
+    void penColor(const String& color);
+    /* set fill color (for shape) */
+    void fillColor(const String& color);
+    /* set no fill color (for shape) */
+    void noFillColor();
+    /* draw circle; centered or not */
+    void circle(int radius, bool centered = false);
+    /* draw oval; centered or not */
+    void oval(int width, int height, bool centered = false);
+    /* draw triangle (SAS) */
+    void triangle(int side1, int angle, int side2);
+    /* draw isosceles triangle; given size and angle */
+    void isoscelesTriangle(int side, int angle);
+    /* draw rectangle; centered or not */
+    void rectangle(int width, int height, bool centered = false);
+    /* draw polygon given side and vertex count */
+    void polygon(int side, int vertexCount);
+    /* draw polygon enclosed in an imaginary centered circle */
+    /* - given circle radius and vertex count */
+    /* - whether inside the imaginary circle or outside of it */ 
+    void centeredPolygon(int radius, int vertexCount, bool inside = false);
+};
+
 
 
 class DumbDisplay {
@@ -247,6 +285,8 @@ class DumbDisplay {
     LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
     /* create a LCD layer */
     LcdDDLayer* createLcdLayer(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
+    /* create a graphical [LCD] layer */
+    GraphicalDDLayer* createGraphicalLayer(int width, int height);
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */

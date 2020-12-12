@@ -19,7 +19,7 @@ void setup() {
     Serial.begin(115200);
   }
 
-  dumbdisplay.debugSetup(13);
+  dumbdisplay.debugSetup(13);  // setup to use pin 13
 
   if (true) {
     dumbdisplay.connect();  // explicitly connect (so that the following comment will show)

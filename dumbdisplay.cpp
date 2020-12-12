@@ -55,7 +55,7 @@ void IOProxy::print(const char *p) {
 
 
 bool _Connected = false;
-int _DDVersion = 0;
+int _DDCompatibility = 0;
 int _NextLid = 0;
 DDInputOutput* _IO = NULL;
 
@@ -196,7 +196,7 @@ void _Connect() {
     if (pSIO != NULL)
       delete pSIO;
   }
-  int version = 0;
+  int compatibility = 0;
   { 
     long nextTime = 0;
     IOProxy ioProxy(_IO);
@@ -209,7 +209,7 @@ void _Connect() {
       digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
     }
 #endif
-        ioProxy.print(">init>:Arduino-v1\n");
+        ioProxy.print(">init>:Arduino-c1\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
       if (ioProxy.available()) {
@@ -217,7 +217,7 @@ void _Connect() {
         if (data == "<init<")
           break;
         if (data.startsWith("<init<:")) {
-            version = data.substring(7).toInt();
+            compatibility = data.substring(7).toInt();
             break;
         }  
         ioProxy.clear();  
@@ -225,9 +225,9 @@ void _Connect() {
     }
   }
   _Connected = true;
-  _DDVersion = version;
+  _DDCompatibility = compatibility;
   if (true) {       
-    _IO->print(("// connected to DD v" + String(_DDVersion) + "\n").c_str());
+    _IO->print(("// connected to DD c" + String(compatibility) + "\n").c_str());
   }
 #ifdef DEBUG_WITH_LED
     if (debugLedPin != -1) {
@@ -252,67 +252,6 @@ int _AllocLayerId() {
 
 
 using namespace DDImpl;
-
-DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
-  _IO = pIO;
-}
-void DumbDisplay::connect() {
-  _Connect();
-}
-void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
-  _Connect();
-  if (xUnitCount != 100 || yUnitCount != 100) {
-    _sendCommand2("", "CFGPF", String(xUnitCount), String(yUnitCount));
-  }
-}
-void DumbDisplay::configAutoPin(const String& layoutSpec) {
-  _Connect();
-  _sendCommand1("", "CFGAP", layoutSpec);
-}
-MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
-  int lid = _AllocLayerId();
-  String layerId = String(lid);
-  _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
-  return new MbDDLayer(lid);
-}
-TurtleDDLayer* DumbDisplay::createTurtleLayer(int width, int height) {
-  int lid = _AllocLayerId();
-  String layerId = String(lid);
-  _sendCommand3(layerId, "SU", String("turtle"), String(width), String(height));
-  return new TurtleDDLayer(lid);
-}
-LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int subColCount, int subRowCount) {
-  int lid = _AllocLayerId();
-  String layerId = String(lid);
-  _sendCommand5(layerId, "SU", String("ledgrid"), String(colCount), String(rowCount), String(subColCount), String(subRowCount));
-  return new LedGridDDLayer(lid);
-}
-LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeight, const String& fontName) {
-  int lid = _AllocLayerId();
-  String layerId = String(lid);
-  _sendCommand5(layerId, "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
-  return new LcdDDLayer(lid);
-}
-void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
-  _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
-}
-void DumbDisplay::deleteLayer(DDLayer *pLayer) {
-  _sendCommand0(pLayer->getLayerId(), "DEL");
-  delete pLayer;
-}
-void DumbDisplay::writeComment(const String& comment) {
-  _sendCommand0("", ("// " + comment).c_str());
-}
-
-void DumbDisplay::debugSetup(int debugLedPin) {
-#ifdef DEBUG_WITH_LED
-  if (debugLedPin != -1) {
-     pinMode(debugLedPin, OUTPUT);
-   }
-  _DebugLedPin = debugLedPin;
-#endif  
-}
-
 
 
 DDLayer::DDLayer(int layerId) {
@@ -530,5 +469,118 @@ void LcdDDLayer::noBgPixelColor() {
 }
 
 
+void GraphicalDDLayer::forward(int distance) {
+  _sendCommand1(layerId, "fd", String(distance));
+}
+void GraphicalDDLayer::leftTurn(int angle) {
+  _sendCommand1(layerId, "lt", String(angle));
+}
+void GraphicalDDLayer::rightTurn(int angle) {
+  _sendCommand1(layerId, "rt", String(angle));
+}
+void GraphicalDDLayer::setHeading(int angle) {
+  _sendCommand1(layerId, "seth", String(angle));
+}
+void GraphicalDDLayer::penSize(int size) {
+  _sendCommand1(layerId, "pensize", String(size));
+}
+void GraphicalDDLayer::penColor(const String& color) {
+  _sendCommand1(layerId, "pencolor", color);
+}
+void GraphicalDDLayer::fillColor(const String& color) {
+  _sendCommand1(layerId, "fillcolor", color);
+}
+void GraphicalDDLayer::noFillColor() {
+  _sendCommand0(layerId, "nofillcolor");
+}
+void GraphicalDDLayer::circle(int radius, bool centered) {
+  _sendCommand1(layerId, centered ? "ccircle" : "circle", String(radius));
+}
+void GraphicalDDLayer::oval(int width, int height, bool centered) {
+  _sendCommand2(layerId, centered ? "coval" : "oval", String(width), String(height));
+}
+void GraphicalDDLayer::rectangle(int width, int height, bool centered) {
+  _sendCommand2(layerId, centered ? "crect" : "rect", String(width), String(height));
+}
+void GraphicalDDLayer::triangle(int side1, int angle, int side2) {
+  _sendCommand3(layerId, "trisas", String(side1), String(angle), String(side2));
+}
+void GraphicalDDLayer::isoscelesTriangle(int side, int angle) {
+  _sendCommand2(layerId, "trisas", String(side), String(angle));
+}
+void GraphicalDDLayer::polygon(int side, int vertexCount) {
+  _sendCommand2(layerId, "poly", String(side), String(vertexCount));
+}
+void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
+  _sendCommand2(layerId, inside ? "cpolyin" : "cpoly", String(radius), String(vertexCount));
+}
+
+
+
+DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
+  _IO = pIO;
+}
+void DumbDisplay::connect() {
+  _Connect();
+}
+void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
+  _Connect();
+  if (xUnitCount != 100 || yUnitCount != 100) {
+    _sendCommand2("", "CFGPF", String(xUnitCount), String(yUnitCount));
+  }
+}
+void DumbDisplay::configAutoPin(const String& layoutSpec) {
+  _Connect();
+  _sendCommand1("", "CFGAP", layoutSpec);
+}
+MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
+  return new MbDDLayer(lid);
+}
+TurtleDDLayer* DumbDisplay::createTurtleLayer(int width, int height) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("turtle"), String(width), String(height));
+  return new TurtleDDLayer(lid);
+}
+LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int subColCount, int subRowCount) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand5(layerId, "SU", String("ledgrid"), String(colCount), String(rowCount), String(subColCount), String(subRowCount));
+  return new LedGridDDLayer(lid);
+}
+LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeight, const String& fontName) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand5(layerId, "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
+  return new LcdDDLayer(lid);
+}
+GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("graphical"), String(width), String(height));
+  return new GraphicalDDLayer(lid);
+}
+void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
+  _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
+}
+void DumbDisplay::deleteLayer(DDLayer *pLayer) {
+  _sendCommand0(pLayer->getLayerId(), "DEL");
+  delete pLayer;
+}
+void DumbDisplay::writeComment(const String& comment) {
+  _sendCommand0("", ("// " + comment).c_str());
+}
+
+void DumbDisplay::debugSetup(int debugLedPin) {
+#ifdef DEBUG_WITH_LED
+  if (debugLedPin != -1) {
+     pinMode(debugLedPin, OUTPUT);
+   }
+  _DebugLedPin = debugLedPin;
+#endif  
+}
 
 
