@@ -146,23 +146,53 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 
 
 bool Pinned = false;
+bool AutoPin = true;
+
 
 MbDDLayer *pMbLayer = NULL;
+TurtleDDLayer *pTurtleLayer = NULL;
+LedGridDDLayer *pLedGridLayer = NULL;
+LcdDDLayer *pLcdLayer = NULL;
+
+void LcdDDTester_autoPinLayers(DumbDisplay& dumbdisplay) {
+  if (pMbLayer == NULL || pTurtleLayer == NULL || pLedGridLayer == NULL || pLcdLayer == NULL) {
+    dumbdisplay.configAutoPin(DD_AP_HORI);
+  } else {  
+    dumbdisplay.configAutoPin(DD_AP_VERT_2(
+                                DD_AP_HORI_2(pMbLayer->getLayerId(), pTurtleLayer->getLayerId()),
+                                DD_AP_HORI_2(pLedGridLayer->getLayerId(), pLcdLayer->getLayerId())
+                              ));
+  }
+}
+
+
+
+
 void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
-    if (Pinned) 
-      dumbdisplay.pinLayer(pMbLayer, 50, 50, 50, 50);
+    if (Pinned) {
+      if (AutoPin) {
+        LcdDDTester_autoPinLayers(dumbdisplay);
+      } else {
+        dumbdisplay.pinLayer(pMbLayer, 50, 50, 50, 50);
+      }
+    }
   }
   debugMbTestStep(pMbLayer, stepCount);
 }
 
-TurtleDDLayer *pTurtleLayer = NULL;
+
 void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
-    if (Pinned) 
-      dumbdisplay.pinLayer(pTurtleLayer, 0, 50, 50, 50);
+    if (Pinned) { 
+      if (AutoPin) {
+        LcdDDTester_autoPinLayers(dumbdisplay);
+      } else {
+        dumbdisplay.pinLayer(pTurtleLayer, 0, 50, 50, 50);
+      }
+    }
     pTurtleLayer->penColor("blue");
   }
   if (stepCount > 0) {
@@ -176,7 +206,7 @@ void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   }
 }
 
-LedGridDDLayer *pLedGridLayer = NULL;
+
 bool hori = false;
 void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   int init = stepCount % 6;
@@ -200,6 +230,11 @@ void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
       subRowCount = 4;
     }
     pLedGridLayer = dumbdisplay.createLedGridLayer(colCount, rowCount, subColCount, subRowCount); 
+    if (Pinned) {
+      if (AutoPin) {
+        LcdDDTester_autoPinLayers(dumbdisplay);
+      }
+    }
     pLedGridLayer->offColor("lightgray");
   }
   int c = stepCount % 4;
@@ -218,12 +253,16 @@ void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   }
 }
 
-LcdDDLayer *pLcdLayer = NULL;
 void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pLcdLayer = dumbdisplay.createLcdLayer(18, 3, 16, "Courier");
-    if (Pinned) 
-      dumbdisplay.pinLayer(pLcdLayer, 0, 0, 100, 50);
+    if (Pinned) {
+      if (AutoPin) {
+        LcdDDTester_autoPinLayers(dumbdisplay);
+      } else {
+        dumbdisplay.pinLayer(pLcdLayer, 0, 0, 100, 50);
+      }
+    }
     pLcdLayer->pixelColor("red");
     pLcdLayer->bgPixelColor(DD_RGB_COLOR(200, 200, 200));
     pLcdLayer->backgroundColor(DD_HEX_COLOR(0x111111));
@@ -233,6 +272,7 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   pLcdLayer->writeLine("Hi friend!", 1, "C");
   pLcdLayer->writeLine("Bună Привіт 你好", 2, "R");
 }
+
 
 }
 
@@ -246,12 +286,11 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool mb, bool turtle, bool ledGri
   if (turtle) testCount++;
   if (ledGrid) testCount++;
   if (lcd) testCount++;
-  bool autoPin = false;
-  if (autoPin) {
-    dumbdisplay.configAutoPin(DD_AP_HORI);
-  } else {
-    Pinned = testCount > 1;
-  }
+
+
+  Pinned = testCount > 1;
+  AutoPin = true;
+
   int stepCount = 0;
   while (true) {
     if (mb)
