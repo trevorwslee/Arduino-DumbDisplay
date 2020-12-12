@@ -252,6 +252,8 @@ class DumbDisplay {
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     void deleteLayer(DDLayer *pLayer);
+    /* write out a comment to DD */
+    void writeComment(const String& comment);
     void debugSetup(int debugLedPin);
 };
 

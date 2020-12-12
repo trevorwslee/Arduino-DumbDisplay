@@ -55,6 +55,7 @@ void IOProxy::print(const char *p) {
 
 
 bool _Connected = false;
+int _DDVersion = 0;
 int _NextLid = 0;
 DDInputOutput* _IO = NULL;
 
@@ -195,6 +196,7 @@ void _Connect() {
     if (pSIO != NULL)
       delete pSIO;
   }
+  int version = 0;
   { 
     long nextTime = 0;
     IOProxy ioProxy(_IO);
@@ -207,18 +209,26 @@ void _Connect() {
       digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
     }
 #endif
-        ioProxy.print(">init>:Arduino\n");
+        ioProxy.print(">init>:Arduino-v1\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
       if (ioProxy.available()) {
         String& data = ioProxy.get();
         if (data == "<init<")
           break;
+        if (data.startsWith("<init<:")) {
+            version = data.substring(7).toInt();
+            break;
+        }  
         ioProxy.clear();  
       }
     }
   }
   _Connected = true;
+  _DDVersion = version;
+  if (true) {       
+    _IO->print(("// connected to DD v" + String(_DDVersion) + "\n").c_str());
+  }
 #ifdef DEBUG_WITH_LED
     if (debugLedPin != -1) {
       digitalWrite(debugLedPin, LOW);
@@ -290,6 +300,10 @@ void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
   delete pLayer;
 }
+void DumbDisplay::writeComment(const String& comment) {
+  _sendCommand0("", ("// " + comment).c_str());
+}
+
 void DumbDisplay::debugSetup(int debugLedPin) {
 #ifdef DEBUG_WITH_LED
   if (debugLedPin != -1) {
