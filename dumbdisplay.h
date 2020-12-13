@@ -137,6 +137,8 @@ class TurtleDDLayer: public DDLayer {
     void home(bool withPen = true);
     /* go to (x, y); with pen or not */
     void goTo(int x, int y, bool withPen = true);
+    /* go by (byX, byY); with pen or not */
+    void goBy(int byX, int byY, bool withPen = true);
     /* set heading angle */
     void setHeading(int angle);
     /* pen up */
@@ -233,8 +235,12 @@ class GraphicalDDLayer: public DDLayer {
     }
     /* set cursor */
     void setCursor(int x, int y);
-    /* set text color (and color of drawing) */
+    /* move cursor by ... */
+    void moveCursorBy(int byX, int byY);
+    /* set text color (i.e. pen color) */
     void setTextColor(const String& color);
+    /* set text color and background color */
+    void setTextColor(const String& color, const String& bgColor);
     /* set text size */
     void setTextSize(int size);
     /* set font */
@@ -243,6 +249,8 @@ class GraphicalDDLayer: public DDLayer {
     void setTextFont(const String& fontName, int textSize = 0);
     /* set whether "print" will auto wrap or not */
     void setTextWrap(bool wrapOn);
+    /* fill screen with color */
+    void fillScreen(const String& color);
     void print(const String& text);
     void println(const String& text = "");
     /* forward; with pen or not */
@@ -255,7 +263,7 @@ class GraphicalDDLayer: public DDLayer {
     void setHeading(int angle);
     /* set pen size */
     void penSize(int size);
-    /* set pen color */
+    /* set pen color (i.e. text color) */
     void penColor(const String& color);
     /* set fill color (for shape) */
     void fillColor(const String& color);

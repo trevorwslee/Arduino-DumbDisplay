@@ -147,6 +147,8 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
   int step = stepCount;
   if (step-- == 0) {
+    pLayer->setCursor(20, 0);
+    pLayer->fillScreen("lightgreen");
     pLayer->println("你好!");
   }
   if (step-- == 0) {

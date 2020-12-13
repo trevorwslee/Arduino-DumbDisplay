@@ -334,7 +334,10 @@ void TurtleDDLayer::home(bool withPen) {
   _sendCommand0(layerId, withPen ? "home" : "jhome");
 }
 void TurtleDDLayer::goTo(int x, int y, bool withPen) {
-  _sendCommand2(layerId, withPen ? "goto" : "hto", String(x), String(y));
+  _sendCommand2(layerId, withPen ? "goto" : "jto", String(x), String(y));
+}
+void TurtleDDLayer::goBy(int byX, int byY, bool withPen) {
+  _sendCommand2(layerId, withPen ? "goby" : "jby", String(byX), String(byY));
 }
 void TurtleDDLayer::setHeading(int angle) {
   _sendCommand1(layerId, "seth", String(angle));
@@ -478,8 +481,14 @@ void LcdDDLayer::noBgPixelColor() {
 void GraphicalDDLayer::setCursor(int x, int y) {
   _sendCommand2(layerId, "setcursor", String(x), String(y));
 }
+void GraphicalDDLayer::moveCursorBy(int byX, int byY) {
+  _sendCommand2(layerId, "movecursorby", String(byX), String(byY));
+}
 void GraphicalDDLayer::setTextColor(const String& color) {
   _sendCommand1(layerId, "textcolor", color);
+}
+void GraphicalDDLayer::setTextColor(const String& color, const String& bgColor) {
+  _sendCommand2(layerId, "textcolor", color, bgColor);
 }
 void GraphicalDDLayer::setTextSize(int size) {
   _sendCommand1(layerId, "textsize", String(size));
@@ -489,6 +498,9 @@ void GraphicalDDLayer::setTextFont(const String& fontName, int size) {
 }
 void GraphicalDDLayer::setTextWrap(bool wrapOn) {
   _sendCommand1(layerId, "settextwrap", TO_BOOL(wrapOn));
+}
+void GraphicalDDLayer::fillScreen(const String& color) {
+  _sendCommand1(layerId, "fillscreen", color);
 }
 void GraphicalDDLayer::print(const String& text) {
   _sendCommand1(layerId, "print", text);
