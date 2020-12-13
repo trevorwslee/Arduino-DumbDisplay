@@ -386,8 +386,13 @@ void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
         LcdDDTester_autoPinLayers(dumbdisplay);
       }
     }
-    pGraphicalLayer->penColor("blue");
-    pGraphicalLayer->setTextFont("monospace", 14);
+    pGraphicalLayer->setTextColor("blue");
+    if (true) {
+      pGraphicalLayer->setTextFont("monospace");
+      pGraphicalLayer->setTextSize(14);
+    } else {
+      pGraphicalLayer->setTextFont("monospace", 14);
+    }
   }
   if (stepCount <= 14) {
     standardGraphicalTestStep(pGraphicalLayer, stepCount);

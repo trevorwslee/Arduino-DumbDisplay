@@ -153,8 +153,12 @@ class TurtleDDLayer: public DDLayer {
     void noFillColor();
     /* set pen filled or not; if filled, shape drawn will be filled */
     void penFilled(bool filled);
+    /* set text size */
     void setTextSize(int size);
-    void setTextFont(const String& fontName, int size = 0);
+    /* set font */
+    /* - fontName */
+    /* - textSize: 0 means default */
+    void setTextFont(const String& fontName, int textSize = 0);
     /* draw circle; centered or not */
     void circle(int radius, bool centered = false);
     /* draw oval; centered or not */
@@ -229,20 +233,17 @@ class GraphicalDDLayer: public DDLayer {
     }
     /* set cursor */
     void setCursor(int x, int y);
+    /* set text color (and color of drawing) */
     void setTextColor(const String& color);
+    /* set text size */
     void setTextSize(int size);
-    void setTextFont(const String& fontName, int size = 0);
+    /* set font */
+    /* - fontName */
+    /* - textSize: 0 means default */
+    void setTextFont(const String& fontName, int textSize = 0);
+    /* set whether "print" will auto wrap or not */
     void setTextWrap(bool wrapOn);
     void print(const String& text);
-    // inline void print(const char str[]) {
-    //   print(String(str));
-    // }
-    // inline void print(char c) {
-    //   print(String(c));
-    // }
-    // inline void print(double number, uint8_t digits) {
-    //   print(String(number, digits));
-    // }
     void println(const String& text = "");
     /* forward; with pen or not */
     void forward(int distance);
@@ -276,7 +277,8 @@ class GraphicalDDLayer: public DDLayer {
     /* - given circle radius and vertex count */
     /* - whether inside the imaginary circle or outside of it */ 
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
-    /* write text; draw means draw the text (honor heading) */
+    /* write text; will not auto wrap */
+    /* - draw means draw the text (honor heading direction) */
     void write(const String& text, bool draw = false);
 };
 
