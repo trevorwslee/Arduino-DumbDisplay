@@ -517,7 +517,15 @@ void GraphicalDDLayer::polygon(int side, int vertexCount) {
 void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
   _sendCommand2(layerId, inside ? "cpolyin" : "cpoly", String(radius), String(vertexCount));
 }
-
+void GraphicalDDLayer::write(const String& text, bool draw) {
+  _sendCommand1(layerId, draw ? "drawtext" : "write", text);
+}
+void GraphicalDDLayer::print(const String& text) {
+  _sendCommand1(layerId, "print", text);
+}
+void GraphicalDDLayer::println(const String& text) {
+  _sendCommand1(layerId, "println", text);
+}
 
 
 DumbDisplay::DumbDisplay(DDInputOutput* pIO) {

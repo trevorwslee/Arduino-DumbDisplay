@@ -225,6 +225,8 @@ class GraphicalDDLayer: public DDLayer {
   public:
     GraphicalDDLayer(int layerId): DDLayer(layerId) {
     }
+    /* set cursor */
+    void setCursor(int x, int y);
     /* forward; with pen or not */
     void forward(int distance);
     /* left turn */
@@ -233,8 +235,6 @@ class GraphicalDDLayer: public DDLayer {
     void rightTurn(int angle);
     /* set heading angle */
     void setHeading(int angle);
-    /* set cursor */
-    void setCursor(int x, int y);
     /* set pen size */
     void penSize(int size);
     /* set pen color */
@@ -259,6 +259,10 @@ class GraphicalDDLayer: public DDLayer {
     /* - given circle radius and vertex count */
     /* - whether inside the imaginary circle or outside of it */ 
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
+    /* write text; draw means draw the text (honor heading) */
+    void write(const String& text, bool draw = false);
+    void print(const String& text);
+    void println(const String& text = "");
 };
 
 
