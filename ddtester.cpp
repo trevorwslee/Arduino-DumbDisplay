@@ -144,6 +144,45 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
   }
 }
 
+void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
+  int step = stepCount;
+  if (step-- == 0) {
+    pLayer->println("你好!");
+  }
+  if (step-- == 0) {
+    pLayer->println();
+  }
+  if (step-- == 0) {
+    pLayer->print("This is a very very long long text line.");
+  }
+  if (step-- == 0) {
+    pLayer->println(" Yes, it is a very very long long text line!"); 
+  }
+  if (step-- == 0) {
+    pLayer->println();
+  }
+  if (step-- == 0) {
+    pLayer->print("Hello, ");
+  }
+  if (step-- == 0) {
+    pLayer->println(" World!");
+  }
+  if (step-- == 0) {
+    pLayer->println();
+  }
+  if (step-- == 0) {
+    pLayer->println("How are you?");
+  }
+  if (step-- == 0) {
+    pLayer->println();
+  }
+  if (step-- == 0) {
+    pLayer->print("Good");
+  }
+  if (step-- == 0) {
+    pLayer->println(" Day!");
+  }
+}
 
 void shapeGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
     pLayer->clear();
@@ -348,8 +387,13 @@ void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
       }
     }
     pGraphicalLayer->penColor("blue");
+    pGraphicalLayer->setTextFont("monospace", 14);
   }
-  shapeGraphicalTestStep(pGraphicalLayer, stepCount);
+  if (stepCount <= 14) {
+    standardGraphicalTestStep(pGraphicalLayer, stepCount);
+  } else {
+    shapeGraphicalTestStep(pGraphicalLayer, stepCount);
+  }
 }
 
 

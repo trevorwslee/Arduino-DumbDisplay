@@ -366,6 +366,12 @@ void TurtleDDLayer::noFillColor() {
 void TurtleDDLayer::penFilled(bool filled) {
   _sendCommand1(layerId, "pfilled", TO_BOOL(filled));
 }
+void TurtleDDLayer::setTextSize(int size) {
+  _sendCommand1(layerId, "ptextsize", String(size));
+}
+void TurtleDDLayer::setTextFont(const String& fontName, int size) {
+  _sendCommand2(layerId, "ptextfont", fontName, String(size));
+}
 void TurtleDDLayer::circle(int radius, bool centered) {
   _sendCommand1(layerId, centered ? "ccircle" : "circle", String(radius));
 }
@@ -469,6 +475,27 @@ void LcdDDLayer::noBgPixelColor() {
 }
 
 
+void GraphicalDDLayer::setCursor(int x, int y) {
+  _sendCommand2(layerId, "setcursor", String(x), String(y));
+}
+void GraphicalDDLayer::setTextColor(const String& color) {
+  _sendCommand1(layerId, "textcolor", color);
+}
+void GraphicalDDLayer::setTextSize(int size) {
+  _sendCommand1(layerId, "textsize", String(size));
+}
+void GraphicalDDLayer::setTextFont(const String& fontName, int size) {
+  _sendCommand2(layerId, "textfont", fontName, String(size));
+}
+void GraphicalDDLayer::setTextWrap(bool wrapOn) {
+  _sendCommand1(layerId, "settextwrap", TO_BOOL(wrapOn));
+}
+void GraphicalDDLayer::print(const String& text) {
+  _sendCommand1(layerId, "print", text);
+}
+void GraphicalDDLayer::println(const String& text) {
+  _sendCommand1(layerId, "println", text);
+}
 void GraphicalDDLayer::forward(int distance) {
   _sendCommand1(layerId, "fd", String(distance));
 }
@@ -480,9 +507,6 @@ void GraphicalDDLayer::rightTurn(int angle) {
 }
 void GraphicalDDLayer::setHeading(int angle) {
   _sendCommand1(layerId, "seth", String(angle));
-}
-void GraphicalDDLayer::setCursor(int x, int y) {
-  _sendCommand2(layerId, "setcursor", String(x), String(y));
 }
 void GraphicalDDLayer::penSize(int size) {
   _sendCommand1(layerId, "pensize", String(size));
@@ -519,12 +543,6 @@ void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside)
 }
 void GraphicalDDLayer::write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? "drawtext" : "write", text);
-}
-void GraphicalDDLayer::print(const String& text) {
-  _sendCommand1(layerId, "print", text);
-}
-void GraphicalDDLayer::println(const String& text) {
-  _sendCommand1(layerId, "println", text);
 }
 
 

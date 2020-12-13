@@ -153,6 +153,8 @@ class TurtleDDLayer: public DDLayer {
     void noFillColor();
     /* set pen filled or not; if filled, shape drawn will be filled */
     void penFilled(bool filled);
+    void setTextSize(int size);
+    void setTextFont(const String& fontName, int size = 0);
     /* draw circle; centered or not */
     void circle(int radius, bool centered = false);
     /* draw oval; centered or not */
@@ -227,6 +229,21 @@ class GraphicalDDLayer: public DDLayer {
     }
     /* set cursor */
     void setCursor(int x, int y);
+    void setTextColor(const String& color);
+    void setTextSize(int size);
+    void setTextFont(const String& fontName, int size = 0);
+    void setTextWrap(bool wrapOn);
+    void print(const String& text);
+    // inline void print(const char str[]) {
+    //   print(String(str));
+    // }
+    // inline void print(char c) {
+    //   print(String(c));
+    // }
+    // inline void print(double number, uint8_t digits) {
+    //   print(String(number, digits));
+    // }
+    void println(const String& text = "");
     /* forward; with pen or not */
     void forward(int distance);
     /* left turn */
@@ -261,8 +278,6 @@ class GraphicalDDLayer: public DDLayer {
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
     /* write text; draw means draw the text (honor heading) */
     void write(const String& text, bool draw = false);
-    void print(const String& text);
-    void println(const String& text = "");
 };
 
 
