@@ -2,6 +2,9 @@
 #include "ddtester.h"
 
 
+#define ASCII_ONLY false
+
+
 namespace DDTesterImpl {
 
 void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
@@ -149,7 +152,11 @@ void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
   if (step-- == 0) {
     pLayer->setCursor(20, 0);
     pLayer->fillScreen("lightgreen");
-    pLayer->println("你好!");
+    if (ASCII_ONLY) {
+      pLayer->println("FRIEND");
+    } else {
+      pLayer->println("你好!");
+    }
   }
   if (step-- == 0) {
     pLayer->println();
@@ -376,8 +383,13 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   }
   pLcdLayer->setCursor(0, 0);
   pLcdLayer->print("stepCount:" + String(stepCount));
-  pLcdLayer->writeLine(((stepCount / 10) % 2 == 0) ? "朋友" : "Hi friend", 1, "C");
-  pLcdLayer->writeLine("Bună Привіт 你好", 2, "R");
+  if (ASCII_ONLY) {
+    pLcdLayer->writeLine(((stepCount / 10) % 2 == 0) ? "FRIEND" : "Hi friend", 1, "C");
+    pLcdLayer->writeLine("How do you do?", 2, "R");
+  } else {  
+    pLcdLayer->writeLine(((stepCount / 10) % 2 == 0) ? "朋友" : "Hi friend", 1, "C");
+    pLcdLayer->writeLine("Bună Привіт 你好", 2, "R");
+  }
 }
 
 void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {

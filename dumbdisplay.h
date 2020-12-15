@@ -8,8 +8,9 @@
 #endif
 
 
-
 #define DUMBDISPLAY_BAUD 115200
+#define DD_SERIAL_BAUD DUMBDISPLAY_BAUD
+
 
 #define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
@@ -30,7 +31,7 @@
 class DDInputOutput {
   public:
     /* Serial IO mechanism (i.e. connecting via USB) */ 
-    DDInputOutput(): DDInputOutput(false, true) {
+    DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
     }
     bool isBackupBySerial() {
       return backupBySerial;
@@ -49,14 +50,16 @@ class DDInputOutput {
     }
     virtual void preConnect() {
       if (setupForSerial)
-        Serial.begin(DUMBDISPLAY_BAUD);
+        Serial.begin(serialBaud);
     }
   protected:
-    DDInputOutput(bool backupBySerial, bool setupForSerial) {
+    DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
+      this->serialBaud = serialBaud;
       this->backupBySerial = backupBySerial;
       this->setupForSerial = setupForSerial;
     }
   protected:
+    unsigned long serialBaud;
     bool backupBySerial;
     bool setupForSerial;
 };
@@ -239,7 +242,7 @@ class GraphicalDDLayer: public DDLayer {
     void moveCursorBy(int byX, int byY);
     /* set text color (i.e. pen color) */
     void setTextColor(const String& color);
-    /* set text color and background color */
+    /* set text color and text background color */
     void setTextColor(const String& color, const String& bgColor);
     /* set text size */
     void setTextSize(int size);

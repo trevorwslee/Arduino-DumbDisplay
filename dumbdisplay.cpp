@@ -8,10 +8,12 @@
 
 // define DD_DEBUG if need to use Serial to debug
 //#define DD_DEBUG
+//#define DEBUG_ECHO_COMMAND
 
 #define DEBUG_WITH_LED
 
-#define FLUSH_AFTER_SEND_COMMAND true
+// not flush seems to be a bit better for Serial (lost data)
+#define FLUSH_AFTER_SEND_COMMAND false
 
 namespace DDImpl {
 
@@ -100,6 +102,14 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
   if (FLUSH_AFTER_SEND_COMMAND) {
     _IO->flush();
   }
+#ifdef DEBUG_ECHO_COMMAND
+  if (true) {
+    _IO->print("// ");
+    _IO->print(command);
+    _IO->print("\n");
+    _IO->flush();
+  }  
+#endif  
 #ifdef DEBUG_WITH_LED
   if (debugLedPin != -1) {
     digitalWrite(debugLedPin, LOW);
