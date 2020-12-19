@@ -150,6 +150,27 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
   int step = stepCount;
   if (step-- == 0) {
+    if (true) {
+      for (int i = 0; i < 4; i++) {
+        if (i == 0) {
+          pLayer->drawRect(2, 2, 32, 42, "black");
+          pLayer->drawTriangle(4, 4, 32, 32, 8, 42, "blue");
+          pLayer->fillTriangle(6, 8, 28, 30, 10, 40, "green");
+        } else if (i == 1) {
+          pLayer->drawRect(2, 2, 60, 70, "black");
+          pLayer->drawRoundRect(4, 4, 56, 66, 18, "blue");
+          pLayer->fillRoundRect(6, 6, 52, 62, 20, "green");
+        } else if (i == 2) {
+          pLayer->drawCircle(11, 11, 9, "green");
+          pLayer->fillCircle(11, 11, 7, "blue");
+        } else {
+          pLayer->drawRect(0, 0, 24, 34, "blue");
+          pLayer->fillRect(2, 2, 20, 30, "red");
+        }
+        delay(2000);
+        pLayer->clear();
+      }
+    }
     pLayer->drawPixel(5, 10, "red");
     pLayer->drawLine(40, 50, 60, 100, "darkgreen");
     pLayer->drawChar(20, 30, '@', "red", "blue", 32);
@@ -451,6 +472,8 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
 
   int stepCount = 0;
   while (true) {
+    if (graphical)
+      GraphicalDDTester_testStep(dumbdisplay, stepCount);
     if (mb)
       MbDDTester_testStep(dumbdisplay, stepCount);
     if (turtle)  
@@ -459,8 +482,6 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
       LedGridDDTester_testStep(dumbdisplay, stepCount);  
     if (lcd)
       LcdDDTester_testStep(dumbdisplay, stepCount);
-    if (graphical)
-      GraphicalDDTester_testStep(dumbdisplay, stepCount);
     delay(1000);
     stepCount++;
   }

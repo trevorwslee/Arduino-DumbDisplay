@@ -261,8 +261,18 @@ class GraphicalDDLayer: public DDLayer {
     /* . empty background color means no background color */
     /* - size: 0 means default */
     void drawChar(int x, int y, char c, const String& color, const String& bgColor = "", int size = 0);
+    /* draw a pixel */
     void drawPixel(int x, int y, const String& color);
+    /* draw a [end to end] line */
     void drawLine(int x1, int x2, int y1, int y2, const String& color);
+    void drawCircle(int x, int y, int r, const String& color);
+    void fillCircle(int x, int y, int r, const String& color);
+    void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color);
+    void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color);
+    void drawRect(int x, int y, int w, int h, const String& color);
+    void fillRect(int x, int y, int w, int h, const String& color);
+    void drawRoundRect(int x, int y, int w, int h, int r, const String& color);
+    void fillRoundRect(int x, int y, int w, int h, int r, const String& color);
     /* forward; with pen or not */
     void forward(int distance);
     /* left turn */

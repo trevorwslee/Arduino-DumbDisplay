@@ -67,7 +67,7 @@ int _DebugLedPin = -1;
 
 
 
-void _sendCommand(const String& layerId, const char *command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL) {
+void _sendCommand(const String& layerId, const char *command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL) {
 #ifdef DEBUG_WITH_LED
   int debugLedPin = _DebugLedPin;
   if (debugLedPin != -1) {
@@ -97,6 +97,14 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
             if (pParam6 != NULL) {
               _IO->print(",");
               _IO->print(pParam6->c_str());
+              if (pParam7 != NULL) {
+                _IO->print(",");
+                _IO->print(pParam7->c_str());
+                if (pParam8 != NULL) {
+                  _IO->print(",");
+                  _IO->print(pParam8->c_str());
+                }
+              }
             }
           }
         }
@@ -141,6 +149,12 @@ void _sendCommand5(const String& layerId, const char *command, const String& par
 }
 void _sendCommand6(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6) {
   _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6);
+}
+void _sendCommand7(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7) {
+  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7);
+}
+void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
+  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
 }
 
 
@@ -534,6 +548,30 @@ void GraphicalDDLayer::drawPixel(int x, int y, const String& color) {
 }
 void GraphicalDDLayer::drawLine(int x1, int x2, int y1, int y2, const String& color) {
   _sendCommand5(layerId, "drawline", String(x1), String(y1), String(x2), String(y2), color);
+}
+void GraphicalDDLayer::drawRect(int x, int y, int w, int h, const String& color) {
+  _sendCommand5(layerId, "drawrect", String(x), String(y), String(w), String(h), color);
+}
+void GraphicalDDLayer::fillRect(int x, int y, int w, int h, const String& color) {
+  _sendCommand6(layerId, "drawrect", String(x), String(y), String(w), String(h), color, TO_BOOL(true));
+}
+void GraphicalDDLayer::drawCircle(int x, int y, int r, const String& color) {
+  _sendCommand4(layerId, "drawcircle", String(x), String(y), String(r), color);
+}
+void GraphicalDDLayer::fillCircle(int x, int y, int r, const String& color) {
+  _sendCommand5(layerId, "drawcircle", String(x), String(y), String(r), color, TO_BOOL(true));
+}
+void GraphicalDDLayer::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color) {
+  _sendCommand7(layerId, "drawtriangle", String(x1), String(y1), String(x2), String(y2), String(x3), String(y3), color);
+}
+void GraphicalDDLayer::fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color) {
+  _sendCommand8(layerId, "drawtriangle", String(x1), String(y1), String(x2), String(y2), String(x3), String(y3), color, TO_BOOL(true));
+}
+void GraphicalDDLayer::drawRoundRect(int x, int y, int w, int h, int r, const String& color) {
+  _sendCommand6(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color);
+}
+void GraphicalDDLayer::fillRoundRect(int x, int y, int w, int h, int r, const String& color) {
+  _sendCommand7(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color, TO_BOOL(true));
 }
 void GraphicalDDLayer::forward(int distance) {
   _sendCommand1(layerId, "fd", String(distance));
