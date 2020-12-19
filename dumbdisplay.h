@@ -261,6 +261,8 @@ class GraphicalDDLayer: public DDLayer {
     /* . empty background color means no background color */
     /* - size: 0 means default */
     void drawChar(int x, int y, char c, const String& color, const String& bgColor = "", int size = 0);
+    void drawPixel(int x, int y, const String& color);
+    void drawLine(int x1, int x2, int y1, int y2, const String& color);
     /* forward; with pen or not */
     void forward(int distance);
     /* left turn */

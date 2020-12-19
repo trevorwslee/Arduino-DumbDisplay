@@ -150,6 +150,8 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
   int step = stepCount;
   if (step-- == 0) {
+    pLayer->drawPixel(5, 10, "red");
+    pLayer->drawLine(40, 50, 60, 100, "darkgreen");
     pLayer->drawChar(20, 30, '@', "red", "blue", 32);
     delay(2000);
     pLayer->fillScreen("lightgreen");

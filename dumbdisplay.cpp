@@ -529,6 +529,12 @@ void GraphicalDDLayer::println(const String& text) {
 void GraphicalDDLayer::drawChar(int x, int y, char c, const String& color, const String& bgColor, int size) {
   _sendCommand6(layerId, "drawchar", String(x), String(y), color, bgColor, String(size), String(c));
 }
+void GraphicalDDLayer::drawPixel(int x, int y, const String& color) {
+  _sendCommand3(layerId, "drawpixel", String(x), String(y), color);
+}
+void GraphicalDDLayer::drawLine(int x1, int x2, int y1, int y2, const String& color) {
+  _sendCommand5(layerId, "drawline", String(x1), String(y1), String(x2), String(y2), color);
+}
 void GraphicalDDLayer::forward(int distance) {
   _sendCommand1(layerId, "fd", String(distance));
 }
