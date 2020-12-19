@@ -8,8 +8,9 @@
 #endif
 
 
-
 #define DUMBDISPLAY_BAUD 115200
+#define DD_SERIAL_BAUD DUMBDISPLAY_BAUD
+
 
 #define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
@@ -30,7 +31,7 @@
 class DDInputOutput {
   public:
     /* Serial IO mechanism (i.e. connecting via USB) */ 
-    DDInputOutput(): DDInputOutput(false, true) {
+    DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
     }
     bool isBackupBySerial() {
       return backupBySerial;
@@ -49,19 +50,20 @@ class DDInputOutput {
     }
     virtual void preConnect() {
       if (setupForSerial)
-        Serial.begin(DUMBDISPLAY_BAUD);
+        Serial.begin(serialBaud);
     }
   protected:
-    DDInputOutput(bool backupBySerial, bool setupForSerial) {
+    DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
+      this->serialBaud = serialBaud;
       this->backupBySerial = backupBySerial;
       this->setupForSerial = setupForSerial;
     }
   protected:
+    unsigned long serialBaud;
     bool backupBySerial;
     bool setupForSerial;
 };
 
- 
 
 class DDLayer {
   public:
@@ -138,6 +140,8 @@ class TurtleDDLayer: public DDLayer {
     void home(bool withPen = true);
     /* go to (x, y); with pen or not */
     void goTo(int x, int y, bool withPen = true);
+    /* go by (byX, byY); with pen or not */
+    void goBy(int byX, int byY, bool withPen = true);
     /* set heading angle */
     void setHeading(int angle);
     /* pen up */
@@ -154,6 +158,12 @@ class TurtleDDLayer: public DDLayer {
     void noFillColor();
     /* set pen filled or not; if filled, shape drawn will be filled */
     void penFilled(bool filled);
+    /* set text size */
+    void setTextSize(int size);
+    /* set font */
+    /* - fontName */
+    /* - textSize: 0 means default */
+    void setTextFont(const String& fontName, int textSize = 0);
     /* draw circle; centered or not */
     void circle(int radius, bool centered = false);
     /* draw oval; centered or not */
@@ -168,11 +178,12 @@ class TurtleDDLayer: public DDLayer {
     void polygon(int side, int vertexCount);
     /* draw polygon enclosed in an imaginary centered circle */
     /* - given circle radius and vertex count */
-    /* - whether inside the circle or not */ 
+    /* - whether inside the imaginary circle or outside of it */ 
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
     /* write text; draw means draw the text (honor heading) */
     void write(const String& text, bool draw = false);
 };
+
 
 class LedGridDDLayer: public DDLayer {
   public:
@@ -221,6 +232,84 @@ class LcdDDLayer: public DDLayer {
     void noBgPixelColor();
 };
 
+class GraphicalDDLayer: public DDLayer {
+  public:
+    GraphicalDDLayer(int layerId): DDLayer(layerId) {
+    }
+    /* set cursor */
+    void setCursor(int x, int y);
+    /* move cursor by ... */
+    void moveCursorBy(int byX, int byY);
+    // /* set text color (i.e. pen color) */
+    // void setTextColor(const String& color);
+    /* set text color and text background color */
+    /* . empty background color means no background color */
+    void setTextColor(const String& color, const String& bgColor = "");
+    /* set text size */
+    void setTextSize(int size);
+    /* set font */
+    /* - fontName */
+    /* - textSize: 0 means default */
+    void setTextFont(const String& fontName, int textSize = 0);
+    /* set whether "print" will auto wrap or not */
+    void setTextWrap(bool wrapOn);
+    /* fill screen with color */
+    void fillScreen(const String& color);
+    void print(const String& text);
+    void println(const String& text = "");
+    /* draw char */
+    /* . empty background color means no background color */
+    /* - size: 0 means default */
+    void drawChar(int x, int y, char c, const String& color, const String& bgColor = "", int size = 0);
+    /* draw a pixel */
+    void drawPixel(int x, int y, const String& color);
+    /* draw a [end to end] line */
+    void drawLine(int x1, int x2, int y1, int y2, const String& color);
+    void drawCircle(int x, int y, int r, const String& color);
+    void fillCircle(int x, int y, int r, const String& color);
+    void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color);
+    void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color);
+    void drawRect(int x, int y, int w, int h, const String& color);
+    void fillRect(int x, int y, int w, int h, const String& color);
+    void drawRoundRect(int x, int y, int w, int h, int r, const String& color);
+    void fillRoundRect(int x, int y, int w, int h, int r, const String& color);
+    /* forward; with pen or not */
+    void forward(int distance);
+    /* left turn */
+    void leftTurn(int angle);
+    /* right turn */
+    void rightTurn(int angle);
+    /* set heading angle */
+    void setHeading(int angle);
+    /* set pen size */
+    void penSize(int size);
+    /* set pen color (i.e. text color) */
+    void penColor(const String& color);
+    /* set fill color (for shape) */
+    void fillColor(const String& color);
+    /* set no fill color (for shape) */
+    void noFillColor();
+    /* draw circle; centered or not */
+    void circle(int radius, bool centered = false);
+    /* draw oval; centered or not */
+    void oval(int width, int height, bool centered = false);
+    /* draw triangle (SAS) */
+    void triangle(int side1, int angle, int side2);
+    /* draw isosceles triangle; given size and angle */
+    void isoscelesTriangle(int side, int angle);
+    /* draw rectangle; centered or not */
+    void rectangle(int width, int height, bool centered = false);
+    /* draw polygon given side and vertex count */
+    void polygon(int side, int vertexCount);
+    /* draw polygon enclosed in an imaginary centered circle */
+    /* - given circle radius and vertex count */
+    /* - whether inside the imaginary circle or outside of it */ 
+    void centeredPolygon(int radius, int vertexCount, bool inside = false);
+    /* write text; will not auto wrap */
+    /* - draw means draw the text (honor heading direction) */
+    void write(const String& text, bool draw = false);
+};
+
 
 
 class DumbDisplay {
@@ -247,11 +336,15 @@ class DumbDisplay {
     LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
     /* create a LCD layer */
     LcdDDLayer* createLcdLayer(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
+    /* create a graphical [LCD] layer */
+    GraphicalDDLayer* createGraphicalLayer(int width, int height);
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     void deleteLayer(DDLayer *pLayer);
+    /* write out a comment to DD */
+    void writeComment(const String& comment);
     void debugSetup(int debugLedPin);
 };
 

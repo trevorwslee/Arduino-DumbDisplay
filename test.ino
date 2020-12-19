@@ -9,25 +9,31 @@
 
 unsigned long baud = DUMBDISPLAY_BAUD;
 boolean enableSerial = true;
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), baud, enableSerial));
+unsigned long serialBaud = DD_SERIAL_BAUD;
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), baud, enableSerial, serialBaud));
 //DumbDisplay dumbdisplay(new DDInputOutput());
 
 
 void setup() {
-  if (!enableSerial)
+  if (!enableSerial) {
+    // if DD not using Serial, setup Serial here
     Serial.begin(115200);
-  dumbdisplay.debugSetup(13);
+  }
+
+  dumbdisplay.debugSetup(13);  // setup to use pin 13
+
+  if (true) {
+    dumbdisplay.connect();  // explicitly connect (so that the following comment will show)
+    dumbdisplay.writeComment("Good Day!");
+  }
 }
 
 void loop() {
   if (!enableSerial) {
+    // if DD not using Serial, print something to Serial
     Serial.println("hello");
   }
-  bool mb = true;
-  bool turtle = true;
-  bool ledGrid = true;
-  bool lcd = true;
-  BasicDDTestLoop(dumbdisplay, mb, turtle, ledGrid, lcd);
+  BasicDDTestLoop(dumbdisplay);
 }
 
 

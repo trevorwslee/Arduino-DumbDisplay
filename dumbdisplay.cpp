@@ -8,10 +8,12 @@
 
 // define DD_DEBUG if need to use Serial to debug
 //#define DD_DEBUG
+//#define DEBUG_ECHO_COMMAND
 
 #define DEBUG_WITH_LED
 
-#define FLUSH_AFTER_SEND_COMMAND true
+// not flush seems to be a bit better for Serial (lost data)
+#define FLUSH_AFTER_SEND_COMMAND false
 
 namespace DDImpl {
 
@@ -55,6 +57,7 @@ void IOProxy::print(const char *p) {
 
 
 bool _Connected = false;
+int _DDCompatibility = 0;
 int _NextLid = 0;
 DDInputOutput* _IO = NULL;
 
@@ -63,7 +66,8 @@ int _DebugLedPin = -1;
 #endif
 
 
-void _sendCommand(const String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5) {
+
+void _sendCommand(const String& layerId, const char *command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL) {
 #ifdef DEBUG_WITH_LED
   int debugLedPin = _DebugLedPin;
   if (debugLedPin != -1) {
@@ -90,6 +94,18 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
           if (pParam5 != NULL) {
             _IO->print(",");
             _IO->print(pParam5->c_str());
+            if (pParam6 != NULL) {
+              _IO->print(",");
+              _IO->print(pParam6->c_str());
+              if (pParam7 != NULL) {
+                _IO->print(",");
+                _IO->print(pParam7->c_str());
+                if (pParam8 != NULL) {
+                  _IO->print(",");
+                  _IO->print(pParam8->c_str());
+                }
+              }
+            }
           }
         }
       }
@@ -99,6 +115,14 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
   if (FLUSH_AFTER_SEND_COMMAND) {
     _IO->flush();
   }
+#ifdef DEBUG_ECHO_COMMAND
+  if (true) {
+    _IO->print("// ");
+    _IO->print(command);
+    _IO->print("\n");
+    _IO->flush();
+  }  
+#endif  
 #ifdef DEBUG_WITH_LED
   if (debugLedPin != -1) {
     digitalWrite(debugLedPin, LOW);
@@ -106,22 +130,31 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
   }  
 }  
 void _sendCommand0(const String& layerId, const char *command) {
-  _sendCommand(layerId, command, NULL, NULL, NULL, NULL, NULL);
+  _sendCommand(layerId, command);
 }  
 void _sendCommand1(const String& layerId, const char *command, const String& param1) {
-  _sendCommand(layerId, command, &param1, NULL, NULL, NULL, NULL);
+  _sendCommand(layerId, command, &param1);
 }  
 void _sendCommand2(const String& layerId, const char *command, const String& param1, const String& param2) {
-  _sendCommand(layerId, command, &param1, &param2, NULL, NULL, NULL);
+  _sendCommand(layerId, command, &param1, &param2);
 }  
 void _sendCommand3(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, NULL, NULL);
+  _sendCommand(layerId, command, &param1, &param2, &param3);
 }  
 void _sendCommand4(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, NULL);
+  _sendCommand(layerId, command, &param1, &param2, &param3, &param4);
 }
 void _sendCommand5(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5) {
   _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5);
+}
+void _sendCommand6(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6) {
+  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6);
+}
+void _sendCommand7(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7) {
+  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7);
+}
+void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
+  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
 }
 
 
@@ -195,6 +228,7 @@ void _Connect() {
     if (pSIO != NULL)
       delete pSIO;
   }
+  int compatibility = 0;
   { 
     long nextTime = 0;
     IOProxy ioProxy(_IO);
@@ -207,18 +241,26 @@ void _Connect() {
       digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
     }
 #endif
-        ioProxy.print(">init>:Arduino\n");
+        ioProxy.print(">init>:Arduino-c1\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
       if (ioProxy.available()) {
         String& data = ioProxy.get();
         if (data == "<init<")
           break;
+        if (data.startsWith("<init<:")) {
+            compatibility = data.substring(7).toInt();
+            break;
+        }  
         ioProxy.clear();  
       }
     }
   }
   _Connected = true;
+  _DDCompatibility = compatibility;
+  if (true) {       
+    _IO->print(("// connected to DD c" + String(compatibility) + "\n").c_str());
+  }
 #ifdef DEBUG_WITH_LED
     if (debugLedPin != -1) {
       digitalWrite(debugLedPin, LOW);
@@ -242,63 +284,6 @@ int _AllocLayerId() {
 
 
 using namespace DDImpl;
-
-DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
-  _IO = pIO;
-}
-void DumbDisplay::connect() {
-  _Connect();
-}
-void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
-  _Connect();
-  if (xUnitCount != 100 || yUnitCount != 100) {
-    _sendCommand2("", "CFGPF", String(xUnitCount), String(yUnitCount));
-  }
-}
-void DumbDisplay::configAutoPin(const String& layoutSpec) {
-  _Connect();
-  _sendCommand1("", "CFGAP", layoutSpec);
-}
-MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
-  int lid = _AllocLayerId();
-  String layerId = String(lid);
-  _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
-  return new MbDDLayer(lid);
-}
-TurtleDDLayer* DumbDisplay::createTurtleLayer(int width, int height) {
-  int lid = _AllocLayerId();
-  String layerId = String(lid);
-  _sendCommand3(layerId, "SU", String("turtle"), String(width), String(height));
-  return new TurtleDDLayer(lid);
-}
-LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int subColCount, int subRowCount) {
-  int lid = _AllocLayerId();
-  String layerId = String(lid);
-  _sendCommand5(layerId, "SU", String("ledgrid"), String(colCount), String(rowCount), String(subColCount), String(subRowCount));
-  return new LedGridDDLayer(lid);
-}
-LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeight, const String& fontName) {
-  int lid = _AllocLayerId();
-  String layerId = String(lid);
-  _sendCommand5(layerId, "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
-  return new LcdDDLayer(lid);
-}
-void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
-  _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
-}
-void DumbDisplay::deleteLayer(DDLayer *pLayer) {
-  _sendCommand0(pLayer->getLayerId(), "DEL");
-  delete pLayer;
-}
-void DumbDisplay::debugSetup(int debugLedPin) {
-#ifdef DEBUG_WITH_LED
-  if (debugLedPin != -1) {
-     pinMode(debugLedPin, OUTPUT);
-   }
-  _DebugLedPin = debugLedPin;
-#endif  
-}
-
 
 
 DDLayer::DDLayer(int layerId) {
@@ -381,7 +366,10 @@ void TurtleDDLayer::home(bool withPen) {
   _sendCommand0(layerId, withPen ? "home" : "jhome");
 }
 void TurtleDDLayer::goTo(int x, int y, bool withPen) {
-  _sendCommand2(layerId, withPen ? "goto" : "hto", String(x), String(y));
+  _sendCommand2(layerId, withPen ? "goto" : "jto", String(x), String(y));
+}
+void TurtleDDLayer::goBy(int byX, int byY, bool withPen) {
+  _sendCommand2(layerId, withPen ? "goby" : "jby", String(byX), String(byY));
 }
 void TurtleDDLayer::setHeading(int angle) {
   _sendCommand1(layerId, "seth", String(angle));
@@ -412,6 +400,12 @@ void TurtleDDLayer::noFillColor() {
 }
 void TurtleDDLayer::penFilled(bool filled) {
   _sendCommand1(layerId, "pfilled", TO_BOOL(filled));
+}
+void TurtleDDLayer::setTextSize(int size) {
+  _sendCommand1(layerId, "ptextsize", String(size));
+}
+void TurtleDDLayer::setTextFont(const String& fontName, int size) {
+  _sendCommand2(layerId, "ptextfont", fontName, String(size));
 }
 void TurtleDDLayer::circle(int radius, bool centered) {
   _sendCommand1(layerId, centered ? "ccircle" : "circle", String(radius));
@@ -516,5 +510,183 @@ void LcdDDLayer::noBgPixelColor() {
 }
 
 
+void GraphicalDDLayer::setCursor(int x, int y) {
+  _sendCommand2(layerId, "setcursor", String(x), String(y));
+}
+void GraphicalDDLayer::moveCursorBy(int byX, int byY) {
+  _sendCommand2(layerId, "movecursorby", String(byX), String(byY));
+}
+// void GraphicalDDLayer::setTextColor(const String& color) {
+//   _sendCommand1(layerId, "textcolor", color);
+// }
+void GraphicalDDLayer::setTextColor(const String& color, const String& bgColor) {
+  _sendCommand2(layerId, "textcolor", color, bgColor);
+}
+void GraphicalDDLayer::setTextSize(int size) {
+  _sendCommand1(layerId, "textsize", String(size));
+}
+void GraphicalDDLayer::setTextFont(const String& fontName, int size) {
+  _sendCommand2(layerId, "textfont", fontName, String(size));
+}
+void GraphicalDDLayer::setTextWrap(bool wrapOn) {
+  _sendCommand1(layerId, "settextwrap", TO_BOOL(wrapOn));
+}
+void GraphicalDDLayer::fillScreen(const String& color) {
+  _sendCommand1(layerId, "fillscreen", color);
+}
+void GraphicalDDLayer::print(const String& text) {
+  _sendCommand1(layerId, "print", text);
+}
+void GraphicalDDLayer::println(const String& text) {
+  _sendCommand1(layerId, "println", text);
+}
+void GraphicalDDLayer::drawChar(int x, int y, char c, const String& color, const String& bgColor, int size) {
+  _sendCommand6(layerId, "drawchar", String(x), String(y), color, bgColor, String(size), String(c));
+}
+void GraphicalDDLayer::drawPixel(int x, int y, const String& color) {
+  _sendCommand3(layerId, "drawpixel", String(x), String(y), color);
+}
+void GraphicalDDLayer::drawLine(int x1, int x2, int y1, int y2, const String& color) {
+  _sendCommand5(layerId, "drawline", String(x1), String(y1), String(x2), String(y2), color);
+}
+void GraphicalDDLayer::drawRect(int x, int y, int w, int h, const String& color) {
+  _sendCommand5(layerId, "drawrect", String(x), String(y), String(w), String(h), color);
+}
+void GraphicalDDLayer::fillRect(int x, int y, int w, int h, const String& color) {
+  _sendCommand6(layerId, "drawrect", String(x), String(y), String(w), String(h), color, TO_BOOL(true));
+}
+void GraphicalDDLayer::drawCircle(int x, int y, int r, const String& color) {
+  _sendCommand4(layerId, "drawcircle", String(x), String(y), String(r), color);
+}
+void GraphicalDDLayer::fillCircle(int x, int y, int r, const String& color) {
+  _sendCommand5(layerId, "drawcircle", String(x), String(y), String(r), color, TO_BOOL(true));
+}
+void GraphicalDDLayer::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color) {
+  _sendCommand7(layerId, "drawtriangle", String(x1), String(y1), String(x2), String(y2), String(x3), String(y3), color);
+}
+void GraphicalDDLayer::fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color) {
+  _sendCommand8(layerId, "drawtriangle", String(x1), String(y1), String(x2), String(y2), String(x3), String(y3), color, TO_BOOL(true));
+}
+void GraphicalDDLayer::drawRoundRect(int x, int y, int w, int h, int r, const String& color) {
+  _sendCommand6(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color);
+}
+void GraphicalDDLayer::fillRoundRect(int x, int y, int w, int h, int r, const String& color) {
+  _sendCommand7(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color, TO_BOOL(true));
+}
+void GraphicalDDLayer::forward(int distance) {
+  _sendCommand1(layerId, "fd", String(distance));
+}
+void GraphicalDDLayer::leftTurn(int angle) {
+  _sendCommand1(layerId, "lt", String(angle));
+}
+void GraphicalDDLayer::rightTurn(int angle) {
+  _sendCommand1(layerId, "rt", String(angle));
+}
+void GraphicalDDLayer::setHeading(int angle) {
+  _sendCommand1(layerId, "seth", String(angle));
+}
+void GraphicalDDLayer::penSize(int size) {
+  _sendCommand1(layerId, "pensize", String(size));
+}
+void GraphicalDDLayer::penColor(const String& color) {
+  _sendCommand1(layerId, "pencolor", color);
+}
+void GraphicalDDLayer::fillColor(const String& color) {
+  _sendCommand1(layerId, "fillcolor", color);
+}
+void GraphicalDDLayer::noFillColor() {
+  _sendCommand0(layerId, "nofillcolor");
+}
+void GraphicalDDLayer::circle(int radius, bool centered) {
+  _sendCommand1(layerId, centered ? "ccircle" : "circle", String(radius));
+}
+void GraphicalDDLayer::oval(int width, int height, bool centered) {
+  _sendCommand2(layerId, centered ? "coval" : "oval", String(width), String(height));
+}
+void GraphicalDDLayer::rectangle(int width, int height, bool centered) {
+  _sendCommand2(layerId, centered ? "crect" : "rect", String(width), String(height));
+}
+void GraphicalDDLayer::triangle(int side1, int angle, int side2) {
+  _sendCommand3(layerId, "trisas", String(side1), String(angle), String(side2));
+}
+void GraphicalDDLayer::isoscelesTriangle(int side, int angle) {
+  _sendCommand2(layerId, "trisas", String(side), String(angle));
+}
+void GraphicalDDLayer::polygon(int side, int vertexCount) {
+  _sendCommand2(layerId, "poly", String(side), String(vertexCount));
+}
+void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
+  _sendCommand2(layerId, inside ? "cpolyin" : "cpoly", String(radius), String(vertexCount));
+}
+void GraphicalDDLayer::write(const String& text, bool draw) {
+  _sendCommand1(layerId, draw ? "drawtext" : "write", text);
+}
+
+
+DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
+  _IO = pIO;
+}
+void DumbDisplay::connect() {
+  _Connect();
+}
+void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
+  _Connect();
+  if (xUnitCount != 100 || yUnitCount != 100) {
+    _sendCommand2("", "CFGPF", String(xUnitCount), String(yUnitCount));
+  }
+}
+void DumbDisplay::configAutoPin(const String& layoutSpec) {
+  _Connect();
+  _sendCommand1("", "CFGAP", layoutSpec);
+}
+MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
+  return new MbDDLayer(lid);
+}
+TurtleDDLayer* DumbDisplay::createTurtleLayer(int width, int height) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("turtle"), String(width), String(height));
+  return new TurtleDDLayer(lid);
+}
+LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int subColCount, int subRowCount) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand5(layerId, "SU", String("ledgrid"), String(colCount), String(rowCount), String(subColCount), String(subRowCount));
+  return new LedGridDDLayer(lid);
+}
+LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeight, const String& fontName) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand5(layerId, "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
+  return new LcdDDLayer(lid);
+}
+GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("graphical"), String(width), String(height));
+  return new GraphicalDDLayer(lid);
+}
+void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
+  _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
+}
+void DumbDisplay::deleteLayer(DDLayer *pLayer) {
+  _sendCommand0(pLayer->getLayerId(), "DEL");
+  delete pLayer;
+}
+void DumbDisplay::writeComment(const String& comment) {
+  _sendCommand0("", ("// " + comment).c_str());
+}
+
+void DumbDisplay::debugSetup(int debugLedPin) {
+#ifdef DEBUG_WITH_LED
+  if (debugLedPin != -1) {
+     pinMode(debugLedPin, OUTPUT);
+   }
+  _DebugLedPin = debugLedPin;
+#endif  
+}
 
 
