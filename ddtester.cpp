@@ -150,8 +150,12 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
   int step = stepCount;
   if (step-- == 0) {
-    pLayer->setCursor(20, 0);
+    pLayer->drawChar(20, 30, '@', "red", "blue", 32);
+    delay(2000);
     pLayer->fillScreen("lightgreen");
+    pLayer->write("AA");
+    delay(500);
+    pLayer->setCursor(20, 0);
     if (ASCII_ONLY) {
       pLayer->println("FRIEND");
     } else {
@@ -171,10 +175,12 @@ void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
     pLayer->println();
   }
   if (step-- == 0) {
-    pLayer->print("Hello, ");
+    pLayer->setTextColor("red", "pink");
+    pLayer->print("Hello");
+    pLayer->setTextColor("blue");
   }
   if (step-- == 0) {
-    pLayer->println(" World!");
+    pLayer->println(", World!");
   }
   if (step-- == 0) {
     pLayer->println();

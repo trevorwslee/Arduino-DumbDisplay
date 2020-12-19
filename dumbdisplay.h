@@ -240,10 +240,11 @@ class GraphicalDDLayer: public DDLayer {
     void setCursor(int x, int y);
     /* move cursor by ... */
     void moveCursorBy(int byX, int byY);
-    /* set text color (i.e. pen color) */
-    void setTextColor(const String& color);
+    // /* set text color (i.e. pen color) */
+    // void setTextColor(const String& color);
     /* set text color and text background color */
-    void setTextColor(const String& color, const String& bgColor);
+    /* . empty background color means no background color */
+    void setTextColor(const String& color, const String& bgColor = "");
     /* set text size */
     void setTextSize(int size);
     /* set font */
@@ -256,6 +257,10 @@ class GraphicalDDLayer: public DDLayer {
     void fillScreen(const String& color);
     void print(const String& text);
     void println(const String& text = "");
+    /* draw char */
+    /* . empty background color means no background color */
+    /* - size: 0 means default */
+    void drawChar(int x, int y, char c, const String& color, const String& bgColor = "", int size = 0);
     /* forward; with pen or not */
     void forward(int distance);
     /* left turn */

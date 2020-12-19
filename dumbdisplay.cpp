@@ -66,7 +66,8 @@ int _DebugLedPin = -1;
 #endif
 
 
-void _sendCommand(const String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5) {
+
+void _sendCommand(const String& layerId, const char *command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL) {
 #ifdef DEBUG_WITH_LED
   int debugLedPin = _DebugLedPin;
   if (debugLedPin != -1) {
@@ -93,6 +94,10 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
           if (pParam5 != NULL) {
             _IO->print(",");
             _IO->print(pParam5->c_str());
+            if (pParam6 != NULL) {
+              _IO->print(",");
+              _IO->print(pParam6->c_str());
+            }
           }
         }
       }
@@ -117,22 +122,25 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
   }  
 }  
 void _sendCommand0(const String& layerId, const char *command) {
-  _sendCommand(layerId, command, NULL, NULL, NULL, NULL, NULL);
+  _sendCommand(layerId, command);
 }  
 void _sendCommand1(const String& layerId, const char *command, const String& param1) {
-  _sendCommand(layerId, command, &param1, NULL, NULL, NULL, NULL);
+  _sendCommand(layerId, command, &param1);
 }  
 void _sendCommand2(const String& layerId, const char *command, const String& param1, const String& param2) {
-  _sendCommand(layerId, command, &param1, &param2, NULL, NULL, NULL);
+  _sendCommand(layerId, command, &param1, &param2);
 }  
 void _sendCommand3(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, NULL, NULL);
+  _sendCommand(layerId, command, &param1, &param2, &param3);
 }  
 void _sendCommand4(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, NULL);
+  _sendCommand(layerId, command, &param1, &param2, &param3, &param4);
 }
 void _sendCommand5(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5) {
   _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5);
+}
+void _sendCommand6(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6) {
+  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6);
 }
 
 
@@ -494,9 +502,9 @@ void GraphicalDDLayer::setCursor(int x, int y) {
 void GraphicalDDLayer::moveCursorBy(int byX, int byY) {
   _sendCommand2(layerId, "movecursorby", String(byX), String(byY));
 }
-void GraphicalDDLayer::setTextColor(const String& color) {
-  _sendCommand1(layerId, "textcolor", color);
-}
+// void GraphicalDDLayer::setTextColor(const String& color) {
+//   _sendCommand1(layerId, "textcolor", color);
+// }
 void GraphicalDDLayer::setTextColor(const String& color, const String& bgColor) {
   _sendCommand2(layerId, "textcolor", color, bgColor);
 }
@@ -517,6 +525,9 @@ void GraphicalDDLayer::print(const String& text) {
 }
 void GraphicalDDLayer::println(const String& text) {
   _sendCommand1(layerId, "println", text);
+}
+void GraphicalDDLayer::drawChar(int x, int y, char c, const String& color, const String& bgColor, int size) {
+  _sendCommand6(layerId, "drawchar", String(x), String(y), color, bgColor, String(size), String(c));
 }
 void GraphicalDDLayer::forward(int distance) {
   _sendCommand1(layerId, "fd", String(distance));
