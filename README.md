@@ -334,7 +334,7 @@ To showcase Turtle, as well as the more controller way of "pinning" layers
 
 ### Screenshot 5 -- *Graphical [LCD]*
 
-There is a graphical [LCD] layer that is derived with the Turtle layer
+There is a graphical [LCD] layer that is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features)
 
 ```
 #include <ssdumbdisplay.h>
