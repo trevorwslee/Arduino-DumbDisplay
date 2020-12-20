@@ -29,6 +29,9 @@ class DDBluetoothSerialIO: public DDInputOutput {
     char read() {
       return serialBT.read();
     } 
+    void print(const String &s) {
+      serialBT.print(s); 
+    }
     void print(const char *p) {
       serialBT.print(p); 
     }
@@ -37,7 +40,9 @@ class DDBluetoothSerialIO: public DDInputOutput {
       serialBT.begin(btLocalName);
     }
     void flush() {
-      serialBT.flush();
+      if (false) {
+        serialBT.flush();  // not the expected "flush"
+      }
     }
   private:
     String btLocalName;

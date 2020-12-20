@@ -2,13 +2,12 @@
 #include "dumbdisplay.h"
 
 
-#define HAND_SHAKE_GAP 500
+#define HAND_SHAKE_GAP 1000
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
-
 //#define DEBUG_ECHO_COMMAND
 
 
@@ -31,6 +30,7 @@ class IOProxy {
     bool available();
     String& get();
     void clear();
+    void print(const String &s);
     void print(const char *p);
   private:
     DDInputOutput *pIO;
@@ -55,19 +55,22 @@ String& IOProxy::get() {
 void IOProxy::clear() {
   data = "";
 }
+void IOProxy::print(const String &s) {
+  pIO->print(s);
+}
 void IOProxy::print(const char *p) {
   pIO->print(p);
 }
 
 
 
-bool _Connected = false;
-int _DDCompatibility = 0;
-int _NextLid = 0;
-DDInputOutput* _IO = NULL;
+volatile bool _Connected = false;
+volatile int _DDCompatibility = 0;
+volatile int _NextLid = 0;
+DDInputOutput* volatile _IO = NULL;
 
 #ifdef DEBUG_WITH_LED
-int _DebugLedPin = -1;
+volatile int _DebugLedPin = -1;
 #endif
 
 
@@ -79,35 +82,41 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
     digitalWrite(debugLedPin, HIGH);
   }
 #endif   
+#ifdef DD_DEBUG_SEND_COMMAND          
+    Serial.print("// *** sent");
+#endif        
   if (layerId != "") {
-    _IO->print(layerId.c_str());
+    _IO->print(layerId/*.c_str()*/);
     _IO->print(".");
   }
   _IO->print(command);
+#ifdef DD_DEBUG_SEND_COMMAND          
+    Serial.print(" ...");
+#endif        
   if (pParam1 != NULL) {
     _IO->print(":");
-    _IO->print(pParam1->c_str());
+    _IO->print(*pParam1/*pParam1->c_str()*/);
     if (pParam2 != NULL) {
       _IO->print(",");
-      _IO->print(pParam2->c_str());
+      _IO->print(*pParam2/*pParam2->c_str()*/);
       if (pParam3 != NULL) {
         _IO->print(",");
-        _IO->print(pParam3->c_str());
+        _IO->print(*pParam3/*pParam3->c_str()*/);
         if (pParam4 != NULL) {
           _IO->print(",");
-          _IO->print(pParam4->c_str());
+          _IO->print(*pParam4/*pParam4->c_str()*/);
           if (pParam5 != NULL) {
             _IO->print(",");
-            _IO->print(pParam5->c_str());
+            _IO->print(*pParam5/*pParam5->c_str()*/);
             if (pParam6 != NULL) {
               _IO->print(",");
-              _IO->print(pParam6->c_str());
+              _IO->print(*pParam6/*pParam6->c_str()*/);
               if (pParam7 != NULL) {
                 _IO->print(",");
-                _IO->print(pParam7->c_str());
+                _IO->print(*pParam7/*pParam7->c_str()*/);
                 if (pParam8 != NULL) {
                   _IO->print(",");
-                  _IO->print(pParam8->c_str());
+                  _IO->print(*pParam8/*pParam8->c_str()*/);
                 }
               }
             }
@@ -116,20 +125,22 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
       }
     }
   }
+#ifdef DD_DEBUG_SEND_COMMAND          
+    Serial.print(" COMMAND ");
+#endif        
   _IO->print("\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
     _IO->flush();
   }
-#ifdef DD_DEBUG_SEND_COMMAND          
-    Serial.print("// *** sent COMMAND ");
-    Serial.println(command);
-#endif        
 #ifdef DEBUG_ECHO_COMMAND
   _IO->print("// ");
   _IO->print(command);
   _IO->print("\n");
   _IO->flush();
 #endif  
+#ifdef DD_DEBUG_SEND_COMMAND          
+    Serial.println(command);
+#endif        
 #ifdef DEBUG_WITH_LED
   if (debugLedPin != -1) {
     digitalWrite(debugLedPin, LOW);
@@ -268,13 +279,26 @@ void _Connect() {
   }
   _Connected = true;
   _DDCompatibility = compatibility;
+  if (false) {
+    // ignore any input in 1000ms window
+    delay(1000);
+    while (_IO->available()) {
+      _IO->read();
+    }
+  }
   if (true) {       
-    _IO->print(("// connected to DD c" + String(compatibility) + "\n").c_str());
-    _IO->flush();
+    _IO->print("// connected to DD c" + String(compatibility) + "\n"/*.c_str()*/);
+    //_IO->flush();
+    if (false) {
+      // *** debug code
+      for (int i = 0; i < 10; i++) {
+        delay(500);
+        _IO->print("// connected to DD c" + String(compatibility) + "\n"/*.c_str()*/);
+      }
+    }
 #ifdef DD_DEBUG_HS          
     Serial.println("// *** CONNECTED");
 #endif        
-    //delay(500);  // delay a bit before proceeding
   }
 #ifdef DEBUG_WITH_LED
     if (debugLedPin != -1) {
@@ -282,7 +306,8 @@ void _Connect() {
     }
 #endif
     if (false) {
-      _IO->print(String("// connection to DD made\n").c_str());
+      // *** debug code
+      _IO->print("// connection to DD made\n");
        _sendCommand0("", "// *** connection made ***");
     }
 #ifdef DD_DEBUG_HS          

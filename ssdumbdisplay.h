@@ -22,6 +22,9 @@ class DDSoftwareSerialIO: public DDInputOutput {
     char read() {
       return pSS->read();
     } 
+    void print(const String &s) {
+      pSS->print(s); 
+    }
     void print(const char *p) {
       pSS->print(p); 
     }

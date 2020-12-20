@@ -42,6 +42,9 @@ class DDInputOutput {
     virtual char read() {
       return Serial.read();
     }
+    virtual void print(const String &s) {
+        Serial.print(s);
+    }
     virtual void print(const char *p) {
         Serial.print(p);
     }
