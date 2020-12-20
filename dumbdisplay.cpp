@@ -6,15 +6,19 @@
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
-// define DD_DEBUG_HS if need to use Serial to debug
-#define DD_DEBUG_HS
-#define DD_DEBUG_SEND_COMMAND
+//#define DD_DEBUG_HS
+//#define DD_DEBUG_SEND_COMMAND
+
 //#define DEBUG_ECHO_COMMAND
+
 
 #define DEBUG_WITH_LED
 
+
 // not flush seems to be a bit better for Serial (lost data)
 #define FLUSH_AFTER_SENT_COMMAND false
+
+
 
 namespace DDImpl {
 
@@ -564,7 +568,7 @@ void GraphicalDDLayer::drawChar(int x, int y, char c, const String& color, const
 void GraphicalDDLayer::drawPixel(int x, int y, const String& color) {
   _sendCommand3(layerId, "drawpixel", String(x), String(y), color);
 }
-void GraphicalDDLayer::drawLine(int x1, int x2, int y1, int y2, const String& color) {
+void GraphicalDDLayer::drawLine(int x1, int y1, int x2, int y2, const String& color) {
   _sendCommand5(layerId, "drawline", String(x1), String(y1), String(x2), String(y2), color);
 }
 void GraphicalDDLayer::drawRect(int x, int y, int w, int h, const String& color) {

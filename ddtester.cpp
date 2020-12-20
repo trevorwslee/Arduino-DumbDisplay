@@ -153,6 +153,7 @@ void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
     if (true) {
       for (int i = 0; i < 4; i++) {
         if (i == 0) {
+          pLayer->backgroundColor("aliceblue");
           pLayer->drawRect(2, 2, 32, 42, "black");
           pLayer->drawTriangle(4, 4, 32, 32, 8, 42, "blue");
           pLayer->fillTriangle(6, 8, 28, 30, 10, 40, "green");
@@ -175,6 +176,7 @@ void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
     pLayer->drawLine(40, 50, 60, 100, "darkgreen");
     pLayer->drawChar(20, 30, '@', "red", "blue", 32);
     delay(2000);
+    pLayer->backgroundColor("black");
     pLayer->fillScreen("lightgreen");
     pLayer->write("AA");
     delay(500);
