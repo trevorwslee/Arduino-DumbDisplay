@@ -85,7 +85,7 @@ With a DumbDisplay object, you are ready to proceed coding, like
 ## More Samples
 
 
-| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | Graphical [LCD] |
+| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] |
 |--|--|--|--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmb.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddgraphical.png)|
 
@@ -334,7 +334,7 @@ To showcase Turtle, as well as the more controller way of "pinning" layers
 
 ### Screenshot 5 -- *Graphical [LCD]*
 
-There is a graphical [LCD] layer that is derived with the Turtle layer
+There is a graphical [LCD] layer that is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features)
 
 ```
 #include <ssdumbdisplay.h>
