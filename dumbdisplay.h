@@ -264,7 +264,7 @@ class GraphicalDDLayer: public DDLayer {
     /* draw a pixel */
     void drawPixel(int x, int y, const String& color);
     /* draw a [end to end] line */
-    void drawLine(int x1, int x2, int y1, int y2, const String& color);
+    void drawLine(int x1, int y1, int x2, int y2, const String& color);
     void drawCircle(int x, int y, int r, const String& color);
     void fillCircle(int x, int y, int r, const String& color);
     void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color);

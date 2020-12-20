@@ -6,14 +6,19 @@
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
-// define DD_DEBUG if need to use Serial to debug
-//#define DD_DEBUG
+//#define DD_DEBUG_HS
+//#define DD_DEBUG_SEND_COMMAND
+
 //#define DEBUG_ECHO_COMMAND
+
 
 #define DEBUG_WITH_LED
 
+
 // not flush seems to be a bit better for Serial (lost data)
-#define FLUSH_AFTER_SEND_COMMAND false
+#define FLUSH_AFTER_SENT_COMMAND false
+
+
 
 namespace DDImpl {
 
@@ -112,48 +117,50 @@ void _sendCommand(const String& layerId, const char *command, const String* pPar
     }
   }
   _IO->print("\n");
-  if (FLUSH_AFTER_SEND_COMMAND) {
+  if (FLUSH_AFTER_SENT_COMMAND) {
     _IO->flush();
   }
+#ifdef DD_DEBUG_SEND_COMMAND          
+    Serial.print("// *** sent COMMAND ");
+    Serial.println(command);
+#endif        
 #ifdef DEBUG_ECHO_COMMAND
-  if (true) {
-    _IO->print("// ");
-    _IO->print(command);
-    _IO->print("\n");
-    _IO->flush();
-  }  
+  _IO->print("// ");
+  _IO->print(command);
+  _IO->print("\n");
+  _IO->flush();
 #endif  
 #ifdef DEBUG_WITH_LED
   if (debugLedPin != -1) {
     digitalWrite(debugLedPin, LOW);
-#endif
   }  
+#endif
 }  
-void _sendCommand0(const String& layerId, const char *command) {
+inline void _sendCommand0(const String& layerId, const char *command) {
   _sendCommand(layerId, command);
 }  
-void _sendCommand1(const String& layerId, const char *command, const String& param1) {
+inline void _sendCommand1(const String& layerId, const char *command, const String& param1) {
   _sendCommand(layerId, command, &param1);
 }  
-void _sendCommand2(const String& layerId, const char *command, const String& param1, const String& param2) {
+inline void _sendCommand2(const String& layerId, const char *command, const String& param1, const String& param2) {
   _sendCommand(layerId, command, &param1, &param2);
 }  
-void _sendCommand3(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
+inline void _sendCommand3(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
   _sendCommand(layerId, command, &param1, &param2, &param3);
 }  
-void _sendCommand4(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4) {
+inline void _sendCommand4(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4) {
   _sendCommand(layerId, command, &param1, &param2, &param3, &param4);
 }
-void _sendCommand5(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5) {
+inline void _sendCommand5(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5) {
   _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5);
 }
-void _sendCommand6(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6) {
+inline void _sendCommand6(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6) {
   _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6);
 }
-void _sendCommand7(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7) {
+inline void _sendCommand7(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7) {
   _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7);
 }
-void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
+inline void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
   _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
 }
 
@@ -184,15 +191,15 @@ void _Connect() {
       long now = millis();
       if (now > nextTime) {
 #ifdef DEBUG_WITH_LED
-    if (debugLedPin != -1) {
-      debugLedOn = !debugLedOn;
-      digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
-    }
+        if (debugLedPin != -1) {
+          debugLedOn = !debugLedOn;
+          digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
+        }
 #endif
         ioProxy.print("ddhello\n");
         if (pSerialIOProxy != NULL) 
           pSerialIOProxy->print("ddhello\n");
-#ifdef DD_DEBUG          
+#ifdef DD_DEBUG_HS          
         Serial.println("handshake:ddhello");
 #endif        
         nextTime = now + HAND_SHAKE_GAP;
@@ -207,7 +214,7 @@ void _Connect() {
       }
       if (available) {
         String& data = fromSerial ? pSerialIOProxy->get() : ioProxy.get();
-#ifdef DD_DEBUG          
+#ifdef DD_DEBUG_HS          
         Serial.println("handshake:data-" + data);
 #endif        
         if (data == "ddhello") {
@@ -217,6 +224,9 @@ void _Connect() {
           }
           break;
         }
+#ifdef DD_DEBUG_HS          
+        Serial.println("handshake:DONE");
+#endif        
         if (fromSerial) 
           pSerialIOProxy->clear();
         else
@@ -236,10 +246,10 @@ void _Connect() {
       long now = millis();
       if (now > nextTime) {
 #ifdef DEBUG_WITH_LED
-    if (debugLedPin != -1) {
-      debugLedOn = !debugLedOn;
-      digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
-    }
+        if (debugLedPin != -1) {
+          debugLedOn = !debugLedOn;
+          digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
+        }
 #endif
         ioProxy.print(">init>:Arduino-c1\n");
         nextTime = now + HAND_SHAKE_GAP;
@@ -260,12 +270,24 @@ void _Connect() {
   _DDCompatibility = compatibility;
   if (true) {       
     _IO->print(("// connected to DD c" + String(compatibility) + "\n").c_str());
+    _IO->flush();
+#ifdef DD_DEBUG_HS          
+    Serial.println("// *** CONNECTED");
+#endif        
+    //delay(500);  // delay a bit before proceeding
   }
 #ifdef DEBUG_WITH_LED
     if (debugLedPin != -1) {
       digitalWrite(debugLedPin, LOW);
     }
 #endif
+    if (false) {
+      _IO->print(String("// connection to DD made\n").c_str());
+       _sendCommand0("", "// *** connection made ***");
+    }
+#ifdef DD_DEBUG_HS          
+    Serial.println("// *** DONE MAKE CONNECTION");
+#endif        
 }
 
 int _AllocLayerId() {
@@ -546,7 +568,7 @@ void GraphicalDDLayer::drawChar(int x, int y, char c, const String& color, const
 void GraphicalDDLayer::drawPixel(int x, int y, const String& color) {
   _sendCommand3(layerId, "drawpixel", String(x), String(y), color);
 }
-void GraphicalDDLayer::drawLine(int x1, int x2, int y1, int y2, const String& color) {
+void GraphicalDDLayer::drawLine(int x1, int y1, int x2, int y2, const String& color) {
   _sendCommand5(layerId, "drawline", String(x1), String(y1), String(x2), String(y2), color);
 }
 void GraphicalDDLayer::drawRect(int x, int y, int w, int h, const String& color) {
