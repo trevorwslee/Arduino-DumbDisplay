@@ -225,6 +225,7 @@ void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
 }
 
 void shapeGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
+    pLayer->backgroundColor("beige");
     pLayer->clear();
     pLayer->setCursor(100,100);
     pLayer->setHeading(0);
