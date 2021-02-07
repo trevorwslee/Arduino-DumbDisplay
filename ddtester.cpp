@@ -514,11 +514,11 @@ using namespace DDTesterImpl;
 
 void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
 
-  bool mb = false;
-  bool turtle = false;
-  bool ledGrid = false;
-  bool lcd = false;
-  bool graphical = false;
+  bool mb = true;
+  bool turtle = true;
+  bool ledGrid = true;
+  bool lcd = true;
+  bool graphical = true;
   bool sevenSegmentRow = true;
 
   int testCount = 0;
