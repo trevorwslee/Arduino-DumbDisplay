@@ -318,6 +318,15 @@ class SevenSegmentRowDDLayer: public DDLayer {
   public:
     SevenSegmentRowDDLayer(int layerId): DDLayer(layerId) {
     }
+    /* set segment color */
+    void segmentColor(const String& color);
+    /* show number */
+    void showNumber(float number);
+    /* show HEX number */
+    void showHexNumber(int number);
+    /* show formatted number (even number with hex digits) */
+    /* e.g. "12.00", "00.34", "-.12", "0ff" */
+    void SevenSegmentRowDDLayer::showFormatted(const String& formatted);
 };
 
 

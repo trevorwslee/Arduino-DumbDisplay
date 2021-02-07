@@ -669,6 +669,21 @@ void GraphicalDDLayer::write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? "drawtext" : "write", text);
 }
 
+void SevenSegmentRowDDLayer::segmentColor(const String& color) {
+  _sendCommand1(layerId, "segcolor", color);
+}
+void SevenSegmentRowDDLayer::showNumber(float number) {
+  _sendCommand1(layerId, "shownumber", String(number, 5));
+}
+void SevenSegmentRowDDLayer::showHexNumber(int number) {
+  _sendCommand1(layerId, "showhex", String(number));
+}
+void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
+  _sendCommand1(layerId, "showformatted", formatted);
+}
+
+
+
 
 DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
   _IO = pIO;
@@ -716,10 +731,10 @@ GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
   _sendCommand3(layerId, "SU", String("graphical"), String(width), String(height));
   return new GraphicalDDLayer(lid);
 }
-SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount) {
+SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   int lid = _AllocLayerId();
   String layerId = String(lid);
-  _sendCommand3(layerId, "SU", String("7segrow"), String(digitCount));
+  _sendCommand2(layerId, "SU", String("7segrow"), String(digitCount));
   return new SevenSegmentRowDDLayer(lid);
 }
 void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
