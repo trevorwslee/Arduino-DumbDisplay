@@ -320,6 +320,8 @@ class SevenSegmentRowDDLayer: public DDLayer {
     }
     /* set segment color */
     void segmentColor(const String& color);
+    void turnOn(const String& segments, int digitIdx = 0);
+    void turnOff(const String& segments, int digitIdx = 0);
     /* show number */
     void showNumber(float number);
     /* show HEX number */

@@ -442,10 +442,19 @@ void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
     p7SegmentRowLayer->backgroundColor(DD_HEX_COLOR(0x334455));
     p7SegmentRowLayer->segmentColor("yellow");
   }
-  int maxCount1 = 5;
-  int maxCount2 = 10;
+
+  char allSegs[] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' }; 
+  int maxCount1 = 16;
+  int maxCount2 = maxCount1 + 5;
   if (stepCount < maxCount1) {
-      p7SegmentRowLayer->showFormatted("11.22");
+    if ((stepCount % 2) == 0)
+      p7SegmentRowLayer->turnOn("abcdefg.", 2);
+    else
+      p7SegmentRowLayer->turnOff("abcdefg.", 2);
+    if (stepCount < 8)  
+      p7SegmentRowLayer->turnOn(String(allSegs[stepCount % 8]));
+    else
+      p7SegmentRowLayer->turnOff(String(allSegs[stepCount % 8]));
   } else if (stepCount < maxCount2) {
     int counter = stepCount - maxCount1;
     if (counter-- == 0) p7SegmentRowLayer->showHexNumber(0xfb);
