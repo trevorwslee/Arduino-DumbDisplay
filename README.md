@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.1.2)
+# DumbDisplay Arduino Library (v0.1.3)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets for your Arduino / ESP32 experiments.
 
@@ -11,11 +11,13 @@ Doing so you may defer buying / connecting real output gadgets until later stage
 
 A few types of output layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
-* LCD
+* LCD (text-based and graphical)
 * Micro:bit-like canvas
 * Turtle-like canvas
+* graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
+* 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 
-You can install the free DumbDisplay app (v0.3.3 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
+You can install the free DumbDisplay app (v0.3.4 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth via HC-06)
@@ -23,7 +25,7 @@ The app can accept connection via
 
 Notes:
 * Sorry that since I only have Arduino Uno, therefore the library is only tested with Arduino Uno (and partly with ESP32).
-* In case DumbDisply does not "handshake" with your Arduion correctly, you can try resetting your Adruino.
+* In case DumbDisply does not "handshake" with your Arduion correctly, you can try resetting your Adruino by pressing the "reset" button on your Adruion
 
 
 # Sample Code
@@ -32,7 +34,7 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
 
 * Via Serial 
   ```
-    #include "#include <dumbdisplay.h>"
+    #include <dumbdisplay.h>
     DumbDisplay dumbdisplay(new DDInputOutput());
   ```
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
@@ -40,11 +42,11 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   - doing so will **automatically set Serial baud rate to 115200**, and **you should not be using Serial for other purposes**
 * Via SoftwareSerial
   ```
-    #include "#include <ssdumbdisplay.h>"
-    DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 9600));
+    #include <ssdumbdisplay.h>
+    DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
   ```
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
-  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 9600))`  
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)))`  
     - 2 and 3 are the pins used by SoftwareSerial
     - **the default baud rate is 115200**, which seems to work better from my own testing [with HC-06]
   - **You should not be using that SoftwareSerial for other purposes**
@@ -52,11 +54,11 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   ```
     #define DD_4_ESP32
     #include <esp32dumbdisplay.h>
-    DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true));
+    DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
   ```
   - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
   - include esp32dumbdisplay.h -- `#include <esp32dumbdisplay.h>`
-  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true))`  
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"))`  
     - "ESP32" is name used by BluetoothSerial
   - **You should not be using BluetoothSerial for other purposes**
   - In my own testing, the bluetooth communication will hang from time to time.
@@ -127,7 +129,7 @@ A more interesting sample would be like
 
 ### Screenshot 2 -- *LEDs + "Bar Meter" + LCD*
 
-Even more interesting sample would be like
+An even more interesting sample would be like
 
 ```
   #include "ssdumbdisplay.h"
@@ -334,7 +336,7 @@ To showcase Turtle, as well as the more controller way of "pinning" layers
 
 ### Screenshot 5 -- *Graphical [LCD]*
 
-There is a graphical [LCD] layer that is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features)
+There is a graphical [LCD] layer which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features)
 
 ```
 #include <ssdumbdisplay.h>
@@ -362,7 +364,7 @@ void setup() {
                               DD_AP_VERT_2(pLayer1->getLayerId(), pLayer2->getLayerId()),
                               DD_AP_VERT_2(pLayer3->getLayerId(), pLayer4->getLayerId())));
 
-  // draw rectangles
+  // draw triangles
   int left = 0;
   int right = 150;
   int top = 0;
@@ -430,6 +432,7 @@ void loop() {
 For reference, please look into the declarations of the different related classes in the header files; mostly dumbdisplay.h -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/dumbdisplay.h
 
 
+
 # Thank You!
 
 Greeting from the author Trevor Lee:
@@ -439,7 +442,15 @@ Greeting from the author Trevor Lee:
 > Jesus loves you!
 
 
+# License
+
+MIT
+
+
 # Change History
+
+v0.1.3
+- added 7-Segment-row layer (`SevenSegmentRowDDLayer`)
 
 v0.1.2
 - added "graphical" LCD layer (`GraphicalDDLayer`)

@@ -298,12 +298,19 @@ TurtleDDLayer *pTurtleLayer = NULL;
 LedGridDDLayer *pLedGridLayer = NULL;
 LcdDDLayer *pLcdLayer = NULL;
 GraphicalDDLayer *pGraphicalLayer = NULL;
+SevenSegmentRowDDLayer *p7SegmentRowLayer = NULL;
 
-void LcdDDTester_autoPinLayers(DumbDisplay& dumbdisplay) {
-  if (pMbLayer == NULL || pTurtleLayer == NULL || pLedGridLayer == NULL || pLcdLayer == NULL || pGraphicalLayer == NULL) {
+void DDTester_autoPinLayers(DumbDisplay& dumbdisplay) {
+  if (pMbLayer == NULL ||
+      pTurtleLayer == NULL ||
+      pLedGridLayer == NULL ||
+      pLcdLayer == NULL ||
+      pGraphicalLayer == NULL || 
+      p7SegmentRowLayer == NULL) {
     dumbdisplay.configAutoPin(DD_AP_HORI);
   } else {  
-    dumbdisplay.configAutoPin(DD_AP_VERT_3(
+    dumbdisplay.configAutoPin(DD_AP_VERT_4(
+                                p7SegmentRowLayer->getLayerId(),
                                 DD_AP_HORI_2(pMbLayer->getLayerId(), pTurtleLayer->getLayerId()),
                                 pLcdLayer->getLayerId(),
                                 DD_AP_HORI_2(pLedGridLayer->getLayerId(), pGraphicalLayer->getLayerId())
@@ -319,7 +326,7 @@ void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
     pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
     if (Pinned) {
       if (AutoPin) {
-        LcdDDTester_autoPinLayers(dumbdisplay);
+        DDTester_autoPinLayers(dumbdisplay);
       } else {
         dumbdisplay.pinLayer(pMbLayer, 50, 50, 50, 50);
       }
@@ -334,7 +341,7 @@ void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
     pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
     if (Pinned) { 
       if (AutoPin) {
-        LcdDDTester_autoPinLayers(dumbdisplay);
+        DDTester_autoPinLayers(dumbdisplay);
       } else {
         dumbdisplay.pinLayer(pTurtleLayer, 0, 50, 50, 50);
       }
@@ -378,7 +385,7 @@ void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
     pLedGridLayer = dumbdisplay.createLedGridLayer(colCount, rowCount, subColCount, subRowCount); 
     if (Pinned) {
       if (AutoPin) {
-        LcdDDTester_autoPinLayers(dumbdisplay);
+        DDTester_autoPinLayers(dumbdisplay);
       }
     }
     pLedGridLayer->offColor("lightgray");
@@ -404,7 +411,7 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
     pLcdLayer = dumbdisplay.createLcdLayer(18, 3, 16, "Courier");
     if (Pinned) {
       if (AutoPin) {
-        LcdDDTester_autoPinLayers(dumbdisplay);
+        DDTester_autoPinLayers(dumbdisplay);
       } else {
         dumbdisplay.pinLayer(pLcdLayer, 0, 0, 100, 50);
       }
@@ -424,12 +431,63 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   }
 }
 
+void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
+  if (stepCount == 0) {
+    p7SegmentRowLayer = dumbdisplay.create7SegmentRowLayer(4);
+    if (Pinned) {
+      if (AutoPin) {
+        DDTester_autoPinLayers(dumbdisplay);
+      }
+    }
+    p7SegmentRowLayer->backgroundColor(DD_HEX_COLOR(0x334455));
+    p7SegmentRowLayer->segmentColor("yellow");
+  }
+
+  char allSegs[] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' }; 
+  int maxCount1 = 16;
+  int maxCount2 = maxCount1 + 5;
+  if (stepCount < maxCount1) {
+    if ((stepCount % 2) == 0)
+      p7SegmentRowLayer->turnOn("abcdefg.", 2);
+    else
+      p7SegmentRowLayer->turnOff("abcdefg.", 2);
+    if (stepCount < 8)  
+      p7SegmentRowLayer->turnOn(String(allSegs[stepCount % 8]));
+    else
+      p7SegmentRowLayer->turnOff(String(allSegs[stepCount % 8]));
+  } else if (stepCount < maxCount2) {
+    int counter = stepCount - maxCount1;
+    if (counter-- == 0) p7SegmentRowLayer->showHexNumber(0xfb);
+    else if (counter-- == 0) {
+      p7SegmentRowLayer->showFormatted("00.00");
+    } else {
+      if (stepCount % 2 == 0)
+        p7SegmentRowLayer->showFormatted("----------");
+      else
+        p7SegmentRowLayer->showFormatted("..........");
+    }
+  } else {
+    int counter = stepCount - maxCount2;
+    if (counter-- == 0) p7SegmentRowLayer->showNumber(1);
+    else if (counter-- == 0) p7SegmentRowLayer->showNumber(12);
+    else if (counter-- == 0) p7SegmentRowLayer->showNumber(123);
+    else if (counter-- == 0) p7SegmentRowLayer->showNumber(1234);
+    else if (counter-- == 0) p7SegmentRowLayer->showNumber(1.234567);
+    else {
+        float num = random(10000) - random(10000);
+        if (random(2) == 0)
+          num = num / random(2, 1000);
+        p7SegmentRowLayer->showNumber(num);
+    }
+  }
+}
+
 void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pGraphicalLayer = dumbdisplay.createGraphicalLayer(215, 215);
     if (Pinned) {
       if (AutoPin) {
-        LcdDDTester_autoPinLayers(dumbdisplay);
+        DDTester_autoPinLayers(dumbdisplay);
       }
     }
     pGraphicalLayer->setTextColor("blue");
@@ -461,6 +519,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
   bool ledGrid = true;
   bool lcd = true;
   bool graphical = true;
+  bool sevenSegmentRow = true;
 
   int testCount = 0;
   if (mb) testCount++;
@@ -468,6 +527,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
   if (ledGrid) testCount++;
   if (lcd) testCount++;
   if (graphical) testCount++;
+  if (sevenSegmentRow) testCount++;
 
 
   Pinned = testCount > 1;
@@ -475,6 +535,8 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
 
   int stepCount = 0;
   while (true) {
+    if (sevenSegmentRow)
+      SevenSegmentRowDDTester_testStep(dumbdisplay, stepCount);
     if (graphical)
       GraphicalDDTester_testStep(dumbdisplay, stepCount);
     if (mb)
