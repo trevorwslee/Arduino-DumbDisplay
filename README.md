@@ -78,7 +78,7 @@ With a DumbDisplay object, you are ready to proceed coding, like
   }
 
   void loop() {
-      led->toggle(0, 0);
+      led->toggle();
       delay(1000);
   }
 ```
