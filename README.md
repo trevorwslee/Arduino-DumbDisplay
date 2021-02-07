@@ -78,7 +78,7 @@ With a DumbDisplay object, you are ready to proceed coding, like
   }
 
   void loop() {
-      led->toggle(0, 0);
+      led->toggle();
       delay(1000);
   }
 ```
@@ -93,6 +93,8 @@ With a DumbDisplay object, you are ready to proceed coding, like
 
 
 ### Screenshot 1 -- *Micro:bit*
+
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddmb/ddmb.ino
 
 A more interesting sample would be like
 
@@ -128,6 +130,8 @@ A more interesting sample would be like
 ```
 
 ### Screenshot 2 -- *LEDs + "Bar Meter" + LCD*
+
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddbarmeter/ddbarmeter.ino
 
 An even more interesting sample would be like
 
@@ -172,6 +176,8 @@ An even more interesting sample would be like
 
 
 ### Screenshot 3 -- *Nested "auto pin" layers*
+
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddautopin/ddautopin.ino
 
 Auto pinning of layers is not restricted to a single direction. In fact, it can be nested, like
 
@@ -259,6 +265,8 @@ Auto pinning of layers is not restricted to a single direction. In fact, it can 
 
 ### Screenshot 4 -- *Manual "pin" layers (LEDs + Turtle)*
 
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddpinturtle/ddpinturtle.ino
+
 To showcase Turtle, as well as the more controller way of "pinning" layers
 
 ```
@@ -335,6 +343,8 @@ To showcase Turtle, as well as the more controller way of "pinning" layers
 ```
 
 ### Screenshot 5 -- *Graphical [LCD]*
+
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddgraphical/ddgraphical.ino
 
 There is a graphical [LCD] layer which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features)
 

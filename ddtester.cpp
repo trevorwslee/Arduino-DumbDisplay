@@ -535,8 +535,6 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
 
   int stepCount = 0;
   while (true) {
-    if (sevenSegmentRow)
-      SevenSegmentRowDDTester_testStep(dumbdisplay, stepCount);
     if (graphical)
       GraphicalDDTester_testStep(dumbdisplay, stepCount);
     if (mb)
@@ -547,6 +545,8 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
       LedGridDDTester_testStep(dumbdisplay, stepCount);  
     if (lcd)
       LcdDDTester_testStep(dumbdisplay, stepCount);
+    if (sevenSegmentRow)
+      SevenSegmentRowDDTester_testStep(dumbdisplay, stepCount);
     delay(1000);
     stepCount++;
   }
