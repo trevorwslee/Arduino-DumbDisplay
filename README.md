@@ -94,6 +94,8 @@ With a DumbDisplay object, you are ready to proceed coding, like
 
 ### Screenshot 1 -- *Micro:bit*
 
+[https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddmb/ddmb.ino]
+
 A more interesting sample would be like
 
 ```
@@ -128,6 +130,8 @@ A more interesting sample would be like
 ```
 
 ### Screenshot 2 -- *LEDs + "Bar Meter" + LCD*
+
+[https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddbarmeter/ddbarmeter.ino]
 
 An even more interesting sample would be like
 
