@@ -320,7 +320,13 @@ class SevenSegmentRowDDLayer: public DDLayer {
     }
     /* set segment color */
     void segmentColor(const String& color);
+    /* turn on one or more segments */
+    /* - segments: each character represents a segment to turn on */
+    /*   . 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' */
     void turnOn(const String& segments, int digitIdx = 0);
+    /* turn off one or more segments */
+    /* - segments: each character represents a segment to turn off */
+    /*   . 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' */
     void turnOff(const String& segments, int digitIdx = 0);
     /* show number */
     void showNumber(float number);
