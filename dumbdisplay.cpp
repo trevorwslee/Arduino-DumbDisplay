@@ -716,6 +716,12 @@ GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
   _sendCommand3(layerId, "SU", String("graphical"), String(width), String(height));
   return new GraphicalDDLayer(lid);
 }
+SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount) {
+  int lid = _AllocLayerId();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("7segrow"), String(digitCount));
+  return new SevenSegmentRowDDLayer(lid);
+}
 void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }

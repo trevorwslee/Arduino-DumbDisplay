@@ -15,7 +15,7 @@ A few types of output layers can be created:
 * Micro:bit-like canvas
 * Turtle-like canvas
 * graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
-* 7-Segment, which can be used to display a single digit, plus a decimal dot
+* 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 
 You can install the free DumbDisplay app (v0.3.4 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
@@ -450,7 +450,7 @@ MIT
 # Change History
 
 v0.1.3
-- added 7-segment layer
+- added 7-Segment-row layer (`SevenSegmentRowDDLayer`)
 
 v0.1.2
 - added "graphical" LCD layer (`GraphicalDDLayer`)

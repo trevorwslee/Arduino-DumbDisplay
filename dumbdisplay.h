@@ -314,6 +314,12 @@ class GraphicalDDLayer: public DDLayer {
 };
 
 
+class SevenSegmentRowDDLayer: public DDLayer {
+  public:
+    SevenSegmentRowDDLayer(int layerId): DDLayer(layerId) {
+    }
+};
+
 
 class DumbDisplay {
   public:
@@ -341,6 +347,7 @@ class DumbDisplay {
     LcdDDLayer* createLcdLayer(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
     /* create a graphical [LCD] layer */
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
+    SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
