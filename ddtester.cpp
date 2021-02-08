@@ -472,6 +472,8 @@ void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
     else if (counter-- == 0) p7SegmentRowLayer->showNumber(12);
     else if (counter-- == 0) p7SegmentRowLayer->showNumber(123);
     else if (counter-- == 0) p7SegmentRowLayer->showNumber(1234);
+    else if (counter-- == 0) p7SegmentRowLayer->showNumber(1.00001);
+    else if (counter-- == 0) p7SegmentRowLayer->showNumber(1.10001);
     else if (counter-- == 0) p7SegmentRowLayer->showNumber(1.234567);
     else {
         float num = random(10000) - random(10000);
