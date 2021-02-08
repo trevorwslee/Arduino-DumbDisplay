@@ -66,6 +66,8 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
 
 With a DumbDisplay object, you are ready to proceed coding, like
 
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddblink/ddblink.ino
+
 ```
   #include <ssdumbdisplay.h>
 
