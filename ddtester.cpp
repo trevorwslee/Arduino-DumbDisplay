@@ -16,25 +16,25 @@ void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
       pLayer->ledColor(DD_HEX_COLOR(0xff00ff));
 
       pLayer->showLeds("|.#.#|####");
-      delay(2000);
+      DDDelay(2000);
 
       pLayer->backgroundColor("lightyellow");
       pLayer->ledColor("green");
 
       pLayer->toggle(1, 2);
-      delay(1000);
+      DDDelay(1000);
       pLayer->unplot(1, 2);
-      delay(1000);
+      DDDelay(1000);
       pLayer->plot(1, 2);
-      delay(1000);
+      DDDelay(1000);
 
       pLayer->noBackgroundColor();
       pLayer->showIcon(SmallDiamond);
-      delay(1000);
+      DDDelay(1000);
       pLayer->showNumber(8);
-      delay(1000);
+      DDDelay(1000);
       pLayer->showString("a,b,c");
-      delay(5000);
+      DDDelay(5000);
     }
     
     pLayer->showNumber(count);
@@ -112,7 +112,7 @@ void shapeTurtleTestStep(TurtleDDLayer *pLayer, int stepCount) {
             pLayer->clear();
             pLayer->centeredPolygon(40, size, false);   
             pLayer->circle(40, true);
-            delay(500);
+            DDDelay(500);
         }
         break;
     }
@@ -168,18 +168,18 @@ void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
           pLayer->drawRect(0, 0, 24, 34, "blue");
           pLayer->fillRect(2, 2, 20, 30, "red");
         }
-        delay(2000);
+        DDDelay(2000);
         pLayer->clear();
       }
     }
     pLayer->drawPixel(5, 10, "red");
     pLayer->drawLine(40, 50, 60, 100, "darkgreen");
     pLayer->drawChar(20, 30, '@', "red", "blue", 32);
-    delay(2000);
+    DDDelay(2000);
     pLayer->backgroundColor("black");
     pLayer->fillScreen("lightgreen");
     pLayer->write("AA");
-    delay(500);
+    DDDelay(500);
     pLayer->setCursor(20, 0);
     if (ASCII_ONLY) {
       pLayer->println("FRIEND");
@@ -280,7 +280,7 @@ void shapeGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
             pLayer->clear();
             pLayer->centeredPolygon(40, size, false);   
             pLayer->circle(40, true);
-            delay(500);
+            DDDelay(500);
         }
         break;
     }
@@ -549,7 +549,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
       LcdDDTester_testStep(dumbdisplay, stepCount);
     if (sevenSegmentRow)
       SevenSegmentRowDDTester_testStep(dumbdisplay, stepCount);
-    delay(1000);
+    DDDelay(1000);
     stepCount++;
   }
 }

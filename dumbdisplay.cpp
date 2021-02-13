@@ -10,6 +10,7 @@
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
+//#define SERIAL_ECHO_FEEDBACK
 
 
 #define DEBUG_WITH_LED
@@ -344,8 +345,31 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
 void _HandleFeedback() {
   String* pFeedback = _ReadFeedback();
   if (pFeedback != NULL) {
-      _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
+    _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
+#ifdef SERIAL_ECHO_FEEDBACK
+  Serial.print("// FB -- ");
+  Serial.print(*pFeedback);
+  Serial.print("\n");
+  Serial.flush();
+#endif    
     delete pFeedback;
+  }
+}
+
+void _Delay(unsigned long ms) {
+  unsigned long delayMicros = ms * 1000;
+	unsigned long start = micros();
+  while (true) {
+    _HandleFeedback();
+    unsigned long remain = delayMicros - (micros() - start);
+    if (remain > 100000) {
+      delay(100);
+    } else if (remain > 0) {
+      delay(remain / 1000);
+      break;
+    } else {
+      break;
+    }
   }
 }
 
@@ -824,12 +848,17 @@ void DumbDisplay::debugSetup(int debugLedPin) {
   _DebugLedPin = debugLedPin;
 #endif  
 }
-// void DumbDisplay::debugRead() {
-//   // String* pFeedback = _ReadFeedback();
-//   // if (pFeedback != NULL) {
-//   //   writeComment("FEEDBACK -- " + *pFeedback);
-//   //   delete pFeedback;
-//   // }
+// void DumbDisplay::delay(unsigned long ms) {
+//   _Delay(ms);
 // }
+
+
+void DDDelay(unsigned long ms) {
+  _Delay(ms);
+}
+void DDYield() {
+    _HandleFeedback();
+}
+
 
 
