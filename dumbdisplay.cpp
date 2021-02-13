@@ -10,7 +10,7 @@
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
-//#define SERIAL_ECHO_FEEDBACK
+#define SERIAL_ECHO_FEEDBACK
 
 
 #define DEBUG_WITH_LED
@@ -36,6 +36,7 @@ class IOProxy {
     void print(const char *p);
   private:
     DDInputOutput *pIO;
+    bool fromSerial;
     String data;  
 };
 
@@ -81,13 +82,15 @@ volatile bool _Connected = false;
 volatile int _DDCompatibility = 0;
 volatile int _NextLid = 0;
 DDInputOutput* volatile _IO = NULL;
-IOProxy* volatile _ConnectedIOProxy = NULL; 
+IOProxy* volatile _ConnectedIOProxy = NULL;
+volatile bool _ConnectedFromSerial = false; 
 
 #ifdef DEBUG_WITH_LED
 volatile int _DebugLedPin = -1;
 #endif
 
 volatile bool _SendingCommand = false;
+volatile bool _HandlingFeedback = false;
 
 void _Connect() {
   if (_Connected)
@@ -145,6 +148,8 @@ void _Connect() {
             _IO = pSIO;
             pSIO = NULL;
           }
+          _ConnectedIOProxy = new IOProxy(_IO);
+          _ConnectedFromSerial = fromSerial;
           break;
         }
 #ifdef DD_DEBUG_HS          
@@ -190,7 +195,7 @@ void _Connect() {
     }
   }
   _Connected = true;
-  _ConnectedIOProxy = new IOProxy(_IO);
+//  _ConnectedIOProxy = new IOProxy(_IO);
   _DDCompatibility = compatibility;
   if (false) {
     // ignore any input in 1000ms window
@@ -343,16 +348,23 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
 }
 
 void _HandleFeedback() {
-  String* pFeedback = _ReadFeedback();
-  if (pFeedback != NULL) {
-    _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
+  bool alreadyHandlingFeedback = _HandlingFeedback;  // not very accurate
+  _HandlingFeedback = true;
+  if (!alreadyHandlingFeedback) {
+    String* pFeedback = _ReadFeedback();
+    if (pFeedback != NULL) {
+      _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
 #ifdef SERIAL_ECHO_FEEDBACK
-  Serial.print("// FB -- ");
-  Serial.print(*pFeedback);
-  Serial.print("\n");
-  Serial.flush();
+    if (!_ConnectedFromSerial) {
+      Serial.print("// FB -- ");
+      Serial.print(*pFeedback);
+      Serial.print("\n");
+      Serial.flush();
+    }
 #endif    
-    delete pFeedback;
+      delete pFeedback;
+    }
+    _HandlingFeedback = false;
   }
 }
 
