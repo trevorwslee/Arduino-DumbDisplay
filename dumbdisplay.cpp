@@ -250,16 +250,16 @@ String* _ReadFeedback() {
 
 
 
-void _SendCommand(const String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5, const String* pParam6, const String* pParam7, const String* pParam8) {
-#ifdef DEBUG_WITH_LED
-  int debugLedPin = _DebugLedPin;
-  if (debugLedPin != -1) {
-    digitalWrite(debugLedPin, HIGH);
-  }
-#endif   
-#ifdef DD_DEBUG_SEND_COMMAND          
-    Serial.print("// *** sent");
-#endif        
+void __SendCommand(const String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5, const String* pParam6, const String* pParam7, const String* pParam8) {
+// #ifdef DEBUG_WITH_LED
+//   int debugLedPin = _DebugLedPin;
+//   if (debugLedPin != -1) {
+//     digitalWrite(debugLedPin, HIGH);
+//   }
+// #endif   
+// #ifdef DD_DEBUG_SEND_COMMAND          
+//     Serial.print("// *** sent");
+// #endif        
   if (layerId != "") {
     _IO->print(layerId/*.c_str()*/);
     _IO->print(".");
@@ -313,6 +313,41 @@ void _SendCommand(const String& layerId, const char *command, const String* pPar
   _IO->print("\n");
   _IO->flush();
 #endif  
+// #ifdef DD_DEBUG_SEND_COMMAND          
+//     Serial.println(command);
+// #endif        
+// #ifdef DEBUG_WITH_LED
+//   if (debugLedPin != -1) {
+//     digitalWrite(debugLedPin, LOW);
+//   }  
+// #endif
+}  
+void _SendCommand(const String& layerId, const char *command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL) {
+  bool alreadySendingCommand = _SendingCommand;  // not very accurate
+  _SendingCommand = true;
+
+#ifdef DEBUG_WITH_LED
+  int debugLedPin = _DebugLedPin;
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, HIGH);
+  }
+#endif   
+#ifdef DD_DEBUG_SEND_COMMAND          
+    Serial.print("// *** sent");
+#endif        
+
+  __SendCommand(layerId, command, pParam1, pParam2, pParam3, pParam4, pParam5, pParam6, pParam7, pParam8);
+
+#ifdef ENABLE_FEEDBACK
+  if (!alreadySendingCommand) {
+    String* pFeedback = _ReadFeedback();
+    if (pFeedback != NULL) {
+        _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
+      delete pFeedback;
+    }
+  }
+#endif
+
 #ifdef DD_DEBUG_SEND_COMMAND          
     Serial.println(command);
 #endif        
@@ -321,48 +356,35 @@ void _SendCommand(const String& layerId, const char *command, const String* pPar
     digitalWrite(debugLedPin, LOW);
   }  
 #endif
-}  
-void _sendCommand(const String& layerId, const char *command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL) {
-  bool alreadySendingCommand = _SendingCommand;  // not very accurate
-  _SendingCommand = true;
-  _SendCommand(layerId, command, pParam1, pParam2, pParam3, pParam4, pParam5, pParam6, pParam7, pParam8);
-// #ifdef ENABLE_FEEDBACK
-//   if (!alreadySendingCommand) {
-//     String* pFeedback = _ReadFeedback();
-//     if (pFeedback != NULL) {
-//         _sendCommand("", ("// feedback -- " + *pFeedback).c_str());
-//       delete pFeedback;
-//     }
-//   }
-// #endif
+
   _SendingCommand = false;
 }
 inline void _sendCommand0(const String& layerId, const char *command) {
-  _sendCommand(layerId, command);
+  _SendCommand(layerId, command);
 }  
 inline void _sendCommand1(const String& layerId, const char *command, const String& param1) {
-  _sendCommand(layerId, command, &param1);
+  _SendCommand(layerId, command, &param1);
 }  
 inline void _sendCommand2(const String& layerId, const char *command, const String& param1, const String& param2) {
-  _sendCommand(layerId, command, &param1, &param2);
+  _SendCommand(layerId, command, &param1, &param2);
 }  
 inline void _sendCommand3(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
-  _sendCommand(layerId, command, &param1, &param2, &param3);
+  _SendCommand(layerId, command, &param1, &param2, &param3);
 }  
 inline void _sendCommand4(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4);
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4);
 }
 inline void _sendCommand5(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5);
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5);
 }
 inline void _sendCommand6(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6);
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6);
 }
 inline void _sendCommand7(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7);
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7);
 }
 inline void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
 }
 
 
