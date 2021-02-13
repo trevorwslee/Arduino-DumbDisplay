@@ -374,9 +374,7 @@ class DumbDisplay {
     void deleteLayer(DDLayer *pLayer);
     /* write out a comment to DD */
     void writeComment(const String& comment);
-    // /* the same usage as standard delay(), but allows DD a chance to handle feedback */
-    // void delay(unsigned long ms);
-    void debugSetup(int debugLedPin);
+    void debugSetup(int debugLedPin, bool enableSerialEchoFeedback = true);
 };
 
 /* the same usage as standard delay(), but it allows DD chances to handle feedback */

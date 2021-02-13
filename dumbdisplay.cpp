@@ -88,6 +88,9 @@ volatile bool _ConnectedFromSerial = false;
 #ifdef DEBUG_WITH_LED
 volatile int _DebugLedPin = -1;
 #endif
+#ifdef SERIAL_ECHO_FEEDBACK 
+volatile bool _DebugEnableSerialEchoFeedback = false;
+#endif
 
 volatile bool _SendingCommand = false;
 volatile bool _HandlingFeedback = false;
@@ -355,7 +358,7 @@ void _HandleFeedback() {
     if (pFeedback != NULL) {
       _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
 #ifdef SERIAL_ECHO_FEEDBACK
-    if (!_ConnectedFromSerial) {
+    if (_DebugEnableSerialEchoFeedback && !_ConnectedFromSerial) {
       Serial.print("// FB -- ");
       Serial.print(*pFeedback);
       Serial.print("\n");
@@ -852,13 +855,16 @@ void DumbDisplay::writeComment(const String& comment) {
   _sendCommand0("", ("// " + comment).c_str());
 }
 
-void DumbDisplay::debugSetup(int debugLedPin) {
+void DumbDisplay::debugSetup(int debugLedPin, bool enableSerialEchoFeedback) {
 #ifdef DEBUG_WITH_LED
   if (debugLedPin != -1) {
      pinMode(debugLedPin, OUTPUT);
    }
   _DebugLedPin = debugLedPin;
 #endif  
+#ifdef SERIAL_ECHO_FEEDBACK
+  _DebugEnableSerialEchoFeedback = enableSerialEchoFeedback;
+#endif
 }
 // void DumbDisplay::delay(unsigned long ms) {
 //   _Delay(ms);
