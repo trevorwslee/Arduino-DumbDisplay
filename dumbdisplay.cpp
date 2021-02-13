@@ -249,23 +249,17 @@ String* _ReadFeedback() {
 
 
 
-void __SendCommand(const String& layerId, const char *command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5, const String* pParam6, const String* pParam7, const String* pParam8) {
-// #ifdef DEBUG_WITH_LED
-//   int debugLedPin = _DebugLedPin;
-//   if (debugLedPin != -1) {
-//     digitalWrite(debugLedPin, HIGH);
-//   }
-// #endif   
-// #ifdef DD_DEBUG_SEND_COMMAND          
-//     Serial.print("// *** sent");
-// #endif        
+void __SendCommand(const String& layerId, const char* command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5, const String* pParam6, const String* pParam7, const String* pParam8) {
+#ifdef DD_DEBUG_SEND_COMMAND          
+  Serial.print("// *** sent");
+#endif        
   if (layerId != "") {
     _IO->print(layerId/*.c_str()*/);
     _IO->print(".");
   }
   _IO->print(command);
 #ifdef DD_DEBUG_SEND_COMMAND          
-    Serial.print(" ...");
+  Serial.print(" ...");
 #endif        
   if (pParam1 != NULL) {
     _IO->print(":");
@@ -300,7 +294,7 @@ void __SendCommand(const String& layerId, const char *command, const String* pPa
     }
   }
 #ifdef DD_DEBUG_SEND_COMMAND          
-    Serial.print(" COMMAND ");
+  Serial.print(" COMMAND ");
 #endif        
   _IO->print("\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
@@ -312,17 +306,12 @@ void __SendCommand(const String& layerId, const char *command, const String* pPa
   _IO->print("\n");
   _IO->flush();
 #endif  
-// #ifdef DD_DEBUG_SEND_COMMAND          
-//     Serial.println(command);
-// #endif        
-// #ifdef DEBUG_WITH_LED
-//   if (debugLedPin != -1) {
-//     digitalWrite(debugLedPin, LOW);
-//   }  
-// #endif
+#ifdef DD_DEBUG_SEND_COMMAND          
+  Serial.println(command);
+#endif        
 }  
 void _HandleFeedback();
-void _SendCommand(const String& layerId, const char *command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL) {
+void _SendCommand(const String& layerId, const char* command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL) {
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
   _SendingCommand = true;
 
@@ -332,11 +321,10 @@ void _SendCommand(const String& layerId, const char *command, const String* pPar
     digitalWrite(debugLedPin, HIGH);
   }
 #endif   
-#ifdef DD_DEBUG_SEND_COMMAND          
-    Serial.print("// *** sent");
-#endif        
 
-  __SendCommand(layerId, command, pParam1, pParam2, pParam3, pParam4, pParam5, pParam6, pParam7, pParam8);
+  if (command != NULL) {
+    __SendCommand(layerId, command, pParam1, pParam2, pParam3, pParam4, pParam5, pParam6, pParam7, pParam8);
+  }
 
 #ifdef ENABLE_FEEDBACK
   if (!alreadySendingCommand) {
@@ -344,9 +332,6 @@ void _SendCommand(const String& layerId, const char *command, const String* pPar
   }
 #endif
 
-#ifdef DD_DEBUG_SEND_COMMAND          
-    Serial.println(command);
-#endif        
 #ifdef DEBUG_WITH_LED
   if (debugLedPin != -1) {
     digitalWrite(debugLedPin, LOW);
