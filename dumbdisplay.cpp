@@ -41,11 +41,10 @@ class IOProxy {
 bool IOProxy::available() {
   bool done = false;
   if (true) {
-    while (pIO->available()) {
+    while (!done && pIO->available()) {
       char c =  pIO->read();
       if (c == '\n') {
         done = true;
-        break;
       } else {
         data = data + c;
       }
@@ -322,6 +321,7 @@ void __SendCommand(const String& layerId, const char *command, const String* pPa
 //   }  
 // #endif
 }  
+void _HandleFeedback();
 void _SendCommand(const String& layerId, const char *command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL) {
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
   _SendingCommand = true;
@@ -340,11 +340,7 @@ void _SendCommand(const String& layerId, const char *command, const String* pPar
 
 #ifdef ENABLE_FEEDBACK
   if (!alreadySendingCommand) {
-    String* pFeedback = _ReadFeedback();
-    if (pFeedback != NULL) {
-        _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
-      delete pFeedback;
-    }
+    _HandleFeedback();
   }
 #endif
 
@@ -359,6 +355,17 @@ void _SendCommand(const String& layerId, const char *command, const String* pPar
 
   _SendingCommand = false;
 }
+
+void _HandleFeedback() {
+  String* pFeedback = _ReadFeedback();
+  if (pFeedback != NULL) {
+      _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
+    delete pFeedback;
+  }
+}
+
+
+
 inline void _sendCommand0(const String& layerId, const char *command) {
   _SendCommand(layerId, command);
 }  
