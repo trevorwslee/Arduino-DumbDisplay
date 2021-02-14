@@ -434,6 +434,16 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 
 void SevenSegmentRowDDTester_FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
   pLayer->writeComment("layer FB (" + String(x) + "," + String(y) + ")");
+  int r = 0;
+  int g = 0;
+  int b = 0;
+  if (x == 0)
+    r = 255;
+  else if (x == 1)
+    g = 255;
+  else if (x == 2)
+    b = 255;  
+  p7SegmentRowLayer->backgroundColor(DD_RGB_COLOR(r, g, b));
 }
 void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
