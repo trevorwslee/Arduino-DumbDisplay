@@ -384,63 +384,47 @@ void _HandleFeedback() {
     String* pFeedback = _ReadFeedback();
     if (pFeedback != NULL) {
 #ifdef SERIAL_ECHO_FEEDBACK
-    if (_DebugEnableSerialEchoFeedback && !_ConnectedFromSerial) {
-      Serial.print("// FB -- ");
-      Serial.print(*pFeedback);
-      Serial.print("\n");
-      Serial.flush();
-    }
-#endif  
-      //_SendCommand("", ("// feedback -- " + *pFeedback).c_str());
+      if (_DebugEnableSerialEchoFeedback && !_ConnectedFromSerial) {
+        Serial.print("// FB -- ");
+        Serial.print(*pFeedback);
+        Serial.print("\n");
+        Serial.flush();
+      }
+#endif
+      if (true) {  
+        _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
+      }
 #ifdef STORE_LAYERS
       int bufLen = pFeedback->length() + 1;
       char buf[bufLen];
       pFeedback->toCharArray(buf, bufLen);
-      if (true) {
-        int lid = -1;
-        int x = -1;
-        int y = -1;
-        char* token = strtok(buf, ".");
-        if (token != NULL) {
-          lid = _LayerIdToLid(token);
-          token = strtok(NULL, ":");
-        }
-        if (token != NULL) {
-          token = strtok(NULL, ",");
-        }
-        if (token != NULL) {
-          x = atoi(token);
-          token = strtok(NULL, ",");
-        }
-        if (token != NULL) {
-          y = atoi(token);
-        }
-        if (lid != -1) {
-          DDLayer* pLayer = _DDLayerArray[lid];
-          if (pLayer != NULL) {
-            DDFeedbackHandler handler = pLayer->getFeedbackHandler();
-            if (handler != NULL) {
-              handler(pLayer, CLICK, x, y);
-              //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
-            }
-          }
-        }
-      } else {
-        char* tmp = strchr(buf, '.');
-        if (tmp != NULL) {  
-          // currently, assume it is a CLICK
-          *tmp = 0;
-          int lid = _LayerIdToLid(buf);
-          tmp = strchr(buf, ':');
-          if (tmp != NULL) {
-            DDLayer* pLayer = _DDLayerArray[lid];
-            if (pLayer != NULL) {
-              DDFeedbackHandler handler = pLayer->getFeedbackHandler();
-              if (handler != NULL) {
-                handler(pLayer, CLICK, 0, 0);
-                //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
-              }
-            }
+      bool ok = false;
+      int lid = -1;
+      int x = -1;
+      int y = -1;
+      char* token = strtok(buf, ".");
+      if (token != NULL) {
+        lid = _LayerIdToLid(token);
+        token = strtok(NULL, ":");
+      }
+      if (token != NULL) {
+        token = strtok(NULL, ",");
+      }
+      if (token != NULL) {
+        x = atoi(token);
+        token = strtok(NULL, ",");
+      }
+      if (token != NULL) {
+        y = atoi(token);
+        ok = true;
+      }
+      if (ok) {
+        DDLayer* pLayer = _DDLayerArray[lid];
+        if (pLayer != NULL) {
+          DDFeedbackHandler handler = pLayer->getFeedbackHandler();
+          if (handler != NULL) {
+            handler(pLayer, CLICK, x, y);
+            //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
           }
         }
       }
