@@ -70,6 +70,10 @@ class DDInputOutput {
 };
 
 
+class DDLayer;
+enum DDFeedbackType { CLICK };
+typedef void (*DDFeedbackHandler)(DDLayer&, DDFeedbackType, int, int);
+
 class DDLayer {
   public:
     /* set layer visibility */
@@ -85,11 +89,15 @@ class DDLayer {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
+    void setFeedbackHandler(DDFeedbackHandler handler);
+    //void setFeedbackHandler(void (*handler)(DDFeedbackType, int, int));
     const String& getLayerId() { return layerId; }
   protected:
     DDLayer(int layerId);
   protected:
     String layerId;  
+    //void (*feedbackHandler)(DDFeedbackType, int, int);
+    DDFeedbackHandler feedbackHandler;
 };
 
 
@@ -338,7 +346,6 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /* e.g. "12.00", "00.34", "-.12", "0ff" */
     void SevenSegmentRowDDLayer::showFormatted(const String& formatted);
 };
-
 
 class DumbDisplay {
   public:

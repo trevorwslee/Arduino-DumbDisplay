@@ -431,9 +431,13 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   }
 }
 
+
+void SevenSegmentRowDDTester_FeedbackHandler(DDLayer& layer, DDFeedbackType type, int x, int y) {
+}
 void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     p7SegmentRowLayer = dumbdisplay.create7SegmentRowLayer(4);
+    p7SegmentRowLayer->setFeedbackHandler(SevenSegmentRowDDTester_FeedbackHandler);
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);

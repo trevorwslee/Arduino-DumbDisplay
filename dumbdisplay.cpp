@@ -4,6 +4,7 @@
 
 #define HAND_SHAKE_GAP 1000
 #define ENABLE_FEEDBACK
+#define STORE_LAYERS
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
@@ -81,6 +82,7 @@ void IOProxy::print(const char *p) {
 volatile bool _Connected = false;
 volatile int _DDCompatibility = 0;
 volatile int _NextLid = 0;
+DDLayer** _DDLayerArray = NULL;
 DDInputOutput* volatile _IO = NULL;
 IOProxy* volatile _ConnectedIOProxy = NULL;
 volatile bool _ConnectedFromSerial = false; 
@@ -236,9 +238,34 @@ void _Connect() {
 #endif        
 }
 
-int _AllocLayerId() {
+int _AllocLid() {
   _Connect();
-  return _NextLid++;
+  int lid = _NextLid++;
+#ifdef STORE_LAYERS  
+  DDLayer** oriLayerArray = _DDLayerArray;
+  DDLayer** layerArray = (DDLayer**) malloc((lid + 1) * sizeof(DDLayer*));
+  if (oriLayerArray != NULL) {
+    memcpy(layerArray, oriLayerArray, lid * sizeof(DDLayer*));
+    delete oriLayerArray;
+  }
+  _DDLayerArray = layerArray;
+#endif
+  return lid;
+}
+int _LayerIdToLid(const String& layerId) {
+  return atoi(layerId.c_str());
+}
+void _PostCreateLayer(DDLayer* pLayer) {
+#ifdef STORE_LAYERS  
+  int lid = _LayerIdToLid(pLayer->getLayerId());
+  _DDLayerArray[lid] = pLayer;
+#endif
+}
+void _PreDeleteLayer(DDLayer* pLayer) {
+#ifdef STORE_LAYERS  
+  int lid = _LayerIdToLid(pLayer->getLayerId());
+  _DDLayerArray[lid] = NULL;
+#endif
 }
 String* _ReadFeedback() {
   if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
@@ -377,8 +404,8 @@ void _Delay(unsigned long ms) {
   while (true) {
     _HandleFeedback();
     unsigned long remain = delayMicros - (micros() - start);
-    if (remain > 100000) {
-      delay(100);
+    if (remain > 50000) {
+      delay(50);
     } else if (remain > 0) {
       delay(remain / 1000);
       break;
@@ -460,6 +487,12 @@ void DDLayer::backgroundColor(const String& color) {
 }
 void DDLayer::noBackgroundColor() {
   _sendCommand0(layerId, "nobgcolor");
+}
+//void DDLayer::setFeedbackHandler(void (*handler)(DDFeedbackType, int, int)) {
+void DDLayer::setFeedbackHandler(DDFeedbackHandler handler) {
+  bool enable = handler != NULL;
+  _sendCommand1(layerId, "feedback", TO_BOOL(enable));
+  feedbackHandler = handler;
 }
 
 
@@ -809,51 +842,65 @@ void DumbDisplay::configAutoPin(const String& layoutSpec) {
   _sendCommand1("", "CFGAP", layoutSpec);
 }
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
-  return new MbDDLayer(lid);
+  MbDDLayer* pLayer = new MbDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 TurtleDDLayer* DumbDisplay::createTurtleLayer(int width, int height) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand3(layerId, "SU", String("turtle"), String(width), String(height));
-  return new TurtleDDLayer(lid);
+  TurtleDDLayer* pLayer = new TurtleDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int subColCount, int subRowCount) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand5(layerId, "SU", String("ledgrid"), String(colCount), String(rowCount), String(subColCount), String(subRowCount));
-  return new LedGridDDLayer(lid);
+  LedGridDDLayer* pLayer = new LedGridDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeight, const String& fontName) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand5(layerId, "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
-  return new LcdDDLayer(lid);
+  LcdDDLayer* pLayer = new LcdDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand3(layerId, "SU", String("graphical"), String(width), String(height));
-  return new GraphicalDDLayer(lid);
+  GraphicalDDLayer* pLayer = new GraphicalDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand2(layerId, "SU", String("7segrow"), String(digitCount));
-  return new SevenSegmentRowDDLayer(lid);
+  SevenSegmentRowDDLayer* pLayer = new SevenSegmentRowDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
+  _PreDeleteLayer(pLayer);
   delete pLayer;
 }
 void DumbDisplay::writeComment(const String& comment) {
   _sendCommand0("", ("// " + comment).c_str());
 }
+
 
 void DumbDisplay::debugSetup(int debugLedPin, bool enableSerialEchoFeedback) {
 #ifdef DEBUG_WITH_LED
