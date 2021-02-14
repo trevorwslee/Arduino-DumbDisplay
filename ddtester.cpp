@@ -443,7 +443,7 @@ void SevenSegmentRowDDTester_FeedbackHandler(DDLayer* pLayer, DDFeedbackType typ
     g = 255;
   else if (x == 2)
     b = 255;  
-  p7SegmentRowLayer->backgroundColor(DD_RGB_COLOR(r, g, b));
+  ((SevenSegmentRowDDLayer*) pLayer)->backgroundColor(DD_RGB_COLOR(r, g, b));
 }
 void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
