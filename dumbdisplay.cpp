@@ -238,6 +238,7 @@ void _Connect() {
 #endif        
 }
 
+
 int _AllocLid() {
   _Connect();
   int lid = _NextLid++;
@@ -377,6 +378,14 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   _SendingCommand = false;
 }
 
+void _LogToSerial(const String& logLine) {
+  if (!_ConnectedFromSerial) {
+    Serial.println(logLine);
+  } else {
+    _SendCommand("", ("// " + logLine).c_str());
+  }
+}
+
 void _HandleFeedback() {
   bool alreadyHandlingFeedback = _HandlingFeedback;  // not very accurate
   _HandlingFeedback = true;
@@ -419,6 +428,11 @@ void _HandleFeedback() {
         ok = true;
       }
       if (ok) {
+        if (lid < 0 || lid >= _NextLid) {
+          ok = false;
+        }
+      }
+      if (ok) {
         DDLayer* pLayer = _DDLayerArray[lid];
         if (pLayer != NULL) {
           DDFeedbackHandler handler = pLayer->getFeedbackHandler();
@@ -441,8 +455,8 @@ void _Delay(unsigned long ms) {
   while (true) {
     _HandleFeedback();
     unsigned long remain = delayMicros - (micros() - start);
-    if (remain > 50000) {
-      delay(50);
+    if (remain > 20000) {
+      delay(20);
     } else if (remain > 0) {
       delay(remain / 1000);
       break;
@@ -627,6 +641,9 @@ void TurtleDDLayer::setTextSize(int size) {
 }
 void TurtleDDLayer::setTextFont(const String& fontName, int size) {
   _sendCommand2(layerId, "ptextfont", fontName, String(size));
+}
+void TurtleDDLayer::dot(int size, const String& color) {
+  _sendCommand2(layerId, "dot", String(size), color);
 }
 void TurtleDDLayer::circle(int radius, bool centered) {
   _sendCommand1(layerId, centered ? "ccircle" : "circle", String(radius));
@@ -958,6 +975,9 @@ void DumbDisplay::debugSetup(int debugLedPin, bool enableEchoFeedback) {
 // }
 
 
+void DDLogToSerial(const String& logLine) {
+  _LogToSerial(logLine);
+}
 void DDDelay(unsigned long ms) {
   _Delay(ms);
 }

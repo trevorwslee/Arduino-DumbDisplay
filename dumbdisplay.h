@@ -179,6 +179,8 @@ class TurtleDDLayer: public DDLayer {
     /* - fontName */
     /* - textSize: 0 means default */
     void setTextFont(const String& fontName, int textSize = 0);
+    /* draw a dot */
+    void dot(int size, const String& color);
     /* draw circle; centered or not */
     void circle(int radius, bool centered = false);
     /* draw oval; centered or not */
@@ -386,6 +388,8 @@ class DumbDisplay {
     void debugSetup(int debugLedPin, bool enableEchoFeedback = true);
 };
 
+/* log line to serial making sure not affect DD */
+void DDLogToSerial(const String& logLine);
 /* the same usage as standard delay(), but it allows DD chances to handle feedback */
 void DDDelay(unsigned long ms);
 /* give DD a chance to handle feedback */

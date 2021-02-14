@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.1.3)
+# DumbDisplay Arduino Library (v0.1.4)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets for your Arduino / ESP32 experiments.
 
@@ -460,6 +460,9 @@ MIT
 
 
 # Change History
+
+v0.1.4
+- added layer "feedback" mechanism -- i.e. handling "hook" to handle when layer clicked 
 
 v0.1.3
 - added 7-Segment-row layer (`SevenSegmentRowDDLayer`)

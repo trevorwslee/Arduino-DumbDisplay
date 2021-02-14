@@ -565,7 +565,12 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
     if (lcd)
       LcdDDTester_testStep(dumbdisplay, stepCount);
     DDDelay(1000);
+
     stepCount++;
+
+    if (true) {
+      DDLogToSerial("STEP: " + String(stepCount));
+    }
   }
 }
 
