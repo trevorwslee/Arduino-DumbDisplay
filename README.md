@@ -561,7 +561,7 @@ MIT
 
 # Change History
 
-v0.1.4
+v0.4.0
 - added layer "feedback" mechanism -- i.e. handling "hook" to handle when layer clicked 
 
 v0.1.3
