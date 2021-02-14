@@ -72,7 +72,7 @@ class DDInputOutput {
 
 class DDLayer;
 enum DDFeedbackType { CLICK };
-typedef void (*DDFeedbackHandler)(DDLayer&, DDFeedbackType, int, int);
+typedef void (*DDFeedbackHandler)(DDLayer*, DDFeedbackType, int, int);
 
 class DDLayer {
   public:
@@ -89,12 +89,14 @@ class DDLayer {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
+    DDFeedbackHandler getFeedbackHandler() { return feedbackHandler; }
     void setFeedbackHandler(DDFeedbackHandler handler);
     //void setFeedbackHandler(void (*handler)(DDFeedbackType, int, int));
     const String& getLayerId() { return layerId; }
-  protected:
+    void writeComment(const String& comment);
+ protected:
     DDLayer(int layerId);
-  protected:
+ protected:
     String layerId;  
     //void (*feedbackHandler)(DDFeedbackType, int, int);
     DDFeedbackHandler feedbackHandler;

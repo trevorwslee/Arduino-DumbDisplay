@@ -383,7 +383,6 @@ void _HandleFeedback() {
   if (!alreadyHandlingFeedback) {
     String* pFeedback = _ReadFeedback();
     if (pFeedback != NULL) {
-      _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
 #ifdef SERIAL_ECHO_FEEDBACK
     if (_DebugEnableSerialEchoFeedback && !_ConnectedFromSerial) {
       Serial.print("// FB -- ");
@@ -391,7 +390,26 @@ void _HandleFeedback() {
       Serial.print("\n");
       Serial.flush();
     }
-#endif    
+#endif  
+      //_SendCommand("", ("// feedback -- " + *pFeedback).c_str());
+#ifdef STORE_LAYERS
+      int bufLen = pFeedback->length() + 1;
+      char buf[bufLen];
+      pFeedback->toCharArray(buf, bufLen);
+      char* pos = strchr(buf, '.');
+      if (pos != NULL) { 
+        *pos = 0;
+        int lid = _LayerIdToLid(buf);
+        DDLayer* pLayer = _DDLayerArray[lid];
+        if (pLayer != NULL) {
+          DDFeedbackHandler handler = pLayer->getFeedbackHandler();
+          if (handler != NULL) {
+            handler(pLayer, CLICK, 0, 0);
+            //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
+          }
+        }
+      }
+#endif  
       delete pFeedback;
     }
     _HandlingFeedback = false;
@@ -487,6 +505,9 @@ void DDLayer::backgroundColor(const String& color) {
 }
 void DDLayer::noBackgroundColor() {
   _sendCommand0(layerId, "nobgcolor");
+}
+void DDLayer::writeComment(const String& comment) {
+  _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
 }
 //void DDLayer::setFeedbackHandler(void (*handler)(DDFeedbackType, int, int)) {
 void DDLayer::setFeedbackHandler(DDFeedbackHandler handler) {

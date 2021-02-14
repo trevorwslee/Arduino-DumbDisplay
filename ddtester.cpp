@@ -432,7 +432,9 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 }
 
 
-void SevenSegmentRowDDTester_FeedbackHandler(DDLayer& layer, DDFeedbackType type, int x, int y) {
+void SevenSegmentRowDDTester_FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
+            //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
+  pLayer->writeComment("feedback (" + String(pLayer->getLayerId()) + ")");
 }
 void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
