@@ -3,12 +3,15 @@
 
 
 #define HAND_SHAKE_GAP 1000
+#define ENABLE_FEEDBACK
+#define STORE_LAYERS
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
+#define DEBUG_ECHO_FEEDBACK
 
 
 #define DEBUG_WITH_LED
@@ -34,17 +37,29 @@ class IOProxy {
     void print(const char *p);
   private:
     DDInputOutput *pIO;
+    bool fromSerial;
     String data;  
 };
 
 bool IOProxy::available() {
   bool done = false;
-  if (pIO->available()) {
-    char c =  pIO->read();
-    if (c == '\n') {
-      done = true;
-    } else {
-      data = data + c;
+  if (true) {
+    while (!done && pIO->available()) {
+      char c =  pIO->read();
+      if (c == '\n') {
+        done = true;
+      } else {
+        data = data + c;
+      }
+    }
+  } else {
+    if (pIO->available()) {
+      char c =  pIO->read();
+      if (c == '\n') {
+        done = true;
+      } else {
+        data = data + c;
+      }
     }
   }
   return done;
@@ -67,115 +82,20 @@ void IOProxy::print(const char *p) {
 volatile bool _Connected = false;
 volatile int _DDCompatibility = 0;
 volatile int _NextLid = 0;
+DDLayer** _DDLayerArray = NULL;
 DDInputOutput* volatile _IO = NULL;
+IOProxy* volatile _ConnectedIOProxy = NULL;
+volatile bool _ConnectedFromSerial = false; 
 
 #ifdef DEBUG_WITH_LED
 volatile int _DebugLedPin = -1;
 #endif
-
-
-
-void _sendCommand(const String& layerId, const char *command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL) {
-#ifdef DEBUG_WITH_LED
-  int debugLedPin = _DebugLedPin;
-  if (debugLedPin != -1) {
-    digitalWrite(debugLedPin, HIGH);
-  }
-#endif   
-#ifdef DD_DEBUG_SEND_COMMAND          
-    Serial.print("// *** sent");
-#endif        
-  if (layerId != "") {
-    _IO->print(layerId/*.c_str()*/);
-    _IO->print(".");
-  }
-  _IO->print(command);
-#ifdef DD_DEBUG_SEND_COMMAND          
-    Serial.print(" ...");
-#endif        
-  if (pParam1 != NULL) {
-    _IO->print(":");
-    _IO->print(*pParam1/*pParam1->c_str()*/);
-    if (pParam2 != NULL) {
-      _IO->print(",");
-      _IO->print(*pParam2/*pParam2->c_str()*/);
-      if (pParam3 != NULL) {
-        _IO->print(",");
-        _IO->print(*pParam3/*pParam3->c_str()*/);
-        if (pParam4 != NULL) {
-          _IO->print(",");
-          _IO->print(*pParam4/*pParam4->c_str()*/);
-          if (pParam5 != NULL) {
-            _IO->print(",");
-            _IO->print(*pParam5/*pParam5->c_str()*/);
-            if (pParam6 != NULL) {
-              _IO->print(",");
-              _IO->print(*pParam6/*pParam6->c_str()*/);
-              if (pParam7 != NULL) {
-                _IO->print(",");
-                _IO->print(*pParam7/*pParam7->c_str()*/);
-                if (pParam8 != NULL) {
-                  _IO->print(",");
-                  _IO->print(*pParam8/*pParam8->c_str()*/);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-#ifdef DD_DEBUG_SEND_COMMAND          
-    Serial.print(" COMMAND ");
-#endif        
-  _IO->print("\n");
-  if (FLUSH_AFTER_SENT_COMMAND) {
-    _IO->flush();
-  }
-#ifdef DEBUG_ECHO_COMMAND
-  _IO->print("// ");
-  _IO->print(command);
-  _IO->print("\n");
-  _IO->flush();
-#endif  
-#ifdef DD_DEBUG_SEND_COMMAND          
-    Serial.println(command);
-#endif        
-#ifdef DEBUG_WITH_LED
-  if (debugLedPin != -1) {
-    digitalWrite(debugLedPin, LOW);
-  }  
+#ifdef DEBUG_ECHO_FEEDBACK 
+volatile bool _DebugEnableEchoFeedback = false;
 #endif
-}  
-inline void _sendCommand0(const String& layerId, const char *command) {
-  _sendCommand(layerId, command);
-}  
-inline void _sendCommand1(const String& layerId, const char *command, const String& param1) {
-  _sendCommand(layerId, command, &param1);
-}  
-inline void _sendCommand2(const String& layerId, const char *command, const String& param1, const String& param2) {
-  _sendCommand(layerId, command, &param1, &param2);
-}  
-inline void _sendCommand3(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
-  _sendCommand(layerId, command, &param1, &param2, &param3);
-}  
-inline void _sendCommand4(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4);
-}
-inline void _sendCommand5(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5);
-}
-inline void _sendCommand6(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6);
-}
-inline void _sendCommand7(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7);
-}
-inline void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
-  _sendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
-}
 
-
+volatile bool _SendingCommand = false;
+volatile bool _HandlingFeedback = false;
 
 void _Connect() {
   if (_Connected)
@@ -233,6 +153,8 @@ void _Connect() {
             _IO = pSIO;
             pSIO = NULL;
           }
+          _ConnectedIOProxy = new IOProxy(_IO);
+          _ConnectedFromSerial = fromSerial;
           break;
         }
 #ifdef DD_DEBUG_HS          
@@ -278,6 +200,7 @@ void _Connect() {
     }
   }
   _Connected = true;
+//  _ConnectedIOProxy = new IOProxy(_IO);
   _DDCompatibility = compatibility;
   if (false) {
     // ignore any input in 1000ms window
@@ -305,20 +228,276 @@ void _Connect() {
       digitalWrite(debugLedPin, LOW);
     }
 #endif
-    if (false) {
-      // *** debug code
-      _IO->print("// connection to DD made\n");
-       _sendCommand0("", "// *** connection made ***");
-    }
+    // if (false) {
+    //   // *** debug code
+    //   _IO->print("// connection to DD made\n");
+    //    _sendCommand0("", "// *** connection made ***");
+    // }
 #ifdef DD_DEBUG_HS          
     Serial.println("// *** DONE MAKE CONNECTION");
 #endif        
 }
 
-int _AllocLayerId() {
+
+int _AllocLid() {
   _Connect();
-  return _NextLid++;
+  int lid = _NextLid++;
+#ifdef STORE_LAYERS  
+  DDLayer** oriLayerArray = _DDLayerArray;
+  DDLayer** layerArray = (DDLayer**) malloc((lid + 1) * sizeof(DDLayer*));
+  if (oriLayerArray != NULL) {
+    memcpy(layerArray, oriLayerArray, lid * sizeof(DDLayer*));
+    delete oriLayerArray;
+  }
+  _DDLayerArray = layerArray;
+#endif
+  return lid;
 }
+int _LayerIdToLid(const String& layerId) {
+  return atoi(layerId.c_str());
+}
+void _PostCreateLayer(DDLayer* pLayer) {
+#ifdef STORE_LAYERS  
+  int lid = _LayerIdToLid(pLayer->getLayerId());
+  _DDLayerArray[lid] = pLayer;
+#endif
+}
+void _PreDeleteLayer(DDLayer* pLayer) {
+#ifdef STORE_LAYERS  
+  int lid = _LayerIdToLid(pLayer->getLayerId());
+  _DDLayerArray[lid] = NULL;
+#endif
+}
+String* _ReadFeedback() {
+  if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
+    return NULL;
+  }
+  String data = _ConnectedIOProxy->get();
+  String* pResData = new String(data);
+  _ConnectedIOProxy->clear();
+  return pResData;
+  // const char* dataStr = data.c_str();
+  // int dataLen = strlen(dataStr);
+  // char* resDataStr = (char*) malloc(dataLen + 1);
+  // strcpy(resDataStr, dataStr);
+  // _ConnectedIOProxy->clear()
+  // return resDataStr;
+}
+
+
+
+void __SendCommand(const String& layerId, const char* command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5, const String* pParam6, const String* pParam7, const String* pParam8) {
+#ifdef DD_DEBUG_SEND_COMMAND          
+  Serial.print("// *** sent");
+#endif        
+  if (layerId != "") {
+    _IO->print(layerId/*.c_str()*/);
+    _IO->print(".");
+  }
+  _IO->print(command);
+#ifdef DD_DEBUG_SEND_COMMAND          
+  Serial.print(" ...");
+#endif        
+  if (pParam1 != NULL) {
+    _IO->print(":");
+    _IO->print(*pParam1/*pParam1->c_str()*/);
+    if (pParam2 != NULL) {
+      _IO->print(",");
+      _IO->print(*pParam2/*pParam2->c_str()*/);
+      if (pParam3 != NULL) {
+        _IO->print(",");
+        _IO->print(*pParam3/*pParam3->c_str()*/);
+        if (pParam4 != NULL) {
+          _IO->print(",");
+          _IO->print(*pParam4/*pParam4->c_str()*/);
+          if (pParam5 != NULL) {
+            _IO->print(",");
+            _IO->print(*pParam5/*pParam5->c_str()*/);
+            if (pParam6 != NULL) {
+              _IO->print(",");
+              _IO->print(*pParam6/*pParam6->c_str()*/);
+              if (pParam7 != NULL) {
+                _IO->print(",");
+                _IO->print(*pParam7/*pParam7->c_str()*/);
+                if (pParam8 != NULL) {
+                  _IO->print(",");
+                  _IO->print(*pParam8/*pParam8->c_str()*/);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+#ifdef DD_DEBUG_SEND_COMMAND          
+  Serial.print(" COMMAND ");
+#endif        
+  _IO->print("\n");
+  if (FLUSH_AFTER_SENT_COMMAND) {
+    _IO->flush();
+  }
+#ifdef DEBUG_ECHO_COMMAND
+  _IO->print("// ");
+  _IO->print(command);
+  _IO->print("\n");
+  _IO->flush();
+#endif  
+#ifdef DD_DEBUG_SEND_COMMAND          
+  Serial.println(command);
+#endif        
+}  
+void _HandleFeedback();
+void _SendCommand(const String& layerId, const char* command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL) {
+  bool alreadySendingCommand = _SendingCommand;  // not very accurate
+  _SendingCommand = true;
+
+#ifdef DEBUG_WITH_LED
+  int debugLedPin = _DebugLedPin;
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, HIGH);
+  }
+#endif   
+
+  if (command != NULL) {
+    __SendCommand(layerId, command, pParam1, pParam2, pParam3, pParam4, pParam5, pParam6, pParam7, pParam8);
+  }
+
+#ifdef ENABLE_FEEDBACK
+  if (!alreadySendingCommand) {
+    _HandleFeedback();
+  }
+#endif
+
+#ifdef DEBUG_WITH_LED
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, LOW);
+  }  
+#endif
+
+  _SendingCommand = false;
+}
+
+void _LogToSerial(const String& logLine) {
+  if (!_ConnectedFromSerial) {
+    Serial.println(logLine);
+  } else {
+    _SendCommand("", ("// " + logLine).c_str());
+  }
+}
+
+void _HandleFeedback() {
+  bool alreadyHandlingFeedback = _HandlingFeedback;  // not very accurate
+  _HandlingFeedback = true;
+  if (!alreadyHandlingFeedback) {
+    String* pFeedback = _ReadFeedback();
+    if (pFeedback != NULL) {
+#ifdef DEBUG_ECHO_FEEDBACK
+      if (_DebugEnableEchoFeedback) {
+          _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
+        if (!_ConnectedFromSerial) {
+          Serial.print("// FB -- ");
+          Serial.print(*pFeedback);
+          Serial.print("\n");
+          Serial.flush();
+        }
+      }
+#endif
+#ifdef STORE_LAYERS
+      int bufLen = pFeedback->length() + 1;
+      char buf[bufLen];
+      pFeedback->toCharArray(buf, bufLen);
+      bool ok = false;
+      int lid = -1;
+      int x = -1;
+      int y = -1;
+      char* token = strtok(buf, ".");
+      if (token != NULL) {
+        lid = _LayerIdToLid(token);
+        token = strtok(NULL, ":");
+      }
+      if (token != NULL) {
+        token = strtok(NULL, ",");
+      }
+      if (token != NULL) {
+        x = atoi(token);
+        token = strtok(NULL, ",");
+      }
+      if (token != NULL) {
+        y = atoi(token);
+        ok = true;
+      }
+      if (ok) {
+        if (lid < 0 || lid >= _NextLid) {
+          ok = false;
+        }
+      }
+      if (ok) {
+        DDLayer* pLayer = _DDLayerArray[lid];
+        if (pLayer != NULL) {
+          DDFeedbackHandler handler = pLayer->getFeedbackHandler();
+          if (handler != NULL) {
+            handler(pLayer, CLICK, x, y);
+            //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
+          }
+        }
+      }
+#endif  
+      delete pFeedback;
+    }
+    _HandlingFeedback = false;
+  }
+}
+
+void _Delay(unsigned long ms) {
+  unsigned long delayMicros = ms * 1000;
+	unsigned long start = micros();
+  while (true) {
+    _HandleFeedback();
+    unsigned long remain = delayMicros - (micros() - start);
+    if (remain > 20000) {
+      delay(20);
+    } else if (remain > 0) {
+      delay(remain / 1000);
+      break;
+    } else {
+      break;
+    }
+  }
+}
+
+
+
+inline void _sendCommand0(const String& layerId, const char *command) {
+  _SendCommand(layerId, command);
+}  
+inline void _sendCommand1(const String& layerId, const char *command, const String& param1) {
+  _SendCommand(layerId, command, &param1);
+}  
+inline void _sendCommand2(const String& layerId, const char *command, const String& param1, const String& param2) {
+  _SendCommand(layerId, command, &param1, &param2);
+}  
+inline void _sendCommand3(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3) {
+  _SendCommand(layerId, command, &param1, &param2, &param3);
+}  
+inline void _sendCommand4(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4) {
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4);
+}
+inline void _sendCommand5(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5) {
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5);
+}
+inline void _sendCommand6(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6) {
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6);
+}
+inline void _sendCommand7(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7) {
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7);
+}
+inline void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
+}
+
+
+
 
 
 }
@@ -359,6 +538,15 @@ void DDLayer::backgroundColor(const String& color) {
 }
 void DDLayer::noBackgroundColor() {
   _sendCommand0(layerId, "nobgcolor");
+}
+void DDLayer::writeComment(const String& comment) {
+  _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
+}
+//void DDLayer::setFeedbackHandler(void (*handler)(DDFeedbackType, int, int)) {
+void DDLayer::setFeedbackHandler(DDFeedbackHandler handler) {
+  bool enable = handler != NULL;
+  _sendCommand1(layerId, "feedback", TO_BOOL(enable));
+  feedbackHandler = handler;
 }
 
 
@@ -453,6 +641,9 @@ void TurtleDDLayer::setTextSize(int size) {
 }
 void TurtleDDLayer::setTextFont(const String& fontName, int size) {
   _sendCommand2(layerId, "ptextfont", fontName, String(size));
+}
+void TurtleDDLayer::dot(int size, const String& color) {
+  _sendCommand2(layerId, "dot", String(size), color);
 }
 void TurtleDDLayer::circle(int radius, bool centered) {
   _sendCommand1(layerId, centered ? "ccircle" : "circle", String(radius));
@@ -708,59 +899,91 @@ void DumbDisplay::configAutoPin(const String& layoutSpec) {
   _sendCommand1("", "CFGAP", layoutSpec);
 }
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand3(layerId, "SU", String("mb"), String(width), String(height));
-  return new MbDDLayer(lid);
+  MbDDLayer* pLayer = new MbDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 TurtleDDLayer* DumbDisplay::createTurtleLayer(int width, int height) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand3(layerId, "SU", String("turtle"), String(width), String(height));
-  return new TurtleDDLayer(lid);
+  TurtleDDLayer* pLayer = new TurtleDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int subColCount, int subRowCount) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand5(layerId, "SU", String("ledgrid"), String(colCount), String(rowCount), String(subColCount), String(subRowCount));
-  return new LedGridDDLayer(lid);
+  LedGridDDLayer* pLayer = new LedGridDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeight, const String& fontName) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand5(layerId, "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
-  return new LcdDDLayer(lid);
+  LcdDDLayer* pLayer = new LcdDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand3(layerId, "SU", String("graphical"), String(width), String(height));
-  return new GraphicalDDLayer(lid);
+  GraphicalDDLayer* pLayer = new GraphicalDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
-  int lid = _AllocLayerId();
+  int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand2(layerId, "SU", String("7segrow"), String(digitCount));
-  return new SevenSegmentRowDDLayer(lid);
+  SevenSegmentRowDDLayer* pLayer = new SevenSegmentRowDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
 }
 void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
+  _PreDeleteLayer(pLayer);
   delete pLayer;
 }
 void DumbDisplay::writeComment(const String& comment) {
   _sendCommand0("", ("// " + comment).c_str());
 }
 
-void DumbDisplay::debugSetup(int debugLedPin) {
+
+void DumbDisplay::debugSetup(int debugLedPin, bool enableEchoFeedback) {
 #ifdef DEBUG_WITH_LED
   if (debugLedPin != -1) {
      pinMode(debugLedPin, OUTPUT);
    }
   _DebugLedPin = debugLedPin;
 #endif  
+#ifdef DEBUG_ECHO_FEEDBACK
+  _DebugEnableEchoFeedback = enableEchoFeedback;
+#endif
 }
+// void DumbDisplay::delay(unsigned long ms) {
+//   _Delay(ms);
+// }
+
+
+void DDLogToSerial(const String& logLine) {
+  _LogToSerial(logLine);
+}
+void DDDelay(unsigned long ms) {
+  _Delay(ms);
+}
+void DDYield() {
+    _HandleFeedback();
+}
+
 
 

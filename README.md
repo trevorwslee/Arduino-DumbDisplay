@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.1.3)
+# DumbDisplay Arduino Library (v0.4.0)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets for your Arduino / ESP32 experiments.
 
@@ -17,7 +17,7 @@ A few types of output layers can be created:
 * graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 
-You can install the free DumbDisplay app (v0.3.4 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
+You can install the free DumbDisplay app (v0.4.0 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth via HC-06)
@@ -89,9 +89,9 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/d
 ## More Samples
 
 
-| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] |
-|--|--|--|--|--|
-|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmb.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddgraphical.png)|
+| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. Layer "feedback" |
+|--|--|--|--|--|--|
+|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmb.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddgraphical.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/dddoodle.png)|
 
 
 ### Screenshot 1 -- *Micro:bit*
@@ -438,6 +438,106 @@ void loop() {
 }
 ```
 
+### Screenshot 6 -- *Layer "feedback"*
+
+This very simple doodle sample shows how the layer "feedback" mechanism can be used to route user interaction (clicking) of layer to Arduino code.
+
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/dddoodle/dddoodle.ino
+
+```
+#include <ssdumbdisplay.h>
+
+
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true));
+
+int dotSize = 5;
+const char* penColor = "red";
+TurtleDDLayer* pTurtleLayer = NULL;
+LcdDDLayer* pLcdLayer = NULL;
+LedGridDDLayer* pLedGridLayer = NULL;
+
+void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
+    if (pLayer == pLcdLayer) {
+        // clicked the "clear" button
+        pLayer->backgroundColor("white");
+        Reset();
+        delay(100);
+        pLayer->backgroundColor("lightgray");
+    } else if (pLayer == pLedGridLayer) {
+        // clicked one of the 3 color options
+        const char* color = NULL;
+        if (x == 0)
+            color = "red";
+        else if (x == 1)    
+            color = "green";
+        else if (x == 2)    
+            color = "blue";
+        if (color != NULL) {
+            pLedGridLayer->turnOff(x, 0);
+            delay(100);
+            pLedGridLayer->onColor(color);
+            pLedGridLayer->turnOn(x, 0);
+            penColor = color;
+            pTurtleLayer->penColor(penColor);
+            pTurtleLayer->dot(dotSize, penColor);
+        }
+    } else {
+        // very simple doodle
+        pTurtleLayer->goTo(x, y);
+        pTurtleLayer->dot(dotSize, penColor);
+    }
+}
+
+void Reset() {
+    pTurtleLayer->clear();
+    pTurtleLayer->penSize(2);
+    pTurtleLayer->penColor(penColor);
+    pTurtleLayer->home(false);
+    pTurtleLayer->dot(dotSize, penColor);
+}
+
+
+void setup() {
+    // use a Turtle layer for very simple doodle
+    pTurtleLayer = dumbdisplay.createTurtleLayer(201, 201);
+    pTurtleLayer->setFeedbackHandler(FeedbackHandler);
+    pTurtleLayer->backgroundColor("azure");
+    pTurtleLayer->fillColor("lemonchiffon");
+
+    // use a LED layer for the "clear" button
+    pLcdLayer = dumbdisplay.createLcdLayer(5, 1);   
+    pLcdLayer->setFeedbackHandler(FeedbackHandler);
+    pLcdLayer->backgroundColor("lightgray");
+    pLcdLayer->print("CLEAR");
+
+    // use a LED-grid layers for the 3 color options -- red, green and blue 
+    pLedGridLayer = dumbdisplay.createLedGridLayer(3);
+    pLedGridLayer->setFeedbackHandler(FeedbackHandler);
+    pLedGridLayer->onColor("red");
+    pLedGridLayer->turnOn(0);
+    pLedGridLayer->onColor("green");
+    pLedGridLayer->turnOn(1);
+    pLedGridLayer->onColor("blue");
+    pLedGridLayer->turnOn(2);
+ 
+    // layout the different layers
+    dumbdisplay.configAutoPin(DD_AP_VERT_2(
+                                DD_AP_HORI_2(
+                                    pLedGridLayer->getLayerId(),
+                                    pLcdLayer->getLayerId()),
+                                pTurtleLayer->getLayerId()));
+
+
+
+    Reset();
+}
+
+
+void loop() {
+    // just to give DD chances to capture feedback
+    DDDelay(1000);
+}
+```
 
 # Reference
 
@@ -460,6 +560,9 @@ MIT
 
 
 # Change History
+
+v0.1.4
+- added layer "feedback" mechanism -- i.e. handling "hook" to handle when layer clicked 
 
 v0.1.3
 - added 7-Segment-row layer (`SevenSegmentRowDDLayer`)

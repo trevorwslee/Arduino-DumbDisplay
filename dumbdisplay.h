@@ -25,6 +25,8 @@
 #define DD_AP_VERT_4(id1, id2, id3, id4) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + ")")
 #define DD_AP_HORI_5(id1, id2, id3, id4, id5) ("H(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")")
 #define DD_AP_VERT_5(id1, id2, id3, id4, id5) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")")
+#define DD_AP_HORI_6(id1, id2, id3, id4, id5, id6) ("H(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
+#define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 
 
 
@@ -68,6 +70,10 @@ class DDInputOutput {
 };
 
 
+class DDLayer;
+enum DDFeedbackType { CLICK };
+typedef void (*DDFeedbackHandler)(DDLayer*, DDFeedbackType, int, int);
+
 class DDLayer {
   public:
     /* set layer visibility */
@@ -83,11 +89,17 @@ class DDLayer {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
+    DDFeedbackHandler getFeedbackHandler() { return feedbackHandler; }
+    void setFeedbackHandler(DDFeedbackHandler handler);
+    //void setFeedbackHandler(void (*handler)(DDFeedbackType, int, int));
     const String& getLayerId() { return layerId; }
-  protected:
+    void writeComment(const String& comment);
+ protected:
     DDLayer(int layerId);
-  protected:
+ protected:
     String layerId;  
+    //void (*feedbackHandler)(DDFeedbackType, int, int);
+    DDFeedbackHandler feedbackHandler;
 };
 
 
@@ -167,6 +179,8 @@ class TurtleDDLayer: public DDLayer {
     /* - fontName */
     /* - textSize: 0 means default */
     void setTextFont(const String& fontName, int textSize = 0);
+    /* draw a dot */
+    void dot(int size, const String& color);
     /* draw circle; centered or not */
     void circle(int radius, bool centered = false);
     /* draw oval; centered or not */
@@ -337,7 +351,6 @@ class SevenSegmentRowDDLayer: public DDLayer {
     void SevenSegmentRowDDLayer::showFormatted(const String& formatted);
 };
 
-
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO);
@@ -372,8 +385,15 @@ class DumbDisplay {
     void deleteLayer(DDLayer *pLayer);
     /* write out a comment to DD */
     void writeComment(const String& comment);
-    void debugSetup(int debugLedPin);
+    void debugSetup(int debugLedPin, bool enableEchoFeedback = true);
 };
+
+/* log line to serial making sure not affect DD */
+void DDLogToSerial(const String& logLine);
+/* the same usage as standard delay(), but it allows DD chances to handle feedback */
+void DDDelay(unsigned long ms);
+/* give DD a chance to handle feedback */
+void DDYield();
 
 
 #endif
