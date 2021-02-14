@@ -1,6 +1,6 @@
 # DumbDisplay Arduino Library (v0.4.0)
 
-DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets for your Arduino / ESP32 experiments.
+DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some very simple virtual input gadgets) for your Arduino / ESP32 experiments.
 
 
 # Description
@@ -16,6 +16,9 @@ A few types of output layers can be created:
 * Turtle-like canvas
 * graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
+
+Notice that with the new layer "feedback" mechanism, user-interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as input gadgets as well.
+
 
 You can install the free DumbDisplay app (v0.4.0 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
@@ -561,7 +564,7 @@ MIT
 
 # Change History
 
-v0.1.4
+v0.4.0
 - added layer "feedback" mechanism -- i.e. handling "hook" to handle when layer clicked 
 
 v0.1.3

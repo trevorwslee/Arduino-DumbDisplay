@@ -89,14 +89,15 @@ class DDLayer {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
-    DDFeedbackHandler getFeedbackHandler() { return feedbackHandler; }
+    /* set handler to "feedback" (setting handler also enables "feedback" mechanism) */
     void setFeedbackHandler(DDFeedbackHandler handler);
-    //void setFeedbackHandler(void (*handler)(DDFeedbackType, int, int));
     const String& getLayerId() { return layerId; }
     void writeComment(const String& comment);
- protected:
+  public:
+    DDFeedbackHandler getFeedbackHandler() { return feedbackHandler; }
+  protected:
     DDLayer(int layerId);
- protected:
+  protected:
     String layerId;  
     //void (*feedbackHandler)(DDFeedbackType, int, int);
     DDFeedbackHandler feedbackHandler;
