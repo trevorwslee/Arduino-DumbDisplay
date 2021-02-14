@@ -11,7 +11,7 @@
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
-#define SERIAL_ECHO_FEEDBACK
+#define DEBUG_ECHO_FEEDBACK
 
 
 #define DEBUG_WITH_LED
@@ -90,8 +90,8 @@ volatile bool _ConnectedFromSerial = false;
 #ifdef DEBUG_WITH_LED
 volatile int _DebugLedPin = -1;
 #endif
-#ifdef SERIAL_ECHO_FEEDBACK 
-volatile bool _DebugEnableSerialEchoFeedback = false;
+#ifdef DEBUG_ECHO_FEEDBACK 
+volatile bool _DebugEnableEchoFeedback = false;
 #endif
 
 volatile bool _SendingCommand = false;
@@ -383,17 +383,17 @@ void _HandleFeedback() {
   if (!alreadyHandlingFeedback) {
     String* pFeedback = _ReadFeedback();
     if (pFeedback != NULL) {
-#ifdef SERIAL_ECHO_FEEDBACK
-      if (_DebugEnableSerialEchoFeedback && !_ConnectedFromSerial) {
-        Serial.print("// FB -- ");
-        Serial.print(*pFeedback);
-        Serial.print("\n");
-        Serial.flush();
+#ifdef DEBUG_ECHO_FEEDBACK
+      if (_DebugEnableEchoFeedback) {
+          _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
+        if (!_ConnectedFromSerial) {
+          Serial.print("// FB -- ");
+          Serial.print(*pFeedback);
+          Serial.print("\n");
+          Serial.flush();
+        }
       }
 #endif
-      if (true) {  
-        _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
-      }
 #ifdef STORE_LAYERS
       int bufLen = pFeedback->length() + 1;
       char buf[bufLen];
@@ -942,15 +942,15 @@ void DumbDisplay::writeComment(const String& comment) {
 }
 
 
-void DumbDisplay::debugSetup(int debugLedPin, bool enableSerialEchoFeedback) {
+void DumbDisplay::debugSetup(int debugLedPin, bool enableEchoFeedback) {
 #ifdef DEBUG_WITH_LED
   if (debugLedPin != -1) {
      pinMode(debugLedPin, OUTPUT);
    }
   _DebugLedPin = debugLedPin;
 #endif  
-#ifdef SERIAL_ECHO_FEEDBACK
-  _DebugEnableSerialEchoFeedback = enableSerialEchoFeedback;
+#ifdef DEBUG_ECHO_FEEDBACK
+  _DebugEnableEchoFeedback = enableEchoFeedback;
 #endif
 }
 // void DumbDisplay::delay(unsigned long ms) {

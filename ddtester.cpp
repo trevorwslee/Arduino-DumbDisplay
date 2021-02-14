@@ -433,8 +433,7 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 
 
 void SevenSegmentRowDDTester_FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
-            //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
-  pLayer->writeComment("feedback (" + String(x) + "," + String(y) + ")");
+  pLayer->writeComment("layer FB (" + String(x) + "," + String(y) + ")");
 }
 void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
@@ -522,11 +521,11 @@ using namespace DDTesterImpl;
 
 void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
 
-  bool mb = false;
-  bool turtle = false;
-  bool ledGrid = false;
-  bool lcd = false;
-  bool graphical = false;
+  bool mb = true;
+  bool turtle = true;
+  bool ledGrid = true;
+  bool lcd = true;
+  bool graphical = true;
   bool sevenSegmentRow = true;
 
   int testCount = 0;
@@ -543,6 +542,10 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
 
   int stepCount = 0;
   while (true) {
+    if (graphical)
+      GraphicalDDTester_testStep(dumbdisplay, stepCount);
+    if (sevenSegmentRow)
+      SevenSegmentRowDDTester_testStep(dumbdisplay, stepCount);
     if (mb)
       MbDDTester_testStep(dumbdisplay, stepCount);
     if (turtle)  
@@ -551,10 +554,6 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
       LedGridDDTester_testStep(dumbdisplay, stepCount);  
     if (lcd)
       LcdDDTester_testStep(dumbdisplay, stepCount);
-    if (graphical)
-      GraphicalDDTester_testStep(dumbdisplay, stepCount);
-    if (sevenSegmentRow)
-      SevenSegmentRowDDTester_testStep(dumbdisplay, stepCount);
     DDDelay(1000);
     stepCount++;
   }

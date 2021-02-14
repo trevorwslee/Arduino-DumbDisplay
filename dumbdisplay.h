@@ -383,7 +383,7 @@ class DumbDisplay {
     void deleteLayer(DDLayer *pLayer);
     /* write out a comment to DD */
     void writeComment(const String& comment);
-    void debugSetup(int debugLedPin, bool enableSerialEchoFeedback = true);
+    void debugSetup(int debugLedPin, bool enableEchoFeedback = true);
 };
 
 /* the same usage as standard delay(), but it allows DD chances to handle feedback */
