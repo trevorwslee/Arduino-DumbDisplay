@@ -87,6 +87,7 @@ void setup() {
 
 
 void loop() {
-    // give DD a chance to capture feedback
-    DDYield();
+    // give DD chances to capture feedback
+    DDDelay(1000);
+    dumbdisplay.writeComment("... looping ...");
 }

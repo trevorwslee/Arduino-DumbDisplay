@@ -67,7 +67,7 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   - In my own testing, the bluetooth communication will hang from time to time.
 
 
-With a DumbDisplay object, you are ready to proceed coding, like
+With a DumbDisplay object, you are ready to proceed with coding, like
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddblink/ddblink.ino
 
@@ -92,6 +92,7 @@ You can also try out "feedback" from DumbDisplay like
 
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddonoffmb/ddonoffmb.ino
+
 ```
 #include <ssdumbdisplay.h>
 
@@ -116,6 +117,10 @@ void loop() {
 }
 ```
 
+Please note that DD will check for "feedback" in 3 occasions:
+* after every send of command
+* once when `DDYield()` is called
+* during the "wait loop" of `DDDelay()`
 
 
 ## More Samples
