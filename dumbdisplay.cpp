@@ -466,6 +466,11 @@ void _Delay(unsigned long ms) {
   }
 }
 
+void _Yield() {
+  _HandleFeedback();
+  yield();
+}
+
 
 
 inline void _sendCommand0(const String& layerId, const char *command) {
@@ -982,7 +987,7 @@ void DDDelay(unsigned long ms) {
   _Delay(ms);
 }
 void DDYield() {
-    _HandleFeedback();
+  _Yield();
 }
 
 
