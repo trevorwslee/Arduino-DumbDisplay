@@ -529,13 +529,19 @@ using namespace DDTesterImpl;
 
 
 
-void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
+void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
 
-  bool mb = true;
-  bool turtle = true;
-  bool ledGrid = true;
-  bool lcd = true;
-  bool graphical = true;
+  if (forDebugging) {
+    const char* log_msg = "!!! start test loop !!!";
+    dumbdisplay.writeComment(log_msg);
+    DDLogToSerial(log_msg);
+  }
+
+  bool mb = !forDebugging;
+  bool turtle = !forDebugging;
+  bool ledGrid = !forDebugging;
+  bool lcd = !forDebugging;
+  bool graphical = !forDebugging;
   bool sevenSegmentRow = true;
 
   int testCount = 0;
@@ -564,7 +570,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay) {
       LedGridDDTester_testStep(dumbdisplay, stepCount);  
     if (lcd)
       LcdDDTester_testStep(dumbdisplay, stepCount);
-    DDDelay(1000);
+    DDDelay(800);
 
     stepCount++;
 
