@@ -537,10 +537,11 @@ void setup() {
 
 
 void loop() {
-    // just to give DD chances to capture feedback
-    DDDelay(1000);
+    // give DD a chance to capture feedback
+    DDYield();
 }
 ```
+
 
 # Reference
 
@@ -565,7 +566,7 @@ MIT
 # Change History
 
 v0.4.0
-- added layer "feedback" mechanism -- i.e. handling "hook" to handle when layer clicked 
+- added layer "feedback" mechanism -- i.e. handler "hook" to handle when layer clicked 
 
 v0.1.3
 - added 7-Segment-row layer (`SevenSegmentRowDDLayer`)

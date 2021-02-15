@@ -87,6 +87,6 @@ void setup() {
 
 
 void loop() {
-    // just to give DD chances to capture feedback
-    DDDelay(1000);
+    // give DD a chance to capture feedback
+    DDYield();
 }

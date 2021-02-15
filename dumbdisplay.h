@@ -72,7 +72,11 @@ class DDInputOutput {
 
 class DDLayer;
 enum DDFeedbackType { CLICK };
-typedef void (*DDFeedbackHandler)(DDLayer*, DDFeedbackType, int, int);
+
+/* pLayer -- pointer to the DDLayer of which "feedback" received */
+/* type -- currently, only possible value if CLICK */
+/* x, y -- (x, y) is the "position" where on the layer was clicked */
+typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, int x, int y);
 
 class DDLayer {
   public:
@@ -99,7 +103,6 @@ class DDLayer {
     DDLayer(int layerId);
   protected:
     String layerId;  
-    //void (*feedbackHandler)(DDFeedbackType, int, int);
     DDFeedbackHandler feedbackHandler;
 };
 
