@@ -570,7 +570,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
       LedGridDDTester_testStep(dumbdisplay, stepCount);  
     if (lcd)
       LcdDDTester_testStep(dumbdisplay, stepCount);
-    DDDelay(1000);
+    DDDelay(800);
 
     stepCount++;
 
