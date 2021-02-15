@@ -5,7 +5,7 @@
 #include "dumbdisplay.h"
 
 
-void BasicDDTestLoop(DumbDisplay& dumbdisplay);
+void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging = false);
 
 
 #endif

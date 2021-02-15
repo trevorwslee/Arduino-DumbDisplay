@@ -6,6 +6,8 @@
 
 #define ENABLE_FEEDBACK
 #define STORE_LAYERS
+#define HANDLE_FEEDBACK_DURING_DELAY
+
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
@@ -20,6 +22,7 @@
 
 // not flush seems to be a bit better for Serial (lost data)
 #define FLUSH_AFTER_SENT_COMMAND false
+#define YIELD_AFTER_SEND_COMMAND false
 
 
 
@@ -337,6 +340,9 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
   _IO->print("\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
     _IO->flush();
+  }
+  if (YIELD_AFTER_SEND_COMMAND) {
+    yield();
   }
 #ifdef DEBUG_ECHO_COMMAND
   _IO->print("// ");
@@ -991,7 +997,11 @@ void DDLogToSerial(const String& logLine) {
   _LogToSerial(logLine);
 }
 void DDDelay(unsigned long ms) {
+#ifdef HANDLE_FEEDBACK_DURING_DELAY
   _Delay(ms);
+#else
+  delay(ms);
+#endif
 }
 void DDYield() {
   _Yield();
