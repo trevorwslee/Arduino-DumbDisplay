@@ -3,6 +3,7 @@
 
 
 #define HAND_SHAKE_GAP 1000
+
 #define ENABLE_FEEDBACK
 #define STORE_LAYERS
 
@@ -450,6 +451,7 @@ void _HandleFeedback() {
 }
 
 void _Delay(unsigned long ms) {
+#ifdef ENABLE_FEEDBACK
   unsigned long delayMicros = ms * 1000;
 	unsigned long start = micros();
   while (true) {
@@ -464,10 +466,15 @@ void _Delay(unsigned long ms) {
       break;
     }
   }
+#else
+  delay(ms);
+#endif
 }
 
 void _Yield() {
+#ifdef ENABLE_FEEDBACK
   _HandleFeedback();
+#endif
   yield();
 }
 
