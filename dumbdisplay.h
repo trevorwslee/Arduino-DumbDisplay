@@ -111,8 +111,7 @@ enum MbArrow { North, NorthEast, East, SouthEast, South, SouthWest, West, NorthW
 enum MbIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, Surprised,
               Silly, Fabulous, Meh, TShirt, Rollerskate, Duck, House, Tortoise, Butterfly, StickFigure,
               Ghost, Sword, Giraffe, Skull, Umbrella, Snake, Rabbit, Cow, QuarterNote, EigthNote,
-              Pitchfork, Target, Triangle, LeftTriangle, Chessboard, Diamond, SmallDiamond, Square, SmallSquare, Scissors,
-        };
+              Pitchfork, Target, Triangle, LeftTriangle, Chessboard, Diamond, SmallDiamond, Square, SmallSquare, Scissors };
 
 class MbDDLayer: public DDLayer {
   public:
@@ -352,7 +351,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
     void showHexNumber(int number);
     /* show formatted number (even number with hex digits) */
     /* e.g. "12.00", "00.34", "-.12", "0ff" */
-    void SevenSegmentRowDDLayer::showFormatted(const String& formatted);
+    void showFormatted(const String& formatted);
 };
 
 class DumbDisplay {
