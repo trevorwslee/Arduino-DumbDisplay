@@ -91,7 +91,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/d
 You can also try out "feedback" from DumbDisplay like
 
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddblink/ddonoffmb.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddonoffmb/ddonoffmb.ino
 ```
 #include <ssdumbdisplay.h>
 
