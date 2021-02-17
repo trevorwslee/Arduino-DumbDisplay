@@ -300,6 +300,27 @@ LcdDDLayer *pLcdLayer = NULL;
 GraphicalDDLayer *pGraphicalLayer = NULL;
 SevenSegmentRowDDLayer *p7SegmentRowLayer = NULL;
 
+void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
+  pLayer->writeComment("layer [" + pLayer->getLayerId() + "] FB (" + String(x) + "," + String(y) + ")");
+  if (pLayer == p7SegmentRowLayer) {
+    int r = 0;
+    int g = 0;
+    int b = 0;
+    if (x == 0)
+      r = 255;
+    else if (x == 1)
+      g = 255;
+    else if (x == 2)
+      b = 255;  
+    p7SegmentRowLayer->backgroundColor(DD_RGB_COLOR(r, g, b));
+  } else if (pLayer == pLcdLayer) {
+    int r = random(256);
+    int g = 255 - r;
+    pLcdLayer->bgPixelColor(DD_RGB_COLOR(r, 218, 218));
+    pLcdLayer->backgroundColor(DD_RGB_COLOR(16, g, 16));
+  }
+}
+
 void DDTester_autoPinLayers(DumbDisplay& dumbdisplay) {
   if (pMbLayer == NULL ||
       pTurtleLayer == NULL ||
@@ -409,6 +430,7 @@ void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pLcdLayer = dumbdisplay.createLcdLayer(18, 3, 16, "Courier");
+    pLcdLayer->setFeedbackHandler(FeedbackHandler);
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -432,23 +454,10 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 }
 
 
-void SevenSegmentRowDDTester_FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
-  pLayer->writeComment("layer FB (" + String(x) + "," + String(y) + ")");
-  int r = 0;
-  int g = 0;
-  int b = 0;
-  if (x == 0)
-    r = 255;
-  else if (x == 1)
-    g = 255;
-  else if (x == 2)
-    b = 255;  
-  ((SevenSegmentRowDDLayer*) pLayer)->backgroundColor(DD_RGB_COLOR(r, g, b));
-}
 void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     p7SegmentRowLayer = dumbdisplay.create7SegmentRowLayer(4);
-    p7SegmentRowLayer->setFeedbackHandler(SevenSegmentRowDDTester_FeedbackHandler);
+    p7SegmentRowLayer->setFeedbackHandler(FeedbackHandler);
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -570,7 +579,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
       LedGridDDTester_testStep(dumbdisplay, stepCount);  
     if (lcd)
       LcdDDTester_testStep(dumbdisplay, stepCount);
-    DDDelay(800);
+    DDDelay(1000);
 
     stepCount++;
 

@@ -33,7 +33,8 @@ void loop() {
     // if DD not using Serial, print something to Serial
     Serial.println("hello");
   }
-  BasicDDTestLoop(dumbdisplay);
+  bool forDebugging = false;
+  BasicDDTestLoop(dumbdisplay, forDebugging);
 }
 
 

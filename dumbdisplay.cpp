@@ -251,7 +251,7 @@ int _AllocLid() {
   DDLayer** layerArray = (DDLayer**) malloc((lid + 1) * sizeof(DDLayer*));
   if (oriLayerArray != NULL) {
     memcpy(layerArray, oriLayerArray, lid * sizeof(DDLayer*));
-    delete oriLayerArray;
+    free(oriLayerArray);
   }
   _DDLayerArray = layerArray;
 #endif
