@@ -276,10 +276,10 @@ void _PreDeleteLayer(DDLayer* pLayer) {
   _DDLayerArray[lid] = NULL;
 #endif
 }
-#ifdef READ_BUFFER_USE_BUFFER
-String _ReadFeedbackBuffer;
-#endif
-String* _ReadFeedback() {
+// #ifdef READ_BUFFER_USE_BUFFER
+// String _ReadFeedbackBuffer;
+// #endif
+String* _ReadFeedback(String& buffer) {
   if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
     return NULL;
   }
@@ -289,9 +289,9 @@ String* _ReadFeedback() {
   Serial.println(data);
 #endif
 #ifdef READ_BUFFER_USE_BUFFER
-    _ReadFeedbackBuffer = data;
+    buffer = data;
     _ConnectedIOProxy->clear();
-    return &_ReadFeedbackBuffer;
+    return &buffer;
 #else    
     String* pResData = new String(data);
     _ConnectedIOProxy->clear();
@@ -414,7 +414,10 @@ void _HandleFeedback() {
   bool alreadyHandlingFeedback = _HandlingFeedback;  // not very accurate
   _HandlingFeedback = true;
   if (!alreadyHandlingFeedback) {
-    String* pFeedback = _ReadFeedback();
+#ifdef READ_BUFFER_USE_BUFFER
+    String buffer;
+#endif
+    String* pFeedback = _ReadFeedback(buffer);
     if (pFeedback != NULL) {
 #ifdef DEBUG_ECHO_FEEDBACK
       if (_DebugEnableEchoFeedback) {
