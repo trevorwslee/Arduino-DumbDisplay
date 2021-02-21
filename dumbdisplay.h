@@ -75,17 +75,17 @@ struct DDFeedback {
 };
 
 
-class FeedbackManager {
+class DDFeedbackManager {
   public: 
-    FeedbackManager(int bufferSize);
-    ~FeedbackManager();
+    DDFeedbackManager(int bufferSize);
+    ~DDFeedbackManager();
     const DDFeedback* getFeedback();
     void pushFeedback(int x, int y);
   private:
-    bool feedbackValid;
     DDFeedback* feedbackArray;
     int arraySize;
     int nextArrayIdx;
+    int validArrayIdx;
 };
 
 class DDLayer;
@@ -115,23 +115,24 @@ class DDLayer {
     void noBackgroundColor();
     const String& getLayerId() { return layerId; }
     void writeComment(const String& comment);
+    /* rely on getFeedback() being called */ 
     /* autoFeedbackMethod: */
     /* . "" -- no auto feedback */
     /* . "f" -- flash the layer */
     /* . "fs" -- flash the spot where the layer is clicked */
     void enableFeedback(const String& autoFeedbackMethod = "");
+    /** disable "feedback" */
     void disableFeedback();
     /** get "feedback" ... NULL if no pending "feedback" */
     const DDFeedback* getFeedback();
-    // /* check to see if there is any pending feedback */
-    // bool hasFeedback();
-    // /* get the pending feedback */ 
-    // DDFeedback getFeedback();
-    /* set explicit "feedback" handler (and enable feedback) */
-    /* autoFeedbackMethod -- see enableFeedback() */
+    /* set explicit (and more responsive) "feedback" handler (and enable feedback) */
+    /* autoFeedbackMethod: */
+    /* . "" -- no auto feedback */
+    /* . "f" -- flash the layer */
+    /* . "fs" -- flash the spot where the layer is clicked */
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
   public:
-    FeedbackManager* getFeedbackManager() { return pFeedbackManager; }
+    DDFeedbackManager* getFeedbackManager() { return pFeedbackManager; }
     DDFeedbackHandler getFeedbackHandler() { return feedbackHandler; }
   protected:
     DDLayer(int layerId);
@@ -139,7 +140,7 @@ class DDLayer {
     ~DDLayer();
   protected:
     String layerId;  
-    FeedbackManager *pFeedbackManager;
+    DDFeedbackManager *pFeedbackManager;
     DDFeedbackHandler feedbackHandler;
 };
 

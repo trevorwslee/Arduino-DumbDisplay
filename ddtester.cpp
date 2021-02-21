@@ -3,7 +3,7 @@
 
 
 #define ASCII_ONLY false
-#define TEST_FEEDABCK false
+#define TEST_FEEDABCK true
 
 namespace DDTesterImpl {
 
@@ -347,6 +347,7 @@ void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
     pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
     if (TEST_FEEDABCK) {  
       pMbLayer->enableFeedback("fs");
+      pMbLayer->writeComment("MB FB enabled");
     }    
     if (Pinned) {
       if (AutoPin) {
@@ -357,8 +358,9 @@ void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
     }
   }
   if (TEST_FEEDABCK) {
-    if (pMbLayer->getFeedback() != NULL) {
-      pMbLayer->writeComment("clicked MB layer");
+    const DDFeedback *pFeedback = pMbLayer->getFeedback();
+    if (pFeedback != NULL) {
+      pMbLayer->writeComment("MB @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
     }
   }  
   debugMbTestStep(pMbLayer, stepCount);
@@ -521,6 +523,7 @@ void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
     pGraphicalLayer = dumbdisplay.createGraphicalLayer(215, 215);
     if (TEST_FEEDABCK) {
       pGraphicalLayer->enableFeedback("f");
+      pGraphicalLayer->writeComment("GLCD FB enabled");
     }
     if (Pinned) {
       if (AutoPin) {
@@ -538,7 +541,7 @@ void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (TEST_FEEDABCK) {
     const DDFeedback *pFeedback = pGraphicalLayer->getFeedback();
     if (pFeedback != NULL) {
-      pGraphicalLayer->writeComment("clicked graphical layer @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
+      pGraphicalLayer->writeComment("GLCD @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
     }
   }  
   if (stepCount <= 14) {
