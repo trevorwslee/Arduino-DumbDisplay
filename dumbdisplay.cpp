@@ -10,12 +10,14 @@
 
 #define FEEDBACK_BUFFER_SIZE 4
 
+#define READ_BUFFER_USE_BUFFER
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
+//#define DEBUG_RECEIVE_FEEDBACK
 #define DEBUG_ECHO_FEEDBACK
 
 
@@ -37,7 +39,7 @@ class IOProxy {
       this->pIO = pIO;
     }
     bool available();
-    String& get();
+    const String& get();
     void clear();
     void print(const String &s);
     void print(const char *p);
@@ -70,7 +72,7 @@ bool IOProxy::available() {
   }
   return done;
 }
-String& IOProxy::get() {
+const String& IOProxy::get() {
   return data;
 }
 void IOProxy::clear() {
@@ -150,7 +152,7 @@ void _Connect() {
         }
       }
       if (available) {
-        String& data = fromSerial ? pSerialIOProxy->get() : ioProxy.get();
+        const String& data = fromSerial ? pSerialIOProxy->get() : ioProxy.get();
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:data-" + data);
 #endif        
@@ -194,7 +196,7 @@ void _Connect() {
         nextTime = now + HAND_SHAKE_GAP;
       }
       if (ioProxy.available()) {
-        String& data = ioProxy.get();
+        const String& data = ioProxy.get();
         if (data == "<init<")
           break;
         if (data.startsWith("<init<:")) {
@@ -274,20 +276,33 @@ void _PreDeleteLayer(DDLayer* pLayer) {
   _DDLayerArray[lid] = NULL;
 #endif
 }
+#ifdef READ_BUFFER_USE_BUFFER
+String _ReadFeedbackBuffer;
+#endif
 String* _ReadFeedback() {
   if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
     return NULL;
   }
-  String data = _ConnectedIOProxy->get();
-  String* pResData = new String(data);
-  _ConnectedIOProxy->clear();
-  return pResData;
+  const String& data = _ConnectedIOProxy->get();
+#ifdef DEBUG_RECEIVE_FEEDBACK
+  Serial.print("received: ");  
+  Serial.println(data);
+#endif
+#ifdef READ_BUFFER_USE_BUFFER
+    _ReadFeedbackBuffer = data;
+    _ConnectedIOProxy->clear();
+    return &_ReadFeedbackBuffer;
+#else    
+    String* pResData = new String(data);
+    _ConnectedIOProxy->clear();
+    return pResData;
   // const char* dataStr = data.c_str();
   // int dataLen = strlen(dataStr);
   // char* resDataStr = (char*) malloc(dataLen + 1);
   // strcpy(resDataStr, dataStr);
   // _ConnectedIOProxy->clear()
   // return resDataStr;
+#endif
 }
 
 
@@ -457,7 +472,9 @@ void _HandleFeedback() {
         }
       }
 #endif  
+#ifndef READ_BUFFER_USE_BUFFER
       delete pFeedback;
+#endif      
     }
     _HandlingFeedback = false;
   }
