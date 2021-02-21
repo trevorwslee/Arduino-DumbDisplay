@@ -8,6 +8,8 @@
 #define STORE_LAYERS
 #define HANDLE_FEEDBACK_DURING_DELAY
 
+#define FEEDBACK_BUFFER_SIZE 4
+
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
@@ -446,6 +448,11 @@ void _HandleFeedback() {
           if (handler != NULL) {
             handler(pLayer, CLICK, x, y);
             //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
+          } else {
+            FeedbackManager *pFeedbackManager = pLayer->getFeedbackManager();
+            if (pFeedbackManager != NULL) {
+              pFeedbackManager->pushFeedback(x, y);
+            }
           }
         }
       }
@@ -527,12 +534,92 @@ inline void _sendCommand8(const String& layerId, const char *command, const Stri
 //*************/
 
 
+
+// class FeedbackManager {
+//   public: 
+//     FeedbackManager(int bufferSize = 16) {
+//       this->feedbackValid = false;
+//       this->feedbackArray = new DDFeedback[bufferSize];
+//       // this->xArray = new int[bufferSize];
+//       // this->yArray = new int[bufferSize];
+//       this->arraySize = bufferSize;
+//       this->nextArrayIdx = 0;
+//     }
+//     ~FeedbackManager() {
+//       delete feedbackArray;
+//       // delete this->xArray;
+//       // delete this->yArray;
+//     }
+//     // bool checkFeedback() {
+//     //   bool checkResult = feedbackValid;
+//     //   feedbackValid = false;
+//     //   return checkResult;
+//     // }
+//     const DDFeedback* getFeedback() {
+//       if (!feedbackValid) return NULL;
+//       const DDFeedback* pFeedback = &feedbackArray[nextArrayIdx];
+//       feedbackValid = false;
+//       return pFeedback;
+//       //return feedbackArray[nextArrayIdx];
+//       // DDFeedback feedback;
+//       // feedback.x = xArray[nextArrayIdx];
+//       // feedback.y = yArray[nextArrayIdx];
+//       // feedbackValid = false;
+//       // return feedback;
+//     }
+//     void pushFeedback(int x, int y) {
+//       feedbackArray[nextArrayIdx].x = x;
+//       feedbackArray[nextArrayIdx].y = y;
+//       // xArray[nextArrayIdx] = x;
+//       // yArray[nextArrayIdx] = y;
+//       nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
+//       feedbackValid = true;
+//     }
+//   private:
+//     bool feedbackValid;
+//     DDFeedback* feedbackArray;
+//     // int *xArray;
+//     // int *yArray;
+//     int arraySize;
+//     int nextArrayIdx;
+// };
+
+
 using namespace DDImpl;
+
+
+FeedbackManager::FeedbackManager(int bufferSize) {
+  this->feedbackValid = false;
+  this->feedbackArray = new DDFeedback[bufferSize];
+  this->arraySize = bufferSize;
+  this->nextArrayIdx = 0;
+}
+FeedbackManager::~FeedbackManager() {
+  delete feedbackArray;
+}
+const DDFeedback* FeedbackManager::getFeedback() {
+  if (!feedbackValid) return NULL;
+  const DDFeedback* pFeedback = &feedbackArray[nextArrayIdx];
+  feedbackValid = false;
+  return pFeedback;
+}
+void FeedbackManager::pushFeedback(int x, int y) {
+  feedbackArray[nextArrayIdx].x = x;
+  feedbackArray[nextArrayIdx].y = y;
+  nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
+  feedbackValid = true;
+}
 
 
 DDLayer::DDLayer(int layerId) {
   this->layerId = String(layerId);
+  this->pFeedbackManager = NULL;
+  this->feedbackHandler = NULL;
 }
+DDLayer::~DDLayer() {
+  if (pFeedbackManager != NULL)
+    delete pFeedbackManager;
+} 
 void DDLayer::visibility(bool visible) {
   _sendCommand1(layerId, "visible", TO_BOOL(visible));
 }
@@ -560,11 +647,42 @@ void DDLayer::noBackgroundColor() {
 void DDLayer::writeComment(const String& comment) {
   _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
 }
-//void DDLayer::setFeedbackHandler(void (*handler)(DDFeedbackType, int, int)) {
+void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
+  _sendCommand2(layerId, "feedback", TO_BOOL(true), autoFeedbackMethod);
+  feedbackHandler = NULL;
+  if (pFeedbackManager != NULL)
+    delete pFeedbackManager;
+  pFeedbackManager = new FeedbackManager(FEEDBACK_BUFFER_SIZE);
+}
+void DDLayer::disableFeedback() {
+  _sendCommand1(layerId, "feedback", TO_BOOL(false));
+  feedbackHandler = NULL;
+  if (pFeedbackManager != NULL) {
+    delete pFeedbackManager;
+    pFeedbackManager = NULL;
+  }
+}
+// bool DDLayer::checkFeedback() {
+//   return pFeedbackManager != NULL && pFeedbackManager->checkFeedback();
+// }
+// DDFeedback DDLayer::getFeedback() {
+//   if (pFeedbackManager != NULL) {
+//     return pFeedbackManager->getFeedback();
+//   } else {
+//     return DDFeedback();
+//   }
+// }
+const DDFeedback* DDLayer::getFeedback() {
+  return pFeedbackManager != NULL ? pFeedbackManager->getFeedback() : NULL;
+}
 void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod) {
   bool enable = handler != NULL;
   _sendCommand2(layerId, "feedback", TO_BOOL(enable), autoFeedbackMethod);
   feedbackHandler = handler;
+  if (pFeedbackManager != NULL) {
+    delete pFeedbackManager;
+    pFeedbackManager = NULL;
+  }
 }
 
 

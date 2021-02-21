@@ -69,8 +69,28 @@ class DDInputOutput {
     bool setupForSerial;
 };
 
+struct DDFeedback {
+  int x;
+  int y;
+};
+
+
+class FeedbackManager {
+  public: 
+    FeedbackManager(int bufferSize);
+    ~FeedbackManager();
+    const DDFeedback* getFeedback();
+    void pushFeedback(int x, int y);
+  private:
+    bool feedbackValid;
+    DDFeedback* feedbackArray;
+    int arraySize;
+    int nextArrayIdx;
+};
 
 class DDLayer;
+
+
 enum DDFeedbackType { CLICK };
 
 /* pLayer -- pointer to the DDLayer of which "feedback" received */
@@ -93,19 +113,33 @@ class DDLayer {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
-    /* set handler to "feedback" (setting handler also enables "feedback" mechanism) */
-    /* autoFeedbackMethod (if set): */
-    /* . "f" -- flash the layer */
-    /* . "fs" -- flash the spot where the layer is clicked */
-    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     const String& getLayerId() { return layerId; }
     void writeComment(const String& comment);
+    /* autoFeedbackMethod: */
+    /* . "" -- no auto feedback */
+    /* . "f" -- flash the layer */
+    /* . "fs" -- flash the spot where the layer is clicked */
+    void enableFeedback(const String& autoFeedbackMethod = "");
+    void disableFeedback();
+    /** get "feedback" ... NULL if no pending "feedback" */
+    const DDFeedback* getFeedback();
+    // /* check to see if there is any pending feedback */
+    // bool hasFeedback();
+    // /* get the pending feedback */ 
+    // DDFeedback getFeedback();
+    /* set explicit "feedback" handler (and enable feedback) */
+    /* autoFeedbackMethod -- see enableFeedback() */
+    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
   public:
+    FeedbackManager* getFeedbackManager() { return pFeedbackManager; }
     DDFeedbackHandler getFeedbackHandler() { return feedbackHandler; }
   protected:
     DDLayer(int layerId);
+  public:
+    ~DDLayer();
   protected:
     String layerId;  
+    FeedbackManager *pFeedbackManager;
     DDFeedbackHandler feedbackHandler;
 };
 
@@ -391,7 +425,7 @@ class DumbDisplay {
     void deleteLayer(DDLayer *pLayer);
     /* write out a comment to DD */
     void writeComment(const String& comment);
-    void debugSetup(int debugLedPin, bool enableEchoFeedback = true);
+    void debugSetup(int debugLedPin, bool enableEchoFeedback = false);
 };
 
 /* log line to serial making sure not affect DD */

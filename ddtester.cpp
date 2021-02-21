@@ -3,7 +3,7 @@
 
 
 #define ASCII_ONLY false
-
+#define TEST_FEEDABCK false
 
 namespace DDTesterImpl {
 
@@ -301,7 +301,7 @@ GraphicalDDLayer *pGraphicalLayer = NULL;
 SevenSegmentRowDDLayer *p7SegmentRowLayer = NULL;
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
-  pLayer->writeComment("layer [" + pLayer->getLayerId() + "] FB (" + String(x) + "," + String(y) + ")");
+  //pLayer->writeComment("layer [" + pLayer->getLayerId() + "] FB (" + String(x) + "," + String(y) + ")");
   if (pLayer == p7SegmentRowLayer) {
     int r = 0;
     int g = 0;
@@ -345,6 +345,9 @@ void DDTester_autoPinLayers(DumbDisplay& dumbdisplay) {
 void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
+    if (TEST_FEEDABCK) {  
+      pMbLayer->enableFeedback("fs");
+    }    
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -353,6 +356,11 @@ void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
       }
     }
   }
+  if (TEST_FEEDABCK) {
+    if (pMbLayer->getFeedback() != NULL) {
+      pMbLayer->writeComment("clicked MB layer");
+    }
+  }  
   debugMbTestStep(pMbLayer, stepCount);
 }
 
@@ -511,6 +519,9 @@ void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pGraphicalLayer = dumbdisplay.createGraphicalLayer(215, 215);
+    if (TEST_FEEDABCK) {
+      pGraphicalLayer->enableFeedback("f");
+    }
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -524,6 +535,12 @@ void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
       pGraphicalLayer->setTextFont("monospace", 14);
     }
   }
+  if (TEST_FEEDABCK) {
+    const DDFeedback *pFeedback = pGraphicalLayer->getFeedback();
+    if (pFeedback != NULL) {
+      pGraphicalLayer->writeComment("clicked graphical layer @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
+    }
+  }  
   if (stepCount <= 14) {
     standardGraphicalTestStep(pGraphicalLayer, stepCount);
   } else {
