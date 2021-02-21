@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.4.0)
+# DumbDisplay Arduino Library (v0.4.1)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some very simple virtual input gadgets) for your Arduino / ESP32 experiments.
 
@@ -14,13 +14,13 @@ A few types of output layers can be created:
 * LCD (text-based and graphical)
 * Micro:bit-like canvas
 * Turtle-like canvas
-* graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
+* Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 
-Notice that with the new layer "feedback" mechanism, user-interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as input gadgets as well.
+Notice that with the new "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as input gadgets as well.
 
 
-You can install the free DumbDisplay app (v0.4.0 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
+You can install the free DumbDisplay app (v0.4.1 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth via HC-06)
@@ -88,7 +88,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/d
   }
 ```
 
-You can also try out "feedback" from DumbDisplay like
+You can also try out "layer feedback" from DumbDisplay like
 
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddonoffmb/ddonoffmb.ino
@@ -117,7 +117,7 @@ void loop() {
 }
 ```
 
-Please note that DD will check for "feedback" in 3 occasions:
+Please note that Arduino will check for "feedback" in 3 occasions:
 * after every send of command
 * once when `DDYield()` is called
 * during the "wait loop" of `DDDelay()`
@@ -126,7 +126,7 @@ Please note that DD will check for "feedback" in 3 occasions:
 ## More Samples
 
 
-| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. Layer "feedback" |
+| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. "Layer feedback" |
 |--|--|--|--|--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmb.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddgraphical.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/dddoodle.png)|
 
@@ -475,9 +475,9 @@ void loop() {
 }
 ```
 
-### Screenshot 6 -- *Layer "feedback"*
+### Screenshot 6 -- *"Layer feedback"*
 
-This very simple doodle sample shows how the layer "feedback" mechanism can be used to route user interaction (clicking) of layer to Arduino code.
+This very simple doodle sample shows how the "layer feedback" mechanism can be used to route user interaction (clicking) of layer to Arduino.
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/dddoodle/dddoodle.ino
 
@@ -537,7 +537,7 @@ void Reset() {
 void setup() {
     // use a Turtle layer for very simple doodle
     pTurtleLayer = dumbdisplay.createTurtleLayer(201, 201);
-    pTurtleLayer->setFeedbackHandler(FeedbackHandler);
+    pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs");
     pTurtleLayer->backgroundColor("azure");
     pTurtleLayer->fillColor("lemonchiffon");
 
@@ -599,8 +599,11 @@ MIT
 
 # Change History
 
+v0.4.1
+- added auto "feedback" (e.g. auto flashing layer)
+
 v0.4.0
-- added layer "feedback" mechanism -- i.e. handler "hook" to handle when layer clicked 
+- added "layer feedback" mechanism -- i.e. handler "hook" to handle when layer clicked 
 
 v0.1.3
 - added 7-Segment-row layer (`SevenSegmentRowDDLayer`)

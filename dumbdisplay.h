@@ -94,7 +94,10 @@ class DDLayer {
     /* set no layer background color */
     void noBackgroundColor();
     /* set handler to "feedback" (setting handler also enables "feedback" mechanism) */
-    void setFeedbackHandler(DDFeedbackHandler handler);
+    /* autoFeedbackMethod (if set): */
+    /* . "f" -- flash the layer */
+    /* . "fs" -- flash the spot where the layer is clicked */
+    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     const String& getLayerId() { return layerId; }
     void writeComment(const String& comment);
   public:

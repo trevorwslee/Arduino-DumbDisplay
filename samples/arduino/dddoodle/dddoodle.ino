@@ -53,7 +53,7 @@ void Reset() {
 void setup() {
     // use a Turtle layer for very simple doodle
     pTurtleLayer = dumbdisplay.createTurtleLayer(201, 201);
-    pTurtleLayer->setFeedbackHandler(FeedbackHandler);
+    pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs");
     pTurtleLayer->backgroundColor("azure");
     pTurtleLayer->fillColor("lemonchiffon");
 

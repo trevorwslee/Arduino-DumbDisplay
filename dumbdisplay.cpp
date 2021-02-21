@@ -465,10 +465,10 @@ void _Delay(unsigned long ms) {
     unsigned long remain = delayMicros - (micros() - start);
     if (remain > 20000) {
       delay(20);
-    } else if (remain > 0) {
-      delay(remain / 1000);
-      break;
     } else {
+      if (remain > 1000) {
+        delay(remain / 1000);
+      }
       break;
     }
   }
@@ -561,9 +561,9 @@ void DDLayer::writeComment(const String& comment) {
   _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
 }
 //void DDLayer::setFeedbackHandler(void (*handler)(DDFeedbackType, int, int)) {
-void DDLayer::setFeedbackHandler(DDFeedbackHandler handler) {
+void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod) {
   bool enable = handler != NULL;
-  _sendCommand1(layerId, "feedback", TO_BOOL(enable));
+  _sendCommand2(layerId, "feedback", TO_BOOL(enable), autoFeedbackMethod);
   feedbackHandler = handler;
 }
 

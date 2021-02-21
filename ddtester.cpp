@@ -430,7 +430,7 @@ void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pLcdLayer = dumbdisplay.createLcdLayer(18, 3, 16, "Courier");
-    pLcdLayer->setFeedbackHandler(FeedbackHandler);
+    pLcdLayer->setFeedbackHandler(FeedbackHandler, "f");
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -457,7 +457,7 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     p7SegmentRowLayer = dumbdisplay.create7SegmentRowLayer(4);
-    p7SegmentRowLayer->setFeedbackHandler(FeedbackHandler);
+    p7SegmentRowLayer->setFeedbackHandler(FeedbackHandler, "fs");
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
