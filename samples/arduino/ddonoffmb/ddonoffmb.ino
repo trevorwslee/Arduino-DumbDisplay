@@ -12,7 +12,7 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
 void setup() {
     // create the MB layer with size 10x10
     pMbLayer = dumbdisplay.createMicrobitLayer(10, 10);
-    // set handler to "feedback"
+    // setup "callback" function to handle "feedback" passively
     pMbLayer->setFeedbackHandler(FeedbackHandler, "f");
 }
 

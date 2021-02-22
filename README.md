@@ -90,6 +90,34 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/d
 
 You can also try out "layer feedback" from DumbDisplay like
 
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddonoffloopmb/ddonoffloopmb.ino
+
+
+```
+#include <ssdumbdisplay.h>
+
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true));
+
+MbDDLayer* pMbLayer = NULL;
+
+void setup() {
+    // create the MB layer with size 10x10
+    pMbLayer = dumbdisplay.createMicrobitLayer(10, 10);
+    // enable "feedback"
+    pMbLayer->enableFeedback();
+}
+
+void loop() {
+    // check for "feedback"
+    const DDFeedback *pFeedback = pMbLayer->getFeedback();
+    if (pFeedback != NULL) {
+        // act upon "feedback"
+        pMbLayer->toggle(pFeedback->x, pFeedback->y); 
+    }
+}
+```
+
+Alternativelly, can setup "callback" function to handle "feedback" passively, like
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddonoffmb/ddonoffmb.ino
 
@@ -108,6 +136,7 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
 void setup() {
     // create the MB layer with size 10x10
     pMbLayer = dumbdisplay.createMicrobitLayer(10, 10);
+    // setup "callback" function to handle "feedback" passively
     pMbLayer->setFeedbackHandler(FeedbackHandler);
 }
 
@@ -117,7 +146,8 @@ void loop() {
 }
 ```
 
-Please note that Arduino will check for "feedback" in 3 occasions:
+Please note that Arduino will check for "feedback" in 4 occasions:
+* before every get "feedback" with `getFeedback()`
 * after every send of command
 * once when `DDYield()` is called
 * during the "wait loop" of `DDDelay()`

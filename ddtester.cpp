@@ -314,7 +314,7 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
       b = 255;  
     p7SegmentRowLayer->backgroundColor(DD_RGB_COLOR(r, g, b));
   } else if (pLayer == pLcdLayer) {
-    int r = random(256);
+    int r = random(255);
     int g = 255 - r;
     pLcdLayer->bgPixelColor(DD_RGB_COLOR(r, 218, 218));
     pLcdLayer->backgroundColor(DD_RGB_COLOR(16, g, 16));
@@ -603,7 +603,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
 
     stepCount++;
 
-    if (true) {
+    if (false) {
       DDLogToSerial("STEP: " + String(stepCount));
     }
   }

@@ -51,23 +51,13 @@ class IOProxy {
 
 bool IOProxy::available() {
   bool done = false;
-  if (true) {
-    while (!done && pIO->available()) {
-      char c =  pIO->read();
-      if (c == '\n') {
-        done = true;
-      } else {
-        data = data + c;
-      }
-    }
-  } else {
-    if (pIO->available()) {
-      char c =  pIO->read();
-      if (c == '\n') {
-        done = true;
-      } else {
-        data = data + c;
-      }
+  while (!done && pIO->available()) {
+    char c =  pIO->read();
+    if (c == '\n') {
+      done = true;
+    } else {
+      data += c;
+//         data = data + c;
     }
   }
   return done;
@@ -76,6 +66,7 @@ const String& IOProxy::get() {
   return data;
 }
 void IOProxy::clear() {
+  //data.remove(0, data.length());
   data = "";
 }
 void IOProxy::print(const String &s) {
@@ -276,9 +267,6 @@ void _PreDeleteLayer(DDLayer* pLayer) {
   _DDLayerArray[lid] = NULL;
 #endif
 }
-// #ifdef READ_BUFFER_USE_BUFFER
-// String _ReadFeedbackBuffer;
-// #endif
 String* _ReadFeedback(String& buffer) {
   if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
     return NULL;
@@ -410,10 +398,12 @@ void _LogToSerial(const String& logLine) {
   }
 }
 
+// #ifdef READ_BUFFER_USE_BUFFER
+// String _ReadFeedbackBuffer;
+// #endif
 void _HandleFeedback() {
-  bool alreadyHandlingFeedback = _HandlingFeedback;  // not very accurate
-  _HandlingFeedback = true;
-  if (!alreadyHandlingFeedback) {
+  if (!_HandlingFeedback) {
+    _HandlingFeedback = true;
 #ifdef READ_BUFFER_USE_BUFFER
     String buffer;
 #endif
