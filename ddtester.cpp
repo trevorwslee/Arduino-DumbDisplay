@@ -393,8 +393,8 @@ void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 
 bool hori = false;
 void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
-  int init = stepCount % 6;
-  if (init == 0) {
+  bool init = stepCount <= 50 && stepCount % 6 == 0;
+  if (init) {
     if (pLedGridLayer != NULL)
       dumbdisplay.deleteLayer(pLedGridLayer);
     hori = random(2) == 1;

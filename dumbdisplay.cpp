@@ -391,23 +391,26 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
 }
 
 void _LogToSerial(const String& logLine) {
-  if (!_ConnectedFromSerial) {
+  if (!_ConnectedFromSerial || !_Connected) {
     Serial.println(logLine);
   } else {
     _SendCommand("", ("// " + logLine).c_str());
   }
 }
 
-// #ifdef READ_BUFFER_USE_BUFFER
-// String _ReadFeedbackBuffer;
-// #endif
+#ifdef READ_BUFFER_USE_BUFFER
+String _ReadFeedbackBuffer;
+#endif
 void _HandleFeedback() {
   if (!_HandlingFeedback) {
     _HandlingFeedback = true;
 #ifdef READ_BUFFER_USE_BUFFER
-    String buffer;
+    String* pFeedback = _ReadFeedback(_ReadFeedbackBuffer);
 #endif
-    String* pFeedback = _ReadFeedback(buffer);
+// #ifdef READ_BUFFER_USE_BUFFER
+//     String buffer;
+//    String* pFeedback = _ReadFeedback(buffer);
+// #endif
     if (pFeedback != NULL) {
 #ifdef DEBUG_ECHO_FEEDBACK
       if (_DebugEnableEchoFeedback) {
