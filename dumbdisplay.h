@@ -119,6 +119,7 @@ class DDLayer {
     /* autoFeedbackMethod: */
     /* . "" -- no auto feedback */
     /* . "f" -- flash the layer */
+    /* . "fa" -- flat the area where the layer is clicked */
     /* . "fs" -- flash the spot where the layer is clicked */
     void enableFeedback(const String& autoFeedbackMethod = "");
     /** disable "feedback" */

@@ -7,8 +7,8 @@ MbDDLayer* pMbLayer = NULL;
 void setup() {
     // create the MB layer with size 10x10
     pMbLayer = dumbdisplay.createMicrobitLayer(10, 10);
-    // enable "feedback"
-    pMbLayer->enableFeedback("f");
+    // enable "feedback" -- auto flashing the clicked area
+    pMbLayer->enableFeedback("fa");
 }
 
 void loop() {
