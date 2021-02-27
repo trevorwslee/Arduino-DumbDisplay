@@ -6,8 +6,6 @@
 #include "ddtester.h"
 
 
-
-
 unsigned long baud = DUMBDISPLAY_BAUD;
 boolean enableSerial = true;
 unsigned long serialBaud = DD_SERIAL_BAUD;

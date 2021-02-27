@@ -658,6 +658,12 @@ void DDLayer::backgroundColor(const String& color) {
 void DDLayer::noBackgroundColor() {
   _sendCommand0(layerId, "nobgcolor");
 }
+void DDLayer::flash() {
+  _sendCommand0(layerId, "flash");
+}
+void DDLayer::flashArea(int x, int y) {
+  _sendCommand2(layerId, "flasharea", String(x), String(y));
+}
 void DDLayer::writeComment(const String& comment) {
   _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
 }

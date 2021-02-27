@@ -302,7 +302,9 @@ SevenSegmentRowDDLayer *p7SegmentRowLayer = NULL;
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
   //pLayer->writeComment("layer [" + pLayer->getLayerId() + "] FB (" + String(x) + "," + String(y) + ")");
-  if (pLayer == p7SegmentRowLayer) {
+  if (pLayer == pTurtleLayer) {
+    pLayer->flash();
+  } else if (pLayer == p7SegmentRowLayer) {
     int r = 0;
     int g = 0;
     int b = 0;
@@ -370,6 +372,7 @@ void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
+    pTurtleLayer->setFeedbackHandler(FeedbackHandler);
     if (Pinned) { 
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -393,7 +396,7 @@ void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 
 bool hori = false;
 void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
-  bool init = stepCount <= 50 && stepCount % 6 == 0;
+  bool init = stepCount <= 40 && stepCount % 10 == 0;
   if (init) {
     if (pLedGridLayer != NULL)
       dumbdisplay.deleteLayer(pLedGridLayer);
@@ -467,7 +470,7 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     p7SegmentRowLayer = dumbdisplay.create7SegmentRowLayer(4);
-    p7SegmentRowLayer->setFeedbackHandler(FeedbackHandler, "fs");
+    p7SegmentRowLayer->setFeedbackHandler(FeedbackHandler, "fa");
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);

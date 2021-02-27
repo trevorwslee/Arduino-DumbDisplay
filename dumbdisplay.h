@@ -95,7 +95,7 @@ enum DDFeedbackType { CLICK };
 
 /* pLayer -- pointer to the DDLayer of which "feedback" received */
 /* type -- currently, only possible value if CLICK */
-/* x, y -- (x, y) is the "position" where on the layer was clicked */
+/* x, y -- (x, y) is the "area" on the layer where was clicked */
 typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, int x, int y);
 
 class DDLayer {
@@ -113,6 +113,10 @@ class DDLayer {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
+    /* normally used for "feedback" */
+    void flash();
+    /* normally used for "feedback" */
+    void flashArea(int x, int y);
     const String& getLayerId() { return layerId; }
     void writeComment(const String& comment);
     /* rely on getFeedback() being called */ 
