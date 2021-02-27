@@ -4,17 +4,17 @@
 #include "dumbdisplay.h"
 #include <WiFi.h>
 
-class WifiSerialIO: public DDInputOutput {
+class DDWifiServerIO: public DDInputOutput {
   public:
     /* WiFI IO mechanism */
     /* - enableSerial: enable Serial as well or not (if enabled, connecting via USB will also work) */
-    WifiSerialIO(const char* ssid, const char *passphrase, int port,
-                 bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD):
-                  DDInputOutput(serialBaud, enableSerial, enableSerial),
-                  server(port) {
+    DDWifiServerIO(const char* ssid, const char *passphrase, int serverPort,
+                   bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD):
+                     DDInputOutput(serialBaud, enableSerial, enableSerial),
+                     server(serverPort) {
       this->ssid = ssid;
       this->passphrase = passphrase;
-      this->port = port;
+      this->serverPort = serverPort;
     }
     bool available() {
       return client.available() > 0;
@@ -53,7 +53,7 @@ class WifiSerialIO: public DDInputOutput {
             Serial.print("listening on ");
             Serial.print(WiFi.localIP());
             Serial.print(":");
-            Serial.print(port);
+            Serial.print(serverPort);
             Serial.println(" ...");
             last = millis();
           }
@@ -62,12 +62,14 @@ class WifiSerialIO: public DDInputOutput {
       Serial.println("client conntected");
     }
     void flush() {
+#ifndef DD_4_ESP32      
       server.flush();
+#endif      
     }
   private:
     const char* ssid;
     const char *passphrase;
-    int port;
+    int serverPort;
     WiFiServer server;
     WiFiClient client;
 };

@@ -392,7 +392,7 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
 
 void _LogToSerial(const String& logLine) {
   if (!_ConnectedFromSerial || !_Connected) {
-    Serial.println(logLine);
+    Serial.println(logLine);  // in case not connected ... hmm ... assume ... Serial.begin() called
   } else {
     _SendCommand("", ("// " + logLine).c_str());
   }
