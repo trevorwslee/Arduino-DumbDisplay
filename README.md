@@ -43,7 +43,7 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - doing so will **automatically set Serial baud rate to 115200**, and **you should not be using Serial for other purposes**
-* Via SoftwareSerial (https://www.arduino.cc/en/Reference/softwareSerial)
+* Via `SoftwareSerial` -- https://www.arduino.cc/en/Reference/softwareSerial
   ```
     #include <ssdumbdisplay.h>
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
@@ -53,7 +53,7 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
     - 2 and 3 are the pins used by SoftwareSerial
     - **the default baud rate is 115200**, which seems to work better from my own testing [with HC-06]
   - **You should not be using that SoftwareSerial for other purposes**
-* Via **ESP32** BluetoothSerial (Experimental)
+* Via **ESP32** `BluetoothSerial`
   ```
     #define DD_4_ESP32
     #include <esp32dumbdisplay.h>
@@ -62,17 +62,24 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
   - include esp32dumbdisplay.h -- `#include <esp32dumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"))`  
-    - "ESP32" is name used by BluetoothSerial
+    - "ESP32" is name used by `BluetoothSerial`
   - **You should not be using BluetoothSerial for other purposes**
-  - In my own testing, the bluetooth communication will hang from time to time.
-* Via WIFI as a `WiFiServer` (https://www.arduino.cc/en/Reference/WiFi)  
+* Via WIFI as a `WiFiServer` -- https://www.arduino.cc/en/Reference/WiFi  
   ```
     #include "wifidumbdisplay.h"
-    const char* ssid = "WIFIName";
-    const char* password = "WIFIPassword";
+    const char* ssid = "wifiname";
+    const char* password = "wifipassword";
     const int serverPort = 10201;
     DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password, serverPort));
   ```
+  - WIFI credentials are passed to `WiFi`
+  - By default, will setup and log using `Serial` with baud rate 115200; and you should see log lines like:
+  ```
+    binding WIFI wifiname
+    binded WIFI wifiname
+    listening on 192.168.1.134:10201 ...
+  ```  
+  - Sorry, only tested with ESP32; and appears to be working (when WIFI connection is stable).
 
 
 

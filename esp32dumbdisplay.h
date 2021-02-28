@@ -20,8 +20,10 @@ class DDBluetoothSerialIO: public DDInputOutput {
     /* ESP32 BluetoothSerial IO mechanism */
     /* - btLocalName -- BT name */
     /* - enableSerial: enable Serial as well or not (if enabled, connecting via USB will also work) */
+    /* - serialBaud: Serial baud rate (if enableSerial) */
     DDBluetoothSerialIO(const String& btLocalName, bool enableSerial = false,
-                        unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, enableSerial, enableSerial) {
+                        unsigned long serialBaud = DD_SERIAL_BAUD):
+                          DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->btLocalName = btLocalName;
     }
     bool available() {
