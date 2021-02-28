@@ -10,6 +10,7 @@
 
 #define DUMBDISPLAY_BAUD 115200
 #define DD_SERIAL_BAUD DUMBDISPLAY_BAUD
+#define DD_WIFI_PORT 10201
 
 
 #define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))

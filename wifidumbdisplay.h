@@ -7,14 +7,17 @@
 class DDWifiServerIO: public DDInputOutput {
   public:
     /* WiFI IO mechanism */
+    /* - ssid: WIFI name (pass to WiFi) */
+    /* - passphrase: WIFI password (pass to WiFi) */
+    /* - serverPort: server port (pass to WiFiServer) */
     /* - enableSerial: enable Serial as well or not (if enabled, connecting via USB will also work) */
-    DDWifiServerIO(const char* ssid, const char *passphrase, int serverPort,
+    DDWifiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT,
                    bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD):
                      DDInputOutput(serialBaud, enableSerial, enableSerial),
                      server(serverPort) {
       this->ssid = ssid;
       this->passphrase = passphrase;
-      this->serverPort = serverPort;
+      this->port = serverPort;
     }
     bool available() {
       return client.available() > 0;
@@ -23,18 +26,19 @@ class DDWifiServerIO: public DDInputOutput {
       return client.read();
     } 
     void print(const String &s) {
-      server.print(s); 
+      client.print(s);
     }
     void print(const char *p) {
-      server.print(p); 
+      client.print(p);
     }
     void preConnect() {
       DDInputOutput::preConnect();
       WiFi.begin(ssid, passphrase);
       long last = millis();
       while (WiFi.status() != WL_CONNECTED) {
+        delay(200);
         long diff = millis() - last;
-        if (diff >1000) {
+        if (diff > 1000) {
           Serial.print("binding WIFI ");
           Serial.print(ssid);
           Serial.println(" ...");
@@ -43,7 +47,9 @@ class DDWifiServerIO: public DDInputOutput {
       }
       Serial.print("binded WIFI ");
       Serial.println(ssid);
+      server.begin();
       while (true) {
+        delay(200);
         client = server.available();
         if (client) {
           break;
@@ -53,7 +59,7 @@ class DDWifiServerIO: public DDInputOutput {
             Serial.print("listening on ");
             Serial.print(WiFi.localIP());
             Serial.print(":");
-            Serial.print(serverPort);
+            Serial.print(port);
             Serial.println(" ...");
             last = millis();
           }
@@ -62,14 +68,12 @@ class DDWifiServerIO: public DDInputOutput {
       Serial.println("client conntected");
     }
     void flush() {
-#ifndef DD_4_ESP32      
-      server.flush();
-#endif      
+      client.flush();
     }
   private:
     const char* ssid;
     const char *passphrase;
-    int serverPort;
+    int port;
     WiFiServer server;
     WiFiClient client;
 };

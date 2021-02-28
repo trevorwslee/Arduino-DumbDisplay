@@ -412,6 +412,12 @@ void _HandleFeedback() {
 //    String* pFeedback = _ReadFeedback(buffer);
 // #endif
     if (pFeedback != NULL) {
+      if (*(pFeedback->c_str()) == '<') {
+        // controll ... currently, simply ignore
+        pFeedback = NULL;
+      }
+    }
+    if (pFeedback != NULL) {
 #ifdef DEBUG_ECHO_FEEDBACK
       if (_DebugEnableEchoFeedback) {
           _SendCommand("", ("// feedback -- " + *pFeedback).c_str());
