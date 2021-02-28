@@ -20,6 +20,7 @@
 //#define DEBUG_RECEIVE_FEEDBACK
 #define DEBUG_ECHO_FEEDBACK
 
+#define VALIDATE_CONNECTION
 
 #define DEBUG_WITH_LED
 
@@ -27,7 +28,6 @@
 // not flush seems to be a bit better for Serial (lost data)
 #define FLUSH_AFTER_SENT_COMMAND false
 #define YIELD_AFTER_SEND_COMMAND false
-
 
 
 namespace DDImpl {
@@ -43,6 +43,8 @@ class IOProxy {
     void clear();
     void print(const String &s);
     void print(const char *p);
+    void keepAlive();
+    void validConnection();
   private:
     DDInputOutput *pIO;
     bool fromSerial;
@@ -74,6 +76,12 @@ void IOProxy::print(const String &s) {
 }
 void IOProxy::print(const char *p) {
   pIO->print(p);
+}
+void IOProxy::keepAlive() {
+  pIO->keepAlive();
+}
+void IOProxy::validConnection() {
+  pIO->validConnection();
 }
 
 
@@ -267,10 +275,21 @@ void _PreDeleteLayer(DDLayer* pLayer) {
   _DDLayerArray[lid] = NULL;
 #endif
 }
+#ifdef VALIDATE_CONNECTION
+long _LastValidateConnectionMillis = 0;
+#endif
 String* _ReadFeedback(String& buffer) {
   if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
     return NULL;
   }
+#ifdef VALIDATE_CONNECTION
+    long now = millis();
+    long diff = now - _LastValidateConnectionMillis;
+    if (diff >= 5000) {
+      _ConnectedIOProxy->validConnection();
+      _LastValidateConnectionMillis = now;
+    }
+#endif
   const String& data = _ConnectedIOProxy->get();
 #ifdef DEBUG_RECEIVE_FEEDBACK
   Serial.print("received: ");  
@@ -390,7 +409,7 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   _SendingCommand = false;
 }
 
-void _LogToSerial(const String& logLine) {
+inline void _LogToSerial(const String& logLine) {
   if (!_ConnectedFromSerial || !_Connected) {
     Serial.println(logLine);  // in case not connected ... hmm ... assume ... Serial.begin() called
   } else {
@@ -413,6 +432,10 @@ void _HandleFeedback() {
 // #endif
     if (pFeedback != NULL) {
       if (*(pFeedback->c_str()) == '<') {
+        if (pFeedback->length() == 1) {
+          // keep alive
+          _ConnectedIOProxy->keepAlive();
+        }
         // controll ... currently, simply ignore
         pFeedback = NULL;
       }
@@ -482,7 +505,7 @@ void _HandleFeedback() {
   }
 }
 
-void _Delay(unsigned long ms) {
+inline void _Delay(unsigned long ms) {
 #ifdef ENABLE_FEEDBACK
   unsigned long delayMicros = ms * 1000;
 	unsigned long start = micros();
@@ -503,7 +526,7 @@ void _Delay(unsigned long ms) {
 #endif
 }
 
-void _Yield() {
+inline void _Yield() {
 #ifdef ENABLE_FEEDBACK
   _HandleFeedback();
 #endif

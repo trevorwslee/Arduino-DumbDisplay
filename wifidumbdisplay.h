@@ -4,14 +4,14 @@
 #include "dumbdisplay.h"
 #include <WiFi.h>
 
-class DDWifiServerIO: public DDInputOutput {
+class DDWiFiServerIO: public DDInputOutput {
   public:
     /* WiFI IO mechanism */
     /* - ssid: WIFI name (pass to WiFi) */
     /* - passphrase: WIFI password (pass to WiFi) */
     /* - serverPort: server port (pass to WiFiServer) */
     /* - enableSerial: enable Serial as well or not (if enabled, connecting via USB will also work) */
-    DDWifiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT,
+    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort/* = DD_WIFI_PORT*/,
                    bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD):
                      DDInputOutput(serialBaud, enableSerial, enableSerial),
                      server(serverPort) {
@@ -38,7 +38,7 @@ class DDWifiServerIO: public DDInputOutput {
         if (connected)
           break;
         else {
-          Serial.println("WiFi lost ... try again ...");
+          Serial.println("lost WiFi ... try again ...");
           WiFi.disconnect();
           delay(500);
         }  
@@ -46,7 +46,20 @@ class DDWifiServerIO: public DDInputOutput {
       Serial.println("client conntected");
     }
     void flush() {
-      client.flush();
+      //client.flush();
+    }
+    void validConnection() {
+      uint8_t status = WiFi.status();
+      // if (true) {
+      //   Serial.print("... ");
+      //   Serial.print(status);
+      //   Serial.println(" ... ");
+      // }
+      if (status != WL_CONNECTED) {
+        Serial.println("lost WiFi ... try bind WiFi again ...");
+        WiFi.disconnect();
+        _connectToClient();
+      }
     }
   private:
     bool _connectToNetwork() {
@@ -57,15 +70,15 @@ class DDWifiServerIO: public DDInputOutput {
         uint8_t status = WiFi.status();
         if (status == WL_CONNECTED)
           break;
-        if (status == WL_CONNECTION_LOST)
-          return false;
+        // if (status == WL_DISCONNECTED)
+        //   return false;
         delay(200);
         long diff = millis() - last;
         if (diff > 1000) {
           Serial.print("binding WIFI ");
           Serial.print(ssid);
           Serial.print(" ... ");
-          Serial.print(WiFi.status());
+          Serial.print(status);
           Serial.println(" ...");
           last = millis();
         }
@@ -88,15 +101,24 @@ class DDWifiServerIO: public DDInputOutput {
             return false;
           long diff = millis() - last;
           if (diff >= 1000) {
+            IPAddress localIP = WiFi.localIP();
+            uint32_t localIPValue = localIP;
             Serial.print("via WIFI ... ");
             Serial.print(WiFi.status());
             Serial.print(" ... ");
             Serial.print("listening on ");
-            Serial.print(WiFi.localIP());
+            // if (true) {
+            //   Serial.print("(");
+            //   Serial.print(localIPValue);
+            //   Serial.print(") ");
+            // }
+            Serial.print(localIP);
             Serial.print(":");
             Serial.print(port);
             Serial.println(" ...");
             last = millis();
+            if (localIPValue == 0)
+              return false;
           }
         }
       }

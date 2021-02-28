@@ -54,6 +54,10 @@ class DDInputOutput {
     virtual void flush() {
       Serial.flush();
     }
+    virtual void keepAlive() {
+    }
+    virtual void validConnection() {
+    }
     virtual void preConnect() {
       if (setupForSerial)
         Serial.begin(serialBaud);
@@ -88,6 +92,7 @@ class DDFeedbackManager {
     int nextArrayIdx;
     int validArrayIdx;
 };
+
 
 class DDLayer;
 

@@ -590,6 +590,10 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
 
   int stepCount = 0;
   while (true) {
+    if (true) {
+      DDLogToSerial("DDTest Step: " + String(stepCount));
+    }
+
     if (graphical)
       GraphicalDDTester_testStep(dumbdisplay, stepCount);
     if (sevenSegmentRow)
@@ -605,10 +609,6 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
     DDDelay(1000);
 
     stepCount++;
-
-    if (false) {
-      DDLogToSerial("STEP: " + String(stepCount));
-    }
   }
 }
 

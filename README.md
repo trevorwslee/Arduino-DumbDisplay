@@ -43,7 +43,7 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - doing so will **automatically set Serial baud rate to 115200**, and **you should not be using Serial for other purposes**
-* Via SoftwareSerial
+* Via SoftwareSerial (https://www.arduino.cc/en/Reference/softwareSerial)
   ```
     #include <ssdumbdisplay.h>
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
@@ -65,6 +65,15 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
     - "ESP32" is name used by BluetoothSerial
   - **You should not be using BluetoothSerial for other purposes**
   - In my own testing, the bluetooth communication will hang from time to time.
+* Via WIFI as a `WiFiServer` (https://www.arduino.cc/en/Reference/WiFi)  
+  ```
+    #include "wifidumbdisplay.h"
+    const char* ssid = "WIFIName";
+    const char* password = "WIFIPassword";
+    const int serverPort = 10201;
+    DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password, serverPort));
+  ```
+
 
 
 With a DumbDisplay object, you are ready to proceed with coding, like
@@ -630,6 +639,7 @@ MIT
 # Change History
 
 v0.4.1
+- added experimantal WiFi support
 - added auto "feedback" (e.g. auto flashing layer)
 
 v0.4.0
