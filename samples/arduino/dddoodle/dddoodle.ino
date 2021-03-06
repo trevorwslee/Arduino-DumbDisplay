@@ -75,9 +75,12 @@ void setup() {
  
     // layout the different layers
     dumbdisplay.configAutoPin(DD_AP_VERT_2(
-                                DD_AP_HORI_2(
+                                DD_AP_HORI_5(
+                                    DD_AP_SPACER(1, 1),
                                     pLedGridLayer->getLayerId(),
-                                    pLcdLayer->getLayerId()),
+                                    DD_AP_SPACER(2, 1),
+                                    pLcdLayer->getLayerId(),
+                                    DD_AP_SPACER(1, 1)),
                                 pTurtleLayer->getLayerId()));
 
 

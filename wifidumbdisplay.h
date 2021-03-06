@@ -2,7 +2,13 @@
 #define wifidumbdisplay_h
 
 #include "dumbdisplay.h"
+
+#ifdef DD_4_ESP8266
+#include <ESP8266WiFi.h>
+#else
 #include <WiFi.h>
+#endif
+
 
 
 //#define LOG_WIFI_STATUS
@@ -81,15 +87,13 @@ class DDWiFiServerIO: public DDInputOutput {
         long diff = millis() - last;
         if (diff > 1000) {
           if (logToSerial) {
-            Serial.print("binding WIFI ");
+            Serial.print("binding WIFI");
             Serial.print(ssid);
 #ifdef LOG_WIFI_STATUS
             Serial.print(" ... ");
             Serial.print(status);
-            Serial.println(" ...");
-#else
-            Serial.print(" ...");
 #endif
+            Serial.println(" ...");
           }
           last = millis();
         }

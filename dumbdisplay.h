@@ -16,6 +16,7 @@
 #define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
 
+#define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
 #define DD_AP_HORI "H(*)"
 #define DD_AP_VERT "V(*)"
 #define DD_AP_HORI_2(id1, id2) ("H(" + id1 + "+" + id2 + ")")
@@ -28,7 +29,6 @@
 #define DD_AP_VERT_5(id1, id2, id3, id4, id5) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")")
 #define DD_AP_HORI_6(id1, id2, id3, id4, id5, id6) ("H(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
-
 
 
 class DDInputOutput {
