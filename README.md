@@ -5,19 +5,19 @@ DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual
 
 # Description
 
-Instead of connecting real gadgets to your Arduino for outputing experiment results, you can make use of DumbDisplay for the purpose, to realize virtual gadagets on your Android phone.
+Instead of connecting real gadgets to your Arduino for showing experiment results, or for getting simple input like clicking, you can make use of DumbDisplay for the purpose, to realize virtual gadagets on your Android phone.
 
-Doing so you may defer buying / connecting real output gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
+Doing so you may defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
 
 A few types of output layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
-* LCD (text-based and graphical)
+* LCD (text based)
 * Micro:bit-like canvas
 * Turtle-like canvas
 * Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 
-Notice that with the new "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as input gadgets as well.
+Notice that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
 
 You can install the free DumbDisplay app (v0.4.1 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
@@ -25,9 +25,10 @@ You can install the free DumbDisplay app (v0.4.1 or later) from Android Play Sto
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth via HC-06)
 * Serial (USB connected via OTG adapter)
+* WIFI (e.g. ESP32)
 
 Notes:
-* Sorry that since I only have Arduino Uno, therefore the library is only tested with Arduino Uno (and partly with ESP32).
+* Sorry that since I only have Arduino Uno, therefore the library is only tested with Arduino Uno and ESP32.
 * In case DumbDisplay does not "handshake" with your Arduion correctly, you can try resetting your Adruino by pressing the "reset" button on your Adruion
 
 
@@ -79,7 +80,7 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
     binded WIFI wifiname
     listening on 192.168.1.134:10201 ...
   ```  
-  - Sorry, only tested with ESP32; and appears to be working (when WIFI connection is stable).
+  - Sorry, it is only tested with ESP32; and appears to be working (when WIFI connection is stable).
 
 
 
