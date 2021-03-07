@@ -53,7 +53,7 @@ void Reset() {
 void setup() {
     // use a Turtle layer for very simple doodle
     pTurtleLayer = dumbdisplay.createTurtleLayer(201, 201);
-    pTurtleLayer->setFeedbackHandler(FeedbackHandler);
+    pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs");
     pTurtleLayer->backgroundColor("azure");
     pTurtleLayer->fillColor("lemonchiffon");
 
@@ -62,6 +62,7 @@ void setup() {
     pLcdLayer->setFeedbackHandler(FeedbackHandler);
     pLcdLayer->backgroundColor("lightgray");
     pLcdLayer->print("CLEAR");
+    pLcdLayer->border(2, "gray", "round");
 
     // use a LED-grid layers for the 3 color options -- red, green and blue 
     pLedGridLayer = dumbdisplay.createLedGridLayer(3);
@@ -75,9 +76,12 @@ void setup() {
  
     // layout the different layers
     dumbdisplay.configAutoPin(DD_AP_VERT_2(
-                                DD_AP_HORI_2(
+                                DD_AP_HORI_5(
+                                    DD_AP_SPACER(1, 1),
                                     pLedGridLayer->getLayerId(),
-                                    pLcdLayer->getLayerId()),
+                                    DD_AP_SPACER(2, 1),
+                                    pLcdLayer->getLayerId(),
+                                    DD_AP_SPACER(1, 1)),
                                 pTurtleLayer->getLayerId()));
 
 

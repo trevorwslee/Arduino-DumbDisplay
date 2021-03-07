@@ -8,14 +8,19 @@
 #define STORE_LAYERS
 #define HANDLE_FEEDBACK_DURING_DELAY
 
+#define FEEDBACK_BUFFER_SIZE 4
+
+#define READ_BUFFER_USE_BUFFER
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
+//#define DEBUG_RECEIVE_FEEDBACK
 #define DEBUG_ECHO_FEEDBACK
 
+#define VALIDATE_CONNECTION
 
 #define DEBUG_WITH_LED
 
@@ -23,7 +28,6 @@
 // not flush seems to be a bit better for Serial (lost data)
 #define FLUSH_AFTER_SENT_COMMAND false
 #define YIELD_AFTER_SEND_COMMAND false
-
 
 
 namespace DDImpl {
@@ -35,10 +39,12 @@ class IOProxy {
       this->pIO = pIO;
     }
     bool available();
-    String& get();
+    const String& get();
     void clear();
     void print(const String &s);
     void print(const char *p);
+    void keepAlive();
+    void validConnection();
   private:
     DDInputOutput *pIO;
     bool fromSerial;
@@ -47,31 +53,22 @@ class IOProxy {
 
 bool IOProxy::available() {
   bool done = false;
-  if (true) {
-    while (!done && pIO->available()) {
-      char c =  pIO->read();
-      if (c == '\n') {
-        done = true;
-      } else {
-        data = data + c;
-      }
-    }
-  } else {
-    if (pIO->available()) {
-      char c =  pIO->read();
-      if (c == '\n') {
-        done = true;
-      } else {
-        data = data + c;
-      }
+  while (!done && pIO->available()) {
+    char c =  pIO->read();
+    if (c == '\n') {
+      done = true;
+    } else {
+      data += c;
+//         data = data + c;
     }
   }
   return done;
 }
-String& IOProxy::get() {
+const String& IOProxy::get() {
   return data;
 }
 void IOProxy::clear() {
+  //data.remove(0, data.length());
   data = "";
 }
 void IOProxy::print(const String &s) {
@@ -79,6 +76,12 @@ void IOProxy::print(const String &s) {
 }
 void IOProxy::print(const char *p) {
   pIO->print(p);
+}
+void IOProxy::keepAlive() {
+  pIO->keepAlive();
+}
+void IOProxy::validConnection() {
+  pIO->validConnection();
 }
 
 
@@ -148,7 +151,7 @@ void _Connect() {
         }
       }
       if (available) {
-        String& data = fromSerial ? pSerialIOProxy->get() : ioProxy.get();
+        const String& data = fromSerial ? pSerialIOProxy->get() : ioProxy.get();
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:data-" + data);
 #endif        
@@ -192,7 +195,7 @@ void _Connect() {
         nextTime = now + HAND_SHAKE_GAP;
       }
       if (ioProxy.available()) {
-        String& data = ioProxy.get();
+        const String& data = ioProxy.get();
         if (data == "<init<")
           break;
         if (data.startsWith("<init<:")) {
@@ -272,20 +275,41 @@ void _PreDeleteLayer(DDLayer* pLayer) {
   _DDLayerArray[lid] = NULL;
 #endif
 }
-String* _ReadFeedback() {
+#ifdef VALIDATE_CONNECTION
+long _LastValidateConnectionMillis = 0;
+#endif
+String* _ReadFeedback(String& buffer) {
   if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
     return NULL;
   }
-  String data = _ConnectedIOProxy->get();
-  String* pResData = new String(data);
-  _ConnectedIOProxy->clear();
-  return pResData;
+#ifdef VALIDATE_CONNECTION
+    long now = millis();
+    long diff = now - _LastValidateConnectionMillis;
+    if (diff >= 5000) {
+      _ConnectedIOProxy->validConnection();
+      _LastValidateConnectionMillis = now;
+    }
+#endif
+  const String& data = _ConnectedIOProxy->get();
+#ifdef DEBUG_RECEIVE_FEEDBACK
+  Serial.print("received: ");  
+  Serial.println(data);
+#endif
+#ifdef READ_BUFFER_USE_BUFFER
+    buffer = data;
+    _ConnectedIOProxy->clear();
+    return &buffer;
+#else    
+    String* pResData = new String(data);
+    _ConnectedIOProxy->clear();
+    return pResData;
   // const char* dataStr = data.c_str();
   // int dataLen = strlen(dataStr);
   // char* resDataStr = (char*) malloc(dataLen + 1);
   // strcpy(resDataStr, dataStr);
   // _ConnectedIOProxy->clear()
   // return resDataStr;
+#endif
 }
 
 
@@ -385,19 +409,37 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   _SendingCommand = false;
 }
 
-void _LogToSerial(const String& logLine) {
-  if (!_ConnectedFromSerial) {
-    Serial.println(logLine);
+inline void _LogToSerial(const String& logLine) {
+  if (!_ConnectedFromSerial || !_Connected) {
+    Serial.println(logLine);  // in case not connected ... hmm ... assume ... Serial.begin() called
   } else {
     _SendCommand("", ("// " + logLine).c_str());
   }
 }
 
+#ifdef READ_BUFFER_USE_BUFFER
+String _ReadFeedbackBuffer;
+#endif
 void _HandleFeedback() {
-  bool alreadyHandlingFeedback = _HandlingFeedback;  // not very accurate
-  _HandlingFeedback = true;
-  if (!alreadyHandlingFeedback) {
-    String* pFeedback = _ReadFeedback();
+  if (!_HandlingFeedback) {
+    _HandlingFeedback = true;
+#ifdef READ_BUFFER_USE_BUFFER
+    String* pFeedback = _ReadFeedback(_ReadFeedbackBuffer);
+#endif
+// #ifdef READ_BUFFER_USE_BUFFER
+//     String buffer;
+//    String* pFeedback = _ReadFeedback(buffer);
+// #endif
+    if (pFeedback != NULL) {
+      if (*(pFeedback->c_str()) == '<') {
+        if (pFeedback->length() == 1) {
+          // keep alive
+          _ConnectedIOProxy->keepAlive();
+        }
+        // controll ... currently, simply ignore
+        pFeedback = NULL;
+      }
+    }
     if (pFeedback != NULL) {
 #ifdef DEBUG_ECHO_FEEDBACK
       if (_DebugEnableEchoFeedback) {
@@ -446,17 +488,24 @@ void _HandleFeedback() {
           if (handler != NULL) {
             handler(pLayer, CLICK, x, y);
             //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
+          } else {
+            DDFeedbackManager *pFeedbackManager = pLayer->getFeedbackManager();
+            if (pFeedbackManager != NULL) {
+              pFeedbackManager->pushFeedback(x, y);
+            }
           }
         }
       }
 #endif  
+#ifndef READ_BUFFER_USE_BUFFER
       delete pFeedback;
+#endif      
     }
     _HandlingFeedback = false;
   }
 }
 
-void _Delay(unsigned long ms) {
+inline void _Delay(unsigned long ms) {
 #ifdef ENABLE_FEEDBACK
   unsigned long delayMicros = ms * 1000;
 	unsigned long start = micros();
@@ -465,10 +514,10 @@ void _Delay(unsigned long ms) {
     unsigned long remain = delayMicros - (micros() - start);
     if (remain > 20000) {
       delay(20);
-    } else if (remain > 0) {
-      delay(remain / 1000);
-      break;
     } else {
+      if (remain > 1000) {
+        delay(remain / 1000);
+      }
       break;
     }
   }
@@ -477,7 +526,7 @@ void _Delay(unsigned long ms) {
 #endif
 }
 
-void _Yield() {
+inline void _Yield() {
 #ifdef ENABLE_FEEDBACK
   _HandleFeedback();
 #endif
@@ -527,19 +576,103 @@ inline void _sendCommand8(const String& layerId, const char *command, const Stri
 //*************/
 
 
+
+// class FeedbackManager {
+//   public: 
+//     FeedbackManager(int bufferSize = 16) {
+//       this->feedbackValid = false;
+//       this->feedbackArray = new DDFeedback[bufferSize];
+//       // this->xArray = new int[bufferSize];
+//       // this->yArray = new int[bufferSize];
+//       this->arraySize = bufferSize;
+//       this->nextArrayIdx = 0;
+//     }
+//     ~FeedbackManager() {
+//       delete feedbackArray;
+//       // delete this->xArray;
+//       // delete this->yArray;
+//     }
+//     // bool checkFeedback() {
+//     //   bool checkResult = feedbackValid;
+//     //   feedbackValid = false;
+//     //   return checkResult;
+//     // }
+//     const DDFeedback* getFeedback() {
+//       if (!feedbackValid) return NULL;
+//       const DDFeedback* pFeedback = &feedbackArray[nextArrayIdx];
+//       feedbackValid = false;
+//       return pFeedback;
+//       //return feedbackArray[nextArrayIdx];
+//       // DDFeedback feedback;
+//       // feedback.x = xArray[nextArrayIdx];
+//       // feedback.y = yArray[nextArrayIdx];
+//       // feedbackValid = false;
+//       // return feedback;
+//     }
+//     void pushFeedback(int x, int y) {
+//       feedbackArray[nextArrayIdx].x = x;
+//       feedbackArray[nextArrayIdx].y = y;
+//       // xArray[nextArrayIdx] = x;
+//       // yArray[nextArrayIdx] = y;
+//       nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
+//       feedbackValid = true;
+//     }
+//   private:
+//     bool feedbackValid;
+//     DDFeedback* feedbackArray;
+//     // int *xArray;
+//     // int *yArray;
+//     int arraySize;
+//     int nextArrayIdx;
+// };
+
+
 using namespace DDImpl;
+
+
+DDFeedbackManager::DDFeedbackManager(int bufferSize) {
+  this->feedbackArray = new DDFeedback[bufferSize];
+  this->arraySize = bufferSize;
+  this->nextArrayIdx = 0;
+  this->validArrayIdx = 0;
+}
+DDFeedbackManager::~DDFeedbackManager() {
+  delete feedbackArray;
+}
+const DDFeedback* DDFeedbackManager::getFeedback() {
+  if (nextArrayIdx == validArrayIdx) return NULL;
+  const DDFeedback* pFeedback = &feedbackArray[validArrayIdx];
+  validArrayIdx = (validArrayIdx + 1) % arraySize;
+  return pFeedback;
+}
+void DDFeedbackManager::pushFeedback(int x, int y) {
+  feedbackArray[nextArrayIdx].x = x;
+  feedbackArray[nextArrayIdx].y = y;
+  nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
+  if (nextArrayIdx == validArrayIdx)
+    validArrayIdx = (validArrayIdx + 1) % arraySize;
+}
 
 
 DDLayer::DDLayer(int layerId) {
   this->layerId = String(layerId);
+  this->pFeedbackManager = NULL;
+  this->feedbackHandler = NULL;
 }
+DDLayer::~DDLayer() {
+  if (pFeedbackManager != NULL)
+    delete pFeedbackManager;
+} 
 void DDLayer::visibility(bool visible) {
   _sendCommand1(layerId, "visible", TO_BOOL(visible));
 }
 void DDLayer::opacity(int opacity) {
   _sendCommand1(layerId, "opacity", String(opacity));
 }
-void DDLayer::padding(int left, int top, int right, int bottom) {
+void DDLayer::border(float size, const String& color, const String& shape) {
+  _sendCommand3(layerId, "border", String(size), color, shape);
+}
+void DDLayer::padding(float left, float top, float right, float bottom) {
   _sendCommand4(layerId, "padding", String(left), String(top), String(right), String(bottom));
 }
 void DDLayer::noPadding() {
@@ -557,14 +690,42 @@ void DDLayer::backgroundColor(const String& color) {
 void DDLayer::noBackgroundColor() {
   _sendCommand0(layerId, "nobgcolor");
 }
+void DDLayer::flash() {
+  _sendCommand0(layerId, "flash");
+}
+void DDLayer::flashArea(int x, int y) {
+  _sendCommand2(layerId, "flasharea", String(x), String(y));
+}
 void DDLayer::writeComment(const String& comment) {
   _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
 }
-//void DDLayer::setFeedbackHandler(void (*handler)(DDFeedbackType, int, int)) {
-void DDLayer::setFeedbackHandler(DDFeedbackHandler handler) {
+void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
+  _sendCommand2(layerId, "feedback", TO_BOOL(true), autoFeedbackMethod);
+  feedbackHandler = NULL;
+  if (pFeedbackManager != NULL)
+    delete pFeedbackManager;
+  pFeedbackManager = new DDFeedbackManager(FEEDBACK_BUFFER_SIZE + 1);  // need 1 more slot
+}
+void DDLayer::disableFeedback() {
+  _sendCommand1(layerId, "feedback", TO_BOOL(false));
+  feedbackHandler = NULL;
+  if (pFeedbackManager != NULL) {
+    delete pFeedbackManager;
+    pFeedbackManager = NULL;
+  }
+}
+const DDFeedback* DDLayer::getFeedback() {
+  _HandleFeedback();
+  return pFeedbackManager != NULL ? pFeedbackManager->getFeedback() : NULL;
+}
+void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod) {
   bool enable = handler != NULL;
-  _sendCommand1(layerId, "feedback", TO_BOOL(enable));
+  _sendCommand2(layerId, "feedback", TO_BOOL(enable), autoFeedbackMethod);
   feedbackHandler = handler;
+  if (pFeedbackManager != NULL) {
+    delete pFeedbackManager;
+    pFeedbackManager = NULL;
+  }
 }
 
 
@@ -755,6 +916,9 @@ void LcdDDLayer::scrollDisplayRight() {
 void LcdDDLayer::writeLine(const String& text, int y, const String& align) {
   _sendCommand3(layerId, "writeline", String(y), align, text);
 }
+void LcdDDLayer::writeCenteredLine(const String& text, int y) {
+  _sendCommand3(layerId, "writeline", String(y), "C", text);
+} 
 void LcdDDLayer::pixelColor(const String &color) {
   _sendCommand1(layerId, "pixelcolor", color);
 }

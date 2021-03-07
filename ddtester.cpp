@@ -3,7 +3,7 @@
 
 
 #define ASCII_ONLY false
-
+#define TEST_FEEDABCK true
 
 namespace DDTesterImpl {
 
@@ -301,8 +301,10 @@ GraphicalDDLayer *pGraphicalLayer = NULL;
 SevenSegmentRowDDLayer *p7SegmentRowLayer = NULL;
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
-  pLayer->writeComment("layer [" + pLayer->getLayerId() + "] FB (" + String(x) + "," + String(y) + ")");
-  if (pLayer == p7SegmentRowLayer) {
+  //pLayer->writeComment("layer [" + pLayer->getLayerId() + "] FB (" + String(x) + "," + String(y) + ")");
+  if (pLayer == pTurtleLayer) {
+    pLayer->flash();
+  } else if (pLayer == p7SegmentRowLayer) {
     int r = 0;
     int g = 0;
     int b = 0;
@@ -314,7 +316,7 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
       b = 255;  
     p7SegmentRowLayer->backgroundColor(DD_RGB_COLOR(r, g, b));
   } else if (pLayer == pLcdLayer) {
-    int r = random(256);
+    int r = random(255);
     int g = 255 - r;
     pLcdLayer->bgPixelColor(DD_RGB_COLOR(r, 218, 218));
     pLcdLayer->backgroundColor(DD_RGB_COLOR(16, g, 16));
@@ -345,6 +347,10 @@ void DDTester_autoPinLayers(DumbDisplay& dumbdisplay) {
 void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
+    if (TEST_FEEDABCK) {  
+      pMbLayer->enableFeedback("fs");
+      pMbLayer->writeComment("MB FB enabled");
+    }    
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -353,6 +359,12 @@ void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
       }
     }
   }
+  if (TEST_FEEDABCK) {
+    const DDFeedback *pFeedback = pMbLayer->getFeedback();
+    if (pFeedback != NULL) {
+      pMbLayer->writeComment("MB @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
+    }
+  }  
   debugMbTestStep(pMbLayer, stepCount);
 }
 
@@ -360,6 +372,7 @@ void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
+    pTurtleLayer->setFeedbackHandler(FeedbackHandler);
     if (Pinned) { 
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -383,8 +396,8 @@ void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 
 bool hori = false;
 void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
-  int init = stepCount % 6;
-  if (init == 0) {
+  bool init = stepCount <= 40 && stepCount % 10 == 0;
+  if (init) {
     if (pLedGridLayer != NULL)
       dumbdisplay.deleteLayer(pLedGridLayer);
     hori = random(2) == 1;
@@ -430,7 +443,7 @@ void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pLcdLayer = dumbdisplay.createLcdLayer(18, 3, 16, "Courier");
-    pLcdLayer->setFeedbackHandler(FeedbackHandler);
+    pLcdLayer->setFeedbackHandler(FeedbackHandler, "f");
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -457,7 +470,7 @@ void LcdDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     p7SegmentRowLayer = dumbdisplay.create7SegmentRowLayer(4);
-    p7SegmentRowLayer->setFeedbackHandler(FeedbackHandler);
+    p7SegmentRowLayer->setFeedbackHandler(FeedbackHandler, "fa");
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -511,6 +524,10 @@ void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pGraphicalLayer = dumbdisplay.createGraphicalLayer(215, 215);
+    if (TEST_FEEDABCK) {
+      pGraphicalLayer->enableFeedback("f");
+      pGraphicalLayer->writeComment("GLCD FB enabled");
+    }
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -524,6 +541,12 @@ void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
       pGraphicalLayer->setTextFont("monospace", 14);
     }
   }
+  if (TEST_FEEDABCK) {
+    const DDFeedback *pFeedback = pGraphicalLayer->getFeedback();
+    if (pFeedback != NULL) {
+      pGraphicalLayer->writeComment("GLCD @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
+    }
+  }  
   if (stepCount <= 14) {
     standardGraphicalTestStep(pGraphicalLayer, stepCount);
   } else {
@@ -579,13 +602,14 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
       LedGridDDTester_testStep(dumbdisplay, stepCount);  
     if (lcd)
       LcdDDTester_testStep(dumbdisplay, stepCount);
-    DDDelay(1000);
 
     stepCount++;
 
     if (true) {
-      DDLogToSerial("STEP: " + String(stepCount));
+      DDLogToSerial("DDTest Step: " + String(stepCount));
     }
+
+    DDDelay(1000);
   }
 }
 

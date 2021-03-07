@@ -10,11 +10,13 @@
 
 #define DUMBDISPLAY_BAUD 115200
 #define DD_SERIAL_BAUD DUMBDISPLAY_BAUD
+#define DD_WIFI_PORT 10201
 
 
 #define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
 
+#define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
 #define DD_AP_HORI "H(*)"
 #define DD_AP_VERT "V(*)"
 #define DD_AP_HORI_2(id1, id2) ("H(" + id1 + "+" + id2 + ")")
@@ -27,7 +29,6 @@
 #define DD_AP_VERT_5(id1, id2, id3, id4, id5) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")")
 #define DD_AP_HORI_6(id1, id2, id3, id4, id5, id6) ("H(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
-
 
 
 class DDInputOutput {
@@ -53,6 +54,10 @@ class DDInputOutput {
     virtual void flush() {
       Serial.flush();
     }
+    virtual void keepAlive() {
+    }
+    virtual void validConnection() {
+    }
     virtual void preConnect() {
       if (setupForSerial)
         Serial.begin(serialBaud);
@@ -69,13 +74,34 @@ class DDInputOutput {
     bool setupForSerial;
 };
 
+struct DDFeedback {
+  int x;
+  int y;
+};
+
+
+class DDFeedbackManager {
+  public: 
+    DDFeedbackManager(int bufferSize);
+    ~DDFeedbackManager();
+    const DDFeedback* getFeedback();
+    void pushFeedback(int x, int y);
+  private:
+    DDFeedback* feedbackArray;
+    int arraySize;
+    int nextArrayIdx;
+    int validArrayIdx;
+};
+
 
 class DDLayer;
+
+
 enum DDFeedbackType { CLICK };
 
 /* pLayer -- pointer to the DDLayer of which "feedback" received */
 /* type -- currently, only possible value if CLICK */
-/* x, y -- (x, y) is the "position" where on the layer was clicked */
+/* x, y -- (x, y) is the "area" on the layer where was clicked */
 typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, int x, int y);
 
 class DDLayer {
@@ -85,7 +111,14 @@ class DDLayer {
     /* set layer opacity */
     /* - 0 to 255 */
     void opacity(int opacity);
-    void padding(int left, int top, int right, int bottom);
+    /* size unit is pixel: */
+    /* - LcdLayer; each character is composed of pixels */
+    /* - 7SegmentRowLayer; each 7-segment is composed of fixed 220 x 320 pixels */
+    /* - LedGridLayer; a LED is considered as a pixel */  
+    /* shape -- can be "flat", "round", "raised" or "sunken" */  
+    void border(float size, const String& color, const String& shape = "");
+    /* size unit ... see border() */
+    void padding(float left, float top, float right, float bottom);
     void noPadding();
     /* clear the layer */
     void clear();
@@ -93,16 +126,37 @@ class DDLayer {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
-    /* set handler to "feedback" (setting handler also enables "feedback" mechanism) */
-    void setFeedbackHandler(DDFeedbackHandler handler);
+    /* normally used for "feedback" -- flash the default way (layer + border) */
+    void flash();
+    /* normally used for "feedback" -- flash the area (x, y) where the layer is clicked */
+    void flashArea(int x, int y);
     const String& getLayerId() { return layerId; }
     void writeComment(const String& comment);
+    /* rely on getFeedback() being called */ 
+    /* autoFeedbackMethod: */
+    /* . "" -- no auto feedback */
+    /* . "f" -- flash the default way (layer + border) */
+    /* . "fl" -- flash the layer */
+    /* . "fa" -- flash the area where the layer is clicked */
+    /* . "fs" -- flash the spot where the layer is clicked */
+    void enableFeedback(const String& autoFeedbackMethod = "");
+    /** disable "feedback" */
+    void disableFeedback();
+    /** get "feedback" ... NULL if no pending "feedback" */
+    const DDFeedback* getFeedback();
+    /* set explicit (and more responsive) "feedback" handler (and enable feedback) */
+    /* autoFeedbackMethod ... see enableFeedback() */
+    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
   public:
+    DDFeedbackManager* getFeedbackManager() { return pFeedbackManager; }
     DDFeedbackHandler getFeedbackHandler() { return feedbackHandler; }
   protected:
     DDLayer(int layerId);
+  public:
+    ~DDLayer();
   protected:
     String layerId;  
+    DDFeedbackManager *pFeedbackManager;
     DDFeedbackHandler feedbackHandler;
 };
 
@@ -244,6 +298,8 @@ class LcdDDLayer: public DDLayer {
     void scrollDisplayRight();
     /* write text as a line, with alignment 'L', 'C', or 'R' */
     void writeLine(const String& text, int y = 0, const String& align = "L");
+    /* write text as a line, with align "centered" */
+    void writeCenteredLine(const String& text, int y = 0);
     /* set pixel color */
     void pixelColor(const String &color);
     /* set "background" (off) pixel color */
@@ -388,7 +444,7 @@ class DumbDisplay {
     void deleteLayer(DDLayer *pLayer);
     /* write out a comment to DD */
     void writeComment(const String& comment);
-    void debugSetup(int debugLedPin, bool enableEchoFeedback = true);
+    void debugSetup(int debugLedPin, bool enableEchoFeedback = false);
 };
 
 /* log line to serial making sure not affect DD */

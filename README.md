@@ -1,33 +1,34 @@
-# DumbDisplay Arduino Library (v0.4.0)
+# DumbDisplay Arduino Library (v0.4.2)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some very simple virtual input gadgets) for your Arduino / ESP32 experiments.
 
 
 # Description
 
-Instead of connecting real gadgets to your Arduino for outputing experiment results, you can make use of DumbDisplay for the purpose, to realize virtual gadagets on your Android phone.
+Instead of connecting real gadgets to your Arduino for showing experiment results, or for getting simple input like clicking, you can make use of DumbDisplay for the purpose, to realize virtual gadagets on your Android phone.
 
-Doing so you may defer buying / connecting real output gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
+Doing so you may defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
 
 A few types of output layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
-* LCD (text-based and graphical)
+* LCD (text based)
 * Micro:bit-like canvas
 * Turtle-like canvas
-* graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
+* Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 
-Notice that with the new layer "feedback" mechanism, user-interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as input gadgets as well.
+Notice that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
 
-You can install the free DumbDisplay app (v0.4.0 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
+You can install the free DumbDisplay app (v0.4.2 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth via HC-06)
 * Serial (USB connected via OTG adapter)
+* WIFI  (work in progess) (e.g. ESP32)
 
 Notes:
-* Sorry that since I only have Arduino Uno, therefore the library is only tested with Arduino Uno (and partly with ESP32).
+* Sorry that since I only have Arduino Uno, therefore the library is only tested with Arduino Uno and ESP32.
 * In case DumbDisplay does not "handshake" with your Arduion correctly, you can try resetting your Adruino by pressing the "reset" button on your Adruion
 
 
@@ -43,7 +44,7 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - doing so will **automatically set Serial baud rate to 115200**, and **you should not be using Serial for other purposes**
-* Via SoftwareSerial
+* Via `SoftwareSerial` -- https://www.arduino.cc/en/Reference/softwareSerial
   ```
     #include <ssdumbdisplay.h>
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
@@ -53,7 +54,7 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
     - 2 and 3 are the pins used by SoftwareSerial
     - **the default baud rate is 115200**, which seems to work better from my own testing [with HC-06]
   - **You should not be using that SoftwareSerial for other purposes**
-* Via **ESP32** BluetoothSerial (Experimental)
+* Via **ESP32** `BluetoothSerial`
   ```
     #define DD_4_ESP32
     #include <esp32dumbdisplay.h>
@@ -62,9 +63,25 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
   - include esp32dumbdisplay.h -- `#include <esp32dumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"))`  
-    - "ESP32" is name used by BluetoothSerial
+    - "ESP32" is name used by `BluetoothSerial`
   - **You should not be using BluetoothSerial for other purposes**
-  - In my own testing, the bluetooth communication will hang from time to time.
+* Via WIFI as a `WiFiServer` -- https://www.arduino.cc/en/Reference/WiFi  
+  ```
+    #include "wifidumbdisplay.h"
+    const char* ssid = "wifiname";
+    const char* password = "wifipassword";
+    const int serverPort = 10201;
+    DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password, serverPort));
+  ```
+  - WIFI credentials are passed to `WiFi`
+  - By default, will setup and log using `Serial` with baud rate 115200; and you should see log lines like:
+  ```
+    binding WIFI wifiname
+    binded WIFI wifiname
+    listening on 192.168.1.134:10201 ...
+  ```  
+  - Sorry, it is only tested with ESP32; and appears to be working (when WIFI connection is stable).
+
 
 
 With a DumbDisplay object, you are ready to proceed with coding, like
@@ -88,8 +105,36 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/d
   }
 ```
 
-You can also try out "feedback" from DumbDisplay like
+You can also try out "layer feedback" from DumbDisplay like
 
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddonoffloopmb/ddonoffloopmb.ino
+
+
+```
+#include <ssdumbdisplay.h>
+
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true));
+
+MbDDLayer* pMbLayer = NULL;
+
+void setup() {
+    // create the MB layer with size 10x10
+    pMbLayer = dumbdisplay.createMicrobitLayer(10, 10);
+    // enable "feedback" -- auto flashing the clicked area
+    pMbLayer->enableFeedback("fa");
+}
+
+void loop() {
+    // check for "feedback"
+    const DDFeedback *pFeedback = pMbLayer->getFeedback();
+    if (pFeedback != NULL) {
+        // act upon "feedback"
+        pMbLayer->toggle(pFeedback->x, pFeedback->y); 
+    }
+}
+```
+
+Alternativelly, can setup "callback" function to handle "feedback" passively, like
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddonoffmb/ddonoffmb.ino
 
@@ -108,7 +153,8 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
 void setup() {
     // create the MB layer with size 10x10
     pMbLayer = dumbdisplay.createMicrobitLayer(10, 10);
-    pMbLayer->setFeedbackHandler(FeedbackHandler);
+    // setup "callback" function to handle "feedback" passively -- auto flashing the clicked area
+    pMbLayer->setFeedbackHandler(FeedbackHandler, "fa");
 }
 
 void loop() {
@@ -117,7 +163,8 @@ void loop() {
 }
 ```
 
-Please note that DD will check for "feedback" in 3 occasions:
+Please note that Arduino will check for "feedback" in 4 occasions:
+* before every get "feedback" with `getFeedback()`
 * after every send of command
 * once when `DDYield()` is called
 * during the "wait loop" of `DDDelay()`
@@ -126,7 +173,7 @@ Please note that DD will check for "feedback" in 3 occasions:
 ## More Samples
 
 
-| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. Layer "feedback" |
+| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. "Layer feedback" |
 |--|--|--|--|--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmb.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddgraphical.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/dddoodle.png)|
 
@@ -475,9 +522,9 @@ void loop() {
 }
 ```
 
-### Screenshot 6 -- *Layer "feedback"*
+### Screenshot 6 -- *"Layer feedback"*
 
-This very simple doodle sample shows how the layer "feedback" mechanism can be used to route user interaction (clicking) of layer to Arduino code.
+This very simple doodle sample shows how the "layer feedback" mechanism can be used to route user interaction (clicking) of layer to Arduino.
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/dddoodle/dddoodle.ino
 
@@ -537,7 +584,7 @@ void Reset() {
 void setup() {
     // use a Turtle layer for very simple doodle
     pTurtleLayer = dumbdisplay.createTurtleLayer(201, 201);
-    pTurtleLayer->setFeedbackHandler(FeedbackHandler);
+    pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs");
     pTurtleLayer->backgroundColor("azure");
     pTurtleLayer->fillColor("lemonchiffon");
 
@@ -599,8 +646,14 @@ MIT
 
 # Change History
 
+v0.4.2
+- added auto "feedback" (e.g. auto flashing layer)
+- added "auto pin" spacer -- DD_AP_SPACER
+- added layer border
+- adding WIFI support
+
 v0.4.0
-- added layer "feedback" mechanism -- i.e. handler "hook" to handle when layer clicked 
+- added "layer feedback" mechanism -- i.e. handler "hook" to handle when layer clicked 
 
 v0.1.3
 - added 7-Segment-row layer (`SevenSegmentRowDDLayer`)
