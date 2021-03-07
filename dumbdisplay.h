@@ -111,7 +111,15 @@ class DDLayer {
     /* set layer opacity */
     /* - 0 to 255 */
     void opacity(int opacity);
-    void padding(int left, int top, int right, int bottom);
+    /* size unit is the unit of the layer */
+    /* - normally in pixel */
+    /*   e.g. GraphicalLayer */
+    /*   e.g. LcdLayer -- note that character is composed of pixel */
+    /*   e.g. 7SegmentRowLayer -- note that a 7Segment is composed of 220 x 320 pixels */
+    /* - however, LedGridLayer unit is s LCD */    
+    void border(float size, const String& color = "", const String& shape = "");
+    /* size unit ... see border() */
+    void padding(float left, float top, float right, float bottom);
     void noPadding();
     /* clear the layer */
     void clear();

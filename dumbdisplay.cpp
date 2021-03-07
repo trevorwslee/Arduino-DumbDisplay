@@ -669,7 +669,7 @@ void DDLayer::visibility(bool visible) {
 void DDLayer::opacity(int opacity) {
   _sendCommand1(layerId, "opacity", String(opacity));
 }
-void DDLayer::padding(int left, int top, int right, int bottom) {
+void DDLayer::padding(float left, float top, float right, float bottom) {
   _sendCommand4(layerId, "padding", String(left), String(top), String(right), String(bottom));
 }
 void DDLayer::noPadding() {

@@ -647,8 +647,9 @@ MIT
 # Change History
 
 v0.4.1
-- added experimantal WiFi support
+- added WIFI support
 - added auto "feedback" (e.g. auto flashing layer)
+- added "auto pin" spacer -- DD_AP_SPACER
 
 v0.4.0
 - added "layer feedback" mechanism -- i.e. handler "hook" to handle when layer clicked 
