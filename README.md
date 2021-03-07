@@ -25,7 +25,7 @@ You can install the free DumbDisplay app (v0.4.2 or later) from Android Play Sto
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth via HC-06)
 * Serial (USB connected via OTG adapter)
-* WIFI (e.g. ESP32)
+* WIFI  (work in progess) (e.g. ESP32)
 
 Notes:
 * Sorry that since I only have Arduino Uno, therefore the library is only tested with Arduino Uno and ESP32.
