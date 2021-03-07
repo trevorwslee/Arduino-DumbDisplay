@@ -669,6 +669,9 @@ void DDLayer::visibility(bool visible) {
 void DDLayer::opacity(int opacity) {
   _sendCommand1(layerId, "opacity", String(opacity));
 }
+void DDLayer::border(float size, const String& color, const String& shape) {
+  _sendCommand3(layerId, "border", String(size), color, shape);
+}
 void DDLayer::padding(float left, float top, float right, float bottom) {
   _sendCommand4(layerId, "padding", String(left), String(top), String(right), String(bottom));
 }
@@ -913,6 +916,9 @@ void LcdDDLayer::scrollDisplayRight() {
 void LcdDDLayer::writeLine(const String& text, int y, const String& align) {
   _sendCommand3(layerId, "writeline", String(y), align, text);
 }
+void LcdDDLayer::writeCenteredLine(const String& text, int y) {
+  _sendCommand3(layerId, "writeline", String(y), "C", text);
+} 
 void LcdDDLayer::pixelColor(const String &color) {
   _sendCommand1(layerId, "pixelcolor", color);
 }
