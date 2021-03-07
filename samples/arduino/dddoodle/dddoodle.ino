@@ -62,6 +62,7 @@ void setup() {
     pLcdLayer->setFeedbackHandler(FeedbackHandler);
     pLcdLayer->backgroundColor("lightgray");
     pLcdLayer->print("CLEAR");
+    pLcdLayer->border(2, "gray", "round");
 
     // use a LED-grid layers for the 3 color options -- red, green and blue 
     pLedGridLayer = dumbdisplay.createLedGridLayer(3);

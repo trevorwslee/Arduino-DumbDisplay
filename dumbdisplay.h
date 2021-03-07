@@ -115,7 +115,7 @@ class DDLayer {
     /* - LcdLayer; each character is composed of pixels */
     /* - 7SegmentRowLayer; each 7-segment is composed of fixed 220 x 320 pixels */
     /* - LedGridLayer; a LED is considered as a pixel */  
-    /* shape -- can be "flat", "round" (experimental), "raised" or "sunken" */  
+    /* shape -- can be "flat", "round", "raised" or "sunken" */  
     void border(float size, const String& color, const String& shape = "");
     /* size unit ... see border() */
     void padding(float left, float top, float right, float bottom);
@@ -126,17 +126,18 @@ class DDLayer {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
-    /* normally used for "feedback" */
+    /* normally used for "feedback" -- flash the default way (layer + border) */
     void flash();
-    /* normally used for "feedback" */
+    /* normally used for "feedback" -- flash the area (x, y) where the layer is clicked */
     void flashArea(int x, int y);
     const String& getLayerId() { return layerId; }
     void writeComment(const String& comment);
     /* rely on getFeedback() being called */ 
     /* autoFeedbackMethod: */
     /* . "" -- no auto feedback */
-    /* . "f" -- flash the layer */
-    /* . "fa" -- flat the area where the layer is clicked */
+    /* . "f" -- flash the default way (layer + border) */
+    /* . "fl" -- flash the layer */
+    /* . "fa" -- flash the area where the layer is clicked */
     /* . "fs" -- flash the spot where the layer is clicked */
     void enableFeedback(const String& autoFeedbackMethod = "");
     /** disable "feedback" */
@@ -144,10 +145,7 @@ class DDLayer {
     /** get "feedback" ... NULL if no pending "feedback" */
     const DDFeedback* getFeedback();
     /* set explicit (and more responsive) "feedback" handler (and enable feedback) */
-    /* autoFeedbackMethod: */
-    /* . "" -- no auto feedback */
-    /* . "f" -- flash the layer */
-    /* . "fs" -- flash the spot where the layer is clicked */
+    /* autoFeedbackMethod ... see enableFeedback() */
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
   public:
     DDFeedbackManager* getFeedbackManager() { return pFeedbackManager; }
