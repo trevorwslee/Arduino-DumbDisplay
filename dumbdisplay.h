@@ -138,6 +138,7 @@ class DDLayer {
     /* . "f" -- flash the default way (layer + border) */
     /* . "fl" -- flash the layer */
     /* . "fa" -- flash the area where the layer is clicked */
+    /* . "fas" -- flash the area (as a spot) where the layer is clicked */
     /* . "fs" -- flash the spot where the layer is clicked */
     void enableFeedback(const String& autoFeedbackMethod = "");
     /** disable "feedback" */
@@ -437,13 +438,15 @@ class DumbDisplay {
     /* create a graphical [LCD] layer */
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
+    /* set DD background color with common "color name" */
+    void backgroundColor(const String& color);
+    /* write out a comment to DD */
+    void writeComment(const String& comment);
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     void deleteLayer(DDLayer *pLayer);
-    /* write out a comment to DD */
-    void writeComment(const String& comment);
     void debugSetup(int debugLedPin, bool enableEchoFeedback = false);
 };
 

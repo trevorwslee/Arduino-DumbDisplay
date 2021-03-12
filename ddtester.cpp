@@ -569,6 +569,10 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
     DDLogToSerial(log_msg);
   }
 
+  if (true) {
+    dumbdisplay.backgroundColor(DD_HEX_COLOR(0xE0FFFF));
+  }
+
   bool mb = !forDebugging;
   bool turtle = !forDebugging;
   bool ledGrid = !forDebugging;
