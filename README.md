@@ -1,15 +1,15 @@
-# DumbDisplay Arduino Library (v0.4.2)
+# DumbDisplay Arduino Library (v0.5.0)
 
-DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some very simple virtual input gadgets) for your Arduino / ESP32 experiments.
+DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some very simple inputting means) for your Arduino / ESP8266 / ESP32 experiments.
 
 
 # Description
 
-Instead of connecting real gadgets to your Arduino for showing experiment results, or for getting simple input like clicking, you can make use of DumbDisplay for the purpose, to realize virtual gadagets on your Android phone.
+Instead of connecting real gadgets to your Arduino for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purpose -- to realize virtual IO gadagets on your Android phone.
 
 Doing so you may defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
 
-A few types of output layers can be created:
+A few types of layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
 * LCD (text based)
 * Micro:bit-like canvas
@@ -20,21 +20,22 @@ A few types of output layers can be created:
 Notice that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
 
-You can install the free DumbDisplay app (v0.4.2 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
+You can install the free DumbDisplay app (v0.5.0 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth via HC-06)
+* BluetoothSerial (for ESP32)
 * Serial (USB connected via OTG adapter)
-* WIFI  (work in progess) (e.g. ESP32)
+* WIFI (e.g. ESP8266 and ESP32)
 
 Notes:
-* Sorry that since I only have Arduino Uno, therefore the library is only tested with Arduino Uno and ESP32.
+* Sorry that since I only have limited micro controller boards, the library is only tested with Arduino Uno, ESP8266 and ESP32.
 * In case DumbDisplay does not "handshake" with your Arduion correctly, you can try resetting your Adruino by pressing the "reset" button on your Adruion
 
 
 # Sample Code
 
-For Arduino, you have two options for connecting the DumbDisplay Android app.
+You have several options for connecting to DumbDisplay Android app.
 
 * Via Serial 
   ```
@@ -52,7 +53,7 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)))`  
     - 2 and 3 are the pins used by SoftwareSerial
-    - **the default baud rate is 115200**, which seems to work better from my own testing [with HC-06]
+    - **the default baud rate is 115200**, which seems to work better from my own testing with HC-06; however, when it comes to ESP8266 with HC-06, it appears to work better in baud rate 9600 
   - **You should not be using that SoftwareSerial for other purposes**
 * Via **ESP32** `BluetoothSerial`
   ```
@@ -80,7 +81,8 @@ For Arduino, you have two options for connecting the DumbDisplay Android app.
     binded WIFI wifiname
     listening on 192.168.1.134:10201 ...
   ```  
-  - Sorry, it is only tested with ESP32; and appears to be working (when WIFI connection is stable).
+    where 192.168.1.134 is the "host" and 10201 is the "port"
+  - Sorry, it is only tested with ESP8266 and ESP32, and it appears to be working fine when WIFI connection is stable (especially for ESP8266).
 
 
 
@@ -645,6 +647,9 @@ MIT
 
 
 # Change History
+
+v0.5.0
+- added WIFI support
 
 v0.4.2
 - added auto "feedback" (e.g. auto flashing layer)
