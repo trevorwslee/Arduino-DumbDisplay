@@ -10,7 +10,7 @@ unsigned long baud = DUMBDISPLAY_BAUD;
 boolean enableSerial = true;
 unsigned long serialBaud = DD_SERIAL_BAUD;
 
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), baud, enableSerial, serialBaud));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), baud, enableSerial, serialBaud));
 
 void setup() {
   if (!enableSerial) {

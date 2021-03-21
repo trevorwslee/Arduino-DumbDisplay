@@ -1136,7 +1136,12 @@ void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _PreDeleteLayer(pLayer);
   delete pLayer;
 }
+void DumbDisplay::backgroundColor(const String& color) {
+  _Connect();
+  _sendCommand1("", "BGC", color);
+}
 void DumbDisplay::writeComment(const String& comment) {
+  _Connect();
   _sendCommand0("", ("// " + comment).c_str());
 }
 
