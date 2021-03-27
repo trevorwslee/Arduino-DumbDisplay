@@ -1,6 +1,6 @@
   #include <ssdumbdisplay.h>
 
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true));
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
   LedGridDDLayer *led;
 
   void setup() {
