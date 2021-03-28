@@ -33,6 +33,11 @@ Notes:
 * In case DumbDisplay does not "handshake" with your Arduion correctly, you can try resetting your Adruino by pressing the "reset" button on your Adruion
 
 
+# Installing DumbDisplay Arduino Library
+
+For demonstration on install DumbDisplay Arduino Library, you may want to watch the YouTube video https://www.youtube.com/watch?v=nN7nXRy7NMg
+
+
 # Sample Code
 
 You have several options for connecting to DumbDisplay Android app.
