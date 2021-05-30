@@ -19,7 +19,6 @@ class DDBridge(ddbmod.DDBridge):
                     end_pos = Text_box.index(tk.END)
                     line_count = int(end_pos.split('.')[0]) - 1
                     check_pos = str(line_count) + '.0'
-                    #print(pos, '-', check_pos)
                     if pos != check_pos:
                         Auto_scroll_state.set(False)
             Window.update()
@@ -72,6 +71,8 @@ def ClickedConnect():
         try:
             Ser = Connect()
             if Ser != None:
+                Port_combo["state"] = "disabled"
+                Baud_combo["state"] = "disabled"
                 Bridge = DDBridge()
                 Serial = ddbmod.SerialSource(Ser, Bridge)
                 Wifi = ddbmod.WifiTarget(Bridge)
@@ -135,6 +136,7 @@ def NoSerialLoop():
         if Ser != None:
             return
 
+
 def SerialServe():
     if Serial != None:
         Serial.serialServe()
@@ -149,14 +151,18 @@ if __name__ == "__main__":
             Connect_button.config(text="Disconnect")
             try:
                 SerialLoop()
-            except serial.SerialException as err:
-                Text_box.insert(tk.END, "*** serial exception -- {0}\n".format(err))
+            except Exception as err:
+                Text_box.insert(tk.END, "*** exception -- {0}\n".format(err))
             Ser.close()
             Ser = None
             Bridge = None
+            if Serial != None:
+                Serial = None
             if Wifi != None:
                 Wifi.stop()
                 Wifi = None
+            Port_combo["state"] = "normal"
+            Baud_combo["state"] = "normal"
             Text_box.insert(tk.END, "*** disconnected\n")
         else:
             Connect_button.config(text="Connect")

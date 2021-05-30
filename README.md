@@ -27,6 +27,7 @@ The app can accept connection via
 * BluetoothSerial (for ESP32)
 * Serial (USB connected via OTG adapter)
 * WIFI (e.g. ESP8266 and ESP32)
+* Serial / WIFI via the simple included tool -- DumbDisplay WIFI Bridge
 
 Notes:
 * Sorry that since I only have just a few micro controller boards, the library is only tested with Arduino Uno, ESP8266 and ESP32.
@@ -49,7 +50,7 @@ You have several options for connecting to DumbDisplay Android app.
   ```
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
-  - doing so will **automatically set Serial baud rate to 115200**, and **you should not be using Serial for other purposes**
+  - doing so will **set Serial baud rate to the default 115200**, and **you should not be using Serial for other purposes**; note that a lower baud rate, say 9600, may work better for some cases
 * Via `SoftwareSerial` -- https://www.arduino.cc/en/Reference/softwareSerial
   ```
     #include <ssdumbdisplay.h>
@@ -635,6 +636,17 @@ void loop() {
 
 For reference, please look into the declarations of the different related classes in the header files; mostly dumbdisplay.h -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/dumbdisplay.h
 
+
+
+# DumbDispaly WIFI Bridge
+
+Verh likely you will be using your desktop computer (Windows) for Arduino development, which will be connecting to your Arduino board via Serial connection. Wouldn't it be nice to be able to connect to DumbDisplay similarly, via the same Serial wiring as well?
+
+Yes, you can do exactly that, with the help of the simple DumbDisplay WIFI Bridge Python program -- tools/DDWifiBrideg/DDWifiBridge.py. DumbDisplay WIFI Bridge acts as a "bridge" / "proxy" between your Ardiono board (Serial connection) and your mobile phone (WIFI connection). 
+
+When running the DumbDisplay WIFI Bridge, on one side, it connects to your Arduino board via Serial connection, similar to how you Arduino IDE connect to your Arduino board. At the same time, it listens on port 10201 of your desktop, allowing DumbDisply to establish connection via WIFI. In other words, your desktop computer port 10201 is now a "brideg" / "proxy" to your Arduino DumpDisplay code. 
+
+https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png
 
 
 # Thank You!

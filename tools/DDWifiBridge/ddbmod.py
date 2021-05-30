@@ -2,8 +2,7 @@ import serial
 import socket
 import threading
 
-HOST = '' # empty ==> all accepted
-PORT = 10201        # Port to listen on (non-privileged ports are > 1023)
+from serial.win32 import ClearCommError
 
 
 class DDBridge:
@@ -16,6 +15,14 @@ class DDBridge:
         self._insertLine('<', target_line)
     def insertLogLine(self, log_line):
         self._insertLine('=', log_line)
+    def transportLine(self):
+        while True:
+            line = self._popLine()
+            if line == None:
+                break
+            transDir = line[0]
+            line = line[1:]
+            self._sendLine(line, transDir)
     def _insertLine(self, transDir, line):
         self.lock.acquire()
         self.line_list.append(transDir + line)
@@ -27,17 +34,6 @@ class DDBridge:
             line = self.line_list.pop()
         self.lock.release()    
         return line    
-    def transportLine(self):
-        while True:
-            line = self._popLine()
-            if line == None:
-                break
-            # if len(self.line_list) == 0:
-            #     break
-            # line = self.line_list.pop()
-            transDir = line[0]
-            line = line[1:]
-            self._sendLine(line, transDir)
     def _sendLine(self, line, transDir):
         raise Exception("should have been overridden")
 
@@ -62,7 +58,8 @@ class SerialSource:
     def serialServe(self):
         try:
             self._serialServe()
-        except (serial.SerialException, AttributeError) as err:
+        #except (serial.SerialException, Exception) as err:
+        except Exception as err:
             self.ser = None
             self.error = err
     def _serialServe(self):
@@ -79,6 +76,7 @@ class SerialSource:
 
 class WifiTarget:
     def __init__(self, bridge):
+        self.ip = get_ip()
         self.bridge = bridge
         self.sock = None
         self.conn = None
@@ -110,16 +108,21 @@ class WifiTarget:
                 self.stop()
     def _serveOnce(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            #host = '' # empty ==> all accepted
+            host = self.ip # empty ==> all accepted
+            port = 10201        # Port to listen on (non-privileged ports are > 1023)
             self.sock = s
-            self.sock.bind((HOST, PORT))
+            self.sock.bind((host, port))
             if self.bridge != None:
-                self.bridge.insertLogLine("!!!!! For WiFi, listening on " + get_ip() + ':' + str(PORT))
+                #self.bridge.insertLogLine("!!!!! For WiFi, listening on " + host + ':' + str(port))
+                self.bridge.insertLogLine("!!!!! For WiFi, listening on {0}:{1}".format(host, str(port)))
             self.sock.listen()
             conn, addr = self.sock.accept() # block and wait
             self.conn = conn
             with conn:
                 if self.bridge != None:
-                    self.bridge.insertLogLine('Connected by ' + str(addr))
+                    #self.bridge.insertLogLine('Connected by ' + str(addr))
+                    self.bridge.insertLogLine("!!!!! WiFi connected by {0}".format(str(addr)))
                 while True:
                     data = conn.recv(1024) # blocking
                     if not data: # data is b''

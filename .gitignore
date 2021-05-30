@@ -1,2 +1,4 @@
 .vscode
-tools/DDWifiBridge/__pycache__
+.idea
+__pycache__
+tools/DDWifiBridge/DDWifiBridge.iml
