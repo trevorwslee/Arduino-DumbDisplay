@@ -161,7 +161,8 @@ void _Connect() {
             pSIO = NULL;
           }
           _ConnectedIOProxy = new IOProxy(_IO);
-          _ConnectedFromSerial = fromSerial;
+//          _ConnectedFromSerial = fromSerial;
+          _ConnectedFromSerial = _IO->isSerial();
           break;
         }
 #ifdef DD_DEBUG_HS          
@@ -191,6 +192,7 @@ void _Connect() {
           digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
         }
 #endif
+//Serial.println((_ConnectedFromSerial ? "SERIAL" : "NON-SERIAL"));
         ioProxy.print(">init>:Arduino-c1\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
