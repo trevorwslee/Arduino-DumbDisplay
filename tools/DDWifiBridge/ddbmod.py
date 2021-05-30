@@ -1,5 +1,6 @@
 import serial
 import socket
+import threading
 
 HOST = '' # empty ==> all accepted
 PORT = 10201        # Port to listen on (non-privileged ports are > 1023)
@@ -7,6 +8,7 @@ PORT = 10201        # Port to listen on (non-privileged ports are > 1023)
 
 class DDBridge:
     def __init__(self):
+        self.lock = threading.Lock()
         self.line_list = []
     def insertSourceLine(self, source_line):
         self._insertLine('>', source_line)
@@ -15,13 +17,24 @@ class DDBridge:
     def insertLogLine(self, log_line):
         self._insertLine('=', log_line)
     def _insertLine(self, transDir, line):
+        self.lock.acquire()
         self.line_list.append(transDir + line)
-        #self._transportLine()
+        self.lock.release()
+    def _popLine(self):
+        line = None
+        self.lock.acquire()
+        if len(self.line_list) > 0:
+            line = self.line_list.pop()
+        self.lock.release()    
+        return line    
     def transportLine(self):
         while True:
-            if len(self.line_list) == 0:
+            line = self._popLine()
+            if line == None:
                 break
-            line = self.line_list.pop()
+            # if len(self.line_list) == 0:
+            #     break
+            # line = self.line_list.pop()
             transDir = line[0]
             line = line[1:]
             self._sendLine(line, transDir)
