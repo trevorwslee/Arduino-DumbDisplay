@@ -6,11 +6,20 @@
 #include "ddtester.h"
 
 
+#define USE_BLUETOOTH
+
+unsigned long serialBaud = 9600/*DD_SERIAL_BAUD*/;
+
+
+#ifdef USE_BLUETOOTH
 unsigned long baud = DUMBDISPLAY_BAUD;
 boolean enableSerial = true;
-unsigned long serialBaud = DD_SERIAL_BAUD;
-
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), baud, enableSerial, serialBaud));
+#else
+boolean enableSerial = true;
+DumbDisplay dumbdisplay(new DDInputOutput(serialBaud));
+#endif
+
 
 void setup() {
   if (!enableSerial) {

@@ -36,6 +36,9 @@ class DDInputOutput {
     /* Serial IO mechanism (i.e. connecting via USB) */ 
     DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
     }
+    bool isSerial() {
+      return !backupBySerial && setupForSerial;
+    }
     bool isBackupBySerial() {
       return backupBySerial;
     }

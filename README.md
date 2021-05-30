@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.5.0)
+# DumbDisplay Arduino Library (v0.5.1)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some very simple inputting means) for your Arduino / ESP8266 / ESP32 experiments.
 
@@ -29,7 +29,7 @@ The app can accept connection via
 * WIFI (e.g. ESP8266 and ESP32)
 
 Notes:
-* Sorry that since I only have limited micro controller boards, the library is only tested with Arduino Uno, ESP8266 and ESP32.
+* Sorry that since I only have just a few micro controller boards, the library is only tested with Arduino Uno, ESP8266 and ESP32.
 * In case DumbDisplay does not "handshake" with your Arduion correctly, you can try resetting your Adruino by pressing the "reset" button on your Adruion
 
 
@@ -87,7 +87,7 @@ You have several options for connecting to DumbDisplay Android app.
     listening on 192.168.1.134:10201 ...
   ```  
     where 192.168.1.134 is the "host" and 10201 is the "port"
-  - Sorry, it is only tested with ESP8266 and ESP32, and it appears to be working fine when WIFI connection is stable (especially for ESP8266).
+  - Sorry that it is only tested with ESP8266 and ESP32, and it appears to be working fine when WIFI connection is stable (especially good for ESP8266).
 
 
 
@@ -652,6 +652,10 @@ MIT
 
 
 # Change History
+
+v0.5.1
+- bug fixes
+- added DumbDispaly WIFI Bridge
 
 v0.5.0
 - added WIFI support
