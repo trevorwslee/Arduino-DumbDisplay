@@ -75,8 +75,10 @@ class SerialSource:
 
 
 class WifiTarget:
-    def __init__(self, bridge):
-        self.ip = get_ip()
+    def __init__(self, bridge, host, port):
+        #self.ip = ip#get_ip()
+        self.host = host
+        self.port = port
         self.bridge = bridge
         self.sock = None
         self.conn = None
@@ -109,8 +111,8 @@ class WifiTarget:
     def _serveOnce(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             #host = '' # empty ==> all accepted
-            host = self.ip # empty ==> all accepted
-            port = 10201        # Port to listen on (non-privileged ports are > 1023)
+            host = self.host
+            port = self.port        # Port to listen on (non-privileged ports are > 1023)
             self.sock = s
             self.sock.bind((host, port))
             if self.bridge != None:
