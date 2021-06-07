@@ -1,8 +1,9 @@
+
 import serial
 import socket
 import threading
 
-from serial.win32 import ClearCommError
+from serial import LF, CR
 
 
 class DDBridge:
@@ -65,6 +66,12 @@ class SerialSource:
     def _serialServe(self):
         ser_line = ""
         while True:
+            # c = self.ser.read().decode()
+            # if c == '\n':
+            #     self.bridge.insertSourceLine(ser_line)
+            #     ser_line = ""
+            # else:
+            #     ser_line = ser_line + c
             for b in self.ser.read():
                 c = chr(b)
                 if c == '\n':
@@ -72,7 +79,6 @@ class SerialSource:
                     ser_line = ""
                 else:
                     ser_line = ser_line + c
-
 
 class WifiTarget:
     def __init__(self, bridge, host, port):

@@ -60,7 +60,7 @@ Auto_scroll_state.set(True)
 
 
 def Connect(port, baud):
-    print("Connect to", port)
+    print("Connect to", port, "with baud rate", baud)
     if port != "":
         ser = serial.Serial(port=port,baudrate=baud,
                             parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,
@@ -72,6 +72,7 @@ def Connect(port, baud):
 
 def Disconnect(ser):
     ser.close()
+    print("Disconnected")
 
 
 def ClickedConnect():

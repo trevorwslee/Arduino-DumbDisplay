@@ -87,7 +87,7 @@ class DDWiFiServerIO: public DDInputOutput {
         long diff = millis() - last;
         if (diff > 1000) {
           if (logToSerial) {
-            Serial.print("binding WIFI");
+            Serial.print("binding WIFI ");
             Serial.print(ssid);
 #ifdef LOG_WIFI_STATUS
             Serial.print(" ... ");
