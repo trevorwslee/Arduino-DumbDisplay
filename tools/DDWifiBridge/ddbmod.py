@@ -1,10 +1,6 @@
 
-import serial
 import socket
 import threading
-
-from serial import LF, CR
-
 
 class DDBridge:
     def __init__(self):
