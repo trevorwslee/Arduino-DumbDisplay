@@ -27,7 +27,7 @@ The app can accept connection via
 * BluetoothSerial (for ESP32)
 * Serial (USB connected via OTG adapter)
 * WIFI (e.g. ESP8266 and ESP32)
-* Serial / WIFI via the simple included tool -- DumbDisplay WIFI Bridge
+* Serial <-> WIFI via the simple included tool, DumbDisplay WIFI Bridge
 
 Notes:
 * Sorry that since I only have just a few micro controller boards, the library is only tested with Arduino Uno, ESP8266 and ESP32.
