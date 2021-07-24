@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.5.1)
+# DumbDisplay Arduino Library (v0.6.0)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some very simple inputting means) for your Arduino / ESP8266 / ESP32 experiments.
 
@@ -645,6 +645,13 @@ Verh likely you will be using your desktop computer (Windows) for Arduino develo
 Yes, you can do exactly that, with the help of the simple DumbDisplay WIFI Bridge Python program -- tools/DDWifiBrideg/DDWifiBridge.py. DumbDisplay WIFI Bridge acts as a "bridge" / "proxy" between your Ardiono board (Serial connection) and your mobile phone (WIFI connection). 
 
 When running the DumbDisplay WIFI Bridge, on one side, it connects to your Arduino board via Serial connection, similar to how you Arduino IDE connect to your Arduino board. At the same time, it listens on port 10201 of your desktop, allowing DumbDisply to establish connection via WIFI. In other words, your desktop computer port 10201 is now a "bridge" / "proxy" to your Arduino DumpDisplay code. 
+
+Notes:
+* Can use Python# to run DumbDisply WIFI Bridge.
+* DumbDisply WIFI Bridge makes use of the PySerial library, which can be install like
+      ```pip install pyserial```
+* In Linux, acessing serial port will need special access right. You can grant such right to yourself (the user), lie
+      ```sudo usermod -a -G dialout <user>```  
 
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)
 
