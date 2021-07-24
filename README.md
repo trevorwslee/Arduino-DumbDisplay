@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.5.1)
+# DumbDisplay Arduino Library (v0.6.0)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some very simple inputting means) for your Arduino / ESP8266 / ESP32 experiments.
 
@@ -27,10 +27,10 @@ The app can accept connection via
 * BluetoothSerial (for ESP32)
 * Serial (USB connected via OTG adapter)
 * WIFI (e.g. ESP8266 and ESP32)
-* Serial <-> WIFI via the simple included tool, DumbDisplay WIFI Bridge
+* Serial <-> WIFI via the simple included tool -- DumbDisplay WIFI Bridge
 
 Notes:
-* Sorry that since I only have just a few micro controller boards, the library is only tested with Arduino Uno, ESP8266 and ESP32.
+* Since I only have just a few micro controller boards, the library is only tested with Arduino Uno, ESP8266 and ESP32.
 * In case DumbDisplay does not "handshake" with your Arduion correctly, you can try resetting your Adruino by pressing the "reset" button on your Adruion
 
 
@@ -88,7 +88,8 @@ You have several options for connecting to DumbDisplay Android app.
     listening on 192.168.1.134:10201 ...
   ```  
     where 192.168.1.134 is the "host" and 10201 is the "port"
-  - Sorry that it is only tested with ESP8266 and ESP32, and it appears to be working fine when WIFI connection is stable (especially good for ESP8266).
+  - It is only tested with ESP8266 and ESP32 (which support WIFI without add-on) and it appears to be working fine when WIFI connection is stable (especially good for ESP8266).
+  - With DumbDisply WIFI Bridge, you can simply code to use Arduino's Serial port to "connect" to DumbDisplay Android app, with DumbDisply WIFI Bridge running in the middle. Please refer to the section below that mention about DumbDisply WIFI Bridge.
 
 
 
@@ -646,6 +647,18 @@ Yes, you can do exactly that, with the help of the simple DumbDisplay WIFI Bridg
 
 When running the DumbDisplay WIFI Bridge, on one side, it connects to your Arduino board via Serial connection, similar to how you Arduino IDE connect to your Arduino board. At the same time, it listens on port 10201 of your desktop, allowing DumbDisply to establish connection via WIFI. In other words, your desktop computer port 10201 is now a "bridge" / "proxy" to your Arduino DumpDisplay code. 
 
+Notes:
+* DumbDisply WIFI Bridge makes use of the PySerial library, which can be install like
+  ```
+  pip install pyserial
+  ```
+* In Linux, acessing serial port will need special access right; you can grant such right to yourself (the user) like
+  ```
+  sudo usermod -a -G dialout <user>
+  ```  
+* My own experience shows that using a slower serial baud rate (like 9600) will make the connection more stable.
+
+
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)
 
 
@@ -676,7 +689,7 @@ v0.5.0
 - added WIFI support
 
 v0.4.2
-- added auto "feedback" (e.g. auto flashing layer)
+- added auto "feedback" (e.g. auto flashing of layer)
 - added "auto pin" spacer -- DD_AP_SPACER
 - added layer border
 - adding WIFI support
