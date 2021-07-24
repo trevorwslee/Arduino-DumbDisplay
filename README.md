@@ -88,7 +88,8 @@ You have several options for connecting to DumbDisplay Android app.
     listening on 192.168.1.134:10201 ...
   ```  
     where 192.168.1.134 is the "host" and 10201 is the "port"
-  - Sorry that it is only tested with ESP8266 and ESP32, and it appears to be working fine when WIFI connection is stable (especially good for ESP8266).
+  - It is only tested with ESP8266 and ESP32 (which support WIFI without add-on) and it appears to be working fine when WIFI connection is stable (especially good for ESP8266).
+  - With DumbDisply WIFI Bridge, you can simply code to use Arduino's Serial port to "connect" to DumbDisplay Android app, with DumbDisply WIFI Bridge running in the middle. Please refer to the section below that mention about DumbDisply WIFI Bridge.
 
 
 
@@ -647,11 +648,12 @@ Yes, you can do exactly that, with the help of the simple DumbDisplay WIFI Bridg
 When running the DumbDisplay WIFI Bridge, on one side, it connects to your Arduino board via Serial connection, similar to how you Arduino IDE connect to your Arduino board. At the same time, it listens on port 10201 of your desktop, allowing DumbDisply to establish connection via WIFI. In other words, your desktop computer port 10201 is now a "bridge" / "proxy" to your Arduino DumpDisplay code. 
 
 Notes:
-* Can use Python# to run DumbDisply WIFI Bridge.
 * DumbDisply WIFI Bridge makes use of the PySerial library, which can be install like
       ```pip install pyserial```
-* In Linux, acessing serial port will need special access right. You can grant such right to yourself (the user), lie
+* In Linux, acessing serial port will need special access right; you can grant such right to yourself (the user) like
       ```sudo usermod -a -G dialout <user>```  
+* My own experience shows that using a slower serial baud rate (like 9600) will make the connection more stable.
+      
 
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)
 
@@ -683,7 +685,7 @@ v0.5.0
 - added WIFI support
 
 v0.4.2
-- added auto "feedback" (e.g. auto flashing layer)
+- added auto "feedback" (e.g. auto flashing of layer)
 - added "auto pin" spacer -- DD_AP_SPACER
 - added layer border
 - adding WIFI support
