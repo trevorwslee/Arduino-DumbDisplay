@@ -217,7 +217,7 @@ def WifiServe():
     if Wifi != None:
         Wifi.serve()
 
-def RunDumbDisplayBridgeMain():
+def RunDDBridgeMain():
     global Ser
 
     Initialize()
