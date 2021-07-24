@@ -23,7 +23,7 @@ class DDBluetoothSerialIO: public DDInputOutput {
     /* - serialBaud: Serial baud rate (if enableSerial) */
     DDBluetoothSerialIO(const String& btLocalName, bool enableSerial = false,
                         unsigned long serialBaud = DD_SERIAL_BAUD):
-                          DDInputOutput(serialBaud, enableSerial, enableSerial) {
+                        DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->btLocalName = btLocalName;
     }
     bool available() {

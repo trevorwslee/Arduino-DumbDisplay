@@ -1,6 +1,6 @@
 # DumbDisplay Arduino Library (v0.6.0)
 
-DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some very simple inputting means) for your Arduino / ESP8266 / ESP32 experiments.
+DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP8266 / ESP32 experiments.
 
 
 # Description
@@ -31,12 +31,12 @@ The app can accept connection via
 
 Notes:
 * Since I only have just a few micro controller boards, the library is only tested with Arduino Uno, ESP8266 and ESP32.
-* In case DumbDisplay does not "handshake" with your Arduion correctly, you can try resetting your Adruino by pressing the "reset" button on your Adruion
+* In case DumbDisplay does not "handshake" with your Arduion correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion
 
 
 # Installing DumbDisplay Arduino Library
 
-For demonstration on installing DumbDisplay Arduino Library, you may want to watch the YouTube video https://www.youtube.com/watch?v=nN7nXRy7NMg
+For demonstration on installing DumbDisplay Arduino Library, you may want to watch the YouTube video **Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)** -- https://www.youtube.com/watch?v=nN7nXRy7NMg
 
 
 # Sample Code
@@ -656,7 +656,7 @@ Notes:
   ```
   sudo usermod -a -G dialout <user>
   ```  
-* My own experience shows that using a slower serial baud rate (like 9600) will make the connection more stable.
+* My own experience shows that using a slower serial baud rate (like 57600) will make the connection more stable.
 
 
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)

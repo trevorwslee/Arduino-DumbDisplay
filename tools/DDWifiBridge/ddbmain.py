@@ -91,8 +91,8 @@ def Connect(port, baud):
     print("Connect to", port, "with baud rate", baud)
     if port != "":
         ser = pyserial.Serial(port=port,baudrate=baud,
-                            parity=pyserial.PARITY_NONE,stopbits=pyserial.STOPBITS_ONE,bytesize=pyserial.EIGHTBITS,
-                            timeout=0)
+                              parity=pyserial.PARITY_NONE,stopbits=pyserial.STOPBITS_ONE,bytesize=pyserial.EIGHTBITS,
+                              timeout=0)
         Text_box.insert(tk.END, "*** connected to: " + ser.portstr + "\n")
         return ser
     else:
@@ -219,6 +219,8 @@ def WifiServe():
 
 def RunDDBridgeMain():
     global Ser
+    global Serial
+    global Wifi
 
     Initialize()
     InitWindow()

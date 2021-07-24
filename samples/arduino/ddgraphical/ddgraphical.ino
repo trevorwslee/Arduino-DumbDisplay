@@ -2,6 +2,8 @@
 
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true));
 
+
+
 void setup() {
   // create 4 graphical [LCD] layers
   GraphicalDDLayer *pLayer1 = dumbdisplay.createGraphicalLayer(151, 101);
