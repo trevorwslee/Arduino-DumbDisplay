@@ -27,10 +27,10 @@ The app can accept connection via
 * BluetoothSerial (for ESP32)
 * Serial (USB connected via OTG adapter)
 * WIFI (e.g. ESP8266 and ESP32)
-* Serial <-> WIFI via the simple included tool, DumbDisplay WIFI Bridge
+* Serial <-> WIFI via the simple included tool -- DumbDisplay WIFI Bridge
 
 Notes:
-* Sorry that since I only have just a few micro controller boards, the library is only tested with Arduino Uno, ESP8266 and ESP32.
+* Since I only have just a few micro controller boards, the library is only tested with Arduino Uno, ESP8266 and ESP32.
 * In case DumbDisplay does not "handshake" with your Arduion correctly, you can try resetting your Adruino by pressing the "reset" button on your Adruion
 
 
@@ -649,11 +649,15 @@ When running the DumbDisplay WIFI Bridge, on one side, it connects to your Ardui
 
 Notes:
 * DumbDisply WIFI Bridge makes use of the PySerial library, which can be install like
-      ```pip install pyserial```
+  ```
+      pip install pyserial
+  ```
 * In Linux, acessing serial port will need special access right; you can grant such right to yourself (the user) like
-      ```sudo usermod -a -G dialout <user>```  
+  ```
+      sudo usermod -a -G dialout <user>
+  ```  
 * My own experience shows that using a slower serial baud rate (like 9600) will make the connection more stable.
-      
+
 
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)
 
