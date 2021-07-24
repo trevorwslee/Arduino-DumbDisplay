@@ -6,7 +6,7 @@
 #include "ddtester.h"
 
 
-#define USE_BLUETOOTH
+//#define USE_BLUETOOTH
 
 unsigned long serialBaud = 9600/*DD_SERIAL_BAUD*/;
 
