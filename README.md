@@ -36,7 +36,7 @@ Notes:
 
 # Installing DumbDisplay Arduino Library
 
-For demonstration on install DumbDisplay Arduino Library, you may want to watch the YouTube video https://www.youtube.com/watch?v=nN7nXRy7NMg
+For demonstration on installing DumbDisplay Arduino Library, you may want to watch the YouTube video https://www.youtube.com/watch?v=nN7nXRy7NMg
 
 
 # Sample Code
@@ -644,7 +644,7 @@ Verh likely you will be using your desktop computer (Windows) for Arduino develo
 
 Yes, you can do exactly that, with the help of the simple DumbDisplay WIFI Bridge Python program -- tools/DDWifiBrideg/DDWifiBridge.py. DumbDisplay WIFI Bridge acts as a "bridge" / "proxy" between your Ardiono board (Serial connection) and your mobile phone (WIFI connection). 
 
-When running the DumbDisplay WIFI Bridge, on one side, it connects to your Arduino board via Serial connection, similar to how you Arduino IDE connect to your Arduino board. At the same time, it listens on port 10201 of your desktop, allowing DumbDisply to establish connection via WIFI. In other words, your desktop computer port 10201 is now a "brideg" / "proxy" to your Arduino DumpDisplay code. 
+When running the DumbDisplay WIFI Bridge, on one side, it connects to your Arduino board via Serial connection, similar to how you Arduino IDE connect to your Arduino board. At the same time, it listens on port 10201 of your desktop, allowing DumbDisply to establish connection via WIFI. In other words, your desktop computer port 10201 is now a "bridge" / "proxy" to your Arduino DumpDisplay code. 
 
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)
 
@@ -664,6 +664,9 @@ MIT
 
 
 # Change History
+
+v0.6.0
+- working on it
 
 v0.5.1
 - bug fixes

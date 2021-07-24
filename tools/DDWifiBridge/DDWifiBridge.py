@@ -1,6 +1,9 @@
 from serial.tools.list_ports import comports
 
-import serial
+
+import serial as pyserial
+#import serial
+
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.scrolledtext as st
@@ -62,8 +65,8 @@ Auto_scroll_state.set(True)
 def Connect(port, baud):
     print("Connect to", port, "with baud rate", baud)
     if port != "":
-        ser = serial.Serial(port=port,baudrate=baud,
-                            parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,
+        ser = pyserial.Serial(port=port,baudrate=baud,
+                            parity=pyserial.PARITY_NONE,stopbits=pyserial.STOPBITS_ONE,bytesize=pyserial.EIGHTBITS,
                             timeout=0)
         Text_box.insert(tk.END, "*** connected to: " + ser.portstr + "\n")
         return ser
@@ -103,7 +106,7 @@ def ClickedConnect():
                 #WifiHost_label.configure(text=WifiHost+ ':')
                 threading.Thread(target=SerialServe, daemon=True).start()
                 threading.Thread(target=WifiServe, daemon=True).start()
-        except serial.SerialException as err:
+        except pyserial.SerialException as err:
             Text_box.insert(tk.END, "*** serial exception while connecting -- {0}\n".format(err))
     else:
         Disconnect(Ser)
