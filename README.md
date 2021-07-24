@@ -650,11 +650,11 @@ When running the DumbDisplay WIFI Bridge, on one side, it connects to your Ardui
 Notes:
 * DumbDisply WIFI Bridge makes use of the PySerial library, which can be install like
   ```
-      pip install pyserial
+  pip install pyserial
   ```
 * In Linux, acessing serial port will need special access right; you can grant such right to yourself (the user) like
   ```
-      sudo usermod -a -G dialout <user>
+  sudo usermod -a -G dialout <user>
   ```  
 * My own experience shows that using a slower serial baud rate (like 9600) will make the connection more stable.
 

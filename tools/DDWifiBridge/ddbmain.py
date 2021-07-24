@@ -20,8 +20,52 @@ import ddbmod
 # . in Linux system, access serial port will need access right ... in such case ...
 #       sudo usermod -a -G dialout <user> 
 
+
+
+def Initialize():
+    global Ser
+    global Bridge
+    global Serial
+    global Wifi
+    global Config
+    global ConfigFileName
+    global ConfigSectionName
+    global BaudRateConfigName
+    global WiFiPortConfigName
+    global WifiHost
+    global DefWifiPort
+    global DefBaudRate
+    global Auto_scroll_state
+    global Window
+
+    ConfigFileName = os.path.join(os.path.dirname(__file__), 'ddwifibridge.ini')
+    ConfigSectionName = 'DEFAULT'
+    BaudRateConfigName = 'BaudRate'
+    WiFiPortConfigName = 'WiFiPort'
+    Config = configparser.ConfigParser()
+    Config.read(ConfigFileName)
+    DefBaudRate = Config[ConfigSectionName].get(BaudRateConfigName, fallback=115200)
+    DefWifiPort = Config[ConfigSectionName].get(WiFiPortConfigName, fallback=10201)
+
+    WifiHost = ddbmod.get_ip()
+
+    Ser = None
+    Serial = None
+    Bridge = None
+    Wifi = None
+
+    Window = tk.Tk()
+    Window.title("DumbDispaly WIFI Bridge")
+    Window.geometry("800x600")
+
+    Auto_scroll_state = tk.BooleanVar()
+    Auto_scroll_state.set(True)
+
+
 class DDBridge(ddbmod.DDBridge):
     def _sendLine(self, line, transDir):
+        global Auto_scroll_state
+        global Window
         if line != None:
             if Auto_scroll_state.get():
                 Text_box.see(tk.END)
@@ -41,30 +85,6 @@ class DDBridge(ddbmod.DDBridge):
                 if Ser != None:
                     data = (line + '\n').encode()
                     Ser.write(data)
-
-
-ConfigFileName = os.path.join(os.path.dirname(__file__), 'ddwifibridge.ini')
-ConfigSectionName = 'DEFAULT'
-BaudRateConfigName = 'BaudRate'
-WiFiPortConfigName = 'WiFiPort'
-Config = configparser.ConfigParser()
-Config.read(ConfigFileName)
-DefBaudRate = Config[ConfigSectionName].get(BaudRateConfigName, fallback=115200)
-DefWifiPort = Config[ConfigSectionName].get(WiFiPortConfigName, fallback=10201)
-
-WifiHost = ddbmod.get_ip()
-
-Ser = None
-Serial = None
-Bridge = None
-Wifi = None
-
-Window = tk.Tk()
-Window.title("DumbDispaly WIFI Bridge")
-Window.geometry("800x600")
-
-Auto_scroll_state = tk.BooleanVar()
-Auto_scroll_state.set(True)
 
 
 def Connect(port, baud):
@@ -88,6 +108,13 @@ def ClickedConnect():
     global Bridge
     global Serial
     global Wifi
+    global Config
+    global ConfigFileName
+    global DefWifiPort
+    global ConfigSectionName
+    global BaudRateConfigName
+    global WiFiPortConfigName
+
     if Ser == None:
         port = Port_combo.get()
         baud = Baud_combo.get()
@@ -128,6 +155,8 @@ def FillPortCombo():
        Port_combo.current(0)
 
 def FillBaudCombo():
+    global DefBaudRate
+
     bauds = [2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000]
     Baud_combo['values'] = bauds
     #Baud_combo.current(7)
@@ -188,7 +217,10 @@ def WifiServe():
     if Wifi != None:
         Wifi.serve()
 
-if __name__ == "__main__":
+def RunDumbDisplayBridgeMain():
+    global Ser
+
+    Initialize()
     InitWindow()
     while True:
         if Ser != None:
@@ -212,6 +244,6 @@ if __name__ == "__main__":
         else:
             Connect_button.config(text="Connect")
             NoSerialLoop()
-else:
-    print("This is not a module!")
 
+if __name__ == "__main__":
+    print("Plase run DDWifiBridge.py instead!!!")
