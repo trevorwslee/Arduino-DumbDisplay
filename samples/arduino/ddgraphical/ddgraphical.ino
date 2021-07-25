@@ -1,6 +1,8 @@
 #include <ssdumbdisplay.h>
 
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true, 57600));
+
+
 
 void setup() {
   // create 4 graphical [LCD] layers

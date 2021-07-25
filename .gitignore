@@ -4,3 +4,4 @@ __pycache__
 tools/DDWifiBridge/DDWifiBridge.iml
 tools/DDWifiBridge/ddwifibridge.ini
 tools/DDWifiBridge/venv
+build

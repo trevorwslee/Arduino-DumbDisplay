@@ -9,7 +9,7 @@
 //#define USE_BLUETOOTH
 
 boolean enableSerial = true;
-unsigned long serialBaud = 9600;
+unsigned long serialBaud = 57600;
 #ifdef USE_BLUETOOTH
 unsigned long baud = DUMBDISPLAY_BAUD;
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), baud, enableSerial, serialBaud));

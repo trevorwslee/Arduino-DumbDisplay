@@ -14,7 +14,7 @@ class DDSoftwareSerialIO: public DDInputOutput {
     /* - serialBaud: Serial baud rate (if enableSerial) */
     DDSoftwareSerialIO(SoftwareSerial* pSS, unsigned long baud = DD_BLUETOOTH_BAUD,
                        bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD):
-                         DDInputOutput(serialBaud, enableSerial, enableSerial) {
+                       DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->baud = baud;
       this->pSS = pSS;
     }
