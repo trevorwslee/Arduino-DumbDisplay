@@ -656,11 +656,13 @@ Notes:
   ```
   sudo usermod -a -G dialout <user>
   ```  
-* My own experience shows that using a slower serial baud rate (like 57600) will make the connection more stable.
+* My own experience shows that using a slower serial baud rate (like 57600 or even lower like 9600) will make the connection more stable.
 
 
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)
 
+
+You may want to watch the YouTube video **Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge** -- https://www.youtube.com/watch?v=0UhRmXXBQi8
 
 # Thank You!
 
