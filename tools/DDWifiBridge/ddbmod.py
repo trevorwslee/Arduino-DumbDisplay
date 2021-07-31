@@ -131,7 +131,7 @@ class WifiTarget:
                     data = conn.recv(1024) # blocking
                     if not data: # data is b''
                         break
-                    line = data.decode('UTF8').rstrip()
+                    line = data.decode('UTF8').rstrip() # right strip to strip \n
                     if line != '':
                         if self.bridge != None:
                             self.bridge.insertTargetLine(line)
