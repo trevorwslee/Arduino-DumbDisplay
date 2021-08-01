@@ -119,7 +119,8 @@ class DDLayer {
     /* - 7SegmentRowLayer; each 7-segment is composed of fixed 220 x 320 pixels */
     /* - LedGridLayer; a LED is considered as a pixel */  
     /* shape -- can be "flat", "round", "raised" or "sunken" */  
-    void border(float size, const String& color, const String& shape = "");
+    void border(float size, const String& color, const String& shape = "flat");
+    void noBorder();
     /* size unit ... see border() */
     void padding(float left, float top, float right, float bottom);
     void noPadding();
@@ -401,7 +402,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /* - segments: each character represents a segment to turn on */
     /*   . 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' */
     void turnOn(const String& segments, int digitIdx = 0);
-    /* turn off one or more segments */
+    /* turn off one or more segments */ 
     /* - segments: each character represents a segment to turn off */
     /*   . 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' */
     void turnOff(const String& segments, int digitIdx = 0);

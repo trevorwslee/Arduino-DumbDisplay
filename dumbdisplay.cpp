@@ -674,6 +674,9 @@ void DDLayer::opacity(int opacity) {
 void DDLayer::border(float size, const String& color, const String& shape) {
   _sendCommand3(layerId, "border", String(size), color, shape);
 }
+void DDLayer::noBorder() {
+  _sendCommand0(layerId, "border");
+}
 void DDLayer::padding(float left, float top, float right, float bottom) {
   _sendCommand4(layerId, "padding", String(left), String(top), String(right), String(bottom));
 }
