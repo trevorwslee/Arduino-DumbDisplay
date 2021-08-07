@@ -143,7 +143,7 @@ class DDLayer {
     /* . "fl" -- flash the layer */
     /* . "fa" -- flash the area where the layer is clicked */
     /* . "fas" -- flash the area (as a spot) where the layer is clicked */
-    /* . "fs" -- flash the spot where the layer is clicked */
+    /* . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary) */
     void enableFeedback(const String& autoFeedbackMethod = "");
     /** disable "feedback" */
     void disableFeedback();
@@ -321,8 +321,6 @@ class GraphicalDDLayer: public DDLayer {
     void setCursor(int x, int y);
     /* move cursor by ... */
     void moveCursorBy(int byX, int byY);
-    // /* set text color (i.e. pen color) */
-    // void setTextColor(const String& color);
     /* set text color and text background color */
     /* . empty background color means no background color */
     void setTextColor(const String& color, const String& bgColor = "");
@@ -354,7 +352,7 @@ class GraphicalDDLayer: public DDLayer {
     void fillRect(int x, int y, int w, int h, const String& color);
     void drawRoundRect(int x, int y, int w, int h, int r, const String& color);
     void fillRoundRect(int x, int y, int w, int h, int r, const String& color);
-    /* forward; with pen or not */
+    /* forward (relative to cursor) */
     void forward(int distance);
     /* left turn */
     void leftTurn(int angle);
