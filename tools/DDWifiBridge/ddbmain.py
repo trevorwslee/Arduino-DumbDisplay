@@ -201,7 +201,9 @@ def SerialLoop():
         Window.update()
         if Serial.error != None:
             raise Serial.error
-        Bridge.transportLine()
+        Serial.timeSlice(Bridge)
+        #Bridge.transportLine()
+
 
 def NoSerialLoop():
     while True:

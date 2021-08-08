@@ -74,6 +74,8 @@ class SerialSource:
         except Exception as err:
             self.ser = None
             self.error = err
+    def timeSlice(self, bridge):
+        bridge.transportLine()
     def _serialServe(self):
         ser_line = ""
         while True:
@@ -86,14 +88,32 @@ class SerialSource:
             for b in self.ser.read():
                 c = chr(b)
                 if c == '\n':
-                    self.bridge.insertSourceLine(ser_line)
+                    insert_it = True
+                    if ser_line.startswith("//>lt"):
+                        lt_line = ser_line[5:]
+                        idx = lt_line.find('>')
+                        if idx != -1:
+                            insert_it = False
+                            lt_line = lt_line[0:idx]
+                            lt_data = lt_line[idx + 1:]
+                            idx = lt_line.find('.')
+                            if idx != -1:
+                                tid = lt_line[0:idx]
+                                idx = tid.find(':')
+                                if idx != -1:
+                                    tl_command = tid[0:idx]
+                                    tid = tid[idx + 1]
+                                else:
+                                    tl_command = None
+                                print(tid + ':' + str(tl_command))
+                    if insert_it:
+                        self.bridge.insertSourceLine(ser_line)
                     ser_line = ""
                 else:
                     ser_line = ser_line + c
 
 class WifiTarget:
     def __init__(self, bridge, host, port):
-        #self.ip = ip#get_ip()
         self.host = host
         self.port = port
         self.bridge = bridge
