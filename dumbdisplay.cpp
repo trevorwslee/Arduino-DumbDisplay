@@ -474,6 +474,40 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
 
   _SendingCommand = false;
 }
+void __SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
+    _IO->print("//>");
+    _IO->print(specialType);
+    _IO->print(".");
+    _IO->print(specialId);
+    if (specialCommand != NULL) {
+      _IO->print(":");
+      _IO->print(specialCommand);
+    }
+    _IO->print(">");
+    if (specialData != NULL)
+      _IO->print(specialData);
+    _IO->print("\n");
+}
+void _SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
+  bool alreadySendingCommand = _SendingCommand;  // not very accurate
+  _SendingCommand = true;
+#ifdef DEBUG_WITH_LED
+  int debugLedPin = _DebugLedPin;
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, HIGH);
+  }
+  __SendSpecialCommand(specialType, specialId, specialCommand, specialData);
+#endif   
+  if (!alreadySendingCommand) {
+    _HandleFeedback();
+  }
+#ifdef DEBUG_WITH_LED
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, LOW);
+  }  
+#endif
+  _SendingCommand = false;
+}
 
 inline void _LogToSerial(const String& logLine) {
   if (!_ConnectedFromSerial || !_Connected) {
@@ -634,8 +668,8 @@ inline void _sendCommand8(const String& layerId, const char *command, const Stri
 }
 
 #ifdef SUPPORT_TUNNEL
-inline void _sendSpecialCommand(const String& specialId, const char* specialType, const char* specialCommand, const String& specialData) {
-
+inline void _sendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
+  _SendSpecialCommand(specialType, specialId, specialCommand, specialData);
 }
 #endif
 
@@ -1208,7 +1242,7 @@ DDTunnel::~DDTunnel() {
 BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  _sendSpecialCommand(tunnelId, "lt", "connect", endPoint);
+  _sendSpecialCommand("lt", tunnelId, "connect", endPoint);
   BasicDDTunnel* pTunnel = new BasicDDTunnel(tid);
   _PostCreateTunnel(pTunnel);
   return pTunnel;

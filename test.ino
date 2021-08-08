@@ -6,6 +6,8 @@
 #include "ddtester.h"
 
 
+#define TEST_TUNNEL
+
 //#define USE_BLUETOOTH
 
 boolean enableSerial = true;
@@ -26,16 +28,23 @@ void setup() {
 
   dumbdisplay.debugSetup(13);  // setup to use pin 13
 
+#ifdef TEST_TUNNEL
+  BasicDDTunnel *pTunnel = dumbdisplay.createBasicTunnel("**test**");
+#else
   if (true) {
     dumbdisplay.connect();  // explicitly connect (so that the following comment will show)
     DDLogToSerial("=== connected ===");
     dumbdisplay.writeComment("Good Day!");
   }
+#endif  
 }
 
 void loop() {
+#ifdef TEST_TUNNEL
+#else
   bool forDebugging = false;
   BasicDDTestLoop(dumbdisplay, forDebugging);
+#endif
 }
 
 
