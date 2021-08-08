@@ -34,6 +34,21 @@ class DDBridge:
     def _sendLine(self, line, transDir):
         raise Exception("should have been overridden")
 
+class SimpleDDBridge(DDBridge):
+    def __init__(self, ser, target):
+        self.ser = ser
+        self.target = target
+    def _sendLine(self, line, transDir):
+        if line != None:
+            if transDir == '>':
+                if self.target != None:
+                    self.target.forward(line)
+            elif transDir == '<':
+                if self.ser != None:
+                    data = (line + '\n').encode()
+                    self.ser.write(data)
+
+
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

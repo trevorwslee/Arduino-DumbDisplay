@@ -25,7 +25,7 @@ void setup() {
                               DD_AP_VERT_2(pLayer1->getLayerId(), pLayer2->getLayerId()),
                               DD_AP_VERT_2(pLayer3->getLayerId(), pLayer4->getLayerId())));
 
-  // draw rectangles
+  // draw triangles
   int left = 0;
   int right = 150;
   int top = 0;
