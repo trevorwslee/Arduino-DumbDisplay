@@ -427,7 +427,7 @@ class DDTunnel: public DDObject {
     DDTunnel(int tunnelId/*, const String& endPoint*/);
     ~DDTunnel();
     const String& getTunnelId() { return tunnelId; }
-  private:
+  protected:
     String tunnelId;
 };
 
@@ -435,6 +435,7 @@ class BasicDDTunnel: public DDTunnel {
   public:
     BasicDDTunnel(int tunnelId/*, const String& endPoint*/): DDTunnel(tunnelId/*, endPoint*/) {
     }
+    void write(const String& data);
 };
 
 #endif

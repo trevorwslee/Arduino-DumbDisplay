@@ -90,22 +90,20 @@ class SerialSource:
                 if c == '\n':
                     insert_it = True
                     if ser_line.startswith("//>lt"):
-                        lt_line = ser_line[5:]
+                        lt_line = ser_line[6:]
                         idx = lt_line.find('>')
                         if idx != -1:
                             insert_it = False
-                            lt_line = lt_line[0:idx]
                             lt_data = lt_line[idx + 1:]
-                            idx = lt_line.find('.')
+                            lt_line = lt_line[0:idx]
+                            idx = lt_line.find(':')
                             if idx != -1:
                                 tid = lt_line[0:idx]
-                                idx = tid.find(':')
-                                if idx != -1:
-                                    tl_command = tid[0:idx]
-                                    tid = tid[idx + 1]
-                                else:
-                                    tl_command = None
-                                print(tid + ':' + str(tl_command))
+                                tl_command = lt_line[idx + 1:]
+                            else:
+                                tid = lt_line
+                                tl_command = None
+                        print(tid + ':' + str(tl_command) + ">" + str(lt_data))
                     if insert_it:
                         self.bridge.insertSourceLine(ser_line)
                     ser_line = ""

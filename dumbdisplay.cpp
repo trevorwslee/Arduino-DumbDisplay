@@ -86,7 +86,7 @@ void IOProxy::validConnection() {
 
 
 
-volatile bool _Preconneced = false;
+//volatile bool _Preconneced = false;
 volatile bool _Connected = false;
 volatile int _DDCompatibility = 0;
 volatile int _NextLid = 0;
@@ -111,31 +111,31 @@ volatile bool _DebugEnableEchoFeedback = false;
 volatile bool _SendingCommand = false;
 volatile bool _HandlingFeedback = false;
 
-void _Preconnect() {
-  if (_Preconneced) {
-    return;
-  }
-#ifdef DEBUG_WITH_LED
-  int debugLedPin = _DebugLedPin;  
-  if (debugLedPin != -1) {
-    digitalWrite(debugLedPin, HIGH);
-  }
-#endif
-  _IO->preConnect();
-#ifdef DEBUG_WITH_LED
-  if (debugLedPin != -1) {
-    digitalWrite(debugLedPin, LOW);
-  }
-#endif
-}
+// void _Preconnect() {
+//   if (_Preconneced) {
+//     return;
+//   }
+// #ifdef DEBUG_WITH_LED
+//   int debugLedPin = _DebugLedPin;  
+//   if (debugLedPin != -1) {
+//     digitalWrite(debugLedPin, HIGH);
+//   }
+// #endif
+//   _IO->preConnect();
+// #ifdef DEBUG_WITH_LED
+//   if (debugLedPin != -1) {
+//     digitalWrite(debugLedPin, LOW);
+//   }
+// #endif
+// }
 void _Connect() {
   if (_Connected)
     return;
-#ifdef SUPPORT_TUNNEL
-  _Preconnect(); 
-#else    
-  _IO->preConnect();
-#endif
+// #ifdef SUPPORT_TUNNEL
+//   _Preconnect(); 
+// #else    
+//   _IO->preConnect();
+// #endif
 #ifdef DEBUG_WITH_LED
   int debugLedPin = _DebugLedPin;  
   bool debugLedOn;
@@ -144,6 +144,7 @@ void _Connect() {
     debugLedOn = true;
   }
 #endif
+  _IO->preConnect();
   {
     long nextTime = 0;
     IOProxy ioProxy(_IO);
@@ -276,7 +277,8 @@ void _Connect() {
 }
 
 
-int __AllocLid() {
+int _AllocLid() {
+  _Connect();
   int lid = _NextLid++;
 #ifdef STORE_LAYERS  
 #ifdef SUPPORT_TUNNEL
@@ -299,32 +301,7 @@ int __AllocLid() {
 #endif
   return lid;
 }
-int _AllocLid() {
-  _Connect();
-  return __AllocLid();
-}
 
-#ifdef SUPPORT_TUNNEL
-int _AllocTid() {
-  _Preconnect();
-  return __AllocLid();
-}
-inline int _TunnelIdToLid(const String& tunnelId) {
-  return atoi(tunnelId.c_str());
-}
-void _PostCreateTunnel(DDTunnel* pTunnel) {
-#ifdef STORE_LAYERS  
-  int tid = _TunnelIdToLid(pTunnel->getTunnelId());
-  _DDLayerArray[tid] = pTunnel;
-#endif
-}
-void _PreDeleteTunnel(DDTunnel* pTunnel) {
-#ifdef STORE_LAYERS  
-  int tid = _TunnelIdToLid(pTunnel->getTunnelId());
-  _DDLayerArray[tid] = NULL;
-#endif
-}
-#endif
 
 inline int _LayerIdToLid(const String& layerId) {
   return atoi(layerId.c_str());
@@ -341,6 +318,25 @@ void _PreDeleteLayer(DDLayer* pLayer) {
   _DDLayerArray[lid] = NULL;
 #endif
 }
+
+#ifdef SUPPORT_TUNNEL
+int _AllocTid() {
+  return _AllocLid();
+}
+void _PostCreateTunnel(DDTunnel* pTunnel) {
+#ifdef STORE_LAYERS  
+  int lid = _LayerIdToLid(pTunnel->getTunnelId());
+  _DDLayerArray[lid] = pTunnel;
+#endif
+}
+void _PreDeleteTunnel(DDTunnel* pTunnel) {
+#ifdef STORE_LAYERS  
+  int lid = _LayerIdToLid(pTunnel->getTunnelId());
+  _DDLayerArray[lid] = NULL;
+#endif
+}
+#endif
+
 #ifdef VALIDATE_CONNECTION
 long _LastValidateConnectionMillis = 0;
 #endif
@@ -475,18 +471,25 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   _SendingCommand = false;
 }
 void __SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
-    _IO->print("//>");
-    _IO->print(specialType);
-    _IO->print(".");
-    _IO->print(specialId);
-    if (specialCommand != NULL) {
-      _IO->print(":");
-      _IO->print(specialCommand);
-    }
-    _IO->print(">");
-    if (specialData != NULL)
-      _IO->print(specialData);
-    _IO->print("\n");
+  _IO->print("//>");
+  _IO->print(specialType);
+  _IO->print(".");
+  _IO->print(specialId);
+  if (specialCommand != NULL) {
+    _IO->print(":");
+    _IO->print(specialCommand);
+  }
+  _IO->print(">");
+  if (specialData != NULL) {
+    _IO->print(specialData);
+  }
+  _IO->print("\n");
+  if (FLUSH_AFTER_SENT_COMMAND) {
+    _IO->flush();
+  }
+  if (YIELD_AFTER_SEND_COMMAND) {
+    yield();
+  }
 }
 void _SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
@@ -1239,6 +1242,9 @@ DDTunnel::DDTunnel(int tunnelId) {
 }
 DDTunnel::~DDTunnel() {
 } 
+void BasicDDTunnel::write(const String& data) {
+  _sendSpecialCommand("lt", tunnelId, NULL, data);
+}
 BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
