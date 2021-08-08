@@ -8,6 +8,9 @@
 #endif
 
 
+#define SUPPORT_TUNNEL
+
+
 #define DUMBDISPLAY_BAUD 115200
 #define DD_SERIAL_BAUD DUMBDISPLAY_BAUD
 #define DD_WIFI_PORT 10201
@@ -107,7 +110,10 @@ enum DDFeedbackType { CLICK };
 /* x, y -- (x, y) is the "area" on the layer where was clicked */
 typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, int x, int y);
 
-class DDLayer {
+class DDObject {
+};
+
+class DDLayer: public DDObject {
   public:
     /* set layer visibility */
     void visibility(bool visible);
@@ -413,6 +419,27 @@ class SevenSegmentRowDDLayer: public DDLayer {
     void showFormatted(const String& formatted);
 };
 
+
+#ifdef SUPPORT_TUNNEL
+
+class DDTunnel: public DDObject {
+  public:
+    DDTunnel(int tunnelId/*, const String& endPoint*/);
+    ~DDTunnel();
+    const String& getTunnelId() { return tunnelId; }
+  private:
+    String tunnelId;
+};
+
+class BasicDDTunnel: public DDTunnel {
+  public:
+    BasicDDTunnel(int tunnelId/*, const String& endPoint*/): DDTunnel(tunnelId/*, endPoint*/) {
+    }
+};
+
+#endif
+
+
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO);
@@ -440,6 +467,9 @@ class DumbDisplay {
     /* create a graphical [LCD] layer */
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
+#ifdef SUPPORT_TUNNEL
+    BasicDDTunnel* createBasicTunnel(const String& endPoint);
+#endif
     /* set DD background color with common "color name" */
     void backgroundColor(const String& color);
     /* write out a comment to DD */

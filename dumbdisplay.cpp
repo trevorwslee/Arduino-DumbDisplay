@@ -86,10 +86,17 @@ void IOProxy::validConnection() {
 
 
 
+volatile bool _Preconneced = false;
 volatile bool _Connected = false;
 volatile int _DDCompatibility = 0;
 volatile int _NextLid = 0;
+
+#ifdef SUPPORT_TUNNEL
+DDObject** _DDLayerArray = NULL;
+#else
 DDLayer** _DDLayerArray = NULL;
+#endif
+
 DDInputOutput* volatile _IO = NULL;
 IOProxy* volatile _ConnectedIOProxy = NULL;
 volatile bool _ConnectedFromSerial = false; 
@@ -104,10 +111,31 @@ volatile bool _DebugEnableEchoFeedback = false;
 volatile bool _SendingCommand = false;
 volatile bool _HandlingFeedback = false;
 
+void _Preconnect() {
+  if (_Preconneced) {
+    return;
+  }
+#ifdef DEBUG_WITH_LED
+  int debugLedPin = _DebugLedPin;  
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, HIGH);
+  }
+#endif
+  _IO->preConnect();
+#ifdef DEBUG_WITH_LED
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, LOW);
+  }
+#endif
+}
 void _Connect() {
   if (_Connected)
     return;
+#ifdef SUPPORT_TUNNEL
+  _Preconnect(); 
+#else    
   _IO->preConnect();
+#endif
 #ifdef DEBUG_WITH_LED
   int debugLedPin = _DebugLedPin;  
   bool debugLedOn;
@@ -248,10 +276,18 @@ void _Connect() {
 }
 
 
-int _AllocLid() {
-  _Connect();
+int __AllocLid() {
   int lid = _NextLid++;
 #ifdef STORE_LAYERS  
+#ifdef SUPPORT_TUNNEL
+  DDObject** oriLayerArray = _DDLayerArray;
+  DDObject** layerArray = (DDObject**) malloc((lid + 1) * sizeof(DDObject*));
+  if (oriLayerArray != NULL) {
+    memcpy(layerArray, oriLayerArray, lid * sizeof(DDObject*));
+    free(oriLayerArray);
+  }
+  _DDLayerArray = layerArray;
+#else  
   DDLayer** oriLayerArray = _DDLayerArray;
   DDLayer** layerArray = (DDLayer**) malloc((lid + 1) * sizeof(DDLayer*));
   if (oriLayerArray != NULL) {
@@ -259,10 +295,38 @@ int _AllocLid() {
     free(oriLayerArray);
   }
   _DDLayerArray = layerArray;
+#endif  
 #endif
   return lid;
 }
-int _LayerIdToLid(const String& layerId) {
+int _AllocLid() {
+  _Connect();
+  return __AllocLid();
+}
+
+#ifdef SUPPORT_TUNNEL
+int _AllocTid() {
+  _Preconnect();
+  return __AllocLid();
+}
+inline int _TunnelIdToLid(const String& tunnelId) {
+  return atoi(tunnelId.c_str());
+}
+void _PostCreateTunnel(DDTunnel* pTunnel) {
+#ifdef STORE_LAYERS  
+  int tid = _TunnelIdToLid(pTunnel->getTunnelId());
+  _DDLayerArray[tid] = pTunnel;
+#endif
+}
+void _PreDeleteTunnel(DDTunnel* pTunnel) {
+#ifdef STORE_LAYERS  
+  int tid = _TunnelIdToLid(pTunnel->getTunnelId());
+  _DDLayerArray[tid] = NULL;
+#endif
+}
+#endif
+
+inline int _LayerIdToLid(const String& layerId) {
   return atoi(layerId.c_str());
 }
 void _PostCreateLayer(DDLayer* pLayer) {
@@ -484,7 +548,11 @@ void _HandleFeedback() {
         }
       }
       if (ok) {
+#ifdef SUPPORT_TUNNEL
+        DDLayer* pLayer = (DDLayer*) _DDLayerArray[lid];
+#else
         DDLayer* pLayer = _DDLayerArray[lid];
+#endif
         if (pLayer != NULL) {
           DDFeedbackHandler handler = pLayer->getFeedbackHandler();
           if (handler != NULL) {
@@ -564,6 +632,12 @@ inline void _sendCommand7(const String& layerId, const char *command, const Stri
 inline void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
   _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
 }
+
+#ifdef SUPPORT_TUNNEL
+inline void _sendSpecialCommand(const String& specialId, const char* specialType, const char* specialCommand, const String& specialData) {
+
+}
+#endif
 
 
 
@@ -1125,6 +1199,21 @@ GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
   _PostCreateLayer(pLayer);
   return pLayer;
 }
+#ifdef SUPPORT_TUNNEL
+DDTunnel::DDTunnel(int tunnelId) {
+  this->tunnelId = String(tunnelId);
+}
+DDTunnel::~DDTunnel() {
+} 
+BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint) {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  _sendSpecialCommand(tunnelId, "lt", "connect", endPoint);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel(tid);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
+#endif
 SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   int lid = _AllocLid();
   String layerId = String(lid);
