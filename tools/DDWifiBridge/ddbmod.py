@@ -104,6 +104,8 @@ class SerialSource:
                                 tid = lt_line
                                 tl_command = None
                         print(tid + ':' + str(tl_command) + ">" + str(lt_data))
+                        data = ('<lt.' + tid + ':echo<TESTING-' + lt_data + '\n').encode()
+                        self.ser.write(data)
                     if insert_it:
                         self.bridge.insertSourceLine(ser_line)
                     ser_line = ""
@@ -122,6 +124,7 @@ class WifiTarget:
             try:
                 self._serveOnce()
             except OSError as err:
+                print("WiFi connect lost")
                 if self.bridge != None:
                     self.bridge.insertLogLine("!!!!! WiFi connection lost")
                 self.stop()
@@ -140,8 +143,9 @@ class WifiTarget:
             try:
                 self.conn.sendall(data)
             except:
+                print("WiFi connect lost (when sending data)")
                 if self.bridge != None:
-                    self.bridge.insertLogLine("!!!!! WiFi connection lost")
+                    self.bridge.insertLogLine("!!!!! WiFi connection lost (when sending data)")
                 self.stop()
     def _serveOnce(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -157,6 +161,7 @@ class WifiTarget:
             conn, addr = self.sock.accept() # block and wait
             self.conn = conn
             with conn:
+                print("WiFi connection made")
                 if self.bridge != None:
                     #self.bridge.insertLogLine('Connected by ' + str(addr))
                     self.bridge.insertLogLine("!!!!! WiFi connected by {0}".format(str(addr)))

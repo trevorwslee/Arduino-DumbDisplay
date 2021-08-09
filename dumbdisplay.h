@@ -427,14 +427,19 @@ class DDTunnel: public DDObject {
     DDTunnel(int tunnelId/*, const String& endPoint*/);
     ~DDTunnel();
     const String& getTunnelId() { return tunnelId; }
+    void handleInput(const String& data);
   protected:
     String tunnelId;
+    String data;
+    bool done;
 };
 
 class BasicDDTunnel: public DDTunnel {
   public:
     BasicDDTunnel(int tunnelId/*, const String& endPoint*/): DDTunnel(tunnelId/*, endPoint*/) {
     }
+    int avail();
+    String read();
     void write(const String& data);
 };
 

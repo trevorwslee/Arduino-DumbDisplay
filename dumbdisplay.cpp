@@ -539,7 +539,34 @@ void _HandleFeedback() {
           // keep alive
           _ConnectedIOProxy->keepAlive();
         }
-        // controll ... currently, simply ignore
+        else {
+#ifdef SUPPORT_TUNNEL
+          //Serial.println("LT-" + *pFeedback);
+          if (pFeedback->startsWith("<lt.")) {
+            int idx = pFeedback->indexOf('<', 4);
+            //Serial.println("LT+" + String(idx));
+            if (idx != -1) {
+              //Serial.println("LT++" + String(idx));
+              String tid = pFeedback->substring(4, idx);
+              String data = pFeedback->substring(idx + 1);
+              // idx = tid.indexOf(':');
+              // const char *pCommand = NULL;
+              // //Serial.println("LT+++" + String(idx));
+              // if (idx != -1) {
+              //   tid = tid.substring(0, idx);
+              //   pCommand = tid.substring(idx + 1).c_str();
+              // }
+              int lid = _LayerIdToLid(tid);
+              DDTunnel* pTunnel = (DDTunnel*) _DDLayerArray[lid];
+              if (pTunnel != NULL) {
+                //Serial.println("LT++++" + data);
+                pTunnel->handleInput(data);
+              }
+            }
+          }
+
+#endif          
+        }
         pFeedback = NULL;
       }
     }
@@ -1236,24 +1263,6 @@ GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
   _PostCreateLayer(pLayer);
   return pLayer;
 }
-#ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(int tunnelId) {
-  this->tunnelId = String(tunnelId);
-}
-DDTunnel::~DDTunnel() {
-} 
-void BasicDDTunnel::write(const String& data) {
-  _sendSpecialCommand("lt", tunnelId, NULL, data);
-}
-BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint) {
-  int tid = _AllocTid();
-  String tunnelId = String(tid);
-  _sendSpecialCommand("lt", tunnelId, "connect", endPoint);
-  BasicDDTunnel* pTunnel = new BasicDDTunnel(tid);
-  _PostCreateTunnel(pTunnel);
-  return pTunnel;
-}
-#endif
 SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   int lid = _AllocLid();
   String layerId = String(lid);
@@ -1278,6 +1287,44 @@ void DumbDisplay::writeComment(const String& comment) {
   _Connect();
   _sendCommand0("", ("// " + comment).c_str());
 }
+
+
+#ifdef SUPPORT_TUNNEL
+DDTunnel::DDTunnel(int tunnelId) {
+  this->tunnelId = String(tunnelId);
+}
+DDTunnel::~DDTunnel() {
+} 
+void DDTunnel::handleInput(const String& data) {
+  //Serial.print("*" + this->data);
+  if (data != "") {
+    this->data += data + "\n";
+  } else {
+    this->done = true;
+  }
+}
+int BasicDDTunnel::avail() {
+  return this->data.length();
+}
+String BasicDDTunnel::read() {
+  String data = this->data;
+  this->data = "";
+  //Serial.print("+" + data);
+  return data;
+}
+void BasicDDTunnel::write(const String& data) {
+  _sendSpecialCommand("lt", tunnelId, NULL, data);
+}
+BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint) {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  _sendSpecialCommand("lt", tunnelId, "connect", endPoint);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel(tid);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
+#endif
+
 
 
 void DumbDisplay::debugSetup(int debugLedPin, bool enableEchoFeedback) {

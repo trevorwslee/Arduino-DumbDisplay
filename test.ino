@@ -20,6 +20,9 @@ DumbDisplay dumbdisplay(new DDInputOutput(serialBaud));
 #endif
 
 
+BasicDDTunnel *pTunnel;
+
+
 void setup() {
   if (!enableSerial) {
     // if DD not using Serial, setup Serial here
@@ -35,13 +38,18 @@ void setup() {
   }
 
 #ifdef TEST_TUNNEL
-  BasicDDTunnel *pTunnel = dumbdisplay.createBasicTunnel("**test**");
+  pTunnel = dumbdisplay.createBasicTunnel("**test**");
   dumbdisplay.writeComment("created tunnel");
   pTunnel->write("hello world"); 
 #endif  
 }
 
 void loop() {
+  DDYield();
+  if (pTunnel->avail()) {
+    String data = pTunnel->read();
+    Serial.print("=" + data);
+  }
   // bool forDebugging = false;
   // BasicDDTestLoop(dumbdisplay, forDebugging);
 }
