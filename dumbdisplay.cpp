@@ -471,7 +471,7 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   _SendingCommand = false;
 }
 void __SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
-  _IO->print("//>");
+  _IO->print("%%>");
   _IO->print(specialType);
   _IO->print(".");
   _IO->print(specialId);
@@ -541,7 +541,7 @@ void _HandleFeedback() {
         }
         else {
 #ifdef SUPPORT_TUNNEL
-          //Serial.println("LT-" + *pFeedback);
+//Serial.println("LT-" + *pFeedback);
           if (pFeedback->startsWith("<lt.")) {
             int idx = pFeedback->indexOf('<', 4);
             //Serial.println("LT+" + String(idx));
@@ -549,18 +549,23 @@ void _HandleFeedback() {
               //Serial.println("LT++" + String(idx));
               String tid = pFeedback->substring(4, idx);
               String data = pFeedback->substring(idx + 1);
-              // idx = tid.indexOf(':');
-              // const char *pCommand = NULL;
-              // //Serial.println("LT+++" + String(idx));
-              // if (idx != -1) {
-              //   tid = tid.substring(0, idx);
-              //   pCommand = tid.substring(idx + 1).c_str();
-              // }
+              const String* pData = &data;
+              idx = tid.indexOf(':');
+              //const char *pCommand = NULL;
+              //Serial.println("LT+++" + String(idx));
+              if (idx != -1) {
+                String command = tid.substring(idx + 1);
+                tid = tid.substring(0, idx);
+//Serial.println("LT-command" + data);
+                if (command == "disconnect") {
+                  pData = NULL;
+                }
+              }
               int lid = _LayerIdToLid(tid);
               DDTunnel* pTunnel = (DDTunnel*) _DDLayerArray[lid];
               if (pTunnel != NULL) {
-                //Serial.println("LT++++" + data);
-                pTunnel->handleInput(data);
+//Serial.println("LT++++" + data);
+                pTunnel->handleInput(pData);
               }
             }
           }
@@ -1313,12 +1318,12 @@ void DDTunnel::close() {
   }
   this->done = true;
 }
-void DDTunnel::handleInput(const String& data) {
-  if (data != "") {
-    this->data += data + "\n";
+void DDTunnel::handleInput(const String* pData) {
+  if (pData != NULL) {
+    this->data += *pData + "\n";
   } else {
     this->done = true;
-    //Serial.println("EOF");
+//Serial.println("-eof-");
   }
 }
 int BasicDDTunnel::avail() {

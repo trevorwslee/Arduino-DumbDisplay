@@ -428,11 +428,11 @@ class DDTunnel: public DDObject {
     ~DDTunnel();
     void close();
     const String& getTunnelId() { return tunnelId; }
-    void handleInput(const String& data);
+    void handleInput(const String* pData);
   protected:
     String tunnelId;
     String data;
-    bool done;
+    bool done = false;
 };
 
 class BasicDDTunnel: public DDTunnel {

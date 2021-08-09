@@ -1,5 +1,7 @@
 from serial.tools.list_ports import comports
 
+import traceback
+
 
 import serial as pyserial
 #import serial
@@ -233,7 +235,8 @@ def RunDDBridgeMain():
                 SerialLoop()
             except Exception as err:
                 Text_box.insert(tk.END, "*** exception -- {0}\n".format(err))
-            Ser.close()
+                traceback.print_exc()
+                Ser.close()
             Ser = None
             Bridge = None
             if Serial != None:

@@ -16,10 +16,11 @@ class DDBridge:
         while True:
             line = self._popLine()
             if line == None:
-                break
+                return False
             transDir = line[0]
             line = line[1:]
             self._sendLine(line, transDir)
+            return True
     def _insertLine(self, transDir, line):
         self.lock.acquire()
         self.line_list.append(transDir + line)
@@ -68,6 +69,7 @@ class Tunnel:
         self.host = host
         self.port = port
         self.sock = None
+        self.closed = False
     def serve(self):
         # while True:
         #     try:
@@ -97,6 +99,7 @@ class Tunnel:
         if self.sock != None:
             self.sock.close()
             self.sock = None
+        self.closed = True
         #self.bridge = None
     def _serveOnce(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -119,11 +122,13 @@ class SerialSource:
         self.ser = ser
         self.error = None
         self.bridge = bridge
-        self.tunnels= []
+        self.tunnels = {}
     def timeSlice(self, bridge):
         bridge.transportLine()
-        for tunnel in self.tunnels:
-            tunnel.bridge.transportLine()
+        tunnels = set(self.tunnels.values())
+        for tunnel in tunnels:
+            if not tunnel.bridge.transportLine() and tunnel.closed:
+                del self.tunnels[tunnel.tunnel_id]
     def serialServe(self):
         try:
             self._serialServe()
@@ -144,7 +149,7 @@ class SerialSource:
                 c = chr(b)
                 if c == '\n':
                     insert_it = True
-                    if ser_line.startswith("//>lt"):
+                    if ser_line.startswith("%%>lt"):
                         lt_line = ser_line[6:]
                         idx = lt_line.find('>')
                         if idx != -1:
@@ -158,7 +163,7 @@ class SerialSource:
                             else:
                                 tid = lt_line
                                 tl_command = None
-                        print(tid + ':' + str(tl_command) + ">" + str(lt_data))
+                        #print(tid + ':' + str(tl_command) + ">" + str(lt_data))
                         if tl_command == "connect" and lt_data != None:
                             host = None
                             port = 80
@@ -170,7 +175,8 @@ class SerialSource:
                                 host = lt_data
                             tunnel = Tunnel(self.ser, tid, host, port)
                             threading.Thread(target=tunnel.serve, daemon=True).start()
-                            self.tunnels.append(tunnel)
+                            self.tunnels[tunnel.tunnel_id] = tunnel
+                            #self.tunnels.append(tunnel)
                     # data = ('<lt.' + tid + ':echo<TESTING-' + lt_data + '\n').encode()
                         # self.ser.write(data)
                     if insert_it:
