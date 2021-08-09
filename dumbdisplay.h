@@ -442,6 +442,7 @@ class BasicDDTunnel: public DDTunnel {
     int avail();
     String read();
     void write(const String& data);
+    bool eof();
 };
 
 #endif

@@ -80,34 +80,39 @@ class Tunnel:
             self._serveOnce()
         except OSError as err:
             print(f"failed to 'serve' end-point {self.host}:{self.port} ... {err}")
-            self._onError()
+            self._close()
     def forward(self, line):
         if self.sock != None:
             data = bytes(line + "\n", 'UTF8')
             try:
                 self.sock.sendall(data)
             except:
-                self._onError()
-    def _onError(self):
+                self._close()
+    def _close(self):
+        if self.bridge != None:
+            self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + ":disconnect<")
         # if self.conn != None:
         #     self.conn.close()
         #     self.conn = None
         if self.sock != None:
             self.sock.close()
             self.sock = None
-        self.bridge = None
+        #self.bridge = None
     def _serveOnce(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             self.sock = s
             self.sock.connect((self.host, self.port))
-            data = self.sock.recv(1024)
-            if data: # data is b''
-                line = data.decode('UTF8').rstrip() # right strip to strip \n
-                if line != '':
+            while True:
+                data = self.sock.recv(1024)
+                if data: # data is b''
+                    line = data.decode('UTF8').rstrip() # right strip to strip \n
                     if self.bridge != None:
                         for data in line.split('\n'):
                             #print(f"-{self.tunnel_id}:{data}")
                             self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + data)
+                else:
+                    self._close()
+                    break
 
 class SerialSource:
     def __init__(self, ser, bridge):

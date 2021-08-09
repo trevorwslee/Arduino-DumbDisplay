@@ -1314,11 +1314,11 @@ void DDTunnel::close() {
   this->done = true;
 }
 void DDTunnel::handleInput(const String& data) {
-  //Serial.print("*" + this->data);
   if (data != "") {
     this->data += data + "\n";
   } else {
     this->done = true;
+    //Serial.println("EOF");
   }
 }
 int BasicDDTunnel::avail() {
@@ -1332,6 +1332,9 @@ String BasicDDTunnel::read() {
 }
 void BasicDDTunnel::write(const String& data) {
   _sendSpecialCommand("lt", tunnelId, NULL, data);
+}
+bool BasicDDTunnel::eof() {
+  return this->data.length() == 0 && this->done;
 }
 BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint) {
   int tid = _AllocTid();

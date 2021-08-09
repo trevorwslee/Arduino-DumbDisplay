@@ -51,7 +51,11 @@ void setup() {
 void loop() {
 #ifdef TEST_TUNNEL
   DDYield();
-  if (pTunnel->avail()) {
+  if (pTunnel->eof()) {
+    dumbdisplay.writeComment("EOF");
+    pLayer->toggle();
+    DDDelay(2000);
+  } else if (pTunnel->avail()) {
     String data = pTunnel->read();
     dumbdisplay.writeComment(data);
     pLayer->toggle();
