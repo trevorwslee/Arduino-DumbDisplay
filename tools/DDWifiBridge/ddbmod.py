@@ -36,6 +36,7 @@ class DDBridge:
 
 class SimpleDDBridge(DDBridge):
     def __init__(self, ser, target):
+        super().__init__()
         self.ser = ser
         self.target = target
     def _sendLine(self, line, transDir):
@@ -47,8 +48,6 @@ class SimpleDDBridge(DDBridge):
                 if self.ser != None:
                     data = (line + '\n').encode()
                     self.ser.write(data)
-
-
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -62,11 +61,64 @@ def get_ip():
         s.close()
     return IP
 
+class Tunnel:
+    def __init__(self, ser, tunnel_id,host, port):
+        self.bridge = SimpleDDBridge(ser, self)
+        self.tunnel_id = tunnel_id
+        self.host = host
+        self.port = port
+        self.sock = None
+    def serve(self):
+        # while True:
+        #     try:
+        #         self._serveOnce()
+        #     except OSError as err:
+        #         print(f"failed to 'serve' end-point {self.host}:{self.port} ... {err}")
+        #         self._onError()
+        #         break
+        try:
+            self._serveOnce()
+        except OSError as err:
+            print(f"failed to 'serve' end-point {self.host}:{self.port} ... {err}")
+            self._onError()
+    def forward(self, line):
+        if self.sock != None:
+            data = bytes(line + "\n", 'UTF8')
+            try:
+                self.sock.sendall(data)
+            except:
+                self._onError()
+    def _onError(self):
+        # if self.conn != None:
+        #     self.conn.close()
+        #     self.conn = None
+        if self.sock != None:
+            self.sock.close()
+            self.sock = None
+        self.bridge = None
+    def _serveOnce(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            self.sock = s
+            self.sock.connect((self.host, self.port))
+            data = self.sock.recv(1024)
+            if data: # data is b''
+                line = data.decode('UTF8').rstrip() # right strip to strip \n
+                if line != '':
+                    if self.bridge != None:
+                        for data in line.split('\n'):
+                            #print(f"-{self.tunnel_id}:{data}")
+                            self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + data)
+
 class SerialSource:
     def __init__(self, ser, bridge):
         self.ser = ser
         self.error = None
         self.bridge = bridge
+        self.tunnels= []
+    def timeSlice(self, bridge):
+        bridge.transportLine()
+        for tunnel in self.tunnels:
+            tunnel.bridge.transportLine()
     def serialServe(self):
         try:
             self._serialServe()
@@ -74,8 +126,6 @@ class SerialSource:
         except Exception as err:
             self.ser = None
             self.error = err
-    def timeSlice(self, bridge):
-        bridge.transportLine()
     def _serialServe(self):
         ser_line = ""
         while True:
@@ -104,8 +154,20 @@ class SerialSource:
                                 tid = lt_line
                                 tl_command = None
                         print(tid + ':' + str(tl_command) + ">" + str(lt_data))
-                        data = ('<lt.' + tid + ':echo<TESTING-' + lt_data + '\n').encode()
-                        self.ser.write(data)
+                        if tl_command == "connect" and lt_data != None:
+                            host = None
+                            port = 80
+                            idx = lt_data.find(':')
+                            if idx != -1:
+                                port = int(lt_data[idx + 1:])
+                                host = lt_data[0:idx]
+                            else:
+                                host = lt_data
+                            tunnel = Tunnel(self.ser, tid, host, port)
+                            threading.Thread(target=tunnel.serve, daemon=True).start()
+                            self.tunnels.append(tunnel)
+                    # data = ('<lt.' + tid + ':echo<TESTING-' + lt_data + '\n').encode()
+                        # self.ser.write(data)
                     if insert_it:
                         self.bridge.insertSourceLine(ser_line)
                     ser_line = ""
@@ -120,15 +182,22 @@ class WifiTarget:
         self.sock = None
         self.conn = None
     def serve(self):
-        while True:
-            try:
-                self._serveOnce()
-            except OSError as err:
-                print("WiFi connect lost")
-                if self.bridge != None:
-                    self.bridge.insertLogLine("!!!!! WiFi connection lost")
-                self.stop()
-                break
+        try:
+            self._serveOnce()
+        except OSError as err:
+            print("WiFi connect lost")
+            if self.bridge != None:
+                self.bridge.insertLogLine("!!!!! WiFi connection lost")
+            self.stop()
+        # while True:
+        #     try:
+        #         self._serveOnce()
+        #     except OSError as err:
+        #         print("WiFi connect lost")
+        #         if self.bridge != None:
+        #             self.bridge.insertLogLine("!!!!! WiFi connection lost")
+        #         self.stop()
+        #         break
     def stop(self):
         if self.conn != None:
             self.conn.close()

@@ -480,7 +480,7 @@ void __SendSpecialCommand(const char* specialType, const String& specialId, cons
     _IO->print(specialCommand);
   }
   _IO->print(">");
-  if (specialData != NULL) {
+  if (specialData != "") {
     _IO->print(specialData);
   }
   _IO->print("\n");
@@ -1295,6 +1295,12 @@ DDTunnel::DDTunnel(int tunnelId) {
 }
 DDTunnel::~DDTunnel() {
 } 
+void DDTunnel::close() {
+  if (!this->done) {
+    _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");
+  }
+  this->done = true;
+}
 void DDTunnel::handleInput(const String& data) {
   //Serial.print("*" + this->data);
   if (data != "") {

@@ -426,6 +426,7 @@ class DDTunnel: public DDObject {
   public:
     DDTunnel(int tunnelId/*, const String& endPoint*/);
     ~DDTunnel();
+    void close();
     const String& getTunnelId() { return tunnelId; }
     void handleInput(const String& data);
   protected:

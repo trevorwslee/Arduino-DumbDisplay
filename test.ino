@@ -38,20 +38,23 @@ void setup() {
   }
 
 #ifdef TEST_TUNNEL
-  pTunnel = dumbdisplay.createBasicTunnel("**test**");
+  pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17");
   dumbdisplay.writeComment("created tunnel");
   pTunnel->write("hello world"); 
 #endif  
 }
 
 void loop() {
+#ifdef TEST_TUNNEL
   DDYield();
   if (pTunnel->avail()) {
     String data = pTunnel->read();
     Serial.print("=" + data);
   }
-  // bool forDebugging = false;
-  // BasicDDTestLoop(dumbdisplay, forDebugging);
+#else
+  bool forDebugging = false;
+  BasicDDTestLoop(dumbdisplay, forDebugging);
+#endif
 }
 
 
