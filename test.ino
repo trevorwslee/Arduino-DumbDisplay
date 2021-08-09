@@ -20,8 +20,10 @@ DumbDisplay dumbdisplay(new DDInputOutput(serialBaud));
 #endif
 
 
+#ifdef TEST_TUNNEL
 BasicDDTunnel *pTunnel;
-
+LedGridDDLayer *pLayer;
+#endif
 
 void setup() {
   if (!enableSerial) {
@@ -40,7 +42,9 @@ void setup() {
 #ifdef TEST_TUNNEL
   pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17");
   dumbdisplay.writeComment("created tunnel");
-  pTunnel->write("hello world"); 
+  //pTunnel->write("hello world"); 
+  pLayer = dumbdisplay.createLedGridLayer(3, 2);
+  pLayer->offColor("green");
 #endif  
 }
 
@@ -49,7 +53,9 @@ void loop() {
   DDYield();
   if (pTunnel->avail()) {
     String data = pTunnel->read();
-    Serial.print("=" + data);
+    dumbdisplay.writeComment(data);
+    pLayer->toggle();
+    //Serial.print("=" + data);
   }
 #else
   bool forDebugging = false;

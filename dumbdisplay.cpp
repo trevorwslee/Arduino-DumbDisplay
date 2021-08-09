@@ -1285,7 +1285,19 @@ void DumbDisplay::backgroundColor(const String& color) {
 }
 void DumbDisplay::writeComment(const String& comment) {
   _Connect();
-  _sendCommand0("", ("// " + comment).c_str());
+  if (true) {
+    int idx = comment.indexOf('\n');
+    if (idx != -1) {
+        String com1 = comment.substring(0, idx);
+        String com2 = comment.substring(idx + 1);
+        _sendCommand0("", ("// " + com1).c_str());
+        writeComment(com2);
+    } else {
+      _sendCommand0("", ("// " + comment).c_str());
+    }  
+  } else {
+    _sendCommand0("", ("// " + comment).c_str());
+  }
 }
 
 
