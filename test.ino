@@ -55,8 +55,8 @@ void loop() {
     dumbdisplay.writeComment("EOF");
     pLayer->toggle();
     DDDelay(2000);
-  } else if (pTunnel->available()) {
-    String data = pTunnel->read();
+  } else if (pTunnel->count() > 0) {
+    const String& data = pTunnel->readLine();
     dumbdisplay.writeComment(data);
     pLayer->toggle();
     //Serial.print("=" + data);

@@ -801,7 +801,7 @@ const DDFeedback* DDFeedbackManager::getFeedback() {
 void DDFeedbackManager::pushFeedback(int x, int y) {
   feedbackArray[nextArrayIdx].x = x;
   feedbackArray[nextArrayIdx].y = y;
-  nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
+  nextArrayIdx = (nextArrayIdx + 1) % arraySize;
   if (nextArrayIdx == validArrayIdx)
     validArrayIdx = (validArrayIdx + 1) % arraySize;
 }
@@ -1298,61 +1298,79 @@ void DumbDisplay::backgroundColor(const String& color) {
 }
 void DumbDisplay::writeComment(const String& comment) {
   _Connect();
-  if (true) {
-    int idx = comment.indexOf('\n');
-    if (idx != -1) {
-        String com1 = comment.substring(0, idx);
-        String com2 = comment.substring(idx + 1);
-        _sendCommand0("", ("// " + com1).c_str());
-        writeComment(com2);
-    } else {
-      _sendCommand0("", ("// " + comment).c_str());
-    }  
-  } else {
-    _sendCommand0("", ("// " + comment).c_str());
-  }
+  _sendCommand0("", ("// " + comment).c_str());
+  // if (true) {
+  //   int idx = comment.indexOf('\n');
+  //   if (idx != -1) {
+  //       String com1 = comment.substring(0, idx);
+  //       String com2 = comment.substring(idx + 1);
+  //       _sendCommand0("", ("// " + com1).c_str());
+  //       writeComment(com2);
+  //   } else {
+  //     _sendCommand0("", ("// " + comment).c_str());
+  //   }  
+  // } else {
+  //   _sendCommand0("", ("// " + comment).c_str());
+  // }
 }
 
 
 #ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(int tunnelId) {
+DDTunnel::DDTunnel(int tunnelId, int bufferSize) {
   this->tunnelId = String(tunnelId);
+  this->arraySize = bufferSize;
+  this->dataArray = new String[bufferSize];
+  this->nextArrayIdx = 0;
+  this->validArrayIdx = 0;
   this->done = false;
 }
 DDTunnel::~DDTunnel() {
+  delete this->dataArray;
 } 
 void DDTunnel::close() {
-//Serial.println("***close***");  
-  if (!this->done) {
+  if (!done) {
     _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");
   }
-  this->done = true;
+  done = true;
 }
-void DDTunnel::handleInput(const String& data, bool final) {
-  this->data += data;
-  if (final)
-    this->done = true;
-  // if (pData != NULL) {
-  //   this->data += *pData + "\n";
-  // } else {
-  //   this->done = true;
-//Serial.println("-eof-");
+int DDTunnel::count() {
+  return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
 }
-int BasicDDTunnel::available() {
-  return this->data.length();
+bool DDTunnel::eof() {
+  return nextArrayIdx == validArrayIdx && done;
 }
-String BasicDDTunnel::read() {
-  String data = this->data;
-  this->data = "";
-  //Serial.print("+" + data);
+const String& DDTunnel::readLine() {
+  if (nextArrayIdx == validArrayIdx) return "";
+  const String& data = dataArray[validArrayIdx];
+  validArrayIdx = (validArrayIdx + 1) % arraySize;
   return data;
 }
-void BasicDDTunnel::write(const String& data) {
+void DDTunnel::writeLine(const String& data) {
   _sendSpecialCommand("lt", tunnelId, NULL, data);
 }
-bool BasicDDTunnel::eof() {
-  return this->data.length() == 0 && this->done;
+void DDTunnel::handleInput(const String& data, bool final) {
+  dataArray[nextArrayIdx] = data;
+  nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
+  if (nextArrayIdx == validArrayIdx)
+    validArrayIdx = (validArrayIdx + 1) % arraySize;
+  if (final)
+    this->done = true;
 }
+// int BasicDDTunnel::available() {
+//   return this->data.length();
+// }
+// String BasicDDTunnel::read() {
+//   String data = this->data;
+//   this->data = "";
+//   //Serial.print("+" + data);
+//   return data;
+// }
+// void BasicDDTunnel::write(const String& data) {
+//   _sendSpecialCommand("lt", tunnelId, NULL, data);
+// }
+// bool BasicDDTunnel::eof() {
+//   return this->data.length() == 0 && this->done;
+// }
 BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint) {
   int tid = _AllocTid();
   String tunnelId = String(tid);

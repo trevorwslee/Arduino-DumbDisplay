@@ -424,14 +424,22 @@ class SevenSegmentRowDDLayer: public DDLayer {
 
 class DDTunnel: public DDObject {
   public:
-    DDTunnel(int tunnelId/*, const String& endPoint*/);
+    DDTunnel(int tunnelId, int bufferSize = 4);
     ~DDTunnel();
     void close();
     const String& getTunnelId() { return tunnelId; }
+    int count();
+    bool eof();
+    const String& readLine();
+    void writeLine(const String& data);
+  public:
     void handleInput(const String& data, bool final);
   protected:
     String tunnelId;
-    String data;
+    int arraySize;
+    String* dataArray;
+    int nextArrayIdx;
+    int validArrayIdx;
     bool done;
 };
 
@@ -439,10 +447,10 @@ class BasicDDTunnel: public DDTunnel {
   public:
     BasicDDTunnel(int tunnelId/*, const String& endPoint*/): DDTunnel(tunnelId/*, endPoint*/) {
     }
-    int available();
-    String read();
-    void write(const String& data);
-    bool eof();
+    // int count() { return arraySize; }
+    // String readLine();
+    // void writeLine(const String& lineData);
+    // bool eof();
 };
 
 #endif
