@@ -82,20 +82,19 @@ class Tunnel:
             self._serveOnce()
         except OSError as err:
             print(f"failed to 'serve' end-point {self.host}:{self.port} ... {err}")
-            self._close()
+            self._close("serve err")
     def forward(self, line):
         if self.sock != None:
             data = bytes(line + "\n", 'UTF8')
             try:
                 self.sock.sendall(data)
             except:
-                self._close()
-    def _close(self):
+                pass
+                #self._close()
+    def _close(self, reason):
+        #print(f"close because '{reason}'")
         if self.bridge != None:
             self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + ":disconnect<")
-        # if self.conn != None:
-        #     self.conn.close()
-        #     self.conn = None
         if self.sock != None:
             self.sock.close()
             self.sock = None
@@ -105,17 +104,20 @@ class Tunnel:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             self.sock = s
             self.sock.connect((self.host, self.port))
+            received_any = False
             while True:
                 data = self.sock.recv(1024)
                 if data: # data is b''
+                    received_any = True
                     line = data.decode('UTF8').rstrip() # right strip to strip \n
                     if self.bridge != None:
                         for data in line.split('\n'):
                             #print(f"-{self.tunnel_id}:{data}")
                             self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + data)
                 else:
-                    self._close()
-                    break
+                    if received_any:
+                        self._close("no data")
+                        break
 
 class SerialSource:
     def __init__(self, ser, bridge):

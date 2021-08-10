@@ -432,7 +432,7 @@ class DDTunnel: public DDObject {
   protected:
     String tunnelId;
     String data;
-    bool done = false;
+    bool done;
 };
 
 class BasicDDTunnel: public DDTunnel {

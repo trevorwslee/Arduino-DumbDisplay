@@ -1309,10 +1309,12 @@ void DumbDisplay::writeComment(const String& comment) {
 #ifdef SUPPORT_TUNNEL
 DDTunnel::DDTunnel(int tunnelId) {
   this->tunnelId = String(tunnelId);
+  this->done = false;
 }
 DDTunnel::~DDTunnel() {
 } 
 void DDTunnel::close() {
+//Serial.println("***close***");  
   if (!this->done) {
     _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");
   }
