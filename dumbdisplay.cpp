@@ -1328,7 +1328,7 @@ void DDTunnel::handleInput(const String* pData) {
 //Serial.println("-eof-");
   }
 }
-int BasicDDTunnel::avail() {
+int BasicDDTunnel::available() {
   return this->data.length();
 }
 String BasicDDTunnel::read() {

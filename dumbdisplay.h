@@ -439,7 +439,7 @@ class BasicDDTunnel: public DDTunnel {
   public:
     BasicDDTunnel(int tunnelId/*, const String& endPoint*/): DDTunnel(tunnelId/*, endPoint*/) {
     }
-    int avail();
+    int available();
     String read();
     void write(const String& data);
     bool eof();

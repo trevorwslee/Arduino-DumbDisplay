@@ -105,19 +105,44 @@ class Tunnel:
             self.sock = s
             self.sock.connect((self.host, self.port))
             received_any = False
+            rest = ""
             while True:
-                data = self.sock.recv(1024)
-                if data: # data is b''
-                    received_any = True
-                    line = data.decode('UTF8').rstrip() # right strip to strip \n
-                    if self.bridge != None:
-                        for data in line.split('\n'):
-                            #print(f"-{self.tunnel_id}:{data}")
-                            self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + data)
+                idx = rest.find('\n')
+                if idx != -1:
+                    d = rest
+                    rest = ''
                 else:
-                    if received_any:
-                        self._close("no data")
+                    r = self.sock.recv(1024) # blocking
+                    if not r: # data is b''
                         break
+                    received_any = True
+                    d = r.decode('UTF8')
+                idx = d.find('\n')
+                if idx != -1:
+                    line = rest + d[0: idx]
+                    rest = d[idx + 1:]
+                    if self.bridge != None:
+                        self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + line)
+                else:
+                    rest = rest + d
+            if received_any:
+                if rest != "":
+                    if self.bridge != None:  # actually, no line-end
+                        self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + rest)
+                self._close("no data")
+            # while True:
+            #     data = self.sock.recv(1024)
+            #     if data: # data is b''
+            #         received_any = True
+            #         line = data.decode('UTF8').rstrip() # right strip to strip \n
+            #         if self.bridge != None:
+            #             for data in line.split('\n'):
+            #                 #print(f"-{self.tunnel_id}:{data}")
+            #                 self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + data)
+            #     else:
+            #         if received_any:
+            #             self._close("no data")
+            #             break
 
 class SerialSource:
     def __init__(self, ser, bridge):
@@ -247,14 +272,32 @@ class WifiTarget:
                 if self.bridge != None:
                     #self.bridge.insertLogLine('Connected by ' + str(addr))
                     self.bridge.insertLogLine("!!!!! WiFi connected by {0}".format(str(addr)))
+                rest = ""
                 while True:
-                    data = conn.recv(1024) # blocking
-                    if not data: # data is b''
-                        break
-                    line = data.decode('UTF8').rstrip() # right strip to strip \n
-                    if line != '':
+                    idx = rest.find('\n')
+                    if idx != -1:
+                        d = rest
+                        rest = ''
+                    else:
+                        r = conn.recv(1024) # blocking
+                        if not r: # data is b''
+                            break
+                        d = r.decode('UTF8')
+                    idx = d.find('\n')
+                    if idx != -1:
+                        line = rest + d[0: idx]
+                        rest = d[idx + 1:]
                         if self.bridge != None:
                             self.bridge.insertTargetLine(line)
+                    else:
+                        rest = rest + d
+                    # data = conn.recv(1024) # blocking
+                    # if not data: # data is b''
+                    #     break
+                    # line = data.decode('UTF8').rstrip() # right strip to strip \n
+                    # if line != '':
+                    #     if self.bridge != None:
+                    #         self.bridge.insertTargetLine(line)
 
 if __name__ == "__main__":
     print("Plase run DDWifiBridge.py instead!!!")

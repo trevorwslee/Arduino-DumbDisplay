@@ -11,7 +11,7 @@
 //#define USE_BLUETOOTH
 
 boolean enableSerial = true;
-unsigned long serialBaud = 57600;
+unsigned long serialBaud = 14400;
 #ifdef USE_BLUETOOTH
 unsigned long baud = DUMBDISPLAY_BAUD;
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), baud, enableSerial, serialBaud));
@@ -55,7 +55,7 @@ void loop() {
     dumbdisplay.writeComment("EOF");
     pLayer->toggle();
     DDDelay(2000);
-  } else if (pTunnel->avail()) {
+  } else if (pTunnel->available()) {
     String data = pTunnel->read();
     dumbdisplay.writeComment(data);
     pLayer->toggle();
