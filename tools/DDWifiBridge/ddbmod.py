@@ -82,7 +82,7 @@ class Tunnel:
             self._serveOnce()
         except OSError as err:
             print(f"failed to 'serve' end-point {self.host}:{self.port} ... {err}")
-            self._close("serve err")
+            self._close("OS error: {0}".format(err))
     def forward(self, line):
         if self.sock != None:
             data = bytes(line + "\n", 'UTF8')
@@ -91,15 +91,6 @@ class Tunnel:
             except:
                 pass
                 #self._close()
-    def _close(self, reason):
-        #print(f"close because '{reason}'")
-        if self.bridge != None:
-            self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + ":disconnect<")
-        if self.sock != None:
-            self.sock.close()
-            self.sock = None
-        self.closed = True
-        #self.bridge = None
     def _serveOnce(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             self.sock = s
@@ -122,14 +113,15 @@ class Tunnel:
                     line = rest + d[0: idx]
                     rest = d[idx + 1:]
                     if self.bridge != None:
+                        #print("----:" + line)
                         self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + line)
                 else:
                     rest = rest + d
             if received_any:
-                if rest != "":
-                    if self.bridge != None:  # actually, no line-end
-                        self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + rest)
-                self._close("no data")
+                if self.bridge != None:  # actually, no line-end
+                    #print("FINAL:" + rest)
+                    self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + ":final<" + rest)
+                self._close(None)
             # while True:
             #     data = self.sock.recv(1024)
             #     if data: # data is b''
@@ -143,6 +135,14 @@ class Tunnel:
             #         if received_any:
             #             self._close("no data")
             #             break
+    def _close(self, error_msg):
+        if error_msg != None and self.bridge != None:
+            self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + ":error<" + error_msg)
+        if self.sock != None:
+            self.sock.close()
+            self.sock = None
+        self.closed = True
+        #self.bridge = None
 
 class SerialSource:
     def __init__(self, ser, bridge):

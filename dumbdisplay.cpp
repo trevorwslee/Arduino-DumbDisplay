@@ -549,7 +549,8 @@ void _HandleFeedback() {
               //Serial.println("LT++" + String(idx));
               String tid = pFeedback->substring(4, idx);
               String data = pFeedback->substring(idx + 1);
-              const String* pData = &data;
+              //const String* pData = &data;
+              bool final = false;
               idx = tid.indexOf(':');
               //const char *pCommand = NULL;
               //Serial.println("LT+++" + String(idx));
@@ -557,15 +558,22 @@ void _HandleFeedback() {
                 String command = tid.substring(idx + 1);
                 tid = tid.substring(0, idx);
 //Serial.println("LT-command" + data);
-                if (command == "disconnect") {
-                  pData = NULL;
+                if (command == "final") {
+                  final = true;
+                } else if (command == "error") {
+                  final = true;
+                  data = "";
+                } else {
+                  data = "???" + command + "???";
                 }
+              } else {
+                data += "\n";
               }
               int lid = _LayerIdToLid(tid);
               DDTunnel* pTunnel = (DDTunnel*) _DDLayerArray[lid];
               if (pTunnel != NULL) {
-//Serial.println("LT++++" + data);
-                pTunnel->handleInput(pData);
+//Serial.println("LT++++" + data + " - " + String(final));
+                pTunnel->handleInput(data, final);
               }
             }
           }
@@ -1320,13 +1328,15 @@ void DDTunnel::close() {
   }
   this->done = true;
 }
-void DDTunnel::handleInput(const String* pData) {
-  if (pData != NULL) {
-    this->data += *pData + "\n";
-  } else {
+void DDTunnel::handleInput(const String& data, bool final) {
+  this->data += data;
+  if (final)
     this->done = true;
+  // if (pData != NULL) {
+  //   this->data += *pData + "\n";
+  // } else {
+  //   this->done = true;
 //Serial.println("-eof-");
-  }
 }
 int BasicDDTunnel::available() {
   return this->data.length();

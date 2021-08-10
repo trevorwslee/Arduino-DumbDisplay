@@ -428,7 +428,7 @@ class DDTunnel: public DDObject {
     ~DDTunnel();
     void close();
     const String& getTunnelId() { return tunnelId; }
-    void handleInput(const String* pData);
+    void handleInput(const String& data, bool final);
   protected:
     String tunnelId;
     String data;
