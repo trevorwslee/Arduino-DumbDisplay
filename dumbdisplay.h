@@ -430,7 +430,7 @@ class DDTunnel: public DDObject {
     const String& getTunnelId() { return tunnelId; }
     int count();
     bool eof();
-    const String& readLine();
+    String readLine();
     void writeLine(const String& data);
   public:
     void handleInput(const String& data, bool final);

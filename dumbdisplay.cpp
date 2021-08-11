@@ -471,6 +471,7 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   _SendingCommand = false;
 }
 void __SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
+//Serial.println("//&&" + specialData);
   _IO->print("%%>");
   _IO->print(specialType);
   _IO->print(".");
@@ -566,9 +567,9 @@ void _HandleFeedback() {
                 } else {
                   data = "???" + command + "???";
                 }
-              } else {
+              }/* else {
                 data += "\n";
-              }
+              }*/
               int lid = _LayerIdToLid(tid);
               DDTunnel* pTunnel = (DDTunnel*) _DDLayerArray[lid];
               if (pTunnel != NULL) {
@@ -1339,13 +1340,15 @@ int DDTunnel::count() {
 bool DDTunnel::eof() {
   return nextArrayIdx == validArrayIdx && done;
 }
-const String& DDTunnel::readLine() {
+String DDTunnel::readLine() {
   if (nextArrayIdx == validArrayIdx) return "";
-  const String& data = dataArray[validArrayIdx];
+  String data = dataArray[validArrayIdx];
+  dataArray[validArrayIdx] = "";
   validArrayIdx = (validArrayIdx + 1) % arraySize;
   return data;
 }
 void DDTunnel::writeLine(const String& data) {
+//Serial.println("//--");
   _sendSpecialCommand("lt", tunnelId, NULL, data);
 }
 void DDTunnel::handleInput(const String& data, bool final) {

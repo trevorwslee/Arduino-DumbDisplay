@@ -70,6 +70,11 @@ class Tunnel:
         self.port = port
         self.sock = None
         self.closed = False
+    def insertSourceLine(self, source_line):
+        if self.bridge != None:
+            self.bridge.insertSourceLine(source_line)
+    def close(self):
+        self._close(None)
     def serve(self):
         # while True:
         #     try:
@@ -177,35 +182,42 @@ class SerialSource:
                 if c == '\n':
                     insert_it = True
                     if ser_line.startswith("%%>lt"):
+                        insert_it = False
                         lt_line = ser_line[6:]
                         idx = lt_line.find('>')
                         if idx != -1:
-                            insert_it = False
                             lt_data = lt_line[idx + 1:]
                             lt_line = lt_line[0:idx]
                             idx = lt_line.find(':')
                             if idx != -1:
                                 tid = lt_line[0:idx]
-                                tl_command = lt_line[idx + 1:]
+                                lt_command = lt_line[idx + 1:]
                             else:
                                 tid = lt_line
-                                tl_command = None
+                                lt_command = None
                         #print(tid + ':' + str(tl_command) + ">" + str(lt_data))
-                        if tl_command == "connect" and lt_data != None:
-                            host = None
-                            port = 80
-                            idx = lt_data.find(':')
-                            if idx != -1:
-                                port = int(lt_data[idx + 1:])
-                                host = lt_data[0:idx]
-                            else:
-                                host = lt_data
-                            tunnel = Tunnel(self.ser, tid, host, port)
-                            threading.Thread(target=tunnel.serve, daemon=True).start()
-                            self.tunnels[tunnel.tunnel_id] = tunnel
-                            #self.tunnels.append(tunnel)
-                    # data = ('<lt.' + tid + ':echo<TESTING-' + lt_data + '\n').encode()
-                        # self.ser.write(data)
+                        if lt_command != None:
+                            if lt_command == "connect" and lt_data != None:
+                                host = None
+                                port = 80
+                                idx = lt_data.find(':')
+                                if idx != -1:
+                                    port = int(lt_data[idx + 1:])
+                                    host = lt_data[0:idx]
+                                else:
+                                    host = lt_data
+                                tunnel = Tunnel(self.ser, tid, host, port)
+                                self.tunnels[tunnel.tunnel_id] = tunnel
+                                threading.Thread(target=tunnel.serve, daemon=True).start()
+                                #self.tunnels.append(tunnel)
+                            elif lt_command == 'disconnect':
+                                tunnel = self.tunnels.get(tid)
+                                if tunnel != None:
+                                    tunnel.close()
+                        else:
+                            tunnel = self.tunnels.get(tid)
+                            if tunnel != None:
+                                tunnel.insertSourceLine(lt_data)
                     if insert_it:
                         self.bridge.insertSourceLine(ser_line)
                     ser_line = ""
