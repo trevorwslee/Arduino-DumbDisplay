@@ -1,6 +1,5 @@
 .vscode
 .idea
-mine
 __pycache__
 tools/DDWifiBridge/DDWifiBridge.iml
 tools/DDWifiBridge/ddwifibridge.ini

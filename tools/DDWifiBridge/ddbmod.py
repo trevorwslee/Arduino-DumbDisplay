@@ -29,7 +29,7 @@ class DDBridge:
         line = None
         self.lock.acquire()
         if len(self.line_list) > 0:
-            line = self.line_list.pop()
+            line = self.line_list.pop(0)
         self.lock.release()    
         return line    
     def _sendLine(self, line, transDir):

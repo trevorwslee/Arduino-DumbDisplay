@@ -346,6 +346,10 @@ class GraphicalDDLayer: public DDLayer {
     /* . empty background color means no background color */
     /* - size: 0 means default */
     void drawChar(int x, int y, char c, const String& color, const String& bgColor = "", int size = 0);
+    /* draw text */
+    /* . empty background color means no background color */
+    /* - size: 0 means default */
+    void drawText(int x, int y, const String& text, const String& color, const String& bgColor = "", int size = 0);
     /* draw a pixel */
     void drawPixel(int x, int y, const String& color);
     /* draw a [end to end] line */
@@ -428,10 +432,11 @@ class DDTunnel: public DDObject {
     ~DDTunnel();
     void close();
     const String& getTunnelId() { return tunnelId; }
-    int count();
-    bool eof();
-    String readLine();
-    void writeLine(const String& data);
+  protected:
+    int _count();
+    bool _eof();
+    String _readLine();
+    void _writeLine(const String& data);
   public:
     void handleInput(const String& data, bool final);
   protected:
@@ -445,12 +450,12 @@ class DDTunnel: public DDObject {
 
 class BasicDDTunnel: public DDTunnel {
   public:
-    BasicDDTunnel(int tunnelId/*, const String& endPoint*/): DDTunnel(tunnelId/*, endPoint*/) {
+    BasicDDTunnel(int tunnelId, int bufferSize = 4): DDTunnel(tunnelId, bufferSize) {
     }
-    // int count() { return arraySize; }
-    // String readLine();
-    // void writeLine(const String& lineData);
-    // bool eof();
+    inline int count() { return _count(); }
+    inline bool eof() { return _eof(); }
+    inline String readLine() { return _readLine(); }
+    inline void writeLine(const String& data) { _writeLine(data); }
 };
 
 #endif
@@ -484,7 +489,7 @@ class DumbDisplay {
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
 #ifdef SUPPORT_TUNNEL
-    BasicDDTunnel* createBasicTunnel(const String& endPoint);
+    BasicDDTunnel* createBasicTunnel(const String& endPoint, int bufferSize = 4);
 #endif
     /* set DD background color with common "color name" */
     void backgroundColor(const String& color);

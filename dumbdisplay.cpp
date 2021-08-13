@@ -1120,6 +1120,9 @@ void GraphicalDDLayer::println(const String& text) {
 void GraphicalDDLayer::drawChar(int x, int y, char c, const String& color, const String& bgColor, int size) {
   _sendCommand6(layerId, "drawchar", String(x), String(y), color, bgColor, String(size), String(c));
 }
+void GraphicalDDLayer::drawText(int x, int y, const String& text, const String& color, const String& bgColor, int size) {
+  _sendCommand6(layerId, "drawtext", String(x), String(y), color, bgColor, String(size), text);
+}
 void GraphicalDDLayer::drawPixel(int x, int y, const String& color) {
   _sendCommand3(layerId, "drawpixel", String(x), String(y), color);
 }
@@ -1334,20 +1337,20 @@ void DDTunnel::close() {
   }
   done = true;
 }
-int DDTunnel::count() {
+int DDTunnel::_count() {
   return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
 }
-bool DDTunnel::eof() {
+bool DDTunnel::_eof() {
   return nextArrayIdx == validArrayIdx && done;
 }
-String DDTunnel::readLine() {
+String DDTunnel::_readLine() {
   if (nextArrayIdx == validArrayIdx) return "";
   String data = dataArray[validArrayIdx];
   dataArray[validArrayIdx] = "";
   validArrayIdx = (validArrayIdx + 1) % arraySize;
   return data;
 }
-void DDTunnel::writeLine(const String& data) {
+void DDTunnel::_writeLine(const String& data) {
 //Serial.println("//--");
   _sendSpecialCommand("lt", tunnelId, NULL, data);
 }
@@ -1374,11 +1377,11 @@ void DDTunnel::handleInput(const String& data, bool final) {
 // bool BasicDDTunnel::eof() {
 //   return this->data.length() == 0 && this->done;
 // }
-BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint) {
+BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, int bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
   _sendSpecialCommand("lt", tunnelId, "connect", endPoint);
-  BasicDDTunnel* pTunnel = new BasicDDTunnel(tid);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel(tid, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
