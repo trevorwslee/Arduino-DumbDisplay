@@ -495,8 +495,8 @@ class DumbDisplay {
 #endif
     /* set DD background color with common "color name" */
     void backgroundColor(const String& color);
-    /* start recording layer commands (to any layers), until playback */
-    /* note that during recording, 'feedback' will not function */
+    /* start recording layer commands (to any layers) */
+    /* and sort of freeze the screen, until playback */
     void recordLayerCommands();
     /* playback recorded commands */
     void playbackLayerCommands();

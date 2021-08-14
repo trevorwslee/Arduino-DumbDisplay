@@ -39,7 +39,8 @@ void setup() {
   DDLogToSerial("=== connected ===");
   dumbdisplay.writeComment("Good Day!");
 
-  pLayer = dumbdisplay.createGraphicalLayer(128, 92);
+  pLayer = dumbdisplay.createGraphicalLayer(128, 88);
+  pLayer->border(2, "red");
 
 
   // initialise the digital pins
@@ -67,7 +68,7 @@ void btn_cb(bool new_val, bool &old_val)
 
 const int l_len = 20;
 const int cir_x = 25;
-const int cir_y = 32;
+const int cir_y = 28/*32*/;
 const int cir_r = 13;
 
 const int txt_x = 4;
@@ -81,7 +82,7 @@ void drawBtn(int x, int y, int r, int off_x, int off_y, int btn, char* txt) {
     //Serial.print("\n");
   }  
   r = r + 1;
-  pLayer->drawText(x - r / 2 + off_x - 1, y + cir_r / 2 - off_y + 2, txt, "pink");
+  pLayer->drawText(x - r / 2 + off_x - 1, y + cir_r / 2 - off_y + 2, txt, "yellow");
   pLayer->drawCircle(x, y + r, !digitalRead(btn) ? 3 * r / 4 : r / 2, "pink");
   // u8g2.drawStr(x - r / 2 + off_x, y + cir_r / 2 - off_y, txt);
   // u8g2.drawCircle(x, y, !digitalRead(btn) ? 3 * r / 4 : r / 2);

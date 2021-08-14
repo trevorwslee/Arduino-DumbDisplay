@@ -680,17 +680,15 @@ MIT
 
 # Change History
 
-• v0.6.1
-  - bug fixes
-  - added 'command buffering', to be played back all at once
+v0.6.1
+  - added 'command buffering', sort of freeze the screen, until played back all at once
   - adding MicroPython support
+  - bug fixes
 
-v0.6.0
-- bug fixes
 
 v0.5.1
-- bug fixes
 - added DumbDispaly WIFI Bridge
+- bug fixes
 
 v0.5.0
 - added WIFI support
