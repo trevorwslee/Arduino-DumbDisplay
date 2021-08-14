@@ -814,6 +814,7 @@ DDLayer::DDLayer(int layerId) {
   this->feedbackHandler = NULL;
 }
 DDLayer::~DDLayer() {
+  _PreDeleteLayer(this);
   if (pFeedbackManager != NULL)
     delete pFeedbackManager;
 } 
@@ -1293,8 +1294,14 @@ void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int
 }
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
-  _PreDeleteLayer(pLayer);
+  //_PreDeleteLayer(pLayer);
   delete pLayer;
+}
+void DumbDisplay::recordLayerCommands() {
+  _sendCommand0("", "RECC");
+}
+void DumbDisplay::playbackLayerCommands() {
+  _sendCommand0("", "PLAYC");
 }
 void DumbDisplay::backgroundColor(const String& color) {
   _Connect();
@@ -1329,6 +1336,7 @@ DDTunnel::DDTunnel(int tunnelId, int bufferSize) {
   this->done = false;
 }
 DDTunnel::~DDTunnel() {
+  _PreDeleteTunnel(this);
   delete this->dataArray;
 } 
 void DDTunnel::close() {
@@ -1384,6 +1392,9 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, int buffer
   BasicDDTunnel* pTunnel = new BasicDDTunnel(tid, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
+}
+void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
+  delete pTunnel;
 }
 #endif
 

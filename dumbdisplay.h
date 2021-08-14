@@ -489,10 +489,17 @@ class DumbDisplay {
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
 #ifdef SUPPORT_TUNNEL
+    /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
     BasicDDTunnel* createBasicTunnel(const String& endPoint, int bufferSize = 4);
+    void deleteTunnel(DDTunnel *pTunnel);
 #endif
     /* set DD background color with common "color name" */
     void backgroundColor(const String& color);
+    /* start recording layer commands (to any layers), until playback */
+    /* note that during recording, 'feedback' will not function */
+    void recordLayerCommands();
+    /* playback recorded commands */
+    void playbackLayerCommands();
     /* write out a comment to DD */
     void writeComment(const String& comment);
     /* pin a layer @ some position of an imaginary grid of units */

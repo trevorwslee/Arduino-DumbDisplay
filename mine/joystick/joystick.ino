@@ -34,12 +34,12 @@ GraphicalDDLayer *pLayer;
 
 
 void setup() {
-  dumbdisplay.debugSetup(9/*13*/);  // setup to use pin 13
+  dumbdisplay.debugSetup(13);  // setup to use pin 13
   dumbdisplay.connect();
   DDLogToSerial("=== connected ===");
   dumbdisplay.writeComment("Good Day!");
 
-  pLayer = dumbdisplay.createGraphicalLayer(151, 101);
+  pLayer = dumbdisplay.createGraphicalLayer(128, 92);
 
 
   // initialise the digital pins
@@ -80,7 +80,8 @@ void drawBtn(int x, int y, int r, int off_x, int off_y, int btn, char* txt) {
     //Serial.print(txt);
     //Serial.print("\n");
   }  
-  pLayer->drawText(x - r / 2 + off_x, y + cir_r / 2 - off_y, txt, "pink");
+  r = r + 1;
+  pLayer->drawText(x - r / 2 + off_x - 1, y + cir_r / 2 - off_y + 2, txt, "pink");
   pLayer->drawCircle(x, y + r, !digitalRead(btn) ? 3 * r / 4 : r / 2, "pink");
   // u8g2.drawStr(x - r / 2 + off_x, y + cir_r / 2 - off_y, txt);
   // u8g2.drawCircle(x, y, !digitalRead(btn) ? 3 * r / 4 : r / 2);
@@ -88,7 +89,11 @@ void drawBtn(int x, int y, int r, int off_x, int off_y, int btn, char* txt) {
 
 void loop()
 {
+  dumbdisplay.recordLayerCommands();
+
   pLayer->clear();
+
+  //pLayer->drawCircle(0, 0, 10, "red");
 
   //u8g2.clearBuffer();
   // handle normal buttons, the state will be true on LOW, when the
@@ -102,11 +107,13 @@ void loop()
 
   // to parse analog sensors to digital ones, we first read them and
   // map them to a value in [-1, 0, 1]
-  int new_x_joystick = map(analogRead(x_joystick), 0, 1000, -1 * cir_r, cir_r);
-  int new_y_joystick = map(analogRead(y_joystick), 0, 1000, -1 * cir_r, cir_r);
-  dumbdisplay.writeComment("x:" + String(cir_x + new_x_joystick) + 
+  int x_reading = analogRead(x_joystick);
+  int y_reading = analogRead(y_joystick);
+  int new_x_joystick = map(x_reading, 0, 680, -1 * cir_r, cir_r) + 2;
+  int new_y_joystick = map(y_reading, 0, 675, -1 * cir_r, cir_r);
+  dumbdisplay.writeComment("x:" + String(x_reading) + 
                            String(" -- ") +
-                           "y:" + String(cir_y + new_y_joystick));
+                           "y:" + String(y_reading));
   // Serial.print("x:");
   // Serial.print(cir_x + new_x_joystick);
   // Serial.print("\t");
@@ -116,11 +123,13 @@ void loop()
 
   //draw grid
   pLayer->drawLine(cir_x, cir_y - l_len, cir_x, cir_y + l_len, "blue");
-  pLayer->drawLine(cir_x - l_len, cir_y , cir_x + l_len, cir_y, "green");
+  pLayer->drawLine(cir_x - l_len, cir_y , cir_x + l_len, cir_y, "blue");
   // u8g2.drawLine(cir_x, cir_y - l_len, cir_x, cir_y + l_len);
   // u8g2.drawLine(cir_x - l_len, cir_y , cir_x + l_len, cir_y);
 
   //draw circle
+  //pLayer->drawText(cir_x + new_x_joystick, cir_y - new_y_joystick, "K", "green");
+  pLayer->drawCircle(cir_x + new_x_joystick, cir_y - new_y_joystick, !digitalRead(k_btn) ? 3 * cir_r / 2 : cir_r, "green");
   // u8g2.drawStr(cir_x + new_x_joystick, cir_y - new_y_joystick, "K");
   // u8g2.drawCircle(cir_x + new_x_joystick, cir_y - new_y_joystick, !digitalRead(k_btn) ? 3 * cir_r / 2 : cir_r);
 
@@ -138,6 +147,7 @@ void loop()
   //E
   drawBtn(75, 55, cir_r, txt_x, txt_y, e_btn, "E");
 
+  dumbdisplay.playbackLayerCommands();
 //  u8g2.sendBuffer();
 
   DDDelay(100);
