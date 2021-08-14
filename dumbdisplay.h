@@ -430,7 +430,7 @@ class DDTunnel: public DDObject {
   public:
     DDTunnel(int tunnelId, int bufferSize = 4);
     ~DDTunnel();
-    void close();
+    void release();
     const String& getTunnelId() { return tunnelId; }
   protected:
     int _count();

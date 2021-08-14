@@ -1339,7 +1339,7 @@ DDTunnel::~DDTunnel() {
   _PreDeleteTunnel(this);
   delete this->dataArray;
 } 
-void DDTunnel::close() {
+void DDTunnel::release() {
   if (!done) {
     _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");
   }
