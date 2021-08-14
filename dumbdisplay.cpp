@@ -1121,8 +1121,8 @@ void GraphicalDDLayer::println(const String& text) {
 void GraphicalDDLayer::drawChar(int x, int y, char c, const String& color, const String& bgColor, int size) {
   _sendCommand6(layerId, "drawchar", String(x), String(y), color, bgColor, String(size), String(c));
 }
-void GraphicalDDLayer::drawText(int x, int y, const String& text, const String& color, const String& bgColor, int size) {
-  _sendCommand6(layerId, "drawtext", String(x), String(y), color, bgColor, String(size), text);
+void GraphicalDDLayer::drawStr(int x, int y, const String& string, const String& color, const String& bgColor, int size) {
+  _sendCommand6(layerId, "drawstr", String(x), String(y), color, bgColor, String(size), string);
 }
 void GraphicalDDLayer::drawPixel(int x, int y, const String& color) {
   _sendCommand3(layerId, "drawpixel", String(x), String(y), color);
@@ -1199,7 +1199,7 @@ void GraphicalDDLayer::polygon(int side, int vertexCount) {
 void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
   _sendCommand2(layerId, inside ? "cpolyin" : "cpoly", String(radius), String(vertexCount));
 }
-void GraphicalDDLayer::write(const String& text, bool draw) {
+void GraphicalDDLayer:: write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? "drawtext" : "write", text);
 }
 

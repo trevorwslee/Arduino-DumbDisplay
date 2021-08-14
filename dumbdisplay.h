@@ -346,10 +346,10 @@ class GraphicalDDLayer: public DDLayer {
     /* . empty background color means no background color */
     /* - size: 0 means default */
     void drawChar(int x, int y, char c, const String& color, const String& bgColor = "", int size = 0);
-    /* draw text */
+    /* draw string */
     /* . empty background color means no background color */
     /* - size: 0 means default */
-    void drawText(int x, int y, const String& text, const String& color, const String& bgColor = "", int size = 0);
+    void drawStr(int x, int y, const String& string, const String& color, const String& bgColor = "", int size = 0);
     /* draw a pixel */
     void drawPixel(int x, int y, const String& color);
     /* draw a [end to end] line */
@@ -495,10 +495,10 @@ class DumbDisplay {
 #endif
     /* set DD background color with common "color name" */
     void backgroundColor(const String& color);
-    /* start recording layer commands (to any layers) */
-    /* and sort of freeze the screen, until playback */
+    /* start recording layer commands (of any layers) */
+    /* and sort of freeze the display, until playback */
     void recordLayerCommands();
-    /* playback recorded commands */
+    /* playback recorded commands (unfreeze the display) */
     void playbackLayerCommands();
     /* write out a comment to DD */
     void writeComment(const String& comment);
