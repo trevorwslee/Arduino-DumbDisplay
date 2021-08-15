@@ -52,16 +52,16 @@ void setup() {
 }
 
 void loop() {
-#ifdef TEST_TUNNEL
+#ifdef TEST_TUNNEL  
   //dumbdisplay.writeComment("$$$");
   if (pTunnel == NULL) {
-    dumbdisplay.writeComment("{CLOSED}");
+    dumbdisplay.writeComment("CLOSED");
     pLayer->toggle();
     DDDelay(1000);
   } else if (pTunnel->eof()) {
     dumbdisplay.deleteTunnel(pTunnel);
     pTunnel = NULL;
-    dumbdisplay.writeComment("{EOF}");
+    dumbdisplay.writeComment("EOF");
     pLayer->toggle();
     DDDelay(1000);
   } else {

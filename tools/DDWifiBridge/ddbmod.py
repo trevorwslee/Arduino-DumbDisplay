@@ -85,7 +85,7 @@ class Tunnel:
         #         break
         try:
             self._serveOnce()
-        except OSError as err:
+        except BaseException as err:
             print(f"failed to 'serve' end-point {self.host}:{self.port} ... {err}")
             self._close("OS error: {0}".format(err))
     def forward(self, line):
@@ -99,7 +99,12 @@ class Tunnel:
     def _serveOnce(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             self.sock = s
-            self.sock.connect((self.host, self.port))
+            try:
+                self.sock.connect((self.host, self.port))
+            except BaseException as err:
+                print(f"failed to connect end-point {self.host}:{self.port} ... {err}")
+                self._close("OS error: {0}".format(err))
+                return
             received_any = False
             rest = ""
             while True:

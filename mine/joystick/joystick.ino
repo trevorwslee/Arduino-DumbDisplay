@@ -1,9 +1,29 @@
+
+/*
+
+A|   13| ---
+R|     |     LED
+U|  GND| --- 
+N|     |
+I| 3.3V| --- 
+N|     |     PHOTO
+O|   A2| ---
+ |     |    | 10K 
+U|  GND| --- 
+N|
+O|   5V| --- VCC | HC06 
+ |  GND| --- GND
+ |   11| --- TXD
+ |   10| --- RXD
+
+*/
+
+
+
 #include "ssdumbdisplay.h"
 
 
 #define USE_BLUETOOTH
-#define HAS_PHOTO_RESIST
-
 
 
 
@@ -68,7 +88,8 @@ void setup() {
   dumbdisplay.writeComment("Good Day!");
 
   pLayer = dumbdisplay.createGraphicalLayer(width, height);
-  pLayer->border(2, "red");
+  pLayer->border(2, "navy", "round");
+  pLayer->backgroundColor("navy");
 
 }
 
@@ -78,8 +99,8 @@ void drawBtn(int x, int y, int r, int off_x, int off_y, int btn, char* txt) {
     dumbdisplay.writeComment("BTN-" + String(txt));
   }  
   r = r + 1;
-  pLayer->drawStr(x - r / 2 + off_x - 1, y + cir_r / 2 - off_y + 2, txt, "yellow");
-  pLayer->drawCircle(x, y + r, !digitalRead(btn) ? 3 * r / 4 : r / 2, "pink");
+  pLayer->drawStr(x - r / 2 + off_x - 1, y + cir_r / 2 - off_y + 2, txt, "gold");
+  pLayer->drawCircle(x, y + r, !digitalRead(btn) ? 3 * r / 4 : r / 2, "aqua");
 }
 
 void loop()
@@ -94,29 +115,25 @@ void loop()
   int y_reading = analogRead(y_joystick);
   int new_x_joystick = map(x_reading, 0, 1023, -1 * cir_r, cir_r) + 2;
   int new_y_joystick = map(y_reading, 0, 1023, -1 * cir_r, cir_r);
-#ifdef HAS_PHOTO_RESIST
   int photo_resist_reading = analogRead(photo_resist);
   dumbdisplay.writeComment("x:" + String(x_reading) + String("; ") +
                            "y:" + String(y_reading) + String("; ") +
-                           "photo:" + String(photo_resist_reading));
-  // int bg_color = map(photo_resist_reading, 0, 1024, 0xfff000, 0xffffff);
-  // dumbdisplay.writeComment("bgcolor:" + DD_HEX_COLOR(bg_color));
-  // dumbdisplay.backgroundColor(DD_HEX_COLOR(bg_color));     
-  int bg_color = map(photo_resist_reading, 100, 800, 0, 255);                     
-  dumbdisplay.backgroundColor(DD_RGB_COLOR(bg_color, 0xff, 0xff));     
-#else
-  dumbdisplay.writeComment("x:" + String(x_reading) + 
-                          String(" -- ") +
-                          "y:" + String(y_reading));
-#endif                            
+                           "p:" + String(photo_resist_reading));
+
+
+  // change background color based on photo resistor value
+  int bg_color = map(photo_resist_reading, 200, 700, 0, 255);
+  //dumbdisplay.writeComment("c:" + DD_RGB_COLOR(bg_color, bg_color, 0xff));                       
+  dumbdisplay.backgroundColor(DD_RGB_COLOR(bg_color, bg_color, 0xff));     
+
 
   //draw grid
-  pLayer->drawLine(cir_x, cir_y - l_len, cir_x, cir_y + l_len, "blue");
-  pLayer->drawLine(cir_x - l_len, cir_y , cir_x + l_len, cir_y, "blue");
+  pLayer->drawLine(cir_x, cir_y - l_len, cir_x, cir_y + l_len, "slateblue");
+  pLayer->drawLine(cir_x - l_len, cir_y , cir_x + l_len, cir_y, "slateblue");
 
   //draw circle
   //pLayer->drawText(cir_x + new_x_joystick, cir_y - new_y_joystick, "K", "green");
-  pLayer->drawCircle(cir_x + new_x_joystick, cir_y - new_y_joystick, !digitalRead(k_btn) ? 3 * cir_r / 2 : cir_r, "green");
+  pLayer->drawCircle(cir_x + new_x_joystick, cir_y - new_y_joystick, !digitalRead(k_btn) ? 3 * cir_r / 2 : cir_r, "azure");
 
   //draw Btn
   //A

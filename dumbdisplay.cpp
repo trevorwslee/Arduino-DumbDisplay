@@ -1363,10 +1363,12 @@ void DDTunnel::_writeLine(const String& data) {
   _sendSpecialCommand("lt", tunnelId, NULL, data);
 }
 void DDTunnel::handleInput(const String& data, bool final) {
-  dataArray[nextArrayIdx] = data;
-  nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
-  if (nextArrayIdx == validArrayIdx)
-    validArrayIdx = (validArrayIdx + 1) % arraySize;
+  if (!final || data != "") {
+    dataArray[nextArrayIdx] = data;
+    nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
+    if (nextArrayIdx == validArrayIdx)
+      validArrayIdx = (validArrayIdx + 1) % arraySize;
+  }
   if (final)
     this->done = true;
 }
