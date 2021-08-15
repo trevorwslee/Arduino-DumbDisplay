@@ -1,5 +1,12 @@
 #include "ssdumbdisplay.h"
 
+
+#define USE_BLUETOOTH
+#define HAS_PHOTO_RESIST
+
+
+
+
 // pins
 const int a_btn = 2;
 const int c_btn = 4;
@@ -10,6 +17,7 @@ const int f_btn = 7;
 const int k_btn = 8;
 const int x_joystick = A0;
 const int y_joystick = A1;
+const int photo_resist = A2;
 
 
 const int width = 128;
@@ -26,18 +34,18 @@ const int txt_y = 2;
 
 
 
-#define USE_BLUETOOTH
 
-boolean enableSerial = true;
-unsigned long serialBaud = 57600;
 #ifdef USE_BLUETOOTH
 unsigned long baud = DUMBDISPLAY_BAUD;
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), baud, enableSerial, serialBaud));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), baud, true, 57600));
 #else
 DumbDisplay dumbdisplay(new DDInputOutput(serialBaud));
 #endif
 
 GraphicalDDLayer *pLayer;
+
+
+
 
 
 void setup() {
@@ -84,11 +92,23 @@ void loop()
   // map them to a value in [-1, 0, 1]
   int x_reading = analogRead(x_joystick);
   int y_reading = analogRead(y_joystick);
-  int new_x_joystick = map(x_reading, 0, 680, -1 * cir_r, cir_r) + 2;
-  int new_y_joystick = map(y_reading, 0, 675, -1 * cir_r, cir_r);
+  int new_x_joystick = map(x_reading, 0, 1023, -1 * cir_r, cir_r) + 2;
+  int new_y_joystick = map(y_reading, 0, 1023, -1 * cir_r, cir_r);
+#ifdef HAS_PHOTO_RESIST
+  int photo_resist_reading = analogRead(photo_resist);
+  dumbdisplay.writeComment("x:" + String(x_reading) + String("; ") +
+                           "y:" + String(y_reading) + String("; ") +
+                           "photo:" + String(photo_resist_reading));
+  // int bg_color = map(photo_resist_reading, 0, 1024, 0xfff000, 0xffffff);
+  // dumbdisplay.writeComment("bgcolor:" + DD_HEX_COLOR(bg_color));
+  // dumbdisplay.backgroundColor(DD_HEX_COLOR(bg_color));     
+  int bg_color = map(photo_resist_reading, 100, 800, 0, 255);                     
+  dumbdisplay.backgroundColor(DD_RGB_COLOR(bg_color, 0xff, 0xff));     
+#else
   dumbdisplay.writeComment("x:" + String(x_reading) + 
-                           String(" -- ") +
-                           "y:" + String(y_reading));
+                          String(" -- ") +
+                          "y:" + String(y_reading));
+#endif                            
 
   //draw grid
   pLayer->drawLine(cir_x, cir_y - l_len, cir_x, cir_y + l_len, "blue");
