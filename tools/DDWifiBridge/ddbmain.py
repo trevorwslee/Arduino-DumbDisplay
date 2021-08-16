@@ -68,6 +68,7 @@ class DDBridge(ddbmod.DDBridge):
     def _sendLine(self, line, transDir):
         global Auto_scroll_state
         global Window
+        sent = False
         if line != None:
             if Auto_scroll_state.get():
                 Text_box.see(tk.END)
@@ -82,11 +83,15 @@ class DDBridge(ddbmod.DDBridge):
             Text_box.insert(tk.END, transDir + ' ' + line + '\n')
             if transDir == '>':
                 if Wifi != None:
-                    Wifi.forward(line)
+                    sent = Wifi.forward(line)
             elif transDir == '<':
                 if Ser != None:
                     data = (line + '\n').encode()
                     Ser.write(data)
+                    sent = True
+            else:
+                sent = True
+        return sent
 
 
 def Connect(port, baud):
