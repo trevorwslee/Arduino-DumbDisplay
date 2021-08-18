@@ -1,6 +1,6 @@
 /*
 
-  sample code adapted from:   https://cyaninfinite.com/interfacing-arduino-joystick-shield-with-oled-display/
+  sample code adapted from: https://cyaninfinite.com/interfacing-arduino-joystick-shield-with-oled-display/
   - instead of OLED, DumbDisplay is used
   - added Bluetooth connectivity with the help of HC-06
   - added Photo Resistor connection to dynamically change DumbDisplay border color

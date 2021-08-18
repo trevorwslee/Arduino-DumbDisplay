@@ -641,10 +641,14 @@ In order to relieve this flickering situation a bit, it is possilbe to freeze Du
 * `dumbdisplay.playbackLayerCommands()` -- end recording commands and playback the recorded commands (unfreeze Dumbdisplay screen)
 
 
-A sample sketch demonstrates this can help: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/mine/joystick/joystick.ino
+A sample sketch demonstrates that this DumbDisplay feature can help; the sample is adapted from one that shows off Arduino UNO with JoyStick shield connecting to a OLED display: https://cyaninfinite.com/interfacing-arduino-joystick-shield-with-oled-display
 
+Instead of posting the sample sketch here, please find the sketch with the link: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/mine/joystick/joystick.ino
 
-![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick.png)
+| Arduino UNO | DumbDisplay |
+|--|--|
+|--|--|
+|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick-arduino.jpg)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick-dd.png)|
 
 
 
