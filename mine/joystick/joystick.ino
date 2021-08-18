@@ -1,36 +1,44 @@
-
 /*
 
-A|   13| ---
-R|     |     LED
-D|     |    |
-U|     |  200K
-I|     |    |
-N|  GND| --- 
-O|     |
- |     |
-U| 3.3V| --- 
-N|     |     PHOTO
-O|   A2| ---
- |     |    |  
- |     |   10K 
- |     |    | 
- |  GND| --- 
- |
- |
- |   5V| --- | VCC | HC06 
- |  GND| --- | GND | 
- |   11| --- | TXD | 
- |   10| --- | RXD | 
+  sample code adapted from:   https://cyaninfinite.com/interfacing-arduino-joystick-shield-with-oled-display/
+  - instead of OLED, DumbDisplay is used
+  - added Bluetooth connectivity with the help of HC-06
+  - added Photo Resistor connection to dynamically change DumbDisplay border color
+
+  ----------------------
+  Setup Arduino UNO 
+  . with JoyStick Shield
+  . HC-06
+  . Photo Resistor
+  ----------------------
+
+
+A|   13 | ---
+R|      |     LED
+D|      |    |
+U|      |  200K
+I|      |    |
+N|  GND | --- 
+O|      |
+ |      |
+U| 3.3V | --- 
+N|      |     PHOTO
+O|   A2 | ---
+ |      |    |  
+ |      |   10K 
+ |      |    | 
+ |  GND | --- 
+ |      |
+ |      |
+ |   5V | --- | VCC | HC06 
+ |  GND | --- | GND | 
+ |   11 | --- | TXD | 
+ |   10 | --- | RXD | 
 
 */
 
-
-
 #include "ssdumbdisplay.h"
 
-
-#define USE_BLUETOOTH
 
 
 
@@ -46,14 +54,9 @@ const int x_joystick = A0;
 const int y_joystick = A1;
 const int photo_resist = A2;
 
-
-const int width = 128;
-const int height = 88;
-
-
 const int l_len = 20;
 const int cir_x = 25;
-const int cir_y = 28/*32*/;
+const int cir_y = 28;
 const int cir_r = 13;
 
 const int txt_x = 4;
@@ -61,18 +64,14 @@ const int txt_y = 2;
 
 
 
+// DumbDisplay Graphical layer size
+const int width = 128;
+const int height = 88;
 
-#ifdef USE_BLUETOOTH
-unsigned long baud = DUMBDISPLAY_BAUD;
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), baud, true, 57600));
-#else
-DumbDisplay dumbdisplay(new DDInputOutput(serialBaud));
-#endif
+// setup to connect with bluetooth, as well as be able to connect with serial
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 57600));
 
 GraphicalDDLayer *pLayer;
-
-
-
 
 
 void setup() {
@@ -88,10 +87,7 @@ void setup() {
 
 
   // initialize dumbdisplay
-
   dumbdisplay.debugSetup(13);  // setup to use pin 13
-  dumbdisplay.connect();
-  DDLogToSerial("=== connected ===");
   dumbdisplay.writeComment("Good Day!");
 
   pLayer = dumbdisplay.createGraphicalLayer(width, height);
@@ -130,7 +126,6 @@ void loop()
 
   // change background color based on photo resistor value
   int bg_color = map(photo_resist_reading, 200, 700, 0, 255);
-  //dumbdisplay.writeComment("c:" + DD_RGB_COLOR(bg_color, bg_color, 0xff));                       
   dumbdisplay.backgroundColor(DD_RGB_COLOR(bg_color, bg_color, 0xff));     
 
 

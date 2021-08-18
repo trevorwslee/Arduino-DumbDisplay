@@ -682,7 +682,6 @@ MIT
 
 v0.6.1
   - added 'command buffering', sort of freeze the screen, until played back all at once
-  - adding MicroPython support
   - bug fixes
 
 
