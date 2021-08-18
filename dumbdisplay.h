@@ -8,12 +8,16 @@
 #endif
 
 
+#define SUPPORT_TUNNEL
+
+
 #define DUMBDISPLAY_BAUD 115200
 #define DD_SERIAL_BAUD DUMBDISPLAY_BAUD
 #define DD_WIFI_PORT 10201
 
 
-#define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
+//#define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
+#define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
 
 #define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
@@ -107,7 +111,10 @@ enum DDFeedbackType { CLICK };
 /* x, y -- (x, y) is the "area" on the layer where was clicked */
 typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, int x, int y);
 
-class DDLayer {
+class DDObject {
+};
+
+class DDLayer: public DDObject {
   public:
     /* set layer visibility */
     void visibility(bool visible);
@@ -119,7 +126,8 @@ class DDLayer {
     /* - 7SegmentRowLayer; each 7-segment is composed of fixed 220 x 320 pixels */
     /* - LedGridLayer; a LED is considered as a pixel */  
     /* shape -- can be "flat", "round", "raised" or "sunken" */  
-    void border(float size, const String& color, const String& shape = "");
+    void border(float size, const String& color, const String& shape = "flat");
+    void noBorder();
     /* size unit ... see border() */
     void padding(float left, float top, float right, float bottom);
     void noPadding();
@@ -142,7 +150,7 @@ class DDLayer {
     /* . "fl" -- flash the layer */
     /* . "fa" -- flash the area where the layer is clicked */
     /* . "fas" -- flash the area (as a spot) where the layer is clicked */
-    /* . "fs" -- flash the spot where the layer is clicked */
+    /* . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary) */
     void enableFeedback(const String& autoFeedbackMethod = "");
     /** disable "feedback" */
     void disableFeedback();
@@ -320,8 +328,6 @@ class GraphicalDDLayer: public DDLayer {
     void setCursor(int x, int y);
     /* move cursor by ... */
     void moveCursorBy(int byX, int byY);
-    // /* set text color (i.e. pen color) */
-    // void setTextColor(const String& color);
     /* set text color and text background color */
     /* . empty background color means no background color */
     void setTextColor(const String& color, const String& bgColor = "");
@@ -341,6 +347,10 @@ class GraphicalDDLayer: public DDLayer {
     /* . empty background color means no background color */
     /* - size: 0 means default */
     void drawChar(int x, int y, char c, const String& color, const String& bgColor = "", int size = 0);
+    /* draw string */
+    /* . empty background color means no background color */
+    /* - size: 0 means default */
+    void drawStr(int x, int y, const String& string, const String& color, const String& bgColor = "", int size = 0);
     /* draw a pixel */
     void drawPixel(int x, int y, const String& color);
     /* draw a [end to end] line */
@@ -353,7 +363,7 @@ class GraphicalDDLayer: public DDLayer {
     void fillRect(int x, int y, int w, int h, const String& color);
     void drawRoundRect(int x, int y, int w, int h, int r, const String& color);
     void fillRoundRect(int x, int y, int w, int h, int r, const String& color);
-    /* forward; with pen or not */
+    /* forward (relative to cursor) */
     void forward(int distance);
     /* left turn */
     void leftTurn(int angle);
@@ -401,7 +411,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /* - segments: each character represents a segment to turn on */
     /*   . 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' */
     void turnOn(const String& segments, int digitIdx = 0);
-    /* turn off one or more segments */
+    /* turn off one or more segments */ 
     /* - segments: each character represents a segment to turn off */
     /*   . 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' */
     void turnOff(const String& segments, int digitIdx = 0);
@@ -413,6 +423,44 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /* e.g. "12.00", "00.34", "-.12", "0ff" */
     void showFormatted(const String& formatted);
 };
+
+
+#ifdef SUPPORT_TUNNEL
+
+class DDTunnel: public DDObject {
+  public:
+    DDTunnel(int tunnelId, int bufferSize = 4);
+    ~DDTunnel();
+    void release();
+    const String& getTunnelId() { return tunnelId; }
+  protected:
+    int _count();
+    bool _eof();
+    String _readLine();
+    void _writeLine(const String& data);
+  public:
+    void handleInput(const String& data, bool final);
+  protected:
+    String tunnelId;
+    int arraySize;
+    String* dataArray;
+    int nextArrayIdx;
+    int validArrayIdx;
+    bool done;
+};
+
+class BasicDDTunnel: public DDTunnel {
+  public:
+    BasicDDTunnel(int tunnelId, int bufferSize = 4): DDTunnel(tunnelId, bufferSize) {
+    }
+    inline int count() { return _count(); }
+    inline bool eof() { return _eof(); }
+    inline String readLine() { return _readLine(); }
+    inline void writeLine(const String& data) { _writeLine(data); }
+};
+
+#endif
+
 
 class DumbDisplay {
   public:
@@ -441,8 +489,18 @@ class DumbDisplay {
     /* create a graphical [LCD] layer */
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
+#ifdef SUPPORT_TUNNEL
+    /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
+    BasicDDTunnel* createBasicTunnel(const String& endPoint, int bufferSize = 4);
+    void deleteTunnel(DDTunnel *pTunnel);
+#endif
     /* set DD background color with common "color name" */
     void backgroundColor(const String& color);
+    /* start recording layer commands (of any layers) */
+    /* and sort of freeze the display, until playback */
+    void recordLayerCommands();
+    /* playback recorded commands (unfreeze the display) */
+    void playbackLayerCommands();
     /* write out a comment to DD */
     void writeComment(const String& comment);
     /* pin a layer @ some position of an imaginary grid of units */

@@ -2,28 +2,13 @@
 // ESP32 built-in LED -- 2
 
 
-#include "ssdumbdisplay.h"
+#include "dumbdisplay.h"
 #include "ddtester.h"
 
 
-//#define USE_BLUETOOTH
-
-boolean enableSerial = true;
-unsigned long serialBaud = 57600;
-#ifdef USE_BLUETOOTH
-unsigned long baud = DUMBDISPLAY_BAUD;
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), baud, enableSerial, serialBaud));
-#else
-DumbDisplay dumbdisplay(new DDInputOutput(serialBaud));
-#endif
-
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 void setup() {
-  if (!enableSerial) {
-    // if DD not using Serial, setup Serial here
-    Serial.begin(serialBaud);
-  }
-
   dumbdisplay.debugSetup(13);  // setup to use pin 13
 
   if (true) {
@@ -34,8 +19,7 @@ void setup() {
 }
 
 void loop() {
-  bool forDebugging = false;
-  BasicDDTestLoop(dumbdisplay, forDebugging);
+  BasicDDTestLoop(dumbdisplay);
 }
 
 

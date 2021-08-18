@@ -1,15 +1,32 @@
 #include <ssdumbdisplay.h>
 
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true, 57600));
+
+#define USE_BLUETOOTH
+#define USE_RECORD
+
+boolean enableSerial = true;
+unsigned long serialBaud = 57600;
+#ifdef USE_BLUETOOTH
+unsigned long baud = DUMBDISPLAY_BAUD;
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), baud, enableSerial, serialBaud));
+#else
+DumbDisplay dumbdisplay(new DDInputOutput(serialBaud));
+#endif
 
 
 
 void setup() {
+
   // create 4 graphical [LCD] layers
   GraphicalDDLayer *pLayer1 = dumbdisplay.createGraphicalLayer(151, 101);
   GraphicalDDLayer *pLayer2 = dumbdisplay.createGraphicalLayer(151, 101);
   GraphicalDDLayer *pLayer3 = dumbdisplay.createGraphicalLayer(151, 101);
   GraphicalDDLayer *pLayer4 = dumbdisplay.createGraphicalLayer(151, 101);
+
+#ifdef USE_RECORD
+  dumbdisplay.recordLayerCommands();
+#endif
+
 
   // set fill screen with color
   pLayer1->fillScreen("azure");
@@ -81,6 +98,10 @@ void setup() {
       pLayer4->fillCircle(x + r, y + r, r, "gold");
     }
   }
+
+#ifdef USE_RECORD
+  dumbdisplay.playbackLayerCommands();
+#endif
 }
 
 void loop() {

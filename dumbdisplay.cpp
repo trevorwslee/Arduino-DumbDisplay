@@ -86,10 +86,17 @@ void IOProxy::validConnection() {
 
 
 
+//volatile bool _Preconneced = false;
 volatile bool _Connected = false;
 volatile int _DDCompatibility = 0;
 volatile int _NextLid = 0;
+
+#ifdef SUPPORT_TUNNEL
+DDObject** _DDLayerArray = NULL;
+#else
 DDLayer** _DDLayerArray = NULL;
+#endif
+
 DDInputOutput* volatile _IO = NULL;
 IOProxy* volatile _ConnectedIOProxy = NULL;
 volatile bool _ConnectedFromSerial = false; 
@@ -104,10 +111,31 @@ volatile bool _DebugEnableEchoFeedback = false;
 volatile bool _SendingCommand = false;
 volatile bool _HandlingFeedback = false;
 
+// void _Preconnect() {
+//   if (_Preconneced) {
+//     return;
+//   }
+// #ifdef DEBUG_WITH_LED
+//   int debugLedPin = _DebugLedPin;  
+//   if (debugLedPin != -1) {
+//     digitalWrite(debugLedPin, HIGH);
+//   }
+// #endif
+//   _IO->preConnect();
+// #ifdef DEBUG_WITH_LED
+//   if (debugLedPin != -1) {
+//     digitalWrite(debugLedPin, LOW);
+//   }
+// #endif
+// }
 void _Connect() {
   if (_Connected)
     return;
-  _IO->preConnect();
+// #ifdef SUPPORT_TUNNEL
+//   _Preconnect(); 
+// #else    
+//   _IO->preConnect();
+// #endif
 #ifdef DEBUG_WITH_LED
   int debugLedPin = _DebugLedPin;  
   bool debugLedOn;
@@ -116,6 +144,7 @@ void _Connect() {
     debugLedOn = true;
   }
 #endif
+  _IO->preConnect();
   {
     long nextTime = 0;
     IOProxy ioProxy(_IO);
@@ -252,6 +281,15 @@ int _AllocLid() {
   _Connect();
   int lid = _NextLid++;
 #ifdef STORE_LAYERS  
+#ifdef SUPPORT_TUNNEL
+  DDObject** oriLayerArray = _DDLayerArray;
+  DDObject** layerArray = (DDObject**) malloc((lid + 1) * sizeof(DDObject*));
+  if (oriLayerArray != NULL) {
+    memcpy(layerArray, oriLayerArray, lid * sizeof(DDObject*));
+    free(oriLayerArray);
+  }
+  _DDLayerArray = layerArray;
+#else  
   DDLayer** oriLayerArray = _DDLayerArray;
   DDLayer** layerArray = (DDLayer**) malloc((lid + 1) * sizeof(DDLayer*));
   if (oriLayerArray != NULL) {
@@ -259,10 +297,13 @@ int _AllocLid() {
     free(oriLayerArray);
   }
   _DDLayerArray = layerArray;
+#endif  
 #endif
   return lid;
 }
-int _LayerIdToLid(const String& layerId) {
+
+
+inline int _LayerIdToLid(const String& layerId) {
   return atoi(layerId.c_str());
 }
 void _PostCreateLayer(DDLayer* pLayer) {
@@ -277,6 +318,25 @@ void _PreDeleteLayer(DDLayer* pLayer) {
   _DDLayerArray[lid] = NULL;
 #endif
 }
+
+#ifdef SUPPORT_TUNNEL
+int _AllocTid() {
+  return _AllocLid();
+}
+void _PostCreateTunnel(DDTunnel* pTunnel) {
+#ifdef STORE_LAYERS  
+  int lid = _LayerIdToLid(pTunnel->getTunnelId());
+  _DDLayerArray[lid] = pTunnel;
+#endif
+}
+void _PreDeleteTunnel(DDTunnel* pTunnel) {
+#ifdef STORE_LAYERS  
+  int lid = _LayerIdToLid(pTunnel->getTunnelId());
+  _DDLayerArray[lid] = NULL;
+#endif
+}
+#endif
+
 #ifdef VALIDATE_CONNECTION
 long _LastValidateConnectionMillis = 0;
 #endif
@@ -410,6 +470,48 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
 
   _SendingCommand = false;
 }
+void __SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
+//Serial.println("//&&" + specialData);
+  _IO->print("%%>");
+  _IO->print(specialType);
+  _IO->print(".");
+  _IO->print(specialId);
+  if (specialCommand != NULL) {
+    _IO->print(":");
+    _IO->print(specialCommand);
+  }
+  _IO->print(">");
+  if (specialData != "") {
+    _IO->print(specialData);
+  }
+  _IO->print("\n");
+  if (FLUSH_AFTER_SENT_COMMAND) {
+    _IO->flush();
+  }
+  if (YIELD_AFTER_SEND_COMMAND) {
+    yield();
+  }
+}
+void _SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
+  bool alreadySendingCommand = _SendingCommand;  // not very accurate
+  _SendingCommand = true;
+#ifdef DEBUG_WITH_LED
+  int debugLedPin = _DebugLedPin;
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, HIGH);
+  }
+  __SendSpecialCommand(specialType, specialId, specialCommand, specialData);
+#endif   
+  if (!alreadySendingCommand) {
+    _HandleFeedback();
+  }
+#ifdef DEBUG_WITH_LED
+  if (debugLedPin != -1) {
+    digitalWrite(debugLedPin, LOW);
+  }  
+#endif
+  _SendingCommand = false;
+}
 
 inline void _LogToSerial(const String& logLine) {
   if (!_ConnectedFromSerial || !_Connected) {
@@ -438,7 +540,47 @@ void _HandleFeedback() {
           // keep alive
           _ConnectedIOProxy->keepAlive();
         }
-        // controll ... currently, simply ignore
+        else {
+#ifdef SUPPORT_TUNNEL
+//Serial.println("LT-" + *pFeedback);
+          if (pFeedback->startsWith("<lt.")) {
+            int idx = pFeedback->indexOf('<', 4);
+            //Serial.println("LT+" + String(idx));
+            if (idx != -1) {
+              //Serial.println("LT++" + String(idx));
+              String tid = pFeedback->substring(4, idx);
+              String data = pFeedback->substring(idx + 1);
+              //const String* pData = &data;
+              bool final = false;
+              idx = tid.indexOf(':');
+              //const char *pCommand = NULL;
+              //Serial.println("LT+++" + String(idx));
+              if (idx != -1) {
+                String command = tid.substring(idx + 1);
+                tid = tid.substring(0, idx);
+//Serial.println("LT-command" + data);
+                if (command == "final") {
+                  final = true;
+                } else if (command == "error") {
+                  final = true;
+                  data = "";
+                } else {
+                  data = "???" + command + "???";
+                }
+              }/* else {
+                data += "\n";
+              }*/
+              int lid = _LayerIdToLid(tid);
+              DDTunnel* pTunnel = (DDTunnel*) _DDLayerArray[lid];
+              if (pTunnel != NULL) {
+//Serial.println("LT++++" + data + " - " + String(final));
+                pTunnel->handleInput(data, final);
+              }
+            }
+          }
+
+#endif          
+        }
         pFeedback = NULL;
       }
     }
@@ -484,7 +626,11 @@ void _HandleFeedback() {
         }
       }
       if (ok) {
+#ifdef SUPPORT_TUNNEL
+        DDLayer* pLayer = (DDLayer*) _DDLayerArray[lid];
+#else
         DDLayer* pLayer = _DDLayerArray[lid];
+#endif
         if (pLayer != NULL) {
           DDFeedbackHandler handler = pLayer->getFeedbackHandler();
           if (handler != NULL) {
@@ -564,6 +710,12 @@ inline void _sendCommand7(const String& layerId, const char *command, const Stri
 inline void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
   _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
 }
+
+#ifdef SUPPORT_TUNNEL
+inline void _sendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
+  _SendSpecialCommand(specialType, specialId, specialCommand, specialData);
+}
+#endif
 
 
 
@@ -650,7 +802,7 @@ const DDFeedback* DDFeedbackManager::getFeedback() {
 void DDFeedbackManager::pushFeedback(int x, int y) {
   feedbackArray[nextArrayIdx].x = x;
   feedbackArray[nextArrayIdx].y = y;
-  nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
+  nextArrayIdx = (nextArrayIdx + 1) % arraySize;
   if (nextArrayIdx == validArrayIdx)
     validArrayIdx = (validArrayIdx + 1) % arraySize;
 }
@@ -662,6 +814,7 @@ DDLayer::DDLayer(int layerId) {
   this->feedbackHandler = NULL;
 }
 DDLayer::~DDLayer() {
+  _PreDeleteLayer(this);
   if (pFeedbackManager != NULL)
     delete pFeedbackManager;
 } 
@@ -673,6 +826,9 @@ void DDLayer::opacity(int opacity) {
 }
 void DDLayer::border(float size, const String& color, const String& shape) {
   _sendCommand3(layerId, "border", String(size), color, shape);
+}
+void DDLayer::noBorder() {
+  _sendCommand0(layerId, "border");
 }
 void DDLayer::padding(float left, float top, float right, float bottom) {
   _sendCommand4(layerId, "padding", String(left), String(top), String(right), String(bottom));
@@ -965,6 +1121,9 @@ void GraphicalDDLayer::println(const String& text) {
 void GraphicalDDLayer::drawChar(int x, int y, char c, const String& color, const String& bgColor, int size) {
   _sendCommand6(layerId, "drawchar", String(x), String(y), color, bgColor, String(size), String(c));
 }
+void GraphicalDDLayer::drawStr(int x, int y, const String& string, const String& color, const String& bgColor, int size) {
+  _sendCommand6(layerId, "drawstr", String(x), String(y), color, bgColor, String(size), string);
+}
 void GraphicalDDLayer::drawPixel(int x, int y, const String& color) {
   _sendCommand3(layerId, "drawpixel", String(x), String(y), color);
 }
@@ -1040,7 +1199,7 @@ void GraphicalDDLayer::polygon(int side, int vertexCount) {
 void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
   _sendCommand2(layerId, inside ? "cpolyin" : "cpoly", String(radius), String(vertexCount));
 }
-void GraphicalDDLayer::write(const String& text, bool draw) {
+void GraphicalDDLayer:: write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? "drawtext" : "write", text);
 }
 
@@ -1135,8 +1294,14 @@ void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int
 }
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
-  _PreDeleteLayer(pLayer);
+  //_PreDeleteLayer(pLayer);
   delete pLayer;
+}
+void DumbDisplay::recordLayerCommands() {
+  _sendCommand0("", "RECC");
+}
+void DumbDisplay::playbackLayerCommands() {
+  _sendCommand0("", "PLAYC");
 }
 void DumbDisplay::backgroundColor(const String& color) {
   _Connect();
@@ -1145,7 +1310,96 @@ void DumbDisplay::backgroundColor(const String& color) {
 void DumbDisplay::writeComment(const String& comment) {
   _Connect();
   _sendCommand0("", ("// " + comment).c_str());
+  // if (true) {
+  //   int idx = comment.indexOf('\n');
+  //   if (idx != -1) {
+  //       String com1 = comment.substring(0, idx);
+  //       String com2 = comment.substring(idx + 1);
+  //       _sendCommand0("", ("// " + com1).c_str());
+  //       writeComment(com2);
+  //   } else {
+  //     _sendCommand0("", ("// " + comment).c_str());
+  //   }  
+  // } else {
+  //   _sendCommand0("", ("// " + comment).c_str());
+  // }
 }
+
+
+#ifdef SUPPORT_TUNNEL
+DDTunnel::DDTunnel(int tunnelId, int bufferSize) {
+  this->tunnelId = String(tunnelId);
+  this->arraySize = bufferSize;
+  this->dataArray = new String[bufferSize];
+  this->nextArrayIdx = 0;
+  this->validArrayIdx = 0;
+  this->done = false;
+}
+DDTunnel::~DDTunnel() {
+  _PreDeleteTunnel(this);
+  delete this->dataArray;
+} 
+void DDTunnel::release() {
+  if (!done) {
+    _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");
+  }
+  done = true;
+}
+int DDTunnel::_count() {
+  return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
+}
+bool DDTunnel::_eof() {
+  return nextArrayIdx == validArrayIdx && done;
+}
+String DDTunnel::_readLine() {
+  if (nextArrayIdx == validArrayIdx) return "";
+  String data = dataArray[validArrayIdx];
+  dataArray[validArrayIdx] = "";
+  validArrayIdx = (validArrayIdx + 1) % arraySize;
+  return data;
+}
+void DDTunnel::_writeLine(const String& data) {
+//Serial.println("//--");
+  _sendSpecialCommand("lt", tunnelId, NULL, data);
+}
+void DDTunnel::handleInput(const String& data, bool final) {
+  if (!final || data != "") {
+    dataArray[nextArrayIdx] = data;
+    nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
+    if (nextArrayIdx == validArrayIdx)
+      validArrayIdx = (validArrayIdx + 1) % arraySize;
+  }
+  if (final)
+    this->done = true;
+}
+// int BasicDDTunnel::available() {
+//   return this->data.length();
+// }
+// String BasicDDTunnel::read() {
+//   String data = this->data;
+//   this->data = "";
+//   //Serial.print("+" + data);
+//   return data;
+// }
+// void BasicDDTunnel::write(const String& data) {
+//   _sendSpecialCommand("lt", tunnelId, NULL, data);
+// }
+// bool BasicDDTunnel::eof() {
+//   return this->data.length() == 0 && this->done;
+// }
+BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, int bufferSize) {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  _sendSpecialCommand("lt", tunnelId, "connect", endPoint);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel(tid, bufferSize);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
+void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
+  delete pTunnel;
+}
+#endif
+
 
 
 void DumbDisplay::debugSetup(int debugLedPin, bool enableEchoFeedback) {
