@@ -6,24 +6,35 @@ class DDBridge:
     def __init__(self):
         self.lock = threading.Lock()
         self.line_list = []
+        self.no_further_insert = False
     def insertSourceLine(self, source_line):
         self._insertLine('>', source_line)
-    def insertTargetLine(self, target_line):
-        self._insertLine('<', target_line)
+    def insertTargetLine(self, target_line, no_further_insert = False):
+        self._insertLine('<', target_line, no_further_insert)
     def insertLogLine(self, log_line):
         self._insertLine('=', log_line)
-    def transportLine(self):
+    def transportLine(self, pushback_if_failed = False):
         while True:
-            line = self._popLine()
+            ori_line = self._popLine()
+            line = ori_line
             if line == None:
                 return False
+            #print("TX:" + ori_line)###
             transDir = line[0]
             line = line[1:]
-            self._sendLine(line, transDir)
-            return True
-    def _insertLine(self, transDir, line):
+            if not self._sendLine(line, transDir):
+                if pushback_if_failed:
+                    self._pushbackLine(ori_line)
+                return False
+            else:
+                return True
+    def _insertLine(self, transDir, line, no_further_insert = False):
         self.lock.acquire()
-        self.line_list.append(transDir + line)
+        if not self.no_further_insert:
+            if no_further_insert:
+                self.no_further_insert = True
+                self.line_list.clear()
+            self.line_list.append(transDir + line)
         self.lock.release()
     def _popLine(self):
         line = None
@@ -31,7 +42,11 @@ class DDBridge:
         if len(self.line_list) > 0:
             line = self.line_list.pop(0)
         self.lock.release()    
-        return line    
+        return line
+    def _pushbackLine(self, line):
+        self.lock.acquire()
+        self.line_list.insert(0, line)
+        self.lock.release()
     def _sendLine(self, line, transDir):
         raise Exception("should have been overridden")
 
@@ -41,14 +56,19 @@ class SimpleDDBridge(DDBridge):
         self.ser = ser
         self.target = target
     def _sendLine(self, line, transDir):
+        sent = False
         if line != None:
             if transDir == '>':
                 if self.target != None:
-                    self.target.forward(line)
+                    sent = self.target.forward(line)
             elif transDir == '<':
                 if self.ser != None:
                     data = (line + '\n').encode()
                     self.ser.write(data)
+                    sent = True
+            else:
+                sent = True
+        return sent
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -89,13 +109,15 @@ class Tunnel:
             print(f"failed to 'serve' end-point {self.host}:{self.port} ... {err}")
             self._close("OS error: {0}".format(err))
     def forward(self, line):
+        sent = False
         if self.sock != None:
             data = bytes(line + "\n", 'UTF8')
             try:
                 self.sock.sendall(data)
+                sent = True
             except:
                 pass
-                #self._close()
+        return sent
     def _serveOnce(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             self.sock = s
@@ -147,7 +169,7 @@ class Tunnel:
             #             break
     def _close(self, error_msg):
         if error_msg != None and self.bridge != None:
-            self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + ":error<" + error_msg)
+            self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + ":error<" + error_msg, True)
         if self.sock != None:
             self.sock.close()
             self.sock = None
@@ -164,7 +186,7 @@ class SerialSource:
         bridge.transportLine()
         tunnels = set(self.tunnels.values())
         for tunnel in tunnels:
-            if not tunnel.bridge.transportLine() and tunnel.closed:
+            if not tunnel.bridge.transportLine(True) and tunnel.closed:
                 del self.tunnels[tunnel.tunnel_id]
     def serialServe(self):
         try:
@@ -262,15 +284,18 @@ class WifiTarget:
             self.sock = None
         self.bridge = None
     def forward(self, line):
+        sent = False
         if self.conn != None:
             data = bytes(line + "\n", 'UTF8')
             try:
                 self.conn.sendall(data)
+                sent = True
             except:
                 print("WiFi connect lost (when sending data)")
                 if self.bridge != None:
                     self.bridge.insertLogLine("!!!!! WiFi connection lost (when sending data)")
                 self.stop()
+        return sent
     def _serveOnce(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             #host = '' # empty ==> all accepted
