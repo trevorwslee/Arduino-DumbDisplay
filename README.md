@@ -634,7 +634,7 @@ void loop() {
 
 ## More
 
-It is apparent that turning on a LED by sending text-based command is not particularly efficient. Indeed, screen flickering is a commonplace, special when there are lots of activities.
+It is apparent that turning on a LED by sending text-based command is not particularly efficient. Indeed, screen flickering is a commonplace, especial when there are lots of activities.
 
 In order to relieve this flickering situation a bit, it is possilbe to freeze DumbDisplay's screen during sending bulk of commands:
 * `dumbdisplay.recordLayerCommands()` -- start recording commands (freeze DumbDisplay screen)
@@ -644,7 +644,7 @@ In order to relieve this flickering situation a bit, it is possilbe to freeze Du
 A sample sketch demonstrates this can help: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/mine/joystick/joystick.ino
 
 
-![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/jobstick.png)
+![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick.png)
 
 
 
