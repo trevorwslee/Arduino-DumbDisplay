@@ -1,6 +1,6 @@
 /*
 
-  sample code adapted from: https://cyaninfinite.com/interfacing-arduino-joystick-shield-with-oled-display/
+  Sample code adapted from: https://cyaninfinite.com/interfacing-arduino-joystick-shield-with-oled-display/
   - instead of OLED, DumbDisplay is used
   - added Bluetooth connectivity with the help of HC-06
   - added Photo Resistor connection to dynamically change DumbDisplay border color
@@ -36,6 +36,7 @@ O|   A2 | ---
  |   10 | --- | RXD | 
 
 */
+
 
 #include "ssdumbdisplay.h"
 
@@ -134,8 +135,7 @@ void loop()
   pLayer->drawLine(cir_x - l_len, cir_y , cir_x + l_len, cir_y, "slateblue");
 
   //draw circle
-  //pLayer->drawText(cir_x + new_x_joystick, cir_y - new_y_joystick, "K", "green");
-  pLayer->drawCircle(cir_x + new_x_joystick, cir_y - new_y_joystick, !digitalRead(k_btn) ? 3 * cir_r / 2 : cir_r, "azure");
+  pLayer->drawCircle(cir_x + new_x_joystick, cir_y - new_y_joystick,  cir_r, "azure", !digitalRead(k_btn));
 
   //draw Btn
   //A

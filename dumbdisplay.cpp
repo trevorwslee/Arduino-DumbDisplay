@@ -1130,30 +1130,30 @@ void GraphicalDDLayer::drawPixel(int x, int y, const String& color) {
 void GraphicalDDLayer::drawLine(int x1, int y1, int x2, int y2, const String& color) {
   _sendCommand5(layerId, "drawline", String(x1), String(y1), String(x2), String(y2), color);
 }
-void GraphicalDDLayer::drawRect(int x, int y, int w, int h, const String& color) {
-  _sendCommand5(layerId, "drawrect", String(x), String(y), String(w), String(h), color);
+void GraphicalDDLayer::drawRect(int x, int y, int w, int h, const String& color, bool filled) {
+  _sendCommand6(layerId, "drawrect", String(x), String(y), String(w), String(h), color, TO_BOOL(filled));
 }
-void GraphicalDDLayer::fillRect(int x, int y, int w, int h, const String& color) {
-  _sendCommand6(layerId, "drawrect", String(x), String(y), String(w), String(h), color, TO_BOOL(true));
+// void GraphicalDDLayer::fillRect(int x, int y, int w, int h, const String& color) {
+//   _sendCommand6(layerId, "drawrect", String(x), String(y), String(w), String(h), color, TO_BOOL(true));
+// }
+void GraphicalDDLayer::drawCircle(int x, int y, int r, const String& color, bool filled) {
+  _sendCommand5(layerId, "drawcircle", String(x), String(y), String(r), color, TO_BOOL(filled));
 }
-void GraphicalDDLayer::drawCircle(int x, int y, int r, const String& color) {
-  _sendCommand4(layerId, "drawcircle", String(x), String(y), String(r), color);
+// void GraphicalDDLayer::fillCircle(int x, int y, int r, const String& color) {
+//   _sendCommand5(layerId, "drawcircle", String(x), String(y), String(r), color, TO_BOOL(true));
+// }
+void GraphicalDDLayer::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color, bool filled) {
+  _sendCommand8(layerId, "drawtriangle", String(x1), String(y1), String(x2), String(y2), String(x3), String(y3), color, TO_BOOL(filled));
 }
-void GraphicalDDLayer::fillCircle(int x, int y, int r, const String& color) {
-  _sendCommand5(layerId, "drawcircle", String(x), String(y), String(r), color, TO_BOOL(true));
+// void GraphicalDDLayer::fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color) {
+//   _sendCommand8(layerId, "drawtriangle", String(x1), String(y1), String(x2), String(y2), String(x3), String(y3), color, TO_BOOL(true));
+// }
+void GraphicalDDLayer::drawRoundRect(int x, int y, int w, int h, int r, const String& color, bool filled) {
+  _sendCommand7(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color, TO_BOOL(filled));
 }
-void GraphicalDDLayer::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color) {
-  _sendCommand7(layerId, "drawtriangle", String(x1), String(y1), String(x2), String(y2), String(x3), String(y3), color);
-}
-void GraphicalDDLayer::fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color) {
-  _sendCommand8(layerId, "drawtriangle", String(x1), String(y1), String(x2), String(y2), String(x3), String(y3), color, TO_BOOL(true));
-}
-void GraphicalDDLayer::drawRoundRect(int x, int y, int w, int h, int r, const String& color) {
-  _sendCommand6(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color);
-}
-void GraphicalDDLayer::fillRoundRect(int x, int y, int w, int h, int r, const String& color) {
-  _sendCommand7(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color, TO_BOOL(true));
-}
+// void GraphicalDDLayer::fillRoundRect(int x, int y, int w, int h, int r, const String& color) {
+//   _sendCommand7(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color, TO_BOOL(true));
+// }
 void GraphicalDDLayer::forward(int distance) {
   _sendCommand1(layerId, "fd", String(distance));
 }

@@ -355,14 +355,22 @@ class GraphicalDDLayer: public DDLayer {
     void drawPixel(int x, int y, const String& color);
     /* draw a [end to end] line */
     void drawLine(int x1, int y1, int x2, int y2, const String& color);
-    void drawCircle(int x, int y, int r, const String& color);
-    void fillCircle(int x, int y, int r, const String& color);
-    void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color);
-    void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color);
-    void drawRect(int x, int y, int w, int h, const String& color);
-    void fillRect(int x, int y, int w, int h, const String& color);
-    void drawRoundRect(int x, int y, int w, int h, int r, const String& color);
-    void fillRoundRect(int x, int y, int w, int h, int r, const String& color);
+    void drawCircle(int x, int y, int r, const String& color, bool filled = false);
+    inline void fillCircle(int x, int y, int r, const String& color) {
+      drawCircle(x, y, r, color, true);
+    }
+    void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color, bool filled = false);
+    inline void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color) {
+      drawTriangle(x1, y1, x2, y2, x3, y3, color, true);
+    }
+    void drawRect(int x, int y, int w, int h, const String& color, bool filled = false);
+    inline void fillRect(int x, int y, int w, int h, const String& color) {
+      drawRect(x, y, w, h, color, true);
+    }
+    void drawRoundRect(int x, int y, int w, int h, int r, const String& color, bool filled = false);
+    inline void fillRoundRect(int x, int y, int w, int h, int r, const String& color) {
+      drawRoundRect(x, y, w, h, r, color, true);
+    }
     /* forward (relative to cursor) */
     void forward(int distance);
     /* left turn */
