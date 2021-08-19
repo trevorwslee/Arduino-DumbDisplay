@@ -1,6 +1,7 @@
-#include <ssdumbdisplay.h>
+#include <dumbdisplay.h>
 
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3)));
+/* please use DumbDisplayWiFiBridge for connection */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 LedGridDDLayer *led;
 
 void setup() {

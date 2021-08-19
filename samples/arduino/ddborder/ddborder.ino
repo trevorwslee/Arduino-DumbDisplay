@@ -1,6 +1,7 @@
 #include <dumbdisplay.h>
 
-DumbDisplay dumbdisplay(new DDInputOutput());
+/* please use DumbDisplayWiFiBridge for connection */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 
 void setup() {

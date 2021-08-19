@@ -7,9 +7,9 @@
 
   ----------------------
   Setup Arduino UNO 
-  . with JoyStick Shield
+  . with Joystick shield
   . HC-06
-  . Photo Resistor
+  . photo resistor
   ----------------------
 
 
