@@ -90,6 +90,7 @@ void IOProxy::validConnection() {
 volatile bool _Connected = false;
 volatile int _DDCompatibility = 0;
 volatile int _NextLid = 0;
+volatile int _NextImgId = 0;
 
 #ifdef SUPPORT_TUNNEL
 DDObject** _DDLayerArray = NULL;
@@ -277,6 +278,10 @@ void _Connect() {
 }
 
 
+int _AllocImgId() {
+  int imgId = _NextImgId++;
+  return imgId;
+}
 int _AllocLid() {
   _Connect();
   int lid = _NextLid++;
@@ -921,6 +926,22 @@ void MbDDLayer::showLeds(const String& ledPattern) {
 void MbDDLayer::ledColor(const String& color) {
   _sendCommand1(layerId, "ledc", color);
 }
+MbImage* MbDDLayer::createImage(const String& ledPattern) {
+  int imgId = _AllocImgId();
+  MbImage *pImage = new MbImage(imgId);
+  _sendCommand2(layerId, "crimg", pImage->getImageId(), ledPattern);
+}
+void MbDDLayer::releaseImage(MbImage *pImage) {
+  _sendCommand1(layerId, "delimg", pImage->getImageId());
+  delete pImage;
+}
+void MbDDLayer::showImage(MbImage *pImage, int xOff) {
+  _sendCommand2(layerId, "shimg", pImage->getImageId(), String(xOff));
+}
+void MbDDLayer::scrollImage(MbImage *pImage, int xOff, long interval) {
+  _sendCommand3(layerId, "sclimg", pImage->getImageId(), String(xOff), String(interval));
+}
+
 
 void TurtleDDLayer::forward(int distance, bool withPen) {
   _sendCommand1(layerId, withPen ? "fd" : "dlfd", String(distance));

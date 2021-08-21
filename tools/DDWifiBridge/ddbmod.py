@@ -129,7 +129,7 @@ class Tunnel:
                 return
             received_any = False
             rest = ""
-            while True:
+            while self.sock != None:
                 idx = rest.find('\n')
                 if idx != -1:
                     d = rest
@@ -174,7 +174,8 @@ class Tunnel:
             self.sock.close()
             self.sock = None
         self.closed = True
-        #self.bridge = None
+
+
 
 class SerialSource:
     def __init__(self, ser, bridge):
@@ -184,10 +185,12 @@ class SerialSource:
         self.tunnels = {}
     def timeSlice(self, bridge):
         bridge.transportLine()
-        tunnels = set(self.tunnels.values())
-        for tunnel in tunnels:
-            if not tunnel.bridge.transportLine(True) and tunnel.closed:
-                del self.tunnels[tunnel.tunnel_id]
+        if len(self.tunnels) > 0:
+            tunnels = set(self.tunnels.values())
+            for tunnel in tunnels:
+                if not tunnel.bridge.transportLine(True) and tunnel.closed:
+                    del self.tunnels[tunnel.tunnel_id]
+                    print('Released tunnel ' + tunnel.tunnel_id)
     def serialServe(self):
         try:
             self._serialServe()
@@ -235,6 +238,7 @@ class SerialSource:
                                     host = lt_data
                                 tunnel = Tunnel(self.ser, tid, host, port)
                                 self.tunnels[tunnel.tunnel_id] = tunnel
+                                print('Created tunnel ' + tunnel.tunnel_id)
                                 threading.Thread(target=tunnel.serve, daemon=True).start()
                                 #self.tunnels.append(tunnel)
                             elif lt_command == 'disconnect':

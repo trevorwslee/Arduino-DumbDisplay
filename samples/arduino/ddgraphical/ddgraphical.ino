@@ -1,7 +1,10 @@
-#include <dumbdisplay.h>
+#include <ssdumbdisplay.h>
 
-/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
-DumbDisplay dumbdisplay(new DDInputOutput(57600));
+// assume HC-06 connected, to pin 2 and 3
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true));
+
+// otherwise, can use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8
+// DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 
 

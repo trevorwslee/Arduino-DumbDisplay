@@ -172,12 +172,22 @@ class DDLayer: public DDObject {
     DDFeedbackHandler feedbackHandler;
 };
 
-
 enum MbArrow { North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest };
 enum MbIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, Surprised,
               Silly, Fabulous, Meh, TShirt, Rollerskate, Duck, House, Tortoise, Butterfly, StickFigure,
               Ghost, Sword, Giraffe, Skull, Umbrella, Snake, Rabbit, Cow, QuarterNote, EigthNote,
               Pitchfork, Target, Triangle, LeftTriangle, Chessboard, Diamond, SmallDiamond, Square, SmallSquare, Scissors };
+
+class MbImage {
+  public:
+    MbImage(int imageId) {
+      this->imageId = imageId;
+    }
+    inline const String& getImageId() { return this->imageId; }  
+  private:
+    String imageId;
+};
+
 
 class MbDDLayer: public DDLayer {
   public:
@@ -205,6 +215,10 @@ class MbDDLayer: public DDLayer {
     void showLeds(const String& ledPattern);
     /* set layer LED color with common "color name" */
     void ledColor(const String& color);
+    MbImage* createImage(const String& ledPattern);
+    void releaseImage(MbImage *pImage);
+    void showImage(MbImage *pImage, int xOff);
+    void scrollImage(MbImage *pImage, int xOff, long interval);
 };
 
 
@@ -353,7 +367,7 @@ class GraphicalDDLayer: public DDLayer {
     void drawStr(int x, int y, const String& string, const String& color, const String& bgColor = "", int size = 0);
     /* draw a pixel */
     void drawPixel(int x, int y, const String& color);
-    /* draw a [end to end] line */
+    /* draw a line */
     void drawLine(int x1, int y1, int x2, int y2, const String& color);
     void drawCircle(int x, int y, int r, const String& color, bool filled = false);
     inline void fillCircle(int x, int y, int r, const String& color) {
