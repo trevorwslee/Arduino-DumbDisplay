@@ -181,6 +181,37 @@ Please note that Arduino will check for "feedback" in 4 occasions:
 * once when `DDYield()` is called
 * during the "wait loop" of `DDDelay()`
 
+With the help of DumbDisplay WiFi Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
+
+```
+DumbDisplay dumbdisplay(new DDInputOutput(9600));
+BasicDDTunnel *pTunnel;
+void setup() {
+ pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17"); 
+}
+void loop() {
+  if (!pTunnel->eof()) {  // check not "reached" EOF
+    if (pTunnel->count() > 0) {  // check something is there to read
+      const String& data = pTunnel->readLine();    // read what got so far
+      dumbdisplay.writeComment("{" + data + "}");  // write out what got as comment to DumbDisplay
+    }
+  } 
+  DDDelay(200);  // delay a bit, and give DD a chance to so some work
+}
+```
+
+In case a "tunnel" reached EOF, and need be reinvoked:
+
+```
+pTunnel->reconnect();
+```
+
+In case a "tunnel" finishes all its tasks in the middle, it should be released in order for Arduino to claim back resources:
+
+```
+dumbdisplay.deleteTunnel(pTunnel);
+```
+
 
 ## More Samples
 
