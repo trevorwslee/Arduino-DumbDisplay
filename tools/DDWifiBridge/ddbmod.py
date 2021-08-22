@@ -5,7 +5,7 @@ import time
 
 
 _LOG_TUNNEL = True
-_DEBUG_TUNNEL = True
+_DEBUG_TUNNEL = False
 _DEBUG_TUNNEL_INS = False
 
 class DDBridge:
