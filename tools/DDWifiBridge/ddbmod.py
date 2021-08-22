@@ -1,6 +1,11 @@
 
 import socket
 import threading
+import time
+
+
+_LOG_TUNNEL = True
+_DEBUG_TUNNEL = True
 
 class DDBridge:
     def __init__(self):
@@ -13,28 +18,40 @@ class DDBridge:
         self._insertLine('<', target_line, no_further_insert)
     def insertLogLine(self, log_line):
         self._insertLine('=', log_line)
+    def peek(self):
+        return self._peek();
     def transportLine(self, pushback_if_failed = False):
         while True:
             ori_line = self._popLine()
             line = ori_line
             if line == None:
                 return False
-            #print("TX:" + ori_line)###
             transDir = line[0]
             line = line[1:]
+            if _DEBUG_TUNNEL and line.startswith('<lt.'):
+                print("** TUNNEL-TX:" + line)
             if not self._sendLine(line, transDir):
                 if pushback_if_failed:
                     self._pushbackLine(ori_line)
                 return False
             else:
                 return True
+    def _peek(self):
+        self.lock.acquire()
+        res = len(self.line_list)
+        self.lock.release()
+        return res
     def _insertLine(self, transDir, line, no_further_insert = False):
         self.lock.acquire()
         if not self.no_further_insert:
             if no_further_insert:
                 self.no_further_insert = True
-                self.line_list.clear()
+                self.line_list = []
             self.line_list.append(transDir + line)
+            if _DEBUG_TUNNEL and line.startswith('<lt.'):
+                print("** TUNNEL-INS-" + str(len(self.line_list)) + ":" + line)
+            #elif _DEBUG_TUNNEL and no_further_insert:
+            #    print("** ***-INS-" + str(len(self.line_list)) + ":" + line)  ### not quite expected
         self.lock.release()
     def _popLine(self):
         line = None
@@ -45,7 +62,8 @@ class DDBridge:
         return line
     def _pushbackLine(self, line):
         self.lock.acquire()
-        self.line_list.insert(0, line)
+        if not self.no_further_insert:
+            self.line_list.insert(0, line)
         self.lock.release()
     def _sendLine(self, line, transDir):
         raise Exception("should have been overridden")
@@ -83,7 +101,7 @@ def get_ip():
     return IP
 
 class Tunnel:
-    def __init__(self, ser, tunnel_id,host, port):
+    def __init__(self, ser, tunnel_id, host, port):
         self.bridge = SimpleDDBridge(ser, self)
         self.tunnel_id = tunnel_id
         self.host = host
@@ -188,9 +206,18 @@ class SerialSource:
         if len(self.tunnels) > 0:
             tunnels = set(self.tunnels.values())
             for tunnel in tunnels:
-                if not tunnel.bridge.transportLine(True) and tunnel.closed:
+                tx_closed = tunnel.closed
+                if _DEBUG_TUNNEL and tx_closed:
+                    peek = tunnel.bridge.peek()
+                    if peek > 1:
+                        print("... ??? " + str(peek) + " ???...")
+                    else:
+                        print("...")
+                tx_res = tunnel.bridge.transportLine(True)
+                if tx_closed and (not tx_res):
                     del self.tunnels[tunnel.tunnel_id]
-                    print('Released tunnel ' + tunnel.tunnel_id)
+                    if _LOG_TUNNEL:
+                        print('Released tunnel ' + tunnel.tunnel_id)
     def serialServe(self):
         try:
             self._serialServe()
@@ -227,22 +254,34 @@ class SerialSource:
                                 lt_command = None
                         #print(tid + ':' + str(tl_command) + ">" + str(lt_data))
                         if lt_command != None:
-                            if lt_command == "connect" and lt_data != None:
+                            if lt_command == "connect" or lt_command == "reconnect":
                                 host = None
-                                port = 80
-                                idx = lt_data.find(':')
-                                if idx != -1:
-                                    port = int(lt_data[idx + 1:])
-                                    host = lt_data[0:idx]
-                                else:
-                                    host = lt_data
-                                tunnel = Tunnel(self.ser, tid, host, port)
-                                self.tunnels[tunnel.tunnel_id] = tunnel
-                                print('Created tunnel ' + tunnel.tunnel_id)
-                                threading.Thread(target=tunnel.serve, daemon=True).start()
+                                port = None
+                                if lt_data != None:
+                                    idx = lt_data.find(':')
+                                    if idx != -1:
+                                        port = int(lt_data[idx + 1:])
+                                        host = lt_data[0:idx]
+                                    else:
+                                        host = lt_data
+                                if host != None:
+                                    if lt_command == "reconnect":
+                                        tunnel = self.tunnels.get(tid)
+                                        if tunnel != None:
+                                            tunnel.close()
+                                            while self.tunnels.get(tid) != None:
+                                                time.sleep(0.1)
+                                    tunnel = Tunnel(self.ser, tid, host, port)
+                                    self.tunnels[tunnel.tunnel_id] = tunnel
+                                    if _LOG_TUNNEL:
+                                        log_prefix = 'Re-' if lt_command == "reconnect" else ''
+                                        print(log_prefix + 'Create tunnel ' + tunnel.tunnel_id)
+                                    threading.Thread(target=tunnel.serve, daemon=True).start()
                                 #self.tunnels.append(tunnel)
                             elif lt_command == 'disconnect':
                                 tunnel = self.tunnels.get(tid)
+                                if _LOG_TUNNEL:
+                                    print('Disconnected tunnel ' + tid)
                                 if tunnel != None:
                                     tunnel.close()
                         else:
