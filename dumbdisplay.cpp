@@ -1348,7 +1348,8 @@ void DumbDisplay::writeComment(const String& comment) {
 
 
 #ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(int tunnelId, int bufferSize) {
+DDTunnel::DDTunnel(const String& endPoint, int tunnelId, int bufferSize) {
+  this->endPoint = endPoint;
   this->tunnelId = String(tunnelId);
   this->arraySize = bufferSize;
   this->dataArray = new String[bufferSize];
@@ -1360,6 +1361,15 @@ DDTunnel::~DDTunnel() {
   _PreDeleteTunnel(this);
   delete this->dataArray;
 } 
+void DDTunnel::reconnect() {
+  nextArrayIdx = 0;
+  validArrayIdx = 0;
+  done = false;
+  for (int i = 0; i < arraySize; i++) {
+    dataArray[i] = "";
+  }
+  _sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
+}
 void DDTunnel::release() {
   if (!done) {
     _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");
@@ -1384,6 +1394,7 @@ void DDTunnel::_writeLine(const String& data) {
   _sendSpecialCommand("lt", tunnelId, NULL, data);
 }
 void DDTunnel::handleInput(const String& data, bool final) {
+//Serial.println("//hi:" + data);
   if (!final || data != "") {
     dataArray[nextArrayIdx] = data;
     nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
@@ -1412,10 +1423,15 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, int buffer
   int tid = _AllocTid();
   String tunnelId = String(tid);
   _sendSpecialCommand("lt", tunnelId, "connect", endPoint);
-  BasicDDTunnel* pTunnel = new BasicDDTunnel(tid, bufferSize);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel(endPoint, tid, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
+// void DumbDisplay::reconnectTunnel(DDTunnel *pTunnel, const String& endPoint) {
+//   const String& tunnelId = pTunnel->getTunnelId();
+//   _sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
+//   pTunnel->_reset();
+// }
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   delete pTunnel;
 }

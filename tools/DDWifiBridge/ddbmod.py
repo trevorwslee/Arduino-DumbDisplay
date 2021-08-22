@@ -18,8 +18,8 @@ class DDBridge:
         self._insertLine('<', target_line, no_further_insert)
     def insertLogLine(self, log_line):
         self._insertLine('=', log_line)
-    def peek(self):
-        return self._peek();
+    def count(self):
+        return self._count();
     def transportLine(self, pushback_if_failed = False):
         while True:
             ori_line = self._popLine()
@@ -36,7 +36,7 @@ class DDBridge:
                 return False
             else:
                 return True
-    def _peek(self):
+    def _count(self):
         self.lock.acquire()
         res = len(self.line_list)
         self.lock.release()
@@ -208,7 +208,7 @@ class SerialSource:
             for tunnel in tunnels:
                 tx_closed = tunnel.closed
                 if _DEBUG_TUNNEL and tx_closed:
-                    peek = tunnel.bridge.peek()
+                    peek = tunnel.bridge.count()
                     if peek > 1:
                         print("... ??? " + str(peek) + " ???...")
                     else:

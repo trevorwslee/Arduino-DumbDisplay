@@ -451,9 +451,10 @@ class SevenSegmentRowDDLayer: public DDLayer {
 
 class DDTunnel: public DDObject {
   public:
-    DDTunnel(int tunnelId, int bufferSize = 4);
+    DDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4);
     ~DDTunnel();
     void release();
+    void reconnect();
     const String& getTunnelId() { return tunnelId; }
   protected:
     int _count();
@@ -463,6 +464,7 @@ class DDTunnel: public DDObject {
   public:
     void handleInput(const String& data, bool final);
   protected:
+    String endPoint;
     String tunnelId;
     int arraySize;
     String* dataArray;
@@ -473,7 +475,7 @@ class DDTunnel: public DDObject {
 
 class BasicDDTunnel: public DDTunnel {
   public:
-    BasicDDTunnel(int tunnelId, int bufferSize = 4): DDTunnel(tunnelId, bufferSize) {
+    BasicDDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4): DDTunnel(endPoint, tunnelId, bufferSize) {
     }
     inline int count() { return _count(); }
     inline bool eof() { return _eof(); }
@@ -514,6 +516,7 @@ class DumbDisplay {
 #ifdef SUPPORT_TUNNEL
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
     BasicDDTunnel* createBasicTunnel(const String& endPoint, int bufferSize = 4);
+    //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
 #endif
     /* set DD background color with common "color name" */

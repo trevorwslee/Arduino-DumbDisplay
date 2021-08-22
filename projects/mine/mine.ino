@@ -59,10 +59,14 @@ void loop() {
     pLayer->toggle();
     DDDelay(1000);
   } else if (pTunnel->eof()) {
-    dumbdisplay.deleteTunnel(pTunnel);
-    pTunnel = NULL;
     dumbdisplay.writeComment("EOF");
     pLayer->toggle();
+  #ifdef TUNNEL_ECHO
+    pTunnel->reconnect();
+  #else
+    dumbdisplay.deleteTunnel(pTunnel);
+    pTunnel = NULL;
+  #endif
     DDDelay(1000);
   } else {
   #ifdef TUNNEL_ECHO
