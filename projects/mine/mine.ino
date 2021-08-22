@@ -10,7 +10,6 @@
 
 #define USE_BLUETOOTH
 
-boolean enableSerial = true;
 unsigned long serialBaud = 57600;
 #ifdef USE_BLUETOOTH
 // setup to connect with bluetooth, as well as be able to connect with serial
@@ -27,11 +26,6 @@ LedGridDDLayer *pLayer;
 #endif
 
 void setup() {
-  if (!enableSerial) {
-    // if DD not using Serial, setup Serial here
-    Serial.begin(serialBaud);
-  }
-
   dumbdisplay.debugSetup(13);  // setup to use pin 13
 
   if (true) {

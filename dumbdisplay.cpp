@@ -547,7 +547,7 @@ void _HandleFeedback() {
         }
         else {
 #ifdef SUPPORT_TUNNEL
-//Serial.println("LT-" + *pFeedback);
+//Serial.println("LT-[" + *pFeedback + "]");
           if (pFeedback->startsWith("<lt.")) {
             int idx = pFeedback->indexOf('<', 4);
             //Serial.println("LT+" + String(idx));
@@ -1382,19 +1382,29 @@ int DDTunnel::_count() {
 bool DDTunnel::_eof() {
   return nextArrayIdx == validArrayIdx && done;
 }
-String DDTunnel::_readLine() {
-  if (nextArrayIdx == validArrayIdx) return "";
-  String data = dataArray[validArrayIdx];
-  dataArray[validArrayIdx] = "";
-  validArrayIdx = (validArrayIdx + 1) % arraySize;
-  return data;
+// String DDTunnel::_readLineDirect() {
+//   if (nextArrayIdx == validArrayIdx) return "";
+//   String data = dataArray[validArrayIdx];
+//   dataArray[validArrayIdx] = "";
+//   validArrayIdx = (validArrayIdx + 1) % arraySize;
+//   return data;
+// }
+void DDTunnel::_readLine(String &buffer) {
+  if (nextArrayIdx == validArrayIdx) {
+    buffer = "";
+  } else {
+    buffer = dataArray[validArrayIdx];
+    dataArray[validArrayIdx] = "";
+    validArrayIdx = (validArrayIdx + 1) % arraySize;
+  }
 }
+
 void DDTunnel::_writeLine(const String& data) {
 //Serial.println("//--");
   _sendSpecialCommand("lt", tunnelId, NULL, data);
 }
 void DDTunnel::handleInput(const String& data, bool final) {
-//Serial.println("//hi:" + data);
+//if (final) Serial.println("//final:" + data);
   if (!final || data != "") {
     dataArray[nextArrayIdx] = data;
     nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
@@ -1403,6 +1413,11 @@ void DDTunnel::handleInput(const String& data, bool final) {
   }
   if (final)
     this->done = true;
+}
+String BasicDDTunnel::readLine() {
+  String buffer;
+  _readLine(buffer);
+  return buffer;
 }
 // int BasicDDTunnel::available() {
 //   return this->data.length();

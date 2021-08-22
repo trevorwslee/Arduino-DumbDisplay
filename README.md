@@ -181,12 +181,43 @@ Please note that Arduino will check for "feedback" in 4 occasions:
 * once when `DDYield()` is called
 * during the "wait loop" of `DDDelay()`
 
+With the help of DumbDisplay WiFi Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
+
+```
+DumbDisplay dumbdisplay(new DDInputOutput(9600));
+BasicDDTunnel *pTunnel;
+void setup() {
+ pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17"); 
+}
+void loop() {
+  if (!pTunnel->eof()) {  // check not "reached" EOF
+    if (pTunnel->count() > 0) {  // check something is there to read
+      const String& data = pTunnel->readLine();    // read what got so far
+      dumbdisplay.writeComment("{" + data + "}");  // write out what got as comment to DumbDisplay
+    }
+  } 
+  DDDelay(200);  // delay a bit, and give DD a chance to so some work
+}
+```
+
+In case a "tunnel" reached EOF, and need be reinvoked:
+
+```
+pTunnel->reconnect();
+```
+
+In case a "tunnel" finishes all its tasks in the middle, it should be released in order for Arduino to claim back resources:
+
+```
+dumbdisplay.deleteTunnel(pTunnel);
+```
+
 
 ## More Samples
 
 
-| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. "Layer feedback" |
-|--|--|--|--|--|--|
+| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. "Layer feedback" | 7. "Tunnel" for getting Quotes |
+|--|--|--|--|--|--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmb.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddgraphical.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/dddoodle.png)|
 
 
@@ -641,6 +672,70 @@ void loop() {
 }
 ```
 
+### Screenshot 7 -- *"Tunnel" for getting Quotes*
+
+This sample should demonstrate how to use "tunnel" to access the Internet for simple things, like "quote of the day" is this case:
+
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddquote/ddquote.ino
+
+```
+#include "dumbdisplay.h"
+
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+/* use a lower baud rate since Arduino Uno Serial buffer size is not very big                      */
+DumbDisplay dumbdisplay(new DDInputOutput(9600));
+
+GraphicalDDLayer *pLayer;
+BasicDDTunnel *pTunnel;
+
+bool gettingNewQuoto = true;
+
+void setup() {
+  // setup a "graphial" list 
+  pLayer = dumbdisplay.createGraphicalLayer(200, 150);  // size 200x150
+  pLayer->border(10, "azure", "round");                 // a round border of size 10  
+  pLayer->noBackgroundColor();                          // initial no background color
+  pLayer->penColor("teal");                             // set pen color
+
+  // setup a "tunnel" to access "quote of the day" by djxmmx.net
+  pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17");  
+}
+
+void loop() {
+    if (!pTunnel->eof()) {
+      // not "reached" EOF (end-of-file)
+      if (pTunnel->count() > 0) {
+        // got something to read
+        if (gettingNewQuoto) {
+          // if just started to get the quote, reset something
+          pLayer->clear();           // clear the "graphical" layer
+          pLayer->setCursor(0, 10);  // set "cursor" to (0, 10)
+        }
+        String data = pTunnel->readLine();  // read what got so far
+        pLayer->print(data);                // print out to the "graphical" layer what got so far
+        gettingNewQuoto = false; 
+      }
+    } else {
+      // "reached" EOF (i.e. got everything)
+      // setup layer for getting "feedback" 
+      pLayer->backgroundColor("azure");  // set background color
+      pLayer->enableFeedback("f");       // enable "auto feedback" 
+      while (true) {                     // loop and wait for layer clicked
+        if (pLayer->getFeedback() != NULL) {
+          break;
+        }
+      }
+      // clicked ==> reset
+      pLayer->noBackgroundColor();  // no background color 
+      pLayer->disableFeedback();    // disable "feedback"
+      pTunnel->reconnect();         // reconnect to djxmmx.net to get another quote
+      gettingNewQuoto = true;       // indicating that a new quote is coming
+    }
+    DDDelay(500);  // delay a bit before another round; this also give DumbDisplay libary a chance to so its work
+}
+```
+
+
 ## More
 
 It is apparent that turning on a LED by sending text-based command is not particularly efficient. Indeed, screen flickering is a commonplace, especial when there are lots of activities.
@@ -708,6 +803,10 @@ MIT
 # Change History
 
 v0.6.1
+  - added 'tunnel', to access Internet without special board support of WIFI connectivity
+  - bug fixes
+
+v0.6.0
   - added 'command buffering', sort of freeze the screen, until played back all at once
   - bug fixes
 

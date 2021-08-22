@@ -5,7 +5,8 @@ import time
 
 
 _LOG_TUNNEL = True
-_DEBUG_TUNNEL = True
+_DEBUG_TUNNEL = False
+_DEBUG_TUNNEL_INS = False
 
 class DDBridge:
     def __init__(self):
@@ -48,10 +49,8 @@ class DDBridge:
                 self.no_further_insert = True
                 self.line_list = []
             self.line_list.append(transDir + line)
-            if _DEBUG_TUNNEL and line.startswith('<lt.'):
+            if _DEBUG_TUNNEL_INS and line.startswith('<lt.'):
                 print("** TUNNEL-INS-" + str(len(self.line_list)) + ":" + line)
-            #elif _DEBUG_TUNNEL and no_further_insert:
-            #    print("** ***-INS-" + str(len(self.line_list)) + ":" + line)  ### not quite expected
         self.lock.release()
     def _popLine(self):
         line = None

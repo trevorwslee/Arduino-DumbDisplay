@@ -459,7 +459,8 @@ class DDTunnel: public DDObject {
   protected:
     int _count();
     bool _eof();
-    String _readLine();
+    //String _readLineDirect();
+    void _readLine(String &buffer);
     void _writeLine(const String& data);
   public:
     void handleInput(const String& data, bool final);
@@ -479,7 +480,9 @@ class BasicDDTunnel: public DDTunnel {
     }
     inline int count() { return _count(); }
     inline bool eof() { return _eof(); }
-    inline String readLine() { return _readLine(); }
+    //inline String readLineDirect() { return _readLineDirect(); }
+    String readLine();
+    inline void readLine(String &buffer) { _readLine(buffer); }
     inline void writeLine(const String& data) { _writeLine(data); }
 };
 
