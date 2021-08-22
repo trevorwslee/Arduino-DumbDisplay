@@ -8,16 +8,17 @@
 #define TEST_TUNNEL
 #define TUNNEL_ECHO
 
-//#define USE_BLUETOOTH
+#define USE_BLUETOOTH
 
 boolean enableSerial = true;
 unsigned long serialBaud = 57600;
 #ifdef USE_BLUETOOTH
-unsigned long baud = DUMBDISPLAY_BAUD;
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), baud, enableSerial, serialBaud));
+// setup to connect with bluetooth, as well as be able to connect with serial
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, serialBaud));
 #else
 DumbDisplay dumbdisplay(new DDInputOutput(serialBaud));
 #endif
+
 
 
 #ifdef TEST_TUNNEL
@@ -59,10 +60,14 @@ void loop() {
     pLayer->toggle();
     DDDelay(1000);
   } else if (pTunnel->eof()) {
-    dumbdisplay.deleteTunnel(pTunnel);
-    pTunnel = NULL;
     dumbdisplay.writeComment("EOF");
     pLayer->toggle();
+  #ifdef TUNNEL_ECHO
+    pTunnel->reconnect();
+  #else
+    dumbdisplay.deleteTunnel(pTunnel);
+    pTunnel = NULL;
+  #endif
     DDDelay(1000);
   } else {
   #ifdef TUNNEL_ECHO

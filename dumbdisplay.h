@@ -172,12 +172,22 @@ class DDLayer: public DDObject {
     DDFeedbackHandler feedbackHandler;
 };
 
-
 enum MbArrow { North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest };
 enum MbIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, Surprised,
               Silly, Fabulous, Meh, TShirt, Rollerskate, Duck, House, Tortoise, Butterfly, StickFigure,
               Ghost, Sword, Giraffe, Skull, Umbrella, Snake, Rabbit, Cow, QuarterNote, EigthNote,
               Pitchfork, Target, Triangle, LeftTriangle, Chessboard, Diamond, SmallDiamond, Square, SmallSquare, Scissors };
+
+class MbImage {
+  public:
+    MbImage(int imageId) {
+      this->imageId = imageId;
+    }
+    inline const String& getImageId() { return this->imageId; }  
+  private:
+    String imageId;
+};
+
 
 class MbDDLayer: public DDLayer {
   public:
@@ -205,6 +215,10 @@ class MbDDLayer: public DDLayer {
     void showLeds(const String& ledPattern);
     /* set layer LED color with common "color name" */
     void ledColor(const String& color);
+    MbImage* createImage(const String& ledPattern);
+    void releaseImage(MbImage *pImage);
+    void showImage(MbImage *pImage, int xOff);
+    void scrollImage(MbImage *pImage, int xOff, long interval);
 };
 
 
@@ -353,7 +367,7 @@ class GraphicalDDLayer: public DDLayer {
     void drawStr(int x, int y, const String& string, const String& color, const String& bgColor = "", int size = 0);
     /* draw a pixel */
     void drawPixel(int x, int y, const String& color);
-    /* draw a [end to end] line */
+    /* draw a line */
     void drawLine(int x1, int y1, int x2, int y2, const String& color);
     void drawCircle(int x, int y, int r, const String& color, bool filled = false);
     inline void fillCircle(int x, int y, int r, const String& color) {
@@ -437,9 +451,10 @@ class SevenSegmentRowDDLayer: public DDLayer {
 
 class DDTunnel: public DDObject {
   public:
-    DDTunnel(int tunnelId, int bufferSize = 4);
+    DDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4);
     ~DDTunnel();
     void release();
+    void reconnect();
     const String& getTunnelId() { return tunnelId; }
   protected:
     int _count();
@@ -449,6 +464,7 @@ class DDTunnel: public DDObject {
   public:
     void handleInput(const String& data, bool final);
   protected:
+    String endPoint;
     String tunnelId;
     int arraySize;
     String* dataArray;
@@ -459,7 +475,7 @@ class DDTunnel: public DDObject {
 
 class BasicDDTunnel: public DDTunnel {
   public:
-    BasicDDTunnel(int tunnelId, int bufferSize = 4): DDTunnel(tunnelId, bufferSize) {
+    BasicDDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4): DDTunnel(endPoint, tunnelId, bufferSize) {
     }
     inline int count() { return _count(); }
     inline bool eof() { return _eof(); }
@@ -498,8 +514,11 @@ class DumbDisplay {
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
 #ifdef SUPPORT_TUNNEL
+    /* create a 'tunnel' to interface with Internet (similar to socket) */
+    /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
     BasicDDTunnel* createBasicTunnel(const String& endPoint, int bufferSize = 4);
+    //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
 #endif
     /* set DD background color with common "color name" */

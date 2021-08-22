@@ -2,7 +2,7 @@
 
 
 #define USE_BLUETOOTH
-#define USE_RECORD
+//#define USE_RECORD
 
 boolean enableSerial = true;
 unsigned long serialBaud = 57600;
