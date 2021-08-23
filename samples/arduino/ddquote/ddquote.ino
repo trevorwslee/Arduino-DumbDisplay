@@ -15,7 +15,7 @@ void setup() {
   pLayer = dumbdisplay.createGraphicalLayer(200, 150);  // size 200x150
   pLayer->border(10, "azure", "round");                 // a round border of size 10  
   pLayer->noBackgroundColor();                          // initial no background color
-  pLayer->penColor("teal");                             // set pen color
+  pLayer->penColor("navy");                             // set pen color
 
   // setup a "tunnel" to access "quote of the day" by djxmmx.net
   pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17");  
