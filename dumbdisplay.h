@@ -181,7 +181,7 @@ enum MbIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, S
 class MbImage {
   public:
     MbImage(int imageId) {
-      this->imageId = imageId;
+      this->imageId = String(imageId);
     }
     inline const String& getImageId() { return this->imageId; }  
   private:
