@@ -19,9 +19,9 @@ A few types of layers can be created:
 
 Notice that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
-You can install the DumbDisplay Arduino Library by downloading the ZIP file as: https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
+You can install the DumbDisplay Arduino Library by downloading the ZIP file as -- https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
 
-(To upgrade DumbDisplay Arduino Library, please refer to: https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
+(To upgrade DumbDisplay Arduino Library, please refer to -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
 
 You will also need to install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
@@ -789,6 +789,7 @@ Notes:
   sudo usermod -a -G dialout <user>
   ```  
 * My own experience shows that using a slower serial baud rate (like 57600 or even lower like 9600) will make the connection more stable.
+* ***If DumbDisplay fails to make connection to DumbDisplay WIFI Bridge, try switching desktop WIFI to use to 2.4 GHz.***  
 
 
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)
