@@ -19,8 +19,11 @@ A few types of layers can be created:
 
 Notice that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
+You can install the DumbDisplay Arduino Library by downloading the ZIP file as: https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
 
-You can install the free DumbDisplay app (v0.5.0 or later) from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
+(To upgrade DumbDisplay Arduino Library, please refer to: https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
+
+You will also need to install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth via HC-06)
@@ -114,6 +117,13 @@ void loop() {
     delay(1000);
 }
 ```
+
+In case a layer finishes all its usages in the middle, it should be deleted in order for Arduino to claim back resources:
+
+```
+dumbdisplay.deleteLayer(led);
+```
+
 
 You can also try out "layer feedback" from DumbDisplay like
 
