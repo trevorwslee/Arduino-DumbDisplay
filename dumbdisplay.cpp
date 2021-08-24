@@ -578,12 +578,12 @@ void _HandleFeedback() {
               int lid = _LayerIdToLid(tid);
               DDTunnel* pTunnel = (DDTunnel*) _DDLayerArray[lid];
               if (pTunnel != NULL) {
+//Serial.println(String("// ") + (final ? "F" : "."));
 //Serial.println("LT++++" + data + " - " + String(final));
                 pTunnel->handleInput(data, final);
               }
             }
           }
-
 #endif          
         }
         pFeedback = NULL;
@@ -658,18 +658,19 @@ void _HandleFeedback() {
   }
 }
 
-inline void _Delay(unsigned long ms) {
+void _Delay(unsigned long ms) {
+//Serial.println("// {");
 #ifdef ENABLE_FEEDBACK
-  unsigned long delayMicros = ms * 1000;
-	unsigned long start = micros();
+  unsigned long delayMillis = ms;
+	unsigned long startMillis = millis();
   while (true) {
     _HandleFeedback();
-    unsigned long remain = delayMicros - (micros() - start);
-    if (remain > 20000) {
+    unsigned long remainMillis = delayMillis - (millis() - startMillis);
+    if (remainMillis > 20) {
       delay(20);
     } else {
-      if (remain > 1000) {
-        delay(remain / 1000);
+      if (remainMillis >= 1) {
+        delay(remainMillis);
       }
       break;
     }
@@ -677,7 +678,29 @@ inline void _Delay(unsigned long ms) {
 #else
   delay(ms);
 #endif
+//Serial.println("// }");
 }
+
+// inline void _OLD_Delay(unsigned long ms) {
+// #ifdef ENABLE_FEEDBACK
+//   unsigned long delayMicros = ms * 1000;
+// 	unsigned long start = micros();
+//   while (true) {
+//     _HandleFeedback();
+//     unsigned long remain = delayMicros - (micros() - start);
+//     if (remain > 20000) {
+//       delay(20);
+//     } else {
+//       if (remain > 1000) {
+//         delay(remain / 1000);
+//       }
+//       break;
+//     }
+//   }
+// #else
+//   delay(ms);
+// #endif
+// }
 
 inline void _Yield() {
 #ifdef ENABLE_FEEDBACK
@@ -1413,6 +1436,7 @@ void DDTunnel::handleInput(const String& data, bool final) {
   }
   if (final)
     this->done = true;
+//Serial.println(String("// ") + (final ? "f" : "."));
 }
 String BasicDDTunnel::readLine() {
   String buffer;
