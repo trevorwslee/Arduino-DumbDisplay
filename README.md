@@ -789,7 +789,7 @@ Notes:
   sudo usermod -a -G dialout <user>
   ```  
 * My own experience shows that using a slower serial baud rate (like 57600 or even lower like 9600) will make the connection more stable.
-* ***If DumbDisplay fails to make connection to DumbDisplay WIFI Bridge, try switching desktop WIFI to use 2.4 GHz.***  
+* ***If DumbDisplay fails to make connection to DumbDisplay WIFI Bridge, check your descktop firewall settings; try switching desktop WIFI to use 2.4 GHz.***  
 
 
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)

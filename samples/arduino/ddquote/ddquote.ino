@@ -1,6 +1,5 @@
 #include "dumbdisplay.h"
 
-
 /* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
 /* use a lower baud rate since Arduino Uno Serial buffer size is not very big                      */
 DumbDisplay dumbdisplay(new DDInputOutput(9600));

@@ -658,7 +658,7 @@ void _HandleFeedback() {
   }
 }
 
-void _Delay(unsigned long ms) {
+inline void _Delay(unsigned long ms) {
 //Serial.println("// {");
 #ifdef ENABLE_FEEDBACK
   unsigned long delayMillis = ms;
@@ -671,6 +671,8 @@ void _Delay(unsigned long ms) {
     } else {
       if (remainMillis >= 1) {
         delay(remainMillis);
+      } else {
+        yield();
       }
       break;
     }
@@ -901,6 +903,7 @@ void DDLayer::disableFeedback() {
   }
 }
 const DDFeedback* DDLayer::getFeedback() {
+  yield();
   _HandleFeedback();
   return pFeedbackManager != NULL ? pFeedbackManager->getFeedback() : NULL;
 }
@@ -1371,9 +1374,10 @@ void DumbDisplay::writeComment(const String& comment) {
 
 
 #ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(const String& endPoint, int tunnelId, int bufferSize) {
-  this->endPoint = endPoint;
-  this->tunnelId = String(tunnelId);
+DDTunnel::DDTunnel(const String& endPoint, int tunnelId, int bufferSize):
+  endPoint(endPoint), tunnelId(String(tunnelId)) {
+  //this->endPoint = endPoint;
+  //this->tunnelId = String(tunnelId);
   this->arraySize = bufferSize;
   this->dataArray = new String[bufferSize];
   this->nextArrayIdx = 0;
