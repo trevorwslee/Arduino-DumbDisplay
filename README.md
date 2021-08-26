@@ -98,7 +98,7 @@ You have several options for connecting to DumbDisplay Android app.
 
 With a DumbDisplay object, you are ready to proceed with coding, like
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddblink/ddblink.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddblink/ddblink.ino
 
 ```
 #include <ssdumbdisplay.h>
@@ -127,7 +127,7 @@ dumbdisplay.deleteLayer(led);
 
 You can also try out "layer feedback" from DumbDisplay like
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddonoffloopmb/ddonoffloopmb.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonoffloopmb/ddonoffloopmb.ino
 
 
 ```
@@ -157,7 +157,7 @@ void loop() {
 
 Alternativelly, can setup "callback" function to handle "feedback" passively, like
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/arduino/ddonoffmb/ddonoffmb.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonoffmb/ddonoffmb.ino
 
 ```
 #include <ssdumbdisplay.h>
@@ -235,7 +235,7 @@ dumbdisplay.deleteTunnel(pTunnel);
 
 A more interesting sample would be like
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddmb/ddmb.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddmb/ddmb.ino
 
 ```
 #include "ssdumbdisplay.h"
@@ -273,7 +273,7 @@ void loop() {
 
 An even more interesting sample would be like
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddbarmeter/ddbarmeter.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddbarmeter/ddbarmeter.ino
 
 ```
 #include "ssdumbdisplay.h"
@@ -320,7 +320,7 @@ void loop() {
 
 Auto pinning of layers is not restricted to a single direction. In fact, it can be nested, like
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddautopin/ddautopin.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddautopin/ddautopin.ino
 
 ```
 #include "ssdumbdisplay.h"
@@ -409,7 +409,7 @@ void loop() {
 
 To showcase Turtle, as well as the more controller way of "pinning" layers
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddpinturtle/ddpinturtle.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddpinturtle/ddpinturtle.ino
 
 ```
 #include "ssdumbdisplay.h"
@@ -489,7 +489,7 @@ void loop() {
 
 There is a graphical [LCD] layer which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features)
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddgraphical/ddgraphical.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddgraphical/ddgraphical.ino
 
 ```
 #include <ssdumbdisplay.h>
@@ -584,7 +584,7 @@ void loop() {
 
 This very simple doodle sample shows how the "layer feedback" mechanism can be used to route user interaction (clicking) of layer to Arduino.
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/dddoodle/dddoodle.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/dddoodle/dddoodle.ino
 
 ```
 #include <ssdumbdisplay.h>
@@ -686,7 +686,7 @@ void loop() {
 
 This sample should demonstrate how to use "tunnel" to access the Internet for simple things, like "quote of the day" is this case:
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/arduino/ddquote/ddquote.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddquote/ddquote.ino
 
 ```
 #include "dumbdisplay.h"
