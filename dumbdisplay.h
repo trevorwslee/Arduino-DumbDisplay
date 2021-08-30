@@ -438,7 +438,8 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /*   . 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' */
     void turnOff(const String& segments, int digitIdx = 0);
     /* like turnOn(), exception that the digit will be cleared first */
-    void setOn(const String& segments, int digitIdx = 0);
+    /* - empty segments basically means turn all segments of the digit off */
+    void setOn(const String& segments = "", int digitIdx = 0);
     /* show number */
     void showNumber(float number);
     /* show HEX number */
