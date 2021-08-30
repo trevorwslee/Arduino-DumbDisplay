@@ -1259,6 +1259,9 @@ void SevenSegmentRowDDLayer::turnOn(const String& segments, int digitIdx) {
 void SevenSegmentRowDDLayer::turnOff(const String& segments, int digitIdx) {
   _sendCommand2(layerId, "segoff", segments, String(digitIdx));
 }
+void SevenSegmentRowDDLayer::setOn(const String& segments, int digitIdx) {
+  _sendCommand2(layerId, "setsegon", segments, String(digitIdx));
+}
 void SevenSegmentRowDDLayer::showNumber(float number) {
   _sendCommand1(layerId, "shownumber", String(number, 5));
 }
