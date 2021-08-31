@@ -1,4 +1,4 @@
-// assume the 7 segment display is "common cathod"
+// assume the 7 segment display is "common cathode"
 
 // define the pins connected to the 7 segment display
 const int p_g = 21;

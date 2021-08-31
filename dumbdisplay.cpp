@@ -1350,8 +1350,17 @@ void DumbDisplay::deleteLayer(DDLayer *pLayer) {
 void DumbDisplay::recordLayerCommands() {
   _sendCommand0("", "RECC");
 }
+void DumbDisplay::stopRecordLayerCommands() {
+  _sendCommand0("", "STOPC");
+}
 void DumbDisplay::playbackLayerCommands() {
   _sendCommand0("", "PLAYC");
+}
+void DumbDisplay::saveLayerCommands(const String& id, bool persist) {
+  _sendCommand2("", "SAVEC", id, TO_BOOL(persist));
+}
+void DumbDisplay::loadLayerCommands(const String& id) {
+  _sendCommand1("", "LOADC", id);
 }
 void DumbDisplay::backgroundColor(const String& color) {
   _Connect();

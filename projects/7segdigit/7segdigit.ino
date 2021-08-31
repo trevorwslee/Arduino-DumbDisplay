@@ -1,4 +1,4 @@
-// assume the 7 segment display is "common cathod"
+// assume the 7 segment display is "common cathode"
 
 // define the pins connected to the 7 segment display
 const int p_g = 21;
@@ -19,7 +19,7 @@ const bool seg_0[] = { 1, 1, 1, 1, 1, 1, 0, 0 };
 const bool seg_1[] = { 0, 1, 1, 0, 0, 0, 0, 0 };
 const bool seg_2[] = { 1, 1, 0, 1, 1, 0, 1, 0 };
 const bool seg_3[] = { 1, 1, 1, 1, 0, 0, 1, 0 };
-const bool seg_4[] = { 0, 1, 1, 0, 0, 1, 1, 0};
+const bool seg_4[] = { 0, 1, 1, 0, 0, 1, 1, 0 };
 const bool seg_5[] = { 1, 0, 1, 1, 0, 1, 1, 0 };
 const bool seg_6[] = { 1, 0, 1, 1, 1, 1, 1, 0 };
 const bool seg_7[] = { 1, 1, 1, 0, 0, 0, 0, 0 };
@@ -51,7 +51,6 @@ void turnOnSeg(const bool* states) {
 void turnOnSeg(char c) {
    turnOnSeg(getStates(c));
 }
-
 
 void setup() {
    // setup the pins to output signal

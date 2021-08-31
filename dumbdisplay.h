@@ -534,6 +534,17 @@ class DumbDisplay {
     void recordLayerCommands();
     /* playback recorded commands (unfreeze the display) */
     void playbackLayerCommands();
+    /* stop recording commands (and forget what have recorded) */
+    void stopRecordLayerCommands();
+    /* save the recorded commands (and continue recording) */
+    /* - persist: store it to your phone or not */
+    void saveLayerCommands(const String& id, bool persist = false);
+    /* load saved commands (as if recording those commands) */
+    /* - recording started or not, will add the commands to the buffer */
+    /* - afterward, will keep recording */
+    /* - use playbackLayerCommands() to playback loaded commands */
+    /* - if not recording commands, this basically remove saved commands */
+    void loadLayerCommands(const String& id);
     /* write out a comment to DD */
     void writeComment(const String& comment);
     /* pin a layer @ some position of an imaginary grid of units */
