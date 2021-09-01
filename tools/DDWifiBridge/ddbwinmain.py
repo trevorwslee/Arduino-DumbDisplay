@@ -37,7 +37,13 @@ def Disconnect(ser):
 
 
 def ClickedConnect():
-    ddbcore.InvokeConnect()
+    port = Port_combo.get()
+    baud = Baud_combo.get()
+    try:
+        wifiPort = int(WifiPort_entry.get())
+    except:
+        wifiPort = ddbcore.DefWifiPort
+    ddbcore.InvokeConnect(port, baud, wifiPort)
 
 def ClickedClear():
     Text_box.delete('1.0', tk.END)
@@ -66,6 +72,8 @@ def OnDisconnected():
 
 def InitWindow():
     global Window
+    global Auto_scroll_state
+
     global Connect_button
     global Port_combo
     global Baud_combo
@@ -135,8 +143,8 @@ class DDWinUserInterface(ddbcore.DDUserInterface):
     def timeSlice(self):
         Window.update()
     def bridge_send(self, what):
-        global Window
-        global Auto_scroll_state
+        # global Window
+        # global Auto_scroll_state
         if Auto_scroll_state.get():
             Text_box.see(tk.END)
             if True:

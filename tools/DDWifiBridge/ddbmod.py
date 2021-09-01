@@ -301,6 +301,10 @@ class WifiTarget:
         self.sock = None
         self.conn = None
     def serve(self):
+        # TODO: make sure it works
+        while True:
+            self._serve()
+    def _serve(self):
         try:
             self._serveOnce()
         except OSError as err:

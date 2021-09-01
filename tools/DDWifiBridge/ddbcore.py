@@ -119,7 +119,7 @@ class DDBridge(ddbmod.DDBridge):
 
 def _Connect(port, baud):
     global DdUI
-    DdUI.printLogMessage("Connect to", port, "with baud rate", baud)
+    DdUI.printLogMessage("Connect to {0} with baud rate {1}".format(port, baud))
     if port != "":
         ser = pyserial.Serial(port=port,baudrate=baud,
                               parity=pyserial.PARITY_NONE,stopbits=pyserial.STOPBITS_ONE,bytesize=pyserial.EIGHTBITS,
