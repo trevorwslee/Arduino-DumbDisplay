@@ -236,8 +236,11 @@ def SerialLoop():
     while True:
         DdUI.timeSlice()
         #Window.update()
-        if Serial.error != None:
-            raise Serial.error
+        # if Serial.error != None:
+        #     raise Serial.error
+        if Serial.bridge == None or Wifi.bridge == None:
+            _Disconnect(Ser)
+            return
         Serial.timeSlice(Bridge)
         #Bridge.transportLine()
 
