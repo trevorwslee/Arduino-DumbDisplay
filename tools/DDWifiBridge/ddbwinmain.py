@@ -129,7 +129,7 @@ class DDWinUserInterface(ddbcore.DDUserInterface):
         #Text_box.insert(tk.END, "*** disconnected\n")
     def timeSlice(self):
         Window.update()
-    def bridge_send(self, what):
+    def bridge_send(self, transDir, line):
         # global Window
         # global Auto_scroll_state
         if Auto_scroll_state.get():
@@ -141,12 +141,12 @@ class DDWinUserInterface(ddbcore.DDUserInterface):
                 check_pos = str(line_count) + '.0'
                 if pos != check_pos:
                     Auto_scroll_state.set(False)
-        Window.update()
-        Text_box.insert(tk.END, what)
-    def printLogMessage(self, what):
-        print(what)
-    def printControlMessage(self, what):
-        Text_box.insert(tk.END, what)
+        #Window.update()
+        Text_box.insert(tk.END, transDir + ' ' + line + '\n')
+    def printLogMessage(self, msg):
+        print(msg)
+    def printControlMessage(self, msg):
+        Text_box.insert(tk.END, msg + "\n")
         pass
 
 if __name__ == "__main__":

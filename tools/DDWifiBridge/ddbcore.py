@@ -28,11 +28,11 @@ class DDUserInterface:
         pass
     def timeSlice(self):
         pass
-    def bridge_send(self, what):
+    def bridge_send(self, transDir, line):
         pass
-    def printLogMessage(self, what):
+    def printLogMessage(self, msg):
         pass
-    def printControlMessage(self, what):
+    def printControlMessage(self, msg):
         '''Text_box.insert(tk.END, transDir + ' ' + line + '\n')'''
         pass
 
@@ -87,12 +87,13 @@ def _Initialize(ddui):
 
 class DDBridge(ddbmod.DDBridge):
     def _sendLine(self, line, transDir):
-        global DdUI
+        #global DdUI
         #global Auto_scroll_state
         #global Window
         sent = False
         if line != None:
-            DdUI.bridge_send(transDir + ' ' + line + '\n')
+            #DdUI.bridge_send(transDir + ' ' + line + '\n')
+            DdUI.bridge_send(transDir, line)
             # if Auto_scroll_state.get():
             #     Text_box.see(tk.END)
             #     if True:
@@ -118,21 +119,23 @@ class DDBridge(ddbmod.DDBridge):
 
 
 def _Connect(port, baud):
-    global DdUI
+    #global DdUI
     DdUI.printLogMessage("Connect to {0} with baud rate {1}".format(port, baud))
     if port != "":
         ser = pyserial.Serial(port=port,baudrate=baud,
                               parity=pyserial.PARITY_NONE,stopbits=pyserial.STOPBITS_ONE,bytesize=pyserial.EIGHTBITS,
                               timeout=0)
-        DdUI.printControlMessage("*** connected to: " + ser.portstr + "\n")
+        DdUI.printControlMessage("*** connected to: " + ser.portstr)
         #Text_box.insert(tk.END, "*** connected to: " + ser.portstr + "\n")
         return ser
     else:
         return None
 
-def _Disconnect(ser):
-    global DdUI
-    ser.close()
+def _Disconnect():
+    global Ser
+    #global DdUI
+    Ser.close()
+    Ser = None
     DdUI.printLogMessage("Disconnected")
 
 
@@ -173,10 +176,10 @@ def InvokeConnect(port, baud, wifiPort):
                 threading.Thread(target=SerialServe, daemon=True).start()
                 threading.Thread(target=WifiServe, daemon=True).start()
         except pyserial.SerialException as err:
-            DdUI.printControlMessage("*** serial exception while connecting -- {0}\n".format(err))
+            DdUI.printControlMessage("*** serial exception while connecting -- {0}".format(err))
            #Text_box.insert(tk.END, "*** serial exception while connecting -- {0}\n".format(err))
     else:
-        _Disconnect(Ser)
+        _Disconnect()
 
 # def ClickedClear():
 #     Text_box.delete('1.0', tk.END)
@@ -232,21 +235,23 @@ def InvokeConnect(port, baud, wifiPort):
 #     WifiPort_entry.insert(0, str(DefWifiPort))
 
 def SerialLoop():
-    global DdUI
+    #global DdUI
     while True:
         DdUI.timeSlice()
         #Window.update()
-        # if Serial.error != None:
-        #     raise Serial.error
+        if Serial.error != None:
+            if Ser == None:
+                break
+            raise Serial.error
         if Serial.bridge == None or Wifi.bridge == None:
-            _Disconnect(Ser)
+            _Disconnect()
             return
         Serial.timeSlice(Bridge)
         #Bridge.transportLine()
 
 
 def NoSerialLoop():
-    global DdUI
+    #global DdUI
     while True:
         DdUI.timeSlice()
         #Window.update()
@@ -277,7 +282,7 @@ def RunDDBridgeMain(ddui):
             try:
                 SerialLoop()
             except Exception as err:
-                ddui.printControlMessage("*** exception -- {0}\n".format(err))
+                ddui.printControlMessage("*** exception -- {0}".format(err))
                 #Text_box.insert(tk.END, "*** exception -- {0}\n".format(err))
                 traceback.print_exc()
                 Ser.close()
@@ -289,7 +294,7 @@ def RunDDBridgeMain(ddui):
                 Wifi.stop()
                 Wifi = None
             ddui.onDisconnected()
-            ddui.printControlMessage("*** disconnected\n")
+            ddui.printControlMessage("*** disconnected")
             #Port_combo["state"] = "normal"
             #Baud_combo["state"] = "normal"
             #WifiPort_entry["state"] = "normal"
