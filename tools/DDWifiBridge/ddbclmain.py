@@ -1,5 +1,9 @@
 from serial.tools.list_ports import comports
 
+
+
+import serial as pyserial
+
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.scrolledtext as st
@@ -7,20 +11,6 @@ import tkinter.scrolledtext as st
 import ddbcore
 
 
-# def Connect(port, baud):
-#     print("Connect to", port, "with baud rate", baud)
-#     if port != "":
-#         ser = pyserial.Serial(port=port,baudrate=baud,
-#                               parity=pyserial.PARITY_NONE,stopbits=pyserial.STOPBITS_ONE,bytesize=pyserial.EIGHTBITS,
-#                               timeout=0)
-#         Text_box.insert(tk.END, "*** connected to: " + ser.portstr + "\n")
-#         return ser
-#     else:
-#         return None
-#
-# def Disconnect(ser):
-#     ser.close()
-#     print("Disconnected")
 
 
 def ClickedConnect():
