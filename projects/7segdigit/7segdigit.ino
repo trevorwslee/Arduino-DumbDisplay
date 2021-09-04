@@ -62,10 +62,14 @@ void setup() {
    pinMode(p_d, OUTPUT);
    pinMode(p_c, OUTPUT);
    pinMode(p_dp, OUTPUT);
+
+   pinMode(0, OUTPUT);
 }
 
 char c = '0';  // control what digit to show next
 void loop() {
+   digitalWrite(0, !digitalRead(0));
+  
    // show the digit
    turnOnSeg(c);
 
