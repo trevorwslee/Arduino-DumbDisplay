@@ -308,15 +308,6 @@ class WifiTarget:
             if self.bridge != None:
                 self.bridge.insertLogLine("!!!!! WiFi connection lost")
             self.stop()
-        # while True:
-        #     try:
-        #         self._serveOnce()
-        #     except OSError as err:
-        #         print("WiFi connect lost")
-        #         if self.bridge != None:
-        #             self.bridge.insertLogLine("!!!!! WiFi connection lost")
-        #         self.stop()
-        #         break
     def stop(self):
         if self.conn != None:
             self.conn.close()
