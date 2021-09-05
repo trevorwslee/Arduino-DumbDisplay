@@ -57,10 +57,10 @@ You have several options for connecting to DumbDisplay Android app.
 * Via `SoftwareSerial` -- https://www.arduino.cc/en/Reference/softwareSerial
   ```
     #include <ssdumbdisplay.h>
-    DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
+    DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
   ```
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
-  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)))`  
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200))`  
     - 2 and 3 are the pins used by SoftwareSerial
     - **the default baud rate is 115200**, which seems to work better from my own testing with HC-06; however, when it comes to ESP8266 with HC-06, it appears to work better in baud rate 9600 
   - **You should not be using that SoftwareSerial for other purposes**
@@ -104,7 +104,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddblink/d
 #include <ssdumbdisplay.h>
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), DUMBDISPLAY_BAUD));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
 LedGridDDLayer *led;
 
 void setup() {
@@ -134,7 +134,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonofflo
 #include <ssdumbdisplay.h>
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), DUMBDISPLAY_BAUD, true));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
 
 MbDDLayer* pMbLayer = NULL;
 
@@ -163,7 +163,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonoffmb
 #include <ssdumbdisplay.h>
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), DUMBDISPLAY_BAUD, true));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
 
 MbDDLayer* pMbLayer = NULL;
 
@@ -241,7 +241,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddmb/ddm
 #include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), DUMBDISPLAY_BAUD));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
 
 MbDDLayer *mb;
 int heading;
@@ -279,7 +279,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddbarmet
 #include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200));
 
 void setup() {
   // configure to "auto pin (layout) layers" in the vertical direction -- V(*)
@@ -326,7 +326,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddautopi
 #include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200));
 
 LedGridDDLayer *rled;
 LedGridDDLayer *gled;
@@ -415,7 +415,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddpintur
 #include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3)));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
 
 TurtleDDLayer *turtle = NULL;
 int r = random(0, 255);
@@ -495,7 +495,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddgraphi
 #include <ssdumbdisplay.h>
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200, true));
 
 void setup() {
   // create 4 graphical [LCD] layers
@@ -591,7 +591,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/dddoodle
 
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200, true));
 
 int dotSize = 5;
 const char* penColor = "red";

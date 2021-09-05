@@ -537,6 +537,8 @@ class DumbDisplay {
     /* stop recording commands (and forget what have recorded) */
     void stopRecordLayerCommands();
     /* save the recorded commands (and continue recording) */
+    /* - id: identifier of the recorded commands, overwriting and previous one; */
+    /*       if not recording, will delete previous recorded commands */
     /* - persist: store it to your phone or not */
     void saveLayerCommands(const String& id, bool persist = false);
     /* load saved commands (as if recording those commands) */
