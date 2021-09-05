@@ -7,9 +7,7 @@
 
 #ifndef DD_4_ESP32
 #error DD_4_ESP32 need be defined in order to use DumbDisplay for ESP32
-#endif
-
-#ifdef DD_4_ESP32
+#else
 
 #include "BluetoothSerial.h"
 #include "dumbdisplay.h"
@@ -51,7 +49,6 @@ class DDBluetoothSerialIO: public DDInputOutput {
     String btLocalName;
     BluetoothSerial serialBT;  
 };
-
 
 
 #endif

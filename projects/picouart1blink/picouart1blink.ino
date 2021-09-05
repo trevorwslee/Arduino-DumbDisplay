@@ -1,4 +1,5 @@
-#define DD_4_PICO
+#define DD_4_PICO_TX 8
+#define DD_4_PICO_RX 9
 
 #include <picodumbdisplay.h>
 

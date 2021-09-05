@@ -5,15 +5,18 @@
 #ifndef esp32dumbdisplay_h
 #define esp32dumbdisplay_h
 
-#ifndef DD_4_PICO
-#error DD_4_PICO need be defined in order to use DumbDisplay for ESP32
-#endif
+#if !(defined DD_4_PICO_TX && defined DD_4_PICO_RX)
 
-#ifdef DD_4_PICO
+#error DD_4_PICO_TX and DD_4_PICO_RX need be defined in order to use DumbDisplay for ESP32
+#error e.g. #define DD_4_PICO_TX 8
+#error e.g. #define DD_4_PICO_RX 9
+
+#else
 
 #include "dumbdisplay.h"
 
-UART Serial2(8, 9, 0, 0);
+//UART Serial2(8, 9, 0, 0);
+UART Serial2(DD_4_PICO_TX, DD_4_PICO_RX, 0, 0);
 
 
 class DDPicoUart1IO: public DDInputOutput {
