@@ -956,6 +956,7 @@ MbImage* MbDDLayer::createImage(const String& ledPattern) {
   int imgId = _AllocImgId();
   MbImage *pImage = new MbImage(imgId);
   _sendCommand2(layerId, "crimg", pImage->getImageId(), ledPattern);
+  return pImage;
 }
 void MbDDLayer::releaseImage(MbImage *pImage) {
   _sendCommand1(layerId, "delimg", pImage->getImageId());
