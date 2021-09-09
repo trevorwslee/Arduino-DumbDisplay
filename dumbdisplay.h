@@ -81,7 +81,10 @@ class DDInputOutput {
     /* Serial IO mechanism (i.e. connecting via USB) */ 
     // DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
     // }
-    DDInputOutput(DDInputOutput* pRef): DDInputOutput(pRef->serialBaud, false, true) {
+    // DDInputOutput(DDInputOutput* pRef): DDInputOutput(pRef->serialBaud, false, true) {
+    // }
+    DDInputOutput* newForSerialConnection() {
+      return new DDInputOutput(serialBaud, false, true);
     }
     virtual ~DDInputOutput() {
     }

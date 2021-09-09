@@ -155,7 +155,8 @@ void _Connect() {
     IOProxy* pSerialIOProxy = NULL;
     DDInputOutput *pSIO = NULL;
     if (_IO->isBackupBySerial()) {
-      pSIO = new DDInputOutput(_IO);
+      //pSIO = new DDInputOutput(_IO);
+      pSIO = _IO->newForSerialConnection();
       pSerialIOProxy = new IOProxy(pSIO);
     }
     while (true) {
