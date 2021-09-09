@@ -524,9 +524,9 @@ void _SendSpecialCommand(const char* specialType, const String& specialId, const
 
 bool _CanLogToSerial() {
   if (!_ConnectedFromSerial || !_Connected) {
-    return false;
-  } else {
     return true;
+  } else {
+    return false;
   }
 }
 // inline void _LogToSerial(const String& logLine) {
@@ -1398,9 +1398,9 @@ String BasicDDTunnel::readLine() {
 
 
 DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
-  if (pIO->isSerial() || pIO->isBackupBySerial()) {
-    pDDSerial = new DDRealSerialProxy();
-  }
+  // if (pIO->isSerial() || pIO->isBackupBySerial()) {
+  //   pDDSerial = new DDRealSerialProxy();
+  // }
   _IO = pIO;
 }
 void DumbDisplay::connect() {

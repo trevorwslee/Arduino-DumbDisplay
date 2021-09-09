@@ -126,12 +126,17 @@ class DDInputOutput {
   protected:
     DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
 #ifdef DD_DISABLE_SERIAL
-    backupBySerial = false;
-    setupForSerial = false;
-#endif      
+      backupBySerial = false;
+      setupForSerial = false;
+#endif
       this->serialBaud = serialBaud;
       this->backupBySerial = backupBySerial;
       this->setupForSerial = setupForSerial;
+#ifndef DD_DISABLE_SERIAL
+      if (backupBySerial || setupForSerial) {
+        pDDSerial = new DDRealSerialProxy();
+      }
+#endif
     }
   protected:
     unsigned long serialBaud;
