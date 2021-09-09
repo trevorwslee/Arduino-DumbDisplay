@@ -13,7 +13,7 @@ void setup() {
 
   if (true) {
     dumbdisplay.connect();  // explicitly connect (so that the following comment will show)
-    DDLogToSerial("=== connected ===");
+    dumbdisplay.logToSerial("=== connected ===");
     dumbdisplay.writeComment("Good Day!");
   }
 }

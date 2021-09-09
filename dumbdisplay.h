@@ -35,6 +35,16 @@
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 
 
+class DDSerialProxh {
+  public:
+    virtual bool available() {
+      return false;
+    }
+    virtual char read() {
+      return 0;
+    }
+}
+
 class DDInputOutput {
   public:
     /* Serial IO mechanism (i.e. connecting via USB) */ 
@@ -49,30 +59,50 @@ class DDInputOutput {
       return backupBySerial;
     }
     virtual bool available() {
+#ifndef DD_DISABLE_SERIAL      
       return Serial.available();
+#else 
+      return false;
+#endif      
     }
     virtual char read() {
+#ifndef DD_DISABLE_SERIAL      
       return Serial.read();
+#else
+      return 0;      
+#endif
     }
     virtual void print(const String &s) {
-        Serial.print(s);
+#ifndef DD_DISABLE_SERIAL      
+       Serial.print(s);
+#endif
     }
     virtual void print(const char *p) {
+#ifndef DD_DISABLE_SERIAL      
         Serial.print(p);
+#endif
     }
     virtual void flush() {
+#ifndef DD_DISABLE_SERIAL      
       Serial.flush();
+#endif
     }
     virtual void keepAlive() {
     }
     virtual void validConnection() {
     }
     virtual void preConnect() {
+#ifndef DD_DISABLE_SERIAL      
       if (setupForSerial)
         Serial.begin(serialBaud);
+#endif
     }
   protected:
     DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
+#ifdef DD_DISABLE_SERIAL
+    backupBySerial = false;
+    setupForSerial = false;
+#endif      
       this->serialBaud = serialBaud;
       this->backupBySerial = backupBySerial;
       this->setupForSerial = setupForSerial;
@@ -557,10 +587,22 @@ class DumbDisplay {
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     void deleteLayer(DDLayer *pLayer);
     void debugSetup(int debugLedPin, bool enableEchoFeedback = false);
+    /* log line to serial making sure not affecting DD */
+    void logToSerial(const String& logLine) {
+      if (canLogToSerial()) {
+#ifndef DD_DISABLE_SERIAL      
+        Serial.println(logLine);  // in case not connected ... hmm ... assume ... Serial.begin() called
+#endif
+      } else {
+        writeComment(logLine);
+      }
+    }
+  private:
+    bool canLogToSerial();
 };
 
-/* log line to serial making sure not affect DD */
-void DDLogToSerial(const String& logLine);
+// /* log line to serial making sure not affect DD */
+// void DDLogToSerial(const String& logLine);
 /* the same usage as standard delay(), but it allows DD chances to handle feedback */
 void DDDelay(unsigned long ms);
 /* give DD a chance to handle feedback */

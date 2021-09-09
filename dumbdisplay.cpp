@@ -1,4 +1,5 @@
 #include "Arduino.h"
+
 #include "dumbdisplay.h"
 
 
@@ -18,7 +19,7 @@
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
 //#define DEBUG_RECEIVE_FEEDBACK
-#define DEBUG_ECHO_FEEDBACK
+//#define DEBUG_ECHO_FEEDBACK
 
 #define VALIDATE_CONNECTION
 
@@ -518,13 +519,21 @@ void _SendSpecialCommand(const char* specialType, const String& specialId, const
   _SendingCommand = false;
 }
 
-inline void _LogToSerial(const String& logLine) {
+
+bool _CanLogToSerial() {
   if (!_ConnectedFromSerial || !_Connected) {
-    Serial.println(logLine);  // in case not connected ... hmm ... assume ... Serial.begin() called
+    return false;
   } else {
-    _SendCommand("", ("// " + logLine).c_str());
+    return true;
   }
 }
+// inline void _LogToSerial(const String& logLine) {
+//   if (!_ConnectedFromSerial || !_Connected) {
+//     Serial.println(logLine);  // in case not connected ... hmm ... assume ... Serial.begin() called
+//   } else {
+//     _SendCommand("", ("// " + logLine).c_str());
+//   }
+// }
 
 #ifdef READ_BUFFER_USE_BUFFER
 String _ReadFeedbackBuffer;
@@ -1275,6 +1284,26 @@ void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
 
 
 
+// bool DDInputOutput::available() {
+//   return Serial.available();
+// }
+// char DDInputOutput::read() {
+//   return Serial.read();
+// }
+// void DDInputOutput::print(const String &s) {
+//     Serial.print(s);
+// }
+// void DDInputOutput::print(const char *p) {
+//     Serial.print(p);
+// }
+// void DDInputOutput::flush() {
+//   Serial.flush();
+// }
+// void DDInputOutput::preConnect() {
+//   if (setupForSerial)
+//     Serial.begin(serialBaud);
+// }
+
 
 DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
   _IO = pIO;
@@ -1494,6 +1523,9 @@ void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
 #endif
 
 
+bool DumbDisplay::canLogToSerial() {
+  return _CanLogToSerial();
+}
 
 void DumbDisplay::debugSetup(int debugLedPin, bool enableEchoFeedback) {
 #ifdef DEBUG_WITH_LED
@@ -1511,9 +1543,9 @@ void DumbDisplay::debugSetup(int debugLedPin, bool enableEchoFeedback) {
 // }
 
 
-void DDLogToSerial(const String& logLine) {
-  _LogToSerial(logLine);
-}
+// void DDLogToSerial(const String& logLine) {
+//    _LogToSerial(logLine);
+// }
 void DDDelay(unsigned long ms) {
 #ifdef HANDLE_FEEDBACK_DURING_DELAY
   _Delay(ms);
