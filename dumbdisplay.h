@@ -79,7 +79,9 @@ extern DDSerialProxy* pDDSerial;
 class DDInputOutput {
   public:
     /* Serial IO mechanism (i.e. connecting via USB) */ 
-    DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
+    // DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
+    // }
+    DDInputOutput(DDInputOutput* pRef): DDInputOutput(pRef->serialBaud, false, true) {
     }
     virtual ~DDInputOutput() {
     }
@@ -125,18 +127,12 @@ class DDInputOutput {
     }
   protected:
     DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
-#ifdef DD_DISABLE_SERIAL
-      backupBySerial = false;
-      setupForSerial = false;
-#endif
       this->serialBaud = serialBaud;
       this->backupBySerial = backupBySerial;
       this->setupForSerial = setupForSerial;
-#ifndef DD_DISABLE_SERIAL
       if (backupBySerial || setupForSerial) {
         pDDSerial = new DDRealSerialProxy();
       }
-#endif
     }
   protected:
     unsigned long serialBaud;
