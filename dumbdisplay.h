@@ -35,15 +35,46 @@
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 
 
-class DDSerialProxh {
+class DDSerialProxy {
   public:
+    virtual void begin(unsigned long serialBaud) {
+    }
     virtual bool available() {
       return false;
     }
     virtual char read() {
       return 0;
     }
-}
+    virtual void print(const String &s) {
+    }
+    virtual void print(const char *p) {
+    }
+    virtual void flush() {
+    }
+};
+class DDRealSerialProxy: public DDSerialProxy {
+  public:
+    virtual void begin(unsigned long serialBaud) {
+      Serial.begin(serialBaud);
+    }
+    virtual bool available() {
+      return Serial.available();
+    }
+    virtual char read() {
+      return Serial.read();
+    }
+    virtual void print(const String &s) {
+       Serial.print(s);
+    }
+    virtual void print(const char *p) {
+        Serial.print(p);
+    }
+    virtual void flush() {
+      Serial.flush();
+    }
+};
+
+extern DDSerialProxy* pDDSerial;
 
 class DDInputOutput {
   public:
@@ -59,43 +90,38 @@ class DDInputOutput {
       return backupBySerial;
     }
     virtual bool available() {
-#ifndef DD_DISABLE_SERIAL      
-      return Serial.available();
-#else 
-      return false;
-#endif      
+      if (pDDSerial != NULL)      
+        return pDDSerial->available();
+      else
+        return false;
     }
     virtual char read() {
-#ifndef DD_DISABLE_SERIAL      
-      return Serial.read();
-#else
-      return 0;      
-#endif
+      if (pDDSerial != NULL)      
+        return pDDSerial->read();
+      else
+        return false;
     }
     virtual void print(const String &s) {
-#ifndef DD_DISABLE_SERIAL      
-       Serial.print(s);
-#endif
+      if (pDDSerial != NULL)      
+        pDDSerial->print(s);
     }
     virtual void print(const char *p) {
-#ifndef DD_DISABLE_SERIAL      
-        Serial.print(p);
-#endif
+      if (pDDSerial != NULL)      
+        pDDSerial->print(p);
     }
     virtual void flush() {
-#ifndef DD_DISABLE_SERIAL      
-      Serial.flush();
-#endif
+      if (pDDSerial != NULL)      
+        pDDSerial->flush();
     }
     virtual void keepAlive() {
     }
     virtual void validConnection() {
     }
     virtual void preConnect() {
-#ifndef DD_DISABLE_SERIAL      
-      if (setupForSerial)
-        Serial.begin(serialBaud);
-#endif
+      if (setupForSerial) {
+        if (pDDSerial != NULL)      
+          pDDSerial->begin(serialBaud);
+      }
     }
   protected:
     DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
@@ -590,9 +616,10 @@ class DumbDisplay {
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine) {
       if (canLogToSerial()) {
-#ifndef DD_DISABLE_SERIAL      
-        Serial.println(logLine);  // in case not connected ... hmm ... assume ... Serial.begin() called
-#endif
+        if (pDDSerial != NULL) {
+          pDDSerial->print(logLine);  // in case not connected ... hmm ... assume ... Serial.begin() called
+          pDDSerial->print("\n");
+        }
       } else {
         writeComment(logLine);
       }

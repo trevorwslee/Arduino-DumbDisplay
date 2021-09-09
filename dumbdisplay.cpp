@@ -31,6 +31,8 @@
 #define YIELD_AFTER_SEND_COMMAND false
 
 
+DDSerialProxy* pDDSerial = NULL;
+
 namespace DDImpl {
 
 
@@ -1304,8 +1306,101 @@ void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
 //     Serial.begin(serialBaud);
 // }
 
+#ifdef SUPPORT_TUNNEL
+DDTunnel::DDTunnel(const String& endPoint, int tunnelId, int bufferSize):
+  endPoint(endPoint), tunnelId(String(tunnelId)) {
+  //this->endPoint = endPoint;
+  //this->tunnelId = String(tunnelId);
+  this->arraySize = bufferSize;
+  this->dataArray = new String[bufferSize];
+  this->nextArrayIdx = 0;
+  this->validArrayIdx = 0;
+  this->done = false;
+}
+DDTunnel::~DDTunnel() {
+  _PreDeleteTunnel(this);
+  delete this->dataArray;
+} 
+void DDTunnel::reconnect() {
+  nextArrayIdx = 0;
+  validArrayIdx = 0;
+  done = false;
+  for (int i = 0; i < arraySize; i++) {
+    dataArray[i] = "";
+  }
+  _sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
+}
+void DDTunnel::release() {
+  if (!done) {
+    _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");
+  }
+  done = true;
+}
+int DDTunnel::_count() {
+  return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
+}
+bool DDTunnel::_eof() {
+  return nextArrayIdx == validArrayIdx && done;
+}
+// String DDTunnel::_readLineDirect() {
+//   if (nextArrayIdx == validArrayIdx) return "";
+//   String data = dataArray[validArrayIdx];
+//   dataArray[validArrayIdx] = "";
+//   validArrayIdx = (validArrayIdx + 1) % arraySize;
+//   return data;
+// }
+void DDTunnel::_readLine(String &buffer) {
+  if (nextArrayIdx == validArrayIdx) {
+    buffer = "";
+  } else {
+    buffer = dataArray[validArrayIdx];
+    dataArray[validArrayIdx] = "";
+    validArrayIdx = (validArrayIdx + 1) % arraySize;
+  }
+}
+
+void DDTunnel::_writeLine(const String& data) {
+//Serial.println("//--");
+  _sendSpecialCommand("lt", tunnelId, NULL, data);
+}
+void DDTunnel::handleInput(const String& data, bool final) {
+//if (final) Serial.println("//final:" + data);
+  if (!final || data != "") {
+    dataArray[nextArrayIdx] = data;
+    nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
+    if (nextArrayIdx == validArrayIdx)
+      validArrayIdx = (validArrayIdx + 1) % arraySize;
+  }
+  if (final)
+    this->done = true;
+//Serial.println(String("// ") + (final ? "f" : "."));
+}
+String BasicDDTunnel::readLine() {
+  String buffer;
+  _readLine(buffer);
+  return buffer;
+}
+// int BasicDDTunnel::available() {
+//   return this->data.length();
+// }
+// String BasicDDTunnel::read() {
+//   String data = this->data;
+//   this->data = "";
+//   //Serial.print("+" + data);
+//   return data;
+// }
+// void BasicDDTunnel::write(const String& data) {
+//   _sendSpecialCommand("lt", tunnelId, NULL, data);
+// }
+// bool BasicDDTunnel::eof() {
+//   return this->data.length() == 0 && this->done;
+// }
+
 
 DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
+  if (pIO->isSerial() || pIO->isBackupBySerial()) {
+    pDDSerial = new DDRealSerialProxy();
+  }
   _IO = pIO;
 }
 void DumbDisplay::connect() {
@@ -1415,95 +1510,6 @@ void DumbDisplay::writeComment(const String& comment) {
 }
 
 
-#ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(const String& endPoint, int tunnelId, int bufferSize):
-  endPoint(endPoint), tunnelId(String(tunnelId)) {
-  //this->endPoint = endPoint;
-  //this->tunnelId = String(tunnelId);
-  this->arraySize = bufferSize;
-  this->dataArray = new String[bufferSize];
-  this->nextArrayIdx = 0;
-  this->validArrayIdx = 0;
-  this->done = false;
-}
-DDTunnel::~DDTunnel() {
-  _PreDeleteTunnel(this);
-  delete this->dataArray;
-} 
-void DDTunnel::reconnect() {
-  nextArrayIdx = 0;
-  validArrayIdx = 0;
-  done = false;
-  for (int i = 0; i < arraySize; i++) {
-    dataArray[i] = "";
-  }
-  _sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
-}
-void DDTunnel::release() {
-  if (!done) {
-    _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");
-  }
-  done = true;
-}
-int DDTunnel::_count() {
-  return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
-}
-bool DDTunnel::_eof() {
-  return nextArrayIdx == validArrayIdx && done;
-}
-// String DDTunnel::_readLineDirect() {
-//   if (nextArrayIdx == validArrayIdx) return "";
-//   String data = dataArray[validArrayIdx];
-//   dataArray[validArrayIdx] = "";
-//   validArrayIdx = (validArrayIdx + 1) % arraySize;
-//   return data;
-// }
-void DDTunnel::_readLine(String &buffer) {
-  if (nextArrayIdx == validArrayIdx) {
-    buffer = "";
-  } else {
-    buffer = dataArray[validArrayIdx];
-    dataArray[validArrayIdx] = "";
-    validArrayIdx = (validArrayIdx + 1) % arraySize;
-  }
-}
-
-void DDTunnel::_writeLine(const String& data) {
-//Serial.println("//--");
-  _sendSpecialCommand("lt", tunnelId, NULL, data);
-}
-void DDTunnel::handleInput(const String& data, bool final) {
-//if (final) Serial.println("//final:" + data);
-  if (!final || data != "") {
-    dataArray[nextArrayIdx] = data;
-    nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
-    if (nextArrayIdx == validArrayIdx)
-      validArrayIdx = (validArrayIdx + 1) % arraySize;
-  }
-  if (final)
-    this->done = true;
-//Serial.println(String("// ") + (final ? "f" : "."));
-}
-String BasicDDTunnel::readLine() {
-  String buffer;
-  _readLine(buffer);
-  return buffer;
-}
-// int BasicDDTunnel::available() {
-//   return this->data.length();
-// }
-// String BasicDDTunnel::read() {
-//   String data = this->data;
-//   this->data = "";
-//   //Serial.print("+" + data);
-//   return data;
-// }
-// void BasicDDTunnel::write(const String& data) {
-//   _sendSpecialCommand("lt", tunnelId, NULL, data);
-// }
-// bool BasicDDTunnel::eof() {
-//   return this->data.length() == 0 && this->done;
-// }
 BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, int bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
