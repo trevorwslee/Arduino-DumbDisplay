@@ -35,25 +35,7 @@
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 
 
-// class DDSerialProxy {
-//   public:
-//     virtual void begin(unsigned long serialBaud) {
-//       //if (serialBaud == 0) Serial.begin(9600);
-//     }
-//     virtual bool available() {
-//       return false;
-//     }
-//     virtual char read() {
-//       return 0;
-//     }
-//     virtual void print(const String &s) {
-//     }
-//     virtual void print(const char *p) {
-//     }
-//     virtual void flush() {
-//     }
-// };
-class DDSerialProxy/*: public DDSerialProxy*/ {
+class DDSerialProxy {
   public:
     inline void begin(unsigned long serialBaud) {
       Serial.begin(serialBaud);
@@ -75,30 +57,57 @@ class DDSerialProxy/*: public DDSerialProxy*/ {
     }
 };
 
-extern DDSerialProxy* pTheDDSerial;
+extern DDSerialProxy* _The_DD_Serial;
 
-class DDIOBasis {
+
+class DDInputOutput {
   public:
-    virtual DDIOBasis* newForSerialConnection() {
-      return NULL;
+    DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
     }
-    virtual ~DDIOBasis() {}
+    DDInputOutput* newForSerialConnection() {
+      return new DDInputOutput(serialBaud, false, true);
+    }
+    virtual ~DDInputOutput() {
+    }
+    virtual bool available() {
+      //return Serial.available();
+      return _The_DD_Serial != NULL && _The_DD_Serial->available(); 
+    }
+    virtual char read() {
+      //return Serial.read();
+      return _The_DD_Serial != NULL ? _The_DD_Serial->read() : 0;
+    }
+    virtual void print(const String &s) {
+      //Serial.print(s);
+      if (_The_DD_Serial != NULL) _The_DD_Serial->print(s);
+    }
+    virtual void print(const char *p) {
+      //Serial.print(p);
+      if (_The_DD_Serial != NULL) _The_DD_Serial->print(p);
+    }
+    virtual void flush() {
+      //Serial.flush();
+      if (_The_DD_Serial != NULL) _The_DD_Serial->flush();
+    }
+    virtual void keepAlive() {
+    }
+    virtual void validConnection() {
+    }
+    virtual void preConnect() {
+      if (setupForSerial) {
+        if (_The_DD_Serial != NULL) _The_DD_Serial->begin(serialBaud);
+        //Serial.begin(serialBaud);
+      }
+    }
+  public:  
     bool isSerial() {
       return !backupBySerial && setupForSerial;
     }
     bool isBackupBySerial() {
       return backupBySerial;
     }
-    virtual bool available() { return false; }
-    virtual char read() { return 0; }
-    virtual void print(const String &s) {}
-    virtual void print(const char *p) {}
-    virtual void flush() {}
-    virtual void keepAlive() {}
-    virtual void validConnection() {}
-    virtual void preConnect() {}
   protected:
-    DDIOBasis(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
+    DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
       this->serialBaud = serialBaud;
       this->backupBySerial = backupBySerial;
       this->setupForSerial = setupForSerial;
@@ -107,52 +116,6 @@ class DDIOBasis {
     unsigned long serialBaud;
     bool backupBySerial;
     bool setupForSerial;
-};
-
-
-class DDInputOutput: public DDIOBasis {
-  public:
-    DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDIOBasis(serialBaud, false, true) {
-    }
-    virtual DDIOBasis* newForSerialConnection() {
-      return new DDInputOutput(serialBaud, false, true);
-    }
-    virtual ~DDInputOutput() {
-    }
-    virtual bool available() {
-      //return Serial.available();
-      return pTheDDSerial != NULL && pTheDDSerial->available(); 
-    }
-    virtual char read() {
-      //return Serial.read();
-      return pTheDDSerial != NULL ? pTheDDSerial->read() : 0;
-    }
-    virtual void print(const String &s) {
-      //Serial.print(s);
-      if (pTheDDSerial != NULL) pTheDDSerial->print(s);
-    }
-    virtual void print(const char *p) {
-      //Serial.print(p);
-      if (pTheDDSerial != NULL) pTheDDSerial->print(p);
-    }
-    virtual void flush() {
-      //Serial.flush();
-      if (pTheDDSerial != NULL) pTheDDSerial->flush();
-    }
-    virtual void keepAlive() {
-    }
-    virtual void validConnection() {
-    }
-    virtual void preConnect() {
-      if (setupForSerial) {
-        if (pTheDDSerial != NULL) pTheDDSerial->begin(serialBaud);
-        //Serial.begin(serialBaud);
-      }
-    }
-  protected:
-    DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial):
-      DDIOBasis(serialBaud, backupBySerial, setupForSerial) {
-    }
 };
 
 struct DDFeedback {
@@ -568,7 +531,7 @@ class BasicDDTunnel: public DDTunnel {
 
 class DumbDisplay {
   public:
-    DumbDisplay(DDIOBasis* pIO);
+    DumbDisplay(DDInputOutput* pIO);
     /* explicitly make connection -- blocking */
     /* - implicitly called when configure or create a layer */
     void connect();
@@ -633,9 +596,9 @@ class DumbDisplay {
     void logToSerial(const String& logLine) {
       if (canLogToSerial()) {
         //Serial.println(logLine);
-        if (pTheDDSerial != NULL) {
-          pTheDDSerial->print(logLine);
-          pTheDDSerial->print("\n");
+        if (_The_DD_Serial != NULL) {
+          _The_DD_Serial->print(logLine);
+          _The_DD_Serial->print("\n");
         }
       } else {
         writeComment(logLine);

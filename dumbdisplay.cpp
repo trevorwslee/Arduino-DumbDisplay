@@ -31,14 +31,14 @@
 #define YIELD_AFTER_SEND_COMMAND false
 
 
-DDSerialProxy* pTheDDSerial = NULL;
+DDSerialProxy* _The_DD_Serial = NULL;
 
 namespace DDImpl {
 
 
 class IOProxy {
   public: 
-    IOProxy(DDIOBasis *pIO) {
+    IOProxy(DDInputOutput *pIO) {
       this->pIO = pIO;
     }
     bool available();
@@ -49,7 +49,7 @@ class IOProxy {
     void keepAlive();
     void validConnection();
   private:
-    DDIOBasis *pIO;
+    DDInputOutput *pIO;
     bool fromSerial;
     String data;  
 };
@@ -101,7 +101,7 @@ DDObject** _DDLayerArray = NULL;
 DDLayer** _DDLayerArray = NULL;
 #endif
 
-DDIOBasis* volatile _IO = NULL;
+DDInputOutput* volatile _IO = NULL;
 IOProxy* volatile _ConnectedIOProxy = NULL;
 volatile bool _ConnectedFromSerial = false; 
 
@@ -153,7 +153,7 @@ void _Connect() {
     long nextTime = 0;
     IOProxy ioProxy(_IO);
     IOProxy* pSerialIOProxy = NULL;
-    DDIOBasis *pSIO = NULL;
+    DDInputOutput *pSIO = NULL;
     if (_IO->isBackupBySerial()) {
       //pSIO = new DDInputOutput(_IO);
       pSIO = _IO->newForSerialConnection();
@@ -1398,9 +1398,9 @@ String BasicDDTunnel::readLine() {
 // }
 
 
-DumbDisplay::DumbDisplay(DDIOBasis* pIO) {
+DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
   if (pIO->isSerial() || pIO->isBackupBySerial()) {
-    pTheDDSerial = new DDSerialProxy();
+    _The_DD_Serial = new DDSerialProxy();
   }
   _IO = pIO;
 }
