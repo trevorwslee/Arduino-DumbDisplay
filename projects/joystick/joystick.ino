@@ -98,7 +98,7 @@ void setup() {
 }
 
 
-void drawBtn(int x, int y, int r, int off_x, int off_y, int btn, char* txt) {
+void drawBtn(int x, int y, int r, int off_x, int off_y, int btn, const char* txt) {
   if (!digitalRead(btn)) {
     dumbdisplay.writeComment("BTN-" + String(txt));
   }  
