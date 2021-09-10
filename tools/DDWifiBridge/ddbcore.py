@@ -22,6 +22,8 @@ class DDUserInterface:
         pass
     def syncConnectionState(self, connected):
         pass
+    def onSerialException(self, err):
+        pass
     def onConnected(self):
         pass
     def onDisconnected(self):
@@ -177,6 +179,7 @@ def InvokeConnect(port, baud, wifiPort):
                 threading.Thread(target=WifiServe, daemon=True).start()
         except pyserial.SerialException as err:
             DdUI.printControlMessage("*** serial exception while connecting -- {0}".format(err))
+            DdUI.onSerialException(err)
            #Text_box.insert(tk.END, "*** serial exception while connecting -- {0}\n".format(err))
     else:
         _Disconnect()
@@ -266,7 +269,7 @@ def WifiServe():
     if Wifi != None:
         Wifi.serve()
 
-def RunDDBridgeMain(ddui):
+def RunDDBridgeMain(ddui, param_dict = None):
     global Ser
     global Serial
     global Wifi
@@ -275,6 +278,15 @@ def RunDDBridgeMain(ddui):
     _Initialize(ddui)
     ddui.initialize()
     #InitWindow()
+    if param_dict != None:
+        port = param_dict["port"]
+        baud = param_dict.get("baud")
+        wifiPort = param_dict.get("wifiPort")
+        if baud == None:
+            baud = int(DefBaudRate)
+        if wifiPort == None:
+            wifiPort = int(DefWifiPort)
+        InvokeConnect(port, baud, wifiPort)
     while True:
         ddui.syncConnectionState(Ser != None)
         if Ser != None:
