@@ -784,6 +784,10 @@ Notes:
   ```
   pip install pyserial
   ```
+* Can run DumbDisply WIFI Bridge as a command-line tool (without UI). Simply call it with necessary arguments like "port" (-p <port> / --port=<port>), "baud" (-b <baud> / --baud=<baud>), and "wifi port" (-w <wifi-port> / --wifiport=<wifi-port>), like
+  ```
+  python DDWifiBridge.py --port=COM5 --baud=15200
+  ```
 * In Linux, acessing serial port will need special access right; you can grant such right to yourself (the user) like
   ```
   sudo usermod -a -G dialout <user>
@@ -812,6 +816,10 @@ MIT
 
 
 # Change History
+
+v0.6.3
+  - DDWifiBridge can now run as command-line tool without UI
+  - bug fixes
 
 v0.6.2
   - added capability to store recorded commands to phone
