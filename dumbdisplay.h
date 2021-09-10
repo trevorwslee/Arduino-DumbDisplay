@@ -35,46 +35,47 @@
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 
 
-class DDSerialProxy {
+// class DDSerialProxy {
+//   public:
+//     virtual void begin(unsigned long serialBaud) {
+//       //if (serialBaud == 0) Serial.begin(9600);
+//     }
+//     virtual bool available() {
+//       return false;
+//     }
+//     virtual char read() {
+//       return 0;
+//     }
+//     virtual void print(const String &s) {
+//     }
+//     virtual void print(const char *p) {
+//     }
+//     virtual void flush() {
+//     }
+// };
+class DDSerialProxy/*: public DDSerialProxy*/ {
   public:
-    virtual void begin(unsigned long serialBaud) {
-    }
-    virtual bool available() {
-      return false;
-    }
-    virtual char read() {
-      return 0;
-    }
-    virtual void print(const String &s) {
-    }
-    virtual void print(const char *p) {
-    }
-    virtual void flush() {
-    }
-};
-class DDRealSerialProxy: public DDSerialProxy {
-  public:
-    virtual void begin(unsigned long serialBaud) {
+    inline void begin(unsigned long serialBaud) {
       Serial.begin(serialBaud);
     }
-    virtual bool available() {
+    inline bool available() {
       return Serial.available();
     }
-    virtual char read() {
+    inline char read() {
       return Serial.read();
     }
-    virtual void print(const String &s) {
+    inline void print(const String &s) {
       Serial.print(s);
     }
-    virtual void print(const char *p) {
+    inline void print(const char *p) {
       Serial.print(p);
     }
-    virtual void flush() {
+    inline void flush() {
       Serial.flush();
     }
 };
 
-extern DDSerialProxy* pDDSerial;
+extern DDSerialProxy* pTheDDSerial;
 
 class DDIOBasis {
   public:
@@ -120,23 +121,23 @@ class DDInputOutput: public DDIOBasis {
     }
     virtual bool available() {
       //return Serial.available();
-      return pDDSerial != NULL && pDDSerial->available(); 
+      return pTheDDSerial != NULL && pTheDDSerial->available(); 
     }
     virtual char read() {
       //return Serial.read();
-      return pDDSerial != NULL ? pDDSerial->read() : 0;
+      return pTheDDSerial != NULL ? pTheDDSerial->read() : 0;
     }
     virtual void print(const String &s) {
       //Serial.print(s);
-      if (pDDSerial != NULL) pDDSerial->print(s);
+      if (pTheDDSerial != NULL) pTheDDSerial->print(s);
     }
     virtual void print(const char *p) {
       //Serial.print(p);
-      if (pDDSerial != NULL) pDDSerial->print(p);
+      if (pTheDDSerial != NULL) pTheDDSerial->print(p);
     }
     virtual void flush() {
       //Serial.flush();
-      if (pDDSerial != NULL) pDDSerial->flush();
+      if (pTheDDSerial != NULL) pTheDDSerial->flush();
     }
     virtual void keepAlive() {
     }
@@ -144,7 +145,7 @@ class DDInputOutput: public DDIOBasis {
     }
     virtual void preConnect() {
       if (setupForSerial) {
-        if (pDDSerial != NULL) pDDSerial->begin(serialBaud);
+        if (pTheDDSerial != NULL) pTheDDSerial->begin(serialBaud);
         //Serial.begin(serialBaud);
       }
     }
@@ -632,9 +633,9 @@ class DumbDisplay {
     void logToSerial(const String& logLine) {
       if (canLogToSerial()) {
         //Serial.println(logLine);
-        if (pDDSerial != NULL) {
-          pDDSerial->print(logLine);
-          pDDSerial->print("\n");
+        if (pTheDDSerial != NULL) {
+          pTheDDSerial->print(logLine);
+          pTheDDSerial->print("\n");
         }
       } else {
         writeComment(logLine);
