@@ -31,7 +31,7 @@
 #define YIELD_AFTER_SEND_COMMAND false
 
 
-DDSerialProxy* _The_DD_Serial = NULL;
+DDSerial* _The_DD_Serial = NULL;
 
 namespace DDImpl {
 

@@ -35,18 +35,18 @@
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 
 
-class DDSerialProxy {
-  public:
-    virtual void begin(unsigned long serialBaud) {}
-    virtual bool available() { return false; }
-    virtual char read() { return 0; }
-    virtual void print(const String &s) {}
-    virtual void print(const char *p) {}
-    virtual void flush() {}
-};
+// class DDSerialProxy {
+//   public:
+//     virtual void begin(unsigned long serialBaud) {}
+//     virtual bool available() { return false; }
+//     virtual char read() { return 0; }
+//     virtual void print(const String &s) {}
+//     virtual void print(const char *p) {}
+//     virtual void flush() {}
+// };
 
 
-class DDSerial: public DDSerialProxy {
+class DDSerial/*: public DDSerialProxy*/ {
   public:
     virtual void begin(unsigned long serialBaud) {
       Serial.begin(serialBaud);
@@ -68,7 +68,7 @@ class DDSerial: public DDSerialProxy {
     }
 };
 
-extern DDSerialProxy* _The_DD_Serial;
+extern DDSerial* _The_DD_Serial;
 
 
 class DDInputOutput {
