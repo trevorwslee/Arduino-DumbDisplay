@@ -35,46 +35,46 @@
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 
 
-// class DDSerialProxy {
-//   public:
-//     virtual void begin(unsigned long serialBaud) {
-//     }
-//     virtual bool available() {
-//       return false;
-//     }
-//     virtual char read() {
-//       return 0;
-//     }
-//     virtual void print(const String &s) {
-//     }
-//     virtual void print(const char *p) {
-//     }
-//     virtual void flush() {
-//     }
-// };
-// class DDRealSerialProxy: public DDSerialProxy {
-//   public:
-//     virtual void begin(unsigned long serialBaud) {
-//       Serial.begin(serialBaud);
-//     }
-//     virtual bool available() {
-//       return Serial.available();
-//     }
-//     virtual char read() {
-//       return Serial.read();
-//     }
-//     virtual void print(const String &s) {
-//        Serial.print(s);
-//     }
-//     virtual void print(const char *p) {
-//         Serial.print(p);
-//     }
-//     virtual void flush() {
-//       Serial.flush();
-//     }
-// };
+class DDSerialProxy {
+  public:
+    virtual void begin(unsigned long serialBaud) {
+    }
+    virtual bool available() {
+      return false;
+    }
+    virtual char read() {
+      return 0;
+    }
+    virtual void print(const String &s) {
+    }
+    virtual void print(const char *p) {
+    }
+    virtual void flush() {
+    }
+};
+class DDRealSerialProxy: public DDSerialProxy {
+  public:
+    virtual void begin(unsigned long serialBaud) {
+      Serial.begin(serialBaud);
+    }
+    virtual bool available() {
+      return Serial.available();
+    }
+    virtual char read() {
+      return Serial.read();
+    }
+    virtual void print(const String &s) {
+      Serial.print(s);
+    }
+    virtual void print(const char *p) {
+      Serial.print(p);
+    }
+    virtual void flush() {
+      Serial.flush();
+    }
+};
 
-//extern DDSerialProxy* pDDSerial;
+extern DDSerialProxy* pDDSerial;
 
 class DDIOBasis {
   public:
@@ -111,7 +111,7 @@ class DDIOBasis {
 
 class DDInputOutput: public DDIOBasis {
   public:
-    DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
+    DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDIOBasis(serialBaud, false, true) {
     }
     virtual DDIOBasis* newForSerialConnection() {
       return new DDInputOutput(serialBaud, false, true);
@@ -119,19 +119,24 @@ class DDInputOutput: public DDIOBasis {
     virtual ~DDInputOutput() {
     }
     virtual bool available() {
-      return Serial.available();
+      //return Serial.available();
+      return pDDSerial != NULL && pDDSerial->available(); 
     }
     virtual char read() {
-      return Serial.read();
+      //return Serial.read();
+      return pDDSerial != NULL ? pDDSerial->read() : 0;
     }
     virtual void print(const String &s) {
-      Serial.print(s);
+      //Serial.print(s);
+      if (pDDSerial != NULL) pDDSerial->print(s);
     }
     virtual void print(const char *p) {
-      Serial.print(p);
+      //Serial.print(p);
+      if (pDDSerial != NULL) pDDSerial->print(p);
     }
     virtual void flush() {
-      Serial.flush();
+      //Serial.flush();
+      if (pDDSerial != NULL) pDDSerial->flush();
     }
     virtual void keepAlive() {
     }
@@ -139,7 +144,8 @@ class DDInputOutput: public DDIOBasis {
     }
     virtual void preConnect() {
       if (setupForSerial) {
-        Serial.begin(serialBaud);
+        if (pDDSerial != NULL) pDDSerial->begin(serialBaud);
+        //Serial.begin(serialBaud);
       }
     }
   protected:
@@ -561,7 +567,7 @@ class BasicDDTunnel: public DDTunnel {
 
 class DumbDisplay {
   public:
-    DumbDisplay(DDInputOutput* pIO);
+    DumbDisplay(DDIOBasis* pIO);
     /* explicitly make connection -- blocking */
     /* - implicitly called when configure or create a layer */
     void connect();
@@ -625,7 +631,11 @@ class DumbDisplay {
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine) {
       if (canLogToSerial()) {
-        Serial.println(logLine);
+        //Serial.println(logLine);
+        if (pDDSerial != NULL) {
+          pDDSerial->print(logLine);
+          pDDSerial->print("\n");
+        }
       } else {
         writeComment(logLine);
       }

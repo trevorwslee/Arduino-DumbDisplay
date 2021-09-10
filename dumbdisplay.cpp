@@ -31,7 +31,7 @@
 #define YIELD_AFTER_SEND_COMMAND false
 
 
-//DDSerialProxy* pDDSerial = NULL;
+DDSerialProxy* pDDSerial = NULL;
 
 namespace DDImpl {
 
@@ -1398,10 +1398,10 @@ String BasicDDTunnel::readLine() {
 // }
 
 
-DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
-  // if (pIO->isSerial() || pIO->isBackupBySerial()) {
-  //   pDDSerial = new DDRealSerialProxy();
-  // }
+DumbDisplay::DumbDisplay(DDIOBasis* pIO) {
+  if (pIO->isSerial() || pIO->isBackupBySerial()) {
+    pDDSerial = new DDRealSerialProxy();
+  }
   _IO = pIO;
 }
 void DumbDisplay::connect() {
