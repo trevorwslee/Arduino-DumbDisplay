@@ -37,22 +37,33 @@
 
 class DDSerialProxy {
   public:
-    inline void begin(unsigned long serialBaud) {
+    virtual void begin(unsigned long serialBaud) {}
+    virtual bool available() { return false; }
+    virtual char read() { return 0; }
+    virtual void print(const String &s) {}
+    virtual void print(const char *p) {}
+    virtual void flush() {}
+};
+
+
+class DDSerial: public DDSerialProxy {
+  public:
+    virtual void begin(unsigned long serialBaud) {
       Serial.begin(serialBaud);
     }
-    inline bool available() {
+    virtual bool available() {
       return Serial.available();
     }
-    inline char read() {
+    virtual char read() {
       return Serial.read();
     }
-    inline void print(const String &s) {
+    virtual void print(const String &s) {
       Serial.print(s);
     }
-    inline void print(const char *p) {
+    virtual void print(const char *p) {
       Serial.print(p);
     }
-    inline void flush() {
+    virtual void flush() {
       Serial.flush();
     }
 };
@@ -531,7 +542,15 @@ class BasicDDTunnel: public DDTunnel {
 
 class DumbDisplay {
   public:
-    DumbDisplay(DDInputOutput* pIO);
+    DumbDisplay(DDInputOutput* pIO) {
+#ifndef DD_NO_SERIAL      
+      if (pIO->isSerial() || pIO->isBackupBySerial()) {
+        _The_DD_Serial = new DDSerial();
+      }
+#endif      
+      initialize(pIO);
+    }
+    //DumbDisplay(DDInputOutput* pIO, DDSerialProxy* pDDSerialProxy);
     /* explicitly make connection -- blocking */
     /* - implicitly called when configure or create a layer */
     void connect();
@@ -605,6 +624,7 @@ class DumbDisplay {
       }
     }
   private:
+    void initialize(DDInputOutput* pIO);
     bool canLogToSerial();
 };
 

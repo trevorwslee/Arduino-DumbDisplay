@@ -1398,10 +1398,14 @@ String BasicDDTunnel::readLine() {
 // }
 
 
-DumbDisplay::DumbDisplay(DDInputOutput* pIO) {
-  if (pIO->isSerial() || pIO->isBackupBySerial()) {
-    _The_DD_Serial = new DDSerialProxy();
-  }
+// DumbDisplay::DumbDisplay(DDInputOutput* pIO, DDSerialProxy* pDDSerialProxy) {
+//   if (pIO->isSerial() || pIO->isBackupBySerial()) {
+//     //_The_DD_Serial = new DDSerial();
+//     _The_DD_Serial = pDDSerialProxy;
+//   }
+//   _IO = pIO;
+// }
+void DumbDisplay::initialize(DDInputOutput* pIO) {
   _IO = pIO;
 }
 void DumbDisplay::connect() {
