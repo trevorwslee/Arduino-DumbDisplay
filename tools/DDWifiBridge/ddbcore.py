@@ -1,14 +1,9 @@
-from serial.tools.list_ports import comports
+#from serial.tools.list_ports import comports
 
 import traceback
 
 
 import serial as pyserial
-#import serial
-
-#import tkinter as tk
-#import tkinter.ttk as ttk
-#import tkinter.scrolledtext as st
 import threading
 
 import configparser
