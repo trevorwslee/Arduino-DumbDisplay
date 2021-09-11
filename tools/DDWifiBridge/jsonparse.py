@@ -5,6 +5,7 @@ class NeedMoreDataException(Exception):
 
 class JsonStreamParser:
     def __init__(self, callback, parent_field_name = None):
+        self.unescape_escaped = True
         self.callback = callback
         self.parent_field_name = parent_field_name
         self.nested_parser = None
@@ -145,7 +146,7 @@ class JsonStreamParser:
             c = self.buffer[i]
             if escaping:
                 escaping = False
-                if False: # want to unescape before submit
+                if self.unescape_escaped: # want to unescape before submit
                     self.buffer = self.buffer[0:i-1] + self.buffer[i:]
                     i -= 1
                     max_i -= 1
@@ -182,7 +183,7 @@ class JsonStreamParserTester():
         self.json2 = '{"NESTED":{"str":"str value","int":123},"INT":4321,"NESTED2":{"str2":"str value2"},"STR":"STR VALUE"}'
         self.expected2 = {'NESTED.str': 'str value', 'NESTED.int': '123', 'INT': '4321', 'NESTED2.str2': 'str value2', 'STR': 'STR VALUE'}
         self.json3 = '{ "str1": "str\\\\ing\\"1\\"", "int": 123, "str2" : "\\"string2\\"" }'
-        self.expected3 = {'str1': 'str\\\\ing\\"1\\"', 'int': '123', 'str2': '\\"string2\\"'}
+        self.expected3 = {'str1': 'str\\ing"1"', 'int': '123', 'str2': '"string2"'}
 
     def testIt(self):
         self._testIt(self.json1, self.expected1)
@@ -196,13 +197,13 @@ class JsonStreamParserTester():
     def _testSimple(self, json, expected_value):
         values = self._runSimple(json)
         if expected_value != values:
-            print("XXX -- " + str(values))
+            print("XXX S XXX -- " + str(values))
             assert False
 
     def _testPieceWise(self, json, expected_value):
         values = self._runPieceWise(json)
         if expected_value != values:
-            print(str(values))
+            print("XXX C XXX -- " + str(values))
             assert False
 
 
