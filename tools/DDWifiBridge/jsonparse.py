@@ -138,6 +138,7 @@ class JsonStreamParser:
         return skipped
 
     def _scanTo(self, what, allow_escape = False):
+        ori_buffer = self.buffer
         bufLen = len(self.buffer)
         escaping = False
         i = 0
@@ -146,7 +147,7 @@ class JsonStreamParser:
             c = self.buffer[i]
             if escaping:
                 escaping = False
-                if self.unescape_escaped: # want to unescape before submit
+                if self.unescape_escaped:
                     self.buffer = self.buffer[0:i-1] + self.buffer[i:]
                     i -= 1
                     max_i -= 1
@@ -157,6 +158,7 @@ class JsonStreamParser:
                     return i
             i += 1
         if escaping:
+            self.buffer = ori_buffer
             raise NeedMoreDataException()
         else:
             return -1
@@ -169,13 +171,6 @@ class JsonStreamParser:
 import random
 
 
-json = '{ "str1": "str\\\\ing\\"1\\"", "int": 123, "str2" : "\\"string2\\"" }'
-
-# print("***")
-# parser = JsonStreamParser(lambda id, val: print(". TEST1 -- " + "'" + id + "':'" + val + "'"))
-# parser.sinkJsonData(json)
-
-
 class JsonStreamParserTester():
     def __init__(self):
         self.json1 = ' { "int" : 123 , "int2" : 999 , "str" : "str value" , "str2" : "str value 2" , "Ftrue" : true, "Ffalse" : false , "Fnull" : null, "end":"END" }'
@@ -186,6 +181,7 @@ class JsonStreamParserTester():
         self.expected3 = {'str1': 'str\\ing"1"', 'int': '123', 'str2': '"string2"'}
 
     def testIt(self):
+        self._testDebug()
         self._testIt(self.json1, self.expected1)
         self._testIt(self.json2, self.expected2)
         self._testIt(self.json3, self.expected3)
@@ -193,6 +189,19 @@ class JsonStreamParserTester():
     def _testIt(self, json, expected_value):
         self._testSimple(json, expected_value)
         self._testPieceWise(json, expected_value)
+
+    def _testDebug(self):
+        expected_value = {'str1': 'str\\ing"abc"-def'}
+        values = {}
+        parser = JsonStreamParser(lambda id, val: self._submit("S", values, id, val))
+        parser.sinkJsonData('{ "str1":"str')
+        parser.sinkJsonData('\\\\ing\\')
+        parser.sinkJsonData('"abc\\"-def"}')
+        if expected_value != values:
+            print("XXX D XXX -- " + str(values))
+            assert False
+
+
 
     def _testSimple(self, json, expected_value):
         values = self._runSimple(json)
@@ -205,7 +214,6 @@ class JsonStreamParserTester():
         if expected_value != values:
             print("XXX C XXX -- " + str(values))
             assert False
-
 
     def _runSimple(self, json):
         values = {}
@@ -233,4 +241,15 @@ class JsonStreamParserTester():
 
 
 JsonStreamParserTester().testIt()
+
+
+# json = '{ "str1": "str\\\\ing\\"1\\"", "int": 123, "str2" : "\\"string2\\"" }'
+# print("***")
+# parser = JsonStreamParser(lambda id, val: print(". TEST1 -- " + "'" + id + "':'" + val + "'"))
+# parser.sinkJsonData(json)
+# parser = JsonStreamParser(lambda id, val: print(". TEST1 -- " + "'" + id + "':'" + val + "'"))
+# parser.sinkJsonData('{ "str1":"str')
+# parser.sinkJsonData('\\\\ing\\')
+# parser.sinkJsonData('"abc\\""}')
+
 
