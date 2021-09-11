@@ -2,11 +2,11 @@
 // 9600: AT+BAUD4
 // 57600: AT+BAUD7
 // 115200: AT+BAUD8
-// arduino: AT+NAMEarduino
+// arduino: AT+NAMEpico
 // 1234: AT+PIN1234
 
 
-UART Serial2(8, 9, 0, 0);
+UART Serial2(8, 9, 0, 0);  // GP8 => RX of HC06; GP9 => TX of HC06
 
 const unsigned long baud = 115200;
 
