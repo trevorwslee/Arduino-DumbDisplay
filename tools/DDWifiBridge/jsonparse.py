@@ -1,11 +1,9 @@
 
 
+class NeedMoreDataException(Exception):
+    pass
 
 class JsonStreamParser:
-    '''
-    :param callback
-      input: element id, element valud
-    '''
     def __init__(self, callback, parent_field_name = None):
         self.callback = callback
         self.parent_field_name = parent_field_name
@@ -19,11 +17,14 @@ class JsonStreamParser:
     def sinkJsonData(self, data):
         self.buffer = self.buffer + data
         while True:
-            if self.buffer == '':
-                break
-            done = self._streamParse()
-            if done:
-                return self.buffer
+            try:
+                done = self._streamParse()
+                if done:
+                    return self.buffer
+                if self.buffer == '':
+                    break
+            except NeedMoreDataException:
+                return None
         return None
 
     def _streamParse(self):
@@ -72,25 +73,12 @@ class JsonStreamParser:
             self.buffer = rest
             self.state = '$'
         if self.state == '^>"':
-            skipped = self._skipTo('"')
+            skipped = self._skipTo('"', True)
             if skipped == None:
                 return False
             self.field_value = skipped[:-1].strip()
             self._submit()
             self.state = '$'
-        # if self.state == '^>':
-        #     done = False
-        #     if self._scanTo(',') != -1:
-        #         skipped = self._skipTo(',')
-        #     else:
-        #         skipped = self._skipTo('}')
-        #         done = True
-        #     if skipped == None:
-        #         return False
-        #     self.field_value = skipped[:-1].strip()
-        #     self._submit()
-        #     self.state = '{'
-        #     return done
         if self.state == '^>' or self.state == '$':
             done = False
             sep_idx = self._scanTo(',')
@@ -125,18 +113,20 @@ class JsonStreamParser:
         self.buffer = ""
         return False
 
-    def _skipTo(self, what):
-        return self.__skip(what, True)
+    def _skipTo(self, what, allow_escape = False):
+        return self.__skip(what, True, allow_escape)
 
-    # def _skipUntil(self, what):
-    #     return self.__skip(what, False)
+    def _skipUntil(self, what, allow_escape = False):
+        return self.__skip(what, False, allow_escape)
 
-    def __skip(self, what, inclusive):
-        i = self._scanTo(what)
+    def __skip(self, what, inclusive, allow_escape = False):
+        i = self._scanTo(what, allow_escape)
         if i == -1:
             self.skipping += self.buffer
             self.buffer = ""
             return None
+        # if i == -999:
+        #     return None
         if inclusive:
             skipped = self.skipping + self.buffer[0:i+1]
             self.buffer = self.buffer[i+1:]
@@ -146,33 +136,100 @@ class JsonStreamParser:
         self.skipping = ""
         return skipped
 
-    def _scanTo(self, what):
+    def _scanTo(self, what, allow_escape = False):
         bufLen = len(self.buffer)
-        for i in range(bufLen):
+        escaping = False
+        i = 0
+        max_i = bufLen
+        while i < max_i:
             c = self.buffer[i]
-            if c == what:
-                return i
-        return -1
+            if escaping:
+                escaping = False
+                if False: # want to unescape before submit
+                    self.buffer = self.buffer[0:i-1] + self.buffer[i:]
+                    i -= 1
+                    max_i -= 1
+            else:
+                if allow_escape and c == '\\':
+                    escaping = True
+                elif c == what:
+                    return i
+            i += 1
+        if escaping:
+            raise NeedMoreDataException()
+        else:
+            return -1
 
 
+
+
+#########################################################################
 
 import random
 
 
-json = '{"NESTED":{"str":"str value","int":123},"INT":4321,"NESTED2":{"str2":"str value2"},"STR":"STR VALUE"}'
-#json = ' { "int" : 123 , "int2" : 999 , "str" : "str value" , "str2" : "str value 2" , "Ftrue" : true, "Ffalse" : false , "Fnull" : null, "end":"END" }'
+json = '{ "str1": "str\\\\ing\\"1\\"", "int": 123, "str2" : "\\"string2\\"" }'
 
-print("***")
-parser = JsonStreamParser(lambda id, val: print(". TEST1 -- " + "'" + id + "':'" + val + "'"))
-parser.sinkJsonData(json)
+# print("***")
+# parser = JsonStreamParser(lambda id, val: print(". TEST1 -- " + "'" + id + "':'" + val + "'"))
+# parser.sinkJsonData(json)
 
-print("***")
-parser = JsonStreamParser(lambda id, val: print(". TEST2 -- " + "'" + id + "':'" + val + "'"))
-json_data = ""
-for c in json:
-    json_data += c
-    if random.random() > 0.5:
-        parser.sinkJsonData(json_data)
+
+class JsonStreamParserTester():
+    def __init__(self):
+        self.json1 = ' { "int" : 123 , "int2" : 999 , "str" : "str value" , "str2" : "str value 2" , "Ftrue" : true, "Ffalse" : false , "Fnull" : null, "end":"END" }'
+        self.expected1 = {'int': '123', 'int2': '999', 'str': 'str value', 'str2': 'str value 2', 'Ftrue': 'true', 'Ffalse': 'false', 'Fnull': 'null', 'end': 'END'}
+        self.json2 = '{"NESTED":{"str":"str value","int":123},"INT":4321,"NESTED2":{"str2":"str value2"},"STR":"STR VALUE"}'
+        self.expected2 = {'NESTED.str': 'str value', 'NESTED.int': '123', 'INT': '4321', 'NESTED2.str2': 'str value2', 'STR': 'STR VALUE'}
+        self.json3 = '{ "str1": "str\\\\ing\\"1\\"", "int": 123, "str2" : "\\"string2\\"" }'
+        self.expected3 = {'str1': 'str\\\\ing\\"1\\"', 'int': '123', 'str2': '\\"string2\\"'}
+
+    def testIt(self):
+        self._testIt(self.json1, self.expected1)
+        self._testIt(self.json2, self.expected2)
+        self._testIt(self.json3, self.expected3)
+
+    def _testIt(self, json, expected_value):
+        self._testSimple(json, expected_value)
+        self._testPieceWise(json, expected_value)
+
+    def _testSimple(self, json, expected_value):
+        values = self._runSimple(json)
+        if expected_value != values:
+            print("XXX -- " + str(values))
+            assert False
+
+    def _testPieceWise(self, json, expected_value):
+        values = self._runPieceWise(json)
+        if expected_value != values:
+            print(str(values))
+            assert False
+
+
+    def _runSimple(self, json):
+        values = {}
+        parser = JsonStreamParser(lambda id, val: self._submit("S", values, id, val))
+        parser.sinkJsonData(json)
+        return values
+
+    def _runPieceWise(self, json):
+        values = {}
+        parser = JsonStreamParser(lambda id, val: self._submit("C", values, id, val))
         json_data = ""
-if json_data != "":
-    parser.sinkJsonData(json_data)
+        for c in json:
+            json_data += c
+            if random.random() > 0.5:
+                parser.sinkJsonData(json_data)
+                json_data = ""
+        if json_data != "":
+            parser.sinkJsonData(json_data)
+        return values
+
+    def _submit(self, type, values, id, val):
+        if True:
+            print(type + " -- '" + id + "' = '" + val + "'")
+        values[id] = val
+
+
+JsonStreamParserTester().testIt()
+
