@@ -915,7 +915,7 @@ void DDLayer::disableFeedback() {
   }
 }
 const DDFeedback* DDLayer::getFeedback() {
-  yield();
+  //yield();
   _HandleFeedback();
   return pFeedbackManager != NULL ? pFeedbackManager->getFeedback() : NULL;
 }
@@ -1339,6 +1339,8 @@ void DDTunnel::release() {
 //   return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
 // }
 bool DDTunnel::_eof() {
+  //yield();
+  _HandleFeedback();
   return /*nextArrayIdx == validArrayIdx && */done;
 }
 // void DDTunnel::_readLine(String &buffer) {

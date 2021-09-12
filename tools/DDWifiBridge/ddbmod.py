@@ -9,7 +9,7 @@ from jsonparse import JsonStreamParserCore
 
 _LOG_TUNNEL = True
 _LOG_TUNNEL_IO = False
-_LOG_TUNNEL_JSON = False
+_LOG_TUNNEL_JSON = True
 
 _DEBUG_TUNNEL = False
 _DEBUG_TUNNEL_INS = False

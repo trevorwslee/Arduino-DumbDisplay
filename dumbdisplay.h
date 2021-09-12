@@ -526,9 +526,10 @@ class DDTunnel: public DDObject {
     bool done;
 };
 
+
 class DDBufferedTunnel: public DDTunnel {
   public:
-    DDBufferedTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4);
+    DDBufferedTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize);
     virtual ~DDBufferedTunnel();
     virtual void release();
     virtual void reconnect();
@@ -539,7 +540,7 @@ class DDBufferedTunnel: public DDTunnel {
     void _readLine(String &buffer);
     void _writeLine(const String& data);
   public:
-    void handleInput(const String& data, bool final);
+    virtual void handleInput(const String& data, bool final);
   private:
     // String endPoint;
     // String tunnelId;
