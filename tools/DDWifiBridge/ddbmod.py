@@ -8,8 +8,8 @@ from jsonparse import JsonStreamParserCore
 
 
 _LOG_TUNNEL = True
-_LOG_TUNNEL_IO = True
-_LOG_TUNNEL_JSON = True
+_LOG_TUNNEL_IO = False
+_LOG_TUNNEL_JSON = False
 
 _DEBUG_TUNNEL = False
 _DEBUG_TUNNEL_INS = False
@@ -211,6 +211,8 @@ class Tunnel:
                 idx = d.find('\n')
                 if idx != -1:
                     line = rest + d[0: idx]
+                    if line.endswith('\r'):
+                        line = line[0:len(line) - 1]
                     rest = d[idx + 1:]
                     if self.bridge != None:
                         if _LOG_TUNNEL_IO:
@@ -253,7 +255,7 @@ class SimpleJsonTunnel(Tunnel):
         self.parser.sinkJsonData(line)
         if self.parser.finalized:
             if _LOG_TUNNEL_JSON:
-                print("<{}<| :" + line)
+                print("<{}<| :")
             self._insertTargetLine("", True)
     def _onReceived(self, field_id, field_value):
         line = field_id + ":" + field_value
@@ -340,6 +342,9 @@ class SerialSource:
                                     if lt_command == "reconnect":
                                         tunnel = self.tunnels.get(tid)
                                         if tunnel != None:
+                                            # if type == None:
+                                            #     if isinstance(tunnel, SimpleJsonTunnel):
+                                            #         type = "ddsimplejson"
                                             tunnel.close()
                                             while self.tunnels.get(tid) != None:
                                                 time.sleep(0.1)

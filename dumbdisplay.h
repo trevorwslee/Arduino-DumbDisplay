@@ -502,7 +502,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
 
 class DDTunnel: public DDObject {
   public:
-    DDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4);
+    DDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4);
     virtual ~DDTunnel();
     virtual void release();
     virtual void reconnect();
@@ -515,6 +515,7 @@ class DDTunnel: public DDObject {
   public:
     virtual void handleInput(const String& data, bool final);
   protected:
+    String type;
     String endPoint;
     String tunnelId;
     // int arraySize;
@@ -527,7 +528,7 @@ class DDTunnel: public DDObject {
 
 class DDBufferedTunnel: public DDTunnel {
   public:
-    DDBufferedTunnel(const String& endPoint, int tunnelId, int bufferSize = 4);
+    DDBufferedTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4);
     virtual ~DDBufferedTunnel();
     virtual void release();
     virtual void reconnect();
@@ -552,7 +553,7 @@ class DDBufferedTunnel: public DDTunnel {
 
 class BasicDDTunnel: public DDBufferedTunnel {
   public:
-    BasicDDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(endPoint, tunnelId, bufferSize) {
+    BasicDDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(type, endPoint, tunnelId, bufferSize) {
     }
     inline int count() { return _count(); }
     inline bool eof() { return _eof(); }
@@ -563,7 +564,7 @@ class BasicDDTunnel: public DDBufferedTunnel {
 
 class SimpleJsonDDTunnel: public DDBufferedTunnel {
   public:
-    SimpleJsonDDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(endPoint, tunnelId, bufferSize) {
+    SimpleJsonDDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(type, endPoint, tunnelId, bufferSize) {
     }
     inline int count() { return _count(); }
     inline bool eof() { return _eof(); }

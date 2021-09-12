@@ -1308,8 +1308,8 @@ void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
 // }
 
 #ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(const String& endPoint, int tunnelId, int bufferSize):
-  endPoint(endPoint), tunnelId(String(tunnelId)) {
+DDTunnel::DDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize):
+  type(type), endPoint(endPoint), tunnelId(String(tunnelId)) {
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
   // this->nextArrayIdx = 0;
@@ -1327,7 +1327,7 @@ void DDTunnel::reconnect() {
   //for (int i = 0; i < arraySize; i++) {
     //dataArray[i] = "";
   //}
-  _sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
+  _sendSpecialCommand("lt", tunnelId, "reconnect", type + "@" + endPoint);
 }
 void DDTunnel::release() {
   if (!done) {
@@ -1366,8 +1366,8 @@ void DDTunnel::handleInput(const String& data, bool final) {
     this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
 }
-DDBufferedTunnel::DDBufferedTunnel(const String& endPoint, int tunnelId, int bufferSize):
-  DDTunnel(endPoint, tunnelId) {
+DDBufferedTunnel::DDBufferedTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize):
+  DDTunnel(type, endPoint, tunnelId) {
   this->arraySize = bufferSize;
   this->dataArray = new String[bufferSize];
   this->nextArrayIdx = 0;
@@ -1567,7 +1567,7 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, int buffer
   int tid = _AllocTid();
   String tunnelId = String(tid);
   _sendSpecialCommand("lt", tunnelId, "connect", "ddbasic@" + endPoint);
-  BasicDDTunnel* pTunnel = new BasicDDTunnel(endPoint, tid, bufferSize);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", endPoint, tid, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
@@ -1575,7 +1575,7 @@ SimpleJsonDDTunnel* DumbDisplay::createSimpleJsonTunnel(const String& endPoint, 
   int tid = _AllocTid();
   String tunnelId = String(tid);
   _sendSpecialCommand("lt", tunnelId, "connect", "ddsimplejson@" + endPoint);
-  SimpleJsonDDTunnel* pTunnel = new SimpleJsonDDTunnel(endPoint, tid, bufferSize);
+  SimpleJsonDDTunnel* pTunnel = new SimpleJsonDDTunnel("ddsimplejson", endPoint, tid, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
