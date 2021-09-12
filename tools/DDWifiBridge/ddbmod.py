@@ -8,6 +8,9 @@ from jsonparse import JsonStreamParserCore
 
 
 _LOG_TUNNEL = True
+_LOG_TUNNEL_IO = True
+_LOG_TUNNEL_JSON = True
+
 _DEBUG_TUNNEL = False
 _DEBUG_TUNNEL_INS = False
 
@@ -103,11 +106,41 @@ def get_ip():
     return IP
 
 class Tunnel:
-    def __init__(self, ser, tunnel_id, host, port):
+    def __init__(self, ser, tunnel_id, end_point):
+        protocol = None
+        host = None
+        if end_point.startswith('http://'):
+            protocol = "http"
+            host = end_point[7:]
+        else:
+            host = end_point
+        port = None
+        idx = host.find(':')
+        if idx != -1:
+            port_str = host[idx + 1:]
+            host = host[0:idx]
+            try:
+                port = int(port_str)
+            except ValueError:
+                port = None
+        location = None
+        idx = host.find('/')
+        if idx != -1:
+            location = host[idx:]
+            host = host[0:idx]
+        else:
+            location = "/"
+        if port == None:
+            if protocol == 'http':
+                port = 80
+            else:
+                raise Exception("no port specification for connection to " + end_point)
         self.bridge = SimpleDDBridge(ser, self)
         self.tunnel_id = tunnel_id
+        self.protocol = protocol
         self.host = host
         self.port = port
+        self.location = location
         self.sock = None
         self.closed = False
     def insertSourceLine(self, source_line):
@@ -123,14 +156,29 @@ class Tunnel:
             self._close("OS error: {0}".format(err))
     def forward(self, line):
         sent = False
-        if self.sock != None:
-            data = bytes(line + "\n", 'UTF8')
-            try:
-                self.sock.sendall(data)
-                sent = True
-            except:
-                pass
+        if True:
+            if self.sock != None:
+                try:
+                    self.__send(line)
+                    sent = True
+                except:
+                    pass
+        else:
+            if self.sock != None:
+                if self.log_io:
+                    print(">>>>> :" + line)
+                data = bytes(line + "\n", 'UTF8')
+                try:
+                    self.sock.sendall(data)
+                    sent = True
+                except:
+                    pass
         return sent
+    def __send(self, line):
+        if _LOG_TUNNEL_IO:
+            print(">>>>> :" + line)
+        data = bytes(line + "\n", 'UTF8')
+        self.sock.sendall(data)
     def _serveOnce(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             self.sock = s
@@ -140,6 +188,16 @@ class Tunnel:
                 print(f"failed to connect end-point {self.host}:{self.port} ... {err}")
                 self._close("OS error: {0}".format(err))
                 return
+            if self.sock != None and self.protocol == 'http':
+                self.__send("GET " + self.location + " HTTP/1.1")
+                #self.__send("Accept: application/json, text/plain, */*")
+                self.__send("Connection: close")
+                self.__send("")
+                # line = "GET " + self.location + " HTTP/1.1\n\n"
+                # data = bytes(line, 'UTF8')
+                # self.sock.sendall(data)
+                # if self.log_io:
+                #     print("> HEADER > :" + line)
             received_any = False
             rest = ""
             while self.sock != None:
@@ -158,13 +216,18 @@ class Tunnel:
                     line = rest + d[0: idx]
                     rest = d[idx + 1:]
                     if self.bridge != None:
-                        #print("----:" + line)
+                        if _LOG_TUNNEL_IO:
+                            print("<<<<< :" + line)
+                        # if self.log_io:
+                        #     print("<<<<< :" + line)
                         self._handleReceivedTargetLine(line)
                         #self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + line)
                 else:
                     rest = rest + d
             if received_any:
                 if self.bridge != None:  # actually, no line-end
+                    if _LOG_TUNNEL_IO:
+                        print("<<<<| :" + rest)
                     #print("FINAL:" + rest)
                     self._handleReceivedTargetLine(rest, True)
                     #self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + ":final<" + rest)
@@ -185,16 +248,20 @@ class Tunnel:
         self.bridge.insertTargetLine("<lt." + id + "<" + line)
 
 class SimpleJsonTunnel(Tunnel):
-    def __init__(self, ser, tunnel_id, host, port):
-        super().__init__(ser, tunnel_id, port)
+    def __init__(self, ser, tunnel_id, end_point):
+        super().__init__(ser, tunnel_id, end_point)
         self.parser = JsonStreamParserCore()
         self.parser.onReceived = lambda field_id, field_value: self._onReceived(field_id, field_value)
     def _handleReceivedTargetLine(self, line, final = False):
         self.parser.sinkJsonData(line)
         if self.parser.finalized:
+            if _LOG_TUNNEL_JSON:
+                print("<{}<| :" + line)
             self._insertTargetLine("", True)
     def _onReceived(self, field_id, field_value):
         line = field_id + ":" + field_value
+        if _LOG_TUNNEL_JSON:
+            print("<{}<< :" + line)
         self._insertTargetLine(line)
 
 
@@ -265,24 +332,14 @@ class SerialSource:
                                 # if host != None:
                                 if lt_data != None:
                                     type = None
-                                    host = None
-                                    port = None
+                                    end_point = None
                                     if lt_data != None:
                                         idx = lt_data.find('@')
                                         if idx != -1:
                                             type = lt_data[0:idx]
-                                            lt_data = lt_data[idx + 1:]
-                                        idx = lt_data.find(':')
-                                        if idx != -1:
-                                            host = lt_data[0:idx]
-                                            try:
-                                                port = int(lt_data[idx + 1:])
-                                            except ValueError:
-                                                port = None
+                                            end_point = lt_data[idx + 1:]
                                         else:
-                                            host = lt_data
-                                        # if port == None:
-                                        #     raise Exception("no port specification for connection to " + lt_data)
+                                            end_point = lt_data
                                     if lt_command == "reconnect":
                                         tunnel = self.tunnels.get(tid)
                                         if tunnel != None:
@@ -290,9 +347,9 @@ class SerialSource:
                                             while self.tunnels.get(tid) != None:
                                                 time.sleep(0.1)
                                     if type == 'ddjson':
-                                        tunnel = SimpleJsonTunnel(self.ser, tid, host, port)
+                                        tunnel = SimpleJsonTunnel(self.ser, tid, end_point)
                                     else:
-                                        tunnel = Tunnel(self.ser, tid, host, port)
+                                        tunnel = Tunnel(self.ser, tid, end_point)
                                     self.tunnels[tunnel.tunnel_id] = tunnel
                                     if _LOG_TUNNEL:
                                         log_prefix = 'Re-' if lt_command == "reconnect" else ''

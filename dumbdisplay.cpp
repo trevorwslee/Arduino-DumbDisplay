@@ -1381,21 +1381,18 @@ String BasicDDTunnel::readLine() {
   _readLine(buffer);
   return buffer;
 }
-// int BasicDDTunnel::available() {
-//   return this->data.length();
-// }
-// String BasicDDTunnel::read() {
-//   String data = this->data;
-//   this->data = "";
-//   //Serial.print("+" + data);
-//   return data;
-// }
-// void BasicDDTunnel::write(const String& data) {
-//   _sendSpecialCommand("lt", tunnelId, NULL, data);
-// }
-// bool BasicDDTunnel::eof() {
-//   return this->data.length() == 0 && this->done;
-// }
+void JsonDDTunnel::read(String& fieldId, String& fieldValue) {
+  String buffer;
+  _readLine(buffer);
+  int idx = buffer.indexOf(":");
+  if (idx != -1) {
+    fieldId = buffer.substring(0, idx);
+    fieldValue = buffer.substring(idx + 1);
+  } else {
+    fieldId = "";
+    fieldValue = buffer;
+  }
+}
 
 
 // DumbDisplay::DumbDisplay(DDInputOutput* pIO, DDSerialProxy* pDDSerialProxy) {
@@ -1518,16 +1515,19 @@ void DumbDisplay::writeComment(const String& comment) {
 BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, int bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  _sendSpecialCommand("lt", tunnelId, "connect", endPoint);
+  _sendSpecialCommand("lt", tunnelId, "connect", "ddbasic@" + endPoint);
   BasicDDTunnel* pTunnel = new BasicDDTunnel(endPoint, tid, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
-// void DumbDisplay::reconnectTunnel(DDTunnel *pTunnel, const String& endPoint) {
-//   const String& tunnelId = pTunnel->getTunnelId();
-//   _sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
-//   pTunnel->_reset();
-// }
+JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, int bufferSize) {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  _sendSpecialCommand("lt", tunnelId, "connect", "ddjson@" + endPoint);
+  JsonDDTunnel* pTunnel = new JsonDDTunnel(endPoint, tid, bufferSize);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   delete pTunnel;
 }

@@ -531,10 +531,18 @@ class BasicDDTunnel: public DDTunnel {
     }
     inline int count() { return _count(); }
     inline bool eof() { return _eof(); }
-    //inline String readLineDirect() { return _readLineDirect(); }
     String readLine();
     inline void readLine(String &buffer) { _readLine(buffer); }
     inline void writeLine(const String& data) { _writeLine(data); }
+};
+
+class JsonDDTunnel: public DDTunnel {
+  public:
+    JsonDDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4): DDTunnel(endPoint, tunnelId, bufferSize) {
+    }
+    inline int count() { return _count(); }
+    inline bool eof() { return _eof(); }
+    void read(String& fieldId, String& fieldValue);
 };
 
 #endif
@@ -580,6 +588,7 @@ class DumbDisplay {
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
     BasicDDTunnel* createBasicTunnel(const String& endPoint, int bufferSize = 4);
+    JsonDDTunnel* createJsonTunnel(const String& endPoint, int bufferSize = 4);
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
 #endif
