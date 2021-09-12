@@ -3,15 +3,14 @@
 class NeedMoreDataException(Exception):
     pass
 
-class JsonStreamParser:
-    def __init__(self, callback, parent_field_name = None):
+class JsonStreamParserCore:
+    def __init__(self):
         self.unescape_escaped = True
-        self.callback = callback
-        self.parent_field_name = parent_field_name
         self.nested_parser = None
         self.state = None
         self.buffer = ""
         self.skipping = ""
+        self.finalized = False
         self.field_name = None
         self.field_value = None
 
@@ -21,6 +20,7 @@ class JsonStreamParser:
             try:
                 done = self._streamParse()
                 if done:
+                    self.finalized = True
                     return self.buffer
                 if self.buffer == '':
                     break
@@ -64,7 +64,9 @@ class JsonStreamParser:
         if self.state == '^>{':
             json_data = self.buffer
             if self.nested_parser == None:
-                self.nested_parser = JsonStreamParser(self.callback, self.field_name)
+                #self.nested_parser = JsonStreamParser(self.callback, self.field_name)
+                self.nested_parser = JsonStreamParserCore()
+                self.nested_parser.onReceived = lambda field_name, field_value : self.onReceived(self.field_name + "." + field_name, field_value)
                 json_data = "{" + json_data
             self.buffer = ""
             rest = self.nested_parser.sinkJsonData(json_data)
@@ -99,10 +101,10 @@ class JsonStreamParser:
         return False
 
     def _submit(self):
-        field_name = self.field_name
-        if self.parent_field_name != None:
-            field_name = self.parent_field_name + "." + field_name
-        self.callback(field_name, self.field_value)
+        self.onReceived(self.field_name, self.field_value)
+
+    def onReceived(self, field_name, field_value):
+        pass
 
     def _skipWS(self):
         bufLen = len(self.buffer)
@@ -163,10 +165,17 @@ class JsonStreamParser:
         else:
             return -1
 
+class JsonStreamParser(JsonStreamParserCore):
+    def __init__(self, callback):
+        super().__init__()
+        self.callback = callback
+    def onReceived(self, field_name, field_value):
+        self.callback(field_name, field_value)
 
 
 
-#########################################################################
+
+    #########################################################################
 
 import random
 
@@ -219,6 +228,7 @@ class JsonStreamParserTester():
         values = {}
         parser = JsonStreamParser(lambda id, val: self._submit("S", values, id, val))
         parser.sinkJsonData(json)
+        assert parser.finalized
         return values
 
     def _runPieceWise(self, json):
@@ -232,6 +242,7 @@ class JsonStreamParserTester():
                 json_data = ""
         if json_data != "":
             parser.sinkJsonData(json_data)
+        assert parser.finalized
         return values
 
     def _submit(self, type, values, id, val):
@@ -239,17 +250,7 @@ class JsonStreamParserTester():
             print(type + " -- '" + id + "' = '" + val + "'")
         values[id] = val
 
-
-JsonStreamParserTester().testIt()
-
-
-# json = '{ "str1": "str\\\\ing\\"1\\"", "int": 123, "str2" : "\\"string2\\"" }'
-# print("***")
-# parser = JsonStreamParser(lambda id, val: print(". TEST1 -- " + "'" + id + "':'" + val + "'"))
-# parser.sinkJsonData(json)
-# parser = JsonStreamParser(lambda id, val: print(". TEST1 -- " + "'" + id + "':'" + val + "'"))
-# parser.sinkJsonData('{ "str1":"str')
-# parser.sinkJsonData('\\\\ing\\')
-# parser.sinkJsonData('"abc\\""}')
+if __name__ == "__main__":
+    JsonStreamParserTester().testIt()
 
 

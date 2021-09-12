@@ -11,7 +11,6 @@ import os
 
 import ddbmod
 
-
 class DDUserInterface:
     def initialize(self):
         pass
