@@ -503,56 +503,31 @@ class SevenSegmentRowDDLayer: public DDLayer {
 class DDTunnel: public DDObject {
   public:
     DDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4);
-    virtual ~DDTunnel();
-    virtual void release();
-    virtual void reconnect();
+    ~DDTunnel();
+    void release();
+    void reconnect();
     const String& getTunnelId() { return tunnelId; }
   protected:
-    //int _count();
-    virtual bool _eof();
-    //void _readLine(String &buffer);
-    void _writeLine(const String& data);
-  public:
-    virtual void handleInput(const String& data, bool final);
-  protected:
-    String endPoint;
-    String tunnelId;
-    // int arraySize;
-    // String* dataArray;
-    // int nextArrayIdx;
-    // int validArrayIdx;
-  private:
-    bool done;
-};
-
-class DDBufferedTunnel: public DDTunnel {
-  public:
-    DDBufferedTunnel(const String& endPoint, int tunnelId, int bufferSize = 4);
-    virtual ~DDBufferedTunnel();
-    virtual void release();
-    virtual void reconnect();
-    //const String& getTunnelId() { return tunnelId; }
-  protected:
     int _count();
-    virtual bool _eof();
+    bool _eof();
+    //String _readLineDirect();
     void _readLine(String &buffer);
     void _writeLine(const String& data);
   public:
     void handleInput(const String& data, bool final);
-  private:
-    // String endPoint;
-    // String tunnelId;
+  protected:
+    String endPoint;
+    String tunnelId;
     int arraySize;
     String* dataArray;
     int nextArrayIdx;
     int validArrayIdx;
-    //bool done;
+    bool done;
 };
 
-
-class BasicDDTunnel: public DDBufferedTunnel {
+class BasicDDTunnel: public DDTunnel {
   public:
-    BasicDDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(endPoint, tunnelId, bufferSize) {
+    BasicDDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4): DDTunnel(endPoint, tunnelId, bufferSize) {
     }
     inline int count() { return _count(); }
     inline bool eof() { return _eof(); }
@@ -561,9 +536,9 @@ class BasicDDTunnel: public DDBufferedTunnel {
     inline void writeLine(const String& data) { _writeLine(data); }
 };
 
-class SimpleJsonDDTunnel: public DDBufferedTunnel {
+class JsonDDTunnel: public DDTunnel {
   public:
-    SimpleJsonDDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(endPoint, tunnelId, bufferSize) {
+    JsonDDTunnel(const String& endPoint, int tunnelId, int bufferSize = 4): DDTunnel(endPoint, tunnelId, bufferSize) {
     }
     inline int count() { return _count(); }
     inline bool eof() { return _eof(); }
@@ -613,7 +588,7 @@ class DumbDisplay {
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
     BasicDDTunnel* createBasicTunnel(const String& endPoint, int bufferSize = 4);
-    SimpleJsonDDTunnel* createSimpleJsonTunnel(const String& endPoint, int bufferSize = 4);
+    JsonDDTunnel* createJsonTunnel(const String& endPoint, int bufferSize = 4);
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
 #endif

@@ -188,16 +188,13 @@ class Tunnel:
                 print(f"failed to connect end-point {self.host}:{self.port} ... {err}")
                 self._close("OS error: {0}".format(err))
                 return
+            receiving_headers = False
             if self.sock != None and self.protocol == 'http':
                 self.__send("GET " + self.location + " HTTP/1.1")
                 #self.__send("Accept: application/json, text/plain, */*")
                 self.__send("Connection: close")
                 self.__send("")
-                # line = "GET " + self.location + " HTTP/1.1\n\n"
-                # data = bytes(line, 'UTF8')
-                # self.sock.sendall(data)
-                # if self.log_io:
-                #     print("> HEADER > :" + line)
+                receiving_headers = True
             received_any = False
             rest = ""
             while self.sock != None:
@@ -218,19 +215,19 @@ class Tunnel:
                     if self.bridge != None:
                         if _LOG_TUNNEL_IO:
                             print("<<<<< :" + line)
-                        # if self.log_io:
-                        #     print("<<<<< :" + line)
-                        self._handleReceivedTargetLine(line)
-                        #self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + line)
+                        if not receiving_headers:
+                            self._handleReceivedTargetLine(line)
+                        else:
+                            if line == "":
+                                receiving_headers = False
                 else:
                     rest = rest + d
             if received_any:
                 if self.bridge != None:  # actually, no line-end
                     if _LOG_TUNNEL_IO:
                         print("<<<<| :" + rest)
-                    #print("FINAL:" + rest)
-                    self._handleReceivedTargetLine(rest, True)
-                    #self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + ":final<" + rest)
+                    if not receiving_headers:
+                        self._handleReceivedTargetLine(rest, True)
                 self._close(None)
     def _close(self, error_msg):
         if error_msg != None and self.bridge != None:
@@ -346,7 +343,7 @@ class SerialSource:
                                             tunnel.close()
                                             while self.tunnels.get(tid) != None:
                                                 time.sleep(0.1)
-                                    if type == 'ddjson':
+                                    if type == 'ddsimplejson':
                                         tunnel = SimpleJsonTunnel(self.ser, tid, end_point)
                                     else:
                                         tunnel = Tunnel(self.ser, tid, end_point)
