@@ -222,6 +222,53 @@ In case a "tunnel" finishes all its tasks in the middle, it should be released i
 dumbdisplay.deleteTunnel(pTunnel);
 ```
 
+In a more complicated case, you may want to get data from Internet open REST api that returns JSON. For simple case, `SimpleJsonDDTunnel` "tunnel" may be able to help:
+
+* you construct `SimpleJsonDDTunnel` "tunnel" and make REST request like:
+  ```
+  pTunnel = dumbdisplay.createSimpleJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong"); 
+  ```
+* you read JSON data from the "tunnel" a piece at a time;
+  e.g. if the JSON is
+  ```
+  { 
+    "full_name": "Bruce Lee",
+    "name":
+    {
+      "first": "Bruce",
+      "last": "Lee"
+    },
+    "gender":"Male",
+    "age":32
+  }
+  ```  
+ 
+  then, the following JSON pieces will be returned:
+  * `full_name` = `Bruce Lee`
+  * `name.first` = `Bruce`
+  * `name.last` = `Lee`
+  * `gender` = `Male`
+  * `age` = `32`
+  
+  notes:
+  * all returned values will be text
+  * JSON array not supported
+  * control characters like `\r` not supported
+
+* use `count()` to check the "tunnel" has anything to read, and use `read()` to read what got like:
+  ```
+  while (!pTunnel->eof()) {
+    while (pTunnel->count() > 0) {
+      String fieldId;
+      String fieldValue;
+      pTunnel->read(fieldId, fieldValue);  // fieldId and fieldValue combined is a piece of JSON data 
+      dumbdisplay.writeComment(fieldId + "=" + fieldValue);
+    }
+  }  
+  ```
+  note that `eof()` will check whether everything has returned and read
+
+
 
 ## More Samples
 
@@ -818,6 +865,7 @@ MIT
 # Change History
 
 v0.6.3
+  - added simple JSON "tunnel" for calling simple Internet REST api
   - DDWifiBridge can now run as command-line tool without UI
   - bug fixes
 
