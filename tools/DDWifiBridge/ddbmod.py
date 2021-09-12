@@ -113,13 +113,6 @@ class Tunnel:
     def close(self):
         self._close(None)
     def serve(self):
-        # while True:
-        #     try:
-        #         self._serveOnce()
-        #     except OSError as err:
-        #         print(f"failed to 'serve' end-point {self.host}:{self.port} ... {err}")
-        #         self._onError()
-        #         break
         try:
             self._serveOnce()
         except BaseException as err:
@@ -171,19 +164,6 @@ class Tunnel:
                     #print("FINAL:" + rest)
                     self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + ":final<" + rest)
                 self._close(None)
-            # while True:
-            #     data = self.sock.recv(1024)
-            #     if data: # data is b''
-            #         received_any = True
-            #         line = data.decode('UTF8').rstrip() # right strip to strip \n
-            #         if self.bridge != None:
-            #             for data in line.split('\n'):
-            #                 #print(f"-{self.tunnel_id}:{data}")
-            #                 self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + "<" + data)
-            #     else:
-            #         if received_any:
-            #             self._close("no data")
-            #             break
     def _close(self, error_msg):
         if error_msg != None and self.bridge != None:
             self.bridge.insertTargetLine("<lt." + str(self.tunnel_id) + ":error<" + error_msg, True)
@@ -227,12 +207,6 @@ class SerialSource:
     def _serialServe(self):
         ser_line = ""
         while True:
-            # c = self.ser.read().decode()
-            # if c == '\n':
-            #     self.bridge.insertSourceLine(ser_line)
-            #     ser_line = ""
-            # else:
-            #     ser_line = ser_line + c
             for b in self.ser.read():
                 c = chr(b)
                 if c == '\n':
@@ -366,13 +340,6 @@ class WifiTarget:
                             self.bridge.insertTargetLine(line)
                     else:
                         rest = rest + d
-                    # data = conn.recv(1024) # blocking
-                    # if not data: # data is b''
-                    #     break
-                    # line = data.decode('UTF8').rstrip() # right strip to strip \n
-                    # if line != '':
-                    #     if self.bridge != None:
-                    #         self.bridge.insertTargetLine(line)
 
 if __name__ == "__main__":
     print("Plase run DDWifiBridge.py instead!!!")
