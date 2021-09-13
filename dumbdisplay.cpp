@@ -1446,6 +1446,42 @@ void SimpleJsonDDTunnel::read(String& fieldId, String& fieldValue) {
     fieldValue = buffer;
   }
 }
+SimpleJsonDDTunnelMultiplexer::SimpleJsonDDTunnelMultiplexer(SimpleJsonDDTunnel** tunnels, int tunnelCount){
+  this->tunnelCount = tunnelCount;
+  this->tunnels = tunnels;
+}
+int SimpleJsonDDTunnelMultiplexer::count() {
+  int count = 0;
+  for (int i = 0; i < tunnelCount; i++) {
+    count += tunnels[i]->count();
+  }
+  return count;
+}
+int SimpleJsonDDTunnelMultiplexer::eof() {
+  for (int i = 0; i < tunnelCount; i++) {
+    if (!tunnels[i]->eof()) return false;
+  }
+  return true;
+}
+void SimpleJsonDDTunnelMultiplexer::read(String& fieldId, String& fieldValue) {
+  for (int i = 0; i < tunnelCount; i++) {
+    if (tunnels[i]->count() > 0) {
+      tunnels[i]->read(fieldId, fieldValue);
+      break;
+    }
+  }
+}
+void SimpleJsonDDTunnelMultiplexer::release() {
+  for (int i = 0; i < tunnelCount; i++) {
+    tunnels[i]->release();
+  }
+}
+void SimpleJsonDDTunnelMultiplexer::reconnect() {
+  for (int i = 0; i < tunnelCount; i++) {
+    tunnels[i]->reconnect();
+  }
+}
+
 
 
 // DumbDisplay::DumbDisplay(DDInputOutput* pIO, DDSerialProxy* pDDSerialProxy) {

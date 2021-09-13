@@ -605,8 +605,21 @@ class SimpleJsonDDTunnel: public DDBufferedTunnel {
     void read(String& fieldId, String& fieldValue);
 };
 
-#endif
+/** will not delete "tunnels" passed in */
+class SimpleJsonDDTunnelMultiplexer {
+  public:
+    SimpleJsonDDTunnelMultiplexer(SimpleJsonDDTunnel** tunnels, int tunnelCount);
+    int count();
+    int eof();
+    void read(String& fieldId, String& fieldValue);
+    void release();
+    void reconnect();
+  private:
+     int tunnelCount;
+     SimpleJsonDDTunnel** tunnels;
+};
 
+#endif
 
 class DumbDisplay {
   public:
