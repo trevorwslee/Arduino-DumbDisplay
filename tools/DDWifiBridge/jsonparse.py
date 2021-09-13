@@ -4,7 +4,7 @@ class NeedMoreDataException(Exception):
     pass
 
 class JsonStreamParserCore:
-    def __init__(self):
+    def __init__(self, for_array = False):
         self.unescape_escaped = True
         self.nested_parser = None
         self.state = None
@@ -13,6 +13,9 @@ class JsonStreamParserCore:
         self.finalized = False
         self.field_name = None
         self.field_value = None
+        self.count = 0
+        self.for_array = for_array
+        self.parsing_array = False
 
     def sinkJsonData(self, data):
         self.buffer = self.buffer + data
@@ -30,13 +33,21 @@ class JsonStreamParserCore:
 
     def _streamParse(self):
         if self.state == None:
-            if self._skipTo('{') == None:
-                return False
+            if self.for_array:
+                if self._skipTo('[') == None:
+                    return False
+            else:
+                if self._skipTo('{') == None:
+                    return False
             self.state = '{'
         if self.state == '{':
-            if self._skipTo('"') == None:
-                return False
-            self.state = '{>'
+            if self.for_array:
+                self.field_name = str(self.count)
+                self.state = ':'
+            else:
+                if self._skipTo('"') == None:
+                    return False
+                self.state = '{>'
         if self.state == '{>':
             skipped = self._skipTo('"')
             if skipped == None:
@@ -53,9 +64,10 @@ class JsonStreamParserCore:
             self.state = '^'
         if self.state == '^':
             c = self.buffer[0]
-            if c == '{':
+            if c == '{' or c == '[':
                 self.buffer = self.buffer[1:]
                 self.state = '^>{'
+                self.parsing_array = c == '['
             elif c == '"':
                 self.buffer = self.buffer[1:]
                 self.state = '^>"'
@@ -64,10 +76,12 @@ class JsonStreamParserCore:
         if self.state == '^>{':
             json_data = self.buffer
             if self.nested_parser == None:
-                #self.nested_parser = JsonStreamParser(self.callback, self.field_name)
-                self.nested_parser = JsonStreamParserCore()
+                self.nested_parser = JsonStreamParserCore(self.parsing_array)
                 self.nested_parser.onReceived = lambda field_name, field_value : self.onReceived(self.field_name + "." + field_name, field_value)
-                json_data = "{" + json_data
+                if self.parsing_array:
+                    json_data = '[' + json_data
+                else:
+                    json_data = '{' + json_data
             self.buffer = ""
             rest = self.nested_parser.sinkJsonData(json_data)
             if rest == None:
@@ -75,27 +89,34 @@ class JsonStreamParserCore:
             self.nested_parser = None
             self.buffer = rest
             self.state = '$'
+            self.count = self.count + 1
         if self.state == '^>"':
             skipped = self._skipTo('"', True)
             if skipped == None:
                 return False
             self.field_value = skipped[:-1].strip()
             self._submit()
+            self.count = self.count + 1
             self.state = '$'
         if self.state == '^>' or self.state == '$':
+            if self.for_array or self.parsing_array:
+                close_token = ']'
+            else:
+                close_token = '}'
             done = False
             sep_idx = self._scanTo(',')
-            close_idx = self._scanTo('}')
+            close_idx = self._scanTo(close_token)
             if sep_idx != -1 and (close_idx == -1 or sep_idx < close_idx):
                 skipped = self._skipTo(',')
             else:
-                skipped = self._skipTo('}')
+                skipped = self._skipTo(close_token)
                 done = True
             if skipped == None:
                 return False
             if self.state == '^>':
                 self.field_value = skipped[:-1].strip()
                 self._submit()
+                self.count = self.count + 1
             self.state = '{'
             return done
         return False
@@ -175,7 +196,7 @@ class JsonStreamParser(JsonStreamParserCore):
 
 
 
-    #########################################################################
+#########################################################################
 
 import random
 
@@ -190,7 +211,8 @@ class JsonStreamParserTester():
         self.expected3 = {'str1': 'str\\ing"1"', 'int': '123', 'str2': '"string2"'}
 
     def testIt(self):
-        self._testDebug()
+        self._testTryArray()
+        self._testDebugEscape()
         self._testIt(self.json1, self.expected1)
         self._testIt(self.json2, self.expected2)
         self._testIt(self.json3, self.expected3)
@@ -199,7 +221,15 @@ class JsonStreamParserTester():
         self._testSimple(json, expected_value)
         self._testPieceWise(json, expected_value)
 
-    def _testDebug(self):
+    def _testTryArray(self):
+        values = {}
+        parser = JsonStreamParser(lambda id, val: self._submit("S", values, id, val))
+        json = '{"int-arr":[123,456],"str-arr":["abc","def"],"single-level":"ABC", "nested":{"N1":11,"N2":222}, "nested-arr":[{"A":1,"B":2}, {"A":3,"B":4}]}'
+        #json = '{"nested-arr":[{"A":1,"B":2}, {"A":3,"B":4}]}'
+        parser.sinkJsonData(json)
+        print(values)
+
+    def _testDebugEscape(self):
         expected_value = {'str1': 'str\\ing"abc"-def'}
         values = {}
         parser = JsonStreamParser(lambda id, val: self._submit("S", values, id, val))

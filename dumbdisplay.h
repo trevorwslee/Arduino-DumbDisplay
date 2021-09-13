@@ -552,23 +552,56 @@ class DDBufferedTunnel: public DDTunnel {
 };
 
 
+/**
+ * support basic "text based line oriented" socket communication ... e.g.
+ * pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17")
+ */ 
 class BasicDDTunnel: public DDBufferedTunnel {
   public:
     BasicDDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(type, endPoint, tunnelId, bufferSize) {
     }
+    /* count buffer ready to be read */
     inline int count() { return _count(); }
+    /* reached EOF? */
     inline bool eof() { return _eof(); }
+    /* read a line from buffer */
     String readLine();
+    /* read a line from buffer, in to the buffer passed in */
     inline void readLine(String &buffer) { _readLine(buffer); }
+    /* write a line */
     inline void writeLine(const String& data) { _writeLine(data); }
 };
 
+/**
+ * support simple REST GET api .. e.g.
+ * pTunnel = dumbdisplay.createSimpleJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong") 
+ * . read() will read JSON one piece at a time ... e.g.
+ *   { 
+ *     "full_name": "Bruce Lee",
+ *     "name":
+ *     {
+ *       "first": "Bruce",
+ *       "last": "Lee"
+ *     },
+ *     "gender":"Male",
+ *     "age":32
+ *   }
+ *   ==>
+ *   `full_name` = `Bruce Lee`
+ *   `name.first` = `Bruce`
+ *   `name.last` = `Lee`
+ *   `gender` = `Male`
+ *   `age` = `32`
+ */
 class SimpleJsonDDTunnel: public DDBufferedTunnel {
   public:
     SimpleJsonDDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(type, endPoint, tunnelId, bufferSize) {
     }
+    /* count buffer ready (pieces of JSON) to be read */
     inline int count() { return _count(); }
+    /* reached EOF? */
     inline bool eof() { return _eof(); }
+    /* read a piece of JSON data */
     void read(String& fieldId, String& fieldValue);
 };
 

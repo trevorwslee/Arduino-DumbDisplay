@@ -185,11 +185,12 @@ void loop() {
 }
 ```
 
-Please note that Arduino will check for "feedback" in 4 occasions:
+Please note that Arduino will check for "feedback" in several occasions:
 * before every get "feedback" with `getFeedback()`
 * after every send of command
 * once when `DDYield()` is called
 * during the "wait loop" of `DDDelay()`
+* calling "tunnel" to check for EOF
 
 With the help of DumbDisplay WIFI Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
 
@@ -222,7 +223,7 @@ In case a "tunnel" finishes all its tasks in the middle, it should be released i
 dumbdisplay.deleteTunnel(pTunnel);
 ```
 
-In a more complicated case, you may want to get data from Internet open REST api that returns JSON. For simple case, `SimpleJsonDDTunnel` "tunnel" may be able to help:
+In a more complicated case, you may want to get data from Internet open REST api that returns JSON. For simple "GET" case, `SimpleJsonDDTunnel` "tunnel" may be able to help:
 
 * you construct `SimpleJsonDDTunnel` "tunnel" and make REST request like:
   ```
