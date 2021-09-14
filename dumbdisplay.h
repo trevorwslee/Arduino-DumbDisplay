@@ -609,6 +609,7 @@ class SimpleJsonDDTunnel: public DDBufferedTunnel {
 class SimpleJsonDDTunnelMultiplexer {
   public:
     SimpleJsonDDTunnelMultiplexer(SimpleJsonDDTunnel** tunnels, int tunnelCount);
+    ~SimpleJsonDDTunnelMultiplexer();
     int count();
     int eof();
     void read(String& fieldId, String& fieldValue);

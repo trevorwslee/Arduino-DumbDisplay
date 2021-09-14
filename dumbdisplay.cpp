@@ -1446,39 +1446,55 @@ void SimpleJsonDDTunnel::read(String& fieldId, String& fieldValue) {
     fieldValue = buffer;
   }
 }
-SimpleJsonDDTunnelMultiplexer::SimpleJsonDDTunnelMultiplexer(SimpleJsonDDTunnel** tunnels, int tunnelCount){
+SimpleJsonDDTunnelMultiplexer::SimpleJsonDDTunnelMultiplexer(SimpleJsonDDTunnel** tunnels, int tunnelCount) {
   this->tunnelCount = tunnelCount;
-  this->tunnels = tunnels;
+  //this->tunnels = tunnels;
+  this->tunnels = (SimpleJsonDDTunnel**) malloc(tunnelCount * sizeof(SimpleJsonDDTunnel*));
+  memcpy(this->tunnels, tunnels, tunnelCount * sizeof(SimpleJsonDDTunnel*));
+
+}
+SimpleJsonDDTunnelMultiplexer::~SimpleJsonDDTunnelMultiplexer() {
+  free(this->tunnels);
 }
 int SimpleJsonDDTunnelMultiplexer::count() {
   int count = 0;
   for (int i = 0; i < tunnelCount; i++) {
-    count += tunnels[i]->count();
+    if (tunnels[i] != NULL) {
+      count += tunnels[i]->count();
+    }
   }
   return count;
 }
 int SimpleJsonDDTunnelMultiplexer::eof() {
   for (int i = 0; i < tunnelCount; i++) {
-    if (!tunnels[i]->eof()) return false;
+    if (tunnels[i] != NULL) {
+      if (!tunnels[i]->eof()) return false;
+    }
   }
   return true;
 }
 void SimpleJsonDDTunnelMultiplexer::read(String& fieldId, String& fieldValue) {
   for (int i = 0; i < tunnelCount; i++) {
-    if (tunnels[i]->count() > 0) {
-      tunnels[i]->read(fieldId, fieldValue);
-      break;
+    if (tunnels[i] != NULL) {
+      if (tunnels[i]->count() > 0) {
+        tunnels[i]->read(fieldId, fieldValue);
+        break;
+      }
     }
   }
 }
 void SimpleJsonDDTunnelMultiplexer::release() {
   for (int i = 0; i < tunnelCount; i++) {
-    tunnels[i]->release();
+    if (tunnels[i] != NULL) {
+      tunnels[i]->release();
+    }
   }
 }
 void SimpleJsonDDTunnelMultiplexer::reconnect() {
   for (int i = 0; i < tunnelCount; i++) {
-    tunnels[i]->reconnect();
+    if (tunnels[i] != NULL) {
+      tunnels[i]->reconnect();
+    }
   }
 }
 

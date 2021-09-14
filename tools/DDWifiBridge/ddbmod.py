@@ -8,7 +8,7 @@ from jsonparse import JsonStreamParserCore
 
 
 _LOG_TUNNEL = True
-_LOG_TUNNEL_IO = False
+_LOG_TUNNEL_IO = True
 _LOG_TUNNEL_JSON = True
 
 _DEBUG_TUNNEL = False
@@ -166,7 +166,7 @@ class Tunnel:
         else:
             if self.sock != None:
                 if self.log_io:
-                    print(">>>>> :" + line)
+                    print(self.tunnel_id + ".>>>>> :" + line)
                 data = bytes(line + "\n", 'UTF8')
                 try:
                     self.sock.sendall(data)
@@ -176,7 +176,7 @@ class Tunnel:
         return sent
     def __send(self, line):
         if _LOG_TUNNEL_IO:
-            print(">>>>> :" + line)
+            print(self.tunnel_id + ".>>>>> :" + line)
         data = bytes(line + "\n", 'UTF8')
         self.sock.sendall(data)
     def _serveOnce(self):
@@ -191,7 +191,11 @@ class Tunnel:
             receiving_headers = False
             if self.sock != None and self.protocol == 'http':
                 self.__send("GET " + self.location + " HTTP/1.1")
-                #self.__send("Accept: application/json, text/plain, */*")
+                self.__send("Accept: application/json, text/plain, */*")
+                #self.__send("Accept-Language: en-GB,en-US;q=0.9,en;q=0.8")
+                self.__send("Host: " + self.host + ":" + str(self.port))
+                #self.__send("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36")
+                self.__send("DNT: 1")
                 self.__send("Connection: close")
                 self.__send("")
                 receiving_headers = True
@@ -216,18 +220,23 @@ class Tunnel:
                     rest = d[idx + 1:]
                     if self.bridge != None:
                         if _LOG_TUNNEL_IO:
-                            print("<<<<< :" + line)
+                            print(self.tunnel_id + ".<<<<< :" + line)
                         if not receiving_headers:
                             self._handleReceivedTargetLine(line)
                         else:
                             if line == "":
                                 receiving_headers = False
+                            else:
+                                if line.startswith("HTTP/1.1 "):
+                                    idx = line.find("200")
+                                    if idx == -1:
+                                        raise Exception("HTTP error")
                 else:
                     rest = rest + d
             if received_any:
                 if self.bridge != None:  # actually, no line-end
                     if _LOG_TUNNEL_IO:
-                        print("<<<<| :" + rest)
+                        print(self.tunnel_id + ".<<<<| :" + rest)
                     if not receiving_headers:
                         self._handleReceivedTargetLine(rest, True)
                 self._close(None)
@@ -255,12 +264,12 @@ class SimpleJsonTunnel(Tunnel):
         self.parser.sinkJsonData(line)
         if self.parser.finalized:
             if _LOG_TUNNEL_JSON:
-                print("<{}<| :")
+                print(self.tunnel_id + ".<{}<| :")
             self._insertTargetLine("", True)
     def _onReceived(self, field_id, field_value):
         line = field_id + ":" + field_value
         if _LOG_TUNNEL_JSON:
-            print("<{}<< :" + line)
+            print(self.tunnel_id + ".<{}<< :" + line)
         self._insertTargetLine(line)
 
 
