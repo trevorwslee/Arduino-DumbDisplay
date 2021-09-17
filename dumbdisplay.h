@@ -537,8 +537,8 @@ class DDBufferedTunnel: public DDTunnel {
   protected:
     int _count();
     virtual bool _eof();
-    void _readLine(String &buffer);
-    void _writeLine(const String& data);
+    bool _readLine(String &buffer);
+    //void _writeLine(const String& data);
   public:
     virtual void handleInput(const String& data, bool final);
   private:
@@ -602,7 +602,7 @@ class SimpleJsonDDTunnel: public DDBufferedTunnel {
     /* reached EOF? */
     inline bool eof() { return _eof(); }
     /* read a piece of JSON data */
-    void read(String& fieldId, String& fieldValue);
+    bool read(String& fieldId, String& fieldValue);
 };
 
 /** will not delete "tunnels" passed in */
@@ -611,8 +611,9 @@ class SimpleJsonDDTunnelMultiplexer {
     SimpleJsonDDTunnelMultiplexer(SimpleJsonDDTunnel** tunnels, int tunnelCount);
     ~SimpleJsonDDTunnelMultiplexer();
     int count();
-    int eof();
-    void read(String& fieldId, String& fieldValue);
+    bool eof();
+    /** return the index of the tunnel the field read from; -1 if non ready to read */
+    int read(String& fieldId, String& fieldValue);
     void release();
     void reconnect();
   private:

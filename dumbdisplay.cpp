@@ -1402,13 +1402,15 @@ int DDBufferedTunnel::_count() {
 bool DDBufferedTunnel::_eof() {
   return nextArrayIdx == validArrayIdx && this->DDTunnel::_eof();
 }
-void DDBufferedTunnel::_readLine(String &buffer) {
+bool DDBufferedTunnel::_readLine(String &buffer) {
   if (nextArrayIdx == validArrayIdx) {
     buffer = "";
+    return false;
   } else {
     buffer = dataArray[validArrayIdx];
     dataArray[validArrayIdx] = "";
     validArrayIdx = (validArrayIdx + 1) % arraySize;
+    return true;
   }
 }
 
@@ -1434,17 +1436,30 @@ String BasicDDTunnel::readLine() {
   _readLine(buffer);
   return buffer;
 }
-void SimpleJsonDDTunnel::read(String& fieldId, String& fieldValue) {
-  String buffer;
-  _readLine(buffer);
-  int idx = buffer.indexOf(":");
-  if (idx != -1) {
-    fieldId = buffer.substring(0, idx);
-    fieldValue = buffer.substring(idx + 1);
-  } else {
-    fieldId = "";
-    fieldValue = buffer;
+bool SimpleJsonDDTunnel::read(String& fieldId, String& fieldValue) {
+  fieldId = "";
+  if (!_readLine(fieldValue)) {
+    return false;
   }
+  int idx = fieldValue.indexOf(":");
+  if (idx != -1) {
+    fieldId = fieldValue.substring(0, idx);
+    fieldValue = fieldValue.substring(idx + 1);
+  }
+  return true;
+  // String buffer;
+  // if (!_readLine(buffer)) {
+  //   return false;
+  // }
+  // int idx = buffer.indexOf(":");
+  // if (idx != -1) {
+  //   fieldId = buffer.substring(0, idx);
+  //   fieldValue = buffer.substring(idx + 1);
+  // } else {
+  //   fieldId = "";
+  //   fieldValue = buffer;
+  // }
+  // return true;
 }
 SimpleJsonDDTunnelMultiplexer::SimpleJsonDDTunnelMultiplexer(SimpleJsonDDTunnel** tunnels, int tunnelCount) {
   this->tunnelCount = tunnelCount;
@@ -1465,7 +1480,7 @@ int SimpleJsonDDTunnelMultiplexer::count() {
   }
   return count;
 }
-int SimpleJsonDDTunnelMultiplexer::eof() {
+bool SimpleJsonDDTunnelMultiplexer::eof() {
   for (int i = 0; i < tunnelCount; i++) {
     if (tunnels[i] != NULL) {
       if (!tunnels[i]->eof()) return false;
@@ -1473,15 +1488,17 @@ int SimpleJsonDDTunnelMultiplexer::eof() {
   }
   return true;
 }
-void SimpleJsonDDTunnelMultiplexer::read(String& fieldId, String& fieldValue) {
+int SimpleJsonDDTunnelMultiplexer::read(String& fieldId, String& fieldValue) {
   for (int i = 0; i < tunnelCount; i++) {
     if (tunnels[i] != NULL) {
       if (tunnels[i]->count() > 0) {
-        tunnels[i]->read(fieldId, fieldValue);
-        break;
+        if (tunnels[i]->read(fieldId, fieldValue)) {
+          return i;
+        }
       }
     }
   }
+  return -1;
 }
 void SimpleJsonDDTunnelMultiplexer::release() {
   for (int i = 0; i < tunnelCount; i++) {
@@ -1634,6 +1651,7 @@ SimpleJsonDDTunnel* DumbDisplay::createSimpleJsonTunnel(const String& endPoint, 
   return pTunnel;
 }
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
+  pTunnel->release();
   delete pTunnel;
 }
 #endif

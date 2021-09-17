@@ -255,6 +255,7 @@ In a more complicated case, you may want to get data from Internet open REST api
   * all returned values will be text
   * JSON array not supported
   * control characters like `\r` not supported
+  * HTTPS not supported
 
 * use `count()` to check the "tunnel" has anything to read, and use `read()` to read what got like:
   ```

@@ -175,10 +175,10 @@ class Tunnel:
                     pass
         return sent
     def __send(self, line):
-        if _LOG_TUNNEL_IO:
-            print(self.tunnel_id + ".>>>>> :" + line)
         data = bytes(line + "\n", 'UTF8')
         self.sock.sendall(data)
+        if _LOG_TUNNEL_IO:
+            print(self.tunnel_id + ".>>>>> :" + line)
     def _serveOnce(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             self.sock = s
@@ -195,7 +195,7 @@ class Tunnel:
                 #self.__send("Accept-Language: en-GB,en-US;q=0.9,en;q=0.8")
                 self.__send("Host: " + self.host + ":" + str(self.port))
                 #self.__send("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36")
-                self.__send("DNT: 1")
+                #self.__send("DNT: 1")
                 self.__send("Connection: close")
                 self.__send("")
                 receiving_headers = True
@@ -376,6 +376,8 @@ class SerialSource:
                         else:
                             tunnel = self.tunnels.get(tid)
                             if tunnel != None:
+                                if _LOG_TUNNEL_IO:
+                                    print(tid + ".))))) :" + lt_data)
                                 tunnel.insertSourceLine(lt_data)
                     if insert_it:
                         self.bridge.insertSourceLine(ser_line)
