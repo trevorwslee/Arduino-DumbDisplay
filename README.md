@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.6.2)
+# DumbDisplay Arduino Library (v0.6.3)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP8266 / ESP32 / Respberry Pi Pico experiments.
 
@@ -57,10 +57,10 @@ You have several options for connecting to DumbDisplay Android app.
 * Via `SoftwareSerial` -- https://www.arduino.cc/en/Reference/softwareSerial
   ```
     #include <ssdumbdisplay.h>
-    DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)));
+    DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
   ```
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
-  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3)))`  
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200))`  
     - 2 and 3 are the pins used by SoftwareSerial
     - **the default baud rate is 115200**, which seems to work better from my own testing with HC-06; however, when it comes to ESP8266 with HC-06, it appears to work better in baud rate 9600 
   - **You should not be using that SoftwareSerial for other purposes**
@@ -104,7 +104,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddblink/d
 #include <ssdumbdisplay.h>
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), DUMBDISPLAY_BAUD));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
 LedGridDDLayer *led;
 
 void setup() {
@@ -134,7 +134,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonofflo
 #include <ssdumbdisplay.h>
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), DUMBDISPLAY_BAUD, true));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
 
 MbDDLayer* pMbLayer = NULL;
 
@@ -163,7 +163,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonoffmb
 #include <ssdumbdisplay.h>
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), DUMBDISPLAY_BAUD, true));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
 
 MbDDLayer* pMbLayer = NULL;
 
@@ -185,11 +185,12 @@ void loop() {
 }
 ```
 
-Please note that Arduino will check for "feedback" in 4 occasions:
+Please note that Arduino will check for "feedback" in several occasions:
 * before every get "feedback" with `getFeedback()`
 * after every send of command
 * once when `DDYield()` is called
 * during the "wait loop" of `DDDelay()`
+* calling "tunnel" to check for EOF
 
 With the help of DumbDisplay WIFI Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
 
@@ -222,6 +223,53 @@ In case a "tunnel" finishes all its tasks in the middle, it should be released i
 dumbdisplay.deleteTunnel(pTunnel);
 ```
 
+In a more complicated case, you may want to get data from Internet open REST api that returns JSON. For simple "GET" case, `SimpleJsonDDTunnel` "tunnel" may be able to help:
+
+* you construct `SimpleJsonDDTunnel` "tunnel" and make REST request like:
+  ```
+  pTunnel = dumbdisplay.createSimpleJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong"); 
+  ```
+* you read JSON data from the "tunnel" a piece at a time;
+  e.g. if the JSON is
+  ```
+  { 
+    "full_name": "Bruce Lee",
+    "name":
+    {
+      "first": "Bruce",
+      "last": "Lee"
+    },
+    "gender":"Male",
+    "age":32
+  }
+  ```  
+ 
+  then, the following JSON pieces will be returned:
+  * `full_name` = `Bruce Lee`
+  * `name.first` = `Bruce`
+  * `name.last` = `Lee`
+  * `gender` = `Male`
+  * `age` = `32`
+  
+  notes:
+  * all returned values will be text
+  * control characters like `\r` not supported
+  * HTTPS not supported
+
+* use `count()` to check the "tunnel" has anything to read, and use `read()` to read what got like:
+  ```
+  while (!pTunnel->eof()) {
+    while (pTunnel->count() > 0) {
+      String fieldId;
+      String fieldValue;
+      pTunnel->read(fieldId, fieldValue);  // fieldId and fieldValue combined is a piece of JSON data 
+      dumbdisplay.writeComment(fieldId + "=" + fieldValue);
+    }
+  }  
+  ```
+  note that `eof()` will check whether everything has returned and read
+
+
 
 ## More Samples
 
@@ -241,7 +289,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddmb/ddm
 #include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), DUMBDISPLAY_BAUD));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
 
 MbDDLayer *mb;
 int heading;
@@ -279,7 +327,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddbarmet
 #include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200));
 
 void setup() {
   // configure to "auto pin (layout) layers" in the vertical direction -- V(*)
@@ -326,7 +374,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddautopi
 #include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200));
 
 LedGridDDLayer *rled;
 LedGridDDLayer *gled;
@@ -415,7 +463,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddpintur
 #include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3)));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
 
 TurtleDDLayer *turtle = NULL;
 int r = random(0, 255);
@@ -495,7 +543,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddgraphi
 #include <ssdumbdisplay.h>
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200, true));
 
 void setup() {
   // create 4 graphical [LCD] layers
@@ -591,7 +639,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/dddoodle
 
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), DUMBDISPLAY_BAUD, true));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200, true));
 
 int dotSize = 5;
 const char* penColor = "red";
@@ -784,6 +832,10 @@ Notes:
   ```
   pip install pyserial
   ```
+* Can run DumbDisply WIFI Bridge as a command-line tool (without UI). Simply call it with necessary arguments like "port" (-p <port> / --port=<port>), "baud" (-b <baud> / --baud=<baud>), and "wifi port" (-w <wifi-port> / --wifiport=<wifi-port>), like
+  ```
+  python DDWifiBridge.py --port=COM5 --baud=15200
+  ```
 * In Linux, acessing serial port will need special access right; you can grant such right to yourself (the user) like
   ```
   sudo usermod -a -G dialout <user>
@@ -812,6 +864,11 @@ MIT
 
 
 # Change History
+
+v0.6.3
+  - added simple JSON "tunnel" for calling simple Internet REST api
+  - DDWifiBridge can now run as command-line tool without UI
+  - bug fixes
 
 v0.6.2
   - added capability to store recorded commands to phone

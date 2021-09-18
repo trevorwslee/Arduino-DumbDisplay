@@ -35,21 +35,27 @@ def ClickedConnect():
 def ClickedClear():
     Text_box.delete('1.0', tk.END)
 
-def FillPortCombo():
+def FillPortCombo(port: None):
     ports = []
+    if port != None:
+        ports.append(port)
     for port in comports():
         ports.append(port[0])
     Port_combo['values'] = ports
     if len(ports) > 0:
-       Port_combo.current(0)
+        if port != None:
+            Port_combo.set(port)
+        else:
+            Port_combo.current(0)
 
-def FillBaudCombo():
+
+def FillBaudCombo(baud: None):
     global DefBaudRate
 
     bauds = [2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000]
     Baud_combo['values'] = bauds
     #Baud_combo.current(7)
-    Baud_combo.set(ddbcore.DefBaudRate)
+    Baud_combo.set(baud if baud != None else ddbcore.DefBaudRate)
 
 def OnDisconnected():
     Port_combo["state"] = "normal"
@@ -57,7 +63,7 @@ def OnDisconnected():
     WifiPort_entry["state"] = "normal"
     Text_box.insert(tk.END, "*** disconnected\n")
 
-def InitWindow():
+def InitWindow(param_dict: None):
     global Window
     global Auto_scroll_state
 
@@ -66,6 +72,14 @@ def InitWindow():
     global Baud_combo
     global WifiPort_entry
     global Text_box
+
+    port = None
+    baud = None
+    wifi_port = None
+    if param_dict != None:
+        port = param_dict["port"]
+        baud = param_dict.get("baud")
+        wifi_port = param_dict.get("wifiPort")
 
     Window = tk.Tk()
     Window.title("DumbDispaly WIFI Bridge")
@@ -96,9 +110,9 @@ def InitWindow():
     tool_bar.pack()
     Text_box = st.ScrolledText(width=100, height=1000)
     Text_box.pack(fill=tk.BOTH)
-    FillPortCombo()
-    FillBaudCombo()
-    WifiPort_entry.insert(0, str(ddbcore.DefWifiPort))
+    FillPortCombo(port)
+    FillBaudCombo(baud)
+    WifiPort_entry.insert(0, str(wifi_port if wifi_port != None else ddbcore.DefWifiPort))
 
 # def Initialize():
 #     Window = tk.Tk()
@@ -108,13 +122,15 @@ def InitWindow():
 #     Auto_scroll_state.set(True)
 
 
-def RunDDBridgeWinMain():
-    ddui = DDWinUserInterface()
+def RunDDBridgeWinMain(param_dict = None):
+    ddui = DDWinUserInterface(param_dict)
     ddbcore.RunDDBridgeMain(ddui)
 
 class DDWinUserInterface(ddbcore.DDUserInterface):
+    def __init__(self, param_dict = None):
+        self.param_dict = param_dict
     def initialize(self):
-        InitWindow()
+        InitWindow(self.param_dict)
     def syncConnectionState(self, connected):
         Connect_button.config(text="Disconnect" if connected else "Connect")
     def onConnected(self):

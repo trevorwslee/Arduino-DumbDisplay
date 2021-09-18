@@ -1,4 +1,5 @@
 #include "Arduino.h"
+
 #include "ddtester.h"
 
 
@@ -566,7 +567,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
   if (forDebugging) {
     const char* log_msg = "!!! start test loop !!!";
     dumbdisplay.writeComment(log_msg);
-    DDLogToSerial(log_msg);
+    dumbdisplay.logToSerial(log_msg);
   }
 
   if (true) {
@@ -610,7 +611,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
     stepCount++;
 
     if (true) {
-      DDLogToSerial("DDTest Step: " + String(stepCount));
+      dumbdisplay.logToSerial("DDTest Step: " + String(stepCount));
     }
 
     DDDelay(1000);

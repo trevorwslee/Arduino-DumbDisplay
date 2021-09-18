@@ -16,7 +16,7 @@
 A|   13 | ---
 R|      |     LED
 D|      |    |
-U|      |  200K
+U|      |  330Ω
 I|      |    |
 N|  GND | --- 
 O|      |
@@ -25,7 +25,7 @@ U| 3.3V | ---
 N|      |     PHOTO
 O|   A2 | ---
  |      |    |  
- |      |   10K 
+ |      |   10KΩ 
  |      |    | 
  |  GND | --- 
  |      |
@@ -98,7 +98,7 @@ void setup() {
 }
 
 
-void drawBtn(int x, int y, int r, int off_x, int off_y, int btn, char* txt) {
+void drawBtn(int x, int y, int r, int off_x, int off_y, int btn, const char* txt) {
   if (!digitalRead(btn)) {
     dumbdisplay.writeComment("BTN-" + String(txt));
   }  

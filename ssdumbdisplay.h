@@ -4,7 +4,7 @@
 #include "dumbdisplay.h"
 #include <SoftwareSerial.h>
 
-#define DD_BLUETOOTH_BAUD DUMBDISPLAY_BAUD
+//#define DD_BLUETOOTH_BAUD DUMBDISPLAY_BAUD
 
 class DDSoftwareSerialIO: public DDInputOutput {
   public:
@@ -12,7 +12,7 @@ class DDSoftwareSerialIO: public DDInputOutput {
     /* - baud -- default to DUMBDISPLAY_BAUD */
     /* - enableSerial: enable Serial as well or not (if enabled, connecting via USB will also work) */
     /* - serialBaud: Serial baud rate (if enableSerial) */
-    DDSoftwareSerialIO(SoftwareSerial* pSS, unsigned long baud = DD_BLUETOOTH_BAUD,
+    DDSoftwareSerialIO(SoftwareSerial* pSS, unsigned long baud/* = DD_BLUETOOTH_BAUD*/,
                        bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD):
                        DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->baud = baud;

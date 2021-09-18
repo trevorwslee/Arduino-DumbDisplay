@@ -22,7 +22,7 @@ class DDWiFiServerIO: public DDInputOutput {
     /* - serverPort: server port (pass to WiFiServer) */
     /* - logToSerial: log to Serial */
     /* - serialBaud: Serial baud rate  (logToSerial) */
-    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort/* = DD_WIFI_PORT*/,
+    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT,
                    bool logToSerial = true, unsigned long serialBaud = DD_SERIAL_BAUD):
                    DDInputOutput(serialBaud, false, false),
                    server(serverPort) {

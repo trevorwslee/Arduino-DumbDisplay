@@ -915,7 +915,7 @@ void DDLayer::disableFeedback() {
   }
 }
 const DDFeedback* DDLayer::getFeedback() {
-  //yield();
+  yield();
   _HandleFeedback();
   return pFeedbackManager != NULL ? pFeedbackManager->getFeedback() : NULL;
 }
@@ -1308,26 +1308,28 @@ void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
 // }
 
 #ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize):
-  type(type), endPoint(endPoint), tunnelId(String(tunnelId)) {
-  // this->arraySize = bufferSize;
-  // this->dataArray = new String[bufferSize];
-  // this->nextArrayIdx = 0;
-  // this->validArrayIdx = 0;
+DDTunnel::DDTunnel(const String& endPoint, int tunnelId, int bufferSize):
+  endPoint(endPoint), tunnelId(String(tunnelId)) {
+  //this->endPoint = endPoint;
+  //this->tunnelId = String(tunnelId);
+  this->arraySize = bufferSize;
+  this->dataArray = new String[bufferSize];
+  this->nextArrayIdx = 0;
+  this->validArrayIdx = 0;
   this->done = false;
 }
 DDTunnel::~DDTunnel() {
   _PreDeleteTunnel(this);
-  //delete this->dataArray;
+  delete this->dataArray;
 } 
 void DDTunnel::reconnect() {
-  //nextArrayIdx = 0;
-  //validArrayIdx = 0;
+  nextArrayIdx = 0;
+  validArrayIdx = 0;
   done = false;
-  //for (int i = 0; i < arraySize; i++) {
-    //dataArray[i] = "";
-  //}
-  _sendSpecialCommand("lt", tunnelId, "reconnect", type + "@" + endPoint);
+  for (int i = 0; i < arraySize; i++) {
+    dataArray[i] = "";
+  }
+  _sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
 }
 void DDTunnel::release() {
   if (!done) {
@@ -1335,90 +1337,34 @@ void DDTunnel::release() {
   }
   done = true;
 }
-// int DDTunnel::_count() {
-//   return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
-// }
-bool DDTunnel::_eof() {
-  //yield();
-  _HandleFeedback();
-  return /*nextArrayIdx == validArrayIdx && */done;
+int DDTunnel::_count() {
+  return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
 }
-// void DDTunnel::_readLine(String &buffer) {
-//   if (nextArrayIdx == validArrayIdx) {
-//     buffer = "";
-//   } else {
-//     buffer = dataArray[validArrayIdx];
-//     dataArray[validArrayIdx] = "";
-//     validArrayIdx = (validArrayIdx + 1) % arraySize;
-//   }
+bool DDTunnel::_eof() {
+  return nextArrayIdx == validArrayIdx && done;
+}
+// String DDTunnel::_readLineDirect() {
+//   if (nextArrayIdx == validArrayIdx) return "";
+//   String data = dataArray[validArrayIdx];
+//   dataArray[validArrayIdx] = "";
+//   validArrayIdx = (validArrayIdx + 1) % arraySize;
+//   return data;
 // }
+void DDTunnel::_readLine(String &buffer) {
+  if (nextArrayIdx == validArrayIdx) {
+    buffer = "";
+  } else {
+    buffer = dataArray[validArrayIdx];
+    dataArray[validArrayIdx] = "";
+    validArrayIdx = (validArrayIdx + 1) % arraySize;
+  }
+}
+
 void DDTunnel::_writeLine(const String& data) {
 //Serial.println("//--");
   _sendSpecialCommand("lt", tunnelId, NULL, data);
 }
 void DDTunnel::handleInput(const String& data, bool final) {
-//if (final) Serial.println("//final:" + data);
-  // if (!final || data != "") {
-  //   dataArray[nextArrayIdx] = data;
-  //   nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
-  //   if (nextArrayIdx == validArrayIdx)
-  //     validArrayIdx = (validArrayIdx + 1) % arraySize;
-  // }
-  if (final)
-    this->done = true;
-//Serial.println(String("// ") + (final ? "f" : "."));
-}
-DDBufferedTunnel::DDBufferedTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize):
-  DDTunnel(type, endPoint, tunnelId) {
-  this->arraySize = bufferSize;
-  this->dataArray = new String[bufferSize];
-  this->nextArrayIdx = 0;
-  this->validArrayIdx = 0;
-  //this->done = false;
-}
-DDBufferedTunnel::~DDBufferedTunnel() {
-  delete this->dataArray;
-} 
-void DDBufferedTunnel::reconnect() {
-  nextArrayIdx = 0;
-  validArrayIdx = 0;
-  //done = false;
-  for (int i = 0; i < arraySize; i++) {
-    dataArray[i] = "";
-  }
-  //_sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
-  this->DDTunnel::reconnect();
-}
-void DDBufferedTunnel::release() {
-  // if (!done) {
-  //   _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");
-  // }
-  // done = true;
-  this->DDTunnel::release();
-}
-int DDBufferedTunnel::_count() {
-  return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
-}
-bool DDBufferedTunnel::_eof() {
-  return nextArrayIdx == validArrayIdx && this->DDTunnel::_eof();
-}
-bool DDBufferedTunnel::_readLine(String &buffer) {
-  if (nextArrayIdx == validArrayIdx) {
-    buffer = "";
-    return false;
-  } else {
-    buffer = dataArray[validArrayIdx];
-    dataArray[validArrayIdx] = "";
-    validArrayIdx = (validArrayIdx + 1) % arraySize;
-    return true;
-  }
-}
-
-// void DDTunnel::_writeLine(const String& data) {
-// //Serial.println("//--");
-//   _sendSpecialCommand("lt", tunnelId, NULL, data);
-// }
-void DDBufferedTunnel::handleInput(const String& data, bool final) {
 //if (final) Serial.println("//final:" + data);
   if (!final || data != "") {
     dataArray[nextArrayIdx] = data;
@@ -1426,9 +1372,8 @@ void DDBufferedTunnel::handleInput(const String& data, bool final) {
     if (nextArrayIdx == validArrayIdx)
       validArrayIdx = (validArrayIdx + 1) % arraySize;
   }
-  this->DDTunnel::handleInput(data, final);
-  //if (final)
-    //this->done = true;
+  if (final)
+    this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
 }
 String BasicDDTunnel::readLine() {
@@ -1436,85 +1381,18 @@ String BasicDDTunnel::readLine() {
   _readLine(buffer);
   return buffer;
 }
-bool SimpleJsonDDTunnel::read(String& fieldId, String& fieldValue) {
-  fieldId = "";
-  if (!_readLine(fieldValue)) {
-    return false;
-  }
-  int idx = fieldValue.indexOf(":");
+void JsonDDTunnel::read(String& fieldId, String& fieldValue) {
+  String buffer;
+  _readLine(buffer);
+  int idx = buffer.indexOf(":");
   if (idx != -1) {
-    fieldId = fieldValue.substring(0, idx);
-    fieldValue = fieldValue.substring(idx + 1);
-  }
-  return true;
-  // String buffer;
-  // if (!_readLine(buffer)) {
-  //   return false;
-  // }
-  // int idx = buffer.indexOf(":");
-  // if (idx != -1) {
-  //   fieldId = buffer.substring(0, idx);
-  //   fieldValue = buffer.substring(idx + 1);
-  // } else {
-  //   fieldId = "";
-  //   fieldValue = buffer;
-  // }
-  // return true;
-}
-SimpleJsonDDTunnelMultiplexer::SimpleJsonDDTunnelMultiplexer(SimpleJsonDDTunnel** tunnels, int tunnelCount) {
-  this->tunnelCount = tunnelCount;
-  //this->tunnels = tunnels;
-  this->tunnels = (SimpleJsonDDTunnel**) malloc(tunnelCount * sizeof(SimpleJsonDDTunnel*));
-  memcpy(this->tunnels, tunnels, tunnelCount * sizeof(SimpleJsonDDTunnel*));
-
-}
-SimpleJsonDDTunnelMultiplexer::~SimpleJsonDDTunnelMultiplexer() {
-  free(this->tunnels);
-}
-int SimpleJsonDDTunnelMultiplexer::count() {
-  int count = 0;
-  for (int i = 0; i < tunnelCount; i++) {
-    if (tunnels[i] != NULL) {
-      count += tunnels[i]->count();
-    }
-  }
-  return count;
-}
-bool SimpleJsonDDTunnelMultiplexer::eof() {
-  for (int i = 0; i < tunnelCount; i++) {
-    if (tunnels[i] != NULL) {
-      if (!tunnels[i]->eof()) return false;
-    }
-  }
-  return true;
-}
-int SimpleJsonDDTunnelMultiplexer::read(String& fieldId, String& fieldValue) {
-  for (int i = 0; i < tunnelCount; i++) {
-    if (tunnels[i] != NULL) {
-      if (tunnels[i]->count() > 0) {
-        if (tunnels[i]->read(fieldId, fieldValue)) {
-          return i;
-        }
-      }
-    }
-  }
-  return -1;
-}
-void SimpleJsonDDTunnelMultiplexer::release() {
-  for (int i = 0; i < tunnelCount; i++) {
-    if (tunnels[i] != NULL) {
-      tunnels[i]->release();
-    }
+    fieldId = buffer.substring(0, idx);
+    fieldValue = buffer.substring(idx + 1);
+  } else {
+    fieldId = "";
+    fieldValue = buffer;
   }
 }
-void SimpleJsonDDTunnelMultiplexer::reconnect() {
-  for (int i = 0; i < tunnelCount; i++) {
-    if (tunnels[i] != NULL) {
-      tunnels[i]->reconnect();
-    }
-  }
-}
-
 
 
 // DumbDisplay::DumbDisplay(DDInputOutput* pIO, DDSerialProxy* pDDSerialProxy) {
@@ -1638,20 +1516,19 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, int buffer
   int tid = _AllocTid();
   String tunnelId = String(tid);
   _sendSpecialCommand("lt", tunnelId, "connect", "ddbasic@" + endPoint);
-  BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", endPoint, tid, bufferSize);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel(endPoint, tid, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
-SimpleJsonDDTunnel* DumbDisplay::createSimpleJsonTunnel(const String& endPoint, int bufferSize) {
+JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, int bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  _sendSpecialCommand("lt", tunnelId, "connect", "ddsimplejson@" + endPoint);
-  SimpleJsonDDTunnel* pTunnel = new SimpleJsonDDTunnel("ddsimplejson", endPoint, tid, bufferSize);
+  _sendSpecialCommand("lt", tunnelId, "connect", "ddjson@" + endPoint);
+  JsonDDTunnel* pTunnel = new JsonDDTunnel(endPoint, tid, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
-  pTunnel->release();
   delete pTunnel;
 }
 #endif
