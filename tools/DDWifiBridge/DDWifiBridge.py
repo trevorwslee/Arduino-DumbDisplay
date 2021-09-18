@@ -6,7 +6,24 @@
 import sys, getopt
 
 if __name__ == "__main__":
-    command_line = len(sys.argv) > 1
+    options = None
+    if len(sys.argv) > 1:
+        options, _ = getopt.getopt(sys.argv[1:], "ip:b:w:", ["port=", "baud=", "wifiport="])
+    command_line = False
+    port = None
+    baud = None
+    wifiPort = None
+    if options != None:
+        command_line = True
+        for opt, arg in options:
+            if opt in ('-i'):
+                command_line = False
+            elif opt in ('-p', '--port'):
+                port = arg
+            elif opt in ('-b', '--baud'):
+                baud = int(arg)
+            elif opt in ('-w', '--wifiport'):
+                wifiPort = int(arg)
     import importlib.util
     spec = importlib.util.find_spec("serial")
     if spec is None:
@@ -17,17 +34,7 @@ if __name__ == "__main__":
             messagebox.showinfo("DumbDisplay WIFI Bridge", message)
     else:
         if command_line:
-            options, _ = getopt.getopt(sys.argv[1:], "p:b:w:", ["port=", "baud=", "wifiport="])
-            port = None
-            baud = None
-            wifiPort = None
-            for opt, arg in options:
-                if opt in ('-p', '--port'):
-                    port = arg
-                elif opt in ('-b', '--baud'):
-                    baud = int(arg)
-                elif opt in ('-w', '--wifiport'):
-                    wifiPort = int(arg)
+            #options, _ = getopt.getopt(sys.argv[1:], "p:b:w:", ["port=", "baud=", "wifiport="])
             if port == None:
                 raise Exception("must provide port")
             import ddbclmain
@@ -35,7 +42,8 @@ if __name__ == "__main__":
             ddbclmain.RunDDBridgeClMain(param_dict)
         else:
             import ddbwinmain
-            ddbwinmain.RunDDBridgeWinMain()
+            param_dict = {"port": port, "baud": baud, "wifiPort": wifiPort }
+            ddbwinmain.RunDDBridgeWinMain(param_dict)
 else:
     print("This is not a module!")
 

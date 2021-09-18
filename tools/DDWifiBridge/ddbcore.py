@@ -108,7 +108,7 @@ def _Disconnect():
     DdUI.printLogMessage("Disconnected")
 
 
-def InvokeConnect(port, baud, wifiPort):
+def InvokeConnect(port, baud, wifi_port):
     global Ser
     global Bridge
     global Serial
@@ -122,7 +122,7 @@ def InvokeConnect(port, baud, wifiPort):
 
     if Ser == None:
         Config[ConfigSectionName][BaudRateConfigName] = str(baud)
-        Config[ConfigSectionName][WiFiPortConfigName] = str(wifiPort)
+        Config[ConfigSectionName][WiFiPortConfigName] = str(wifi_port)
         with open(ConfigFileName, 'w') as configfile:
             Config.write(configfile)
         try:
@@ -130,7 +130,7 @@ def InvokeConnect(port, baud, wifiPort):
             if Ser != None:
                 Bridge = DDBridge()
                 Serial = ddbmod.SerialSource(Ser, Bridge)
-                Wifi = ddbmod.WifiTarget(Bridge, WifiHost, wifiPort)
+                Wifi = ddbmod.WifiTarget(Bridge, WifiHost, wifi_port)
                 DdUI.onConnected()
                 threading.Thread(target=SerialServe, daemon=True).start()
                 threading.Thread(target=WifiServe, daemon=True).start()
@@ -166,7 +166,7 @@ def WifiServe():
     if Wifi != None:
         Wifi.serve()
 
-def RunDDBridgeMain(ddui, param_dict = None):
+def RunDDBridgeMain(ddui, connect_param_dict = None):
     global Ser
     global Serial
     global Wifi
@@ -174,15 +174,15 @@ def RunDDBridgeMain(ddui, param_dict = None):
 
     _Initialize(ddui)
     ddui.initialize()
-    if param_dict != None:
-        port = param_dict["port"]
-        baud = param_dict.get("baud")
-        wifiPort = param_dict.get("wifiPort")
+    if connect_param_dict != None:
+        port = connect_param_dict["port"]
+        baud = connect_param_dict.get("baud")
+        wifi_port = connect_param_dict.get("wifiPort")
         if baud == None:
             baud = int(DefBaudRate)
-        if wifiPort == None:
-            wifiPort = int(DefWifiPort)
-        InvokeConnect(port, baud, wifiPort)
+        if wifi_port == None:
+            wifi_port = int(DefWifiPort)
+        InvokeConnect(port, baud, wifi_port)
     while True:
         ddui.syncConnectionState(Ser != None)
         if Ser != None:
