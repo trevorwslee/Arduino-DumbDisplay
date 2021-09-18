@@ -264,7 +264,7 @@ class SimpleJsonTunnel(Tunnel):
         self.parser.sinkJsonData(line)
         if self.parser.finalized:
             if _LOG_TUNNEL_JSON:
-                print(self.tunnel_id + ".<{}<| :")
+                print(self.tunnel_id + ".<{}<|")
             self._insertTargetLine("", True)
     def _onReceived(self, field_id, field_value):
         line = field_id + ":" + field_value

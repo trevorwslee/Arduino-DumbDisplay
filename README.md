@@ -253,7 +253,6 @@ In a more complicated case, you may want to get data from Internet open REST api
   
   notes:
   * all returned values will be text
-  * JSON array not supported
   * control characters like `\r` not supported
   * HTTPS not supported
 
