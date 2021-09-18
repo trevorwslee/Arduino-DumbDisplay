@@ -63,12 +63,12 @@ class JsonStreamParserCore:
             self.state = '^'
         if self.state == '^':
             c = self.buffer[0]
-            if c == '{' or c == '[':
+            if c == '{' or c == '[' or c == '"':
                 self.buffer = self.buffer[1:]
                 self.state = '^>' + c
-            elif c == '"':
-                self.buffer = self.buffer[1:]
-                self.state = '^>"'
+            # elif c == '"':
+            #     self.buffer = self.buffer[1:]
+            #     self.state = '^>"'
             else:
                 self.state = '^>'
         if self.state == '^>{' or self.state == '^>[':
@@ -93,7 +93,7 @@ class JsonStreamParserCore:
             skipped = self._skipTo('"', True)
             if skipped == None:
                 return False
-            self.field_value = skipped[:-1].strip()
+            self.field_value = skipped[:-1]#.strip()
             self._submit()
             self.count = self.count + 1
             self.state = '$'
@@ -195,7 +195,6 @@ class JsonStreamParser(JsonStreamParserCore):
 
 
 
-
 #########################################################################
 
 import random
@@ -209,8 +208,8 @@ class JsonStreamParserTester():
         self.expected2 = {'NESTED.str': 'str value', 'NESTED.int': '123', 'INT': '4321', 'NESTED2.str2': 'str value2', 'STR': 'STR VALUE'}
         self.json3 = '{ "str1": "str\\\\ing\\"1\\"", "int": 123, "str2" : "\\"string2\\"" }'
         self.expected3 = {'str1': 'str\\ing"1"', 'int': '123', 'str2': '"string2"'}
-        self.json4 = '{"int-arr":[123,456],"str-arr":["abc","def"],"single-level":"ABC", "nested":{"N1":11,"N2":222}, "nested-arr":[{"A":1,"B":2}, {"A":3,"B":4}]}'
-        self.expected4 = {'int-arr.0': '123', 'int-arr.1': '456', 'str-arr.0': 'abc', 'str-arr.1': 'def', 'single-level': 'ABC', 'nested.N1': '11', 'nested.N2': '222', 'nested-arr.0.A': '1', 'nested-arr.0.B': '2', 'nested-arr.1.A': '3', 'nested-arr.1.B': '4'}
+        self.json4 = '{"int-arr":[123,456],"str-arr":[" abc ","def"],"single-level":"ABC", "nested":{"N1":11,"N2":222}, "nested-arr":[{"A":1,"B":2}, {"A":3,"B":4}]}'
+        self.expected4 = {'int-arr.0': '123', 'int-arr.1': '456', 'str-arr.0': ' abc ', 'str-arr.1': 'def', 'single-level': 'ABC', 'nested.N1': '11', 'nested.N2': '222', 'nested-arr.0.A': '1', 'nested-arr.0.B': '2', 'nested-arr.1.A': '3', 'nested-arr.1.B': '4'}
 
     def testIt(self):
         #self._testTryArray()
@@ -223,6 +222,13 @@ class JsonStreamParserTester():
     def _testIt(self, json, expected_value):
         self._testSimple(json, expected_value)
         self._testPieceWise(json, expected_value)
+
+    def _testTrySimple(self):
+        values = {}
+        parser = JsonStreamParser(lambda id, val: self._submit("S", values, id, val))
+        json = ' { "str" : " str value " } '
+        parser.sinkJsonData(json)
+        print(values)
 
     # def _testTryArray(self):
     #     values = {}
