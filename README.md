@@ -223,11 +223,11 @@ In case a "tunnel" finishes all its tasks in the middle, it should be released i
 dumbdisplay.deleteTunnel(pTunnel);
 ```
 
-In a more complicated case, you may want to get data from Internet open REST api that returns JSON. For simple "GET" case, `SimpleJsonDDTunnel` "tunnel" may be able to help:
+In a more complicated case, you may want to get data from Internet open REST api that returns JSON. For simple "GET" case, `JsonDDTunnel` "tunnel" may be able to help:
 
-* you construct `SimpleJsonDDTunnel` "tunnel" and make REST request like:
+* you construct `JsonDDTunnel` "tunnel" and make REST request like:
   ```
-  pTunnel = dumbdisplay.createSimpleJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong"); 
+  pTunnel = dumbdisplay.createJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong"); 
   ```
 * you read JSON data from the "tunnel" a piece at a time;
   e.g. if the JSON is

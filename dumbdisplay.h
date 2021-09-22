@@ -489,7 +489,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /* - empty segments basically means turn all segments of the digit off */
     void setOn(const String& segments = "", int digitIdx = 0);
     /* show number */
-    void showNumber(float number);
+    void showNumber(float number, const String& padding = " ");
     /* show HEX number */
     void showHexNumber(int number);
     /* show formatted number (even number with hex digits) */
@@ -574,7 +574,7 @@ class BasicDDTunnel: public DDBufferedTunnel {
 
 /**
  * support simple REST GET api .. e.g.
- * pTunnel = dumbdisplay.createSimpleJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong") 
+ * pTunnel = dumbdisplay.createJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong") 
  * . read() will read JSON one piece at a time ... e.g.
  *   { 
  *     "full_name": "Bruce Lee",
@@ -593,9 +593,9 @@ class BasicDDTunnel: public DDBufferedTunnel {
  *   `gender` = `Male`
  *   `age` = `32`
  */
-class SimpleJsonDDTunnel: public DDBufferedTunnel {
+class JsonDDTunnel: public DDBufferedTunnel {
   public:
-    SimpleJsonDDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(type, endPoint, tunnelId, bufferSize) {
+    JsonDDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(type, endPoint, tunnelId, bufferSize) {
     }
     /* count buffer ready (pieces of JSON) to be read */
     inline int count() { return _count(); }
@@ -606,10 +606,10 @@ class SimpleJsonDDTunnel: public DDBufferedTunnel {
 };
 
 /** will not delete "tunnels" passed in */
-class SimpleJsonDDTunnelMultiplexer {
+class JsonDDTunnelMultiplexer {
   public:
-    SimpleJsonDDTunnelMultiplexer(SimpleJsonDDTunnel** tunnels, int tunnelCount);
-    ~SimpleJsonDDTunnelMultiplexer();
+    JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int tunnelCount);
+    ~JsonDDTunnelMultiplexer();
     int count();
     bool eof();
     /** return the index of the tunnel the field read from; -1 if non ready to read */
@@ -618,7 +618,7 @@ class SimpleJsonDDTunnelMultiplexer {
     void reconnect();
   private:
      int tunnelCount;
-     SimpleJsonDDTunnel** tunnels;
+     JsonDDTunnel** tunnels;
 };
 
 #endif
@@ -663,7 +663,7 @@ class DumbDisplay {
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
     BasicDDTunnel* createBasicTunnel(const String& endPoint, int bufferSize = 4);
-    SimpleJsonDDTunnel* createSimpleJsonTunnel(const String& endPoint, int bufferSize = 4);
+    JsonDDTunnel* createJsonTunnel(const String& endPoint, int bufferSize = 4);
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
 #endif

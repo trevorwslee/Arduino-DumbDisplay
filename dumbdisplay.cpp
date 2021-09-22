@@ -1275,8 +1275,8 @@ void SevenSegmentRowDDLayer::turnOff(const String& segments, int digitIdx) {
 void SevenSegmentRowDDLayer::setOn(const String& segments, int digitIdx) {
   _sendCommand2(layerId, "setsegon", segments, String(digitIdx));
 }
-void SevenSegmentRowDDLayer::showNumber(float number) {
-  _sendCommand1(layerId, "shownumber", String(number, 5));
+void SevenSegmentRowDDLayer::showNumber(float number, const String& padding) {
+  _sendCommand2(layerId, "shownumber", String(number, 5), padding);
 }
 void SevenSegmentRowDDLayer::showHexNumber(int number) {
   _sendCommand1(layerId, "showhex", String(number));
@@ -1436,7 +1436,7 @@ String BasicDDTunnel::readLine() {
   _readLine(buffer);
   return buffer;
 }
-bool SimpleJsonDDTunnel::read(String& fieldId, String& fieldValue) {
+bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
   fieldId = "";
   if (!_readLine(fieldValue)) {
     return false;
@@ -1461,17 +1461,17 @@ bool SimpleJsonDDTunnel::read(String& fieldId, String& fieldValue) {
   // }
   // return true;
 }
-SimpleJsonDDTunnelMultiplexer::SimpleJsonDDTunnelMultiplexer(SimpleJsonDDTunnel** tunnels, int tunnelCount) {
+JsonDDTunnelMultiplexer::JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int tunnelCount) {
   this->tunnelCount = tunnelCount;
   //this->tunnels = tunnels;
-  this->tunnels = (SimpleJsonDDTunnel**) malloc(tunnelCount * sizeof(SimpleJsonDDTunnel*));
-  memcpy(this->tunnels, tunnels, tunnelCount * sizeof(SimpleJsonDDTunnel*));
+  this->tunnels = (JsonDDTunnel**) malloc(tunnelCount * sizeof(JsonDDTunnel*));
+  memcpy(this->tunnels, tunnels, tunnelCount * sizeof(JsonDDTunnel*));
 
 }
-SimpleJsonDDTunnelMultiplexer::~SimpleJsonDDTunnelMultiplexer() {
+JsonDDTunnelMultiplexer::~JsonDDTunnelMultiplexer() {
   free(this->tunnels);
 }
-int SimpleJsonDDTunnelMultiplexer::count() {
+int JsonDDTunnelMultiplexer::count() {
   int count = 0;
   for (int i = 0; i < tunnelCount; i++) {
     if (tunnels[i] != NULL) {
@@ -1480,7 +1480,7 @@ int SimpleJsonDDTunnelMultiplexer::count() {
   }
   return count;
 }
-bool SimpleJsonDDTunnelMultiplexer::eof() {
+bool JsonDDTunnelMultiplexer::eof() {
   for (int i = 0; i < tunnelCount; i++) {
     if (tunnels[i] != NULL) {
       if (!tunnels[i]->eof()) return false;
@@ -1488,7 +1488,7 @@ bool SimpleJsonDDTunnelMultiplexer::eof() {
   }
   return true;
 }
-int SimpleJsonDDTunnelMultiplexer::read(String& fieldId, String& fieldValue) {
+int JsonDDTunnelMultiplexer::read(String& fieldId, String& fieldValue) {
   for (int i = 0; i < tunnelCount; i++) {
     if (tunnels[i] != NULL) {
       if (tunnels[i]->count() > 0) {
@@ -1500,14 +1500,14 @@ int SimpleJsonDDTunnelMultiplexer::read(String& fieldId, String& fieldValue) {
   }
   return -1;
 }
-void SimpleJsonDDTunnelMultiplexer::release() {
+void JsonDDTunnelMultiplexer::release() {
   for (int i = 0; i < tunnelCount; i++) {
     if (tunnels[i] != NULL) {
       tunnels[i]->release();
     }
   }
 }
-void SimpleJsonDDTunnelMultiplexer::reconnect() {
+void JsonDDTunnelMultiplexer::reconnect() {
   for (int i = 0; i < tunnelCount; i++) {
     if (tunnels[i] != NULL) {
       tunnels[i]->reconnect();
@@ -1642,11 +1642,11 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, int buffer
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
-SimpleJsonDDTunnel* DumbDisplay::createSimpleJsonTunnel(const String& endPoint, int bufferSize) {
+JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, int bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
   _sendSpecialCommand("lt", tunnelId, "connect", "ddsimplejson@" + endPoint);
-  SimpleJsonDDTunnel* pTunnel = new SimpleJsonDDTunnel("ddsimplejson", endPoint, tid, bufferSize);
+  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", endPoint, tid, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }

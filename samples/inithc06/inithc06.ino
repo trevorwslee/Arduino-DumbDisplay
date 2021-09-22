@@ -5,7 +5,7 @@
 // * notes for HC-05:
 // * . default baud rate if 38400
 // * . serial monitor needs NL and CR
-// * . need to hold its button while powering on, in order to turn on its AT mode
+// * . need to hold its button while powering on, in order to turn on its AT mode; notice,  LED on HC-5 will flash slowwly
 // ***
 
 
@@ -31,7 +31,7 @@ SoftwareSerial hc06(2, 3);  // 2 => TX of HC06; 3 => RX of HC06
 
 
 
-const unsigned long baud = 38400;  // default for hc-06 is 9600; default for hc-05 is 38400 
+const unsigned long baud = 115200;  // default for hc-06 is 9600; default for hc-05 is 38400 
 
 
 void setup() {
