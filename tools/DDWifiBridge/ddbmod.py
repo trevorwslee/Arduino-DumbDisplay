@@ -348,12 +348,17 @@ class SerialSource:
                                             end_point = lt_data[idx + 1:]
                                         else:
                                             end_point = lt_data
-                                    if lt_command == "reconnect":
-                                        tunnel = self.tunnels.get(tid)
-                                        if tunnel != None:
-                                            tunnel.close()
-                                            while self.tunnels.get(tid) != None:
-                                                time.sleep(0.1)
+                                    tunnel = self.tunnels.get(tid)
+                                    if tunnel != None:
+                                        tunnel.close()
+                                        while self.tunnels.get(tid) != None:
+                                            time.sleep(0.1)
+                                    # if lt_command == "reconnect":
+                                    #     tunnel = self.tunnels.get(tid)
+                                    #     if tunnel != None:
+                                    #         tunnel.close()
+                                    #         while self.tunnels.get(tid) != None:
+                                    #             time.sleep(0.1)
                                     if type == 'ddsimplejson':
                                         tunnel = JsonTunnel(self.ser, tid, end_point)
                                     else:

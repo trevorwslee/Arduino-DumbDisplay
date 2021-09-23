@@ -1308,13 +1308,17 @@ void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
 // }
 
 #ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize):
+DDTunnel::DDTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize):
   type(type), endPoint(endPoint), tunnelId(String(tunnelId)) {
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
   // this->nextArrayIdx = 0;
   // this->validArrayIdx = 0;
-  this->done = false;
+//  this->done = false;
+  this->done = true;
+  if (connectNow) {
+    reconnect();
+  }
 }
 DDTunnel::~DDTunnel() {
   _PreDeleteTunnel(this);
@@ -1368,8 +1372,8 @@ void DDTunnel::handleInput(const String& data, bool final) {
     this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
 }
-DDBufferedTunnel::DDBufferedTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize):
-  DDTunnel(type, endPoint, tunnelId) {
+DDBufferedTunnel::DDBufferedTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize):
+  DDTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
   this->arraySize = bufferSize;
   this->dataArray = new String[bufferSize];
   this->nextArrayIdx = 0;
@@ -1634,19 +1638,23 @@ void DumbDisplay::writeComment(const String& comment) {
 }
 
 
-BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, int bufferSize) {
+BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool connectNow, int bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  _sendSpecialCommand("lt", tunnelId, "connect", "ddbasic@" + endPoint);
-  BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", endPoint, tid, bufferSize);
+  // if (connectNow) {
+  //   _sendSpecialCommand("lt", tunnelId, "connect", "ddbasic@" + endPoint);
+  // }
+  BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", tid, endPoint, connectNow, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
-JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, int bufferSize) {
+JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connectNow, int bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  _sendSpecialCommand("lt", tunnelId, "connect", "ddsimplejson@" + endPoint);
-  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", endPoint, tid, bufferSize);
+  if (connectNow) {
+    _sendSpecialCommand("lt", tunnelId, "connect", "ddsimplejson@" + endPoint);
+  }
+  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, endPoint, connectNow, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
