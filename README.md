@@ -193,7 +193,7 @@ Please note that Arduino will check for "feedback" in several occasions:
 * calling "tunnel" to check for EOF
 
 With the help of DumbDisplay WIFI Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
-(In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears to me that Android does not allow all types of connections.)
+(In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears to me that Android does not allow all connections, likely due to the port used.)
 
 ```
 DumbDisplay dumbdisplay(new DDInputOutput(9600));

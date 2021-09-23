@@ -8,8 +8,8 @@ from jsonparse import JsonStreamParserCore
 
 
 _LOG_TUNNEL = True
-_LOG_TUNNEL_IO = True
-_LOG_TUNNEL_JSON = True
+_LOG_TUNNEL_IO = False
+_LOG_TUNNEL_JSON = False
 
 _DEBUG_TUNNEL = False
 _DEBUG_TUNNEL_INS = False
@@ -305,11 +305,14 @@ class SerialSource:
             self.ser = None
             self.error = err
     def _serialServe(self):
-        ser_line = ""
+        #ser_line = ""
+        ser_bytes = bytes()
         while True:
             for b in self.ser.read():
-                c = chr(b)
-                if c == '\n':
+                #c = chr(b)
+                #if c == '\n':
+                if b == 10:
+                    ser_line = ser_bytes.decode('UTF8')
                     insert_it = True
                     if ser_line.startswith("%%>lt"):
                         insert_it = False
@@ -383,9 +386,11 @@ class SerialSource:
                                 tunnel.insertSourceLine(lt_data)
                     if insert_it:
                         self.bridge.insertSourceLine(ser_line)
-                    ser_line = ""
+                    #ser_line = ""
+                    ser_bytes = bytes()
                 else:
-                    ser_line = ser_line + c
+                    ser_bytes = ser_bytes + b.to_bytes(1, 'big')
+                    #ser_line = ser_line + c
 
 class WifiTarget:
     def __init__(self, bridge, host, port):

@@ -39,8 +39,8 @@ def FillPortCombo(port: None):
     ports = []
     if port != None:
         ports.append(port)
-    for port in comports():
-        ports.append(port[0])
+    for comps in comports():
+        ports.append(comps[0])
     Port_combo['values'] = ports
     if len(ports) > 0:
         if port != None:
