@@ -1,23 +1,22 @@
-#define USE_EMOJi true
-//#define DHTTYPE DHT11
+//****
+//* may want to setup proper location for WORLD_TIME_API_END_POINT
+//* get openweathermap.org APPID, and setup OPEN_WEATHER_API_END_POINT
+//* uncomment out DHTTYPE if connected with DHT11
+//* uncomment out ESP32_BT_NAME if using ESP32
+//****
 #define WORLD_TIME_API_END_POINT "http://worldtimeapi.org/api/timezone/Asia/Hong_Kong"
 //#define OPEN_WEATHER_API_END_POINT "http://api.openweathermap.org/data/2.5/weather?q=Hong Kong&appid=<your-APPID>"
+#define DHTTYPE DHT11
+#define ESP32_BT_NAME "ESP32"
+
 
 const char TemperatureUnit = 'C';  // can be F
-const int LEDPIN = LED_BUILTIN;
-const int DHTPIN = 2;
+const int DHTPIN = 5;
 
-
-#ifdef USE_EMOJi
-const String DATE_TITLE = "📆 ";
-const String TEMP_TITLE = "🌡 ";
-const String HUMI_TITLE = "💧 ";
-const String WEAT_TITLE = "☁ ";
+#ifdef DD_4_ESP32
+  const int LEDPIN = 2;
 #else
-const String DATE_TITLE = "Date";
-const String TEMP_TITLE = "Temp";
-const String HUMI_TITLE = "Humi";
-const String WEAT_TITLE = "Weat";
+  const int LEDPIN = LED_BUILTIN;
 #endif
 
 
@@ -27,10 +26,15 @@ DHT dht(DHTPIN, DHTTYPE);
 #endif
 
 
-#include "dumbdisplay.h"
+#ifdef ESP32_BT_NAME
+  #define DD_4_ESP32
+  #include "esp32dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(ESP32_BT_NAME, true, 57600));
+#else
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput(57600));
+#endif
 
-/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
-DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 SevenSegmentRowDDLayer *pLeft7Seg;
 SevenSegmentRowDDLayer *pMid7Seg;
@@ -123,7 +127,7 @@ void loop() {
       int humi = (int) (h + 0.5);
       int temp = (int) (t + 0.5);
       dumbdisplay.writeComment("Temp: " + String(t) + "°" +  TemperatureUnit + "; Humi: " + String(h) + "%");
-      pLcd->writeLine(TEMP_TITLE + ": " + String(temp) + "°" + TemperatureUnit + "  " + HUMI_TITLE + ": " + String(humi) + "%", 2);
+      pLcd->writeLine("🌡 : " + String(temp) + "°" + TemperatureUnit + "   💧 : " + String(humi) + "%", 2);
       lastUpdateTempMillis = millis();
     }
   }
@@ -184,11 +188,11 @@ void loop() {
           case 6: day = "Sat"; break;
           case 7: day = "Sun"; break;
         }
-        pLcd->writeLine(DATE_TITLE + ": " + date + " " + day, 0);
+        pLcd->writeLine("📆 : " + date + " " + day, 0);
       }
       if (tunnelIdx == 1 && fieldId == "weather.0.main") {
         // Got 'weather'. Show it.
-        pLcd->writeLine(WEAT_TITLE + ": " + fieldValue, 1);
+        pLcd->writeLine("☁ : " + fieldValue, 1);
       }
   }
 
