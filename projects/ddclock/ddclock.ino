@@ -29,7 +29,7 @@ DHT dht(DHTPin, DHTTYPE);
 #ifdef ESP32_BT_NAME
   #define DD_4_ESP32
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(ESP32_BT_NAME, true, 57600));
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(ESP32_BT_NAME));
 #else
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput(57600));
@@ -102,7 +102,7 @@ void setup() {
 }
 
 
-long currentMillis;
+
 long lastUpdateTempMillis;
 long lastGetJsonDataMillis;
 
@@ -202,7 +202,7 @@ void loop() {
   } else {
     // Check to see if it is time to show time, at one second interval.
     long diffMillis = millis() - nextMillis;
-    if (diffMillis >= 1000) {
+    if (diffMillis >= 0) {
       // It is time to show time.
       if (digitalRead(LEDPIN)) {
         digitalWrite(LEDPIN, LOW);
