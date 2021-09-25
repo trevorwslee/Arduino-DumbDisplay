@@ -1,8 +1,8 @@
 //****
-//* may want to setup proper location for WORLD_TIME_API_END_POINT
-//* get openweathermap.org APPID, and setup OPEN_WEATHER_API_END_POINT
-//* uncomment out DHTTYPE if connected with DHT11
-//* uncomment out ESP32_BT_NAME if using ESP32
+//* - may want to setup proper "timezone" for WORLD_TIME_API_END_POINT
+//* - get openweathermap.org APPID, and setup OPEN_WEATHER_API_END_POINT
+//* - comment out DHTTYPE if DHT11 not connected; note that DHT11 data pin is 5 (defined by DHTPIN below)
+//* - comment ESP32_BT_NAME if not using ESP32
 //****
 #define WORLD_TIME_API_END_POINT "http://worldtimeapi.org/api/timezone/Asia/Hong_Kong"
 //#define OPEN_WEATHER_API_END_POINT "http://api.openweathermap.org/data/2.5/weather?q=Hong Kong&appid=<your-APPID>"
@@ -13,7 +13,7 @@
 const char TemperatureUnit = 'C';  // can be F
 const int DHTPIN = 5;
 
-#ifdef DD_4_ESP32
+#ifdef ESP32_BT_NAME
   const int LEDPIN = 2;
 #else
   const int LEDPIN = LED_BUILTIN;
