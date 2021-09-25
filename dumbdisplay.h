@@ -516,8 +516,8 @@ class DDTunnel: public DDObject {
     virtual void handleInput(const String& data, bool final);
   protected:
     String type;
-    String endPoint;
     String tunnelId;
+    String endPoint;
     // int arraySize;
     // String* dataArray;
     // int nextArrayIdx;

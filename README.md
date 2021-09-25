@@ -118,7 +118,7 @@ void loop() {
 }
 ```
 
-In case a layer finishes all its usages in the middle, it should be deleted in order for Arduino to claim back resources:
+In case a layer finishes all its usages in the middle of the sketch, it should be deleted in order for Arduino to claim back resources:
 
 ```
 dumbdisplay.deleteLayer(led);
@@ -133,8 +133,8 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonofflo
 ```
 #include <ssdumbdisplay.h>
 
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 MbDDLayer* pMbLayer = NULL;
 
@@ -289,8 +289,8 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddmb/ddm
 ```
 #include "ssdumbdisplay.h"
 
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 MbDDLayer *mb;
 int heading;
@@ -327,8 +327,8 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddbarmet
 ```
 #include "ssdumbdisplay.h"
 
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200));
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 void setup() {
   // configure to "auto pin (layout) layers" in the vertical direction -- V(*)
@@ -374,8 +374,8 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddautopi
 ```
 #include "ssdumbdisplay.h"
 
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200));
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 LedGridDDLayer *rled;
 LedGridDDLayer *gled;
@@ -544,7 +544,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddgraphi
 #include <ssdumbdisplay.h>
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200, true));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
 
 void setup() {
   // create 4 graphical [LCD] layers
@@ -638,9 +638,8 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/dddoodle
 ```
 #include <ssdumbdisplay.h>
 
-
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200, true));
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 int dotSize = 5;
 const char* penColor = "red";

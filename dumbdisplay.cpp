@@ -1309,7 +1309,7 @@ void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
 
 #ifdef SUPPORT_TUNNEL
 DDTunnel::DDTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize):
-  type(type), endPoint(endPoint), tunnelId(String(tunnelId)) {
+  type(type), tunnelId(String(tunnelId)), endPoint(endPoint) {
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
   // this->nextArrayIdx = 0;
@@ -1651,9 +1651,9 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool conne
 JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connectNow, int bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  if (connectNow) {
-    _sendSpecialCommand("lt", tunnelId, "connect", "ddsimplejson@" + endPoint);
-  }
+  // if (connectNow) {
+  //   _sendSpecialCommand("lt", tunnelId, "connect", "ddsimplejson@" + endPoint);
+  // }
   JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, endPoint, connectNow, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
