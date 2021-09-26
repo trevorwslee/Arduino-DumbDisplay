@@ -489,7 +489,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /* - empty segments basically means turn all segments of the digit off */
     void setOn(const String& segments = "", int digitIdx = 0);
     /* show number */
-    void showNumber(float number);
+    void showNumber(float number, const String& padding = " ");
     /* show HEX number */
     void showHexNumber(int number);
     /* show formatted number (even number with hex digits) */
@@ -502,7 +502,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
 
 class DDTunnel: public DDObject {
   public:
-    DDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4);
+    DDTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize);
     virtual ~DDTunnel();
     virtual void release();
     virtual void reconnect();
@@ -516,8 +516,8 @@ class DDTunnel: public DDObject {
     virtual void handleInput(const String& data, bool final);
   protected:
     String type;
-    String endPoint;
     String tunnelId;
+    String endPoint;
     // int arraySize;
     // String* dataArray;
     // int nextArrayIdx;
@@ -529,7 +529,7 @@ class DDTunnel: public DDObject {
 
 class DDBufferedTunnel: public DDTunnel {
   public:
-    DDBufferedTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize);
+    DDBufferedTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize);
     virtual ~DDBufferedTunnel();
     virtual void release();
     virtual void reconnect();
@@ -558,7 +558,7 @@ class DDBufferedTunnel: public DDTunnel {
  */ 
 class BasicDDTunnel: public DDBufferedTunnel {
   public:
-    BasicDDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(type, endPoint, tunnelId, bufferSize) {
+    BasicDDTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
     }
     /* count buffer ready to be read */
     inline int count() { return _count(); }
@@ -574,7 +574,7 @@ class BasicDDTunnel: public DDBufferedTunnel {
 
 /**
  * support simple REST GET api .. e.g.
- * pTunnel = dumbdisplay.createSimpleJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong") 
+ * pTunnel = dumbdisplay.createJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong") 
  * . read() will read JSON one piece at a time ... e.g.
  *   { 
  *     "full_name": "Bruce Lee",
@@ -593,9 +593,9 @@ class BasicDDTunnel: public DDBufferedTunnel {
  *   `gender` = `Male`
  *   `age` = `32`
  */
-class SimpleJsonDDTunnel: public DDBufferedTunnel {
+class JsonDDTunnel: public DDBufferedTunnel {
   public:
-    SimpleJsonDDTunnel(const String& type, const String& endPoint, int tunnelId, int bufferSize = 4): DDBufferedTunnel(type, endPoint, tunnelId, bufferSize) {
+    JsonDDTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
     }
     /* count buffer ready (pieces of JSON) to be read */
     inline int count() { return _count(); }
@@ -606,10 +606,10 @@ class SimpleJsonDDTunnel: public DDBufferedTunnel {
 };
 
 /** will not delete "tunnels" passed in */
-class SimpleJsonDDTunnelMultiplexer {
+class JsonDDTunnelMultiplexer {
   public:
-    SimpleJsonDDTunnelMultiplexer(SimpleJsonDDTunnel** tunnels, int tunnelCount);
-    ~SimpleJsonDDTunnelMultiplexer();
+    JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int tunnelCount);
+    ~JsonDDTunnelMultiplexer();
     int count();
     bool eof();
     /** return the index of the tunnel the field read from; -1 if non ready to read */
@@ -618,7 +618,7 @@ class SimpleJsonDDTunnelMultiplexer {
     void reconnect();
   private:
      int tunnelCount;
-     SimpleJsonDDTunnel** tunnels;
+     JsonDDTunnel** tunnels;
 };
 
 #endif
@@ -662,8 +662,10 @@ class DumbDisplay {
     /* create a 'tunnel' to interface with Internet (similar to socket) */
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
-    BasicDDTunnel* createBasicTunnel(const String& endPoint, int bufferSize = 4);
-    SimpleJsonDDTunnel* createSimpleJsonTunnel(const String& endPoint, int bufferSize = 4);
+    /* if not connect now, need to connect via reconnect() */
+    BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int bufferSize = 4);
+    /* if not connect now, need to connect via reconnect() */
+    JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int bufferSize = 4);
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
 #endif

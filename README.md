@@ -7,7 +7,7 @@ DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual
 
 Instead of connecting real gadgets to your Arduino for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purpose -- to realize virtual IO gadagets on your Android phone.
 
-Doing so you may defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
+By doing so you can defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
 
 A few types of layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
@@ -19,9 +19,9 @@ A few types of layers can be created:
 
 Notice that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
-You can install the DumbDisplay Arduino Library by downloading the ZIP file as -- https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
+You can install the DumbDisplay Arduino Library by downloading the ZIP file, as demonstrated  by the YouTube video -- https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
 
-(To upgrade DumbDisplay Arduino Library, please refer to -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
+(To upgrade DumbDisplay Arduino Library, please refer to Youtube video -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
 
 You will also need to install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
@@ -118,7 +118,7 @@ void loop() {
 }
 ```
 
-In case a layer finishes all its usages in the middle, it should be deleted in order for Arduino to claim back resources:
+In case a layer finishes all its usages in the middle of the sketch, it should be deleted in order for Arduino to claim back resources:
 
 ```
 dumbdisplay.deleteLayer(led);
@@ -133,8 +133,8 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonofflo
 ```
 #include <ssdumbdisplay.h>
 
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 MbDDLayer* pMbLayer = NULL;
 
@@ -193,6 +193,7 @@ Please note that Arduino will check for "feedback" in several occasions:
 * calling "tunnel" to check for EOF
 
 With the help of DumbDisplay WIFI Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
+(In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears to me that Android does not allow all connections, likely due to the port used.)
 
 ```
 DumbDisplay dumbdisplay(new DDInputOutput(9600));
@@ -217,17 +218,17 @@ In case a "tunnel" reached EOF, and need be reinvoked:
 pTunnel->reconnect();
 ```
 
-In case a "tunnel" finishes all its tasks in the middle, it should be released in order for Arduino to claim back resources:
+In case a "tunnel" finishes all its tasks in the middle of the sketch, it should be released in order for Arduino to claim back resources:
 
 ```
 dumbdisplay.deleteTunnel(pTunnel);
 ```
 
-In a more complicated case, you may want to get data from Internet open REST api that returns JSON. For simple "GET" case, `SimpleJsonDDTunnel` "tunnel" may be able to help:
+In a more complicated case, you may want to get data from Internet open REST api that returns JSON. For simple "GET" case, `JsonDDTunnel` "tunnel" may be able to help:
 
-* you construct `SimpleJsonDDTunnel` "tunnel" and make REST request like:
+* you construct `JsonDDTunnel` "tunnel" and make REST request like:
   ```
-  pTunnel = dumbdisplay.createSimpleJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong"); 
+  pTunnel = dumbdisplay.createJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong"); 
   ```
 * you read JSON data from the "tunnel" a piece at a time;
   e.g. if the JSON is
@@ -288,8 +289,8 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddmb/ddm
 ```
 #include "ssdumbdisplay.h"
 
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 MbDDLayer *mb;
 int heading;
@@ -326,8 +327,8 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddbarmet
 ```
 #include "ssdumbdisplay.h"
 
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200));
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 void setup() {
   // configure to "auto pin (layout) layers" in the vertical direction -- V(*)
@@ -373,8 +374,8 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddautopi
 ```
 #include "ssdumbdisplay.h"
 
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200));
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 LedGridDDLayer *rled;
 LedGridDDLayer *gled;
@@ -543,7 +544,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddgraphi
 #include <ssdumbdisplay.h>
 
 // assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200, true));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
 
 void setup() {
   // create 4 graphical [LCD] layers
@@ -637,9 +638,8 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/dddoodle
 ```
 #include <ssdumbdisplay.h>
 
-
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2,3), 115200, true));
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 int dotSize = 5;
 const char* penColor = "red";

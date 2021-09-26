@@ -8,8 +8,8 @@ from jsonparse import JsonStreamParserCore
 
 
 _LOG_TUNNEL = True
-_LOG_TUNNEL_IO = True
-_LOG_TUNNEL_JSON = True
+_LOG_TUNNEL_IO = False
+_LOG_TUNNEL_JSON = False
 
 _DEBUG_TUNNEL = False
 _DEBUG_TUNNEL_INS = False
@@ -255,7 +255,7 @@ class Tunnel:
             id = id + ":final"
         self.bridge.insertTargetLine("<lt." + id + "<" + line)
 
-class SimpleJsonTunnel(Tunnel):
+class JsonTunnel(Tunnel):
     def __init__(self, ser, tunnel_id, end_point):
         super().__init__(ser, tunnel_id, end_point)
         self.parser = JsonStreamParserCore()
@@ -305,11 +305,14 @@ class SerialSource:
             self.ser = None
             self.error = err
     def _serialServe(self):
-        ser_line = ""
+        #ser_line = ""
+        ser_bytes = bytes()
         while True:
             for b in self.ser.read():
-                c = chr(b)
-                if c == '\n':
+                #c = chr(b)
+                #if c == '\n':
+                if b == 10:
+                    ser_line = ser_bytes.decode('UTF8')
                     insert_it = True
                     if ser_line.startswith("%%>lt"):
                         insert_it = False
@@ -348,17 +351,19 @@ class SerialSource:
                                             end_point = lt_data[idx + 1:]
                                         else:
                                             end_point = lt_data
-                                    if lt_command == "reconnect":
-                                        tunnel = self.tunnels.get(tid)
-                                        if tunnel != None:
-                                            # if type == None:
-                                            #     if isinstance(tunnel, SimpleJsonTunnel):
-                                            #         type = "ddsimplejson"
-                                            tunnel.close()
-                                            while self.tunnels.get(tid) != None:
-                                                time.sleep(0.1)
+                                    tunnel = self.tunnels.get(tid)
+                                    if tunnel != None:
+                                        tunnel.close()
+                                        while self.tunnels.get(tid) != None:
+                                            time.sleep(0.1)
+                                    # if lt_command == "reconnect":
+                                    #     tunnel = self.tunnels.get(tid)
+                                    #     if tunnel != None:
+                                    #         tunnel.close()
+                                    #         while self.tunnels.get(tid) != None:
+                                    #             time.sleep(0.1)
                                     if type == 'ddsimplejson':
-                                        tunnel = SimpleJsonTunnel(self.ser, tid, end_point)
+                                        tunnel = JsonTunnel(self.ser, tid, end_point)
                                     else:
                                         tunnel = Tunnel(self.ser, tid, end_point)
                                     self.tunnels[tunnel.tunnel_id] = tunnel
@@ -381,9 +386,11 @@ class SerialSource:
                                 tunnel.insertSourceLine(lt_data)
                     if insert_it:
                         self.bridge.insertSourceLine(ser_line)
-                    ser_line = ""
+                    #ser_line = ""
+                    ser_bytes = bytes()
                 else:
-                    ser_line = ser_line + c
+                    ser_bytes = ser_bytes + b.to_bytes(1, 'big')
+                    #ser_line = ser_line + c
 
 class WifiTarget:
     def __init__(self, bridge, host, port):
