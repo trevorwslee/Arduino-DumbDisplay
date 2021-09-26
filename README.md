@@ -7,7 +7,7 @@ DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual
 
 Instead of connecting real gadgets to your Arduino for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purpose -- to realize virtual IO gadagets on your Android phone.
 
-Doing so you may defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
+By doing so you can defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
 
 A few types of layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
@@ -19,9 +19,9 @@ A few types of layers can be created:
 
 Notice that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
-You can install the DumbDisplay Arduino Library by downloading the ZIP file as -- https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
+You can install the DumbDisplay Arduino Library by downloading the ZIP file, as demonstrated  by the YouTube video -- https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
 
-(To upgrade DumbDisplay Arduino Library, please refer to -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
+(To upgrade DumbDisplay Arduino Library, please refer to Youtube video -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
 
 You will also need to install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
