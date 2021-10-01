@@ -312,7 +312,12 @@ class SerialSource:
                 #c = chr(b)
                 #if c == '\n':
                 if b == 10:
-                    ser_line = ser_bytes.decode('UTF8')
+                    try:
+                        ser_line = ser_bytes.decode('UTF8')
+                    except UnicodeDecodeError:
+                        print('xxx failed to decode input')
+                        ser_bytes = bytes()
+                        continue
                     insert_it = True
                     if ser_line.startswith("%%>lt"):
                         insert_it = False

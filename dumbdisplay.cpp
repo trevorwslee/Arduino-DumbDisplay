@@ -350,17 +350,17 @@ void _PreDeleteTunnel(DDTunnel* pTunnel) {
 long _LastValidateConnectionMillis = 0;
 #endif
 String* _ReadFeedback(String& buffer) {
-  if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
-    return NULL;
-  }
 #ifdef VALIDATE_CONNECTION
     long now = millis();
     long diff = now - _LastValidateConnectionMillis;
-    if (diff >= 5000) {
+    if (diff >= 2000/*5000*/) {
       _ConnectedIOProxy->validConnection();
       _LastValidateConnectionMillis = now;
     }
 #endif
+  if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
+    return NULL;
+  }
   const String& data = _ConnectedIOProxy->get();
 #ifdef DEBUG_RECEIVE_FEEDBACK
   Serial.print("received: ");  
@@ -671,13 +671,12 @@ void _HandleFeedback() {
 }
 
 inline void _Delay(unsigned long ms) {
-//Serial.println("// {");
 #ifdef ENABLE_FEEDBACK
   unsigned long delayMillis = ms;
 	unsigned long startMillis = millis();
   while (true) {
     _HandleFeedback();
-    unsigned long remainMillis = delayMillis - (millis() - startMillis);
+    long remainMillis = delayMillis - (millis() - startMillis);
     if (remainMillis > 20) {
       delay(20);
     } else {
@@ -692,7 +691,6 @@ inline void _Delay(unsigned long ms) {
 #else
   delay(ms);
 #endif
-//Serial.println("// }");
 }
 
 // inline void _OLD_Delay(unsigned long ms) {

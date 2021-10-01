@@ -101,6 +101,7 @@ class DDInputOutput {
       if (_The_DD_Serial != NULL) _The_DD_Serial->flush();
     }
     virtual void keepAlive() {
+      lastKeepAliveMillis = millis();
     }
     virtual void validConnection() {
     }
@@ -122,11 +123,16 @@ class DDInputOutput {
       this->serialBaud = serialBaud;
       this->backupBySerial = backupBySerial;
       this->setupForSerial = setupForSerial;
+      this->lastKeepAliveMillis = 0;
+    }
+    void resetKeepAlive() {
+        lastKeepAliveMillis = 0;
     }
   protected:
     unsigned long serialBaud;
     bool backupBySerial;
     bool setupForSerial;
+    unsigned long lastKeepAliveMillis;
 };
 
 struct DDFeedback {
