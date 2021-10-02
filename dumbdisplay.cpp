@@ -20,15 +20,19 @@
 //#define DEBUG_ECHO_COMMAND
 //#define DEBUG_RECEIVE_FEEDBACK
 //#define DEBUG_ECHO_FEEDBACK
+//#define DEBUG_VALIDATE_CONNECTION
+
 
 #define VALIDATE_CONNECTION
-
 #define DEBUG_WITH_LED
+#define SUPPORT_RECONNECT
 
 
 // not flush seems to be a bit better for Serial (lost data)
 #define FLUSH_AFTER_SENT_COMMAND false
 #define YIELD_AFTER_SEND_COMMAND false
+
+#define DD_SID "Arduino-c1"
 
 
 DDSerial* _The_DD_Serial = NULL;
@@ -40,6 +44,10 @@ class IOProxy {
   public: 
     IOProxy(DDInputOutput *pIO) {
       this->pIO = pIO;
+#ifdef SUPPORT_RECONNECT      
+      this->lastKeepAliveMillis = 0;
+      this->reconnectEnabled = false;
+#endif
     }
     bool available();
     const String& get();
@@ -48,10 +56,21 @@ class IOProxy {
     void print(const char *p);
     void keepAlive();
     void validConnection();
+    void setReconnectRCId(const String& rcId) {
+#ifdef SUPPORT_RECONNECT      
+      this->reconnectRCId = rcId;
+      this->reconnectEnabled = true;
+#endif
+    }
   private:
     DDInputOutput *pIO;
     bool fromSerial;
     String data;  
+#ifdef SUPPORT_RECONNECT      
+    unsigned long lastKeepAliveMillis;
+    bool reconnectEnabled;
+    String reconnectRCId;
+#endif
 };
 
 bool IOProxy::available() {
@@ -81,10 +100,34 @@ void IOProxy::print(const char *p) {
   pIO->print(p);
 }
 void IOProxy::keepAlive() {
+#ifdef SUPPORT_RECONNECT      
+  this->lastKeepAliveMillis = millis();
+#endif
   pIO->keepAlive();
 }
 void IOProxy::validConnection() {
+#ifdef DEBUG_VALIDATE_CONNECTION
+  Serial.print("... validate connection ... ");
+  Serial.print(lastKeepAliveMillis);
+  if (reconnectEnabled) {
+    Serial.print(" ... RE enabled ");
+  }
+  Serial.println(" ...");
+#endif 
   pIO->validConnection();
+#ifdef SUPPORT_RECONNECT
+  if (this->reconnectEnabled && lastKeepAliveMillis > 0 && (millis() - lastKeepAliveMillis) > 5000) {
+#ifdef DEBUG_VALIDATE_CONNECTION
+    Serial.print("=== reconnect: ");
+    Serial.println(this->reconnectRCId);
+#endif
+    this->print("%%>RECONNECT:");
+    this->print(DD_SID);
+    this->print(":");
+    this->print(this->reconnectRCId);
+    this->print("\n");
+  }
+#endif  
 }
 
 
@@ -227,7 +270,10 @@ void _Connect() {
         }
 #endif
 //Serial.println((_ConnectedFromSerial ? "SERIAL" : "NON-SERIAL"));
-        ioProxy.print(">init>:Arduino-c1\n");
+        //ioProxy.print(">init>:Arduino-c1\n");
+        ioProxy.print(">init>:");
+        ioProxy.print(DD_SID);
+        ioProxy.print("\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
       if (ioProxy.available()) {
@@ -1597,6 +1643,16 @@ void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
   //_PreDeleteLayer(pLayer);
   delete pLayer;
+}
+void DumbDisplay::recordLayerSetupCommands() {
+  _sendCommand0("", "RECC");
+}
+void DumbDisplay::playbackLayerSetupCommands(const String persist_id) {
+  _sendCommand2("", "SAVEC", persist_id, TO_BOOL(true));
+  _sendCommand0("", "PLAYC");
+#ifdef SUPPORT_RECONNECT
+  _ConnectedIOProxy->setReconnectRCId(persist_id);
+#endif
 }
 void DumbDisplay::recordLayerCommands() {
   _sendCommand0("", "RECC");

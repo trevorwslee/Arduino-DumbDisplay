@@ -101,7 +101,7 @@ class DDInputOutput {
       if (_The_DD_Serial != NULL) _The_DD_Serial->flush();
     }
     virtual void keepAlive() {
-      lastKeepAliveMillis = millis();
+//      lastKeepAliveMillis = millis();
     }
     virtual void validConnection() {
     }
@@ -123,16 +123,16 @@ class DDInputOutput {
       this->serialBaud = serialBaud;
       this->backupBySerial = backupBySerial;
       this->setupForSerial = setupForSerial;
-      this->lastKeepAliveMillis = 0;
+//      this->lastKeepAliveMillis = 0;
     }
-    void resetKeepAlive() {
-        lastKeepAliveMillis = 0;
-    }
+    // void resetKeepAlive() {
+    //     lastKeepAliveMillis = 0;
+    // }
   protected:
     unsigned long serialBaud;
     bool backupBySerial;
     bool setupForSerial;
-    unsigned long lastKeepAliveMillis;
+//    unsigned long lastKeepAliveMillis;
 };
 
 struct DDFeedback {
@@ -677,6 +677,14 @@ class DumbDisplay {
 #endif
     /* set DD background color with common "color name" */
     void backgroundColor(const String& color);
+    /* basically, functions the same as recordLayerCommands() */
+    void recordLayerSetupCommands();
+    /* basically, functions the same as playbackLayerCommands() */
+    /* additionally: */
+    /* 1. save and persiste the layer commands */
+    /* 2. enable DumbDisplay reconnect feature -- */ 
+    /*    tells the layer setup commands to use when DumbDisplay reconnects */ 
+    void playbackLayerSetupCommands(const String persist_id);
     /* start recording layer commands (of any layers) */
     /* and sort of freeze the display, until playback */
     void recordLayerCommands();

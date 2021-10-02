@@ -162,7 +162,6 @@ class DDWiFiServerIO: public DDInputOutput {
           }
         }
       }
-      resetKeepAlive();
       return true;
     }
   private:
