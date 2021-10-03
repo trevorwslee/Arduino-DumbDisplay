@@ -11,7 +11,7 @@
 
 
 
-//#define DDWIFI_CONNECT_STATED
+#define DDWIFI_CONNECT_STATED
 
 //#define LOG_DDWIFI_STATUS
 
@@ -32,10 +32,6 @@ class DDWiFiServerIO: public DDInputOutput {
       this->password = passphrase;
       this->port = serverPort;
       this->logToSerial = logToSerial;
-#ifdef DDWIFI_CONNECT_STATED
-      this->connectionState = ' ';
-      this->stateMillis = 0;
-#endif
     }
     bool available() {
       return client.available() > 0;
@@ -52,6 +48,15 @@ class DDWiFiServerIO: public DDInputOutput {
     void preConnect() {
       if (logToSerial)
         Serial.begin(serialBaud);
+#ifdef DDWIFI_CONNECT_STATED    
+      WiFi.begin(ssid, password);
+      connectionState = ' ';
+      stateMillis = 0;
+      while (connectionState != 'C') {
+        checkConnection();
+        delay(200);
+      }
+#else
       while (true) {
         bool connected = _connectToClient(true);
         if (connected)
@@ -63,6 +68,7 @@ class DDWiFiServerIO: public DDInputOutput {
         }  
       }
       if (logToSerial) Serial.println("client conntected");
+#endif      
     }
     void flush() {
       client.flush();
@@ -70,11 +76,12 @@ class DDWiFiServerIO: public DDInputOutput {
     void validConnection() {
 #ifdef LOG_DDWIFI_STATUS
       if (logToSerial) {
-        Serial.print(" ... validate ...");
-        Serial.print(lastKeepAliveMillis);
-        Serial.println(" ... ");
+        Serial.println(" ... validate ...");
       }
 #endif      
+#ifdef DDWIFI_CONNECT_STATED  
+      checkConnection();
+#else  
       uint8_t status = WiFi.status();
       if (status != WL_CONNECTED) {
         if (logToSerial) Serial.println("lost WiFi ... try bind WiFi again ...");
@@ -90,6 +97,7 @@ class DDWiFiServerIO: public DDInputOutput {
             if (logToSerial) Serial.println("reconnected");
           }
       }
+#endif
     }
   private:
     bool _connectToNetwork() {
@@ -165,8 +173,24 @@ class DDWiFiServerIO: public DDInputOutput {
     }
 #ifdef DDWIFI_CONNECT_STATED    
     void checkConnection() {
+      uint8_t status = WiFi.status();
+      if (connectionState == 'C') {
+        if (status != WL_CONNECTED) {
+          if (logToSerial) Serial.println("lost WiFi ... try bind WiFi again ...");
+          client.stop();
+          WiFi.disconnect();
+          connectionState = ' ';
+          stateMillis = 0;
+        } else if (!client.connected()) {
+          client.stop();
+          if (logToSerial) Serial.println("lost connection ... try bind connect again ...");
+          connectionState = 'W';
+          stateMillis = 0;
+        } else {
+          return;
+        }
+      }
       if (connectionState == ' ') {
-        WiFi.begin(ssid, password);
         uint8_t status = WiFi.status();
         if (status == WL_CONNECTED) {
           if (logToSerial) {
@@ -175,7 +199,7 @@ class DDWiFiServerIO: public DDInputOutput {
           }
           server.begin();
           connectionState = 'W';
-          stateMillis = millis();
+          stateMillis = 0;
         } else {
           long diff = millis() - stateMillis;
           if (diff > 1000) {
@@ -194,7 +218,7 @@ class DDWiFiServerIO: public DDInputOutput {
       } else {
         if (status != WL_CONNECTED) {
           connectionState = ' ';
-          stateMillis = millis();
+          stateMillis = 0;
         } else {
           long diff = millis() - stateMillis;
           if (diff >= 1000) {
@@ -214,12 +238,14 @@ class DDWiFiServerIO: public DDInputOutput {
             }
             stateMillis = millis();
           }
-          WiFi cli = server.available();
+          WiFiClient cli = server.available();
           if (cli) {
             client = cli;
             connectionState = 'C';
-            stateMillis = millis();
+            stateMillis = 0;
+            if (logToSerial) Serial.println("client conntected");
           }
+        }  
       }
     }
 #endif    
@@ -230,7 +256,7 @@ class DDWiFiServerIO: public DDInputOutput {
     bool logToSerial;
 #ifdef DDWIFI_CONNECT_STATED
    char connectionState;
-   unsigned long stateMillis;
+   long stateMillis;
 #endif    
     WiFiServer server;
     WiFiClient client;
