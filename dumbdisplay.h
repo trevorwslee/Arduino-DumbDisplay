@@ -8,9 +8,6 @@
 #endif
 
 
-#define SUPPORT_TUNNEL
-
-
 #define DUMBDISPLAY_BAUD 115200
 #define DD_SERIAL_BAUD DUMBDISPLAY_BAUD
 #define DD_WIFI_PORT 10201
@@ -504,8 +501,6 @@ class SevenSegmentRowDDLayer: public DDLayer {
 };
 
 
-#ifdef SUPPORT_TUNNEL
-
 class DDTunnel: public DDObject {
   public:
     DDTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize);
@@ -627,8 +622,6 @@ class JsonDDTunnelMultiplexer {
      JsonDDTunnel** tunnels;
 };
 
-#endif
-
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO) {
@@ -664,7 +657,6 @@ class DumbDisplay {
     /* create a graphical [LCD] layer */
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
-#ifdef SUPPORT_TUNNEL
     /* create a 'tunnel' to interface with Internet (similar to socket) */
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
@@ -674,7 +666,6 @@ class DumbDisplay {
     JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int bufferSize = 4);
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
-#endif
     /* set DD background color with common "color name" */
     void backgroundColor(const String& color);
     /* basically, functions the same as recordLayerCommands() */

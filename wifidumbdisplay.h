@@ -12,8 +12,6 @@
 
 
 //#define LOG_WIFI_STATUS
-//#define RECONNECT_REACQUIRE_WIFI
-
 
 class DDWiFiServerIO: public DDInputOutput {
   public:
@@ -70,12 +68,6 @@ class DDWiFiServerIO: public DDInputOutput {
         Serial.println(" ... ");
       }
 #endif      
-#ifdef RECONNECT_REACQUIRE_WIFI
-      if (!client.connected()) {
-        if (logToSerial) Serial.println("release WiFi since lost connection");
-        WiFi.disconnect();
-      }
-#endif        
       uint8_t status = WiFi.status();
       if (status != WL_CONNECTED) {
         if (logToSerial) Serial.println("lost WiFi ... try bind WiFi again ...");
@@ -172,6 +164,7 @@ class DDWiFiServerIO: public DDInputOutput {
     WiFiServer server;
     WiFiClient client;
 };
+
 
 
 
