@@ -121,7 +121,7 @@ void IOProxy::validConnection() {
     Serial.print("=== reconnect: ");
     Serial.println(this->reconnectRCId);
 #endif
-    this->print("%%>RECONNECT:");
+    this->print("%%>RECON>");
     this->print(DD_SID);
     this->print(":");
     this->print(this->reconnectRCId);
