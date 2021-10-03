@@ -186,7 +186,7 @@ void loop() {
           case 4: day = "Thu"; break;
           case 5: day = "Fri"; break;
           case 6: day = "Sat"; break;
-          case 7: day = "Sun"; break;
+          case 0: day = "Sun"; break;
         }
         pLcd->writeLine("📆 : " + date + " " + day, 0);
       }

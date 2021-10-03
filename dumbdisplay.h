@@ -519,6 +519,7 @@ class DDTunnel: public DDObject {
     String type;
     String tunnelId;
     String endPoint;
+    long connectMillis;
     // int arraySize;
     // String* dataArray;
     // int nextArrayIdx;

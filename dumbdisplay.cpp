@@ -13,6 +13,7 @@
 
 #define READ_BUFFER_USE_BUFFER
 
+
 #define TO_BOOL(val) (val ? "1" : "0")
 
 //#define DD_DEBUG_HS
@@ -24,6 +25,8 @@
 
 
 #define SUPPORT_TUNNEL
+#define TUNNEL_TIMEOUT_MILLIS 30000
+
 
 #define VALIDATE_CONNECTION
 #define DEBUG_WITH_LED
@@ -1378,6 +1381,7 @@ void DDTunnel::reconnect() {
     //dataArray[i] = "";
   //}
   _sendSpecialCommand("lt", tunnelId, "reconnect", type + "@" + endPoint);
+  connectMillis = millis();
 }
 void DDTunnel::release() {
   if (!done) {
@@ -1391,7 +1395,18 @@ void DDTunnel::release() {
 bool DDTunnel::_eof() {
   //yield();
   _HandleFeedback();
-  return /*nextArrayIdx == validArrayIdx && */done;
+#ifdef TUNNEL_TIMEOUT_MILLIS
+    if (done) {
+      return true;
+    }
+    long diff = millis() - connectMillis;
+    if (diff > TUNNEL_TIMEOUT_MILLIS) {
+      return true;
+    }
+    return false;
+#else
+    return /*nextArrayIdx == validArrayIdx && */done;
+#endif    
 }
 // void DDTunnel::_readLine(String &buffer) {
 //   if (nextArrayIdx == validArrayIdx) {
