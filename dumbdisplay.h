@@ -409,31 +409,43 @@ class GraphicalDDLayer: public DDLayer {
     void print(const String& text);
     void println(const String& text = "");
     /* draw char */
-    /* . empty background color means no background color */
+    /* - empty color means text color */
+    /* - empty background color means no background color */
     /* - size: 0 means default */
-    void drawChar(int x, int y, char c, const String& color, const String& bgColor = "", int size = 0);
+    void drawChar(int x, int y, char c, const String& color = "", const String& bgColor = "", int size = 0);
     /* draw string */
+    /* - empty color means text color */
     /* . empty background color means no background color */
     /* - size: 0 means default */
-    void drawStr(int x, int y, const String& string, const String& color, const String& bgColor = "", int size = 0);
+    void drawStr(int x, int y, const String& string, const String& color = "", const String& bgColor = "", int size = 0);
     /* draw a pixel */
-    void drawPixel(int x, int y, const String& color);
+    /* - empty color means text color */
+    void drawPixel(int x, int y, const String& color = "");
     /* draw a line */
-    void drawLine(int x1, int y1, int x2, int y2, const String& color);
-    void drawCircle(int x, int y, int r, const String& color, bool filled = false);
-    inline void fillCircle(int x, int y, int r, const String& color) {
+    /* - empty color means text color */
+    void drawLine(int x1, int y1, int x2, int y2, const String& color = "");
+    /* - empty color means text color */
+    void drawCircle(int x, int y, int r, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillCircle(int x, int y, int r, const String& color = "") {
       drawCircle(x, y, r, color, true);
     }
-    void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color, bool filled = false);
-    inline void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color) {
+    /* - empty color means text color */
+    void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color = "") {
       drawTriangle(x1, y1, x2, y2, x3, y3, color, true);
     }
-    void drawRect(int x, int y, int w, int h, const String& color, bool filled = false);
-    inline void fillRect(int x, int y, int w, int h, const String& color) {
+    /* - empty color means text color */
+    void drawRect(int x, int y, int w, int h, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillRect(int x, int y, int w, int h, const String& color = "") {
       drawRect(x, y, w, h, color, true);
     }
-    void drawRoundRect(int x, int y, int w, int h, int r, const String& color, bool filled = false);
-    inline void fillRoundRect(int x, int y, int w, int h, int r, const String& color) {
+    /* - empty color means text color */
+    void drawRoundRect(int x, int y, int w, int h, int r, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillRoundRect(int x, int y, int w, int h, int r, const String& color = "") {
       drawRoundRect(x, y, w, h, r, color, true);
     }
     /* forward (relative to cursor) */
