@@ -19,7 +19,7 @@
 #define DD_CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 #define DD_CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
-#define DD_RECEIVE_BUFFER_SIZE 64
+#define DD_RECEIVE_BUFFER_SIZE 256
 #define DD_SEND_BUFFER_SIZE 20
 #define DD_LE_INDICATE
 
@@ -107,7 +107,8 @@ class DDBLESerialIO: public DDInputOutput {
           this->pTx = pTx;
           this->pServerCallbacks = pServerCallbacks;
           this->buffering = false;
-          this->bufferSize = 0;
+          this->bufferStart = 0;
+          this->bufferEnd = 0;
 #ifdef DD_SEND_BUFFER_SIZE
           this->sendBufferSize = 0;
 #endif
@@ -136,7 +137,7 @@ class DDBLESerialIO: public DDInputOutput {
         bool available() {
           while (true) {
             if (!buffering) {
-              return bufferSize > 0;
+              return bufferStart != bufferEnd;
             }
             yield();
           }
@@ -144,7 +145,16 @@ class DDBLESerialIO: public DDInputOutput {
         char read() {
           while (true) {
             if (!buffering) {
-              return buffer[--bufferSize];
+              char c = buffer[bufferStart];
+              if (++bufferStart >= DD_RECEIVE_BUFFER_SIZE) {
+                bufferStart = 0;
+              }
+// #ifdef DD_DEBUG_BLE
+//               Serial.print('<');
+//               Serial.print(c);
+//               Serial.print('>');
+// #endif
+              return c;
             }
             yield();
           }
@@ -199,11 +209,16 @@ class DDBLESerialIO: public DDInputOutput {
           buffering = true;
           std::string rxValue = pCharacteristic->getValue();
           int count = rxValue.size();
-          for (int i = count - 1; i >= 0; i--) {
-            if (bufferSize > DD_RECEIVE_BUFFER_SIZE) {
+          for (int i = 0; i < count; i++) {
+            int nextBufferEnd = bufferEnd + 1;
+            if (nextBufferEnd >= DD_RECEIVE_BUFFER_SIZE) {
+              nextBufferEnd = 0;
+            }
+            if (nextBufferEnd == bufferStart) {
               break;
             }
-            buffer[bufferSize++] = rxValue[i];
+            buffer[bufferEnd] = rxValue[i];
+            bufferEnd = nextBufferEnd;
           }
 #ifdef DD_DEBUG_BLE
           Serial.print("BLE received ... ");
@@ -211,8 +226,10 @@ class DDBLESerialIO: public DDInputOutput {
           Serial.print(" ... [");
           Serial.print(rxValue.c_str());
           Serial.print("] ==> ");
-          Serial.print(bufferSize);
-          Serial.print("/");
+          Serial.print(bufferStart);
+          Serial.print('-');
+          Serial.print(bufferEnd);
+          Serial.print('/');
           Serial.print(DD_RECEIVE_BUFFER_SIZE);
           Serial.println();
 #endif
@@ -222,10 +239,11 @@ class DDBLESerialIO: public DDInputOutput {
         BLECharacteristic *pTx;
         ServerCallbacks* pServerCallbacks;
         volatile bool buffering;
-        uint8_t bufferSize;
+        uint8_t bufferStart;
+        uint8_t bufferEnd;
         char buffer[DD_RECEIVE_BUFFER_SIZE];
 #ifdef DD_SEND_BUFFER_SIZE
-        int sendBufferSize;
+        uint8_t sendBufferSize;
         char sendBuffer[DD_SEND_BUFFER_SIZE + 1];
 #endif    
     };
