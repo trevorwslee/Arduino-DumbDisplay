@@ -20,6 +20,7 @@
 #define DD_CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
 #define DD_RECEIVE_BUFFER_SIZE 64
+#define DD_SEND_BUFFER_SIZE 20
 #define DD_LE_INDICATE
 
 //#define DD_DEBUG_BLE 
@@ -59,23 +60,46 @@ class DDBLESerialIO: public DDInputOutput {
     }
     void flush() {
     }
+    void validConnection() {
+      if (pServerCallbacks->isDisconnected()) {
+          delay(500); // give the bluetooth stack the chance to get things ready
+          pServerCallbacks->restartAdvertising();
+#ifdef DD_DEBUG_BLE
+          Serial.println("... connection lost ... waiting for re-connection ...");
+#endif      
+      }
+    }  
   private:
     class ServerCallbacks: public BLEServerCallbacks {
       public:
+        ServerCallbacks(BLEServer* pServer) {
+          this->pServer = pServer;
+          this->connectionState = 0;  // assume connecting
+        }
+      public:
+        void restartAdvertising() {
+          pServer->startAdvertising();
+          connectionState = 0;
+        }
+        bool isDisconnected() { return connectionState == -1; }
+        bool isConnected() { return connectionState == 1; }  
+        bool isConnecting() { return connectionState == 0; }
+      public:
         void onConnect(BLEServer* pServer) {
-          connected = true;
+          connectionState = 1;
 #ifdef DD_DEBUG_BLE
-      Serial.println("BLE connected");
+          Serial.println("BLE connected");
 #endif      
         };
         void onDisconnect(BLEServer* pServer) {
-          connected = false;
+          connectionState = -1;
 #ifdef DD_DEBUG_BLE
-      Serial.println("BLE disconnected");
+          Serial.println("BLE disconnected");
 #endif      
         }
-      public:
-        bool connected;
+      private:
+        BLEServer* pServer;
+        int connectionState;
     };
     class Callbacks: public BLECharacteristicCallbacks {
       public:
@@ -84,25 +108,31 @@ class DDBLESerialIO: public DDInputOutput {
           this->pServerCallbacks = pServerCallbacks;
           this->buffering = false;
           this->bufferSize = 0;
+#ifdef DD_SEND_BUFFER_SIZE
+          this->sendBufferSize = 0;
+#endif
         }
       public:
         void print(std::string s) {
-          pTx->setValue(s);
-#ifdef DD_LE_INDICATE          
-          pTx->indicate();
-#else          
-          pTx->notify();
-#endif
-#ifdef DD_DEBUG_BLE
-          if (!pServerCallbacks->connected) {
-          Serial.print("[not connected] ");
+#ifdef DD_SEND_BUFFER_SIZE
+          int len = s.length();
+          if ((len + sendBufferSize) > DD_SEND_BUFFER_SIZE) {
+            _flushSendBuffer();
+            if (len > DD_SEND_BUFFER_SIZE) {
+              _print(s.c_str());
+              return;
+            }
           }
-          Serial.print("BLE sent ... ");
-          Serial.print(" ... [");
-          Serial.print(s.c_str());
-          Serial.println("]");
+          for (int i = 0; i < len; i++) {
+            sendBuffer[sendBufferSize++] = s[i];
+          }
+          if (sendBufferSize > 0 && sendBuffer[sendBufferSize - 1] == '\n') {
+            _flushSendBuffer();
+          }
+#else
+          _print(s.c_str());
 #endif
-        }
+        }  
         bool available() {
           while (true) {
             if (!buffering) {
@@ -114,17 +144,56 @@ class DDBLESerialIO: public DDInputOutput {
         char read() {
           while (true) {
             if (!buffering) {
-              char c = buffer[--bufferSize];
-// #ifdef DD_DEBUG_BLE
-//           Serial.print("<");
-//           Serial.print(c);
-//           Serial.print("<");
-// #endif
-              return c;
+              return buffer[--bufferSize];
             }
             yield();
           }
-        } 
+        }
+      private:   
+#ifdef DD_SEND_BUFFER_SIZE
+        void _flushSendBuffer() {
+          if (sendBufferSize > 0) {
+            sendBuffer[sendBufferSize] = 0;
+            _print(sendBuffer);
+            sendBufferSize = 0;
+          }
+        }
+#endif
+        void _print(std::string s) {
+          int len = s.length();
+          while (len > 0) {
+            if (len <= 20) {  // 20 is the BLE limit
+              pTx->setValue(s);
+#ifdef DD_LE_INDICATE          
+              pTx->indicate();
+#else          
+              pTx->notify();
+#endif
+              break;
+            } else {
+              pTx->setValue(s.substr(0, 20));
+#ifdef DD_LE_INDICATE          
+              pTx->indicate();
+#else          
+              pTx->notify();
+#endif
+              s = s.substr(20);
+              len -= 20;
+            }
+          }
+#ifdef DD_DEBUG_BLE
+          if (pServerCallbacks->isConnected()) {
+          } else if (pServerCallbacks->isConnecting()) {
+            Serial.print("[connecting] ");
+          } else {
+            Serial.print("[not connected] ");
+          }
+          Serial.print("BLE sent ... ");
+          Serial.print(" ... [");
+          Serial.print(s.c_str());
+          Serial.println("]");
+#endif
+        }
       public:
         void onWrite(BLECharacteristic *pCharacteristic) {
           buffering = true;
@@ -155,6 +224,10 @@ class DDBLESerialIO: public DDInputOutput {
         volatile bool buffering;
         uint8_t bufferSize;
         char buffer[DD_RECEIVE_BUFFER_SIZE];
+#ifdef DD_SEND_BUFFER_SIZE
+        int sendBufferSize;
+        char sendBuffer[DD_SEND_BUFFER_SIZE + 1];
+#endif    
     };
   private:
     void initBLE() {  
@@ -163,7 +236,7 @@ class DDBLESerialIO: public DDInputOutput {
 #endif      
       BLEDevice::init(deviceName.c_str());
       BLEServer *pServer = BLEDevice::createServer();
-      pServerCallbacks = new ServerCallbacks();
+      pServerCallbacks = new ServerCallbacks(pServer);
       pServer->setCallbacks(pServerCallbacks);
       BLEService *pService = pServer->createService(DD_SERVICE_UUID);
       BLECharacteristic *pTx = pService->createCharacteristic(
@@ -173,18 +246,18 @@ class DDBLESerialIO: public DDInputOutput {
 #else                    
 										BLECharacteristic::PROPERTY_NOTIFY
 #endif                    
-									);
+									  );
       pTx->addDescriptor(new BLE2902());
       BLECharacteristic *pRx = pService->createCharacteristic(
-											 DD_CHARACTERISTIC_UUID_RX,
-											BLECharacteristic::PROPERTY_WRITE
+									  DD_CHARACTERISTIC_UUID_RX,
+										BLECharacteristic::PROPERTY_WRITE
 										);
       pCallbacks = new Callbacks(pTx, pServerCallbacks);              
       pRx->setCallbacks(pCallbacks);
       pService->start();
       pServer->getAdvertising()->start();
 #ifdef DD_DEBUG_BLE
-      Serial.println("... done initialized BLE");
+      Serial.println("... done initialized BLE ... waiting for connection ...");
 #endif      
     }
   private:
