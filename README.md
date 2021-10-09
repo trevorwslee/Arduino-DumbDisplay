@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.6.3)
+# DumbDisplay Arduino Library (v0.7.0)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP8266 / ESP32 / Respberry Pi Pico experiments.
 
@@ -21,20 +21,21 @@ Notice that with the "layer feedback" mechanism, user interaction (clicking of l
 
 You can install the DumbDisplay Arduino Library by downloading the ZIP file, as demonstrated  by the YouTube video -- https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
 
-(To upgrade DumbDisplay Arduino Library, please refer to Youtube video -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
+(To upgrade DumbDisplay Arduino Library, you may refer to the Youtube video -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
 
 You will also need to install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
-* SoftwareSerial (e.g. Bluetooth via HC-06)
+* SoftwareSerial (e.g. Bluetooth via HC-06; even HC-08)
 * BluetoothSerial (for ESP32)
+* Bluetooth LE (for ESP32)
 * Serial (USB connected via OTG adapter)
 * WIFI (e.g. ESP01, ESP8266 and ESP32)
 * Serial <-> WIFI via the simple included tool -- DumbDisplay WIFI Bridge
 
 Notes:
 * I have only tested DumbDisplay with the micro controller boards that I have -- namely, Arduino Uno, ESP01, ESP8266, ESP32 and Raspberry Pi Pico.
-* In case DumbDisplay does not "handshake" with your Arduino correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion
+* In case DumbDisplay does not "handshake" with your Arduino correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion.
 
 
 # Installing DumbDisplay Arduino Library
@@ -62,7 +63,8 @@ You have several options for connecting to DumbDisplay Android app.
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200))`  
     - 2 and 3 are the pins used by SoftwareSerial
-    - **the default baud rate is 115200**, which seems to work better from my own testing with HC-06; however, when it comes to ESP8266 with HC-06, it appears to work better in baud rate 9600 
+    - **the default baud rate is 115200**, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially
+    true for HC-08, which connects via BLE. 
   - **You should not be using that SoftwareSerial for other purposes**
 * Via **ESP32** `BluetoothSerial`
   ```
@@ -75,6 +77,17 @@ You have several options for connecting to DumbDisplay Android app.
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"))`  
     - "ESP32" is name used by `BluetoothSerial`
   - **You should not be using BluetoothSerial for other purposes**
+* Via **ESP32** `BLE`
+  ```
+    #define DD_4_ESP32
+    #include <esp32bledumbdisplay.h>
+    DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"));
+  ```
+  - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
+  - include esp32bledumbdisplay.h -- `#include <esp32bledumbdisplay.h>`
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"))`  
+    - "ESP32BLE" is name used by `BLE`
+  - **You should not be using ESP32's BLE for other purposes**
 * Via WIFI as a `WiFiServer` -- https://www.arduino.cc/en/Reference/WiFi  
   ```
     #include "wifidumbdisplay.h"
@@ -91,7 +104,7 @@ You have several options for connecting to DumbDisplay Android app.
     listening on 192.168.1.134:10201 ...
   ```  
     where 192.168.1.134 is the "host" and 10201 is the "port"
-  - It is only tested with ESP8266 and ESP32 (which support WIFI without add-on) and it appears to be working fine when WIFI connection is stable (especially good for ESP8266).
+  - It is only tested with ESP01, ESP8266 and ESP32 (which support WIFI without add-on) and it appears to be working fine when WIFI connection is stable (especially good for ESP8266).
   - With DumbDisply WIFI Bridge, you can simply code to use Arduino's Serial port to "connect" to DumbDisplay Android app, with DumbDisply WIFI Bridge running in the middle. Please refer to the section below that mention about DumbDisply WIFI Bridge.
 
 
@@ -864,6 +877,10 @@ MIT
 
 
 # Change History
+
+v0.7.0
+  - added ability to reconnect after disconnect
+  - added ESP32 BLE connection support
 
 v0.6.3
   - added simple JSON "tunnel" for calling simple Internet REST api
