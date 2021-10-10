@@ -649,7 +649,8 @@ class DumbDisplay {
     /* explicitly make connection -- blocking */
     /* - implicitly called when configure or create a layer */
     void connect();
-    int getConnectionVersion();
+    /** note that when reconnect, the connect version will be bumped up */
+    int getConnectVersion();
     /* configure "pin frame" to be x-units by y-units (default 100x100) */
     void configPinFrame(int xUnitCount = 100, int yUnitCount = 100);
     /* configure "auto pinning of layers" with the layer spec provided */
@@ -732,6 +733,22 @@ class DumbDisplay {
     void initialize(DDInputOutput* pIO);
     bool canLogToSerial();
 };
+
+
+class DDConnectVersionTracker {
+  public:
+    DDConnectVersionTracker() {
+      this->version = 0;
+    }
+    bool checkChanged(DumbDisplay& dumbdisplay) {
+      int oldVersion = this->version;
+      this->version = dumbdisplay.getConnectVersion();
+      return this->version != oldVersion;
+    }
+  private:
+    int version;  
+};
+
 
 // /* log line to serial making sure not affect DD */
 // void DDLogToSerial(const String& logLine);

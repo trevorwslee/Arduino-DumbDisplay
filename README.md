@@ -65,7 +65,7 @@ You have several options for connecting to DumbDisplay Android app.
     - 2 and 3 are the pins used by SoftwareSerial
     - **the default baud rate is 115200**, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially
     true for HC-08, which connects via BLE. 
-  - **You should not be using that SoftwareSerial for other purposes**
+  - **you should not be using that SoftwareSerial for other purposes**
 * Via **ESP32** `BluetoothSerial`
   ```
     #define DD_4_ESP32
@@ -76,7 +76,7 @@ You have several options for connecting to DumbDisplay Android app.
   - include esp32dumbdisplay.h -- `#include <esp32dumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"))`  
     - "ESP32" is name used by `BluetoothSerial`
-  - **You should not be using BluetoothSerial for other purposes**
+  - **you should not be using BluetoothSerial for other purposes**
 * Via **ESP32** `BLE`
   ```
     #define DD_4_ESP32
@@ -87,7 +87,8 @@ You have several options for connecting to DumbDisplay Android app.
   - include esp32bledumbdisplay.h -- `#include <esp32bledumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"))`  
     - "ESP32BLE" is name used by `BLE`
-  - **You should not be using ESP32's BLE for other purposes**
+  - **you should not be using ESP32's BLE for other purposes**
+  - **be warned that `DDBLESerialIO` is slow**; if possible choose `DDBluetoothSerialIO` over `DDBLESerialIO` 
 * Via WIFI as a `WiFiServer` -- https://www.arduino.cc/en/Reference/WiFi  
   ```
     #include "wifidumbdisplay.h"

@@ -34,7 +34,7 @@
 #define SUPPORT_RECONNECT
 #define RECONNECT_NO_KEEP_ALIVE_MILLIS 5000
 
-#define SHOW_KEEP_ALIVE
+//#define SHOW_KEEP_ALIVE
 //#define DEBUG_RECONNECT_WITH_COMMENT
 //#define RECONNECTED_RESET_KEEP_ALIVE
 
@@ -87,7 +87,7 @@ class IOProxy {
 
 
 volatile bool _Connected = false;
-volatile int _ConnectionVersion = 0;
+volatile int _ConnectVersion = 0;
 
 bool IOProxy::available() {
   bool done = false;
@@ -151,13 +151,13 @@ this->print("// NEED TO RECONNECT\n");
       this->print("\n");
       this->reconnectKeepAliveMillis = this->lastKeepAliveMillis;
     } else if (this->reconnectKeepAliveMillis > 0) {
-      _ConnectionVersion = _ConnectionVersion + 1;
+      _ConnectVersion = _ConnectVersion + 1;
 #ifdef DEBUG_RECONNECT_WITH_COMMENT
       this->print("// DETECTED RECONNECTION\n");
 #endif      
 #ifdef DEBUG_VALIDATE_CONNECTION
       Serial.print("*** reconnected: ");
-      Serial.println(_ConnectionVersion);
+      Serial.println(_ConnectVersion);
 #endif
       this->reconnectKeepAliveMillis = 0;
 #ifdef RECONNECTED_RESET_KEEP_ALIVE
@@ -327,7 +327,7 @@ void _Connect() {
     }
   }
   _Connected = true;
-  _ConnectionVersion = 1;
+  _ConnectVersion = 1;
 //  _ConnectedIOProxy = new IOProxy(_IO);
   _DDCompatibility = compatibility;
   if (false) {
@@ -1629,8 +1629,8 @@ void DumbDisplay::initialize(DDInputOutput* pIO) {
 void DumbDisplay::connect() {
   _Connect();
 }
-int DumbDisplay::getConnectionVersion() {
-  return _ConnectionVersion;
+int DumbDisplay::getConnectVersion() {
+  return _ConnectVersion;
 }
 void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
   _Connect();
