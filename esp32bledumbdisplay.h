@@ -24,6 +24,8 @@
 #define DD_LE_INDICATE
 
 //#define DD_DEBUG_BLE 
+//#define DD_DEBUG_BLE_NOT_SEND
+
 
 
 class DDBLESerialIO: public DDInputOutput {
@@ -191,7 +193,7 @@ class DDBLESerialIO: public DDInputOutput {
               len -= 20;
             }
           }
-#ifdef DD_DEBUG_BLE
+#if defined(DD_DEBUG_BLE) && !defined(DD_DEBUG_BLE_NOT_SEND)
           if (pServerCallbacks->isConnected()) {
           } else if (pServerCallbacks->isConnecting()) {
             Serial.print("[connecting] ");

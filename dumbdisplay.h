@@ -649,6 +649,7 @@ class DumbDisplay {
     /* explicitly make connection -- blocking */
     /* - implicitly called when configure or create a layer */
     void connect();
+    int getConnectionVersion();
     /* configure "pin frame" to be x-units by y-units (default 100x100) */
     void configPinFrame(int xUnitCount = 100, int yUnitCount = 100);
     /* configure "auto pinning of layers" with the layer spec provided */

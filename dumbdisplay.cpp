@@ -30,8 +30,13 @@
 
 #define VALIDATE_CONNECTION
 #define DEBUG_WITH_LED
-#define SUPPORT_RECONNECT
 
+#define SUPPORT_RECONNECT
+#define RECONNECT_NO_KEEP_ALIVE_MILLIS 5000
+
+#define SHOW_KEEP_ALIVE
+//#define DEBUG_RECONNECT_WITH_COMMENT
+//#define RECONNECTED_RESET_KEEP_ALIVE
 
 // not flush seems to be a bit better for Serial (lost data)
 #define FLUSH_AFTER_SENT_COMMAND false
@@ -65,6 +70,7 @@ class IOProxy {
 #ifdef SUPPORT_RECONNECT      
       this->reconnectRCId = rcId;
       this->reconnectEnabled = true;
+      this->reconnectKeepAliveMillis = 0;
 #endif
     }
   private:
@@ -75,8 +81,13 @@ class IOProxy {
     unsigned long lastKeepAliveMillis;
     bool reconnectEnabled;
     String reconnectRCId;
+    long reconnectKeepAliveMillis;
 #endif
 };
+
+
+volatile bool _Connected = false;
+volatile int _ConnectionVersion = 0;
 
 bool IOProxy::available() {
   bool done = false;
@@ -105,6 +116,9 @@ void IOProxy::print(const char *p) {
   pIO->print(p);
 }
 void IOProxy::keepAlive() {
+#if defined (SHOW_KEEP_ALIVE) || defined(DEBUG_RECONNECT_WITH_COMMENT)
+  this->print("// KEEP ALIVE\n");
+#endif
 #ifdef SUPPORT_RECONNECT      
   this->lastKeepAliveMillis = millis();
 #endif
@@ -121,16 +135,35 @@ void IOProxy::validConnection() {
 #endif 
   pIO->validConnection();
 #ifdef SUPPORT_RECONNECT
-  if (this->reconnectEnabled && lastKeepAliveMillis > 0 && (millis() - lastKeepAliveMillis) > 5000) {
-#ifdef DEBUG_VALIDATE_CONNECTION
-    Serial.print("=== reconnect: ");
-    Serial.println(this->reconnectRCId);
+  if (this->reconnectEnabled && this->lastKeepAliveMillis > 0) {
+    if ((millis() - this->lastKeepAliveMillis) > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
+#ifdef DEBUG_RECONNECT_WITH_COMMENT 
+this->print("// NEED TO RECONNECT\n");
 #endif
-    this->print("%%>RECON>");
-    this->print(DD_SID);
-    this->print(":");
-    this->print(this->reconnectRCId);
-    this->print("\n");
+#ifdef DEBUG_VALIDATE_CONNECTION
+      Serial.print("=== reconnect: ");
+      Serial.println(this->reconnectRCId);
+#endif
+      this->print("%%>RECON>");
+      this->print(DD_SID);
+      this->print(":");
+      this->print(this->reconnectRCId);
+      this->print("\n");
+      this->reconnectKeepAliveMillis = this->lastKeepAliveMillis;
+    } else if (this->reconnectKeepAliveMillis > 0) {
+      _ConnectionVersion = _ConnectionVersion + 1;
+#ifdef DEBUG_RECONNECT_WITH_COMMENT
+      this->print("// DETECTED RECONNECTION\n");
+#endif      
+#ifdef DEBUG_VALIDATE_CONNECTION
+      Serial.print("*** reconnected: ");
+      Serial.println(_ConnectionVersion);
+#endif
+      this->reconnectKeepAliveMillis = 0;
+#ifdef RECONNECTED_RESET_KEEP_ALIVE
+      this->lastKeepAliveMillis = millis();
+#endif
+    }
   }
 #endif  
 }
@@ -138,7 +171,7 @@ void IOProxy::validConnection() {
 
 
 //volatile bool _Preconneced = false;
-volatile bool _Connected = false;
+//volatile bool _Connected = false;
 volatile int _DDCompatibility = 0;
 volatile int _NextLid = 0;
 volatile int _NextImgId = 0;
@@ -294,6 +327,7 @@ void _Connect() {
     }
   }
   _Connected = true;
+  _ConnectionVersion = 1;
 //  _ConnectedIOProxy = new IOProxy(_IO);
   _DDCompatibility = compatibility;
   if (false) {
@@ -1594,6 +1628,9 @@ void DumbDisplay::initialize(DDInputOutput* pIO) {
 }
 void DumbDisplay::connect() {
   _Connect();
+}
+int DumbDisplay::getConnectionVersion() {
+  return _ConnectionVersion;
 }
 void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
   _Connect();
