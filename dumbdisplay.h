@@ -32,18 +32,10 @@
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 
 
-// class DDSerialProxy {
-//   public:
-//     virtual void begin(unsigned long serialBaud) {}
-//     virtual bool available() { return false; }
-//     virtual char read() { return 0; }
-//     virtual void print(const String &s) {}
-//     virtual void print(const char *p) {}
-//     virtual void flush() {}
-// };
+#define DD_SUPPORT_FEEDBACK_TEXT
 
 
-class DDSerial/*: public DDSerialProxy*/ {
+class DDSerial {
   public:
     virtual void begin(unsigned long serialBaud) {
       Serial.begin(serialBaud);
@@ -98,7 +90,6 @@ class DDInputOutput {
       if (_The_DD_Serial != NULL) _The_DD_Serial->flush();
     }
     virtual void keepAlive() {
-//      lastKeepAliveMillis = millis();
     }
     virtual void validConnection() {
     }
@@ -120,21 +111,20 @@ class DDInputOutput {
       this->serialBaud = serialBaud;
       this->backupBySerial = backupBySerial;
       this->setupForSerial = setupForSerial;
-//      this->lastKeepAliveMillis = 0;
     }
-    // void resetKeepAlive() {
-    //     lastKeepAliveMillis = 0;
-    // }
   protected:
     unsigned long serialBaud;
     bool backupBySerial;
     bool setupForSerial;
-//    unsigned long lastKeepAliveMillis;
 };
+
 
 struct DDFeedback {
   int x;
   int y;
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+  String text;
+#endif
 };
 
 
@@ -143,7 +133,11 @@ class DDFeedbackManager {
     DDFeedbackManager(int bufferSize);
     ~DDFeedbackManager();
     const DDFeedback* getFeedback();
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+    void pushFeedback(int x, int y, const String& text);
+#else
     void pushFeedback(int x, int y);
+#endif
   private:
     DDFeedback* feedbackArray;
     int arraySize;
@@ -155,12 +149,16 @@ class DDFeedbackManager {
 class DDLayer;
 
 
-enum DDFeedbackType { CLICK };
+enum DDFeedbackType { CLICK, KEYS_IN };
 
 /* pLayer -- pointer to the DDLayer of which "feedback" received */
 /* type -- currently, only possible value if CLICK */
 /* x, y -- (x, y) is the "area" on the layer where was clicked */
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback);
+#else
 typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, int x, int y);
+#endif
 
 class DDObject {
 };

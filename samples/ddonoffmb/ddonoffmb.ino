@@ -5,9 +5,9 @@ DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 MbDDLayer* pMbLayer = NULL;
 
-void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
+void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
     // got a click on (x, y) ... toogle it
-    pMbLayer->toggle(x, y);
+    pMbLayer->toggle(feedback.x, feedback.y);
 }
 
 void setup() {

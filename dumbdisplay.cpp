@@ -706,6 +706,7 @@ void _HandleFeedback() {
       int lid = -1;
       int x = -1;
       int y = -1;
+      char* pText = NULL;      
       char* token = strtok(buf, ".");
       if (token != NULL) {
         lid = _LayerIdToLid(token);
@@ -721,7 +722,15 @@ void _HandleFeedback() {
       if (token != NULL) {
         y = atoi(token);
         ok = true;
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+        token = strtok(NULL, ",");
+#endif
       }
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+      if (token != NULL) {
+        pText = token;
+      }
+#endif
       if (ok) {
         if (lid < 0 || lid >= _NextLid) {
           ok = false;
@@ -736,12 +745,26 @@ void _HandleFeedback() {
         if (pLayer != NULL) {
           DDFeedbackHandler handler = pLayer->getFeedbackHandler();
           if (handler != NULL) {
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+            DDFeedback feedback;
+            feedback.x = x;
+            feedback.y = y;
+            if (pText != NULL) {
+              feedback.text = *pText;
+            }
+            handler(pLayer, CLICK, feedback);
+#else
             handler(pLayer, CLICK, x, y);
+#endif
             //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
           } else {
             DDFeedbackManager *pFeedbackManager = pLayer->getFeedbackManager();
             if (pFeedbackManager != NULL) {
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+              pFeedbackManager->pushFeedback(x, y, "");
+#else
               pFeedbackManager->pushFeedback(x, y);
+#endif
             }
           }
         }
@@ -924,9 +947,16 @@ const DDFeedback* DDFeedbackManager::getFeedback() {
   validArrayIdx = (validArrayIdx + 1) % arraySize;
   return pFeedback;
 }
-void DDFeedbackManager::pushFeedback(int x, int y) {
+void DDFeedbackManager::pushFeedback(int x, int y
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+, const String& text
+#endif
+) {
   feedbackArray[nextArrayIdx].x = x;
   feedbackArray[nextArrayIdx].y = y;
+#ifdef SUPPORT_FEEDBACK_TEXT
+  feedbackArray[nextArrayIdx].text = text;
+#endif
   nextArrayIdx = (nextArrayIdx + 1) % arraySize;
   if (nextArrayIdx == validArrayIdx)
     validArrayIdx = (validArrayIdx + 1) % arraySize;
