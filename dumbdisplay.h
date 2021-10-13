@@ -178,6 +178,8 @@ class DDLayer: public DDObject {
     void border(float size, const String& color, const String& shape = "flat");
     void noBorder();
     /* size unit ... see border() */
+    void padding(float size);
+    /* size unit ... see border() */
     void padding(float left, float top, float right, float bottom);
     void noPadding();
     /* clear the layer */

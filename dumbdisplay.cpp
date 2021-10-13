@@ -13,6 +13,7 @@
 
 #define READ_BUFFER_USE_BUFFER
 
+#define MORE_KEEP_ALIVE
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
@@ -637,10 +638,16 @@ void _HandleFeedback() {
 //    String* pFeedback = _ReadFeedback(buffer);
 // #endif
     if (pFeedback != NULL) {
+#ifdef MORE_KEEP_ALIVE
+          // keep alive wheneven received someting
+        _ConnectedIOProxy->keepAlive();
+#endif        
       if (*(pFeedback->c_str()) == '<') {
         if (pFeedback->length() == 1) {
+#ifndef MORE_KEEP_ALIVE
           // keep alive
           _ConnectedIOProxy->keepAlive();
+#endif   
         }
         else {
 #ifdef SUPPORT_TUNNEL
@@ -750,7 +757,7 @@ void _HandleFeedback() {
             feedback.x = x;
             feedback.y = y;
             if (pText != NULL) {
-              feedback.text = *pText;
+              feedback.text = String(pText);
             }
             handler(pLayer, CLICK, feedback);
 #else
@@ -984,6 +991,9 @@ void DDLayer::border(float size, const String& color, const String& shape) {
 }
 void DDLayer::noBorder() {
   _sendCommand0(layerId, "border");
+}
+void DDLayer::padding(float size) {
+  _sendCommand1(layerId, "padding", String(size));
 }
 void DDLayer::padding(float left, float top, float right, float bottom) {
   _sendCommand4(layerId, "padding", String(left), String(top), String(right), String(bottom));
@@ -1729,6 +1739,7 @@ void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   delete pLayer;
 }
 void DumbDisplay::recordLayerSetupCommands() {
+  _Connect();
   _sendCommand0("", "RECC");
 }
 void DumbDisplay::playbackLayerSetupCommands(const String persist_id) {
@@ -1739,6 +1750,7 @@ void DumbDisplay::playbackLayerSetupCommands(const String persist_id) {
 #endif
 }
 void DumbDisplay::recordLayerCommands() {
+  _Connect();
   _sendCommand0("", "RECC");
 }
 void DumbDisplay::stopRecordLayerCommands() {
