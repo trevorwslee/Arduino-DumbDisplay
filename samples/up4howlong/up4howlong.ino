@@ -15,8 +15,9 @@ void setup() {
 
   // create a 7-seg layer for 4 digits
   sevenSeg = dumbdisplay.create7SegmentRowLayer(4);
-  sevenSeg->border(15, "blue", "round");
+  sevenSeg->border(15, "darkblue", "round");
   sevenSeg->padding(10);
+  sevenSeg->resetSegmentOffColor(DD_HEX_COLOR(0xeeddcc));
 
   // stop recording and play back the recorded commands
   // more importantly, a "id" is given so that

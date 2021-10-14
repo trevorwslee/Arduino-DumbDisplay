@@ -492,6 +492,10 @@ class SevenSegmentRowDDLayer: public DDLayer {
     }
     /* set segment color */
     void segmentColor(const String& color);
+    /* reset segment off color; note that this will clear all digits */
+    void resetSegmentOffColor(const String& color);
+    /* reset segment off color to no color; note that this will clear all digits */
+    void resetSegmentOffNoColor();
     /* turn on one or more segments */
     /* - segments: each character represents a segment to turn on */
     /*   . 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' */

@@ -1389,6 +1389,12 @@ void GraphicalDDLayer:: write(const String& text, bool draw) {
 void SevenSegmentRowDDLayer::segmentColor(const String& color) {
   _sendCommand1(layerId, "segcolor", color);
 }
+void SevenSegmentRowDDLayer::resetSegmentOffColor(const String& color) {
+  _sendCommand1(layerId, "resetsegoffcolor", color);
+}
+void SevenSegmentRowDDLayer::resetSegmentOffNoColor() {
+  _sendCommand0(layerId, "resetsegoffcolor");
+}
 void SevenSegmentRowDDLayer::turnOn(const String& segments, int digitIdx) {
   _sendCommand2(layerId, "segon", segments, String(digitIdx));
 }
