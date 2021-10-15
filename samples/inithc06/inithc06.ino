@@ -1,5 +1,5 @@
 // ***
-// * notes for HC-06:
+// * notes for HC-06 / HC-08:
 // * . default baud rate if 9600
 // * . serial monitor needs no line ending
 // * notes for HC-05:
@@ -23,6 +23,7 @@ SoftwareSerial hc06(2, 3);  // 2 => TX of HC06; 3 => RX of HC06
 //   arduino: AT+NAMEarduino
 //   1234: AT+PIN1234
 
+
 // for HC-05
 //   get name: AT+NAME?
 //   set name: AT+NAME=arduino
@@ -32,8 +33,15 @@ SoftwareSerial hc06(2, 3);  // 2 => TX of HC06; 3 => RX of HC06
 //   reset: AT+ORGL
 
 
+// for HC-08 (set up like HC-06)
+//  get info: AT+RX  
+//  set name: AT+NAME=xxx
+//  set baud: AT+BAUD=nnn 
+//  reset: AT+RESET
+//  reset to default: AT+DEFAULT
 
-const unsigned long baud = 115200;  // default for hc-06 is 9600; for hc-05, set to 38400 
+
+const unsigned long baud = 115200;  // default for hc-06 / hc-08 is 9600; for hc-05, set to 38400 
 
 
 void setup() {

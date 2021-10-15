@@ -21,6 +21,8 @@
 
 #define DD_RECEIVE_BUFFER_SIZE 256
 #define DD_SEND_BUFFER_SIZE 20
+
+// using INDICATE is more reliable, but slower
 #define DD_LE_INDICATE
 
 //#define DD_DEBUG_BLE 
