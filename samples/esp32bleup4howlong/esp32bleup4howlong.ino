@@ -3,6 +3,11 @@
 //*******
 
 
+//** . by default, BLE client can READ the value
+//** . can uncomment either INDICATE or NOTIFY so that
+//**   BLE client will be notified of new value
+//**   - NOTIFY   -- just notify
+//**   - INDICATE -- notify, and sort of requiring acknowledgement
 //#define INDICATE
 #define NOTIFY
 
@@ -32,7 +37,8 @@ void setup() {
       | BLECharacteristic::PROPERTY_NOTIFY
 #endif                                        
   );
-#if defined(INDICATE) || defined (NOTIFY)                                        
+#if defined(INDICATE) || defined (NOTIFY)   
+  // a 2902 descriptor is needed to enable notification                                     
   pCharacteristic->addDescriptor(new BLE2902());
 #endif
 
