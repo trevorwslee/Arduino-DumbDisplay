@@ -5,7 +5,7 @@ DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual
 
 # Description
 
-Instead of connecting real gadgets to your Arduino for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purpose -- to realize virtual IO gadagets on your Android phone.
+Instead of connecting real gadgets to your Arduino for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets on your Android phone.
 
 By doing so you can defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
 
@@ -35,7 +35,8 @@ The app can accept connection via
 
 Notes:
 * I have only tested DumbDisplay with the micro controller boards that I have -- namely, Arduino Uno, ESP01, ESP8266, ESP32 and Raspberry Pi Pico.
-* In case DumbDisplay does not "handshake" with your Arduino correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion.
+* In case DumbDisplay does not "handshake" with your Arduino board correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion.
+* In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to later section of the README.
 
 
 # Installing DumbDisplay Arduino Library
@@ -207,7 +208,7 @@ Please note that Arduino will check for "feedback" in several occasions:
 * calling "tunnel" to check for EOF
 
 With the help of DumbDisplay WIFI Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
-(In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears to me that Android does not allow all connections, likely due to the port used.)
+(In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears that Android does not allow all connections, possibly due to the port restriction.)
 
 ```
 DumbDisplay dumbdisplay(new DDInputOutput(9600));
@@ -254,8 +255,8 @@ In a more complicated case, you may want to get data from Internet open REST api
       "first": "Bruce",
       "last": "Lee"
     },
-    "gender":"Male",
-    "age":32
+    "gender": "Male",
+    "age": 32
   }
   ```  
  
@@ -269,7 +270,7 @@ In a more complicated case, you may want to get data from Internet open REST api
   notes:
   * all returned values will be text
   * control characters like `\r` not supported
-  * HTTPS not supported
+  * HTTPS not yet supported
 
 * use `count()` to check the "tunnel" has anything to read, and use `read()` to read what got like:
   ```
@@ -282,7 +283,7 @@ In a more complicated case, you may want to get data from Internet open REST api
     }
   }  
   ```
-  note that `eof()` will check whether everything has returned and read
+  note that `eof()` will check whether everything has returned and read before signaling EOF.
 
 
 
@@ -808,9 +809,9 @@ void loop() {
 ```
 
 
-## More
+## Record and Playback Commands
 
-It is apparent that turning on a LED by sending text-based command is not particularly efficient. Indeed, screen flickering is a commonplace, especial when there are lots of activities.
+It is apparent that turning on LEDs, drawing on graphical LCDs, etc, by sending text-based command is not particularly efficient. Indeed, screen flickering is a commonplace, especial when there are lots of activities.
 
 In order to relieve this flickering situation a bit, it is possilbe to freeze DumbDisplay's screen during sending bulk of commands:
 * `dumbdisplay.recordLayerCommands()` -- start recording commands (freeze DumbDisplay screen)
@@ -824,6 +825,38 @@ Instead of posting the sample sketch here, please find it with the link: https:/
 | Arduino UNO with Joystick shield| DumbDisplay |
 |--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick-arduino.jpg)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick-dd.png)|
+
+
+## Survive DumbDisplay App Reconnection
+
+In certain "stateless" cases, like DumbDisplay is simply used as means to show values, it is possible for DumbDisplay to be able to meaningfully reconnect after DumbDisplay app disconnect / restart, since DumbDisplay app does not persist "state" information.
+
+The only missing piece is the layout of the different layers. And this missing piece can be "regained" by recording the layout commands, and automatically playback when DumbDisplay app reconnects.
+
+To do this, you simply need to enclose the "setup" code with the record/playback mechanism mentioned previously. 
+
+More precisely, you will need to use the DumbDisplay object methods:
+* `dumbdisplay.recordLayerSetupCommands()` -- start recording "setup" commands (freeze DumbDisplay screen)
+* `dumbdisplay.playbackLayerSetupCommands("<setup-id>")` -- end recording "setup" commands and playback the recorded "setup" commands. **The argument `"<setup-id>"`, is the name for DumbDisplay app to persist the "setup" commands. When reconnect, those "setup" commands will be played back automatically.**
+
+E.g.
+```
+  // start recording the commands to setup DD (app side)
+  dumbdisplay.recordLayerSetupCommands();
+
+  // create a 7-seg layer for 4 digits
+  sevenSeg = dumbdisplay.create7SegmentRowLayer(4);
+  sevenSeg->border(15, "darkblue", "round");
+  sevenSeg->padding(10);
+  sevenSeg->resetSegmentOffColor(DD_HEX_COLOR(0xeeddcc));
+
+  // stop recording and play back the recorded commands
+  // more importantly, a "id" is given so that
+  // the records commands can be reused during restart of DD app 
+  dumbdisplay.playbackLayerSetupCommands("up4howlong");
+```
+
+For the complete sketch of the above example, please refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/ddup4howlong/ddup4howlong.ino
 
 
 
