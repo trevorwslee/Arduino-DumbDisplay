@@ -13,6 +13,8 @@
 
 #define READ_BUFFER_USE_BUFFER
 
+#define MORE_KEEP_ALIVE
+
 #define TO_BOOL(val) (val ? "1" : "0")
 
 //#define DD_DEBUG_HS
@@ -20,15 +22,28 @@
 //#define DEBUG_ECHO_COMMAND
 //#define DEBUG_RECEIVE_FEEDBACK
 //#define DEBUG_ECHO_FEEDBACK
+//#define DEBUG_VALIDATE_CONNECTION
+
+
+#define SUPPORT_TUNNEL
+#define TUNNEL_TIMEOUT_MILLIS 30000
+
 
 #define VALIDATE_CONNECTION
-
 #define DEBUG_WITH_LED
 
+#define SUPPORT_RECONNECT
+#define RECONNECT_NO_KEEP_ALIVE_MILLIS 5000
+
+//#define SHOW_KEEP_ALIVE
+//#define DEBUG_RECONNECT_WITH_COMMENT
+//#define RECONNECTED_RESET_KEEP_ALIVE
 
 // not flush seems to be a bit better for Serial (lost data)
 #define FLUSH_AFTER_SENT_COMMAND false
 #define YIELD_AFTER_SEND_COMMAND false
+
+#define DD_SID "Arduino-c1"
 
 
 DDSerial* _The_DD_Serial = NULL;
@@ -40,6 +55,10 @@ class IOProxy {
   public: 
     IOProxy(DDInputOutput *pIO) {
       this->pIO = pIO;
+#ifdef SUPPORT_RECONNECT      
+      this->lastKeepAliveMillis = 0;
+      this->reconnectEnabled = false;
+#endif
     }
     bool available();
     const String& get();
@@ -48,11 +67,28 @@ class IOProxy {
     void print(const char *p);
     void keepAlive();
     void validConnection();
+    void setReconnectRCId(const String& rcId) {
+#ifdef SUPPORT_RECONNECT      
+      this->reconnectRCId = rcId;
+      this->reconnectEnabled = true;
+      this->reconnectKeepAliveMillis = 0;
+#endif
+    }
   private:
     DDInputOutput *pIO;
     bool fromSerial;
     String data;  
+#ifdef SUPPORT_RECONNECT      
+    unsigned long lastKeepAliveMillis;
+    bool reconnectEnabled;
+    String reconnectRCId;
+    long reconnectKeepAliveMillis;
+#endif
 };
+
+
+volatile bool _Connected = false;
+volatile int _ConnectVersion = 0;
 
 bool IOProxy::available() {
   bool done = false;
@@ -81,16 +117,62 @@ void IOProxy::print(const char *p) {
   pIO->print(p);
 }
 void IOProxy::keepAlive() {
+#if defined (SHOW_KEEP_ALIVE) || defined(DEBUG_RECONNECT_WITH_COMMENT)
+  this->print("// KEEP ALIVE\n");
+#endif
+#ifdef SUPPORT_RECONNECT      
+  this->lastKeepAliveMillis = millis();
+#endif
   pIO->keepAlive();
 }
 void IOProxy::validConnection() {
+#ifdef DEBUG_VALIDATE_CONNECTION
+  Serial.print("... validate connection ... ");
+  Serial.print(lastKeepAliveMillis);
+  if (reconnectEnabled) {
+    Serial.print(" ... RE enabled ");
+  }
+  Serial.println(" ...");
+#endif 
   pIO->validConnection();
+#ifdef SUPPORT_RECONNECT
+  if (this->reconnectEnabled && this->lastKeepAliveMillis > 0) {
+    if ((millis() - this->lastKeepAliveMillis) > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
+#ifdef DEBUG_RECONNECT_WITH_COMMENT 
+this->print("// NEED TO RECONNECT\n");
+#endif
+#ifdef DEBUG_VALIDATE_CONNECTION
+      Serial.print("=== reconnect: ");
+      Serial.println(this->reconnectRCId);
+#endif
+      this->print("%%>RECON>");
+      this->print(DD_SID);
+      this->print(":");
+      this->print(this->reconnectRCId);
+      this->print("\n");
+      this->reconnectKeepAliveMillis = this->lastKeepAliveMillis;
+    } else if (this->reconnectKeepAliveMillis > 0) {
+      _ConnectVersion = _ConnectVersion + 1;
+#ifdef DEBUG_RECONNECT_WITH_COMMENT
+      this->print("// DETECTED RECONNECTION\n");
+#endif      
+#ifdef DEBUG_VALIDATE_CONNECTION
+      Serial.print("*** reconnected: ");
+      Serial.println(_ConnectVersion);
+#endif
+      this->reconnectKeepAliveMillis = 0;
+#ifdef RECONNECTED_RESET_KEEP_ALIVE
+      this->lastKeepAliveMillis = millis();
+#endif
+    }
+  }
+#endif  
 }
 
 
 
 //volatile bool _Preconneced = false;
-volatile bool _Connected = false;
+//volatile bool _Connected = false;
 volatile int _DDCompatibility = 0;
 volatile int _NextLid = 0;
 volatile int _NextImgId = 0;
@@ -227,7 +309,10 @@ void _Connect() {
         }
 #endif
 //Serial.println((_ConnectedFromSerial ? "SERIAL" : "NON-SERIAL"));
-        ioProxy.print(">init>:Arduino-c1\n");
+        //ioProxy.print(">init>:Arduino-c1\n");
+        ioProxy.print(">init>:");
+        ioProxy.print(DD_SID);
+        ioProxy.print("\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
       if (ioProxy.available()) {
@@ -243,6 +328,7 @@ void _Connect() {
     }
   }
   _Connected = true;
+  _ConnectVersion = 1;
 //  _ConnectedIOProxy = new IOProxy(_IO);
   _DDCompatibility = compatibility;
   if (false) {
@@ -350,17 +436,17 @@ void _PreDeleteTunnel(DDTunnel* pTunnel) {
 long _LastValidateConnectionMillis = 0;
 #endif
 String* _ReadFeedback(String& buffer) {
-  if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
-    return NULL;
-  }
 #ifdef VALIDATE_CONNECTION
     long now = millis();
     long diff = now - _LastValidateConnectionMillis;
-    if (diff >= 5000) {
+    if (diff >= 2000/*5000*/) {
       _ConnectedIOProxy->validConnection();
       _LastValidateConnectionMillis = now;
     }
 #endif
+  if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
+    return NULL;
+  }
   const String& data = _ConnectedIOProxy->get();
 #ifdef DEBUG_RECEIVE_FEEDBACK
   Serial.print("received: ");  
@@ -552,10 +638,16 @@ void _HandleFeedback() {
 //    String* pFeedback = _ReadFeedback(buffer);
 // #endif
     if (pFeedback != NULL) {
+#ifdef MORE_KEEP_ALIVE
+          // keep alive wheneven received someting
+        _ConnectedIOProxy->keepAlive();
+#endif        
       if (*(pFeedback->c_str()) == '<') {
         if (pFeedback->length() == 1) {
+#ifndef MORE_KEEP_ALIVE
           // keep alive
           _ConnectedIOProxy->keepAlive();
+#endif   
         }
         else {
 #ifdef SUPPORT_TUNNEL
@@ -621,6 +713,7 @@ void _HandleFeedback() {
       int lid = -1;
       int x = -1;
       int y = -1;
+      char* pText = NULL;      
       char* token = strtok(buf, ".");
       if (token != NULL) {
         lid = _LayerIdToLid(token);
@@ -636,7 +729,15 @@ void _HandleFeedback() {
       if (token != NULL) {
         y = atoi(token);
         ok = true;
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+        token = strtok(NULL, ",");
+#endif
       }
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+      if (token != NULL) {
+        pText = token;
+      }
+#endif
       if (ok) {
         if (lid < 0 || lid >= _NextLid) {
           ok = false;
@@ -651,12 +752,26 @@ void _HandleFeedback() {
         if (pLayer != NULL) {
           DDFeedbackHandler handler = pLayer->getFeedbackHandler();
           if (handler != NULL) {
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+            DDFeedback feedback;
+            feedback.x = x;
+            feedback.y = y;
+            if (pText != NULL) {
+              feedback.text = String(pText);
+            }
+            handler(pLayer, CLICK, feedback);
+#else
             handler(pLayer, CLICK, x, y);
+#endif
             //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
           } else {
             DDFeedbackManager *pFeedbackManager = pLayer->getFeedbackManager();
             if (pFeedbackManager != NULL) {
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+              pFeedbackManager->pushFeedback(x, y, "");
+#else
               pFeedbackManager->pushFeedback(x, y);
+#endif
             }
           }
         }
@@ -671,13 +786,12 @@ void _HandleFeedback() {
 }
 
 inline void _Delay(unsigned long ms) {
-//Serial.println("// {");
 #ifdef ENABLE_FEEDBACK
   unsigned long delayMillis = ms;
 	unsigned long startMillis = millis();
   while (true) {
     _HandleFeedback();
-    unsigned long remainMillis = delayMillis - (millis() - startMillis);
+    long remainMillis = delayMillis - (millis() - startMillis);
     if (remainMillis > 20) {
       delay(20);
     } else {
@@ -692,7 +806,6 @@ inline void _Delay(unsigned long ms) {
 #else
   delay(ms);
 #endif
-//Serial.println("// }");
 }
 
 // inline void _OLD_Delay(unsigned long ms) {
@@ -841,9 +954,16 @@ const DDFeedback* DDFeedbackManager::getFeedback() {
   validArrayIdx = (validArrayIdx + 1) % arraySize;
   return pFeedback;
 }
-void DDFeedbackManager::pushFeedback(int x, int y) {
+void DDFeedbackManager::pushFeedback(int x, int y
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+, const String& text
+#endif
+) {
   feedbackArray[nextArrayIdx].x = x;
   feedbackArray[nextArrayIdx].y = y;
+#ifdef SUPPORT_FEEDBACK_TEXT
+  feedbackArray[nextArrayIdx].text = text;
+#endif
   nextArrayIdx = (nextArrayIdx + 1) % arraySize;
   if (nextArrayIdx == validArrayIdx)
     validArrayIdx = (validArrayIdx + 1) % arraySize;
@@ -871,6 +991,9 @@ void DDLayer::border(float size, const String& color, const String& shape) {
 }
 void DDLayer::noBorder() {
   _sendCommand0(layerId, "border");
+}
+void DDLayer::padding(float size) {
+  _sendCommand1(layerId, "padding", String(size));
 }
 void DDLayer::padding(float left, float top, float right, float bottom) {
   _sendCommand4(layerId, "padding", String(left), String(top), String(right), String(bottom));
@@ -1266,6 +1389,12 @@ void GraphicalDDLayer:: write(const String& text, bool draw) {
 void SevenSegmentRowDDLayer::segmentColor(const String& color) {
   _sendCommand1(layerId, "segcolor", color);
 }
+void SevenSegmentRowDDLayer::resetSegmentOffColor(const String& color) {
+  _sendCommand1(layerId, "resetsegoffcolor", color);
+}
+void SevenSegmentRowDDLayer::resetSegmentOffNoColor() {
+  _sendCommand0(layerId, "resetsegoffcolor");
+}
 void SevenSegmentRowDDLayer::turnOn(const String& segments, int digitIdx) {
   _sendCommand2(layerId, "segon", segments, String(digitIdx));
 }
@@ -1332,6 +1461,7 @@ void DDTunnel::reconnect() {
     //dataArray[i] = "";
   //}
   _sendSpecialCommand("lt", tunnelId, "reconnect", type + "@" + endPoint);
+  connectMillis = millis();
 }
 void DDTunnel::release() {
   if (!done) {
@@ -1345,7 +1475,18 @@ void DDTunnel::release() {
 bool DDTunnel::_eof() {
   //yield();
   _HandleFeedback();
-  return /*nextArrayIdx == validArrayIdx && */done;
+#ifdef TUNNEL_TIMEOUT_MILLIS
+    if (done) {
+      return true;
+    }
+    long diff = millis() - connectMillis;
+    if (diff > TUNNEL_TIMEOUT_MILLIS) {
+      return true;
+    }
+    return false;
+#else
+    return /*nextArrayIdx == validArrayIdx && */done;
+#endif    
 }
 // void DDTunnel::_readLine(String &buffer) {
 //   if (nextArrayIdx == validArrayIdx) {
@@ -1534,6 +1675,9 @@ void DumbDisplay::initialize(DDInputOutput* pIO) {
 void DumbDisplay::connect() {
   _Connect();
 }
+int DumbDisplay::getConnectVersion() {
+  return _ConnectVersion;
+}
 void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
   _Connect();
   if (xUnitCount != 100 || yUnitCount != 100) {
@@ -1600,7 +1744,19 @@ void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   //_PreDeleteLayer(pLayer);
   delete pLayer;
 }
+void DumbDisplay::recordLayerSetupCommands() {
+  _Connect();
+  _sendCommand0("", "RECC");
+}
+void DumbDisplay::playbackLayerSetupCommands(const String persist_id) {
+  _sendCommand2("", "SAVEC", persist_id, TO_BOOL(true));
+  _sendCommand0("", "PLAYC");
+#ifdef SUPPORT_RECONNECT
+  _ConnectedIOProxy->setReconnectRCId(persist_id);
+#endif
+}
 void DumbDisplay::recordLayerCommands() {
+  _Connect();
   _sendCommand0("", "RECC");
 }
 void DumbDisplay::stopRecordLayerCommands() {

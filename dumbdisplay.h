@@ -8,9 +8,6 @@
 #endif
 
 
-#define SUPPORT_TUNNEL
-
-
 #define DUMBDISPLAY_BAUD 115200
 #define DD_SERIAL_BAUD DUMBDISPLAY_BAUD
 #define DD_WIFI_PORT 10201
@@ -35,18 +32,10 @@
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 
 
-// class DDSerialProxy {
-//   public:
-//     virtual void begin(unsigned long serialBaud) {}
-//     virtual bool available() { return false; }
-//     virtual char read() { return 0; }
-//     virtual void print(const String &s) {}
-//     virtual void print(const char *p) {}
-//     virtual void flush() {}
-// };
+#define DD_SUPPORT_FEEDBACK_TEXT
 
 
-class DDSerial/*: public DDSerialProxy*/ {
+class DDSerial {
   public:
     virtual void begin(unsigned long serialBaud) {
       Serial.begin(serialBaud);
@@ -129,9 +118,13 @@ class DDInputOutput {
     bool setupForSerial;
 };
 
+
 struct DDFeedback {
   int x;
   int y;
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+  String text;
+#endif
 };
 
 
@@ -140,7 +133,11 @@ class DDFeedbackManager {
     DDFeedbackManager(int bufferSize);
     ~DDFeedbackManager();
     const DDFeedback* getFeedback();
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+    void pushFeedback(int x, int y, const String& text);
+#else
     void pushFeedback(int x, int y);
+#endif
   private:
     DDFeedback* feedbackArray;
     int arraySize;
@@ -152,12 +149,16 @@ class DDFeedbackManager {
 class DDLayer;
 
 
-enum DDFeedbackType { CLICK };
+enum DDFeedbackType { CLICK, KEYS_IN };
 
 /* pLayer -- pointer to the DDLayer of which "feedback" received */
 /* type -- currently, only possible value if CLICK */
 /* x, y -- (x, y) is the "area" on the layer where was clicked */
+#ifdef DD_SUPPORT_FEEDBACK_TEXT
+typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback);
+#else
 typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, int x, int y);
+#endif
 
 class DDObject {
 };
@@ -176,6 +177,8 @@ class DDLayer: public DDObject {
     /* shape -- can be "flat", "round", "raised" or "sunken" */  
     void border(float size, const String& color, const String& shape = "flat");
     void noBorder();
+    /* size unit ... see border() */
+    void padding(float size);
     /* size unit ... see border() */
     void padding(float left, float top, float right, float bottom);
     void noPadding();
@@ -406,31 +409,43 @@ class GraphicalDDLayer: public DDLayer {
     void print(const String& text);
     void println(const String& text = "");
     /* draw char */
-    /* . empty background color means no background color */
+    /* - empty color means text color */
+    /* - empty background color means no background color */
     /* - size: 0 means default */
-    void drawChar(int x, int y, char c, const String& color, const String& bgColor = "", int size = 0);
+    void drawChar(int x, int y, char c, const String& color = "", const String& bgColor = "", int size = 0);
     /* draw string */
+    /* - empty color means text color */
     /* . empty background color means no background color */
     /* - size: 0 means default */
-    void drawStr(int x, int y, const String& string, const String& color, const String& bgColor = "", int size = 0);
+    void drawStr(int x, int y, const String& string, const String& color = "", const String& bgColor = "", int size = 0);
     /* draw a pixel */
-    void drawPixel(int x, int y, const String& color);
+    /* - empty color means text color */
+    void drawPixel(int x, int y, const String& color = "");
     /* draw a line */
-    void drawLine(int x1, int y1, int x2, int y2, const String& color);
-    void drawCircle(int x, int y, int r, const String& color, bool filled = false);
-    inline void fillCircle(int x, int y, int r, const String& color) {
+    /* - empty color means text color */
+    void drawLine(int x1, int y1, int x2, int y2, const String& color = "");
+    /* - empty color means text color */
+    void drawCircle(int x, int y, int r, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillCircle(int x, int y, int r, const String& color = "") {
       drawCircle(x, y, r, color, true);
     }
-    void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color, bool filled = false);
-    inline void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color) {
+    /* - empty color means text color */
+    void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color = "") {
       drawTriangle(x1, y1, x2, y2, x3, y3, color, true);
     }
-    void drawRect(int x, int y, int w, int h, const String& color, bool filled = false);
-    inline void fillRect(int x, int y, int w, int h, const String& color) {
+    /* - empty color means text color */
+    void drawRect(int x, int y, int w, int h, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillRect(int x, int y, int w, int h, const String& color = "") {
       drawRect(x, y, w, h, color, true);
     }
-    void drawRoundRect(int x, int y, int w, int h, int r, const String& color, bool filled = false);
-    inline void fillRoundRect(int x, int y, int w, int h, int r, const String& color) {
+    /* - empty color means text color */
+    void drawRoundRect(int x, int y, int w, int h, int r, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillRoundRect(int x, int y, int w, int h, int r, const String& color = "") {
       drawRoundRect(x, y, w, h, r, color, true);
     }
     /* forward (relative to cursor) */
@@ -477,6 +492,10 @@ class SevenSegmentRowDDLayer: public DDLayer {
     }
     /* set segment color */
     void segmentColor(const String& color);
+    /* reset segment off color; note that this will clear all digits */
+    void resetSegmentOffColor(const String& color);
+    /* reset segment off color to no color; note that this will clear all digits */
+    void resetSegmentOffNoColor();
     /* turn on one or more segments */
     /* - segments: each character represents a segment to turn on */
     /*   . 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' */
@@ -498,8 +517,6 @@ class SevenSegmentRowDDLayer: public DDLayer {
 };
 
 
-#ifdef SUPPORT_TUNNEL
-
 class DDTunnel: public DDObject {
   public:
     DDTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize);
@@ -518,6 +535,7 @@ class DDTunnel: public DDObject {
     String type;
     String tunnelId;
     String endPoint;
+    long connectMillis;
     // int arraySize;
     // String* dataArray;
     // int nextArrayIdx;
@@ -621,8 +639,6 @@ class JsonDDTunnelMultiplexer {
      JsonDDTunnel** tunnels;
 };
 
-#endif
-
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO) {
@@ -637,6 +653,8 @@ class DumbDisplay {
     /* explicitly make connection -- blocking */
     /* - implicitly called when configure or create a layer */
     void connect();
+    /** note that when reconnect, the connect version will be bumped up */
+    int getConnectVersion();
     /* configure "pin frame" to be x-units by y-units (default 100x100) */
     void configPinFrame(int xUnitCount = 100, int yUnitCount = 100);
     /* configure "auto pinning of layers" with the layer spec provided */
@@ -658,7 +676,6 @@ class DumbDisplay {
     /* create a graphical [LCD] layer */
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
-#ifdef SUPPORT_TUNNEL
     /* create a 'tunnel' to interface with Internet (similar to socket) */
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
@@ -668,9 +685,16 @@ class DumbDisplay {
     JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int bufferSize = 4);
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
-#endif
     /* set DD background color with common "color name" */
     void backgroundColor(const String& color);
+    /* basically, functions the same as recordLayerCommands() */
+    void recordLayerSetupCommands();
+    /* basically, functions the same as playbackLayerCommands() */
+    /* additionally: */
+    /* 1. save and persiste the layer commands */
+    /* 2. enable DumbDisplay reconnect feature -- */ 
+    /*    tells the layer setup commands to use when DumbDisplay reconnects */ 
+    void playbackLayerSetupCommands(const String persist_id);
     /* start recording layer commands (of any layers) */
     /* and sort of freeze the display, until playback */
     void recordLayerCommands();
@@ -713,6 +737,22 @@ class DumbDisplay {
     void initialize(DDInputOutput* pIO);
     bool canLogToSerial();
 };
+
+
+class DDConnectVersionTracker {
+  public:
+    DDConnectVersionTracker() {
+      this->version = 0;
+    }
+    bool checkChanged(DumbDisplay& dumbdisplay) {
+      int oldVersion = this->version;
+      this->version = dumbdisplay.getConnectVersion();
+      return this->version != oldVersion;
+    }
+  private:
+    int version;  
+};
+
 
 // /* log line to serial making sure not affect DD */
 // void DDLogToSerial(const String& logLine);

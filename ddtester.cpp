@@ -301,11 +301,12 @@ LcdDDLayer *pLcdLayer = NULL;
 GraphicalDDLayer *pGraphicalLayer = NULL;
 SevenSegmentRowDDLayer *p7SegmentRowLayer = NULL;
 
-void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
+void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
   //pLayer->writeComment("layer [" + pLayer->getLayerId() + "] FB (" + String(x) + "," + String(y) + ")");
   if (pLayer == pTurtleLayer) {
     pLayer->flash();
   } else if (pLayer == p7SegmentRowLayer) {
+    int x = feedback.x;
     int r = 0;
     int g = 0;
     int b = 0;

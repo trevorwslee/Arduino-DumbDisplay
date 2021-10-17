@@ -11,7 +11,9 @@
 
 
 
-//#define LOG_WIFI_STATUS
+#define DDWIFI_CONNECT_STATED
+
+//#define LOG_DDWIFI_STATUS
 
 
 class DDWiFiServerIO: public DDInputOutput {
@@ -20,8 +22,8 @@ class DDWiFiServerIO: public DDInputOutput {
     /* - ssid: WIFI name (pass to WiFi) */
     /* - passphrase: WIFI password (pass to WiFi) */
     /* - serverPort: server port (pass to WiFiServer) */
-    /* - logToSerial: log to Serial */
-    /* - serialBaud: Serial baud rate  (logToSerial) */
+    /* - logToSerial: log to Serial (default will log toSerial) */
+    /* - serialBaud: Serial baud rate, if logToSerial (default is 115200) */
     DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT,
                    bool logToSerial = true, unsigned long serialBaud = DD_SERIAL_BAUD):
                    DDInputOutput(serialBaud, false, false),
@@ -46,8 +48,17 @@ class DDWiFiServerIO: public DDInputOutput {
     void preConnect() {
       if (logToSerial)
         Serial.begin(serialBaud);
+#ifdef DDWIFI_CONNECT_STATED    
+      WiFi.begin(ssid, password);
+      connectionState = ' ';
+      stateMillis = 0;
+      while (connectionState != 'C') {
+        checkConnection();
+        delay(200);
+      }
+#else
       while (true) {
-        bool connected = _connectToClient();
+        bool connected = _connectToClient(true);
         if (connected)
           break;
         else {
@@ -57,23 +68,36 @@ class DDWiFiServerIO: public DDInputOutput {
         }  
       }
       if (logToSerial) Serial.println("client conntected");
+#endif      
     }
     void flush() {
       client.flush();
     }
     void validConnection() {
-      uint8_t status = WiFi.status();
-#ifdef LOG_WIFI_STATUS
+#ifdef LOG_DDWIFI_STATUS
       if (logToSerial) {
-        Serial.print(status);
-        Serial.println(" ... ");
+        Serial.println(" ... validate ...");
       }
 #endif      
+#ifdef DDWIFI_CONNECT_STATED  
+      checkConnection();
+#else  
+      uint8_t status = WiFi.status();
       if (status != WL_CONNECTED) {
         if (logToSerial) Serial.println("lost WiFi ... try bind WiFi again ...");
+        client.stop();
         WiFi.disconnect();
-        _connectToClient();
+        if (_connectToClient(true)) {
+          if (logToSerial) Serial.println("re-acquired WiFi and connection");
+        }
+      } else if (!client.connected()) {
+        client.stop();
+        if (logToSerial) Serial.println("lost connection ... try bind connect again ...");
+          if (_connectToClient(false)) {
+            if (logToSerial) Serial.println("reconnected");
+          }
       }
+#endif
     }
   private:
     bool _connectToNetwork() {
@@ -89,7 +113,7 @@ class DDWiFiServerIO: public DDInputOutput {
           if (logToSerial) {
             Serial.print("binding WIFI ");
             Serial.print(ssid);
-#ifdef LOG_WIFI_STATUS
+#ifdef LOG_DDWIFI_STATUS
             Serial.print(" ... ");
             Serial.print(status);
 #endif
@@ -104,10 +128,12 @@ class DDWiFiServerIO: public DDInputOutput {
       }
       return true;
     }
-    bool _connectToClient() {
-      if (!_connectToNetwork())
-        return false;
-      server.begin();
+    bool _connectToClient(bool initConnect) {
+      if (initConnect) {
+        if (!_connectToNetwork())
+          return false;
+        server.begin();
+      }
       long last = millis();
       while (true) {
         client = server.available();
@@ -121,17 +147,17 @@ class DDWiFiServerIO: public DDInputOutput {
             IPAddress localIP = WiFi.localIP();
             uint32_t localIPValue = localIP;
             if (logToSerial) {
-#ifdef LOG_WIFI_STATUS
+#ifdef LOG_DDWIFI_STATUS
               Serial.print("via WIFI ... ");
               Serial.print(WiFi.status());
               Serial.print(" ... ");
 #endif
               Serial.print("listening on ");
-#ifdef LOG_WIFI_STATUS
-              Serial.print("(");
-              Serial.print(localIPValue);
-              Serial.print(") ");
-#endif
+// #ifdef LOG_DDWIFI_STATUS
+//               Serial.print("(");
+//               Serial.print(localIPValue);
+//               Serial.print(") ");
+// #endif
               Serial.print(localIP);
               Serial.print(":");
               Serial.print(port);
@@ -145,14 +171,97 @@ class DDWiFiServerIO: public DDInputOutput {
       }
       return true;
     }
+#ifdef DDWIFI_CONNECT_STATED    
+    void checkConnection() {
+      uint8_t status = WiFi.status();
+      if (connectionState == 'C') {
+        if (status != WL_CONNECTED) {
+          if (logToSerial) Serial.println("lost WiFi ... try bind WiFi again ...");
+          client.stop();
+          WiFi.disconnect();
+          connectionState = ' ';
+          stateMillis = 0;
+        } else if (!client.connected()) {
+          client.stop();
+          if (logToSerial) Serial.println("lost connection ... try bind connect again ...");
+          connectionState = 'W';
+          stateMillis = 0;
+        } else {
+          return;
+        }
+      }
+      if (connectionState == ' ') {
+        uint8_t status = WiFi.status();
+        if (status == WL_CONNECTED) {
+          if (logToSerial) {
+            Serial.print("binded WIFI ");
+            Serial.println(ssid);
+          }
+          server.begin();
+          connectionState = 'W';
+          stateMillis = 0;
+        } else {
+          long diff = millis() - stateMillis;
+          if (diff > 1000) {
+            if (logToSerial) {
+              Serial.print("binding WIFI ");
+              Serial.print(ssid);
+#ifdef LOG_DDWIFI_STATUS
+              Serial.print(" ... ");
+              Serial.print(status);
+#endif
+              Serial.println(" ...");
+            }
+            stateMillis = millis();
+          }
+        }
+      } else {
+        if (status != WL_CONNECTED) {
+          connectionState = ' ';
+          stateMillis = 0;
+        } else {
+          long diff = millis() - stateMillis;
+          if (diff >= 1000) {
+            IPAddress localIP = WiFi.localIP();
+            uint32_t localIPValue = localIP;
+            if (logToSerial) {
+#ifdef LOG_DDWIFI_STATUS
+              Serial.print("via WIFI ... ");
+              Serial.print(WiFi.status());
+              Serial.print(" ... ");
+#endif
+              Serial.print("listening on ");
+              Serial.print(localIP);
+              Serial.print(":");
+              Serial.print(port);
+              Serial.println(" ...");
+            }
+            stateMillis = millis();
+          }
+          WiFiClient cli = server.available();
+          if (cli) {
+            client = cli;
+            connectionState = 'C';
+            stateMillis = 0;
+            if (logToSerial) Serial.println("client conntected");
+          }
+        }  
+      }
+    }
+#endif    
   private:
     const char* ssid;
     const char *password;
     int port;
     bool logToSerial;
+#ifdef DDWIFI_CONNECT_STATED
+   char connectionState;
+   long stateMillis;
+#endif    
     WiFiServer server;
     WiFiClient client;
 };
+
 
 
 

@@ -62,9 +62,13 @@ void setup() {
   dumbdisplay.debugSetup(13);  // setup to use pin 13
   dumbdisplay.writeComment("Good Day!");
 
+  dumbdisplay.recordLayerSetupCommands();
+
   pLayer = dumbdisplay.createGraphicalLayer(width, height);
   pLayer->border(2, "navy", "round");
   pLayer->backgroundColor("navy");
+
+  dumbdisplay.playbackLayerSetupCommands("rc-joystick-plus");
 
 }
 

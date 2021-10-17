@@ -1,11 +1,11 @@
-# DumbDisplay Arduino Library (v0.6.3)
+# DumbDisplay Arduino Library (v0.7.0)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP8266 / ESP32 / Respberry Pi Pico experiments.
 
 
 # Description
 
-Instead of connecting real gadgets to your Arduino for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purpose -- to realize virtual IO gadagets on your Android phone.
+Instead of connecting real gadgets to your Arduino for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets on your Android phone.
 
 By doing so you can defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
 
@@ -21,20 +21,22 @@ Notice that with the "layer feedback" mechanism, user interaction (clicking of l
 
 You can install the DumbDisplay Arduino Library by downloading the ZIP file, as demonstrated  by the YouTube video -- https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
 
-(To upgrade DumbDisplay Arduino Library, please refer to Youtube video -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
+(To upgrade DumbDisplay Arduino Library, you may refer to the Youtube video -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
 
 You will also need to install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
-* SoftwareSerial (e.g. Bluetooth via HC-06)
+* SoftwareSerial (e.g. Bluetooth via HC-06; even HC-08)
 * BluetoothSerial (for ESP32)
+* Bluetooth LE (for ESP32)
 * Serial (USB connected via OTG adapter)
 * WIFI (e.g. ESP01, ESP8266 and ESP32)
 * Serial <-> WIFI via the simple included tool -- DumbDisplay WIFI Bridge
 
 Notes:
 * I have only tested DumbDisplay with the micro controller boards that I have -- namely, Arduino Uno, ESP01, ESP8266, ESP32 and Raspberry Pi Pico.
-* In case DumbDisplay does not "handshake" with your Arduino correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion
+* In case DumbDisplay does not "handshake" with your Arduino board correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion.
+* In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to later section of the README.
 
 
 # Installing DumbDisplay Arduino Library
@@ -62,8 +64,9 @@ You have several options for connecting to DumbDisplay Android app.
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200))`  
     - 2 and 3 are the pins used by SoftwareSerial
-    - **the default baud rate is 115200**, which seems to work better from my own testing with HC-06; however, when it comes to ESP8266 with HC-06, it appears to work better in baud rate 9600 
-  - **You should not be using that SoftwareSerial for other purposes**
+    - **the default baud rate is 115200**, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially
+    true for HC-08, which connects via BLE. 
+  - **you should not be using that SoftwareSerial for other purposes**
 * Via **ESP32** `BluetoothSerial`
   ```
     #define DD_4_ESP32
@@ -74,7 +77,19 @@ You have several options for connecting to DumbDisplay Android app.
   - include esp32dumbdisplay.h -- `#include <esp32dumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"))`  
     - "ESP32" is name used by `BluetoothSerial`
-  - **You should not be using BluetoothSerial for other purposes**
+  - **you should not be using BluetoothSerial for other purposes**
+* Via **ESP32** `BLE`
+  ```
+    #define DD_4_ESP32
+    #include <esp32bledumbdisplay.h>
+    DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"));
+  ```
+  - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
+  - include esp32bledumbdisplay.h -- `#include <esp32bledumbdisplay.h>`
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"))`  
+    - "ESP32BLE" is name used by `BLE`
+  - **you should not be using ESP32's BLE for other purposes**
+  - **be warned that `DDBLESerialIO` is slow**; if possible choose `DDBluetoothSerialIO` over `DDBLESerialIO` 
 * Via WIFI as a `WiFiServer` -- https://www.arduino.cc/en/Reference/WiFi  
   ```
     #include "wifidumbdisplay.h"
@@ -91,7 +106,7 @@ You have several options for connecting to DumbDisplay Android app.
     listening on 192.168.1.134:10201 ...
   ```  
     where 192.168.1.134 is the "host" and 10201 is the "port"
-  - It is only tested with ESP8266 and ESP32 (which support WIFI without add-on) and it appears to be working fine when WIFI connection is stable (especially good for ESP8266).
+  - It is only tested with ESP01, ESP8266 and ESP32 (which support WIFI without add-on) and it appears to be working fine when WIFI connection is stable (especially good for ESP8266).
   - With DumbDisply WIFI Bridge, you can simply code to use Arduino's Serial port to "connect" to DumbDisplay Android app, with DumbDisply WIFI Bridge running in the middle. Please refer to the section below that mention about DumbDisply WIFI Bridge.
 
 
@@ -167,9 +182,9 @@ DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200,
 
 MbDDLayer* pMbLayer = NULL;
 
-void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
+void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
     // got a click on (x, y) ... toogle it
-    pMbLayer->toggle(x, y);
+    pMbLayer->toggle(feedback.x, feedback.y);
 }
 
 void setup() {
@@ -193,7 +208,7 @@ Please note that Arduino will check for "feedback" in several occasions:
 * calling "tunnel" to check for EOF
 
 With the help of DumbDisplay WIFI Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
-(In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears to me that Android does not allow all connections, likely due to the port used.)
+(In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears that Android does not allow all connections, possibly due to the port restriction.)
 
 ```
 DumbDisplay dumbdisplay(new DDInputOutput(9600));
@@ -240,8 +255,8 @@ In a more complicated case, you may want to get data from Internet open REST api
       "first": "Bruce",
       "last": "Lee"
     },
-    "gender":"Male",
-    "age":32
+    "gender": "Male",
+    "age": 32
   }
   ```  
  
@@ -255,7 +270,7 @@ In a more complicated case, you may want to get data from Internet open REST api
   notes:
   * all returned values will be text
   * control characters like `\r` not supported
-  * HTTPS not supported
+  * HTTPS not yet supported
 
 * use `count()` to check the "tunnel" has anything to read, and use `read()` to read what got like:
   ```
@@ -268,7 +283,7 @@ In a more complicated case, you may want to get data from Internet open REST api
     }
   }  
   ```
-  note that `eof()` will check whether everything has returned and read
+  note that `eof()` will check whether everything has returned and read before signaling EOF.
 
 
 
@@ -794,9 +809,9 @@ void loop() {
 ```
 
 
-## More
+## Record and Playback Commands
 
-It is apparent that turning on a LED by sending text-based command is not particularly efficient. Indeed, screen flickering is a commonplace, especial when there are lots of activities.
+It is apparent that turning on LEDs, drawing on graphical LCDs, etc, by sending text-based command is not particularly efficient. Indeed, screen flickering is a commonplace, especial when there are lots of activities.
 
 In order to relieve this flickering situation a bit, it is possilbe to freeze DumbDisplay's screen during sending bulk of commands:
 * `dumbdisplay.recordLayerCommands()` -- start recording commands (freeze DumbDisplay screen)
@@ -810,6 +825,38 @@ Instead of posting the sample sketch here, please find it with the link: https:/
 | Arduino UNO with Joystick shield| DumbDisplay |
 |--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick-arduino.jpg)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick-dd.png)|
+
+
+## Survive DumbDisplay App Reconnection
+
+In certain "stateless" cases, like DumbDisplay is simply used as means to show values, it is possible for DumbDisplay to be able to meaningfully reconnect after DumbDisplay app disconnect / restart, since DumbDisplay app does not persist "state" information.
+
+The only missing piece is the layout of the different layers. And this missing piece can be "regained" by recording the layout commands, and automatically playback when DumbDisplay app reconnects.
+
+To do this, you simply need to enclose the "setup" code with the record/playback mechanism mentioned previously. 
+
+More precisely, you will need to use the DumbDisplay object methods:
+* `dumbdisplay.recordLayerSetupCommands()` -- start recording "setup" commands (freeze DumbDisplay screen)
+* `dumbdisplay.playbackLayerSetupCommands("<setup-id>")` -- end recording "setup" commands and playback the recorded "setup" commands. **The argument `"<setup-id>"`, is the name for DumbDisplay app to persist the "setup" commands. When reconnect, those "setup" commands will be played back automatically.**
+
+E.g.
+```
+  // start recording the commands to setup DD (app side)
+  dumbdisplay.recordLayerSetupCommands();
+
+  // create a 7-seg layer for 4 digits
+  sevenSeg = dumbdisplay.create7SegmentRowLayer(4);
+  sevenSeg->border(15, "darkblue", "round");
+  sevenSeg->padding(10);
+  sevenSeg->resetSegmentOffColor(DD_HEX_COLOR(0xeeddcc));
+
+  // stop recording and play back the recorded commands
+  // more importantly, a "id" is given so that
+  // the records commands can be reused during restart of DD app 
+  dumbdisplay.playbackLayerSetupCommands("up4howlong");
+```
+
+For the complete sketch of the above example, please refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/ddup4howlong/ddup4howlong.ino
 
 
 
@@ -864,6 +911,10 @@ MIT
 
 
 # Change History
+
+v0.7.0
+  - added ability to reconnect after disconnect
+  - added ESP32 BLE connection support
 
 v0.6.3
   - added simple JSON "tunnel" for calling simple Internet REST api
