@@ -835,7 +835,7 @@ The only missing piece is the layout of the different layers. And this missing p
 
 To do this, you simply need to enclose the "setup" code with the record/playback mechanism mentioned previously. 
 
-More precisely, you will need to use the DumbDisplay object methods:
+More precisely, you will need to use the following methods of DumbDisplay object:
 * `dumbdisplay.recordLayerSetupCommands()` -- start recording "setup" commands (freeze DumbDisplay screen)
 * `dumbdisplay.playbackLayerSetupCommands("<setup-id>")` -- end recording "setup" commands and playback the recorded "setup" commands. **The argument `"<setup-id>"`, is the name for DumbDisplay app to persist the "setup" commands. When reconnect, those "setup" commands will be played back automatically.**
 
@@ -856,7 +856,7 @@ E.g.
   dumbdisplay.playbackLayerSetupCommands("up4howlong");
 ```
 
-For the complete sketch of the above example, please refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/ddup4howlong/ddup4howlong.ino
+For the complete sketch of the above example, please refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddup4howlong/ddup4howlong.ino
 
 
 
