@@ -175,7 +175,8 @@ class DDLayer: public DDObject {
     /* - 7SegmentRowLayer; each 7-segment is composed of fixed 220 x 320 pixels */
     /* - LedGridLayer; a LED is considered as a pixel */  
     /* shape -- can be "flat", "round", "raised" or "sunken" */  
-    void border(float size, const String& color, const String& shape = "flat");
+    /* extraSize just added to size; however if shape is "round", it affect the "roundness" */
+    void border(float size, const String& color, const String& shape = "flat", float extraSize = 0);
     void noBorder();
     /* size unit ... see border() */
     void padding(float size);

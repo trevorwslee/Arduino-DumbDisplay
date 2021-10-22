@@ -17,6 +17,11 @@
 
 #define TO_BOOL(val) (val ? "1" : "0")
 
+#define IS_FLOAT_ZERO(f) (((f) - 0.0) < 0.01)
+#define IS_FLOAT_WHOLE(f) IS_FLOAT_ZERO((f) - (int) (f))
+#define TO_NUM_STRING(num) IS_FLOAT_WHOLE(num) ? String((int) num) : String(num) 
+
+
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
@@ -986,17 +991,21 @@ void DDLayer::visibility(bool visible) {
 void DDLayer::opacity(int opacity) {
   _sendCommand1(layerId, "opacity", String(opacity));
 }
-void DDLayer::border(float size, const String& color, const String& shape) {
-  _sendCommand3(layerId, "border", String(size), color, shape);
+void DDLayer::border(float size, const String& color, const String& shape, float extraSize) {
+  if (IS_FLOAT_ZERO(extraSize)) {
+    _sendCommand3(layerId, "border", TO_NUM_STRING(size), color, shape);
+  } else {
+    _sendCommand4(layerId, "border", TO_NUM_STRING(size), color, shape, TO_NUM_STRING(extraSize));
+  }
 }
 void DDLayer::noBorder() {
   _sendCommand0(layerId, "border");
 }
 void DDLayer::padding(float size) {
-  _sendCommand1(layerId, "padding", String(size));
+  _sendCommand1(layerId, "padding", TO_NUM_STRING(size));
 }
 void DDLayer::padding(float left, float top, float right, float bottom) {
-  _sendCommand4(layerId, "padding", String(left), String(top), String(right), String(bottom));
+  _sendCommand4(layerId, "padding", TO_NUM_STRING(left), TO_NUM_STRING(top), TO_NUM_STRING(right), TO_NUM_STRING(bottom));
 }
 void DDLayer::noPadding() {
   _sendCommand0(layerId, "padding");
@@ -1405,7 +1414,11 @@ void SevenSegmentRowDDLayer::setOn(const String& segments, int digitIdx) {
   _sendCommand2(layerId, "setsegon", segments, String(digitIdx));
 }
 void SevenSegmentRowDDLayer::showNumber(float number, const String& padding) {
-  _sendCommand2(layerId, "shownumber", String(number, 5), padding);
+  if (IS_FLOAT_WHOLE(number)) {
+    _sendCommand2(layerId, "shownumber", String((int) number), padding);
+  } else {
+    _sendCommand2(layerId, "shownumber", String(number, 5), padding);
+  }
 }
 void SevenSegmentRowDDLayer::showHexNumber(int number) {
   _sendCommand1(layerId, "showhex", String(number));
