@@ -30,6 +30,8 @@
 //#define DEBUG_VALIDATE_CONNECTION
 
 
+#define SUPPORT_LONG_PRESS_FEEDBACK
+
 #define SUPPORT_TUNNEL
 #define TUNNEL_TIMEOUT_MILLIS 30000
 
@@ -716,6 +718,7 @@ void _HandleFeedback() {
       pFeedback->toCharArray(buf, bufLen);
       bool ok = false;
       int lid = -1;
+      DDFeedbackType type = CLICK;
       int x = -1;
       int y = -1;
       char* pText = NULL;      
@@ -725,6 +728,13 @@ void _HandleFeedback() {
         token = strtok(NULL, ":");
       }
       if (token != NULL) {
+#ifdef SUPPORT_LONG_PRESS_FEEDBACK        
+        if (strcmp(token, "longpress") == 0) {
+          type = LONGPRESS;
+        } else if (strcmp(token, "doubleclick") == 0) {
+          type = DOUBLECLICK;
+        }
+#endif       
         token = strtok(NULL, ",");
       }
       if (token != NULL) {
@@ -764,9 +774,9 @@ void _HandleFeedback() {
             if (pText != NULL) {
               feedback.text = String(pText);
             }
-            handler(pLayer, CLICK, feedback);
+            handler(pLayer, type/*CLICK*/, feedback);
 #else
-            handler(pLayer, CLICK, x, y);
+            handler(pLayer, type/*CLICK*/, x, y);
 #endif
             //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
           } else {

@@ -149,7 +149,7 @@ class DDFeedbackManager {
 class DDLayer;
 
 
-enum DDFeedbackType { CLICK, KEYS_IN };
+enum DDFeedbackType { CLICK, DOUBLECLICK, LONGPRESS };
 
 /* pLayer -- pointer to the DDLayer of which "feedback" received */
 /* type -- currently, only possible value if CLICK */
