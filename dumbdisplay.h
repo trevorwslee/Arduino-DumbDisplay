@@ -517,6 +517,16 @@ class SevenSegmentRowDDLayer: public DDLayer {
     void showFormatted(const String& formatted);
 };
 
+class PlotterDDLayer: public DDLayer {
+  public:
+    PlotterDDLayer(int layerId): DDLayer(layerId) {
+    }
+    void set(const String& key, float value);  
+    void set2(const String& key1, float value1, const String& key2, float value2);  
+    void set3(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3);  
+};
+
+
 
 class DDTunnel: public DDObject {
   public:
@@ -677,6 +687,7 @@ class DumbDisplay {
     /* create a graphical [LCD] layer */
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
+    PlotterDDLayer* createPlotterLayer(int width, int height);
     /* create a 'tunnel' to interface with Internet (similar to socket) */
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */

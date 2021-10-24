@@ -1437,6 +1437,16 @@ void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
   _sendCommand1(layerId, "showformatted", formatted);
 }
 
+void PlotterDDLayer::set(const String& key, float value) {
+  _sendCommand2(layerId, "set", key, TO_NUM_STRING(value));
+}  
+void PlotterDDLayer::set2(const String& key1, float value1, const String& key2, float value2) {
+  _sendCommand4(layerId, "set", key1, TO_NUM_STRING(value1), key2, TO_NUM_STRING(value2));
+}  
+void PlotterDDLayer::set3(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3) {
+  _sendCommand6(layerId, "set", key1, TO_NUM_STRING(value1), key2, TO_NUM_STRING(value2), key3, TO_NUM_STRING(value3));
+}  
+
 
 
 // bool DDInputOutput::available() {
@@ -1756,6 +1766,14 @@ SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   String layerId = String(lid);
   _sendCommand2(layerId, "SU", String("7segrow"), String(digitCount));
   SevenSegmentRowDDLayer* pLayer = new SevenSegmentRowDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
+}
+PlotterDDLayer* DumbDisplay::createPlotterLayer(int width, int height) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("plotterview"), String(width), String(height));
+  PlotterDDLayer* pLayer = new PlotterDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
 }
