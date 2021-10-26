@@ -16,6 +16,7 @@ A few types of layers can be created:
 * Turtle-like canvas
 * Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
+* Plotter, which works similar to the plotter of DumbDisplay, but chart data provided by sending commands
 
 Notice that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
@@ -913,6 +914,7 @@ MIT
 # Change History
 
 v0.7.1
+  - added plotter layer `PlotterDDLayer`
   - added double-click / long-press "feedback"
   - bug fixes
 

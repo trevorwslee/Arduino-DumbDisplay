@@ -13,8 +13,14 @@
 #define DD_WIFI_PORT 10201
 
 
-//#define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
+#define DD_CONDENSE_COMMAND
+
+#ifdef DD_CONDENSE_COMMAND
+#define DD_RGB_COLOR(r, g, b) ("#" + String(((((r) << 8) + (g)) << 8) + (b), 16))
+#else
 #define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
+#endif
+
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
 
 #define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
@@ -687,7 +693,7 @@ class DumbDisplay {
     /* create a graphical [LCD] layer */
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
-    PlotterDDLayer* createPlotterLayer(int width, int height);
+    PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     /* create a 'tunnel' to interface with Internet (similar to socket) */
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
