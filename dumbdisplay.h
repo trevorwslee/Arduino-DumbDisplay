@@ -16,7 +16,7 @@
 #define DD_CONDENSE_COMMAND
 
 #ifdef DD_CONDENSE_COMMAND
-#define DD_RGB_COLOR(r, g, b) ("#" + String(((((r) << 8) + (g)) << 8) + (b), 16))
+#define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & (((((r) << 8) + (g)) << 8) + (b)), 16))
 #else
 #define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
 #endif
@@ -217,6 +217,7 @@ class DDLayer: public DDObject {
     /* set explicit (and more responsive) "feedback" handler (and enable feedback) */
     /* autoFeedbackMethod ... see enableFeedback() */
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
+    void debugOnly(int i);
   public:
     DDFeedbackManager* getFeedbackManager() { return pFeedbackManager; }
     DDFeedbackHandler getFeedbackHandler() { return feedbackHandler; }
@@ -527,9 +528,14 @@ class PlotterDDLayer: public DDLayer {
   public:
     PlotterDDLayer(int layerId): DDLayer(layerId) {
     }
-    void set(const String& key, float value);  
-    void set2(const String& key1, float value1, const String& key2, float value2);  
-    void set3(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3);  
+    /* set label of value with certain key */
+    /* if key has no label, the key will be the label */
+    void label(const String& key, const String& label);
+    /* note that key can be empty */
+    void plot(const String& key, float value);  
+    void plot(const String& key1, float value1, const String& key2, float value2);  
+    void plot(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3);  
+    void plot(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3, const String& key4, float value4);  
 };
 
 
@@ -778,6 +784,8 @@ class DDConnectVersionTracker {
 void DDDelay(unsigned long ms);
 /* give DD a chance to handle feedback */
 void DDYield();
+
+void DDDebugOnly(int i);
 
 
 #endif
