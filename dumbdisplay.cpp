@@ -1539,20 +1539,20 @@ void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
   _sendCommand1(layerId, C_showformatted, formatted);
 }
 
-void PlotterDDLayer::label(const String& key, const String& label) {
-  _sendCommand2(layerId, "label", key, label);
+void PlotterDDLayer::label(const String& key, const String& lab) {
+  _sendCommand2(layerId, "label", key, lab);
 }
-void PlotterDDLayer::plot(const String& key, float value) {
+void PlotterDDLayer::set(const String& key, float value) {
   _sendCommand2(layerId, "", key, TO_C_NUM(value));
 }  
-void PlotterDDLayer::plot(const String& key1, float value1, const String& key2, float value2) {
+void PlotterDDLayer::set(const String& key1, float value1, const String& key2, float value2) {
   _sendCommand4(layerId, "", key1, TO_C_NUM(value1), key2, TO_C_NUM(value2));
 }  
-void PlotterDDLayer::plot(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3) {
+void PlotterDDLayer::set(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3) {
   _sendCommand6(layerId, "", key1, TO_C_NUM(value1), key2, TO_C_NUM(value2), key3, TO_C_NUM(value3));
   //_sendCommand6(layerId, "", key1, String(value1), key2, String(value2), key3, String(value3));
 }  
-void PlotterDDLayer::plot(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3, const String& key4, float value4) {
+void PlotterDDLayer::set(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3, const String& key4, float value4) {
   _sendCommand8(layerId, "", key1, TO_C_NUM(value1), key2, TO_C_NUM(value2), key3, TO_C_NUM(value3), key4, TO_C_NUM(value4));
 }  
 

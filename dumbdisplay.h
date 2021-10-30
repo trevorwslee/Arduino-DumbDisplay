@@ -530,12 +530,16 @@ class PlotterDDLayer: public DDLayer {
     }
     /* set label of value with certain key */
     /* if key has no label, the key will be the label */
-    void label(const String& key, const String& label);
+    void label(const String& key, const String& lab);
+    inline void label(const String& lab) { label("", lab); }
+    /* set value of certain key */
     /* note that key can be empty */
-    void plot(const String& key, float value);  
-    void plot(const String& key1, float value1, const String& key2, float value2);  
-    void plot(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3);  
-    void plot(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3, const String& key4, float value4);  
+    void set(const String& key, float value);  
+    /* set value with empty key */
+    inline void set(float value) { set("", value); }  
+    void set(const String& key1, float value1, const String& key2, float value2);  
+    void set(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3);  
+    void set(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3, const String& key4, float value4);  
 };
 
 

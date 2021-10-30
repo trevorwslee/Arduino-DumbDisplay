@@ -236,6 +236,13 @@ class DDWiFiServerIO: public DDInputOutput {
               Serial.print(port);
               Serial.println(" ...");
             }
+            // if (true) {
+            //   // testing for ESP
+            //   Serial.println("*** sleep ...");
+            //   esp_sleep_enable_timer_wakeup(10 * 1000);  // 10ms
+            //   esp_light_sleep_start();
+            //   Serial.println("*** ... up");
+            // }
             stateMillis = millis();
           }
           WiFiClient cli = server.available();
