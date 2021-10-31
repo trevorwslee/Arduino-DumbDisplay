@@ -101,7 +101,10 @@ void loop() {
 
 
 #define DD_4_ESP8266
+
+
 #include "wifidumbdisplay.h"
+
 const char* ssid = "<wifi-router-ssid>";
 const char* password = "<password>";
 DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
