@@ -8,7 +8,7 @@
 #define LED_PIN 16
 
 // if want to try out ESP8266 DumbDisplay support, uncomment the following line 
-#define ESP8266_DD_SUPPORT
+//#define ESP8266_DD_SUPPORT
 
 
 // create the servo object, from <Servo.h>
@@ -50,7 +50,6 @@ void setup() {
 int toAngle = 0;
 int autoInc = 1;
 
-int lastAngle = -1;
 long lastButtonMillis = 0;
 
 void loop() {
@@ -234,6 +233,8 @@ void DrawServoPointer(int servoAngle, bool turnOn) {
   pGraphical->fillCircle(tx, ty, DotRadius - 1, turnOn ? OnColor : BgColor);
 }
 
+
+int lastAngle = -1;
 
 
 // will be called i
