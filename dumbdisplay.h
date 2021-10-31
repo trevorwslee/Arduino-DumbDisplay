@@ -13,15 +13,21 @@
 #define DD_WIFI_PORT 10201
 
 
+#include "_dd_util.h"
+
+
 #define DD_CONDENSE_COMMAND
 
 #ifdef DD_CONDENSE_COMMAND
 #define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & (((((r) << 8) + (g)) << 8) + (b)), 16))
+#define DD_INT_COLOR(color) ("+" + DDIntEncoder(color).encoded())
 #else
 #define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
+#define DD_INT_COLOR(color) ("+" + String(color))
 #endif
 
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
+
 
 #define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
 #define DD_AP_HORI "H(*)"
@@ -41,121 +47,124 @@
 #define DD_SUPPORT_FEEDBACK_TEXT
 
 
-class DDSerial {
-  public:
-    virtual void begin(unsigned long serialBaud) {
-      Serial.begin(serialBaud);
-    }
-    virtual bool available() {
-      return Serial.available();
-    }
-    virtual char read() {
-      return Serial.read();
-    }
-    virtual void print(const String &s) {
-      Serial.print(s);
-    }
-    virtual void print(const char *p) {
-      Serial.print(p);
-    }
-    virtual void flush() {
-      Serial.flush();
-    }
-};
+#include "_dd_serial.h"
+// class DDSerial {
+//   public:
+//     virtual void begin(unsigned long serialBaud) {
+//       Serial.begin(serialBaud);
+//     }
+//     virtual bool available() {
+//       return Serial.available();
+//     }
+//     virtual char read() {
+//       return Serial.read();
+//     }
+//     virtual void print(const String &s) {
+//       Serial.print(s);
+//     }
+//     virtual void print(const char *p) {
+//       Serial.print(p);
+//     }
+//     virtual void flush() {
+//       Serial.flush();
+//     }
+// };
 
-extern DDSerial* _The_DD_Serial;
-
-
-class DDInputOutput {
-  public:
-    DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
-    }
-    DDInputOutput* newForSerialConnection() {
-      return new DDInputOutput(serialBaud, false, true);
-    }
-    virtual ~DDInputOutput() {
-    }
-    virtual bool available() {
-      //return Serial.available();
-      return _The_DD_Serial != NULL && _The_DD_Serial->available(); 
-    }
-    virtual char read() {
-      //return Serial.read();
-      return _The_DD_Serial != NULL ? _The_DD_Serial->read() : 0;
-    }
-    virtual void print(const String &s) {
-      //Serial.print(s);
-      if (_The_DD_Serial != NULL) _The_DD_Serial->print(s);
-    }
-    virtual void print(const char *p) {
-      //Serial.print(p);
-      if (_The_DD_Serial != NULL) _The_DD_Serial->print(p);
-    }
-    virtual void flush() {
-      //Serial.flush();
-      if (_The_DD_Serial != NULL) _The_DD_Serial->flush();
-    }
-    virtual void keepAlive() {
-    }
-    virtual void validConnection() {
-    }
-    virtual void preConnect() {
-      if (setupForSerial) {
-        if (_The_DD_Serial != NULL) _The_DD_Serial->begin(serialBaud);
-        //Serial.begin(serialBaud);
-      }
-    }
-  public:  
-    bool isSerial() {
-      return !backupBySerial && setupForSerial;
-    }
-    bool isBackupBySerial() {
-      return backupBySerial;
-    }
-  protected:
-    DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
-      this->serialBaud = serialBaud;
-      this->backupBySerial = backupBySerial;
-      this->setupForSerial = setupForSerial;
-    }
-  protected:
-    unsigned long serialBaud;
-    bool backupBySerial;
-    bool setupForSerial;
-};
+//extern DDSerial* _The_DD_Serial;
 
 
-struct DDFeedback {
-  int x;
-  int y;
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
-  String text;
-#endif
-};
+#include "_dd_io.h"
+// class DDInputOutput {
+//   public:
+//     DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
+//     }
+//     DDInputOutput* newForSerialConnection() {
+//       return new DDInputOutput(serialBaud, false, true);
+//     }
+//     virtual ~DDInputOutput() {
+//     }
+//     virtual bool available() {
+//       //return Serial.available();
+//       return _The_DD_Serial != NULL && _The_DD_Serial->available(); 
+//     }
+//     virtual char read() {
+//       //return Serial.read();
+//       return _The_DD_Serial != NULL ? _The_DD_Serial->read() : 0;
+//     }
+//     virtual void print(const String &s) {
+//       //Serial.print(s);
+//       if (_The_DD_Serial != NULL) _The_DD_Serial->print(s);
+//     }
+//     virtual void print(const char *p) {
+//       //Serial.print(p);
+//       if (_The_DD_Serial != NULL) _The_DD_Serial->print(p);
+//     }
+//     virtual void flush() {
+//       //Serial.flush();
+//       if (_The_DD_Serial != NULL) _The_DD_Serial->flush();
+//     }
+//     virtual void keepAlive() {
+//     }
+//     virtual void validConnection() {
+//     }
+//     virtual void preConnect() {
+//       if (setupForSerial) {
+//         if (_The_DD_Serial != NULL) _The_DD_Serial->begin(serialBaud);
+//         //Serial.begin(serialBaud);
+//       }
+//     }
+//   public:  
+//     bool isSerial() {
+//       return !backupBySerial && setupForSerial;
+//     }
+//     bool isBackupBySerial() {
+//       return backupBySerial;
+//     }
+//   protected:
+//     DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
+//       this->serialBaud = serialBaud;
+//       this->backupBySerial = backupBySerial;
+//       this->setupForSerial = setupForSerial;
+//     }
+//   protected:
+//     unsigned long serialBaud;
+//     bool backupBySerial;
+//     bool setupForSerial;
+// };
 
 
-class DDFeedbackManager {
-  public: 
-    DDFeedbackManager(int bufferSize);
-    ~DDFeedbackManager();
-    const DDFeedback* getFeedback();
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
-    void pushFeedback(int x, int y, const String& text);
-#else
-    void pushFeedback(int x, int y);
-#endif
-  private:
-    DDFeedback* feedbackArray;
-    int arraySize;
-    int nextArrayIdx;
-    int validArrayIdx;
-};
+// struct DDFeedback {
+//   int x;
+//   int y;
+// #ifdef DD_SUPPORT_FEEDBACK_TEXT
+//   String text;
+// #endif
+// };
+
+
+#include "_dd_feedback.h"
+// class DDFeedbackManager {
+//   public: 
+//     DDFeedbackManager(int bufferSize);
+//     ~DDFeedbackManager();
+//     const DDFeedback* getFeedback();
+// #ifdef DD_SUPPORT_FEEDBACK_TEXT
+//     void pushFeedback(int x, int y, const String& text);
+// #else
+//     void pushFeedback(int x, int y);
+// #endif
+//   private:
+//     DDFeedback* feedbackArray;
+//     int arraySize;
+//     int nextArrayIdx;
+//     int validArrayIdx;
+// };
 
 
 class DDLayer;
 
 
-enum DDFeedbackType { CLICK, DOUBLECLICK, LONGPRESS };
+//enum DDFeedbackType { CLICK, DOUBLECLICK, LONGPRESS };
 
 /* pLayer -- pointer to the DDLayer of which "feedback" received */
 /* type -- currently, only possible value if CLICK */
@@ -782,18 +791,14 @@ class DDConnectVersionTracker {
 };
 
 
+// // /* log line to serial making sure not affect DD */
+// // void DDLogToSerial(const String& logLine);
+// /* the same usage as standard delay(), but it allows DD chances to handle feedback */
+// void DDDelay(unsigned long ms);
+// /* give DD a chance to handle feedback */
+// void DDYield();
 
-
-#define DD_INT_COLOR(color) ("+" + String(color))
-
-// /* log line to serial making sure not affect DD */
-// void DDLogToSerial(const String& logLine);
-/* the same usage as standard delay(), but it allows DD chances to handle feedback */
-void DDDelay(unsigned long ms);
-/* give DD a chance to handle feedback */
-void DDYield();
-
-void DDDebugOnly(int i);
+// void DDDebugOnly(int i);
 
 
 #endif
