@@ -782,6 +782,10 @@ class DDConnectVersionTracker {
 };
 
 
+
+
+#define DD_INT_COLOR(color) ("+" + String(color))
+
 // /* log line to serial making sure not affect DD */
 // void DDLogToSerial(const String& logLine);
 /* the same usage as standard delay(), but it allows DD chances to handle feedback */
