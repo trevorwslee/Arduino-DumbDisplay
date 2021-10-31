@@ -1,3 +1,7 @@
+#ifndef _dd_feedback_h
+#define _dd_feedback_h
+
+
 struct DDFeedback {
   int x;
   int y;
@@ -5,7 +9,6 @@ struct DDFeedback {
   String text;
 #endif
 };
-
 
 class DDFeedbackManager {
   public: 
@@ -26,3 +29,5 @@ class DDFeedbackManager {
 
 enum DDFeedbackType { CLICK, DOUBLECLICK, LONGPRESS };
 
+
+#endif

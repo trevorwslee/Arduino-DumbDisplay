@@ -1,3 +1,7 @@
+#ifndef _dd_io_h
+#define _dd_io_h
+
+
 class DDInputOutput {
   public:
     DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
@@ -55,3 +59,5 @@ class DDInputOutput {
     bool backupBySerial;
     bool setupForSerial;
 };
+
+#endif

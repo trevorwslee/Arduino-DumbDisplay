@@ -1,3 +1,7 @@
+#ifndef _dd_util_h
+#define _dd_util_h
+
+
 // /* log line to serial making sure not affect DD */
 // void DDLogToSerial(const String& logLine);
 /* the same usage as standard delay(), but it allows DD chances to handle feedback */
@@ -20,3 +24,5 @@ class DDIntEncoder {
     char buffer[20];
     String str;
 };
+
+#endif

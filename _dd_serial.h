@@ -1,3 +1,7 @@
+#ifndef _dd_serial_h
+#define _dd_serial_h
+
+
 class DDSerial {
   public:
     virtual void begin(unsigned long serialBaud) {
@@ -21,3 +25,5 @@ class DDSerial {
 };
 
 extern DDSerial* _The_DD_Serial;
+
+#endif
