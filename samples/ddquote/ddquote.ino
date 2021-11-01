@@ -10,7 +10,7 @@ BasicDDTunnel *pTunnel;
 bool freshStart = true;
 
 void setup() {
-  // setup a "graphial" list 
+  // setup a "graphial" layer 
   pLayer = dumbdisplay.createGraphicalLayer(200, 150);  // size 200x150
   pLayer->border(10, "azure", "round");                 // a round border of size 10  
   pLayer->noBackgroundColor();                          // initial no background color

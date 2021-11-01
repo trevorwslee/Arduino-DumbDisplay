@@ -3,12 +3,17 @@
 
 #define SERVO_PIN 2
 
-// comment out the following lines if button/pin not installed
+// comment out the following lines if button/pin not connected
 #define BUTTON_PIN 0
 #define LED_PIN 16
 
-// if want to try out ESP8266 DumbDisplay support, uncomment the following line 
+// if want to try out ESP8266 DumbDisplay support, uncomment the following lines
+// . that defines ESP8266_DD_SUPPORT
+// . that defines your WIFI_SSID
+// . that defines your WIFI_PASSWORD
 //#define ESP8266_DD_SUPPORT
+//#define WIFI_SSID           "<your-wifi-ssid>"
+//#define WIFI_PASSWORD       "<your-wifi-passwor>"
 
 
 // create the servo object, from <Servo.h>
@@ -100,13 +105,9 @@ void loop() {
 
 
 #define DD_4_ESP8266
-
-
 #include "wifidumbdisplay.h"
 
-const char* ssid = "<wifi-router-ssid>";
-const char* password = "<password>";
-DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
+DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 
 
 PlotterDDLayer* pPlotter;
@@ -117,10 +118,10 @@ const int DotRadius = 4;
 const int GaugeRadius = 128;
 const int LayerWidth = 2 * (GaugeRadius + DotRadius);
 const int LayerHeight = GaugeRadius + 2 * DotRadius;
-const char* OffColor = "lightgray";
-const char* OnColor = "darkgreen";
-const char* BgColor = "azure";
-const String HandColor = DD_INT_COLOR(0xff0000);
+const String OffColor = DD_INT_COLOR(0xD3D3D3);    // lightgray
+const String OnColor = DD_INT_COLOR(0x006400);     // darkgreen
+const String BgColor = DD_INT_COLOR(0xF0FFFF);     // azure
+const String HandColor = DD_INT_COLOR(0xFF0000);   // red
 
 
 

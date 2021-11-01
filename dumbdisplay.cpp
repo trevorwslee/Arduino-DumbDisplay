@@ -843,15 +843,11 @@ void _HandleFeedback() {
       if (token != NULL) {
         y = atoi(token);
         ok = true;
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
         token = strtok(NULL, ",");
-#endif
       }
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
       if (token != NULL) {
         pText = token;
       }
-#endif
       if (ok) {
         if (lid < 0 || lid >= _NextLid) {
           ok = false;
@@ -866,7 +862,6 @@ void _HandleFeedback() {
         if (pLayer != NULL) {
           DDFeedbackHandler handler = pLayer->getFeedbackHandler();
           if (handler != NULL) {
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
             DDFeedback feedback;
             feedback.x = x;
             feedback.y = y;
@@ -874,18 +869,11 @@ void _HandleFeedback() {
               feedback.text = String(pText);
             }
             handler(pLayer, type/*CLICK*/, feedback);
-#else
-            handler(pLayer, type/*CLICK*/, x, y);
-#endif
             //_SendCommand("", ("// feedback (" + String(lid) + ") -- " + *pFeedback).c_str());
           } else {
             DDFeedbackManager *pFeedbackManager = pLayer->getFeedbackManager();
             if (pFeedbackManager != NULL) {
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
-              pFeedbackManager->pushFeedback(x, y, "");
-#else
-              pFeedbackManager->pushFeedback(x, y);
-#endif
+              pFeedbackManager->pushFeedback(type, x, y, pText);
             }
           }
         }
@@ -994,61 +982,6 @@ inline void _sendSpecialCommand(const char* specialType, const String& specialId
 
 
 
-//*************/
-/** EXPORTED **/
-//*************/
-
-
-
-// class FeedbackManager {
-//   public: 
-//     FeedbackManager(int bufferSize = 16) {
-//       this->feedbackValid = false;
-//       this->feedbackArray = new DDFeedback[bufferSize];
-//       // this->xArray = new int[bufferSize];
-//       // this->yArray = new int[bufferSize];
-//       this->arraySize = bufferSize;
-//       this->nextArrayIdx = 0;
-//     }
-//     ~FeedbackManager() {
-//       delete feedbackArray;
-//       // delete this->xArray;
-//       // delete this->yArray;
-//     }
-//     // bool checkFeedback() {
-//     //   bool checkResult = feedbackValid;
-//     //   feedbackValid = false;
-//     //   return checkResult;
-//     // }
-//     const DDFeedback* getFeedback() {
-//       if (!feedbackValid) return NULL;
-//       const DDFeedback* pFeedback = &feedbackArray[nextArrayIdx];
-//       feedbackValid = false;
-//       return pFeedback;
-//       //return feedbackArray[nextArrayIdx];
-//       // DDFeedback feedback;
-//       // feedback.x = xArray[nextArrayIdx];
-//       // feedback.y = yArray[nextArrayIdx];
-//       // feedbackValid = false;
-//       // return feedback;
-//     }
-//     void pushFeedback(int x, int y) {
-//       feedbackArray[nextArrayIdx].x = x;
-//       feedbackArray[nextArrayIdx].y = y;
-//       // xArray[nextArrayIdx] = x;
-//       // yArray[nextArrayIdx] = y;
-//       nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
-//       feedbackValid = true;
-//     }
-//   private:
-//     bool feedbackValid;
-//     DDFeedback* feedbackArray;
-//     // int *xArray;
-//     // int *yArray;
-//     int arraySize;
-//     int nextArrayIdx;
-// };
-
 
 using namespace DDImpl;
 
@@ -1068,16 +1001,11 @@ const DDFeedback* DDFeedbackManager::getFeedback() {
   validArrayIdx = (validArrayIdx + 1) % arraySize;
   return pFeedback;
 }
-void DDFeedbackManager::pushFeedback(int x, int y
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
-, const String& text
-#endif
-) {
+void DDFeedbackManager::pushFeedback(DDFeedbackType type, int x, int y, const char* pText) {
+  feedbackArray[nextArrayIdx].type = type;
   feedbackArray[nextArrayIdx].x = x;
   feedbackArray[nextArrayIdx].y = y;
-#ifdef SUPPORT_FEEDBACK_TEXT
-  feedbackArray[nextArrayIdx].text = text;
-#endif
+  feedbackArray[nextArrayIdx].text = pText != NULL ? pText : "";
   nextArrayIdx = (nextArrayIdx + 1) % arraySize;
   if (nextArrayIdx == validArrayIdx)
     validArrayIdx = (validArrayIdx + 1) % arraySize;
@@ -2005,7 +1933,7 @@ void DDYield() {
   _Yield();
 }
 
-void DDDebugOnly(int i) {
+void DDDebugOnly(int32_t i) {
   Serial.print(i);
   Serial.print(" ==> ");
   Serial.println(TO_C_INT(i));

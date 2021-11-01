@@ -9,7 +9,7 @@ void DDDelay(unsigned long ms);
 /* give DD a chance to handle feedback */
 void DDYield();
 
-void DDDebugOnly(int i);
+void DDDebugOnly(int32_t i);
 
 
 
@@ -17,11 +17,11 @@ char* _DDEncodeInt(int i, char* buffer, int bufferLen);
 
 class DDIntEncoder {
   public:
-    DDIntEncoder(int i): str(_DDEncodeInt(i, buffer, 20)) {
+    DDIntEncoder(int32_t i): str(_DDEncodeInt(i, buffer, 20)) {
     }
     const String& encoded() { return str; }
   private:
-    char buffer[20];
+    char buffer[21];
     String str;
 };
 

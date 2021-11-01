@@ -1,13 +1,14 @@
 #ifndef _dd_feedback_h
 #define _dd_feedback_h
 
+enum DDFeedbackType { CLICK, DOUBLECLICK, LONGPRESS };
+
 
 struct DDFeedback {
+  DDFeedbackType type;
   int x;
   int y;
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
   String text;
-#endif
 };
 
 class DDFeedbackManager {
@@ -15,19 +16,13 @@ class DDFeedbackManager {
     DDFeedbackManager(int bufferSize);
     ~DDFeedbackManager();
     const DDFeedback* getFeedback();
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
-    void pushFeedback(int x, int y, const String& text);
-#else
-    void pushFeedback(int x, int y);
-#endif
+    void pushFeedback(DDFeedbackType type, int x, int y, const char* pText);
   private:
     DDFeedback* feedbackArray;
     int arraySize;
     int nextArrayIdx;
     int validArrayIdx;
 };
-
-enum DDFeedbackType { CLICK, DOUBLECLICK, LONGPRESS };
 
 
 #endif
