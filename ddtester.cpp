@@ -350,8 +350,8 @@ void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
     if (TEST_FEEDABCK) {  
+      pMbLayer->writeComment("enable MB FB");
       pMbLayer->enableFeedback("fs");
-      pMbLayer->writeComment("MB FB enabled");
     }    
     if (Pinned) {
       if (AutoPin) {
@@ -527,8 +527,8 @@ void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pGraphicalLayer = dumbdisplay.createGraphicalLayer(215, 215);
     if (TEST_FEEDABCK) {
+      pGraphicalLayer->writeComment("enable GLCD FB");
       pGraphicalLayer->enableFeedback("f");
-      pGraphicalLayer->writeComment("GLCD FB enabled");
     }
     if (Pinned) {
       if (AutoPin) {

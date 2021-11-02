@@ -8,7 +8,7 @@
 
 
 //DumbDisplay dumbdisplay(new DDInputOutput(57600));
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 57600));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 115200));
 
 void setup() {
   // Serial.begin(57600);
