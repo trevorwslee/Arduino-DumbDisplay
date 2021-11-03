@@ -50,7 +50,6 @@
 #include "_dd_io.h"
 #include "_dd_feedback.h"
 
-
 class DDLayer;
 
 
@@ -642,7 +641,8 @@ class DumbDisplay {
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     void deleteLayer(DDLayer *pLayer);
-    void debugSetup(int debugLedPin, bool enableEchoFeedback = false);
+    void debugSetup(int debugLedPin/*, bool enableEchoFeedback = false*/);
+    void optionNoCompression(bool noCompression);    
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine) {
       if (canLogToSerial()) {

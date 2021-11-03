@@ -3,8 +3,10 @@
 #include "ddtester.h"
 
 
+#define TEST_FEEDABCK 
+
+
 #define ASCII_ONLY false
-#define TEST_FEEDABCK true
 
 namespace DDTesterImpl {
 
@@ -349,10 +351,10 @@ void DDTester_autoPinLayers(DumbDisplay& dumbdisplay) {
 void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
-    if (TEST_FEEDABCK) {  
-      pMbLayer->writeComment("enable MB FB");
-      pMbLayer->enableFeedback("fs");
-    }    
+#ifdef TEST_FEEDABCK    
+    pMbLayer->writeComment("enable MB FB");
+    pMbLayer->enableFeedback("fs");
+#endif    
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -361,12 +363,12 @@ void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
       }
     }
   }
-  if (TEST_FEEDABCK) {
-    const DDFeedback *pFeedback = pMbLayer->getFeedback();
-    if (pFeedback != NULL) {
-      pMbLayer->writeComment("MB @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
-    }
-  }  
+#ifdef TEST_FEEDABCK    
+  const DDFeedback *pFeedback = pMbLayer->getFeedback();
+  if (pFeedback != NULL) {
+    pMbLayer->writeComment("MB @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
+  }
+#endif
   debugMbTestStep(pMbLayer, stepCount);
 }
 
@@ -526,10 +528,10 @@ void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pGraphicalLayer = dumbdisplay.createGraphicalLayer(215, 215);
-    if (TEST_FEEDABCK) {
+#ifdef TEST_FEEDABCK
       pGraphicalLayer->writeComment("enable GLCD FB");
       pGraphicalLayer->enableFeedback("f");
-    }
+#endif    
     if (Pinned) {
       if (AutoPin) {
         DDTester_autoPinLayers(dumbdisplay);
@@ -543,12 +545,12 @@ void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
       pGraphicalLayer->setTextFont("monospace", 14);
     }
   }
-  if (TEST_FEEDABCK) {
-    const DDFeedback *pFeedback = pGraphicalLayer->getFeedback();
-    if (pFeedback != NULL) {
-      pGraphicalLayer->writeComment("GLCD @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
-    }
-  }  
+#ifdef TEST_FEEDABCK
+  const DDFeedback *pFeedback = pGraphicalLayer->getFeedback();
+  if (pFeedback != NULL) {
+    pGraphicalLayer->writeComment("GLCD @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
+  }
+#endif  
   if (stepCount <= 14) {
     standardGraphicalTestStep(pGraphicalLayer, stepCount);
   } else {

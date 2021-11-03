@@ -87,6 +87,10 @@
 
 
 
+
+
+
+
 DDSerial* _The_DD_Serial = NULL;
 
 namespace DDImpl {
@@ -271,6 +275,7 @@ volatile int _DebugLedPin = -1;
 #ifdef DEBUG_ECHO_FEEDBACK 
 volatile bool _DebugEnableEchoFeedback = false;
 #endif
+volatile bool _NoEncodeInt = false;
 
 
 // class IntEncoder {
@@ -992,18 +997,13 @@ using namespace DDImpl;
 
 
 DDFeedbackManager::DDFeedbackManager(int bufferSize) {
-  this->feedbackArray = new DDFeedback[bufferSize];
-  this->arraySize = bufferSize;
   this->nextArrayIdx = 0;
   this->validArrayIdx = 0;
-}
-DDFeedbackManager::~DDFeedbackManager() {
-  delete feedbackArray;
 }
 const DDFeedback* DDFeedbackManager::getFeedback() {
   if (nextArrayIdx == validArrayIdx) return NULL;
   const DDFeedback* pFeedback = &feedbackArray[validArrayIdx];
-  validArrayIdx = (validArrayIdx + 1) % arraySize;
+  validArrayIdx = (validArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
   return pFeedback;
 }
 void DDFeedbackManager::pushFeedback(DDFeedbackType type, int x, int y, const char* pText) {
@@ -1011,9 +1011,9 @@ void DDFeedbackManager::pushFeedback(DDFeedbackType type, int x, int y, const ch
   feedbackArray[nextArrayIdx].x = x;
   feedbackArray[nextArrayIdx].y = y;
   feedbackArray[nextArrayIdx].text = pText != NULL ? pText : "";
-  nextArrayIdx = (nextArrayIdx + 1) % arraySize;
+  nextArrayIdx = (nextArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
   if (nextArrayIdx == validArrayIdx)
-    validArrayIdx = (validArrayIdx + 1) % arraySize;
+    validArrayIdx = (validArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
 }
 
 
@@ -1908,7 +1908,7 @@ bool DumbDisplay::canLogToSerial() {
   return _CanLogToSerial();
 }
 
-void DumbDisplay::debugSetup(int debugLedPin, bool enableEchoFeedback) {
+void DumbDisplay::debugSetup(int debugLedPin/*, bool enableEchoFeedback*/) {
 #ifdef DEBUG_WITH_LED
   if (debugLedPin != -1) {
      pinMode(debugLedPin, OUTPUT);
@@ -1918,6 +1918,10 @@ void DumbDisplay::debugSetup(int debugLedPin, bool enableEchoFeedback) {
 #ifdef DEBUG_ECHO_FEEDBACK
   _DebugEnableEchoFeedback = enableEchoFeedback;
 #endif
+}
+void DumbDisplay::optionNoCompression(bool noCompression) 
+{
+  _NoEncodeInt = noCompression;
 }
 // void DumbDisplay::delay(unsigned long ms) {
 //   _Delay(ms);
