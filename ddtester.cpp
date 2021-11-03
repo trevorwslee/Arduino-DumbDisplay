@@ -3,8 +3,10 @@
 #include "ddtester.h"
 
 
-#define TEST_FEEDABCK 
-
+//#define TEST_GET_FEEDBACK 
+#define MB
+#define TURTLE
+#define GRAPHICAL
 
 #define ASCII_ONLY false
 
@@ -150,6 +152,8 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
   }
 }
 
+#ifdef GRAPHICAL
+
 void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
   int step = stepCount;
   if (step-- == 0) {
@@ -291,23 +295,37 @@ void shapeGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
     pLayer->forward(100);
 }
 
+#endif
 
 bool Pinned = false;
 bool AutoPin = true;
 
 
+#ifdef MB
 MbDDLayer *pMbLayer = NULL;
+#endif
+
+#ifdef TURTLE
 TurtleDDLayer *pTurtleLayer = NULL;
+#endif
+
 LedGridDDLayer *pLedGridLayer = NULL;
 LcdDDLayer *pLcdLayer = NULL;
+
+#ifdef GRAPHICAL
 GraphicalDDLayer *pGraphicalLayer = NULL;
+#endif
+
 SevenSegmentRowDDLayer *p7SegmentRowLayer = NULL;
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
   //pLayer->writeComment("layer [" + pLayer->getLayerId() + "] FB (" + String(x) + "," + String(y) + ")");
+#ifdef TURTLE
   if (pLayer == pTurtleLayer) {
     pLayer->flash();
-  } else if (pLayer == p7SegmentRowLayer) {
+  } else 
+#endif
+  if (pLayer == p7SegmentRowLayer) {
     int x = feedback.x;
     int r = 0;
     int g = 0;
@@ -328,7 +346,8 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
 }
 
 void DDTester_autoPinLayers(DumbDisplay& dumbdisplay) {
-  if (pMbLayer == NULL ||
+#if defined(GRAPHICAL) && defined (MB) && defined(TURTLE)
+   if (pMbLayer == NULL ||
       pTurtleLayer == NULL ||
       pLedGridLayer == NULL ||
       pLcdLayer == NULL ||
@@ -343,15 +362,19 @@ void DDTester_autoPinLayers(DumbDisplay& dumbdisplay) {
                                 DD_AP_HORI_2(pLedGridLayer->getLayerId(), pGraphicalLayer->getLayerId())
                               ));
   }
+#else
+  dumbdisplay.configAutoPin(DD_AP_HORI);
+#endif  
 }
 
 
 
+#ifdef MB
 
 void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
-#ifdef TEST_FEEDABCK    
+#ifdef TEST_GET_FEEDBACK    
     pMbLayer->writeComment("enable MB FB");
     pMbLayer->enableFeedback("fs");
 #endif    
@@ -363,7 +386,7 @@ void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
       }
     }
   }
-#ifdef TEST_FEEDABCK    
+#ifdef TEST_GET_FEEDBACK    
   const DDFeedback *pFeedback = pMbLayer->getFeedback();
   if (pFeedback != NULL) {
     pMbLayer->writeComment("MB @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
@@ -372,6 +395,9 @@ void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   debugMbTestStep(pMbLayer, stepCount);
 }
 
+#endif
+
+#ifdef TURTLE
 
 void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
@@ -397,6 +423,7 @@ void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   }
 }
 
+#endif
 
 bool hori = false;
 void LedGridDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
@@ -525,10 +552,12 @@ void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   }
 }
 
+#ifdef GRAPHICAL
+
 void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pGraphicalLayer = dumbdisplay.createGraphicalLayer(215, 215);
-#ifdef TEST_FEEDABCK
+#ifdef TEST_GET_FEEDBACK
       pGraphicalLayer->writeComment("enable GLCD FB");
       pGraphicalLayer->enableFeedback("f");
 #endif    
@@ -545,7 +574,7 @@ void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
       pGraphicalLayer->setTextFont("monospace", 14);
     }
   }
-#ifdef TEST_FEEDABCK
+#ifdef TEST_GET_FEEDBACK
   const DDFeedback *pFeedback = pGraphicalLayer->getFeedback();
   if (pFeedback != NULL) {
     pGraphicalLayer->writeComment("GLCD @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
@@ -558,6 +587,7 @@ void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   }
 }
 
+#endif
 
 }
 
@@ -598,15 +628,20 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
 
   int stepCount = 0;
   while (true) {
+#ifdef GRAPHICAL
     if (graphical)
       GraphicalDDTester_testStep(dumbdisplay, stepCount);
+#endif
     if (sevenSegmentRow)
       SevenSegmentRowDDTester_testStep(dumbdisplay, stepCount);
+#ifdef MB
     if (mb)
       MbDDTester_testStep(dumbdisplay, stepCount);
+#endif
+#ifdef TURTLE
     if (turtle)  
       TurtleDDTester_testStep(dumbdisplay, stepCount);
-    if (ledGrid)
+#endif    if (ledGrid)
       LedGridDDTester_testStep(dumbdisplay, stepCount);  
     if (lcd)
       LcdDDTester_testStep(dumbdisplay, stepCount);

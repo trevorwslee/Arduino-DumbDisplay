@@ -291,13 +291,14 @@ volatile bool _NoEncodeInt = false;
 
 #define IS_FLOAT_ZERO(f) ((((f)<0?-(f):(f)) - 0.0) < 0.001)
 #define IS_FLOAT_WHOLE(f) IS_FLOAT_ZERO((f) - (int) (f))
-#define TO_NUM(num) IS_FLOAT_WHOLE(num) ? String((int) num) : String(num) 
 
 
 #ifdef DD_CONDENSE_COMMAND
 #define TO_C_INT(i) DDIntEncoder(i).encoded()
+#define TO_NUM(num) IS_FLOAT_WHOLE(num) ? String((int) num) : String(num) 
 #else
 #define TO_C_INT(i) String(i)
+#define TO_NUM(num) String(num) 
 #endif
 //#define TO_NUM(num) IS_FLOAT_WHOLE(num) ? String((int) num) : String(num) 
 #define TO_C_NUM(num) IS_FLOAT_WHOLE(num) ? TO_C_INT((int) num) : String(num) 
@@ -828,8 +829,8 @@ void _HandleFeedback() {
       bool ok = false;
       int lid = -1;
       DDFeedbackType type = CLICK;
-      int x = -1;
-      int y = -1;
+      int16_t x = -1;
+      int16_t y = -1;
       char* pText = NULL;      
       char* token = strtok(buf, ".");
       if (token != NULL) {
@@ -1006,7 +1007,7 @@ const DDFeedback* DDFeedbackManager::getFeedback() {
   validArrayIdx = (validArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
   return pFeedback;
 }
-void DDFeedbackManager::pushFeedback(DDFeedbackType type, int x, int y, const char* pText) {
+void DDFeedbackManager::pushFeedback(DDFeedbackType type, int16_t x, int16_t y, const char* pText) {
   feedbackArray[nextArrayIdx].type = type;
   feedbackArray[nextArrayIdx].x = x;
   feedbackArray[nextArrayIdx].y = y;

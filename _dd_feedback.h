@@ -8,8 +8,8 @@ enum DDFeedbackType { CLICK, DOUBLECLICK, LONGPRESS };
 
 struct DDFeedback {
   DDFeedbackType type;
-  int x;
-  int y;
+  int16_t x;
+  int16_t y;
   String text;
 };
 
@@ -17,7 +17,7 @@ class DDFeedbackManager {
   public: 
     DDFeedbackManager(int bufferSize);
     const DDFeedback* getFeedback();
-    void pushFeedback(DDFeedbackType type, int x, int y, const char* pText);
+    void pushFeedback(DDFeedbackType type, int16_t x, int16_t y, const char* pText);
   private:
     DDFeedback feedbackArray[DD_FEEDBACK_BUFFER_SIZE];
     int nextArrayIdx;
