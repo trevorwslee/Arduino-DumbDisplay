@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.7.0)
+# DumbDisplay Arduino Library (v0.7.5)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP8266 / ESP32 / Respberry Pi Pico experiments.
 
@@ -16,6 +16,7 @@ A few types of layers can be created:
 * Turtle-like canvas
 * Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
+* Plotter, which works similar to the plotter of DumbDisplay, but chart data provided by sending commands
 
 Notice that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
@@ -36,7 +37,7 @@ The app can accept connection via
 Notes:
 * I have only tested DumbDisplay with the micro controller boards that I have -- namely, Arduino Uno, ESP01, ESP8266, ESP32 and Raspberry Pi Pico.
 * In case DumbDisplay does not "handshake" with your Arduino board correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion.
-* In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to later section of the README.
+* In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to later section of this README.
 
 
 # Installing DumbDisplay Arduino Library
@@ -764,7 +765,7 @@ BasicDDTunnel *pTunnel;
 bool gettingNewQuoto = true;
 
 void setup() {
-  // setup a "graphial" list 
+  // setup a "graphical" layer 
   pLayer = dumbdisplay.createGraphicalLayer(200, 150);  // size 200x150
   pLayer->border(10, "azure", "round");                 // a round border of size 10  
   pLayer->noBackgroundColor();                          // initial no background color
@@ -859,6 +860,67 @@ E.g.
 For the complete sketch of the above example, please refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddup4howlong/ddup4howlong.ino
 
 
+## "Feedback" Options
+
+Besides the usual `CLICK`, `DOUBLECLICK` and `LONGPRESS` "feedback" types are also possible.
+
+For example, if want to modify previously mentioned *"Layer feedback"* sample to only clear dots on double-check, can change the code in `FeedbackHandler()`
+
+from 
+
+```
+    if (pLayer == pLcdLayer) {
+        // clicked the "clear" button
+        pLayer->backgroundColor("white");
+        Reset();
+        delay(100);
+        pLayer->backgroundColor("lightgray");
+    }
+```
+
+to
+
+```
+    if (pLayer == pLcdLayer) {
+        // clicked the "clear" button
+        if (type == DOUBLECLICK) {
+          pLayer->backgroundColor("white");
+          Reset();
+          delay(100);
+          pLayer->backgroundColor("lightgray");
+        }
+    }
+```
+
+Additionally, if want to make use of the "auto repeat" option, can change code like:
+
+from 
+
+```
+pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs");
+```
+
+to
+
+```
+pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:lprpt50");
+```
+
+This simple change will enable "auto repeat" option -- as long as still pressed, long press feedback will auto repeat every 50ms.
+
+Better yet, if want the dragging to be trigger as so as possible, can use the option like
+
+```
+pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:rpt50");
+```
+
+Like "lprpt50", "rpt50" enables "auto repeat" option. The difference is that "rpt50" will simulate dragging -- clicking continuously.
+
+As a reference, you may want to refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/servo/servo.ino 
+
+
+![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/servo-dd.png)
+
 
 # Reference
 
@@ -911,6 +973,12 @@ MIT
 
 
 # Change History
+
+v0.7.5
+  - added auto repeat "feedback" option, which can be used to simulate dragging
+  - added plotter layer `PlotterDDLayer`
+  - added double-click / long-press "feedback"
+  - bug fixes
 
 v0.7.0
   - added ability to reconnect after disconnect

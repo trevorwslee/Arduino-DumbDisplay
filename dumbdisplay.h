@@ -13,9 +13,24 @@
 #define DD_WIFI_PORT 10201
 
 
-//#define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
-#define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
+#include "_dd_util.h"
+
+
+#define DD_CONDENSE_COMMAND
+
+
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
+
+#ifdef DD_CONDENSE_COMMAND
+#define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b)), 16))
+#define DD_INT_COLOR(color) ("+" + DDIntEncoder(color).encoded())
+//#define DD_RGB_COLOR(r, g, b) DD_INT_COLOR((int32_t) (0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b))))
+#else
+#define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
+#define DD_INT_COLOR(color) ("+" + String(color))
+#endif
+
+
 
 #define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
 #define DD_AP_HORI "H(*)"
@@ -32,133 +47,18 @@
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 
 
-#define DD_SUPPORT_FEEDBACK_TEXT
-
-
-class DDSerial {
-  public:
-    virtual void begin(unsigned long serialBaud) {
-      Serial.begin(serialBaud);
-    }
-    virtual bool available() {
-      return Serial.available();
-    }
-    virtual char read() {
-      return Serial.read();
-    }
-    virtual void print(const String &s) {
-      Serial.print(s);
-    }
-    virtual void print(const char *p) {
-      Serial.print(p);
-    }
-    virtual void flush() {
-      Serial.flush();
-    }
-};
-
-extern DDSerial* _The_DD_Serial;
-
-
-class DDInputOutput {
-  public:
-    DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
-    }
-    DDInputOutput* newForSerialConnection() {
-      return new DDInputOutput(serialBaud, false, true);
-    }
-    virtual ~DDInputOutput() {
-    }
-    virtual bool available() {
-      //return Serial.available();
-      return _The_DD_Serial != NULL && _The_DD_Serial->available(); 
-    }
-    virtual char read() {
-      //return Serial.read();
-      return _The_DD_Serial != NULL ? _The_DD_Serial->read() : 0;
-    }
-    virtual void print(const String &s) {
-      //Serial.print(s);
-      if (_The_DD_Serial != NULL) _The_DD_Serial->print(s);
-    }
-    virtual void print(const char *p) {
-      //Serial.print(p);
-      if (_The_DD_Serial != NULL) _The_DD_Serial->print(p);
-    }
-    virtual void flush() {
-      //Serial.flush();
-      if (_The_DD_Serial != NULL) _The_DD_Serial->flush();
-    }
-    virtual void keepAlive() {
-    }
-    virtual void validConnection() {
-    }
-    virtual void preConnect() {
-      if (setupForSerial) {
-        if (_The_DD_Serial != NULL) _The_DD_Serial->begin(serialBaud);
-        //Serial.begin(serialBaud);
-      }
-    }
-  public:  
-    bool isSerial() {
-      return !backupBySerial && setupForSerial;
-    }
-    bool isBackupBySerial() {
-      return backupBySerial;
-    }
-  protected:
-    DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
-      this->serialBaud = serialBaud;
-      this->backupBySerial = backupBySerial;
-      this->setupForSerial = setupForSerial;
-    }
-  protected:
-    unsigned long serialBaud;
-    bool backupBySerial;
-    bool setupForSerial;
-};
-
-
-struct DDFeedback {
-  int x;
-  int y;
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
-  String text;
-#endif
-};
-
-
-class DDFeedbackManager {
-  public: 
-    DDFeedbackManager(int bufferSize);
-    ~DDFeedbackManager();
-    const DDFeedback* getFeedback();
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
-    void pushFeedback(int x, int y, const String& text);
-#else
-    void pushFeedback(int x, int y);
-#endif
-  private:
-    DDFeedback* feedbackArray;
-    int arraySize;
-    int nextArrayIdx;
-    int validArrayIdx;
-};
-
+#include "_dd_serial.h"
+#include "_dd_io.h"
+#include "_dd_feedback.h"
 
 class DDLayer;
 
 
-enum DDFeedbackType { CLICK, KEYS_IN };
-
 /* pLayer -- pointer to the DDLayer of which "feedback" received */
 /* type -- currently, only possible value if CLICK */
 /* x, y -- (x, y) is the "area" on the layer where was clicked */
-#ifdef DD_SUPPORT_FEEDBACK_TEXT
 typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback);
-#else
-typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, int x, int y);
-#endif
+
 
 class DDObject {
 };
@@ -175,7 +75,8 @@ class DDLayer: public DDObject {
     /* - 7SegmentRowLayer; each 7-segment is composed of fixed 220 x 320 pixels */
     /* - LedGridLayer; a LED is considered as a pixel */  
     /* shape -- can be "flat", "round", "raised" or "sunken" */  
-    void border(float size, const String& color, const String& shape = "flat");
+    /* extraSize just added to size; however if shape is "round", it affect the "roundness" */
+    void border(float size, const String& color, const String& shape = "flat", float extraSize = 0);
     void noBorder();
     /* size unit ... see border() */
     void padding(float size);
@@ -210,6 +111,7 @@ class DDLayer: public DDObject {
     /* set explicit (and more responsive) "feedback" handler (and enable feedback) */
     /* autoFeedbackMethod ... see enableFeedback() */
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
+    void debugOnly(int i);
   public:
     DDFeedbackManager* getFeedbackManager() { return pFeedbackManager; }
     DDFeedbackHandler getFeedbackHandler() { return feedbackHandler; }
@@ -516,6 +418,25 @@ class SevenSegmentRowDDLayer: public DDLayer {
     void showFormatted(const String& formatted);
 };
 
+class PlotterDDLayer: public DDLayer {
+  public:
+    PlotterDDLayer(int layerId): DDLayer(layerId) {
+    }
+    /* set label of value with certain key */
+    /* if key has no label, the key will be the label */
+    void label(const String& key, const String& lab);
+    inline void label(const String& lab) { label("", lab); }
+    /* set value of certain key */
+    /* note that key can be empty */
+    void set(const String& key, float value);  
+    /* set value with empty key */
+    inline void set(float value) { set("", value); }  
+    void set(const String& key1, float value1, const String& key2, float value2);  
+    void set(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3);  
+    void set(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3, const String& key4, float value4);  
+};
+
+
 
 class DDTunnel: public DDObject {
   public:
@@ -676,6 +597,7 @@ class DumbDisplay {
     /* create a graphical [LCD] layer */
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
+    PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     /* create a 'tunnel' to interface with Internet (similar to socket) */
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
@@ -720,7 +642,8 @@ class DumbDisplay {
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     void deleteLayer(DDLayer *pLayer);
-    void debugSetup(int debugLedPin, bool enableEchoFeedback = false);
+    void debugSetup(int debugLedPin/*, bool enableEchoFeedback = false*/);
+    void optionNoCompression(bool noCompression);    
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine) {
       if (canLogToSerial()) {
@@ -753,13 +676,6 @@ class DDConnectVersionTracker {
     int version;  
 };
 
-
-// /* log line to serial making sure not affect DD */
-// void DDLogToSerial(const String& logLine);
-/* the same usage as standard delay(), but it allows DD chances to handle feedback */
-void DDDelay(unsigned long ms);
-/* give DD a chance to handle feedback */
-void DDYield();
 
 
 #endif
