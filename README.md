@@ -918,7 +918,7 @@ Like "lprpt50", "rpt50" enables "auto repeat" option. The difference is that "rp
 
 As a reference, you may want to refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/servo/servo.ino 
 
-| Servo ESP8266 Project | DumbDisplay |
+| ESP8266 with Servo | DumbDisplay |
 |--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/servo-esp8266.jpg)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/servo-dd.png)|
 
