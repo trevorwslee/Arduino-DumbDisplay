@@ -20,9 +20,9 @@ A few types of layers can be created:
 
 Notice that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
-You can install the DumbDisplay Arduino Library by downloading the ZIP file, as demonstrated  by the YouTube video -- https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
+You can install the DumbDisplay Arduino Library by downloading the ZIP file, as demonstrated  by the video **Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)** -- https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
 
-(To upgrade DumbDisplay Arduino Library, you may refer to the Youtube video -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
+(To upgrade DumbDisplay Arduino Library, you may refer to the video **Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge** -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
 
 You will also need to install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
@@ -42,7 +42,7 @@ Notes:
 
 # Installing DumbDisplay Arduino Library
 
-For demonstration on installing DumbDisplay Arduino Library, you may want to watch the YouTube video **Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)** -- https://www.youtube.com/watch?v=nN7nXRy7NMg
+For demonstration on installing DumbDisplay Arduino Library, you may want to watch the video **Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)** -- https://www.youtube.com/watch?v=nN7nXRy7NMg
 
 
 # Sample Code
@@ -828,6 +828,8 @@ Instead of posting the sample sketch here, please find it with the link: https:/
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick-arduino.jpg)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick-dd.png)|
 
 
+If you are interested, you may want to watch the video **Arduino JoyStick Shield and DumbDisplay** -- https://www.youtube.com/watch?v=9GYrZWXHfUo
+
 ## Survive DumbDisplay App Reconnection
 
 In certain "stateless" cases, like DumbDisplay is simply used as means to show values, it is possible for DumbDisplay to be able to meaningfully reconnect after DumbDisplay app disconnect / restart, since DumbDisplay app does not persist "state" information.
@@ -916,7 +918,7 @@ pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:rpt50");
 
 Like "lprpt50", "rpt50" enables "auto repeat" option. The difference is that "rpt50" will simulate dragging -- clicking continuously.
 
-As a reference, you may want to refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/servo/servo.ino 
+As a reference, you may want to refer to the servo project -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/servo/servo.ino 
 
 | ESP8266 with Servo | DumbDisplay |
 |--|--|
