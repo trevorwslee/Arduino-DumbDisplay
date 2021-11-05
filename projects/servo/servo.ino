@@ -40,8 +40,6 @@ void setup() {
   servo.attach(SERVO_PIN);
 
   // move the servo just for a test
-  servo.write(180);
-  delay(2000);
   servo.write(0);
   delay(2000);
 

@@ -294,7 +294,7 @@ volatile bool _NoEncodeInt = false;
 
 
 #ifdef DD_CONDENSE_COMMAND
-#define TO_C_INT(i) DDIntEncoder(i).encoded()
+#define TO_C_INT(i) (_NoEncodeInt ? String(i) : DDIntEncoder(i).encoded())
 #define TO_NUM(num) IS_FLOAT_WHOLE(num) ? String((int) num) : String(num) 
 #else
 #define TO_C_INT(i) String(i)

@@ -24,6 +24,7 @@
 #ifdef DD_CONDENSE_COMMAND
 #define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b)), 16))
 #define DD_INT_COLOR(color) ("+" + DDIntEncoder(color).encoded())
+//#define DD_RGB_COLOR(r, g, b) DD_INT_COLOR((int32_t) (0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b))))
 #else
 #define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
 #define DD_INT_COLOR(color) ("+" + String(color))
