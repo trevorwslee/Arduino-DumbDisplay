@@ -641,7 +641,8 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
 #ifdef TURTLE
     if (turtle)  
       TurtleDDTester_testStep(dumbdisplay, stepCount);
-#endif    if (ledGrid)
+#endif
+    if (ledGrid)
       LedGridDDTester_testStep(dumbdisplay, stepCount);  
     if (lcd)
       LcdDDTester_testStep(dumbdisplay, stepCount);

@@ -1920,13 +1920,23 @@ void DumbDisplay::debugSetup(int debugLedPin/*, bool enableEchoFeedback*/) {
   _DebugEnableEchoFeedback = enableEchoFeedback;
 #endif
 }
-void DumbDisplay::optionNoCompression(bool noCompression) 
-{
+void DumbDisplay::optionNoCompression(bool noCompression) {
   _NoEncodeInt = noCompression;
 }
 // void DumbDisplay::delay(unsigned long ms) {
 //   _Delay(ms);
 // }
+void DumbDisplay::logToSerial(const String& logLine) {
+  if (canLogToSerial()) {
+    if (_The_DD_Serial != NULL) {
+      _The_DD_Serial->print(logLine);
+      _The_DD_Serial->print("\n");
+    }
+  } else {
+    writeComment(logLine);
+  }
+}
+
 
 
 // void DDLogToSerial(const String& logLine) {
