@@ -642,20 +642,13 @@ class DumbDisplay {
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     void deleteLayer(DDLayer *pLayer);
-    void debugSetup(int debugLedPin/*, bool enableEchoFeedback = false*/);
+    void debugSetup(int debugLedPin);
+    /* by default, some commands will have there numeric arguments encoded/compress */
+    /* in order to reduce the amount of data to send. */
+    /* you can disable this behavior by calling this method. */
     void optionNoCompression(bool noCompression);    
     /* log line to serial making sure not affecting DD */
-    void logToSerial(const String& logLine) {
-      if (canLogToSerial()) {
-        //Serial.println(logLine);
-        if (_The_DD_Serial != NULL) {
-          _The_DD_Serial->print(logLine);
-          _The_DD_Serial->print("\n");
-        }
-      } else {
-        writeComment(logLine);
-      }
-    }
+    void logToSerial(const String& logLine);
   private:
     void initialize(DDInputOutput* pIO);
     bool canLogToSerial();

@@ -1,11 +1,12 @@
 # DumbDisplay Arduino Library (v0.7.5)
 
-DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP8266 / ESP32 / Respberry Pi Pico experiments.
+DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / Respberry Pi Pico experiments.
 
+You may want to watch the video **Introducing DumbDisplay -- the little helper for Arduino experiments** for a brief introduction -- https://www.youtube.com/watch?v=QZkhO6jTf0U
 
 # Description
 
-Instead of connecting real gadgets to your Arduino for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets on your Android phone.
+Instead of connecting real gadgets to your Arduino micro-controller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets on your Android phone.
 
 By doing so you can defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few Arduino pins for other experiment needs.
 
@@ -18,7 +19,7 @@ A few types of layers can be created:
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 * Plotter, which works similar to the plotter of DumbDisplay, but chart data provided by sending commands
 
-Notice that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
+Note that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
 You can install the DumbDisplay Arduino Library by downloading the ZIP file, as demonstrated  by the video **Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)** -- https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
 
@@ -134,12 +135,16 @@ void loop() {
 }
 ```
 
-In case a layer finishes all its usages in the middle of the sketch, it should be deleted in order for Arduino to claim back resources:
+Notes:
+* DumbDisplay library will work cooperatively with your code, there, do give a change for DumbDisplay library chances to do its work. Please call `DDYeild()` and/or `DDDelay()` appropriately whenever possible. 
+* By default, certain commands sent will be "compressed"; to turn off such "compression" use
+  the DumbDisplay method `optionNoCompression()`.
+* In case a layer finishes all its usages in the middle of the sketch, it should be deleted in order for Arduino to claim back resources:
+  ```
+  dumbdisplay.deleteLayer(led);
+  ```
 
-```
-dumbdisplay.deleteLayer(led);
-```
-
+## DumbDispaly "feedback" Mechanism
 
 You can also try out "layer feedback" from DumbDisplay like
 
@@ -201,12 +206,16 @@ void loop() {
 }
 ```
 
-Please note that Arduino will check for "feedback" in several occasions:
+Please note that DumbDisplay library will check for "feedback" in several occasions:
 * before every get "feedback" with `getFeedback()`
 * after every send of command
 * once when `DDYield()` is called
 * during the "wait loop" of `DDDelay()`
 * calling "tunnel" to check for EOF
+
+
+## DumbDispaly "Tunnel"
+
 
 With the help of DumbDisplay WIFI Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
 (In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears that Android does not allow all connections, possibly due to the port restriction.)
@@ -285,7 +294,6 @@ In a more complicated case, you may want to get data from Internet open REST api
   }  
   ```
   note that `eof()` will check whether everything has returned and read before signaling EOF.
-
 
 
 ## More Samples
@@ -862,7 +870,7 @@ E.g.
 For the complete sketch of the above example, please refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddup4howlong/ddup4howlong.ino
 
 
-## "Feedback" Options
+## More "Feedback" Options
 
 Besides the usual `CLICK`, `DOUBLECLICK` and `LONGPRESS` "feedback" types are also possible.
 
