@@ -66,7 +66,7 @@ void loop() {
   if (servoAngle != toAngle) {
     servo.write(toAngle);
 #ifdef LED_PIN  
-    analogWrite(16, map(toAngle, 0, 180, 0, 255));
+    analogWrite(LED_PIN, map(toAngle, 0, 180, 0, 255));
 #endif
   } else {
     if (autoInc != 0) {
@@ -202,9 +202,10 @@ void setup_DD() {
 
   // setup interaction when clicking / dragging on the gauge;
   // 1) feedback will be handled by FeedbackHandler
-  // 2) feedback will auto-repeat as long as the gauge keeps being touched, in 50 ms;
+  // 2) feedback will auto-repeat as long as the gauge is kept being touched, in 50 ms;
   //    something like dragging
-  pGraphical->setFeedbackHandler(FeedbackHandler, "fs:rpt50");
+  // 3) note that the repeat is trigger by long pressing
+  pGraphical->setFeedbackHandler(FeedbackHandler, "fs:lprpt50");
 
   // play back the layer setup commands recorded;
   // and instruct that "servo" is the id of the setup layer commands, for re-connection
