@@ -928,6 +928,9 @@ Like "lprpt50", "rpt50" enables "auto repeat" option. The difference is that "rp
 
 As a reference, you may want to refer to the servo project -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/servo/servo.ino 
 
+For a brief explanation of the sketch, you may want to watch the video **ESP8266 Servo Arduino experiment, subsequently, with simple DumbDisplay UI** -- https://www.youtube.com/watch?v=pgfL_qwj8cQ
+
+
 | ESP8266 with Servo | DumbDisplay |
 |--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/esp8266-servo.jpg)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/servo-dd.png)|
@@ -967,7 +970,7 @@ Notes:
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)
 
 
-You may want to watch the YouTube video **Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge** -- https://www.youtube.com/watch?v=0UhRmXXBQi8
+You may want to watch the video **Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge** -- https://www.youtube.com/watch?v=0UhRmXXBQi8
 
 # Thank You!
 
