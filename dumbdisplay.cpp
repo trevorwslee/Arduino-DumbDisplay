@@ -4,6 +4,7 @@
 
 
 #define HAND_SHAKE_GAP 1000
+#define VALIDATE_GAP 2000
 
 #define ENABLE_FEEDBACK
 #define STORE_LAYERS
@@ -27,6 +28,8 @@
 
 
 #define SUPPORT_LONG_PRESS_FEEDBACK
+
+#define SUPPORT_IDLE_CALLBACK
 
 #define SUPPORT_TUNNEL
 #define TUNNEL_TIMEOUT_MILLIS 30000
@@ -172,6 +175,10 @@ class IOProxy {
 volatile bool _Connected = false;
 volatile int _ConnectVersion = 0;
 
+#ifdef SUPPORT_IDLE_CALLBACK
+volatile DDIdleCallback _IdleCallback = NULL; 
+#endif
+
 bool IOProxy::available() {
   bool done = false;
   while (!done && pIO->available()) {
@@ -219,7 +226,15 @@ void IOProxy::validConnection() {
   pIO->validConnection();
 #ifdef SUPPORT_RECONNECT
   if (this->reconnectEnabled && this->lastKeepAliveMillis > 0) {
-    if ((millis() - this->lastKeepAliveMillis) > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
+    long now = millis();
+    long notKeptAliveMillis = now - this->lastKeepAliveMillis; 
+    if (notKeptAliveMillis > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
+#ifdef SUPPORT_IDLE_CALLBACK
+      if (_IdleCallback != NULL) {
+        long idleForMillis = notKeptAliveMillis - RECONNECT_NO_KEEP_ALIVE_MILLIS;
+        _IdleCallback(idleForMillis);
+      }
+#endif      
 #ifdef DEBUG_RECONNECT_WITH_COMMENT 
 this->print("// NEED TO RECONNECT\n");
 #endif
@@ -353,6 +368,7 @@ void _Connect() {
       pSIO = _IO->newForSerialConnection();
       pSerialIOProxy = new IOProxy(pSIO);
     }
+    long startMillis = millis();
     while (true) {
       long now = millis();
       if (now > nextTime) {
@@ -368,6 +384,12 @@ void _Connect() {
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:ddhello");
 #endif        
+#ifdef SUPPORT_IDLE_CALLBACK
+        if (_IdleCallback != NULL) {
+          long idleForMillis = now - startMillis;
+          _IdleCallback(idleForMillis);
+        }
+#endif      
         nextTime = now + HAND_SHAKE_GAP;
       }
       bool fromSerial = false;
@@ -551,7 +573,7 @@ String* _ReadFeedback(String& buffer) {
 #ifdef VALIDATE_CONNECTION
     long now = millis();
     long diff = now - _LastValidateConnectionMillis;
-    if (diff >= 2000/*5000*/) {
+    if (diff >= VALIDATE_GAP/*2000*//*5000*/) {
       _ConnectedIOProxy->validConnection();
       _LastValidateConnectionMillis = now;
     }
@@ -1751,6 +1773,9 @@ void DumbDisplay::initialize(DDInputOutput* pIO) {
 void DumbDisplay::connect() {
   _Connect();
 }
+bool DumbDisplay::connected() {
+  return _Connected;
+}
 int DumbDisplay::getConnectVersion() {
   return _ConnectVersion;
 }
@@ -1923,6 +1948,12 @@ void DumbDisplay::debugSetup(int debugLedPin/*, bool enableEchoFeedback*/) {
 void DumbDisplay::optionNoCompression(bool noCompression) {
   _NoEncodeInt = noCompression;
 }
+void DumbDisplay::setIdleCalback(DDIdleCallback idleCallback) {
+#ifdef SUPPORT_IDLE_CALLBACK
+  _IdleCallback = idleCallback;
+#endif
+} 
+
 // void DumbDisplay::delay(unsigned long ms) {
 //   _Delay(ms);
 // }
