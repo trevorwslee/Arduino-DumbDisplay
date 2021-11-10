@@ -35,11 +35,12 @@ class DDInputOutput {
     }
     virtual void validConnection() {
     }
-    virtual void preConnect() {
+    virtual bool preConnect(bool firstCall) {
       if (setupForSerial) {
         if (_The_DD_Serial != NULL) _The_DD_Serial->begin(serialBaud);
         //Serial.begin(serialBaud);
       }
+      return true;
     }
   public:  
     bool isSerial() {

@@ -11,8 +11,6 @@
 
 
 
-#define DDWIFI_CONNECT_STATED
-
 //#define LOG_DDWIFI_STATUS
 
 
@@ -45,30 +43,18 @@ class DDWiFiServerIO: public DDInputOutput {
     void print(const char *p) {
       client.print(p);
     }
-    void preConnect() {
-      if (logToSerial)
-        Serial.begin(serialBaud);
-#ifdef DDWIFI_CONNECT_STATED    
-      WiFi.begin(ssid, password);
-      connectionState = ' ';
-      stateMillis = 0;
-      while (connectionState != 'C') {
+    bool preConnect(bool firstCall) {
+      if (firstCall) {
+        if (logToSerial)
+          Serial.begin(serialBaud);
+        WiFi.begin(ssid, password);
+        connectionState = ' ';
+        stateMillis = 0;
+      } else {
         checkConnection();
         delay(200);
       }
-#else
-      while (true) {
-        bool connected = _connectToClient(true);
-        if (connected)
-          break;
-        else {
-          if (logToSerial) Serial.println("lost WiFi ... try again ...");
-          WiFi.disconnect();
-          delay(500);
-        }  
-      }
-      if (logToSerial) Serial.println("client conntected");
-#endif      
+      return connectionState == 'C';
     }
     void flush() {
       client.flush();
@@ -79,25 +65,7 @@ class DDWiFiServerIO: public DDInputOutput {
         Serial.println(" ... validate ...");
       }
 #endif      
-#ifdef DDWIFI_CONNECT_STATED  
       checkConnection();
-#else  
-      uint8_t status = WiFi.status();
-      if (status != WL_CONNECTED) {
-        if (logToSerial) Serial.println("lost WiFi ... try bind WiFi again ...");
-        client.stop();
-        WiFi.disconnect();
-        if (_connectToClient(true)) {
-          if (logToSerial) Serial.println("re-acquired WiFi and connection");
-        }
-      } else if (!client.connected()) {
-        client.stop();
-        if (logToSerial) Serial.println("lost connection ... try bind connect again ...");
-          if (_connectToClient(false)) {
-            if (logToSerial) Serial.println("reconnected");
-          }
-      }
-#endif
     }
   private:
     bool _connectToNetwork() {
@@ -171,7 +139,6 @@ class DDWiFiServerIO: public DDInputOutput {
       }
       return true;
     }
-#ifdef DDWIFI_CONNECT_STATED    
     void checkConnection() {
       uint8_t status = WiFi.status();
       if (connectionState == 'C') {
@@ -255,16 +222,13 @@ class DDWiFiServerIO: public DDInputOutput {
         }  
       }
     }
-#endif    
   private:
     const char* ssid;
     const char *password;
     int port;
     bool logToSerial;
-#ifdef DDWIFI_CONNECT_STATED
    char connectionState;
    long stateMillis;
-#endif    
     WiFiServer server;
     WiFiClient client;
 };

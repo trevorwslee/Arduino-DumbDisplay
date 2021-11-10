@@ -357,7 +357,27 @@ void _Connect() {
     debugLedOn = true;
   }
 #endif
-  _IO->preConnect();
+  {
+    long startMillis = millis();
+    long lastCallMillis = startMillis;
+    bool firstCall = true;
+    while (true) {
+      if (_IO->preConnect(firstCall)) {
+        break;
+      }
+#ifdef SUPPORT_IDLE_CALLBACK
+        if (_IdleCallback != NULL) {
+          long now = millis();
+          if ((now - lastCallMillis) >= HAND_SHAKE_GAP) {
+            long idleForMillis = now - startMillis;
+            _IdleCallback(idleForMillis);
+            lastCallMillis = now;
+          }
+        }
+#endif      
+      firstCall = false;
+    }
+  }
   {
     long nextTime = 0;
     IOProxy ioProxy(_IO);

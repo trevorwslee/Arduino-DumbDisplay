@@ -30,9 +30,10 @@ class DDSoftwareSerialIO: public DDInputOutput {
     void print(const char *p) {
       pSS->print(p); 
     }
-    void preConnect() {
-      DDInputOutput::preConnect();
+    bool preConnect(bool firstCall) {
+      DDInputOutput::preConnect(firstCall);
       pSS->begin(baud/*DUMBDISPLAY_BAUD*/);
+      return true;
     }
     void flush() {
       pSS->flush();
