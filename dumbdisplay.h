@@ -560,6 +560,9 @@ class JsonDDTunnelMultiplexer {
      JsonDDTunnel** tunnels;
 };
 
+typedef void (*DDIdleCallback)(long idleForMillis);
+
+
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO) {
@@ -574,6 +577,7 @@ class DumbDisplay {
     /* explicitly make connection -- blocking */
     /* - implicitly called when configure or create a layer */
     void connect();
+    bool connected();
     /** note that when reconnect, the connect version will be bumped up */
     int getConnectVersion();
     /* configure "pin frame" to be x-units by y-units (default 100x100) */
@@ -646,7 +650,11 @@ class DumbDisplay {
     /* by default, some commands will have there numeric arguments encoded/compress */
     /* in order to reduce the amount of data to send. */
     /* you can disable this behavior by calling this method. */
-    void optionNoCompression(bool noCompression);    
+    void optionNoCompression(bool noCompression);   
+    /* set 'idle callback', which will be called in 2 situations: */
+    /* 1. no connection response while connecting */
+    /* 2. detected no 'keep alive' signal */
+    void setIdleCalback(DDIdleCallback idleCallback); 
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine);
   private:

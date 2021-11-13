@@ -53,14 +53,15 @@ class DDBLESerialIO: public DDInputOutput {
     void print(const char *p) {
       pCallbacks->print(p);
     }
-    void preConnect() {
+    bool preConnect(bool firstCall) {
 #ifdef DD_DEBUG_BLE
       if (!setupForSerial) {
         Serial.begin(115200);
       }
 #endif
-      DDInputOutput::preConnect();
+      DDInputOutput::preConnect(firstCall);
       initBLE();
+      return true;
     }
     void flush() {
     }

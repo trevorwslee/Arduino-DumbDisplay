@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.7.5)
+# DumbDisplay Arduino Library (v0.7.6)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / Respberry Pi Pico experiments.
 
@@ -987,6 +987,9 @@ MIT
 
 
 # Change History
+
+v0.7.6
+  - added "idle callback"
 
 v0.7.5
   - added auto repeat "feedback" option, which can be used to simulate dragging

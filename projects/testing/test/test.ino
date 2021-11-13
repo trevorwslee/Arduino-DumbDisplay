@@ -10,9 +10,17 @@
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
 //DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 115200));
 
+
+void IdleCallback(long idleForMillis) {
+  Serial.print("* IDLE: ");
+  Serial.println(idleForMillis / 1000);
+}
+
+
 void setup() {
   // Serial.begin(57600);
   // Serial.println("*****");
+  dumbdisplay.setIdleCalback(IdleCallback);
   dumbdisplay.debugSetup(13);  // setup to use pin 13
 
   if (true) {
