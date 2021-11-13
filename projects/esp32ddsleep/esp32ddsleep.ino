@@ -14,13 +14,6 @@
 
 
 
-volatile long noisyMillis = 0;
-
-void DetectedNoise() {
-  noisyMillis = millis();
-}
-
-
 
 DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
 
@@ -75,6 +68,13 @@ LcdDDLayer* CreateButton(const String& label) {
   button->writeLine(label, 0, "C");
   button->setFeedbackHandler(FeedbackHandler, "fl");
   return button;
+}
+
+
+volatile long noisyMillis = 0;
+
+void DetectedNoise() {
+  noisyMillis = millis();
 }
 
 

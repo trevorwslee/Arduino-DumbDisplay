@@ -224,17 +224,22 @@ void IOProxy::validConnection() {
   Serial.println(" ...");
 #endif 
   pIO->validConnection();
-#ifdef SUPPORT_RECONNECT
-  if (this->reconnectEnabled && this->lastKeepAliveMillis > 0) {
+#if defined (SUPPORT_IDLE_CALLBACK) || defined (SUPPORT_RECONNECT)
+  bool needReconnect = false;
+  if (this->lastKeepAliveMillis > 0) {
     long now = millis();
     long notKeptAliveMillis = now - this->lastKeepAliveMillis; 
     if (notKeptAliveMillis > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
-#ifdef SUPPORT_IDLE_CALLBACK
+      needReconnect = true;
+#ifdef SUPPORT_IDLE_CALLBACK      
       if (_IdleCallback != NULL) {
         long idleForMillis = notKeptAliveMillis - RECONNECT_NO_KEEP_ALIVE_MILLIS;
         _IdleCallback(idleForMillis);
       }
 #endif      
+    }
+#ifdef SUPPORT_RECONNECT
+    if (this->reconnectEnabled && needReconnect) {
 #ifdef DEBUG_RECONNECT_WITH_COMMENT 
 this->print("// NEED TO RECONNECT\n");
 #endif
@@ -262,6 +267,7 @@ this->print("// NEED TO RECONNECT\n");
       this->lastKeepAliveMillis = millis();
 #endif
     }
+#endif
   }
 #endif  
 }
