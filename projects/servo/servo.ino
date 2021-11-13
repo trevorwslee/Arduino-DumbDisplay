@@ -99,6 +99,8 @@ void loop() {
 }
 
 
+// For a brief explanation of the sketch, you may want to watch the video **ESP8266 Servo Arduino experiment, subsequently, with simple DumbDisplay UI** -- https://www.youtube.com/watch?v=pgfL_qwj8cQ
+
 #ifdef ESP8266_DD_SUPPORT
 
 
