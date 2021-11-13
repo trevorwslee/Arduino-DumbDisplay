@@ -952,6 +952,25 @@ For a brief explanation of the sketch, you may want to watch the video **ESP8266
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/esp8266-servo.jpg)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/servo-dd.png)|
 
 
+## Idle Callback and ESP32 Deep Sleep
+
+It is possible setup ESP32 to go to deep sleep when DumbDisplay library detects "idle", after, say, 15 seconds:
+
+```
+void IdleCallback(long idleForMillis) {
+  if (idleForMillis > 15000) {  // go to sleep if idle for more than 15 seconds
+    esp_sleep_enable_timer_wakeup(5 * 1000 * 1000);  // wake up in 5 seconds
+    esp_deep_sleep_start();
+  }
+}
+...
+void setup() {
+  ...
+  dumbdisplay.setIdleCalback(IdleCallback);
+  ...
+}
+```
+
 # Reference
 
 For reference, please look into the declarations of the different related classes in the header files; mostly dumbdisplay.h -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/dumbdisplay.h
