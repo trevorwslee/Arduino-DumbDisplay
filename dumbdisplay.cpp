@@ -238,13 +238,8 @@ void IOProxy::validConnection() {
       }
 #endif      
     }
-  }
-#endif      
 #ifdef SUPPORT_RECONNECT
-  if (this->reconnectEnabled && needReconnect/*this->lastKeepAliveMillis > 0*/) {
-    //long now = millis();
-    //long notKeptAliveMillis = now - this->lastKeepAliveMillis; 
-    if (true/*notKeptAliveMillis > RECONNECT_NO_KEEP_ALIVE_MILLIS*/) {
+    if (this->reconnectEnabled && needReconnect) {
 #ifdef DEBUG_RECONNECT_WITH_COMMENT 
 this->print("// NEED TO RECONNECT\n");
 #endif
@@ -272,6 +267,7 @@ this->print("// NEED TO RECONNECT\n");
       this->lastKeepAliveMillis = millis();
 #endif
     }
+#endif
   }
 #endif  
 }

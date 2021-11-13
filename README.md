@@ -54,7 +54,7 @@ For demonstration on installing DumbDisplay Arduino Library, you may want to wat
 
 ## PlatformIO
 
-If you have a PlatformIO Arduino platform project that wants to make use of DumbDisplay Arduino Library, you can simply modify *platformio.ini* adding to *lib_deps* like:
+If you have an Arduino framework PlatformIO project that wants to make use of DumbDisplay Arduino Library, you can simply modify *platformio.ini* adding to *lib_deps* like:
 
 ```
 lib_deps =
