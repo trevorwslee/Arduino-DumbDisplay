@@ -1,15 +1,16 @@
 #define DD_4_ESP32
-#include "esp32bledumbdisplay.h"
+#include "esp32dumbdisplay.h"
 
 
-#define NOISE_PIN 26
-#define NOISE_PIN_NUM GPIO_NUM_26
+#define NOISE_PIN 15
+#define NOISE_PIN_NUM GPIO_NUM_15
 
 #define TOUCH_PIN 4 
 #define TOUCH_PIN_NUM T0
 #define TOUCH_THRESHOLD 40
 
-#define WAKE_UP_IN_SECONDS 5
+// uncommend out if want DumbDisplay to go to sleep when 'idle'
+//#define AUTO_SLEEP_WHEN_IDEL_MILLIS 10000
 
 
 
@@ -21,7 +22,7 @@ void DetectedNoise() {
 
 
 
-DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32-BLE"));
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
 
 
 LedGridDDLayer* detected;
@@ -31,6 +32,15 @@ LcdDDLayer* just;
 LcdDDLayer* inFive;
 LcdDDLayer* touch;
 LcdDDLayer* noise;
+
+#ifdef AUTO_SLEEP_WHEN_IDEL_MILLIS
+void IdleCallback(long idleForMillis) {
+  if (idleForMillis > AUTO_SLEEP_WHEN_IDEL_MILLIS) {
+    esp_sleep_enable_ext0_wakeup(NOISE_PIN_NUM, 0);
+    esp_deep_sleep_start();
+  }
+}
+#endif
 
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
@@ -74,7 +84,9 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(NOISE_PIN), DetectedNoise, RISING);
   touchAttachInterrupt(TOUCH_PIN, [](){}, TOUCH_THRESHOLD);
 
-  dumbdisplay.recordLayerCommands();
+#ifdef AUTO_SLEEP_WHEN_IDEL_MILLIS
+  dumbdisplay.setIdleCalback(IdleCallback);
+#endif
 
   detected = dumbdisplay.createLedGridLayer(2, 1);
   detected->onColor("navy");
@@ -97,8 +109,6 @@ void setup() {
       touch->getLayerId(),
       noise->getLayerId()
     ));
-
-  dumbdisplay.playbackLayerCommands();
 
   dumbdisplay.writeComment("");
   dumbdisplay.writeComment("Good Day! It is a new start!");
