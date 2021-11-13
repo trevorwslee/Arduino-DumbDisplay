@@ -43,7 +43,23 @@ Notes:
 
 # Installing DumbDisplay Arduino Library
 
+## Arduino IDE
+
+The basic steps are
+1) download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
+2) to install, use Arduino IDE menu option **Sktech** | **Include Library** | **Add .ZIP library...** and choose the ZIP you just downloaded
+
 For demonstration on installing DumbDisplay Arduino Library, you may want to watch the video **Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)** -- https://www.youtube.com/watch?v=nN7nXRy7NMg
+
+
+## PlatformIO
+
+If you have a PlatformIO Arduino platform project that wants to make use of DumbDisplay Arduino Library, you can simply modify *platformio.ini* adding to *lib_deps* like:
+
+```
+lib_deps =
+    https://github.com/trevorwslee/Arduino-DumbDisplay
+```
 
 
 # Sample Code
@@ -935,6 +951,25 @@ For a brief explanation of the sketch, you may want to watch the video **ESP8266
 |--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/esp8266-servo.jpg)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/servo-dd.png)|
 
+
+## Idle Callback and ESP32 Deep Sleep
+
+It is possible setup ESP32 to go to deep sleep when DumbDisplay library detects "idle", after, say, 15 seconds:
+
+```
+void IdleCallback(long idleForMillis) {
+  if (idleForMillis > 15000) {  // go to sleep if idle for more than 15 seconds
+    esp_sleep_enable_timer_wakeup(5 * 1000 * 1000);  // wake up in 5 seconds
+    esp_deep_sleep_start();
+  }
+}
+...
+void setup() {
+  ...
+  dumbdisplay.setIdleCalback(IdleCallback);
+  ...
+}
+```
 
 # Reference
 
