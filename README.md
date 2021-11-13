@@ -43,7 +43,23 @@ Notes:
 
 # Installing DumbDisplay Arduino Library
 
+## Arduino IDE
+
+The basic steps are
+1) download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
+2) to install, use Arduino IDE menu option **Sktech** | **Include Library** | **Add .ZIP library...** and choose the ZIP you just downloaded
+
 For demonstration on installing DumbDisplay Arduino Library, you may want to watch the video **Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)** -- https://www.youtube.com/watch?v=nN7nXRy7NMg
+
+
+## PlatformIO
+
+If you have a PlatformIO Arduino platform project that wants to make use of DumbDisplay Arduino Library, you can simply modify *platformio.ini* adding to *lib_deps* like:
+
+```
+lib_deps =
+    https://github.com/trevorwslee/Arduino-DumbDisplay
+```
 
 
 # Sample Code
