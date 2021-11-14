@@ -38,22 +38,14 @@ void IdleCallback(long idleForMillis) {
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
   if (pLayer == just) {
-    dumbdisplay.writeComment("just sleep ... going to ...");
-    dumbdisplay.backgroundColor("gray");
     esp_deep_sleep_start();
   } else if (pLayer == inFive) {
-    dumbdisplay.writeComment("wake up in 5s ... going to ...");
-    dumbdisplay.backgroundColor("gray");
     esp_sleep_enable_timer_wakeup(5 * 1000 * 1000);  // wake up in 5 seconds
     esp_deep_sleep_start();
   } else if (pLayer == touch) {
-    dumbdisplay.writeComment("wake up by touch ... going to ...");
-    dumbdisplay.backgroundColor("gray");
     esp_sleep_enable_touchpad_wakeup();
     esp_deep_sleep_start();
   } else if (pLayer == noise) {
-    dumbdisplay.writeComment("wake up by noise ... going to ...");
-    dumbdisplay.backgroundColor("gray");
     esp_sleep_enable_ext0_wakeup(NOISE_PIN_NUM, 0);
     esp_deep_sleep_start();
   }

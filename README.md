@@ -36,7 +36,7 @@ The app can accept connection via
 * Serial <-> WIFI via the simple included tool -- DumbDisplay WIFI Bridge
 
 Notes:
-* I have only tested DumbDisplay with the micro controller boards that I have -- namely, Arduino Uno, ESP01, ESP8266, ESP32 and Raspberry Pi Pico.
+* I have only tested DumbDisplay with the micro controller boards that I have -- namely, Arduino Uno, Arduino Nano, ESP01, ESP8266, ESP32 and Raspberry Pi Pico.
 * In case DumbDisplay does not "handshake" with your Arduino board correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion.
 * In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to later section of this README.
 
