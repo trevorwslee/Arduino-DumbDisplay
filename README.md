@@ -971,6 +971,9 @@ void setup() {
 }
 ```
 
+For reference, you may want to refer to the example as shown by the video **ESP32 Deep Sleep Experiment using Arduino with DumbDisplay** -- https://www.youtube.com/watch?v=a61hRLIaqy8 
+
+
 # Reference
 
 For reference, please look into the declarations of the different related classes in the header files; mostly dumbdisplay.h -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/dumbdisplay.h
