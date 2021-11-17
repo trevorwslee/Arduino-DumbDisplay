@@ -17,14 +17,15 @@
 
 
 #define DD_CONDENSE_COMMAND
+//#define DD_CAN_TURN_OFF_CONDENSE_COMMAND
 
 
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
 
+
 #ifdef DD_CONDENSE_COMMAND
 #define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b)), 16))
 #define DD_INT_COLOR(color) ("+" + DDIntEncoder(color).encoded())
-//#define DD_RGB_COLOR(r, g, b) DD_INT_COLOR((int32_t) (0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b))))
 #else
 #define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
 #define DD_INT_COLOR(color) ("+" + String(color))
@@ -647,10 +648,12 @@ class DumbDisplay {
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     void deleteLayer(DDLayer *pLayer);
     void debugSetup(int debugLedPin);
+#ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
     /* by default, some commands will have there numeric arguments encoded/compress */
     /* in order to reduce the amount of data to send. */
     /* you can disable this behavior by calling this method. */
     void optionNoCompression(bool noCompression);   
+#endif
     /* set 'idle callback', which will be called in 2 situations: */
     /* 1. no connection response while connecting */
     /* 2. detected no 'keep alive' signal */
