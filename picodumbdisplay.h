@@ -37,8 +37,9 @@ class DDPicoUart1IO: public DDInputOutput {
     void print(const char *p) {
       Serial2.print(p); 
     }
-    void preConnect() {
+    bool preConnect(bool firstCall) {
       Serial2.begin(baud);
+      return true;
     }
     void flush() {
     }
