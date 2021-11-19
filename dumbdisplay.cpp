@@ -135,43 +135,6 @@ class IOProxy {
 };
 
 
-// char* _EncodeInt(int i, char* buffer, int bufferLen) {
-//   bool isNeg;
-//   if (i < 0) {
-//     isNeg = true;
-//     i = -i;
-//   } else {
-//     isNeg = false;
-//   }
-//   char *encoded = buffer + (isNeg ? 1 : 0);
-//   if (i <= 78) {
-//     encoded[0] = i + '0'; 
-//     encoded[1] = 0;
-//   } else if (i <= 99) {
-//     encoded[0] = (i / 10) + '0';
-//     encoded[1] = (i % 10) + '0';
-//     encoded[2] = 0;
-//   } else {
-//     encoded[bufferLen - 1] = 0;
-//     int idx = bufferLen - 2;
-//     while (idx >= 0 && i > 0) {
-//       int r = i % 78;
-//       i = i / 78;
-//       int c = r + '0';
-//       if (i == 0) {
-//         c += 10;
-//       }
-//       encoded[idx--] = c;
-//     }
-//     encoded += idx + 1;
-//   }
-//   if (isNeg) {
-//     encoded--;
-//     encoded[0] = '-';
-//   } 
-//   return encoded;
-// }
-
 volatile bool _Connected = false;
 volatile int _ConnectVersion = 0;
 
@@ -300,16 +263,6 @@ volatile bool _DebugEnableEchoFeedback = false;
 volatile bool _NoEncodeInt = false;
 #endif
 
-// class IntEncoder {
-//   public:
-//     IntEncoder(int i): str(_EncodeInt(i, buffer, 20)) {
-//     }
-//     const String& encoded() { return str; }
-//   private:
-//     char buffer[20];
-//     String str;
-// };
-
 
 #define IS_FLOAT_ZERO(f) ((((f)<0?-(f):(f)) - 0.0) < 0.001)
 #define IS_FLOAT_WHOLE(f) IS_FLOAT_ZERO((f) - (int) (f))
@@ -330,9 +283,9 @@ volatile bool _NoEncodeInt = false;
 
 
 
-
 volatile bool _SendingCommand = false;
 volatile bool _HandlingFeedback = false;
+
 
 // void _Preconnect() {
 //   if (_Preconneced) {
@@ -1304,8 +1257,22 @@ void LedGridDDLayer::turnOff(int x, int y) {
 void LedGridDDLayer::toggle(int x, int y) {
   _sendCommand2(layerId, "ledtoggle", String(x), String(y));
 }
+void LedGridDDLayer::bitwise(unsigned long bits, int y) {
+  _sendCommand2(layerId, "bitwise", String(y), String(bits));
+}
+void LedGridDDLayer::bitwise2(unsigned long bits_0, unsigned long bits_1, int y) {
+  _sendCommand3(layerId, "bitwise", String(y), String(bits_0), String(bits_1));
+}
+void LedGridDDLayer::bitwise3(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, int y) {
+  _sendCommand4(layerId, "bitwise", String(y), String(bits_0), String(bits_1), String(bits_2));
+}
+void LedGridDDLayer::bitwise4(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, unsigned long bits_3, int y) {
+  _sendCommand5(layerId, "bitwise", String(y), String(bits_0), String(bits_1), String(bits_2), String(bits_3));
+}
+void bitwise(unsigned long bits_array[], int start_x) {
+}
 void LedGridDDLayer::horizontalBar(int count, bool rightToLeft) {
-  _sendCommand2(layerId, "ledhoribar", String(count), TO_BOOL(rightToLeft));
+  _sendCommand2(layerId, "bitwise", String(count), TO_BOOL(rightToLeft));
 }
 void LedGridDDLayer::verticalBar(int count, bool bottomToTop) {
   _sendCommand2(layerId, "ledvertbar", String(count), TO_BOOL(bottomToTop));

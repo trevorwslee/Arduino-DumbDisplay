@@ -249,6 +249,10 @@ class LedGridDDLayer: public DDLayer {
     void turnOff(int x = 0, int y = 0);
     /* toggle LED @ (x, y) */
     void toggle(int x = 0, int y = 0);
+    void bitwise(unsigned long bits, int y = 0);
+    void bitwise2(unsigned long bits_0, unsigned long bits_1, int y = 0);
+    void bitwise3(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, int y = 0);
+    void bitwise4(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, unsigned long bits_3, int y = 0);
     /* turn on LEDs to form a horizontal "bar" */
     void horizontalBar(int count, bool rightToLeft = false);
     /* turn on LEDs to form a vertical "bar" */ 
@@ -665,21 +669,6 @@ class DumbDisplay {
     bool canLogToSerial();
 };
 
-
-class DDConnectVersionTracker {
-  public:
-    DDConnectVersionTracker() {
-      this->version = 0;
-    }
-    bool checkChanged(DumbDisplay& dumbdisplay) {
-      int oldVersion = this->version;
-      this->version = dumbdisplay.getConnectVersion();
-      return this->version != oldVersion;
-    }
-  private:
-    int version;  
-};
-
-
+#include "_dd_misc.h"
 
 #endif
