@@ -40,8 +40,8 @@ int GetRegisterPin(int idx) {
 
 LedGridDDLayer *shiftBitLayer;
 LedGridDDLayer *registerLayer;
-LcdDDLayer *clockLayer;
 
+LcdDDLayer *clockLayer;
 LcdDDLayer *clearLayer;
 LcdDDLayer *autoLayer;
 
@@ -95,8 +95,6 @@ void setup() {
     DD_AP_HORI_2(shiftBitLayer->getLayerId(), registerLayer->getLayerId()),
     clockLayer->getLayerId()
   ));
-
-
 }
 
 

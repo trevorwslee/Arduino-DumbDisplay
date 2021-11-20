@@ -30,6 +30,7 @@
 #define SUPPORT_LONG_PRESS_FEEDBACK
 
 #define SUPPORT_IDLE_CALLBACK
+#define SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
 
 #define SUPPORT_TUNNEL
 #define TUNNEL_TIMEOUT_MILLIS 30000
@@ -144,6 +145,10 @@ volatile int _ConnectVersion = 0;
 volatile DDIdleCallback _IdleCallback = NULL; 
 #endif
 
+#ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
+volatile DDConnectVersionChangedCallback _ConnectVersionChangedCallback = NULL; 
+#endif
+
 bool IOProxy::available() {
   bool done = false;
   while (!done && pIO->available()) {
@@ -220,6 +225,11 @@ this->print("// NEED TO RECONNECT\n");
       this->reconnectKeepAliveMillis = this->lastKeepAliveMillis;
     } else if (this->reconnectKeepAliveMillis > 0) {
       _ConnectVersion = _ConnectVersion + 1;
+#ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK   
+      if (_ConnectVersionChangedCallback != NULL) {
+        _ConnectVersionChangedCallback(_ConnectVersion);
+      }
+#endif   
 #ifdef DEBUG_RECONNECT_WITH_COMMENT
       this->print("// DETECTED RECONNECTION\n");
 #endif      
@@ -1953,7 +1963,13 @@ void DumbDisplay::setIdleCalback(DDIdleCallback idleCallback) {
 #ifdef SUPPORT_IDLE_CALLBACK
   _IdleCallback = idleCallback;
 #endif
-} 
+}
+void DumbDisplay::setConnectVersionChangedCalback(DDConnectVersionChangedCallback connectVersionChangedCallback) {
+#ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
+  _ConnectVersionChangedCallback = connectVersionChangedCallback;
+#endif
+}
+
 
 // void DumbDisplay::delay(unsigned long ms) {
 //   _Delay(ms);

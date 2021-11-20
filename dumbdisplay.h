@@ -17,7 +17,7 @@
 
 
 #define DD_CONDENSE_COMMAND
-//#define DD_CAN_TURN_OFF_CONDENSE_COMMAND
+//#define DD_CAN_TURN_OFF_CONDENSE_COMMAND  // comment out for code memory usage
 
 
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
@@ -249,7 +249,12 @@ class LedGridDDLayer: public DDLayer {
     void turnOff(int x = 0, int y = 0);
     /* toggle LED @ (x, y) */
     void toggle(int x = 0, int y = 0);
+    /* turn on/off LEDs based on bits */
+    /* - bits: least significant bit maps to right-most LED */
+    /* - y: row */
     void bitwise(unsigned long bits, int y = 0);
+    /* turn on/off two rows of LEDs by bits */
+    /* - y: starting row */
     void bitwise2(unsigned long bits_0, unsigned long bits_1, int y = 0);
     void bitwise3(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, int y = 0);
     void bitwise4(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, unsigned long bits_3, int y = 0);
@@ -566,6 +571,7 @@ class JsonDDTunnelMultiplexer {
 };
 
 typedef void (*DDIdleCallback)(long idleForMillis);
+typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 
 class DumbDisplay {
@@ -662,6 +668,7 @@ class DumbDisplay {
     /* 1. no connection response while connecting */
     /* 2. detected no 'keep alive' signal */
     void setIdleCalback(DDIdleCallback idleCallback); 
+    void setConnectVersionChangedCalback(DDConnectVersionChangedCallback connectVersionChangedCallback); 
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine);
   private:
