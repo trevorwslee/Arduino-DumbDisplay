@@ -11,6 +11,7 @@ class DDValueStore {
       storedValue = value;
       return !same;
     }
+    T get() { return storedValue; }
   private:
     T storedValue;
 };
