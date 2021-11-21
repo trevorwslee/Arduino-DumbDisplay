@@ -1281,10 +1281,8 @@ void LedGridDDLayer::bitwise3(unsigned long bits_0, unsigned long bits_1, unsign
 void LedGridDDLayer::bitwise4(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, unsigned long bits_3, int y) {
   _sendCommand5(layerId, C_bitwise, String(y), String(bits_0), String(bits_1), String(bits_2), String(bits_3));
 }
-void bitwise(unsigned long bits_array[], int start_x) {
-}
 void LedGridDDLayer::horizontalBar(int count, bool rightToLeft) {
-  _sendCommand2(layerId, C_bitwise, String(count), TO_BOOL(rightToLeft));
+  _sendCommand2(layerId, "ledhoribar", String(count), TO_BOOL(rightToLeft));
 }
 void LedGridDDLayer::verticalBar(int count, bool bottomToTop) {
   _sendCommand2(layerId, "ledvertbar", String(count), TO_BOOL(bottomToTop));

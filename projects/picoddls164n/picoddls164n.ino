@@ -116,7 +116,7 @@ void Clear() {
 void SetShiftBit(int bit) {
   if (shiftBitValue.set(bit)) {
     digitalWrite(SHIFT_PIN, bit);
-   shiftBitLayer->bitwise(bit);
+    shiftBitLayer->bitwise(bit);
   }
 }
 void ShowRegister() {
