@@ -17,14 +17,15 @@
 
 
 #define DD_CONDENSE_COMMAND
+//#define DD_CAN_TURN_OFF_CONDENSE_COMMAND  // comment out for code memory usage
 
 
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
 
+
 #ifdef DD_CONDENSE_COMMAND
 #define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b)), 16))
 #define DD_INT_COLOR(color) ("+" + DDIntEncoder(color).encoded())
-//#define DD_RGB_COLOR(r, g, b) DD_INT_COLOR((int32_t) (0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b))))
 #else
 #define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
 #define DD_INT_COLOR(color) ("+" + String(color))
@@ -248,6 +249,15 @@ class LedGridDDLayer: public DDLayer {
     void turnOff(int x = 0, int y = 0);
     /* toggle LED @ (x, y) */
     void toggle(int x = 0, int y = 0);
+    /* turn on/off LEDs based on bits */
+    /* - bits: least significant bit maps to right-most LED */
+    /* - y: row */
+    void bitwise(unsigned long bits, int y = 0);
+    /* turn on/off two rows of LEDs by bits */
+    /* - y: starting row */
+    void bitwise2(unsigned long bits_0, unsigned long bits_1, int y = 0);
+    void bitwise3(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, int y = 0);
+    void bitwise4(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, unsigned long bits_3, int y = 0);
     /* turn on LEDs to form a horizontal "bar" */
     void horizontalBar(int count, bool rightToLeft = false);
     /* turn on LEDs to form a vertical "bar" */ 
@@ -561,6 +571,7 @@ class JsonDDTunnelMultiplexer {
 };
 
 typedef void (*DDIdleCallback)(long idleForMillis);
+typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 
 class DumbDisplay {
@@ -647,14 +658,17 @@ class DumbDisplay {
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     void deleteLayer(DDLayer *pLayer);
     void debugSetup(int debugLedPin);
+#ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
     /* by default, some commands will have there numeric arguments encoded/compress */
     /* in order to reduce the amount of data to send. */
     /* you can disable this behavior by calling this method. */
     void optionNoCompression(bool noCompression);   
+#endif
     /* set 'idle callback', which will be called in 2 situations: */
     /* 1. no connection response while connecting */
     /* 2. detected no 'keep alive' signal */
     void setIdleCalback(DDIdleCallback idleCallback); 
+    void setConnectVersionChangedCalback(DDConnectVersionChangedCallback connectVersionChangedCallback); 
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine);
   private:
@@ -662,21 +676,6 @@ class DumbDisplay {
     bool canLogToSerial();
 };
 
-
-class DDConnectVersionTracker {
-  public:
-    DDConnectVersionTracker() {
-      this->version = 0;
-    }
-    bool checkChanged(DumbDisplay& dumbdisplay) {
-      int oldVersion = this->version;
-      this->version = dumbdisplay.getConnectVersion();
-      return this->version != oldVersion;
-    }
-  private:
-    int version;  
-};
-
-
+#include "_dd_misc.h"
 
 #endif

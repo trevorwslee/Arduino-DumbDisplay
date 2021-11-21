@@ -1,7 +1,3 @@
-//************************************************//
-//*** must define DD_4_ESP32 before includeing ***/
-//************************************************//
-
 #ifndef esp32dumbdisplay_h
 #define esp32dumbdisplay_h
 
