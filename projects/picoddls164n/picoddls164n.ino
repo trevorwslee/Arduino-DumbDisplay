@@ -1,13 +1,25 @@
 
+// for a desciption of the Shift Register experiment, please watch the YouTube video 
+// -- Raspberry Pi Pico Shift Register Arduino Experiment with HC-06 and DumpDisplay, and 8x8 LED Matrix
+// -- https://www.youtube.com/watch?v=qNESLsdzsWk
+
 // comment out BLUETOOTH if don't have HC-06 connectivity
 // . GP8 => RX of HC-06; GP9 => TX of HC-06
 // if no HC-06 connectivity, will need to use DumbDisplayWifiBridge
 #define BLUETOOTH
 
-
 #define SHIFT_PIN   6
 #define CLEAR_PIN   26
 #define CLOCK_PIN   27
+
+
+#define PULSE_MILLIS           2
+#define AUTO_DELAY_STEP_MILLIS 2
+#define AUTO_DELAY_STEP_FACTOR 2
+#define MAX_AUTO_DELAY_STEPS   50
+
+
+
 
 
 #ifdef BLUETOOTH
@@ -45,6 +57,8 @@ LcdDDLayer *clockLayer;
 LcdDDLayer *clearLayer;
 LcdDDLayer *autoLayer;
 
+LedGridDDLayer *autoDelayLayer;
+
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback);
 
@@ -62,6 +76,12 @@ void setup() {
 
   digitalWrite(CLOCK_PIN, 0);
   digitalWrite(CLEAR_PIN, 1);
+
+  autoDelayLayer = dumbdisplay.createLedGridLayer(MAX_AUTO_DELAY_STEPS, 1, 1, 5);
+  autoDelayLayer->border(1, "green", "round");
+  autoDelayLayer->padding(1);
+  autoDelayLayer->horizontalBar(MAX_AUTO_DELAY_STEPS);
+  autoDelayLayer->setFeedbackHandler(FeedbackHandler, "fs:rpt50");
 
 
   shiftBitLayer = dumbdisplay.createLedGridLayer();
@@ -90,7 +110,8 @@ void setup() {
   autoLayer->setFeedbackHandler(FeedbackHandler);
 
 
-  dumbdisplay.configAutoPin(DD_AP_VERT_3(
+  dumbdisplay.configAutoPin(DD_AP_VERT_4(
+    autoDelayLayer->getLayerId(),
     DD_AP_HORI_2(autoLayer->getLayerId(), clearLayer->getLayerId()),
     DD_AP_HORI_2(shiftBitLayer->getLayerId(), registerLayer->getLayerId()),
     clockLayer->getLayerId()
@@ -99,18 +120,19 @@ void setup() {
 
 
 int shiftBit = 1;  // -1 means auto
+int autoDelaySteps = 100;
 DDValueStore<int16_t> shiftBitValue(0);
 DDValueStore<int16_t> registerValue(0);
 
 
 void Clock() {
   digitalWrite(CLOCK_PIN, 1);
-  delay(10);
+  delay(PULSE_MILLIS);
   digitalWrite(CLOCK_PIN, 0);
 }
 void Clear() {
     digitalWrite(CLEAR_PIN, 0);
-    delay(10);
+    delay(PULSE_MILLIS);
     digitalWrite(CLEAR_PIN, 1);
 }
 void SetShiftBit(int bit) {
@@ -150,7 +172,8 @@ void loop() {
       ShowRegister();
       int bit = (shiftCount == 0) ? 1 : 0;
       SetShiftBit(bit);
-      DDDelay(500);
+      long delayMillis = autoDelaySteps * AUTO_DELAY_STEP_FACTOR * AUTO_DELAY_STEP_MILLIS;
+      DDDelay(delayMillis);
       Clock();
       if (shiftCount == 7) {
         shiftCount = 0;
@@ -181,8 +204,14 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
     }
   } else {
     // auto mode
-    shiftBit = 1;
-    Clear();
-    autoLayer->noBackgroundColor();
+    if (pLayer == autoDelayLayer) {
+      int steps = feedback.x;
+      autoDelayLayer->horizontalBar(steps);
+      autoDelaySteps = steps;
+    } else {
+      shiftBit = 1;
+      Clear();
+      autoLayer->noBackgroundColor();
+    }
   }
 }

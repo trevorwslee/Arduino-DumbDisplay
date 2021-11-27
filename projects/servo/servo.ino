@@ -1,3 +1,8 @@
+// for a desciption of the Servo experiment, please watch the YouTube video 
+// -- ESP8266 Servo Arduino experiment, subsequently, with simple DumbDisplay UI
+// -- https://www.youtube.com/watch?v=pgfL_qwj8cQ 
+
+
 #include <Servo.h>
 
 
