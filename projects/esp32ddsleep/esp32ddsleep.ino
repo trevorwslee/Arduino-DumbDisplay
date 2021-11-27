@@ -1,3 +1,8 @@
+// for a desciption of the ESP32 Deep Sleep experiment, please watch the YouTube video 
+// -- ESP32 Deep Sleep Experiment using Arduino with DumbDisplay
+// -- https://www.youtube.com/watch?v=a61hRLIaqy8
+
+
 #define DD_4_ESP32
 #include "esp32dumbdisplay.h"
 
