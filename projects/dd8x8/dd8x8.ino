@@ -107,13 +107,13 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
     int c = feedback.x;
     int r = feedback.y;
     ledMatrix->toggle(c, r);
-    int bits = data[c];
+    int bits = data[r];
     int mask = 1 << (7 - c);
-    bool on = bits & mask; 
+    bool on = (bits & mask) == 0; 
     if (on) {
-      data[r] = bits & ~mask;
-    } else {
       data[r] = bits | mask;
+    } else {
+      data[r] = bits & ~mask;
     }
   } else {
     ledMatrix->clear();
