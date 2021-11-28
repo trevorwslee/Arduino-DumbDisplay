@@ -1,6 +1,6 @@
 # DumbDisplay Arduino Library (v0.7.7)
 
-DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / Respberry Pi Pico experiments.
+DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / STM32 / Respberry Pi Pico experiments.
 
 You may want to watch the video **Introducing DumbDisplay -- the little helper for Arduino experiments** for a brief introduction -- https://www.youtube.com/watch?v=QZkhO6jTf0U
 
@@ -36,7 +36,7 @@ The app can accept connection via
 * Serial <-> WIFI via the simple included tool -- DumbDisplay WIFI Bridge
 
 Notes:
-* I have only tested DumbDisplay with the micro controller boards that I have -- namely, Arduino Uno, ESP01, ESP8266, ESP32 and Raspberry Pi Pico.
+* I have only tested DumbDisplay with the micro controller boards that I have -- namely, Arduino Uno, ESP01, ESP8266, ESP32, STM32F103 and Raspberry Pi Pico.
 * In case DumbDisplay does not "handshake" with your Arduino board correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion.
 * In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to later section of this README.
 
@@ -74,7 +74,7 @@ You have several options for connecting to DumbDisplay Android app.
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - doing so will **set Serial baud rate to the default 115200**, and **you should not be using Serial for other purposes**; note that a lower baud rate, say 9600, may work better for some cases
-* Via `SoftwareSerial` -- https://www.arduino.cc/en/Reference/softwareSerial
+* Via `SoftwareSerial` (connected to Bluetooth module like HC-06) -- https://www.arduino.cc/en/Reference/softwareSerial
   ```
     #include <ssdumbdisplay.h>
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
@@ -85,6 +85,28 @@ You have several options for connecting to DumbDisplay Android app.
     - **the default baud rate is 115200**, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially
     true for HC-08, which connects via BLE. 
   - **you should not be using that SoftwareSerial for other purposes**
+* Via `Serial2` (for STM32, connected to Bluetooth module like HC-06) 
+  ```
+    #include <serial2dumbdisplay.h>
+    DumbDisplay dumbdisplay(new DDSerial2IO(115200));
+  ```
+  - need to include serial2dumbdisplay.h -- `#include <serial2dumbdisplay.h>`
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSerial2IO(115200))`
+  - e.g. STM32F103: PA3 (RX2) ==> TX; PA2 (TX2) ==> RX
+* Via `Serial2` (for Raspberry Pi Pico, connected to Bluetooth module like HC-06) 
+  ```
+    #include <picodumbdisplay.h>
+    DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
+  ```
+  - need to include picodumbdisplay.h -- `#include <picodumbdisplay.h>`
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDPicoUart1IO(115200))`
+  - **MUST** define DD_4_PICO_TX and DD_4_PICO_RX before including picodumbdisplay.h, like
+  ```
+    #define DD_4_PICO_TX 8
+    #define DD_4_PICO_RX 9
+    #include <picodumbdisplay.h>
+    DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
+  ```
 * Via **ESP32** `BluetoothSerial`
   ```
     #define DD_4_ESP32
