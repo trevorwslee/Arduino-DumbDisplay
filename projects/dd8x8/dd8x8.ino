@@ -5,7 +5,7 @@
 
 #ifdef BLUETOOTH
 
-// GP8 => RX of HC-06; GP9 => TX of HC-06
+// GP8 => RX of HC-06; GP9 => TX of HC-06; HC-06 should be configured to use baud rate of 115200
 #define DD_4_PICO_TX 8
 #define DD_4_PICO_RX 9
 #include <picodumbdisplay.h>
