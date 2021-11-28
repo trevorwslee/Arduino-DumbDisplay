@@ -1,5 +1,5 @@
-#ifndef esp32dumbdisplay_h
-#define esp32dumbdisplay_h
+#ifndef picodumbdisplay_h
+#define picodumbdisplay_h
 
 #if !(defined DD_4_PICO_TX && defined DD_4_PICO_RX)
 
@@ -18,7 +18,9 @@ UART Serial2(DD_4_PICO_TX, DD_4_PICO_RX, 0, 0);
 class DDPicoUart1IO: public DDInputOutput {
   public:
     /* using PICO Uart1 */
-    DDPicoUart1IO(unsigned long baud): DDInputOutput(DD_SERIAL_BAUD, false, false) {
+    DDPicoUart1IO(unsigned long baud,
+                  bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD):
+                  DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->baud = baud;
     }
     bool available() {

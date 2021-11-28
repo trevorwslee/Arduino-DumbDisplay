@@ -4,7 +4,7 @@
 // -- https://www.youtube.com/watch?v=qNESLsdzsWk
 
 // comment out BLUETOOTH if don't have HC-06 connectivity
-// . GP8 => RX of HC-06; GP9 => TX of HC-06
+// . GP8 => RX of HC-06; GP9 => TX of HC-06; ; HC-06 should be configured to use baud rate of 115200
 // if no HC-06 connectivity, will need to use DumbDisplayWifiBridge
 #define BLUETOOTH
 
