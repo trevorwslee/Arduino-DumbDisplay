@@ -33,19 +33,27 @@
 
 
 
-#define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
 #define DD_AP_HORI "H(*)"
 #define DD_AP_VERT "V(*)"
 #define DD_AP_HORI_2(id1, id2) ("H(" + id1 + "+" + id2 + ")")
 #define DD_AP_VERT_2(id1, id2) ("V(" + id1 + "+" + id2 + ")")
+#define DD_AP_STACK_2(id1, id2) ("S(" + id1 + "+" + id2 + ")")
 #define DD_AP_HORI_3(id1, id2, id3) ("H(" + id1 + "+" + id2 + "+" + id3 + ")")
 #define DD_AP_VERT_3(id1, id2, id3) ("V(" + id1 + "+" + id2 + "+" + id3 + ")")
+#define DD_AP_STACK_3(id1, id2, id3) ("S(" + id1 + "+" + id2 + "+" + id3 + ")")
 #define DD_AP_HORI_4(id1, id2, id3, id4) ("H(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + ")")
 #define DD_AP_VERT_4(id1, id2, id3, id4) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + ")")
+#define DD_AP_STACK_4(id1, id2, id3, id4) ("S(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + ")")
 #define DD_AP_HORI_5(id1, id2, id3, id4, id5) ("H(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")")
 #define DD_AP_VERT_5(id1, id2, id3, id4, id5) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")")
+#define DD_AP_STACK_5(id1, id2, id3, id4, id5) ("S(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")")
 #define DD_AP_HORI_6(id1, id2, id3, id4, id5, id6) ("H(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
 #define DD_AP_VERT_6(id1, id2, id3, id4, id5, id6) ("V(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
+#define DD_AP_STACK_6(id1, id2, id3, id4, id5, id6) ("S(" + id1 + "+" + id2 + "+" + id3 + "+" + id4 + "+" + id5 + ")" + "+" + id6 + ")")
+
+#define DD_AP_PADDING(lp, tp, rp, bp, id) ("S/" + String(lp) + "-" + String(tp) + "-" + String(rp) + "-" + String(bp) + "(" + id + ")") 
+
+#define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
 
 
 #include "_dd_serial.h"
