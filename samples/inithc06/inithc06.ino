@@ -41,7 +41,7 @@ SoftwareSerial hc06(2, 3);  // 2 => TX of HC06; 3 => RX of HC06
 //  reset to default: AT+DEFAULT
 
 
-const unsigned long baud = 115200;  // default for hc-06 / hc-08 is 9600; for hc-05, set to 38400 
+const unsigned long baud = 38400;  // default for hc-06 / hc-08 is 9600; for hc-05, set to 38400 
 
 
 void setup() {
