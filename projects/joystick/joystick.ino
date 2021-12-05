@@ -1,3 +1,8 @@
+// for a desciption of the experiment
+// -- Arduino JoyStick Shield and DumbDisplay
+// -- https://www.youtube.com/watch?v=9GYrZWXHfUo 
+
+
 /*
 
   Sample code adapted from: https://cyaninfinite.com/interfacing-arduino-joystick-shield-with-oled-display/

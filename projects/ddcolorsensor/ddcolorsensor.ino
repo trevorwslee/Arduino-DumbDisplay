@@ -71,7 +71,7 @@ bool calibrateMin = false;
 bool calibrateMax = false;
 
 
-void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, int x, int y) {
+void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
   if (pLayer == whiteLayer) {
     // which button clicked ==> calibrate MIN of the color intensities
     calibrateMin = true;

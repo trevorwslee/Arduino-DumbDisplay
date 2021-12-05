@@ -1,3 +1,8 @@
+// for a desciption of the experiment
+// -- ESP32 Digital Clock experiment with DHT11 and DumbDisplay, and the Internet
+// -- https://www.youtube.com/watch?v=BVceJHvigBQ 
+
+
 //****
 //* - may want to setup proper "timezone" for WORLD_TIME_API_END_POINT
 //* - get openweathermap.org APPID, and setup OPEN_WEATHER_API_END_POINT
