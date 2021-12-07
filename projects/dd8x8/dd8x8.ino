@@ -1,3 +1,11 @@
+
+// for a desciption of the 8x8 LED Matrix with DumbDisplay UI experiment, please watch the YouTube video 
+// -- Raspberry Pi Pico 8x8 LED Matrix Arduino Experiment with HC-06 and DumpDisplay
+// -- https://www.youtube.com/watch?v=YRfc9Z-L73A 
+
+
+
+
 // comment out BLUETOOTH if don't have HC-06 connectivity
 // . GP8 => RX of HC-06; GP9 => TX of HC-06
 // if no HC-06 connectivity, will need to use DumbDisplayWifiBridge

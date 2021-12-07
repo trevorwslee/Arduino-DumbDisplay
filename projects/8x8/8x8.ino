@@ -1,4 +1,9 @@
 
+// for a desciption of the 8x8 LED Matrix experiment, please watch the YouTube video 
+// -- Raspberry Pi Pico 8x8 LED Matrix Arduino Experiment with HC-06 and DumpDisplay
+// -- https://www.youtube.com/watch?v=YRfc9Z-L73A 
+
+
 #define R_SHIFT_PIN   6
 #define R_CLOCK_PIN   27
 
