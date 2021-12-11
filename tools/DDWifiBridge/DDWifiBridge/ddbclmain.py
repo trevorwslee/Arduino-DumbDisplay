@@ -3,7 +3,8 @@ import sys, time
 from serial.tools.list_ports import comports
 
 
-import ddbcore
+#import ddbcore
+from . import ddbcore
 
 def PrintLogMessage(msg):
     print("... " + msg)
@@ -36,5 +37,5 @@ class DDClUserInterface(ddbcore.DDUserInterface):
     def printControlMessage(self, msg):
         PrintControlMessage(msg)
 
-if __name__ == "__main__":
-    print("Please run DDClWifiBridge.py instead!!!")
+# if __name__ == "__main__":
+#     print("Please run DDClWifiBridge.py instead!!!")

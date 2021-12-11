@@ -165,5 +165,5 @@ class DDWinUserInterface(ddbcore.DDUserInterface):
         Text_box.insert(tk.END, msg + "\n")
         pass
 
-if __name__ == "__main__":
-    print("Please run DDWifiBridge.py instead!!!")
+# if __name__ == "__main__":
+#     print("Please run DDWifiBridge.py instead!!!")
