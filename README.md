@@ -1032,6 +1032,11 @@ Notes:
 
 You may want to watch the video **Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge** -- https://www.youtube.com/watch?v=0UhRmXXBQi8
 
+
+There is also a seperate repository for the tool -- https://github.com/trevorwslee/DDWifiBridge 
+
+
+
 # Thank You!
 
 Greeting from the author Trevor Lee:
