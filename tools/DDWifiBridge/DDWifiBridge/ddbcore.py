@@ -205,5 +205,5 @@ def RunDDBridgeMain(ddui, connect_param_dict = None):
         else:
             NoSerialLoop()
 
-if __name__ == "__main__":
-    print("Please run DDWifiBridge.py instead!!!")
+# if __name__ == "__main__":
+#     print("Please run DDWifiBridge.py instead!!!")

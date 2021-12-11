@@ -1,10 +1,24 @@
-# . will need the PySerial module ... i.e. if needed to, install it like
-#       pip install pyserizl
-# . in Linux system, access serial port will need access right ... in such case ...
-#       sudo usermod -a -G dialout <user>
-
 import sys, getopt
 
+
+# def checkDependencies(command_line):
+#     import importlib.util
+#     while True:
+#         spec = importlib.util.find_spec("serial")
+#         if spec is None:
+#             message = "pyserial is not installed ...\n can install by running command ...\n pip install pyserial"
+#             print(message)
+#             if not command_line:
+#                 from tkinter import messagebox
+#                 #messagebox.showinfo("DumbDisplay WIFI Bridge", message)
+#                 message = message + "\ninstall it now?"
+#                 answer = messagebox.askyesno("DumbDisplay WIFI Bridge", message)
+#                 if answer:
+#                     import subprocess
+#                     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyserial'], stdout=subprocess.DEVNULL)
+#                     continue
+#         break
+#     return True
 
 def main():
     options = None
@@ -28,11 +42,17 @@ def main():
     import importlib.util
     spec = importlib.util.find_spec("serial")
     if spec is None:
-        message = "pyserial is not installed ...\n can install by running command ...\n pip install pyserial"
+        message = "package 'pyserial' is not installed\ncan install it by running command\n    pip install pyserial"
         print(message)
         if not command_line:
             from tkinter import messagebox
-            messagebox.showinfo("DumbDisplay WIFI Bridge", message)
+            #messagebox.showinfo("DumbDisplay WIFI Bridge", message)
+            message = message + "\ninstall it now?"
+            answer = messagebox.askyesno("DumbDisplay WIFI Bridge", message)
+            if answer:
+                import subprocess
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyserial'], stdout=subprocess.DEVNULL)
+                messagebox.showinfo("DumbDisplay WIFI Bridge", "Please try running DDWifiBridge again.")
     else:
         if command_line:
             #options, _ = getopt.getopt(sys.argv[1:], "p:b:w:", ["port=", "baud=", "wifiport="])
@@ -49,5 +69,5 @@ def main():
             ddbwinmain.RunDDBridgeWinMain(param_dict)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

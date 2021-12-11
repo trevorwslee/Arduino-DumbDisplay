@@ -471,5 +471,5 @@ class WifiTarget:
                     else:
                         rest = rest + d
 
-if __name__ == "__main__":
-    print("Plase run DDWifiBridge.py instead!!!")
+# if __name__ == "__main__":
+#     print("Plase run DDWifiBridge.py instead!!!")
