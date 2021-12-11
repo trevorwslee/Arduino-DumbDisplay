@@ -1082,15 +1082,18 @@ void DDLayer::backgroundColor(const String& color) {
 void DDLayer::noBackgroundColor() {
   _sendCommand0(layerId, C_nobgcolor);
 }
+// void DDLayer::reorder(bool bringUp) {
+//   _sendCommand1(layerId, C_reorder);
+// }
 void DDLayer::flash() {
   _sendCommand0(layerId, "flash");
 }
 void DDLayer::flashArea(int x, int y) {
   _sendCommand2(layerId, "flasharea", String(x), String(y));
 }
-void DDLayer::writeComment(const String& comment) {
-  _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
-}
+// void DDLayer::writeComment(const String& comment) {
+//   _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
+// }
 void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
   _sendCommand2(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod);
   feedbackHandler = NULL;
@@ -1860,11 +1863,14 @@ void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   //_PreDeleteLayer(pLayer);
   delete pLayer;
 }
+void DumbDisplay::reorderLayer(DDLayer *pLayer, const String& how) {
+  _sendCommand1(pLayer->getLayerId(), "REORD", how);
+}
 void DumbDisplay::recordLayerSetupCommands() {
   _Connect();
   _sendCommand0("", "RECC");
 }
-void DumbDisplay::playbackLayerSetupCommands(const String persist_id) {
+void DumbDisplay::playbackLayerSetupCommands(const String& persist_id) {
   _sendCommand2("", "SAVEC", persist_id, TO_BOOL(true));
   _sendCommand0("", "PLAYC");
 #ifdef SUPPORT_RECONNECT
