@@ -1011,13 +1011,10 @@ Yes, you can do exactly that, with the help of the simple DumbDisplay WIFI Bridg
 When running the DumbDisplay WIFI Bridge, on one side, it connects to your Arduino board via Serial connection, similar to how you Arduino IDE connect to your Arduino board. At the same time, it listens on port 10201 of your desktop, allowing DumbDisply to establish connection via WIFI. In other words, your desktop computer port 10201 is now a "bridge" / "proxy" to your Arduino DumpDisplay code. 
 
 Notes:
+* There is also a seperate repository for DumbDisply WIFI Bridge -- https://github.com/trevorwslee/DDWifiBridge 
 * DumbDisply WIFI Bridge makes use of the PySerial library, which can be install like
   ```
   pip install pyserial
-  ```
-* Can run DumbDisply WIFI Bridge as a command-line tool (without UI). Simply call it with necessary arguments like "port" (-p <port> / --port=<port>), "baud" (-b <baud> / --baud=<baud>), and "wifi port" (-w <wifi-port> / --wifiport=<wifi-port>), like
-  ```
-  python DDWifiBridge.py --port=COM5 --baud=15200
   ```
 * In Linux, acessing serial port will need special access right; you can grant such right to yourself (the user) like
   ```
@@ -1031,9 +1028,6 @@ Notes:
 
 
 You may want to watch the video **Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge** -- https://www.youtube.com/watch?v=0UhRmXXBQi8
-
-
-There is also a seperate repository for the tool -- https://github.com/trevorwslee/DDWifiBridge 
 
 
 

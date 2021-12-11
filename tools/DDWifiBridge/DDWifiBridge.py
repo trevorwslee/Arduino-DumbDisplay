@@ -5,5 +5,5 @@
 
 from DDWifiBridge import ddbridge
 
-if __name__ == "__main__":
-    ddbridge.main()
+# if __name__ == "__main__":
+#     ddbridge.main()

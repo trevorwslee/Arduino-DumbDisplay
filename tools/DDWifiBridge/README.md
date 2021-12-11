@@ -22,7 +22,7 @@ Notes:
   ```
 * Can run DumbDisply WIFI Bridge as a command-line tool (without UI). Simply call it with necessary arguments like "port" (-p <port> / --port=<port>), "baud" (-b <baud> / --baud=<baud>), and "wifi port" (-w <wifi-port> / --wifiport=<wifi-port>), like
   ```
-  python3 -m DDWifiBridge --port=COM5 --baud=15200
+  python3 -m DDWifiBridge --port=COM5 --baud=115200
   ```
 * In Linux, acessing serial port will need special access right; you can grant such right to yourself (the user) like
   ```
