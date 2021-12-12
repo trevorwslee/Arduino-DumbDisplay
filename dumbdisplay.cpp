@@ -53,6 +53,8 @@
 #define DD_SID "Arduino-c1"
 
 
+#define C_TONE             "#00"
+
 #define C_border           "#10"
 #define C_padding          "#11" 
 #define C_bgcolor          "#12"
@@ -1913,6 +1915,10 @@ void DumbDisplay::writeComment(const String& comment) {
   // } else {
   //   _sendCommand0("", ("// " + comment).c_str());
   // }
+}
+void DumbDisplay::tone(uint32_t freq, uint32_t duration) {
+  _Connect();
+  _sendCommand2("", C_TONE, TO_C_INT(freq), TO_C_INT(duration));
 }
 
 

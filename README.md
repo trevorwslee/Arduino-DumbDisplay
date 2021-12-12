@@ -1049,6 +1049,7 @@ MIT
 
 v0.7.8
   - added more "auto pin" functions
+  - added "tone" to DumbDisplay
   - bug fixes
 
 

@@ -663,6 +663,7 @@ class DumbDisplay {
     void loadLayerCommands(const String& id);
     /* write out a comment to DD */
     void writeComment(const String& comment);
+    void tone(uint32_t freq, uint32_t duration);
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
