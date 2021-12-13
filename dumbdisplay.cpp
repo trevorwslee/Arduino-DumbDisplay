@@ -1860,8 +1860,8 @@ PlotterDDLayer* DumbDisplay::createPlotterLayer(int width, int height, int pixel
 void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }
-void DumbDisplay::pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight) {
-  _sendCommand5("", "PINAP", layoutSpec, String(uLeft), String(uTop), String(uWidth), String(uHeight));
+void DumbDisplay::pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
+  _sendCommand6("", "PINAP", layoutSpec, String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
