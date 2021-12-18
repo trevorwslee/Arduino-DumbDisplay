@@ -68,7 +68,7 @@ You have several options for connecting to DumbDisplay Android app.
 
 * Via Serial 
   ```
-    #include <dumbdisplay.h>
+    #include "dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDInputOutput());
   ```
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
@@ -76,7 +76,7 @@ You have several options for connecting to DumbDisplay Android app.
   - doing so will **set Serial baud rate to the default 115200**, and **you should not be using Serial for other purposes**; note that a lower baud rate, say 9600, may work better for some cases
 * Via `SoftwareSerial` (connected to Bluetooth module like HC-06) -- https://www.arduino.cc/en/Reference/softwareSerial
   ```
-    #include <ssdumbdisplay.h>
+    #include "ssdumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
   ```
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
@@ -87,7 +87,7 @@ You have several options for connecting to DumbDisplay Android app.
   - **you should not be using that SoftwareSerial for other purposes**
 * Via `Serial2` (for STM32, connected to Bluetooth module like HC-06) 
   ```
-    #include <serial2dumbdisplay.h>
+    #include "serial2dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSerial2IO(115200));
   ```
   - need to include serial2dumbdisplay.h -- `#include <serial2dumbdisplay.h>`
@@ -104,13 +104,13 @@ You have several options for connecting to DumbDisplay Android app.
   ```
     #define DD_4_PICO_TX 8
     #define DD_4_PICO_RX 9
-    #include <picodumbdisplay.h>
+    #include "picodumbdisplay.h"
     DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
   ```
 * Via **ESP32** `BluetoothSerial`
   ```
     #define DD_4_ESP32
-    #include <esp32dumbdisplay.h>
+    #include "esp32dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
   ```
   - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
@@ -121,7 +121,7 @@ You have several options for connecting to DumbDisplay Android app.
 * Via **ESP32** `BLE`
   ```
     #define DD_4_ESP32
-    #include <esp32bledumbdisplay.h>
+    #include "esp32bledumbdisplay.h"
     DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"));
   ```
   - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
@@ -156,7 +156,7 @@ With a DumbDisplay object, you are ready to proceed with coding, like
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddblink/ddblink.ino
 
 ```
-#include <ssdumbdisplay.h>
+#include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
@@ -190,7 +190,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonofflo
 
 
 ```
-#include <ssdumbdisplay.h>
+#include "ssdumbdisplay.h"
 
 /* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
 DumbDisplay dumbdisplay(new DDInputOutput(57600));
@@ -219,7 +219,7 @@ Alternativelly, can setup "callback" function to handle "feedback" passively, li
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonoffmb/ddonoffmb.ino
 
 ```
-#include <ssdumbdisplay.h>
+#include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
@@ -603,7 +603,7 @@ There is a graphical [LCD] layer which is derived from the Turtle layer (i.e. in
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddgraphical/ddgraphical.ino
 
 ```
-#include <ssdumbdisplay.h>
+#include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
@@ -698,7 +698,7 @@ This very simple doodle sample shows how the "layer feedback" mechanism can be u
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/dddoodle/dddoodle.ino
 
 ```
-#include <ssdumbdisplay.h>
+#include "ssdumbdisplay.h"
 
 /* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
 DumbDisplay dumbdisplay(new DDInputOutput(57600));

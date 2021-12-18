@@ -71,7 +71,7 @@ typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, const DD
 
 class DDObject {
   public:
-    String customId;
+    String customData;
 };
 
 class DDLayer: public DDObject {
