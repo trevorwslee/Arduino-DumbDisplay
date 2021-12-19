@@ -146,7 +146,7 @@ void IdleCallback(long idleForMillis) {
 }
 
 
-GraphicalDDLayer* SetupKey(DumbDisplay& dumbdisplay, int octiveOffset, int noteIdx) {
+GraphicalDDLayer* SetupKey(int octiveOffset, int noteIdx) {
   int width = WIDTH - 2 * BORDER;
   int xOffset = noteIdx * WIDTH / 2;
   int height;
@@ -212,11 +212,11 @@ void setup() {
 
   dumbdisplay.configPinFrame(9 * WIDTH, TOP_HEIGHT + HEIGHT);
 
-  SetupKey(dumbdisplay, -1, 11);
+  SetupKey(-1, 11);
   for (int i = 0; i < 12; i++) {
-    SetupKey(dumbdisplay, 0, i);
+    SetupKey(0, i);
   }
-  SetupKey(dumbdisplay, 1, 0);
+  SetupKey(1, 0);
 
   playLayer = SetupButton("⏯");
   restartLayer = SetupButton("⏮");
