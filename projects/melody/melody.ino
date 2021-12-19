@@ -1,32 +1,33 @@
 #define SPEAKER_PIN 5
 
 
-int8_t ToNoteIdx(char nodeName, char semiTone) {
-  if (nodeName == '0') return -99;  // '0' means no node; -99 is a special node index that signal no note
-  int8_t nodeIdx;
-  switch (nodeName) {
-    case 'C': nodeIdx = 0; break;
-    case 'D': nodeIdx = 2; break;
-    case 'E': nodeIdx = 4; break;
-    case 'F': nodeIdx = 5; break;
-    case 'G': nodeIdx = 7; break;
-    case 'A': nodeIdx = 9; break;
-    case 'B': nodeIdx = 11; break;
+// noteName: C, D, E, F, G, A, B
+// halfNote: #, b
+int ToNoteIdx(char noteName, char halfNote) {
+  int noteIdx;
+  switch (noteName) {
+    case 'C': noteIdx = 0; break;
+    case 'D': noteIdx = 2; break;
+    case 'E': noteIdx = 4; break;
+    case 'F': noteIdx = 5; break;
+    case 'G': noteIdx = 7; break;
+    case 'A': noteIdx = 9; break;
+    case 'B': noteIdx = 11; break;
   }
-  if (semiTone == '#') {
-    nodeIdx = nodeIdx + 1; 
-  } else if (semiTone = 'b') {
-    nodeIdx = nodeIdx - 1;
+  if (halfNote == '#') {
+    noteName = noteIdx + 1; 
+  } else if (halfNote = 'b') {
+    noteName = noteIdx - 1;
   }
-  return nodeIdx;
+  return noteIdx;
 }
 
 
-// 440 is A
-int GetNoteFreq(int8_t octaveIdx, int8_t nodeIdx) {
-  if (nodeIdx == -99) return 0;  // -99 is a special node index that signal no note
-  int8_t n = nodeIdx + 12 * octaveIdx - 8;
-  float freq = 440.0 * pow(2, n / 12.0);
+// octave: can be negative
+// noteIdx: 0 to 11; i.e. 12 note indexes in an octave
+int GetNoteFreq(int octave, int noteIdx) {
+  int n = noteIdx + 12 * octave - 8;
+  float freq = 440.0 * pow(2, n / 12.0);  // 440 is A
   return round(freq);
 }
 
@@ -48,10 +49,11 @@ void PlayTone(int freq, int duration) {
 
 
 
-const char* song = "GcecedcAGGcecedgegegecGAccAGGcecedc";
-const char* beat = "24114242424114282111142411142411428";
+const char* song   = "G C E C E D C A G G C E C E D G E G E G E C G A C C A G G C E C E D C ";
+const char* octave = "0 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0 0 1 1 0 0 0 1 1 1 1 1 1 ";
+const char* beat   = "2 4 1 1 4 2 4 2 4 2 4 1 1 4 2 8 2 1 1 1 1 4 2 4 1 1 1 4 2 4 1 1 4 2 8 ";
 
-const int speed = 300;
+const int beatSpeed = 300;
 
 
 void setup() {
@@ -59,31 +61,22 @@ void setup() {
 }
 
 void loop() {
-  for (int8_t i = 0;; i++) {
+  for (int i = 0;; i += 2) {
 
-    char n = song[i];
-    if (n == 0) {
+    char noteName = song[i];
+    char halfNote = song[i + 1];
+    
+    if (noteName == 0) {
       // reached end of song => break out of loop
       break;
     }
 
-    // get song note to play
-    char nodeName;
-    int8_t octaveIdx;
-    if (n >= 'a') {
-      nodeName = 'A' + (n - 'a');
-      octaveIdx = 1;
-    } else {
-      nodeName = n;
-      octaveIdx = 0;
-    }
-
     // convert the song note into tone frequency
-    int8_t nodeIdx = ToNoteIdx(nodeName, ' ');
-    int freq = GetNoteFreq(octaveIdx, nodeIdx);
+    int noteIdx = ToNoteIdx(noteName, halfNote);
+    int freq = GetNoteFreq(octave[i] - '0', noteIdx);
 
     // get the how to to play the note/tone for 
-    int duration = speed * (beat[i] - '0');
+    int duration = beatSpeed * (beat[i] - '0');
 
     // play the note/tone
     PlayTone(freq, duration);
