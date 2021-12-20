@@ -3,7 +3,7 @@ import socket
 import threading
 import time
 
-#from jsonparse import JsonStreamParserCore
+#from . import JsonStreamParserCore
 from . import jsonparse
 
 
@@ -258,7 +258,7 @@ class Tunnel:
 class JsonTunnel(Tunnel):
     def __init__(self, ser, tunnel_id, end_point):
         super().__init__(ser, tunnel_id, end_point)
-        self.parser = JsonStreamParserCore()
+        self.parser = jsonparse.JsonStreamParserCore()
         self.parser.onReceived = lambda field_id, field_value: self._onReceived(field_id, field_value)
     def _handleReceivedTargetLine(self, line, final = False):
         self.parser.sinkJsonData(line)
