@@ -258,12 +258,13 @@ void loop() {
     }
 
     char noteName = song[i];
-    char halfNote = song[i + 1];
 
     if (noteName == 0) {
       // reached end of song => break out of loop
       break;
     }
+
+    char halfNote = song[i + 1];
 
     // convert the song note into tone frequency
     int noteIdx = ToNoteIdx(noteName, halfNote);
