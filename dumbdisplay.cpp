@@ -53,12 +53,19 @@
 #define DD_SID "Arduino-c1"
 
 
+#define C_TONE             "#00"
+
 #define C_border           "#10"
 #define C_padding          "#11" 
 #define C_bgcolor          "#12"
 #define C_nobgcolor        "#13"
 #define C_feedback         "#14"
 #define C_clear            "#15"
+#define C_flash	           "#16"
+#define C_flasharea        "#17"
+#define C_visible          "#18"
+#define C_opacity          "#19"
+
 
 #define C_fillscreen       "#30"
 #define C_drawtriangle     "#31"
@@ -90,6 +97,43 @@
 #define C_showhex          "#57"
 #define C_bitwise          "#58"
 #define C_ledtoggle        "#59"
+#define C_autoscroll       "#60"
+#define C_display          "#61"
+#define C_scrollleft       "#62"
+#define C_scrollright      "#63"
+#define C_pixelcolor       "#64"
+#define C_bgpixelcolor     "#65"
+#define C_setcursor        "#66"
+#define C_movecursorby     "#67"
+#define C_settextwrap      "#68"
+#define C_drawtext         "#69"
+#define C_write            "#70"	
+#define C_cpoly            "#71"
+#define C_cpolyin          "#72"
+#define C_poly             "#73"
+#define C_trisas           "#74"
+#define C_coval            "#75"
+#define C_oval             "#76"
+#define C_dot              "#77"
+#define C_ptextfont        "#78"
+#define C_ptextsize        "#79"
+#define C_ledhoribar       "#80"
+#define C_ledvertbar       "#81"
+#define C_home             "#82"
+#define C_seth             "#83"
+#define C_pensize          "#84"
+#define C_fillcolor        "#85"
+#define C_nofillcolor      "#86"
+#define C_segcolor	       "#87"
+#define C_segon            "#88"
+#define C_segoff           "#89"	
+#define C_setsegon         "#90"
+#define C_label            "#91"
+#define C_cursor           "#92"
+
+#define C_fd               "fd"
+#define C_lt               "lt"
+#define C_rt               "rt"
 
 
 
@@ -1046,10 +1090,10 @@ DDLayer::~DDLayer() {
     delete pFeedbackManager;
 } 
 void DDLayer::visibility(bool visible) {
-  _sendCommand1(layerId, "visible", TO_BOOL(visible));
+  _sendCommand1(layerId, C_visible, TO_BOOL(visible));
 }
 void DDLayer::opacity(int opacity) {
-  _sendCommand1(layerId, "opacity", String(opacity));
+  _sendCommand1(layerId, C_opacity, String(opacity));
 }
 void DDLayer::border(float size, const String& color, const String& shape, float extraSize) {
   if (IS_FLOAT_ZERO(extraSize)) {
@@ -1082,15 +1126,18 @@ void DDLayer::backgroundColor(const String& color) {
 void DDLayer::noBackgroundColor() {
   _sendCommand0(layerId, C_nobgcolor);
 }
+// void DDLayer::reorder(bool bringUp) {
+//   _sendCommand1(layerId, C_reorder);
+// }
 void DDLayer::flash() {
-  _sendCommand0(layerId, "flash");
+  _sendCommand0(layerId, C_flash);
 }
 void DDLayer::flashArea(int x, int y) {
-  _sendCommand2(layerId, "flasharea", String(x), String(y));
+  _sendCommand2(layerId, C_flasharea, String(x), String(y));
 }
-void DDLayer::writeComment(const String& comment) {
-  _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
-}
+// void DDLayer::writeComment(const String& comment) {
+//   _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
+// }
 void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
   _sendCommand2(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod);
   feedbackHandler = NULL;
@@ -1228,37 +1275,37 @@ void TurtleDDLayer::penFilled(bool filled) {
   _sendCommand1(layerId, "pfilled", TO_BOOL(filled));
 }
 void TurtleDDLayer::setTextSize(int size) {
-  _sendCommand1(layerId, "ptextsize", String(size));
+  _sendCommand1(layerId, C_ptextsize, String(size));
 }
 void TurtleDDLayer::setTextFont(const String& fontName, int size) {
-  _sendCommand2(layerId, "ptextfont", fontName, String(size));
+  _sendCommand2(layerId, C_ptextfont, fontName, String(size));
 }
 void TurtleDDLayer::dot(int size, const String& color) {
-  _sendCommand2(layerId, "dot", String(size), color);
+  _sendCommand2(layerId, C_dot, String(size), color);
 }
 void TurtleDDLayer::circle(int radius, bool centered) {
   _sendCommand1(layerId, centered ? C_ccircle : C_circle, String(radius));
 }
 void TurtleDDLayer::oval(int width, int height, bool centered) {
-  _sendCommand2(layerId, centered ? "coval" : "oval", String(width), String(height));
+  _sendCommand2(layerId, centered ? C_coval : C_oval, String(width), String(height));
 }
 void TurtleDDLayer::rectangle(int width, int height, bool centered) {
   _sendCommand2(layerId, centered ? C_crect : C_rect, String(width), String(height));
 }
 void TurtleDDLayer::triangle(int side1, int angle, int side2) {
-  _sendCommand3(layerId, "trisas", String(side1), String(angle), String(side2));
+  _sendCommand3(layerId, C_trisas, String(side1), String(angle), String(side2));
 }
 void TurtleDDLayer::isoscelesTriangle(int side, int angle) {
-  _sendCommand2(layerId, "trisas", String(side), String(angle));
+  _sendCommand2(layerId, C_trisas, String(side), String(angle));
 }
 void TurtleDDLayer::polygon(int side, int vertexCount) {
-  _sendCommand2(layerId, "poly", String(side), String(vertexCount));
+  _sendCommand2(layerId, C_poly, String(side), String(vertexCount));
 }
 void TurtleDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
-  _sendCommand2(layerId, inside ? "cpolyin" : "cpoly", String(radius), String(vertexCount));
+  _sendCommand2(layerId, inside ? C_cpolyin : C_cpoly, String(radius), String(vertexCount));
 }
 void TurtleDDLayer::write(const String& text, bool draw) {
-  _sendCommand1(layerId, draw ? "drawtext" : "write", text);
+  _sendCommand1(layerId, draw ? C_drawtext : C_write, text);
 }
 void LedGridDDLayer::turnOn(int x, int y) {
   _sendCommand2(layerId, C_ledon, String(x), String(y));
@@ -1282,10 +1329,10 @@ void LedGridDDLayer::bitwise4(unsigned long bits_0, unsigned long bits_1, unsign
   _sendCommand5(layerId, C_bitwise, String(y), String(bits_0), String(bits_1), String(bits_2), String(bits_3));
 }
 void LedGridDDLayer::horizontalBar(int count, bool rightToLeft) {
-  _sendCommand2(layerId, "ledhoribar", String(count), TO_BOOL(rightToLeft));
+  _sendCommand2(layerId, C_ledhoribar, String(count), TO_BOOL(rightToLeft));
 }
 void LedGridDDLayer::verticalBar(int count, bool bottomToTop) {
-  _sendCommand2(layerId, "ledvertbar", String(count), TO_BOOL(bottomToTop));
+  _sendCommand2(layerId, C_ledvertbar, String(count), TO_BOOL(bottomToTop));
 }
 // void LedGridDDLayer::onColor(long color) {
 //   _sendCommand1(layerId, "ledoncolor", HEX_COLOR(color));
@@ -1308,34 +1355,34 @@ void LcdDDLayer::print(const String& text) {
   _sendCommand1(layerId, C_print, text);
 }
 void LcdDDLayer::home() {
-  _sendCommand0(layerId, "home");
+  _sendCommand0(layerId, C_home);
 }
 void LcdDDLayer::setCursor(int x, int y) {
-  _sendCommand2(layerId, "setcursor", String(x), String(y));
+  _sendCommand2(layerId, C_setcursor, String(x), String(y));
 }
 void LcdDDLayer::cursor() {
-  _sendCommand1(layerId, "cursor", TO_BOOL(true));
+  _sendCommand1(layerId, C_cursor, TO_BOOL(true));
 }
 void LcdDDLayer::noCursor() {
-  _sendCommand1(layerId, "cursor", TO_BOOL(false));
+  _sendCommand1(layerId, C_cursor, TO_BOOL(false));
 }
 void LcdDDLayer::autoscroll() {
-  _sendCommand1(layerId, "autoscroll", TO_BOOL(true));
+  _sendCommand1(layerId, C_autoscroll, TO_BOOL(true));
 }
 void LcdDDLayer::noAutoscroll() {
-  _sendCommand1(layerId, "autoscroll", TO_BOOL(false));
+  _sendCommand1(layerId, C_autoscroll, TO_BOOL(false));
 }
 void LcdDDLayer::display() {
-  _sendCommand1(layerId, "display", TO_BOOL(true));
+  _sendCommand1(layerId, C_display, TO_BOOL(true));
 }
 void LcdDDLayer::noDisplay() {
-  _sendCommand1(layerId, "display", TO_BOOL(false));
+  _sendCommand1(layerId, C_display, TO_BOOL(false));
 }
 void LcdDDLayer::scrollDisplayLeft() {
-  _sendCommand0(layerId, "scrollleft");
+  _sendCommand0(layerId, C_scrollleft);
 }
 void LcdDDLayer::scrollDisplayRight() {
-  _sendCommand0(layerId, "scrollright");
+  _sendCommand0(layerId, C_scrollright);
 }
 void LcdDDLayer::writeLine(const String& text, int y, const String& align) {
   _sendCommand3(layerId, C_writeline, String(y), align, text);
@@ -1344,21 +1391,21 @@ void LcdDDLayer::writeCenteredLine(const String& text, int y) {
   _sendCommand3(layerId, C_writeline, String(y), "C", text);
 } 
 void LcdDDLayer::pixelColor(const String &color) {
-  _sendCommand1(layerId, "pixelcolor", color);
+  _sendCommand1(layerId, C_pixelcolor, color);
 }
 void LcdDDLayer::bgPixelColor(const String &color) {
-  _sendCommand1(layerId, "bgpixelcolor", color);
+  _sendCommand1(layerId, C_bgpixelcolor, color);
 }
 void LcdDDLayer::noBgPixelColor() {
-  _sendCommand0(layerId, "bgpixelcolor");
+  _sendCommand0(layerId, C_bgpixelcolor);
 }
 
 
 void GraphicalDDLayer::setCursor(int x, int y) {
-  _sendCommand2(layerId, "setcursor", String(x), String(y));
+  _sendCommand2(layerId, C_setcursor, String(x), String(y));
 }
 void GraphicalDDLayer::moveCursorBy(int byX, int byY) {
-  _sendCommand2(layerId, "movecursorby", String(byX), String(byY));
+  _sendCommand2(layerId, C_movecursorby, String(byX), String(byY));
 }
 // void GraphicalDDLayer::setTextColor(const String& color) {
 //   _sendCommand1(layerId, "textcolor", color);
@@ -1373,7 +1420,7 @@ void GraphicalDDLayer::setTextFont(const String& fontName, int size) {
   _sendCommand2(layerId, C_textfont, fontName, String(size));
 }
 void GraphicalDDLayer::setTextWrap(bool wrapOn) {
-  _sendCommand1(layerId, "settextwrap", TO_BOOL(wrapOn));
+  _sendCommand1(layerId, C_settextwrap, TO_BOOL(wrapOn));
 }
 void GraphicalDDLayer::fillScreen(const String& color) {
   _sendCommand1(layerId, C_fillscreen, color);
@@ -1422,56 +1469,56 @@ void GraphicalDDLayer::drawRoundRect(int x, int y, int w, int h, int r, const St
 //   _sendCommand7(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color, TO_BOOL(true));
 // }
 void GraphicalDDLayer::forward(int distance) {
-  _sendCommand1(layerId, "fd", String(distance));
+  _sendCommand1(layerId, C_fd, String(distance));
 }
 void GraphicalDDLayer::leftTurn(int angle) {
-  _sendCommand1(layerId, "lt", String(angle));
+  _sendCommand1(layerId, C_lt, String(angle));
 }
 void GraphicalDDLayer::rightTurn(int angle) {
-  _sendCommand1(layerId, "rt", String(angle));
+  _sendCommand1(layerId, C_rt, String(angle));
 }
 void GraphicalDDLayer::setHeading(int angle) {
-  _sendCommand1(layerId, "seth", String(angle));
+  _sendCommand1(layerId, C_seth, String(angle));
 }
 void GraphicalDDLayer::penSize(int size) {
-  _sendCommand1(layerId, "pensize", String(size));
+  _sendCommand1(layerId, C_pensize, String(size));
 }
 void GraphicalDDLayer::penColor(const String& color) {
-  _sendCommand1(layerId, "pencolor", color);
+  _sendCommand1(layerId, C_pencolor, color);
 }
 void GraphicalDDLayer::fillColor(const String& color) {
-  _sendCommand1(layerId, "fillcolor", color);
+  _sendCommand1(layerId, C_fillcolor, color);
 }
 void GraphicalDDLayer::noFillColor() {
-  _sendCommand0(layerId, "nofillcolor");
+  _sendCommand0(layerId, C_nofillcolor);
 }
 void GraphicalDDLayer::circle(int radius, bool centered) {
-  _sendCommand1(layerId, centered ? "ccircle" : "circle", String(radius));
+  _sendCommand1(layerId, centered ? C_ccircle : C_circle, String(radius));
 }
 void GraphicalDDLayer::oval(int width, int height, bool centered) {
-  _sendCommand2(layerId, centered ? "coval" : "oval", String(width), String(height));
+  _sendCommand2(layerId, centered ? C_coval : C_oval, String(width), String(height));
 }
 void GraphicalDDLayer::rectangle(int width, int height, bool centered) {
-  _sendCommand2(layerId, centered ? "crect" : "rect", String(width), String(height));
+  _sendCommand2(layerId, centered ? C_crect : C_rect, String(width), String(height));
 }
 void GraphicalDDLayer::triangle(int side1, int angle, int side2) {
-  _sendCommand3(layerId, "trisas", String(side1), String(angle), String(side2));
+  _sendCommand3(layerId, C_trisas, String(side1), String(angle), String(side2));
 }
 void GraphicalDDLayer::isoscelesTriangle(int side, int angle) {
-  _sendCommand2(layerId, "trisas", String(side), String(angle));
+  _sendCommand2(layerId, C_trisas, String(side), String(angle));
 }
 void GraphicalDDLayer::polygon(int side, int vertexCount) {
-  _sendCommand2(layerId, "poly", String(side), String(vertexCount));
+  _sendCommand2(layerId, C_poly, String(side), String(vertexCount));
 }
 void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
-  _sendCommand2(layerId, inside ? "cpolyin" : "cpoly", String(radius), String(vertexCount));
+  _sendCommand2(layerId, inside ? C_cpolyin : C_cpoly, String(radius), String(vertexCount));
 }
 void GraphicalDDLayer:: write(const String& text, bool draw) {
-  _sendCommand1(layerId, draw ? "drawtext" : "write", text);
+  _sendCommand1(layerId, draw ? C_drawtext : C_write, text);
 }
 
 void SevenSegmentRowDDLayer::segmentColor(const String& color) {
-  _sendCommand1(layerId, "segcolor", color);
+  _sendCommand1(layerId, C_segcolor, color);
 }
 void SevenSegmentRowDDLayer::resetSegmentOffColor(const String& color) {
   _sendCommand1(layerId, C_resetsegoffcolor, color);
@@ -1480,13 +1527,13 @@ void SevenSegmentRowDDLayer::resetSegmentOffNoColor() {
   _sendCommand0(layerId, C_resetsegoffcolor);
 }
 void SevenSegmentRowDDLayer::turnOn(const String& segments, int digitIdx) {
-  _sendCommand2(layerId, "segon", segments, String(digitIdx));
+  _sendCommand2(layerId, C_segon, segments, String(digitIdx));
 }
 void SevenSegmentRowDDLayer::turnOff(const String& segments, int digitIdx) {
-  _sendCommand2(layerId, "segoff", segments, String(digitIdx));
+  _sendCommand2(layerId, C_segoff, segments, String(digitIdx));
 }
 void SevenSegmentRowDDLayer::setOn(const String& segments, int digitIdx) {
-  _sendCommand2(layerId, "setsegon", segments, String(digitIdx));
+  _sendCommand2(layerId, C_setsegon, segments, String(digitIdx));
 }
 void SevenSegmentRowDDLayer::showNumber(float number, const String& padding) {
   if (IS_FLOAT_WHOLE(number)) {
@@ -1503,7 +1550,7 @@ void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
 }
 
 void PlotterDDLayer::label(const String& key, const String& lab) {
-  _sendCommand2(layerId, "label", key, lab);
+  _sendCommand2(layerId, C_label, key, lab);
 }
 void PlotterDDLayer::set(const String& key, float value) {
   _sendCommand2(layerId, "", key, TO_C_NUM(value));
@@ -1855,16 +1902,22 @@ PlotterDDLayer* DumbDisplay::createPlotterLayer(int width, int height, int pixel
 void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }
+void DumbDisplay::pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
+  _sendCommand6("", "PINAP", layoutSpec, String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
+}
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
   //_PreDeleteLayer(pLayer);
   delete pLayer;
 }
+void DumbDisplay::reorderLayer(DDLayer *pLayer, const String& how) {
+  _sendCommand1(pLayer->getLayerId(), "REORD", how);
+}
 void DumbDisplay::recordLayerSetupCommands() {
   _Connect();
   _sendCommand0("", "RECC");
 }
-void DumbDisplay::playbackLayerSetupCommands(const String persist_id) {
+void DumbDisplay::playbackLayerSetupCommands(const String& persist_id) {
   _sendCommand2("", "SAVEC", persist_id, TO_BOOL(true));
   _sendCommand0("", "PLAYC");
 #ifdef SUPPORT_RECONNECT
@@ -1908,6 +1961,10 @@ void DumbDisplay::writeComment(const String& comment) {
   //   _sendCommand0("", ("// " + comment).c_str());
   // }
 }
+void DumbDisplay::tone(uint32_t freq, uint32_t duration) {
+  _Connect();
+  _sendCommand2("", C_TONE, TO_C_INT(freq), TO_C_INT(duration));
+}
 
 
 BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool connectNow, int bufferSize) {
@@ -1949,7 +2006,7 @@ void DumbDisplay::debugSetup(int debugLedPin/*, bool enableEchoFeedback*/) {
   _DebugLedPin = debugLedPin;
 #endif  
 #ifdef DEBUG_ECHO_FEEDBACK
-  _DebugEnableEchoFeedback = enableEchoFeedback;
+  _DebugEnableEchoFeedback = true;//enableEchoFeedback;
 #endif
 }
 #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND

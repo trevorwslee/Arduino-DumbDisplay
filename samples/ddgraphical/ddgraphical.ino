@@ -1,4 +1,4 @@
-#include <ssdumbdisplay.h>
+#include "ssdumbdisplay.h"
 
 // assume HC-06 connected, to pin 2 and 3
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));

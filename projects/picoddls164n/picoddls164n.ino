@@ -27,12 +27,12 @@
 // GP8 => RX of HC-06; GP9 => TX of HC-06
 #define DD_4_PICO_TX 8
 #define DD_4_PICO_RX 9
-#include <picodumbdisplay.h>
+#include "picodumbdisplay.h"
 DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
 
 #else
 
-#include <dumbdisplay.h>
+#include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 #endif

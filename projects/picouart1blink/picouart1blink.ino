@@ -1,7 +1,7 @@
 #define DD_4_PICO_TX 8
 #define DD_4_PICO_RX 9
 
-#include <picodumbdisplay.h>
+#include "picodumbdisplay.h"
 
 /* HC-06 connectivity */
 DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));

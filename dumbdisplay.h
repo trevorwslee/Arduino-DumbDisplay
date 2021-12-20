@@ -70,6 +70,8 @@ typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, const DD
 
 
 class DDObject {
+  public:
+    String customData;
 };
 
 class DDLayer: public DDObject {
@@ -98,12 +100,13 @@ class DDLayer: public DDObject {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
+    //void reorder(bool bringUp);
     /* normally used for "feedback" -- flash the default way (layer + border) */
     void flash();
     /* normally used for "feedback" -- flash the area (x, y) where the layer is clicked */
     void flashArea(int x, int y);
     const String& getLayerId() { return layerId; }
-    void writeComment(const String& comment);
+    //void writeComment(const String& comment);
     /* rely on getFeedback() being called */ 
     /* autoFeedbackMethod: */
     /* . "" -- no auto feedback */
@@ -639,7 +642,7 @@ class DumbDisplay {
     /* 1. save and persiste the layer commands */
     /* 2. enable DumbDisplay reconnect feature -- */ 
     /*    tells the layer setup commands to use when DumbDisplay reconnects */ 
-    void playbackLayerSetupCommands(const String persist_id);
+    void playbackLayerSetupCommands(const String& persist_id);
     /* start recording layer commands (of any layers) */
     /* and sort of freeze the display, until playback */
     void recordLayerCommands();
@@ -660,10 +663,18 @@ class DumbDisplay {
     void loadLayerCommands(const String& id);
     /* write out a comment to DD */
     void writeComment(const String& comment);
+    void tone(uint32_t freq, uint32_t duration);
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
+    void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
+    /**
+     * recorder the layer
+     * - how: can be "T" for top; or "B" for bottom;
+     *        "U" for up; or "D" for down
+     */
+    void reorderLayer(DDLayer *pLayer, const String& how);
     void deleteLayer(DDLayer *pLayer);
     void debugSetup(int debugLedPin);
 #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
