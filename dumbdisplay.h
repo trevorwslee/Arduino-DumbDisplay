@@ -518,10 +518,10 @@ class DDBufferedTunnel: public DDTunnel {
   private:
     // String endPoint;
     // String tunnelId;
-    int arraySize;
+    int8_t arraySize;
     String* dataArray;
-    int nextArrayIdx;
-    int validArrayIdx;
+    int8_t nextArrayIdx;
+    int8_t validArrayIdx;
     //bool done;
 };
 
@@ -591,9 +591,10 @@ class JsonDDTunnelMultiplexer {
     void release();
     void reconnect();
   private:
-     int tunnelCount;
+     int8_t tunnelCount;
      JsonDDTunnel** tunnels;
 };
+
 
 typedef void (*DDIdleCallback)(long idleForMillis);
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
@@ -690,6 +691,7 @@ class DumbDisplay {
      */
     void reorderLayer(DDLayer *pLayer, const String& how);
     void deleteLayer(DDLayer *pLayer);
+    void walkLayers(void (*walker)(DDLayer *));
     void debugSetup(int debugLedPin);
 #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
     /* by default, some commands will have there numeric arguments encoded/compress */

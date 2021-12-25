@@ -4,6 +4,9 @@ DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual
 
 You may want to watch the video **Introducing DumbDisplay -- the little helper for Arduino experiments** for a brief introduction -- https://www.youtube.com/watch?v=QZkhO6jTf0U
 
+Plase nonote that the above mentioned video is just one of the several that I have on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
+
+
 # Description
 
 Instead of connecting real gadgets to your Arduino micro-controller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets on your Android phone.
@@ -19,7 +22,7 @@ A few types of layers can be created:
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 * Plotter, which works similar to the plotter of DumbDisplay, but chart data provided by sending commands
 
-Note that with the "layer feedback" mechanism, user interaction (clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
+Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed to Arduino, and as a result, the layers can be used as simple input gadgets as well.
 
 You can install the DumbDisplay Arduino Library by downloading the ZIP file, as demonstrated  by the video **Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)** -- https://www.youtube.com/watch?v=nN7nXRy7NMg&t=105s
 
@@ -28,15 +31,15 @@ You can install the DumbDisplay Arduino Library by downloading the ZIP file, as 
 You will also need to install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
-* SoftwareSerial (e.g. Bluetooth via HC-06; even HC-08)
+* SoftwareSerial (e.g. Bluetooth by HC-06; even HC-08)
 * BluetoothSerial (for ESP32)
 * Bluetooth LE (for ESP32)
-* Serial (USB connected via OTG adapter)
 * WIFI (e.g. ESP01, ESP8266 and ESP32)
-* Serial <-> WIFI via the simple included tool -- DumbDisplay WIFI Bridge
+* Serial (USB connected via OTG adapter)
+* Serial <-> WIFI via the simple included tool -- DumbDisplay WIFI Bridge (more on it later)
 
 Notes:
-* I have only tested DumbDisplay with the micro controller boards that I have -- namely, Arduino Uno, ESP01, ESP8266, ESP32, STM32F103 and Raspberry Pi Pico.
+* I have only tested DumbDisplay with the micro-controller boards that I have -- namely, Arduino Uno, ESP01, ESP8266, ESP32, STM32F103 and Raspberry Pi Pico.
 * In case DumbDisplay does not "handshake" with your Arduino board correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion.
 * In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to later section of this README.
 
@@ -256,7 +259,8 @@ Please note that DumbDisplay library will check for "feedback" in several occasi
 
 
 With the help of DumbDisplay WIFI Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
-(In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears that Android does not allow all connections, possibly due to the port restriction.)
+
+In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears that Android does not allow all connections, possibly due to the port restriction.
 
 ```
 DumbDisplay dumbdisplay(new DDInputOutput(9600));
@@ -320,7 +324,7 @@ In a more complicated case, you may want to get data from Internet open REST api
   * control characters like `\r` not supported
   * HTTPS not yet supported
 
-* use `count()` to check the "tunnel" has anything to read, and use `read()` to read what got like:
+* use `count()` to check if the "tunnel" has anything to read, and use `read()` to read what got, like:
   ```
   while (!pTunnel->eof()) {
     while (pTunnel->count() > 0) {
@@ -855,15 +859,62 @@ void loop() {
 }
 ```
 
+## Positioning of Layers
+
+By default, layers are stacked one by one, with the one created first on the top of the stack. Each layer will be automatically stretched to fit the DumbDisplay, with the aspact ratio kept unchanged.
+
+This behavior is not suitable for all cases. In fact, I would say that this default behavior is not suitable for many cases, except for the most simple case when you only have a single layer.
+
+Actually, two mechanisms to "pin" the layers on DumbDisplay are provided -- automatic, and manual.
+
+The automatic pinning of layers is the easier. You only need to call the DumbDisplay method `configAutoPin()` once to pin the layers, like
+```
+    dumbdisplay.configAutoPin(DD_AP_VERT_2(
+                                DD_AP_HORI_2(
+                                    pLedGridLayer->getLayerId(),
+                                    pLcdLayer->getLayerId()),
+                                pTurtleLayer->getLayerId()));
+```
+`DD_AP_HORI_2()` / `DD_AP_VERT_2()` macro pins 2 layers shoulder-to-shoulder horizontally / vertically. It accepts 2 arguments, with each one either a layer id, or another *DD_AP_XXX* macro. 
+
+The manual way of pinning layers is a bit more complicated. First, a "pin frame" needs be defined with a fixed size; by default, the size is 100 by 100. To change the "pin frame" fixed size, use the DumbDisplay method `configPinFrame()`. 
+
+On the "pin frame", the different layers are explicitly pinned.
+
+For example
+```
+  // config "pin frame" to be 290 units x 250 units
+  // 290: 25 + 240 + 25
+  // 240: 25 + 190 + 25
+  dumbdisplay.configPinFrame(290, 240);
+
+  // pin top-left LED @ (0, 0) with size (25, 25)
+  dumbdisplay.pinLayer(ltLed, 0, 0, 25, 25);
+  // pin top-right LED @ (265, 0) with size (25, 25)
+  dumbdisplay.pinLayer(rtLed, 265, 0, 25, 25);
+  // pin right-bottom LED @ (265, 215) with size (25, 25)
+  dumbdisplay.pinLayer(rbLed, 265, 215, 25, 25);
+  // pin left-bottom LED @ (0, 215) with size (25, 25)
+  dumbdisplay.pinLayer(lbLed, 0, 215, 25, 25);
+
+  // pin Turtle @ (25, 25) with size (240, 190)
+  dumbdisplay.pinLayer(turtle, 25, 25, 240, 190);
+```
+The DumbDisplay method `pinLayer` accepts 5 arguments. The first argument is the layer to pin. The rest four arguments define the rectangular area on the "pin frame" to pin the layer to -- the four argments are "left-top" corner and the "width-height" of the rectangular area.
+
+As a matter of fact, the "auto pin" mechanism can be used in conjunction with the manual pinning mechanism. The method to used is `pinAutoPinLayers`.
+
+To get a feel, you may want to refer to the video *Raspberry Pi Pico playing song melody tones, with DumbDisplay control and keyboard input* -- https://www.youtube.com/watch?v=l-HrsJXIwBY 
+
+
 
 ## Record and Playback Commands
 
-It is apparent that turning on LEDs, drawing on graphical LCDs, etc, by sending text-based command is not particularly efficient. Indeed, screen flickering is a commonplace, especial when there are lots of activities.
+It is apparent that turning on LEDs, drawing on graphical LCDs, etc, by sending text-based commands is not particularly efficient. Indeed, screen flickering is a commonplace, especial when there are lots of activities.
 
 In order to relieve this flickering situation a bit, it is possilbe to freeze DumbDisplay's screen during sending bulk of commands:
 * `dumbdisplay.recordLayerCommands()` -- start recording commands (freeze DumbDisplay screen)
 * `dumbdisplay.playbackLayerCommands()` -- end recording commands and playback the recorded commands (unfreeze Dumbdisplay screen)
-
 
 A sample sketch demonstrates that this DumbDisplay feature can help; the sample is adapted from one that shows off Arduino UNO with Joystick shield connecting to a OLED display: https://cyaninfinite.com/interfacing-arduino-joystick-shield-with-oled-display
 

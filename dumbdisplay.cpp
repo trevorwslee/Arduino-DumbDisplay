@@ -1510,7 +1510,7 @@ void PlotterDDLayer::set(const String& key1, float value1, const String& key2, f
 
 #ifdef SUPPORT_TUNNEL
 DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize):
-  DDObject(DD_OBJECT_TYPE_LAYER), type(type), tunnelId(String(tunnelId)), endPoint(endPoint) {
+  DDObject(DD_OBJECT_TYPE_TUNNEL), type(type), tunnelId(String(tunnelId)), endPoint(endPoint) {
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
   // this->nextArrayIdx = 0;
@@ -1827,11 +1827,20 @@ void DumbDisplay::pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop
 }
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
-  //_PreDeleteLayer(pLayer);
-  delete pLayer;
+  delete pLayer;  // will call _PreDeleteLayer(pLayer)
 }
 void DumbDisplay::reorderLayer(DDLayer *pLayer, const String& how) {
   _sendCommand1(pLayer->getLayerId(), "REORD", how);
+}
+void DumbDisplay:: walkLayers(void (*walker)(DDLayer *)) {
+  for (int i = 0; i < _NextLid; i++) {
+    DDObject* pObject = _DDLayerArray[i];
+    if (pObject != NULL) {
+      if (pObject->objectType == DD_OBJECT_TYPE_LAYER) {
+        walker((DDLayer*) pObject);
+      }
+    }
+  }
 }
 void DumbDisplay::recordLayerSetupCommands() {
   _Connect();
