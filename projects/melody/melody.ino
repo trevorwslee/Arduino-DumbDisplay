@@ -1,3 +1,8 @@
+// for a desciption of the melody experiment, please watch the YouTube video 
+// -- Raspberry Pi Pico playing song melody tones, with DumbDisplay control and keyboard input
+// -- https://www.youtube.com/watch?v=l-HrsJXIwBY 
+
+
 #define SPEAKER_PIN 5
 
 
