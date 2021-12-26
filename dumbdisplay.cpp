@@ -1254,6 +1254,12 @@ void LedGridDDLayer::horizontalBar(int count, bool rightToLeft) {
 void LedGridDDLayer::verticalBar(int count, bool bottomToTop) {
   _sendCommand2(layerId, C_ledvertbar, String(count), TO_BOOL(bottomToTop));
 }
+void LedGridDDLayer::horizontalBarEx(int count, int startX, const String& color) {
+  _sendCommand3(layerId, C_ledhoribarex, String(count), String(startX), color);
+}
+void LedGridDDLayer::verticalBarEx(int count, int startY, const String& color) {
+  _sendCommand3(layerId, C_ledvertbarex, String(count), String(startY), color);
+}
 // void LedGridDDLayer::onColor(long color) {
 //   _sendCommand1(layerId, "ledoncolor", HEX_COLOR(color));
 // }

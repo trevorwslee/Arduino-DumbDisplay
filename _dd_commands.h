@@ -76,6 +76,8 @@
 #define C_setsegon         "#90"
 #define C_label            "#91"
 #define C_cursor           "#92"
+#define C_ledhoribarex     "#93"
+#define C_ledvertbarex     "#94"
 
 #define C_fd               "fd"
 #define C_lt               "lt"

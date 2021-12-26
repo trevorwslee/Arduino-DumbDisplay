@@ -287,6 +287,16 @@ class LedGridDDLayer: public DDLayer {
     void horizontalBar(int count, bool rightToLeft = false);
     /* turn on LEDs to form a vertical "bar" */ 
     void verticalBar(int count, bool bottomToTop = true);
+    /* turn on LEDs to form a horizontal "bar" */
+    /* - count: can be negative (if it makes sense) */
+    /* - startX: normally 0 */
+    /* - color: LED on color; empty string means what already set */
+    void horizontalBarEx(int count, int startX = 0, const String& color = "");
+    /* turn on LEDs to form a vertical "bar" */
+    /* - count: can be negative (if it makes sense) */
+    /* - startY: normally 0 */
+    /* - color: LED on color; empty string means what already set */
+    void verticalBarEx(int count, int startY = 0, const String& color = "");
     /* set LED on color */ 
     void onColor(const String& color);
     /* set LED off color */ 
