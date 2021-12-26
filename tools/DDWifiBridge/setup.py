@@ -11,7 +11,7 @@ except Exception:
 
 setup(
   name='DDWifiBridge',
-  version='0.7.8',
+  version='0.7.9',
   author='Trevor Lee',
   author_email='trev_lee@hotmail.com',
   description='DumbDisplay Wifi Bridge for DumbDisplay Arduino Lirary',

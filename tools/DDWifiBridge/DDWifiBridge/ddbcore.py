@@ -23,6 +23,8 @@ class DDUserInterface:
         pass
     def onDisconnected(self):
         pass
+    def isUIRunning(self):
+        return True
     def timeSlice(self):
         pass
     def bridge_send(self, transDir, line):
@@ -31,7 +33,6 @@ class DDUserInterface:
         pass
     def printControlMessage(self, msg):
         pass
-
 
 WifiHost = None
 DefWifiPort = None
@@ -142,7 +143,7 @@ def InvokeConnect(port, baud, wifi_port):
         _Disconnect()
 
 def SerialLoop():
-    while True:
+    while DdUI.isUIRunning():
         DdUI.timeSlice()
         if Serial.error != None:
             if Ser == None:
@@ -154,7 +155,7 @@ def SerialLoop():
         Serial.timeSlice(Bridge)
 
 def NoSerialLoop():
-    while True:
+    while DdUI.isUIRunning():
         DdUI.timeSlice()
         if Ser != None:
             return
@@ -168,6 +169,7 @@ def WifiServe():
         Wifi.serve()
 
 def RunDDBridgeMain(ddui, connect_param_dict = None):
+    global UIRunning
     global Ser
     global Serial
     global Wifi
@@ -184,7 +186,7 @@ def RunDDBridgeMain(ddui, connect_param_dict = None):
         if wifi_port == None:
             wifi_port = int(DefWifiPort)
         InvokeConnect(port, baud, wifi_port)
-    while True:
+    while ddui.isUIRunning():
         ddui.syncConnectionState(Ser != None)
         if Ser != None:
             try:

@@ -22,6 +22,14 @@ from . import ddbcore
 #     ser.close()
 #     print("Disconnected")
 
+WindowRunning = True
+
+def OnWindowClosed():
+    global WindowRunning
+
+    print("DDWifiBridgeWindow closed!")
+    WindowRunning = False
+    Window.destroy()
 
 def ClickedConnect():
     port = Port_combo.get()
@@ -82,6 +90,7 @@ def InitWindow(param_dict: None):
         wifi_port = param_dict.get("wifiPort")
 
     Window = tk.Tk()
+    Window.protocol("WM_DELETE_WINDOW", OnWindowClosed)
     Window.title("DumbDispaly WIFI Bridge")
     Window.geometry("800x600")
     Auto_scroll_state = tk.BooleanVar()
@@ -132,7 +141,7 @@ class DDWinUserInterface(ddbcore.DDUserInterface):
     def initialize(self):
         InitWindow(self.param_dict)
     def syncConnectionState(self, connected):
-        Connect_button.config(text="Disconnect" if connected else "Connect")
+        Connect_button.config(text="Disconnect" if connected else "Connect", fg="white" if connected else "green", bg="gray" if connected else "lightgrey")
     def onConnected(self):
         Port_combo["state"] = "disabled"
         Baud_combo["state"] = "disabled"
@@ -143,6 +152,8 @@ class DDWinUserInterface(ddbcore.DDUserInterface):
         Baud_combo["state"] = "normal"
         WifiPort_entry["state"] = "normal"
         #Text_box.insert(tk.END, "*** disconnected\n")
+    def isUIRunning(self):
+        return WindowRunning    
     def timeSlice(self):
         Window.update()
     def bridge_send(self, transDir, line):
