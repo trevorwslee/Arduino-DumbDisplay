@@ -78,6 +78,7 @@
 #define C_cursor           "#92"
 #define C_ledhoribarex     "#93"
 #define C_ledvertbarex     "#94"
+#define C_ledonex          "#95"
 
 #define C_fd               "fd"
 #define C_lt               "lt"

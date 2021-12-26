@@ -274,6 +274,9 @@ class LedGridDDLayer: public DDLayer {
     void turnOff(int x = 0, int y = 0);
     /* toggle LED @ (x, y) */
     void toggle(int x = 0, int y = 0);
+    /* turn on LED @ (x, y) */
+    /* - onColor: LED on color; empty string means what already set */
+    void turnOnEx(int x = 0, int y = 0, const String& onColor = "");
     /* turn on/off LEDs based on bits */
     /* - bits: least significant bit maps to right-most LED */
     /* - y: row */

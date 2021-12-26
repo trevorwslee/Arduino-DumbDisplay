@@ -1236,6 +1236,9 @@ void LedGridDDLayer::turnOff(int x, int y) {
 void LedGridDDLayer::toggle(int x, int y) {
   _sendCommand2(layerId, C_ledtoggle, String(x), String(y));
 }
+void LedGridDDLayer::turnOnEx(int x, int y, const String& onColor) {
+  _sendCommand3(layerId, C_ledonex, String(x), String(y), onColor);
+}
 void LedGridDDLayer::bitwise(unsigned long bits, int y) {
   _sendCommand2(layerId, C_bitwise, String(y), String(bits));
 }
