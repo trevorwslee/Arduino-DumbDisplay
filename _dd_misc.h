@@ -19,8 +19,8 @@ class DDValueStore {
 
 class DDConnectVersionTracker {
   public:
-    DDConnectVersionTracker() {
-      this->version = 0;
+    DDConnectVersionTracker(int version) {
+      this->version = version;
     }
     bool checkChanged(DumbDisplay& dumbdisplay) {
       int oldVersion = this->version;

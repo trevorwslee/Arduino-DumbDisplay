@@ -120,8 +120,7 @@ class DDLayer: public DDObject {
     /* normally used for "feedback" -- flash the area (x, y) where the layer is clicked */
     void flashArea(int x, int y);
     const String& getLayerId() { return layerId; }
-    //void writeComment(const String& comment);
-    /* rely on getFeedback() being called */ 
+    /* set explicit (and more responsive) "feedback" handler (and enable feedback) */
     /* autoFeedbackMethod: */
     /* . "" -- no auto feedback */
     /* . "f" -- flash the default way (layer + border) */
@@ -129,14 +128,14 @@ class DDLayer: public DDObject {
     /* . "fa" -- flash the area where the layer is clicked */
     /* . "fas" -- flash the area (as a spot) where the layer is clicked */
     /* . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary) */
+    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
+    /* rely on getFeedback() being called */ 
+    /* autoFeedbackMethod ... see setFeedbackHandler() */
     void enableFeedback(const String& autoFeedbackMethod = "");
     /** disable "feedback" */
     void disableFeedback();
     /** get "feedback" ... NULL if no pending "feedback" */
     const DDFeedback* getFeedback();
-    /* set explicit (and more responsive) "feedback" handler (and enable feedback) */
-    /* autoFeedbackMethod ... see enableFeedback() */
-    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     void debugOnly(int i);
   public:
     DDFeedbackManager* getFeedbackManager() { return pFeedbackManager; }
