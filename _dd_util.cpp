@@ -1,6 +1,7 @@
 
+#include "Arduino.h"
 
-char* _DDEncodeInt(int i, char* buffer, int bufferLen) {
+char* _DDEncodeInt(int32_t i, char* buffer, int bufferLen) {
   bool isNeg;
   if (i < 0) {
     isNeg = true;

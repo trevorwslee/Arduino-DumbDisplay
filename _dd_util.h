@@ -6,7 +6,7 @@ void DDDebugOnly(int32_t i);
 
 
 
-char* _DDEncodeInt(int i, char* buffer, int bufferLen);
+char* _DDEncodeInt(int32_t i, char* buffer, int bufferLen);
 
 class DDIntEncoder {
   public:
