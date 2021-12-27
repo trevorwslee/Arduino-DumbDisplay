@@ -170,6 +170,11 @@ DDConnectVersionTracker ddConnectionChecker(-1);
 
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
+//  Serial.print(pLayer->getLayerId());
+//  Serial.print(":");   
+//  Serial.print(feedback.x);
+//  Serial.print(",");   
+//  Serial.println(feedback.y);   
     if (pLayer == calibrateLayer) {
         calibrating = true;
     } else if (pLayer == controlLayer) {
