@@ -7,8 +7,8 @@ You may want to watch the video **Introducing DumbDisplay -- the little helper f
 Plase notice that the above mentioned video is just one of the several that I have on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
 
 
-[ref](#desc)
-[ref](Description)
+[ref](#More Samples)
+[ref](#Installing DumbDisplay Arduino Library)
 
 # Description
 
