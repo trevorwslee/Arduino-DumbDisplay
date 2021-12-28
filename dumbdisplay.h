@@ -106,13 +106,19 @@ class DDLayer: public DDObject {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
-    //void visibility(bool visible);
     /* set whether layer visible (not visible means hidden) */
     void setVisible(bool visible);
     /* set whether layer transparent */
     void setTransparent(bool transparent);
-    /* set layer opacity */
-    /* - 0 to 255 */
+    /* set layer opacity percentage */
+    void setOpacity(int opacity);
+    /* set layer's alpha channel (0 - 255) */
+    void setAlpha(int alpha);
+    /* DEPRECATED */
+    inline void visibility(bool visible) {
+      setVisible(visible);
+    }
+    /* DEPRECATED */
     void opacity(int opacity);
     //void reorder(bool bringUp);
     /* normally used for "feedback" -- flash the default way (layer + border) */

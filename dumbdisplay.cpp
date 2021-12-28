@@ -50,7 +50,8 @@
 #define FLUSH_AFTER_SENT_COMMAND false
 #define YIELD_AFTER_SEND_COMMAND false
 
-#define DD_SID "Arduino-c1"
+//#define DD_SID "Arduino-c1"
+#define DD_SID "Arduino-c2"
 
 
 #include "_dd_commands.h"
@@ -1012,8 +1013,18 @@ void DDLayer::setVisible(bool visible) {
 void DDLayer::setTransparent(bool transparent) {
   _sendCommand1(layerId, C_transparent, TO_BOOL(transparent));
 }
+void DDLayer::setOpacity(int opacity) {
+    _sendCommand1(layerId, C_opacity, String(opacity));
+}
+void DDLayer::setAlpha(int alpha) {
+  _sendCommand1(layerId, C_alpha, String(alpha));
+}
 void DDLayer::opacity(int opacity) {
-  _sendCommand1(layerId, C_opacity, String(opacity));
+  if (_DDCompatibility >= 2) {
+      setAlpha(opacity);
+  } else {
+    _sendCommand1(layerId, C_opacity, String(opacity));
+  }
 }
 void DDLayer::border(float size, const String& color, const String& shape, float extraSize) {
   if (IS_FLOAT_ZERO(extraSize)) {

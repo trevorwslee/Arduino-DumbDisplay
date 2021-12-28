@@ -11,6 +11,7 @@
 #define C_visible          "#18"
 #define C_opacity          "#19"
 #define C_transparent      "#20"
+#define C_alpha            "#21"
 
 
 #define C_fillscreen       "#30"
