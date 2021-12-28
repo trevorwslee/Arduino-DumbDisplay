@@ -10,7 +10,7 @@ Plase notice that the above mentioned video is just one of the several that I ha
 [ref](#desc)
 [ref](Description)
 
-# Description (manual desc)
+# Description
 
 Instead of connecting real gadgets to your Arduino IDE compatible micro-controller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets on your Android phone.
 
