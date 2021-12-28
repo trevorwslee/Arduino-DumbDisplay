@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.7.9)
+# DumbDisplay Arduino Library (v0.8.0)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / STM32 / Respberry Pi Pico experiments.
 
@@ -60,7 +60,7 @@ The app can accept connection via
 * Bluetooth LE (for ESP32)
 * WIFI (e.g. ESP01, ESP8266 and ESP32)
 * Serial (USB connected via OTG adapter)
-* Serial <-> WIFI via the simple included tool -- DumbDisplay WIFI Bridge (more on it later)
+* Serial <-> WIFI via the simple included tool -- [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge)
 * Serial2 (hardware serial)
 
 Notes:
@@ -880,7 +880,7 @@ The automatic pinning of layers is the easier. You only need to call the DumbDis
                                     pLcdLayer->getLayerId()),
                                 pTurtleLayer->getLayerId()));
 ```
-`DD_AP_HORI_2()` / `DD_AP_VERT_2()` macro pins 2 layers shoulder-to-shoulder horizontally / vertically. It accepts 2 arguments, with each one either a layer id, or another *DD_AP_XXX* macro. 
+`DD_AP_HORI_2()` / `DD_AP_VERT_2()` macro pins 2 layers one by one horizontally / vertically. It accepts 2 arguments, with each one either a layer id, or another *DD_AP_XXX* macro. 
 
 The manual way of pinning layers is a bit more complicated. First, a "pin frame" needs be defined with a fixed size; by default, the size is 100 by 100. To change the "pin frame" fixed size, use the DumbDisplay method `configPinFrame()`. 
 
@@ -1107,6 +1107,11 @@ MIT
 
 
 # Change History
+
+v0.8.0
+  - added more basic layer functions
+  - added more LCD layer functions
+  - bug fixes
 
 
 v0.7.9

@@ -1,15 +1,15 @@
 
 # DumbDispaly WIFI Bridge
 
- DDWifiBridge (DumbDispaly WIFI Bridge) is a tool that accompanies DumbDisplay Arduino Library;hence, you might be interested in DDWifiBridge in the context it -- https://github.com/trevorwslee/Arduino-DumbDisplay
+ DDWifiBridge (DumbDispaly WIFI Bridge) is a tool that accompanies DumbDisplay Arduino Library. Hence, you might be interested in DDWifiBridge in the context of it -- https://github.com/trevorwslee/Arduino-DumbDisplay
 
 ## Description
 
-Very likely you will be using your desktop computer (Windows) for Arduino development, which will be connecting to your Arduino board via Serial connection. Wouldn't it be nice to be able to connect to DumbDisplay similarly, via the same Serial wiring as well?
+Very likely you will be using your desktop computer (Windows) for Arduino development, which will be connecting to your Arduino board via Serial connection. Wouldn't it be nice to be able to connect to DumbDisplay similarly, via the same USB connection as well?
 
 Yes, you can do exactly that, with the help of the simple DumbDisplay WIFI Bridge Python program -- tools/DDWifiBrideg/DDWifiBridge.py. DumbDisplay WIFI Bridge acts as a "bridge" / "proxy" between your Ardiono board (Serial connection) and your mobile phone (WIFI connection). 
 
-When running the DumbDisplay WIFI Bridge, on one side, it connects to your Arduino board via Serial connection, similar to how you Arduino IDE connect to your Arduino board. At the same time, it listens on port 10201 of your desktop, allowing DumbDisply to establish connection via WIFI. In other words, your desktop computer port 10201 is now a "bridge" / "proxy" to your Arduino DumpDisplay code. 
+When running the DumbDisplay WIFI Bridge, on one side, it connects to your Arduino board via Serial connection, similar to how your Arduino IDE connects to your Arduino micro-controller board. At the same time, it listens on port 10201 of your desktop, allowing DumbDisply to establish connection via WIFI. In other words, your desktop computer port 10201 is now a "bridge" / "proxy" to your Arduino DumpDisplay code. 
 
 Notes:
 * Can install DumbDisplay WIFI Bridge using PIP like
@@ -33,8 +33,6 @@ Notes:
 
 
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)
-
-
 
 
 
