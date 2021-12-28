@@ -17,7 +17,7 @@ Plase notice that the above mentioned video is just one of the several that I ha
   * [DumbDispaly Feedback Mechanism](#dumbdispaly-feedback-mechanism)
   * [DumbDispaly Tunnel](#dumbDispaly-tunnel)
   * [More Samples](#more-samples)
-    * [Screenshot 1 -- *Micro:bit*](#screenshot-1--Microbit)
+    * [Screenshot 1 -- *Micro:bit*](#screenshot-1-Microbit)
 ### Screenshot 2 -- *LEDs + "Bar Meter" + LCD*
 ### Screenshot 3 -- *Nested "auto pin" layers*
 ### Screenshot 4 -- *Manual "pin" layers (LEDs + Turtle)*
