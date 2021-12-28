@@ -12,28 +12,23 @@ Plase notice that the above mentioned video is just one of the several that I ha
 * [Installing DumbDisplay Arduino Library](#installing-dumbdisplay-arduino-library)
   * [Arduino IDE](#arduino-ide)
   * [PlatformIO](#platformio)
-* [DumbDisplay Android app](#dumbDisplay-android-app)
+* [DumbDisplay Android App](#dumbDisplay-android-app)
 * [Sample Code](#sample-code)
-  * [DumbDispaly Feedback Mechanism](#dumbdispaly-feedback-mechanism)
-  * [DumbDispaly Tunnel](#dumbDispaly-tunnel)
+  * [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism)
+  * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
   * [More Samples](#more-samples)
-    * [Screenshot 1 -- *Micro:bit*](#screenshot-1--Microbit)
-### Screenshot 2 -- *LEDs + "Bar Meter" + LCD*
-### Screenshot 3 -- *Nested "auto pin" layers*
-### Screenshot 4 -- *Manual "pin" layers (LEDs + Turtle)*
-### Screenshot 5 -- *Graphical LCD*
-### Screenshot 6 -- *"Layer feedback"*
-### Screenshot 7 -- *"Tunnel" for getting Quotes*
-## Positioning of Layers
-## Record and Playback Commands
-## Survive DumbDisplay App Reconnection
-## More "Feedback" Options
-## Idle Callback and ESP32 Deep Sleep
-# Reference
-# DumbDispaly WIFI Bridge
-# Thank You!
-# License
-# Change History
+  * [Positioning of Layers](#positioning-of-layers)
+  * [Record and Playback Commands](#record-and-playback-commands)
+  * [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
+  * [More "Feedback" Options](#more-feedback-options)
+  * [Idle Callback and ESP32 Deep Sleep](#idle-callback-and-esp32-deep-sleep)
+* [Reference](#reference)
+* [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
+* [Thank You!](#thank-you)
+* [License](#license)
+* [Change History](#change-history)
+
+
 
 # Description
 
@@ -78,7 +73,7 @@ lib_deps =
 (To upgrade DumbDisplay Arduino Library for that PlatformIO project, you can simply delete the 'depended libraries' directory `.pio/libdeps` to force all to be re-installed.)
 
 
-# DumbDisplay Android app
+# DumbDisplay Android App
 
 Obviously, you will need to install an app on your Android phone. Indeed, for Arduino DumbDisplay to work, you will need to install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
