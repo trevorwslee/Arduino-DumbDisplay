@@ -9,7 +9,7 @@ Plase notice that the above mentioned video is just one of the several that I ha
 
 
 * [Description](#description)
-* [Installing DumbDisplay Arduino Library](#installing-dumbDisplay-arduino-library])
+* [Installing DumbDisplay Arduino Library](#installing-dumbdisplay-arduino-library)
   * [Arduino IDE](#arduino-ide)
   * [PlatformIO](#platformio)
 * [DumbDisplay Android app](#dumbDisplay-android-app)
@@ -17,6 +17,23 @@ Plase notice that the above mentioned video is just one of the several that I ha
   * [DumbDispaly Feedback Mechanism](#dumbdispaly-feedback-mechanism)
   * [DumbDispaly Tunnel](#dumbDispaly-tunnel)
   * [More Samples](#more-samples)
+    * [Screenshot 1 -- *Micro:bit*](#screenshot-1--Microbit)
+### Screenshot 2 -- *LEDs + "Bar Meter" + LCD*
+### Screenshot 3 -- *Nested "auto pin" layers*
+### Screenshot 4 -- *Manual "pin" layers (LEDs + Turtle)*
+### Screenshot 5 -- *Graphical LCD*
+### Screenshot 6 -- *"Layer feedback"*
+### Screenshot 7 -- *"Tunnel" for getting Quotes*
+## Positioning of Layers
+## Record and Playback Commands
+## Survive DumbDisplay App Reconnection
+## More "Feedback" Options
+## Idle Callback and ESP32 Deep Sleep
+# Reference
+# DumbDispaly WIFI Bridge
+# Thank You!
+# License
+# Change History
 
 # Description
 
