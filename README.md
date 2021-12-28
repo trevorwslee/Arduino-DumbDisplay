@@ -7,6 +7,17 @@ You may want to watch the video **Introducing DumbDisplay -- the little helper f
 Plase notice that the above mentioned video is just one of the several that I have on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
 
 
+
+* [Description](#description)
+* [Installing DumbDisplay Arduino Library](#installing-dumbDisplay-arduino-library])
+  * [Arduino IDE](#arduino-ide)
+  * [PlatformIO](#platformio)
+* [DumbDisplay Android app](#dumbDisplay-android-app)
+* [Sample Code](#sample-code)
+  * [DumbDispaly Feedback Mechanism](#dumbdispaly-feedback-mechanism)
+  * [DumbDispaly Tunnel](#dumbDispaly-tunnel)
+  * [More Samples](#more-samples)
+
 # Description
 
 Instead of connecting real gadgets to your Arduino IDE compatible micro-controller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets on your Android phone.
@@ -156,7 +167,7 @@ You have several options for connecting to DumbDisplay Android app.
   ```  
     where 192.168.1.134 is the "host" and 10201 is the "port"
   - It is only tested with ESP01, ESP8266 and ESP32 (which support WIFI without add-on) and it appears to be working fine when WIFI connection is stable (especially good for ESP8266).
-  - With DumbDisply WIFI Bridge, you can simply code to use Arduino's Serial port to "connect" to DumbDisplay Android app, with DumbDisply WIFI Bridge running in the middle. Please refer to the section below that mention about DumbDisply WIFI Bridge.
+  - With DumbDisply WIFI Bridge, you can simply code to use Arduino's Serial port to "connect" to DumbDisplay Android app, with DumbDisply WIFI Bridge running in the middle. Please refer to the section below that mention about [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge).
 
 
 
@@ -190,7 +201,7 @@ Notes:
   dumbdisplay.deleteLayer(led);
   ```
 
-## DumbDispaly "feedback" Mechanism
+## DumbDispaly "Feedback" Mechanism
 
 You can also try out "layer feedback" from DumbDisplay like
 
