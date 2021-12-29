@@ -21,7 +21,7 @@ int ToNoteIdx(char noteName, char halfNote) {
   }
   if (halfNote == '#') {
     noteName = noteIdx + 1; 
-  } else if (halfNote = 'b') {
+  } else if (halfNote == 'b') {
     noteName = noteIdx - 1;
   }
   return noteIdx;
