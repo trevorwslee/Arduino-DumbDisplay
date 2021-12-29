@@ -1,17 +1,34 @@
 #include <Arduino.h>
 
+
+
+// comment out BLUETOOTH if don't have HC-06 connectivity
+// . GP8 => RX of HC-06; GP9 => TX of HC-06; ; HC-06 should be configured to use baud rate of 115200
+// if no HC-06 connectivity, will need to use DumbDisplayWifiBridge
+#define BLUETOOTH
+
+
+#ifdef BLUETOOTH
+
+// GP8 => RX of HC-06; GP9 => TX of HC-06
+#define DD_4_PICO_TX 8
+#define DD_4_PICO_RX 9
+#include "picodumbdisplay.h"
+DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
+
+#else
+
 #include "dumbdisplay.h"
-
-
-/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
+#endif
 
 
-// #define PIN_IN1 4
-// #define PIN_IN2 5
-// #define PIN_IN3 6
-// #define PIN_IN4 7
+
+#define PIN_IN1 14
+#define PIN_IN2 15
+#define PIN_IN3 16
+#define PIN_IN4 17
  
 #define STEPS_PER_REVOUTION 512
 
