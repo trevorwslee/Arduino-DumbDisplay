@@ -126,7 +126,7 @@ GraphicalDDLayer *gaugeLayer;
 
 
 
-void DrawStepMotorPointer(int atAngle, int toAngle, bool turnOn) {
+void DrawMotorPointer(int atAngle, int toAngle, bool turnOn) {
 // Serial.print(atAngle);
 // Serial.print(".");
 // Serial.print(toAngle);
@@ -157,7 +157,7 @@ void DrawStepMotorPointer(int atAngle, int toAngle, bool turnOn) {
 
 
 
-int stepMotorAtStep = 0;
+int motorAtStep = 0;
 
 
 bool calibrating = true;
@@ -193,7 +193,7 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
             if (type == DOUBLECLICK) {
                 atAngle = angle;
                 toAngle = angle;
-                stepMotorAtStep = (gaugeAngle / 360.0) * STEPS_PER_REVOUTION;     
+                motorAtStep = (gaugeAngle / 360.0) * STEPS_PER_REVOUTION;     
             }           
         } else {
             toAngle = angle;
@@ -202,7 +202,7 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
     if (!calibrating) {
         turnSpeed = MAX_SPEED;
         int step = STEPS_PER_REVOUTION * (toAngle / 360.0);
-        int stepDiff =  (STEPS_PER_REVOUTION + step - stepMotorAtStep) % STEPS_PER_REVOUTION;
+        int stepDiff =  (STEPS_PER_REVOUTION + step - motorAtStep) % STEPS_PER_REVOUTION;
         // Serial.print(toAngle);
         // Serial.print(">");
         // Serial.print(step);
@@ -223,9 +223,11 @@ void setup() {
     dumbdisplay.recordLayerSetupCommands();
 
     calibrateLayer = dumbdisplay.createLcdLayer(12, 1);
+    calibrateLayer->backgroundColor(GaugeBgColor);
     calibrateLayer->writeCenteredLine("Calibrate");
     calibrateLayer->setFeedbackHandler(FeedbackHandler, "fl");
     controlLayer = dumbdisplay.createLcdLayer(10, 1);
+    controlLayer->backgroundColor(GaugeBgColor);
     controlLayer->writeCenteredLine("Control");
     controlLayer->setFeedbackHandler(FeedbackHandler, "fl");
 
@@ -275,7 +277,7 @@ void loop() {
         if (calibrating) {
             turn = true;
         } else {
-            int gaugeAngle = (360.0 * stepMotorAtStep) / STEPS_PER_REVOUTION;
+            int gaugeAngle = (360.0 * motorAtStep) / STEPS_PER_REVOUTION;
             int angle = GaugeAngleToAngle(gaugeAngle);
             turn = angle != toAngle; 
         }
@@ -284,12 +286,12 @@ void loop() {
             TurnStep(clockwise);
             delayMillis = SPEED_DELAY_MILLIS * (MAX_SPEED - abs(turnSpeed));
             // calculate and record where it is at
-            stepMotorAtStep += clockwise ? -1 : 1;
-            if (stepMotorAtStep == -1)
-                stepMotorAtStep = STEPS_PER_REVOUTION - 1;
+            motorAtStep += clockwise ? -1 : 1;
+            if (motorAtStep == -1)
+                motorAtStep = STEPS_PER_REVOUTION - 1;
             else
-                stepMotorAtStep %= STEPS_PER_REVOUTION;
-            int gaugeAngle = (360.0 * stepMotorAtStep) / STEPS_PER_REVOUTION;
+                motorAtStep %= STEPS_PER_REVOUTION;
+            int gaugeAngle = (360.0 * motorAtStep) / STEPS_PER_REVOUTION;
             atAngle = GaugeAngleToAngle(gaugeAngle);
         }
     }
@@ -318,12 +320,12 @@ void loop() {
     }
     if (knownCalibrate.set(calibrating) || forceRefreshUI) {
         if (calibrating) {
-            calibrateLayer->border(1, "gray");
-            controlLayer->noBorder();
+            calibrateLayer->border(2, GaugeDotOffColor);
+            controlLayer->border(2, GaugeDotOffColor, "hair");
             turnSpeedLayer->setTransparent(false);
         } else {
-            calibrateLayer->noBorder();
-            controlLayer->border(1, "gray");
+            calibrateLayer->border(2, GaugeDotOffColor, "hair");
+            controlLayer->border(2, GaugeDotOffColor);
             turnSpeedLayer->setTransparent(true);
         }
     }
@@ -333,8 +335,8 @@ void loop() {
     bool toAngleChanged = knownToAngle.set(toAngle); 
     if (atAngleChanged || toAngleChanged || forceRefreshUI) {
         dumbdisplay.recordLayerCommands();
-        DrawStepMotorPointer(lastAtAngle, lastToAngle, false);
-        DrawStepMotorPointer(atAngle, toAngle, true);
+        DrawMotorPointer(lastAtAngle, lastToAngle, false);
+        DrawMotorPointer(atAngle, toAngle, true);
         dumbdisplay.playbackLayerCommands();
     }
 
