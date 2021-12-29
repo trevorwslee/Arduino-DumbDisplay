@@ -73,6 +73,7 @@ def OnDisconnected():
 
 def InitWindow(param_dict: None):
     global Window
+    global Show_state
     global Auto_scroll_state
 
     global Connect_button
@@ -93,6 +94,8 @@ def InitWindow(param_dict: None):
     Window.protocol("WM_DELETE_WINDOW", OnWindowClosed)
     Window.title("DumbDispaly WIFI Bridge")
     Window.geometry("800x600")
+    Show_state = tk.BooleanVar()
+    Show_state.set(True)
     Auto_scroll_state = tk.BooleanVar()
     Auto_scroll_state.set(True)
 
@@ -104,6 +107,8 @@ def InitWindow(param_dict: None):
     wifiHost_label = tk.Label(tool_bar, text=ddbcore.WifiHost+':')
     WifiPort_entry = tk.Entry(tool_bar, width=6)
     spacer_label = tk.Label(tool_bar, text='  |  ')
+    show_check = tk.Checkbutton(tool_bar, text='Show', var=Show_state)
+    #clear_button = tk.Button(tool_bar, text='Clear', command=ClickedClear)
     auto_scroll_check = tk.Checkbutton(tool_bar, text='Auto Scroll', var=Auto_scroll_state,
                                        command=lambda: Text_box.mark_set("insert", tk.END))
     clear_button = tk.Button(tool_bar, text='Clear', command=ClickedClear)
@@ -114,6 +119,7 @@ def InitWindow(param_dict: None):
     wifiHost_label.pack(side=tk.LEFT)
     WifiPort_entry.pack(side=tk.LEFT)
     spacer_label.pack(side=tk.LEFT)
+    show_check.pack(side=tk.LEFT)
     auto_scroll_check.pack(side=tk.LEFT)
     clear_button.pack(side=tk.LEFT)
     tool_bar.pack()
@@ -159,17 +165,18 @@ class DDWinUserInterface(ddbcore.DDUserInterface):
     def bridge_send(self, transDir, line):
         # global Window
         # global Auto_scroll_state
-        if Auto_scroll_state.get():
-            Text_box.see(tk.END)
-            if True:
-                pos = Text_box.index(tk.INSERT)
-                end_pos = Text_box.index(tk.END)
-                line_count = int(end_pos.split('.')[0]) - 1
-                check_pos = str(line_count) + '.0'
-                if pos != check_pos:
-                    Auto_scroll_state.set(False)
-        #Window.update()
-        Text_box.insert(tk.END, transDir + ' ' + line + '\n')
+        if Show_state.get():
+            if Auto_scroll_state.get():
+                Text_box.see(tk.END)
+                if True:
+                    pos = Text_box.index(tk.INSERT)
+                    end_pos = Text_box.index(tk.END)
+                    line_count = int(end_pos.split('.')[0]) - 1
+                    check_pos = str(line_count) + '.0'
+                    if pos != check_pos:
+                        Auto_scroll_state.set(False)
+            #Window.update()
+            Text_box.insert(tk.END, transDir + ' ' + line + '\n')
     def printLogMessage(self, msg):
         print(msg)
     def printControlMessage(self, msg):

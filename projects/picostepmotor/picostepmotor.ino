@@ -30,10 +30,12 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 #define PIN_IN3 16
 #define PIN_IN4 17
  
-#define STEPS_PER_REVOUTION 512
 
 #define MAX_SPEED 10 
-#define SPEED_DELAY_MILLIS 10
+
+#define STEPS_PER_REVOUTION 512
+
+
 
 
 void SubStep(int v4, int v3, int v2, int v1) {
@@ -127,11 +129,6 @@ GraphicalDDLayer *gaugeLayer;
 
 
 void DrawMotorPointer(int atAngle, int toAngle, bool turnOn) {
-// Serial.print(atAngle);
-// Serial.print(".");
-// Serial.print(toAngle);
-// Serial.print(" = ");
-// Serial.println(turnOn);    
   int atX;
   int atY;
   AngleToXY(atAngle, GaugeRadius, atX, atY);
@@ -175,11 +172,6 @@ DDConnectVersionTracker ddConnectionChecker(-1);
 
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
-//  Serial.print(pLayer->getLayerId());
-//  Serial.print(":");   
-//  Serial.print(feedback.x);
-//  Serial.print(",");   
-//  Serial.println(feedback.y);   
     if (pLayer == calibrateLayer) {
         calibrating = true;
     } else if (pLayer == controlLayer) {
@@ -203,16 +195,12 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
         turnSpeed = MAX_SPEED;
         int step = STEPS_PER_REVOUTION * (toAngle / 360.0);
         int stepDiff =  (STEPS_PER_REVOUTION + step - motorAtStep) % STEPS_PER_REVOUTION;
-        // Serial.print(toAngle);
-        // Serial.print(">");
-        // Serial.print(step);
-        // Serial.print(".");
-        // Serial.println(stepDiff);
         if (stepDiff < (STEPS_PER_REVOUTION) / 2) {
             turnSpeed = -turnSpeed;
         }
     }
 }
+
 
 void setup() {
     pinMode(PIN_IN1, OUTPUT);
@@ -226,35 +214,29 @@ void setup() {
     calibrateLayer->backgroundColor(GaugeBgColor);
     calibrateLayer->writeCenteredLine("Calibrate");
     calibrateLayer->setFeedbackHandler(FeedbackHandler, "fl");
+    
     controlLayer = dumbdisplay.createLcdLayer(10, 1);
     controlLayer->backgroundColor(GaugeBgColor);
     controlLayer->writeCenteredLine("Control");
     controlLayer->setFeedbackHandler(FeedbackHandler, "fl");
-
 
     turnSpeedLayer = dumbdisplay.createLedGridLayer(2 * MAX_SPEED + 1, 1, 1, 3);
     turnSpeedLayer->border(0.2, "darkgray");
     turnSpeedLayer->offColor("lightgray");
     turnSpeedLayer->setFeedbackHandler(FeedbackHandler, "fa:rpt50");
 
-
     gaugeLayer = dumbdisplay.createGraphicalLayer(GaugeLayerWidth, GaugeLayerHeight);
-  
     gaugeLayer->drawStr(2 * GaugeRadius - 3 * GaugeDotRadius + 8, GaugeRadius + 3, "0");
     gaugeLayer->drawStr(GaugeRadius - 1, 14, "90");
     gaugeLayer->drawStr(2 * GaugeDotRadius, GaugeRadius + 3, "180");
     gaugeLayer->drawStr(GaugeRadius - 5, 2 * GaugeRadius - 11, "270");
-    
     for (int angle = 0; angle <= 355; angle += 5) {
         int x;
         int y;
         AngleToXY(angle, GaugeRadius, x, y);
         gaugeLayer->fillCircle(x, y, GaugeDotOffRadius, GaugeDotOffColor);
     } 
-
-     gaugeLayer->setFeedbackHandler(FeedbackHandler, "fs");
-
-
+    gaugeLayer->setFeedbackHandler(FeedbackHandler, "fs");
 
     dumbdisplay.configAutoPin(
         DD_AP_VERT_2(
@@ -284,7 +266,7 @@ void loop() {
         if (turn) {
             bool clockwise = turnSpeed > 0;
             TurnStep(clockwise);
-            delayMillis = SPEED_DELAY_MILLIS * (MAX_SPEED - abs(turnSpeed));
+            delayMillis = 10 * (MAX_SPEED - abs(turnSpeed));
             // calculate and record where it is at
             motorAtStep += clockwise ? -1 : 1;
             if (motorAtStep == -1)
