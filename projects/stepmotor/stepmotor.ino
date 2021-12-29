@@ -1,22 +1,10 @@
 #include <Arduino.h>
 
-
-#define BLUETOOTH
-
-
-
-#ifdef BLUETOOTH
-
-#include "ssdumbdisplay.h"
-// assume HC-06 connected; 2 => TX of HC06; 3 => RX of HC06
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
-
-#else
-
 #include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
-#endif
+
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 
 
@@ -313,13 +301,12 @@ void loop() {
     }
     if (knownCalibrate.set(calibrating) || forceRefreshUI) {
         if (calibrating) {
-            calibrateLayer->backgroundColor("gray");
-            controlLayer->noBackgroundColor();
+            calibrateLayer->border(1, "gray");
+            controlLayer->noBorder();
             turnSpeedLayer->setTransparent(false);
-
         } else {
-            calibrateLayer->noBackgroundColor();
-            controlLayer->backgroundColor("gray");
+            calibrateLayer->noBorder();
+            controlLayer->border(1, "gray");
             turnSpeedLayer->setTransparent(true);
         }
     }
