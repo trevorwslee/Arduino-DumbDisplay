@@ -154,10 +154,13 @@ class DDWinUserInterface(ddbcore.DDUserInterface):
         WifiPort_entry["state"] = "disabled"
         #Text_box.insert(tk.END, "*** connected\n")
     def onDisconnected(self):
-        Port_combo["state"] = "normal"
-        Baud_combo["state"] = "normal"
-        WifiPort_entry["state"] = "normal"
-        #Text_box.insert(tk.END, "*** disconnected\n")
+        try:
+            Port_combo["state"] = "normal"
+            Baud_combo["state"] = "normal"
+            WifiPort_entry["state"] = "normal"
+            #Text_box.insert(tk.END, "*** disconnected\n")
+        except:
+            pass
     def isUIRunning(self):
         return WindowRunning    
     def timeSlice(self):
