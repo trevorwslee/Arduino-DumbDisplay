@@ -74,7 +74,7 @@ void TurnStep(bool clockwise) {
 
 
 
-const int GaugeDotRadius = 6;//4;
+const int GaugeDotRadius = 6;
 const int GaugeDotOffRadius = GaugeDotRadius - 2;
 const int GaugeRadius = 128;
 const int GaugeLayerWidth = 2 * (GaugeRadius + GaugeDotRadius);
@@ -82,7 +82,7 @@ const int GaugeLayerHeight = 2 * (GaugeRadius + 2 * GaugeDotRadius);
 const String GaugeDotToColor = DD_INT_COLOR(0xFF0000);
 const String GaugeDotOnColor = DD_INT_COLOR(0x006400);
 const String GaugeDotOffColor = DD_INT_COLOR(0xD3D3D3);
-const String GaugeBgColor = DD_INT_COLOR(0xF0FFFF);     // azure
+const String GaugeBgColor = DD_INT_COLOR(0xF0FFFF);
 
 
 
