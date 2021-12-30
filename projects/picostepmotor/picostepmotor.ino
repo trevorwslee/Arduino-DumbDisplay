@@ -25,6 +25,7 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 
 
+// comment out PIN_IN1 if don't have step motor attached
 #define PIN_IN1 14
 #define PIN_IN2 15
 #define PIN_IN3 16
@@ -39,10 +40,12 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 
 void SubStep(int v4, int v3, int v2, int v1) {
+#ifdef PIN_IN1    
     digitalWrite(PIN_IN4, v4);
     digitalWrite(PIN_IN3, v3);
     digitalWrite(PIN_IN2, v2);
     digitalWrite(PIN_IN1, v1);
+#endif    
     delay(1);
 }
 
@@ -203,10 +206,12 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
 
 
 void setup() {
+#ifdef PIN_IN1    
     pinMode(PIN_IN1, OUTPUT);
     pinMode(PIN_IN3, OUTPUT);
     pinMode(PIN_IN2, OUTPUT);
     pinMode(PIN_IN4, OUTPUT);
+#endif
 
     dumbdisplay.recordLayerSetupCommands();
 
