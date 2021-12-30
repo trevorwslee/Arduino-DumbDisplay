@@ -33,9 +33,9 @@ For more details:
 
 # Description
 
-Instead of connecting real gadgets to your Arduino IDE compatible micro-controller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets on your Android phone.
+Instead of connecting real gadgets to your Arduino IDE compatible microcontroller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets on your Android phone.
 
-By doing so you can defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few micro-controller pins for other experiment needs.
+By doing so you can defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few microcontroller pins for other experiment needs.
 
 A few types of layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
@@ -44,9 +44,9 @@ A few types of layers can be created:
 * Turtle-like canvas
 * Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
-* Plotter, which works similar to the plotter of DumbDisplay, but chart data provided by sending commands
+* Plotter, which works similar to the plotter of DumbDisplay, but plotting data provided by sending commands
 
-Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected micro-controller, and as a result, the layers can be used as simple input gadgets as well.
+Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected micro-controller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism) for more on "layer feedback" mechanism.
 
 
 # Installing DumbDisplay Arduino Library
@@ -64,7 +64,7 @@ For demonstration on installing DumbDisplay Arduino Library, you may want to wat
 
 ## PlatformIO
 
-If you have an Arduino framework PlatformIO project that wants to make use of DumbDisplay Arduino Library, you can simply modify *platformio.ini* adding to *lib_deps* like:
+If you have an Arduino framework PlatformIO project that wants to make use of DumbDisplay Arduino Library, you can simply modify the project's *platformio.ini* adding to *lib_deps* like:
 
 ```
 lib_deps =
@@ -79,7 +79,7 @@ lib_deps =
 Obviously, you will need to install an app on your Android phone. Indeed, for Arduino DumbDisplay to work, you will need to install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
 
 The app can accept connection via
-* SoftwareSerial (e.g. Bluetooth by HC-06; even HC-08)
+* SoftwareSerial (e.g. Bluetooth by HC-05 / HC-06; even HC-08)
 * BluetoothSerial (for ESP32)
 * Bluetooth LE (for ESP32)
 * WIFI (e.g. ESP01, ESP8266 and ESP32)
@@ -89,8 +89,8 @@ The app can accept connection via
 
 Notes:
 * I have only tested DumbDisplay with the micro-controller boards that I have -- namely, Arduino Uno, ESP01, ESP8266, ESP32, STM32F103 and Raspberry Pi Pico.
-* In case DumbDisplay does not "handshake" with your micro-controller board correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion.
-* In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to later section of this README.
+* In case DumbDisplay does not "handshake" with your microcontroller board correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion.
+* In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection) for more on the topic.
 
  
 # Sample Code
@@ -100,12 +100,12 @@ You have several options for connecting to DumbDisplay Android app.
 * Via Serial 
   ```
     #include "dumbdisplay.h"
-    DumbDisplay dumbdisplay(new DDInputOutput());
+    DumbDisplay dumbdisplay(new DDInputOutput(115200));
   ```
   - need to include dumbdisplay.h -- `#include <dumbdisplay.h>`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
-  - doing so will **set Serial baud rate to the default 115200**, and you should not be using Serial for other purposes
-  - note that **a lower baud rate, say 9600, may work better for some cases**
+  - you should not be using Serial for other purposes
+  - the default baud rate is 115200;  a lower baud rate, say 9600, may work better for some cases
 * Via `SoftwareSerial` (connected to Bluetooth module like HC-06) -- https://www.arduino.cc/en/Reference/softwareSerial
   ```
     #include "ssdumbdisplay.h"
@@ -114,10 +114,8 @@ You have several options for connecting to DumbDisplay Android app.
   - need to include ssdumbdisplay.h -- `#include <ssdumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200))`  
     - 2 and 3 are the pins used by SoftwareSerial
-    - **the default baud rate is 115200**, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially
-    true for HC-08, which connects via BLE. 
+    - the default baud rate is 115200, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially true for HC-08, which connects via BLE. 
   - you should not be using that SoftwareSerial for other purposes
-  - again, **a lower baud rate, say 9600, may work better for some cases**  
 * Via `Serial2` (for STM32, connected to Bluetooth module like HC-06) 
   ```
     #include "serial2dumbdisplay.h"
@@ -165,12 +163,15 @@ You have several options for connecting to DumbDisplay Android app.
   - **be warned that `DDBLESerialIO` is slow**; if possible choose `DDBluetoothSerialIO` over `DDBLESerialIO` 
 * Via WIFI as a `WiFiServer` (for ESP01/ESP8266/ESP32) -- https://www.arduino.cc/en/Reference/WiFi  
   ```
+    #define DD_4_ESP8266
     #include "wifidumbdisplay.h"
     const char* ssid = "wifiname";
     const char* password = "wifipassword";
     const int serverPort = 10201;
     DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password, serverPort));
   ```
+  - ESP01 is basically a ESP8266
+  - for ESP32, please define DD_4_ESP32 instead of DD_4_ESP8266
   - WIFI credentials are passed to `WiFi`
   - By default, will setup and log using `Serial` with baud rate 115200; and you should see log lines like:
   ```
@@ -179,8 +180,8 @@ You have several options for connecting to DumbDisplay Android app.
     listening on 192.168.1.134:10201 ...
   ```  
     where 192.168.1.134 is the "host" and 10201 is the "port"
-  - It is only tested with ESP01, ESP8266 and ESP32 (which support WIFI without add-on) and it appears to be working fine when WIFI connection is stable (especially good for ESP8266).
-  - With DumbDisply WIFI Bridge, you can simply code to use Arduino's Serial port to "connect" to DumbDisplay Android app, with DumbDisply WIFI Bridge running in the middle. Please refer to the section below that mention about [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge).
+  - It is only tested with ESP01, ESP8266 and ESP32 (which support WIFI without add-on).
+  - With DumbDisply WIFI Bridge, you can simply code to use Arduino's Serial port to "connect" to DumbDisplay Android app, with DumbDisply WIFI Bridge running in the middle. Please refer to [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge) for more on DumbDisply WIFI Bridge.
 
 
 
