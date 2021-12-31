@@ -156,29 +156,25 @@ void DrawMotorPointer(int atAngle, int toAngle, bool turnOn) {
 
 
 
-
 int motorAtStep = 0;
+int calibratedAngle = 0;
 
+DDValueRecord<int> atAngle(0);
+DDValueRecord<int> toAngle(0);
 
-bool calibrating = true;
-DDValueStore<bool> knownCalibrate(calibrating);
-int turnSpeed = 0;
-DDValueStore<int> knownTurnSpeed(turnSpeed);
-
-int atAngle = 0;
-DDValueStore<int> knownAtAngle(atAngle);
-int toAngle = 0;
-DDValueStore<int> knownToAngle(toAngle);
+DDValueRecord<bool> calibrating(true);
+DDValueRecord<int> turnSpeed(0);
 
 DDConnectVersionTracker ddConnectionChecker(-1);
 
 
-
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
-    if (pLayer == calibrateLayer) {
-        calibrating = true;
-    } else if (pLayer == controlLayer) {
+    if (pLayer == controlLayer) {
         calibrating = false;
+    } else if (pLayer == calibrateLayer) {
+        calibrating = true;
+        turnSpeed = 0;
+        toAngle = calibratedAngle;
     } else if (pLayer == turnSpeedLayer) {
         turnSpeed = feedback.x - MAX_SPEED;
     } else if (pLayer == gaugeLayer) {
@@ -186,6 +182,7 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
         int angle = GaugeAngleToAngle(gaugeAngle);
         if (calibrating) {
             if (type == DOUBLECLICK) {
+                calibratedAngle = angle;
                 atAngle = angle;
                 toAngle = angle;
                 motorAtStep = (gaugeAngle / 360.0) * STEPS_PER_REVOUTION;     
@@ -271,7 +268,7 @@ void loop() {
         if (turn) {
             bool clockwise = turnSpeed > 0;
             TurnStep(clockwise);
-            delayMillis = 10 * (MAX_SPEED - abs(turnSpeed));
+            delayMillis = 10 * (MAX_SPEED - abs(turnSpeed.get()));
             // calculate and record where it is at
             motorAtStep += clockwise ? -1 : 1;
             if (motorAtStep == -1)
@@ -288,7 +285,8 @@ void loop() {
     if (forceRefreshUI) {
         gaugeLayer->backgroundColor(GaugeBgColor);
     }
-    if (knownTurnSpeed.set(turnSpeed) || forceRefreshUI) {
+    bool turnSpeedChanged = turnSpeed.record();
+    if (turnSpeedChanged || forceRefreshUI) {
         int count = turnSpeed;
         int xStart;
         const char* color;
@@ -305,7 +303,8 @@ void loop() {
         }
         turnSpeedLayer->horizontalBarEx(count, xStart, color);
     }
-    if (knownCalibrate.set(calibrating) || forceRefreshUI) {
+    bool calibratingChanged = calibrating.record();
+    if (calibratingChanged || forceRefreshUI) {
         if (calibrating) {
             calibrateLayer->border(2, GaugeDotOffColor);
             controlLayer->border(2, GaugeDotOffColor, "hair");
@@ -316,10 +315,10 @@ void loop() {
             turnSpeedLayer->setTransparent(true);
         }
     }
-    int lastAtAngle = knownAtAngle.get();
-    int lastToAngle = knownToAngle.get();
-    bool atAngleChanged = knownAtAngle.set(atAngle);
-    bool toAngleChanged = knownToAngle.set(toAngle); 
+    int lastAtAngle = atAngle.getRecorded();
+    int lastToAngle = toAngle.getRecorded();
+    bool atAngleChanged = atAngle.record();
+    bool toAngleChanged = toAngle.record(); 
     if (atAngleChanged || toAngleChanged || forceRefreshUI) {
         dumbdisplay.recordLayerCommands();
         DrawMotorPointer(lastAtAngle, lastToAngle, false);

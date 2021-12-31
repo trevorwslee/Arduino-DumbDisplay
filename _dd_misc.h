@@ -11,9 +11,30 @@ class DDValueStore {
       storedValue = value;
       return !same;
     }
-    T get() { return storedValue; }
+    inline T get() { return storedValue; }
   private:
     T storedValue;
+};
+
+
+template <class T>
+class DDValueRecord {
+  public:
+    DDValueRecord(T value): value(value), knownValue(value) {}
+    DDValueRecord(T value, T knownValue): value(value), knownValue(knownValue) {}
+    inline operator T() { return value; } 
+    inline T get() { return value; }
+    inline void operator =(T value) { this->value = value; }
+    inline void set(T value) { this->value = value; }
+    inline T getRecorded() { return knownValue; }
+    bool record() {
+      bool same = value == knownValue;
+      knownValue = value;
+      return !same;
+    }
+  private:
+    T value;
+    T knownValue;
 };
 
 
