@@ -1007,25 +1007,25 @@ DDLayer::~DDLayer() {
   if (pFeedbackManager != NULL)
     delete pFeedbackManager;
 } 
-void DDLayer::setVisible(bool visible) {
+void DDLayer::visible(bool visible) {
   _sendCommand1(layerId, C_visible, TO_BOOL(visible));
 }
-void DDLayer::setTransparent(bool transparent) {
+void DDLayer::transparent(bool transparent) {
   _sendCommand1(layerId, C_transparent, TO_BOOL(transparent));
 }
-void DDLayer::setOpacity(int opacity) {
-    _sendCommand1(layerId, C_opacity, String(opacity));
+void DDLayer::opacity(int opacity) {
+  _sendCommand1(layerId, C_opacity, String(opacity));
 }
-void DDLayer::setAlpha(int alpha) {
+void DDLayer::alpha(int alpha) {
   _sendCommand1(layerId, C_alpha, String(alpha));
 }
-void DDLayer::opacity(int opacity) {
-  if (_DDCompatibility >= 2) {
-      setAlpha(opacity);
-  } else {
-    _sendCommand1(layerId, C_opacity, String(opacity));
-  }
-}
+// void DDLayer::opacity(int opacity) {
+//   if (_DDCompatibility >= 2) {
+//       setAlpha(opacity);
+//   } else {
+//     _sendCommand1(layerId, C_opacity, String(opacity));
+//   }
+// }
 void DDLayer::border(float size, const String& color, const String& shape, float extraSize) {
   if (IS_FLOAT_ZERO(extraSize)) {
     _sendCommand3(layerId, C_border, TO_NUM(size), color, shape);

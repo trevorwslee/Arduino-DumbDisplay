@@ -182,7 +182,8 @@ void setup_DD() {
   // create a plotter layer that shows the angle, and for more fun, sin and cos of the angle
   pPlotter = dumbdisplay.createPlotterLayer(300, 150);
   pPlotter->padding(10);
-  pPlotter->opacity(64);
+  //pPlotter->opacity(64);
+  pPlotter->opacity(25);
   pPlotter->noBackgroundColor();
   pPlotter->label("Servo Angle");
 

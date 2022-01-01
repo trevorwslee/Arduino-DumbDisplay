@@ -308,11 +308,11 @@ void loop() {
         if (calibrating) {
             calibrateLayer->border(2, GaugeDotOffColor);
             controlLayer->border(2, GaugeDotOffColor, "hair");
-            turnSpeedLayer->setTransparent(false);
+            turnSpeedLayer->transparent(false);
         } else {
             calibrateLayer->border(2, GaugeDotOffColor, "hair");
             controlLayer->border(2, GaugeDotOffColor);
-            turnSpeedLayer->setTransparent(true);
+            turnSpeedLayer->transparent(true);
         }
     }
     int lastAtAngle = atAngle.getRecorded();
