@@ -1,3 +1,8 @@
+// for a desciption of the Step Motor experiment, please watch the YouTube video 
+// -- Arduino experiment using Raspberry Pi Pico on 28BYJ-48 Step Motor with ULN2003 and DumbDisplay
+// -- https://www.youtube.com/watch?v=lMFkCNaTh84
+
+
 #include <Arduino.h>
 
 
