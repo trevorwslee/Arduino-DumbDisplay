@@ -50,93 +50,11 @@
 #define FLUSH_AFTER_SENT_COMMAND false
 #define YIELD_AFTER_SEND_COMMAND false
 
-#define DD_SID "Arduino-c1"
+//#define DD_SID "Arduino-c1"
+#define DD_SID "Arduino-c2"
 
 
-#define C_TONE             "#00"
-
-#define C_border           "#10"
-#define C_padding          "#11" 
-#define C_bgcolor          "#12"
-#define C_nobgcolor        "#13"
-#define C_feedback         "#14"
-#define C_clear            "#15"
-#define C_flash	           "#16"
-#define C_flasharea        "#17"
-#define C_visible          "#18"
-#define C_opacity          "#19"
-
-
-#define C_fillscreen       "#30"
-#define C_drawtriangle     "#31"
-#define C_drawline         "#32"
-#define c_drawrect         "#33"
-#define C_drawcircle       "#34"
-#define C_shownumber       "#35"
-#define C_resetsegoffcolor "#36"
-#define C_ledon            "#37"
-#define C_ledoff           "#38"
-#define C_writeline        "#39"
-#define C_textcolor        "#40"
-#define C_textsize         "#41"
-#define C_drawstr          "#42"
-#define C_crect            "#43"
-#define C_rect             "#44"
-#define C_ccircle          "#45"
-#define C_circle           "#46"
-#define C_ledoncolor       "#47"
-#define C_ledoffcolor      "#48"
-#define C_pencolor         "#49"
-#define C_print            "#50"
-#define C_textfont         "#51"
-#define C_drawroundrect    "#52"
-#define C_drawpixel        "#53"
-#define C_drawchar         "#54"
-#define C_println          "#55"
-#define C_showformatted    "#56"
-#define C_showhex          "#57"
-#define C_bitwise          "#58"
-#define C_ledtoggle        "#59"
-#define C_autoscroll       "#60"
-#define C_display          "#61"
-#define C_scrollleft       "#62"
-#define C_scrollright      "#63"
-#define C_pixelcolor       "#64"
-#define C_bgpixelcolor     "#65"
-#define C_setcursor        "#66"
-#define C_movecursorby     "#67"
-#define C_settextwrap      "#68"
-#define C_drawtext         "#69"
-#define C_write            "#70"	
-#define C_cpoly            "#71"
-#define C_cpolyin          "#72"
-#define C_poly             "#73"
-#define C_trisas           "#74"
-#define C_coval            "#75"
-#define C_oval             "#76"
-#define C_dot              "#77"
-#define C_ptextfont        "#78"
-#define C_ptextsize        "#79"
-#define C_ledhoribar       "#80"
-#define C_ledvertbar       "#81"
-#define C_home             "#82"
-#define C_seth             "#83"
-#define C_pensize          "#84"
-#define C_fillcolor        "#85"
-#define C_nofillcolor      "#86"
-#define C_segcolor	       "#87"
-#define C_segon            "#88"
-#define C_segoff           "#89"	
-#define C_setsegon         "#90"
-#define C_label            "#91"
-#define C_cursor           "#92"
-
-#define C_fd               "fd"
-#define C_lt               "lt"
-#define C_rt               "rt"
-
-
-
+#include "_dd_commands.h"
 
 
 
@@ -593,13 +511,13 @@ int _AllocTid() {
 }
 void _PostCreateTunnel(DDTunnel* pTunnel) {
 #ifdef STORE_LAYERS  
-  int lid = _LayerIdToLid(pTunnel->getTunnelId());
+  int8_t lid = _LayerIdToLid(pTunnel->getTunnelId());
   _DDLayerArray[lid] = pTunnel;
 #endif
 }
 void _PreDeleteTunnel(DDTunnel* pTunnel) {
 #ifdef STORE_LAYERS  
-  int lid = _LayerIdToLid(pTunnel->getTunnelId());
+  int8_t lid = _LayerIdToLid(pTunnel->getTunnelId());
   _DDLayerArray[lid] = NULL;
 #endif
 }
@@ -1058,7 +976,7 @@ inline void _sendSpecialCommand(const char* specialType, const String& specialId
 using namespace DDImpl;
 
 
-DDFeedbackManager::DDFeedbackManager(int bufferSize) {
+DDFeedbackManager::DDFeedbackManager(int8_t bufferSize) {
   this->nextArrayIdx = 0;
   this->validArrayIdx = 0;
 }
@@ -1079,7 +997,7 @@ void DDFeedbackManager::pushFeedback(DDFeedbackType type, int16_t x, int16_t y, 
 }
 
 
-DDLayer::DDLayer(int layerId) {
+DDLayer::DDLayer(int8_t layerId): DDObject(DD_OBJECT_TYPE_LAYER) {
   this->layerId = String(layerId);
   this->pFeedbackManager = NULL;
   this->feedbackHandler = NULL;
@@ -1089,12 +1007,25 @@ DDLayer::~DDLayer() {
   if (pFeedbackManager != NULL)
     delete pFeedbackManager;
 } 
-void DDLayer::visibility(bool visible) {
+void DDLayer::visible(bool visible) {
   _sendCommand1(layerId, C_visible, TO_BOOL(visible));
+}
+void DDLayer::transparent(bool transparent) {
+  _sendCommand1(layerId, C_transparent, TO_BOOL(transparent));
 }
 void DDLayer::opacity(int opacity) {
   _sendCommand1(layerId, C_opacity, String(opacity));
 }
+void DDLayer::alpha(int alpha) {
+  _sendCommand1(layerId, C_alpha, String(alpha));
+}
+// void DDLayer::opacity(int opacity) {
+//   if (_DDCompatibility >= 2) {
+//       setAlpha(opacity);
+//   } else {
+//     _sendCommand1(layerId, C_opacity, String(opacity));
+//   }
+// }
 void DDLayer::border(float size, const String& color, const String& shape, float extraSize) {
   if (IS_FLOAT_ZERO(extraSize)) {
     _sendCommand3(layerId, C_border, TO_NUM(size), color, shape);
@@ -1316,6 +1247,9 @@ void LedGridDDLayer::turnOff(int x, int y) {
 void LedGridDDLayer::toggle(int x, int y) {
   _sendCommand2(layerId, C_ledtoggle, String(x), String(y));
 }
+void LedGridDDLayer::turnOnEx(int x, int y, const String& onColor) {
+  _sendCommand3(layerId, C_ledonex, String(x), String(y), onColor);
+}
 void LedGridDDLayer::bitwise(unsigned long bits, int y) {
   _sendCommand2(layerId, C_bitwise, String(y), String(bits));
 }
@@ -1333,6 +1267,12 @@ void LedGridDDLayer::horizontalBar(int count, bool rightToLeft) {
 }
 void LedGridDDLayer::verticalBar(int count, bool bottomToTop) {
   _sendCommand2(layerId, C_ledvertbar, String(count), TO_BOOL(bottomToTop));
+}
+void LedGridDDLayer::horizontalBarEx(int count, int startX, const String& color) {
+  _sendCommand3(layerId, C_ledhoribarex, String(count), String(startX), color);
+}
+void LedGridDDLayer::verticalBarEx(int count, int startY, const String& color) {
+  _sendCommand3(layerId, C_ledvertbarex, String(count), String(startY), color);
 }
 // void LedGridDDLayer::onColor(long color) {
 //   _sendCommand1(layerId, "ledoncolor", HEX_COLOR(color));
@@ -1589,8 +1529,8 @@ void PlotterDDLayer::set(const String& key1, float value1, const String& key2, f
 // }
 
 #ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize):
-  type(type), tunnelId(String(tunnelId)), endPoint(endPoint) {
+DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize):
+  DDObject(DD_OBJECT_TYPE_TUNNEL), type(type), tunnelId(String(tunnelId)), endPoint(endPoint) {
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
   // this->nextArrayIdx = 0;
@@ -1665,7 +1605,7 @@ void DDTunnel::handleInput(const String& data, bool final) {
     this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
 }
-DDBufferedTunnel::DDBufferedTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize):
+DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize):
   DDTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
   this->arraySize = bufferSize;
   this->dataArray = new String[bufferSize];
@@ -1758,7 +1698,7 @@ bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
   // }
   // return true;
 }
-JsonDDTunnelMultiplexer::JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int tunnelCount) {
+JsonDDTunnelMultiplexer::JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int8_t tunnelCount) {
   this->tunnelCount = tunnelCount;
   //this->tunnels = tunnels;
   this->tunnels = (JsonDDTunnel**) malloc(tunnelCount * sizeof(JsonDDTunnel*));
@@ -1907,11 +1847,20 @@ void DumbDisplay::pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop
 }
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
-  //_PreDeleteLayer(pLayer);
-  delete pLayer;
+  delete pLayer;  // will call _PreDeleteLayer(pLayer)
 }
 void DumbDisplay::reorderLayer(DDLayer *pLayer, const String& how) {
   _sendCommand1(pLayer->getLayerId(), "REORD", how);
+}
+void DumbDisplay:: walkLayers(void (*walker)(DDLayer *)) {
+  for (int i = 0; i < _NextLid; i++) {
+    DDObject* pObject = _DDLayerArray[i];
+    if (pObject != NULL) {
+      if (pObject->objectType == DD_OBJECT_TYPE_LAYER) {
+        walker((DDLayer*) pObject);
+      }
+    }
+  }
 }
 void DumbDisplay::recordLayerSetupCommands() {
   _Connect();
@@ -1967,7 +1916,7 @@ void DumbDisplay::tone(uint32_t freq, uint32_t duration) {
 }
 
 
-BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool connectNow, int bufferSize) {
+BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool connectNow, int8_t bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
   // if (connectNow) {
@@ -1977,7 +1926,7 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool conne
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
-JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connectNow, int bufferSize) {
+JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connectNow, int8_t bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
   // if (connectNow) {

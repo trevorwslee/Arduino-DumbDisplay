@@ -1,6 +1,7 @@
 #ifndef _dd_serial_h
 #define _dd_serial_h
 
+
 #ifdef DD_4_ESP32
 #include <esp_spp_api.h>
 #include "HardwareSerial.h"

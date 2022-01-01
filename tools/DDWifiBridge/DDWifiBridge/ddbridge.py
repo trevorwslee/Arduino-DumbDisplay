@@ -66,8 +66,10 @@ def main():
             #import ddbwinmain
             from . import ddbwinmain
             param_dict = {"port": port, "baud": baud, "wifiPort": wifiPort }
-            ddbwinmain.RunDDBridgeWinMain(param_dict)
-
-
+            try:
+                ddbwinmain.RunDDBridgeWinMain(param_dict)
+            except:
+                print("RunDDBridgeWinMain exception")
+ 
 # if __name__ == "__main__":
 #     main()

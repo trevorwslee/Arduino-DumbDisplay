@@ -8,9 +8,9 @@
 #endif
 
 
-#define DUMBDISPLAY_BAUD 115200
-#define DD_SERIAL_BAUD DUMBDISPLAY_BAUD
-#define DD_WIFI_PORT 10201
+#define DUMBDISPLAY_BAUD  115200
+#define DD_SERIAL_BAUD    DUMBDISPLAY_BAUD
+#define DD_WIFI_PORT      10201
 
 
 #include "_dd_util.h"
@@ -60,6 +60,7 @@
 #include "_dd_io.h"
 #include "_dd_feedback.h"
 
+
 class DDLayer;
 
 
@@ -69,23 +70,28 @@ class DDLayer;
 typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback);
 
 
+const int8_t DD_OBJECT_TYPE_LAYER  = 0;
+const int8_t DD_OBJECT_TYPE_TUNNEL = 1;
+// #define DD_OBJECT_TYPE_LAYER  0
+// #define DD_OBJECT_TYPE_TUNNEL 1
+
 class DDObject {
+  protected:
+    DDObject(int8_t objectType) {
+      this->objectType = objectType;
+    }
   public:
+    int8_t objectType;
     String customData;
 };
 
 class DDLayer: public DDObject {
   public:
-    /* set layer visibility */
-    void visibility(bool visible);
-    /* set layer opacity */
-    /* - 0 to 255 */
-    void opacity(int opacity);
     /* size unit is pixel: */
     /* - LcdLayer; each character is composed of pixels */
     /* - 7SegmentRowLayer; each 7-segment is composed of fixed 220 x 320 pixels */
     /* - LedGridLayer; a LED is considered as a pixel */  
-    /* shape -- can be "flat", "round", "raised" or "sunken" */  
+    /* shape -- can be "flat", "hair", "round", "raised" or "sunken" */  
     /* extraSize just added to size; however if shape is "round", it affect the "roundness" */
     void border(float size, const String& color, const String& shape = "flat", float extraSize = 0);
     void noBorder();
@@ -100,14 +106,31 @@ class DDLayer: public DDObject {
     void backgroundColor(const String& color);
     /* set no layer background color */
     void noBackgroundColor();
+    /* set whether layer visible (not visible means hidden) */
+    //void setVisible(bool visible);
+    void visible(bool visible);
+    /* set whether layer transparent */
+    //void setTransparent(bool transparent);
+    void transparent(bool transparent);
+    /* set layer opacity percentage */
+    //void setOpacity(int opacity);
+    void opacity(int opacity);
+    /* set layer's alpha channel (0 - 255) */
+    //void setAlpha(int alpha);
+    void alpha(int alpha);
+    // /* DEPRECATED */
+    // inline void visibility(bool visible) {
+    //   setVisible(visible);
+    // }
+    // /* DEPRECATED */
+    // void opacity(int opacity);
     //void reorder(bool bringUp);
     /* normally used for "feedback" -- flash the default way (layer + border) */
     void flash();
     /* normally used for "feedback" -- flash the area (x, y) where the layer is clicked */
     void flashArea(int x, int y);
     const String& getLayerId() { return layerId; }
-    //void writeComment(const String& comment);
-    /* rely on getFeedback() being called */ 
+    /* set explicit (and more responsive) "feedback" handler (and enable feedback) */
     /* autoFeedbackMethod: */
     /* . "" -- no auto feedback */
     /* . "f" -- flash the default way (layer + border) */
@@ -115,20 +138,20 @@ class DDLayer: public DDObject {
     /* . "fa" -- flash the area where the layer is clicked */
     /* . "fas" -- flash the area (as a spot) where the layer is clicked */
     /* . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary) */
+    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
+    /* rely on getFeedback() being called */ 
+    /* autoFeedbackMethod ... see setFeedbackHandler() */
     void enableFeedback(const String& autoFeedbackMethod = "");
     /** disable "feedback" */
     void disableFeedback();
     /** get "feedback" ... NULL if no pending "feedback" */
     const DDFeedback* getFeedback();
-    /* set explicit (and more responsive) "feedback" handler (and enable feedback) */
-    /* autoFeedbackMethod ... see enableFeedback() */
-    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     void debugOnly(int i);
   public:
     DDFeedbackManager* getFeedbackManager() { return pFeedbackManager; }
     DDFeedbackHandler getFeedbackHandler() { return feedbackHandler; }
   protected:
-    DDLayer(int layerId);
+    DDLayer(int8_t layerId);
   public:
     ~DDLayer();
   protected:
@@ -145,7 +168,7 @@ enum MbIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, S
 
 class MbImage {
   public:
-    MbImage(int imageId) {
+    MbImage(int8_t imageId) {
       this->imageId = String(imageId);
     }
     inline const String& getImageId() { return this->imageId; }  
@@ -156,7 +179,7 @@ class MbImage {
 
 class MbDDLayer: public DDLayer {
   public:
-    MbDDLayer(int layerId): DDLayer(layerId) {
+    MbDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /* show Microbit icon */
     void showIcon(MbIcon icon);
@@ -189,7 +212,7 @@ class MbDDLayer: public DDLayer {
 
 class TurtleDDLayer: public DDLayer {
   public:
-    TurtleDDLayer(int layerId): DDLayer(layerId) {
+    TurtleDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /* forward; with pen or not */
     void forward(int distance, bool withPen = true);
@@ -252,7 +275,7 @@ class TurtleDDLayer: public DDLayer {
 
 class LedGridDDLayer: public DDLayer {
   public:
-    LedGridDDLayer(int layerId): DDLayer(layerId) {
+    LedGridDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /* turn on LED @ (x, y) */
     void turnOn(int x = 0, int y = 0);
@@ -260,6 +283,9 @@ class LedGridDDLayer: public DDLayer {
     void turnOff(int x = 0, int y = 0);
     /* toggle LED @ (x, y) */
     void toggle(int x = 0, int y = 0);
+    /* turn on LED @ (x, y) */
+    /* - onColor: LED on color; empty string means what already set */
+    void turnOnEx(int x = 0, int y = 0, const String& onColor = "");
     /* turn on/off LEDs based on bits */
     /* - bits: least significant bit maps to right-most LED */
     /* - y: row */
@@ -273,6 +299,16 @@ class LedGridDDLayer: public DDLayer {
     void horizontalBar(int count, bool rightToLeft = false);
     /* turn on LEDs to form a vertical "bar" */ 
     void verticalBar(int count, bool bottomToTop = true);
+    /* turn on LEDs to form a horizontal "bar" */
+    /* - count: can be negative (if it makes sense) */
+    /* - startX: normally 0 */
+    /* - color: LED on color; empty string means what already set */
+    void horizontalBarEx(int count, int startX = 0, const String& color = "");
+    /* turn on LEDs to form a vertical "bar" */
+    /* - count: can be negative (if it makes sense) */
+    /* - startY: normally 0 */
+    /* - color: LED on color; empty string means what already set */
+    void verticalBarEx(int count, int startY = 0, const String& color = "");
     /* set LED on color */ 
     void onColor(const String& color);
     /* set LED off color */ 
@@ -283,7 +319,7 @@ class LedGridDDLayer: public DDLayer {
 
 class LcdDDLayer: public DDLayer {
   public:
-    LcdDDLayer(int layerId): DDLayer(layerId) {
+    LcdDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     void print(const String& text);
     void home();
@@ -310,7 +346,7 @@ class LcdDDLayer: public DDLayer {
 
 class GraphicalDDLayer: public DDLayer {
   public:
-    GraphicalDDLayer(int layerId): DDLayer(layerId) {
+    GraphicalDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /* set cursor */
     void setCursor(int x, int y);
@@ -411,7 +447,7 @@ class GraphicalDDLayer: public DDLayer {
 
 class SevenSegmentRowDDLayer: public DDLayer {
   public:
-    SevenSegmentRowDDLayer(int layerId): DDLayer(layerId) {
+    SevenSegmentRowDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /* set segment color */
     void segmentColor(const String& color);
@@ -441,7 +477,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
 
 class PlotterDDLayer: public DDLayer {
   public:
-    PlotterDDLayer(int layerId): DDLayer(layerId) {
+    PlotterDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /* set label of value with certain key */
     /* if key has no label, the key will be the label */
@@ -461,7 +497,7 @@ class PlotterDDLayer: public DDLayer {
 
 class DDTunnel: public DDObject {
   public:
-    DDTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize);
+    DDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize);
     virtual ~DDTunnel();
     virtual void release();
     virtual void reconnect();
@@ -489,7 +525,7 @@ class DDTunnel: public DDObject {
 
 class DDBufferedTunnel: public DDTunnel {
   public:
-    DDBufferedTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize);
+    DDBufferedTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize);
     virtual ~DDBufferedTunnel();
     virtual void release();
     virtual void reconnect();
@@ -504,10 +540,10 @@ class DDBufferedTunnel: public DDTunnel {
   private:
     // String endPoint;
     // String tunnelId;
-    int arraySize;
+    int8_t arraySize;
     String* dataArray;
-    int nextArrayIdx;
-    int validArrayIdx;
+    int8_t nextArrayIdx;
+    int8_t validArrayIdx;
     //bool done;
 };
 
@@ -518,7 +554,7 @@ class DDBufferedTunnel: public DDTunnel {
  */ 
 class BasicDDTunnel: public DDBufferedTunnel {
   public:
-    BasicDDTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
+    BasicDDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize): DDBufferedTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
     }
     /* count buffer ready to be read */
     inline int count() { return _count(); }
@@ -555,7 +591,7 @@ class BasicDDTunnel: public DDBufferedTunnel {
  */
 class JsonDDTunnel: public DDBufferedTunnel {
   public:
-    JsonDDTunnel(const String& type, int tunnelId, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
+    JsonDDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
     }
     /* count buffer ready (pieces of JSON) to be read */
     inline int count() { return _count(); }
@@ -568,7 +604,7 @@ class JsonDDTunnel: public DDBufferedTunnel {
 /** will not delete "tunnels" passed in */
 class JsonDDTunnelMultiplexer {
   public:
-    JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int tunnelCount);
+    JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int8_t tunnelCount);
     ~JsonDDTunnelMultiplexer();
     int count();
     bool eof();
@@ -577,9 +613,10 @@ class JsonDDTunnelMultiplexer {
     void release();
     void reconnect();
   private:
-     int tunnelCount;
+     int8_t tunnelCount;
      JsonDDTunnel** tunnels;
 };
+
 
 typedef void (*DDIdleCallback)(long idleForMillis);
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
@@ -628,9 +665,9 @@ class DumbDisplay {
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
     /* if not connect now, need to connect via reconnect() */
-    BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int bufferSize = 4);
+    BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 4);
     /* if not connect now, need to connect via reconnect() */
-    JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int bufferSize = 4);
+    JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 4);
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
     /* set DD background color with common "color name" */
@@ -676,6 +713,7 @@ class DumbDisplay {
      */
     void reorderLayer(DDLayer *pLayer, const String& how);
     void deleteLayer(DDLayer *pLayer);
+    void walkLayers(void (*walker)(DDLayer *));
     void debugSetup(int debugLedPin);
 #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
     /* by default, some commands will have there numeric arguments encoded/compress */

@@ -15,13 +15,13 @@ struct DDFeedback {
 
 class DDFeedbackManager {
   public: 
-    DDFeedbackManager(int bufferSize);
+    DDFeedbackManager(int8_t bufferSize);
     const DDFeedback* getFeedback();
     void pushFeedback(DDFeedbackType type, int16_t x, int16_t y, const char* pText);
   private:
     DDFeedback feedbackArray[DD_FEEDBACK_BUFFER_SIZE];
-    int nextArrayIdx;
-    int validArrayIdx;
+    int8_t nextArrayIdx;
+    int8_t validArrayIdx;
 };
 
 
