@@ -402,8 +402,14 @@ class GraphicalDDLayer: public DDLayer {
     void leftTurn(int angle);
     /* right turn */
     void rightTurn(int angle);
+    // /* go to (x, y); with pen or not */
+    // void goTo(int x, int y, bool withPen = true);
     /* set heading angle */
     void setHeading(int angle);
+    // /* pen up */
+    // void penUp();
+    // /* pen down */
+    // void penDown();
     /* set pen size */
     void penSize(int size);
     /* set pen color (i.e. text color) */
@@ -428,6 +434,13 @@ class GraphicalDDLayer: public DDLayer {
     /* - given circle radius and vertex count */
     /* - whether inside the imaginary circle or outside of it */ 
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
+    /* load image file to cache */
+    /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
+    void loadImageFile(const String& imageFileName, int w = 0, int h = 0);
+    /* draw image file in cache (if not already loaded to cache, load it) */
+    /* - x / y: position of the left-top corner
+    /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
+    void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0);
     /* write text; will not auto wrap */
     /* - draw means draw the text (honor heading direction) */
     void write(const String& text, bool draw = false);
@@ -687,6 +700,11 @@ class DumbDisplay {
     /* - use playbackLayerCommands() to playback loaded commands */
     /* - if not recording commands, this basically remove saved commands */
     void loadLayerCommands(const String& id);
+    /* capture and save display as image */
+    /* IMPORTANT: old file with the same name will be  replaced */
+    /* - imageFileName: name of image file; if it ends with ".png", saved image format will be PNG; other, saved image format will be JPED */
+    /* - width / height: size of the display on which to render the layers */ 
+    void capture(const String& imageFileName, int width, int height);
     /* write out a comment to DD */
     void writeComment(const String& comment);
     void tone(uint32_t freq, uint32_t duration);

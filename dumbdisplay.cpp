@@ -1185,7 +1185,7 @@ void TurtleDDLayer::penDown() {
   _sendCommand0(layerId, "pd");
 }
 void TurtleDDLayer::penSize(int size) {
-  _sendCommand1(layerId, "pensize", String(size));
+  _sendCommand1(layerId, C_pensize, String(size));
 }
 // void TurtleDDLayer::penColor(long color) {
 //   _sendCommand1(layerId, "pencolor", HEX_COLOR(color));
@@ -1420,6 +1420,15 @@ void GraphicalDDLayer::rightTurn(int angle) {
 void GraphicalDDLayer::setHeading(int angle) {
   _sendCommand1(layerId, C_seth, String(angle));
 }
+// void GraphicalDDLayer::goTo(int x, int y, bool withPen) {
+//   _sendCommand2(layerId, withPen ? "goto" : "jto", String(x), String(y));
+// }
+// void GraphicalDDLayer::penUp() {
+//   _sendCommand0(layerId, "pu");
+// }
+// void GraphicalDDLayer::penDown() {
+//   _sendCommand0(layerId, "pd");
+// }
 void GraphicalDDLayer::penSize(int size) {
   _sendCommand1(layerId, C_pensize, String(size));
 }
@@ -1453,9 +1462,16 @@ void GraphicalDDLayer::polygon(int side, int vertexCount) {
 void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
   _sendCommand2(layerId, inside ? C_cpolyin : C_cpoly, String(radius), String(vertexCount));
 }
-void GraphicalDDLayer:: write(const String& text, bool draw) {
+void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h) {
+  _sendCommand3(layerId, C_loadimagefile, imageFileName, String(w), String(h));
+}
+void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h) {
+  _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+}
+void GraphicalDDLayer::write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? C_drawtext : C_write, text);
 }
+
 
 void SevenSegmentRowDDLayer::segmentColor(const String& color) {
   _sendCommand1(layerId, C_segcolor, color);
@@ -1864,30 +1880,33 @@ void DumbDisplay:: walkLayers(void (*walker)(DDLayer *)) {
 }
 void DumbDisplay::recordLayerSetupCommands() {
   _Connect();
-  _sendCommand0("", "RECC");
+  _sendCommand0("", C_RECC);
 }
 void DumbDisplay::playbackLayerSetupCommands(const String& persist_id) {
-  _sendCommand2("", "SAVEC", persist_id, TO_BOOL(true));
-  _sendCommand0("", "PLAYC");
+  _sendCommand2("", C_SAVEC, persist_id, TO_BOOL(true));
+  _sendCommand0("", C_PLAYC);
 #ifdef SUPPORT_RECONNECT
   _ConnectedIOProxy->setReconnectRCId(persist_id);
 #endif
 }
 void DumbDisplay::recordLayerCommands() {
   _Connect();
-  _sendCommand0("", "RECC");
+  _sendCommand0("", C_RECC);
 }
 void DumbDisplay::stopRecordLayerCommands() {
   _sendCommand0("", "STOPC");
 }
 void DumbDisplay::playbackLayerCommands() {
-  _sendCommand0("", "PLAYC");
+  _sendCommand0("", C_PLAYC);
 }
 void DumbDisplay::saveLayerCommands(const String& id, bool persist) {
-  _sendCommand2("", "SAVEC", id, TO_BOOL(persist));
+  _sendCommand2("", C_SAVEC, id, TO_BOOL(persist));
 }
 void DumbDisplay::loadLayerCommands(const String& id) {
   _sendCommand1("", "LOADC", id);
+}
+void DumbDisplay::capture(const String& imageFileName, int width, int height) {
+  _sendCommand3("", C_CAPTURE, imageFileName, String(width), String (height));
 }
 void DumbDisplay::backgroundColor(const String& color) {
   _Connect();
