@@ -440,7 +440,8 @@ class GraphicalDDLayer: public DDLayer {
     /* draw image file in cache (if not already loaded to cache, load it) */
     /* - x / y: position of the left-top corner
     /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
-    void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0);
+    /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default no alignment (i.e. the same as "LT") */
+    void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /* write text; will not auto wrap */
     /* - draw means draw the text (honor heading direction) */
     void write(const String& text, bool draw = false);
@@ -712,6 +713,7 @@ class DumbDisplay {
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
+    /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     /**
      * recorder the layer
