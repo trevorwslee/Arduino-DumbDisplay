@@ -86,6 +86,7 @@
 #define C_ledonex          "#95"
 #define C_loadimagefile    "#96"
 #define C_drawimagefile    "#97"
+#define C_drawimagefilefit "#98"
 
 
 #define C_fd               "fd"

@@ -440,8 +440,11 @@ class GraphicalDDLayer: public DDLayer {
     /* draw image file in cache (if not already loaded to cache, load it) */
     /* - x / y: position of the left-top corner
     /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
-    /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default no alignment (i.e. the same as "LT") */
-    void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
+    void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0);
+    /* draw image file in cache (if not already loaded to cache, load it) */
+    /* - x / y / w / h: aread to draw the image; 0 means the default value */ 
+    /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered */
+    void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /* write text; will not auto wrap */
     /* - draw means draw the text (honor heading direction) */
     void write(const String& text, bool draw = false);

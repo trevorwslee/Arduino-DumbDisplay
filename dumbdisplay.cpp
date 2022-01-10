@@ -1465,8 +1465,11 @@ void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside)
 void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h) {
   _sendCommand3(layerId, C_loadimagefile, imageFileName, String(w), String(h));
 }
-void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h, const String& align) {
-  _sendCommand6(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h), align);
+void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h) {
+  _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+}
+void GraphicalDDLayer::drawImageFileFit(const String& imageFileName, int x, int y, int w, int h, const String& align) {
+  _sendCommand6(layerId, C_drawimagefilefit, imageFileName, String(x), String(y), String(w), String(h), align);
 }
 void GraphicalDDLayer::write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? C_drawtext : C_write, text);
