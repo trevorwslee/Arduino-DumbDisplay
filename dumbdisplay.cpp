@@ -1548,8 +1548,8 @@ void PlotterDDLayer::set(const String& key1, float value1, const String& key2, f
 // }
 
 #ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize):
-  DDObject(DD_OBJECT_TYPE_TUNNEL), type(type), tunnelId(String(tunnelId)), endPoint(endPoint) {
+DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
+  DDObject(DD_OBJECT_TYPE_TUNNEL), type(type), tunnelId(String(tunnelId)), params(params), endPoint(endPoint) {
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
   // this->nextArrayIdx = 0;
@@ -1571,7 +1571,15 @@ void DDTunnel::reconnect() {
   //for (int i = 0; i < arraySize; i++) {
     //dataArray[i] = "";
   //}
-  _sendSpecialCommand("lt", tunnelId, "reconnect", type + "@" + endPoint);
+  String data;
+  data.concat(type);
+  if (params.length() > 0) {
+    data.concat(":");
+    data.concat(params);
+  }
+  data.concat("@");
+  data.concat(endPoint);
+  _sendSpecialCommand("lt", tunnelId, "reconnect", data/*type + "@" + endPoint*/);
   connectMillis = millis();
 }
 void DDTunnel::release() {
@@ -1624,8 +1632,8 @@ void DDTunnel::handleInput(const String& data, bool final) {
     this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
 }
-DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize):
-  DDTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
+DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
+  DDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
   this->arraySize = bufferSize;
   this->dataArray = new String[bufferSize];
   this->nextArrayIdx = 0;
@@ -1716,6 +1724,22 @@ bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
   //   fieldValue = buffer;
   // }
   // return true;
+}
+int SimpleToolDDTunnel::checkResult() {
+  if (this->result == 0) {
+    if (count() > 0) {
+      String fieldId;
+      String fieldValue;
+      read(fieldId, fieldValue);
+      if (fieldId == "result") {
+        this->result = fieldId == "ok" ? 1 : -1;
+      }
+    } else if (eof()) {
+      // not qutie expected
+      this->result = -1;
+    }
+  }
+  return this->result;
 }
 JsonDDTunnelMultiplexer::JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int8_t tunnelCount) {
   this->tunnelCount = tunnelCount;
@@ -1944,7 +1968,7 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool conne
   // if (connectNow) {
   //   _sendSpecialCommand("lt", tunnelId, "connect", "ddbasic@" + endPoint);
   // }
-  BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", tid, endPoint, connectNow, bufferSize);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", tid, "", endPoint, connectNow, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
@@ -1954,10 +1978,18 @@ JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connect
   // if (connectNow) {
   //   _sendSpecialCommand("lt", tunnelId, "connect", "ddsimplejson@" + endPoint);
   // }
-  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, endPoint, connectNow, bufferSize);
+  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, "", endPoint, connectNow, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
+SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName) {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, imageName, endPoint, true, 1);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
+
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   pTunnel->release();
   delete pTunnel;

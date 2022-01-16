@@ -503,7 +503,7 @@ class PlotterDDLayer: public DDLayer {
 
 class DDTunnel: public DDObject {
   public:
-    DDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize);
+    DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize);
     virtual ~DDTunnel();
     virtual void release();
     virtual void reconnect();
@@ -518,6 +518,7 @@ class DDTunnel: public DDObject {
   protected:
     String type;
     String tunnelId;
+    String params;
     String endPoint;
     long connectMillis;
     // int arraySize;
@@ -531,7 +532,7 @@ class DDTunnel: public DDObject {
 
 class DDBufferedTunnel: public DDTunnel {
   public:
-    DDBufferedTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize);
+    DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize);
     virtual ~DDBufferedTunnel();
     virtual void release();
     virtual void reconnect();
@@ -560,7 +561,7 @@ class DDBufferedTunnel: public DDTunnel {
  */ 
 class BasicDDTunnel: public DDBufferedTunnel {
   public:
-    BasicDDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize): DDBufferedTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
+    BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
     /* count buffer ready to be read */
     inline int count() { return _count(); }
@@ -597,7 +598,7 @@ class BasicDDTunnel: public DDBufferedTunnel {
  */
 class JsonDDTunnel: public DDBufferedTunnel {
   public:
-    JsonDDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
+    JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
     /* count buffer ready (pieces of JSON) to be read */
     inline int count() { return _count(); }
@@ -606,6 +607,21 @@ class JsonDDTunnel: public DDBufferedTunnel {
     /* read a piece of JSON data */
     bool read(String& fieldId, String& fieldValue);
 };
+
+class SimpleToolDDTunnel: public JsonDDTunnel {
+  public:
+    SimpleToolDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): JsonDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+      this->result = 0;
+    }
+  public:
+    /* 0: not done */
+    /* 1: done */
+    /* -1: failed */
+    int checkResult(); 
+  private:
+    int result; 
+};
+
 
 /** will not delete "tunnels" passed in */
 class JsonDDTunnelMultiplexer {
@@ -674,6 +690,11 @@ class DumbDisplay {
     BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 4);
     /* if not connect now, need to connect via reconnect() */
     JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 4);
+    /* download image from the web and save the downloaded image */
+    /* you will get reuslt as JSON: {"result":"ok"} or {"result":"failed"} */
+    /* for simplicity, use SimpleToolDDTunnel.checkResult() to check result */
+    /* MUST use deleteTunnel() to delete the "download tunnel" after use */
+    SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName);
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
     /* set DD background color with common "color name" */
