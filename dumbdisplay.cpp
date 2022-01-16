@@ -25,6 +25,7 @@
 //#define DEBUG_RECEIVE_FEEDBACK
 //#define DEBUG_ECHO_FEEDBACK
 //#define DEBUG_VALIDATE_CONNECTION
+//#define DEBUG_TUNNEL_RESPONSE
 
 
 #define SUPPORT_LONG_PRESS_FEEDBACK
@@ -778,8 +779,10 @@ void _HandleFeedback() {
               int lid = _LayerIdToLid(tid);
               DDTunnel* pTunnel = (DDTunnel*) _DDLayerArray[lid];
               if (pTunnel != NULL) {
+#ifdef DEBUG_TUNNEL_RESPONSE                
 //Serial.println(String("// ") + (final ? "F" : "."));
-//Serial.println("LT++++" + data + " - " + String(final));
+Serial.println("LT++++" + data + " - final:" + String(final));
+#endif
                 pTunnel->handleInput(data, final);
               }
             }
@@ -1548,7 +1551,7 @@ void PlotterDDLayer::set(const String& key1, float value1, const String& key2, f
 // }
 
 #ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
+DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow/*, int8_t bufferSize*/):
   DDObject(DD_OBJECT_TYPE_TUNNEL), type(type), tunnelId(String(tunnelId)), params(params), endPoint(endPoint) {
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
@@ -1596,6 +1599,9 @@ bool DDTunnel::_eof() {
   _HandleFeedback();
 #ifdef TUNNEL_TIMEOUT_MILLIS
     if (done) {
+#ifdef DEBUG_TUNNEL_RESPONSE
+Serial.println("_EOF: DONE");
+#endif                
       return true;
     }
     long diff = millis() - connectMillis;
@@ -1633,7 +1639,8 @@ void DDTunnel::handleInput(const String& data, bool final) {
 //Serial.println(String("// ") + (final ? "f" : "."));
 }
 DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
-  DDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+  DDTunnel(type, tunnelId, params, endPoint, connectNow/*, bufferSize*/) {
+  bufferSize = bufferSize + 1;  // need one more
   this->arraySize = bufferSize;
   this->dataArray = new String[bufferSize];
   this->nextArrayIdx = 0;
@@ -1661,10 +1668,32 @@ void DDBufferedTunnel::release() {
   this->DDTunnel::release();
 }
 int DDBufferedTunnel::_count() {
-  return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
+  //int count = (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
+  int count = (arraySize + nextArrayIdx - validArrayIdx) % arraySize;
+#ifdef DEBUG_TUNNEL_RESPONSE                
+Serial.print("COUNT: ");
+Serial.println(count);
+#endif
+  return count;
 }
 bool DDBufferedTunnel::_eof() {
-  return nextArrayIdx == validArrayIdx && this->DDTunnel::_eof();
+  if (!this->DDTunnel::_eof()) {
+    return false;
+  }
+// #ifdef DEBUG_TUNNEL_RESPONSE                
+// Serial.print("CHECK EOF ...");
+// Serial.print("validArrayIdx:");
+// Serial.print(validArrayIdx);
+// Serial.print(" / nextArrayIdx:");
+// Serial.println(nextArrayIdx);
+// #endif
+  return nextArrayIdx == validArrayIdx; 
+  //bool eof = (nextArrayIdx == validArrayIdx) && this->DDTunnel::_eof();
+// #ifdef DEBUG_TUNNEL_RESPONSE                
+// Serial.print("EOF:");
+// Serial.println(eof);
+// #endif
+//  return eof;
 }
 bool DDBufferedTunnel::_readLine(String &buffer) {
   if (nextArrayIdx == validArrayIdx) {
@@ -1683,6 +1712,14 @@ bool DDBufferedTunnel::_readLine(String &buffer) {
 //   _sendSpecialCommand("lt", tunnelId, NULL, data);
 // }
 void DDBufferedTunnel::handleInput(const String& data, bool final) {
+#ifdef DEBUG_TUNNEL_RESPONSE
+Serial.print("DATA:");
+Serial.print(data);
+Serial.print(" ... validArrayIdx:");
+Serial.print(validArrayIdx);
+Serial.print(" / nextArrayIdx:");
+Serial.print(nextArrayIdx);
+#endif
 //if (final) Serial.println("//final:" + data);
   if (!final || data != "") {
     dataArray[nextArrayIdx] = data;
@@ -1694,6 +1731,12 @@ void DDBufferedTunnel::handleInput(const String& data, bool final) {
   //if (final)
     //this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
+#ifdef DEBUG_TUNNEL_RESPONSE
+Serial.print(" ==> validArrayIdx:");
+Serial.print(validArrayIdx);
+Serial.print(" / nextArrayIdx:");
+Serial.println(nextArrayIdx);
+#endif  
 }
 String BasicDDTunnel::readLine() {
   String buffer;
@@ -1731,11 +1774,20 @@ int SimpleToolDDTunnel::checkResult() {
       String fieldId;
       String fieldValue;
       read(fieldId, fieldValue);
+#ifdef DEBUG_TUNNEL_RESPONSE      
+Serial.print("GOT ");
+Serial.print(fieldId);
+Serial.print(" = ");
+Serial.println(fieldValue); 
+#endif    
       if (fieldId == "result") {
-        this->result = fieldId == "ok" ? 1 : -1;
+        this->result = fieldValue == "ok" ? 1 : -1;
       }
     } else if (eof()) {
-      // not qutie expected
+      // not quite expected
+#ifdef DEBUG_TUNNEL_RESPONSE      
+Serial.println("XXX EOF???");
+#endif
       this->result = -1;
     }
   }

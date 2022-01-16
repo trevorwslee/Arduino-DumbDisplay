@@ -352,8 +352,7 @@ In a more complicated case, you may want to get data from Internet open REST api
   notes:
   * all returned values will be text
   * control characters like `\r` not supported
-  * HTTPS not yet supported
-
+  
 * use `count()` to check if the "tunnel" has anything to read, and use `read()` to read what got, like:
   ```
   while (!pTunnel->eof()) {
@@ -1132,6 +1131,14 @@ MIT
 
 
 # Change History
+
+
+v0.8.1
+  - aded "image download tunnel"
+  - "JSON tunnel" now supports HTTPs
+  - added load/save/draw image to "graphical layer"
+  - bug fixes
+
 
 v0.8.0
   - added more basic layer functions

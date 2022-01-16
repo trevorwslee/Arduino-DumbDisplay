@@ -503,7 +503,7 @@ class PlotterDDLayer: public DDLayer {
 
 class DDTunnel: public DDObject {
   public:
-    DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize);
+    DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow/*, int8_t bufferSize*/);
     virtual ~DDTunnel();
     virtual void release();
     virtual void reconnect();
@@ -687,9 +687,9 @@ class DumbDisplay {
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
     /* if not connect now, need to connect via reconnect() */
-    BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 4);
+    BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 3);
     /* if not connect now, need to connect via reconnect() */
-    JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 4);
+    JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 3);
     /* download image from the web and save the downloaded image */
     /* you will get reuslt as JSON: {"result":"ok"} or {"result":"failed"} */
     /* for simplicity, use SimpleToolDDTunnel.checkResult() to check result */
