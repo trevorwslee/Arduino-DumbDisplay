@@ -437,6 +437,7 @@ class GraphicalDDLayer: public DDLayer {
     /* load image file to cache */
     /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
     void loadImageFile(const String& imageFileName, int w = 0, int h = 0);
+    void unloadImageFile(const String& imageFileName);
     /* draw image file in cache (if not already loaded to cache, load it) */
     /* - x / y: position of the left-top corner
     /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
@@ -507,6 +508,10 @@ class DDTunnel: public DDObject {
     virtual ~DDTunnel();
     virtual void release();
     virtual void reconnect();
+    void reconnectTo(const String& endPoint) {
+      this->endPoint = endPoint;
+      reconnect();
+    }
     const String& getTunnelId() { return tunnelId; }
   protected:
     //int _count();

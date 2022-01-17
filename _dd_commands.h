@@ -85,8 +85,9 @@
 #define C_ledvertbarex     "#94"
 #define C_ledonex          "#95"
 #define C_loadimagefile    "#96"
-#define C_drawimagefile    "#97"
-#define C_drawimagefilefit "#98"
+#define C_unloadimagefile  "#97"
+#define C_drawimagefile    "#98"
+#define C_drawimagefilefit "#99"
 
 
 #define C_fd               "fd"

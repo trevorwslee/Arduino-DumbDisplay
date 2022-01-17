@@ -1468,6 +1468,9 @@ void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside)
 void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h) {
   _sendCommand3(layerId, C_loadimagefile, imageFileName, String(w), String(h));
 }
+void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
+  _sendCommand1(layerId, C_unloadimagefile, imageFileName);
+}
 void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h) {
   _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
 }
@@ -1568,22 +1571,24 @@ DDTunnel::~DDTunnel() {
   //delete this->dataArray;
 } 
 void DDTunnel::reconnect() {
-  //nextArrayIdx = 0;
-  //validArrayIdx = 0;
-  done = false;
-  //for (int i = 0; i < arraySize; i++) {
-    //dataArray[i] = "";
-  //}
-  String data;
-  data.concat(type);
-  if (params.length() > 0) {
-    data.concat(":");
-    data.concat(params);
+  if (endPoint != "") {
+    //nextArrayIdx = 0;
+    //validArrayIdx = 0;
+    done = false;
+    //for (int i = 0; i < arraySize; i++) {
+      //dataArray[i] = "";
+    //}
+    String data;
+    data.concat(type);
+    if (params.length() > 0) {
+      data.concat(":");
+      data.concat(params);
+    }
+    data.concat("@");
+    data.concat(endPoint);
+    _sendSpecialCommand("lt", tunnelId, "reconnect", data/*type + "@" + endPoint*/);
+    connectMillis = millis();
   }
-  data.concat("@");
-  data.concat(endPoint);
-  _sendSpecialCommand("lt", tunnelId, "reconnect", data/*type + "@" + endPoint*/);
-  connectMillis = millis();
 }
 void DDTunnel::release() {
   if (!done) {
