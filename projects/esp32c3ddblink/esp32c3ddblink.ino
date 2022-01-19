@@ -24,22 +24,14 @@ LcdDDLayer* pBlue;
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback);
 
-
-void SetLayerNormal(DDLayer* button) {
-    button->backgroundColor("white");
-    button->border(1, "darkgray", "hair");
-}
-void SetLayerTurnedOn(DDLayer* button) {
-    button->backgroundColor("lightgray");
-    button->border(1, "darkgray", "round");
-}
-
-LcdDDLayer* CreateLayer(const char* label, int pin) {
+LcdDDLayer* CreateLayer(const char* label, int pin, const char* color) {
     LcdDDLayer* button = dumbdisplay.createLcdLayer(12, 3);
     button->customData = String(pin);
     button->writeCenteredLine(label, 1);
-    button->setFeedbackHandler(FeedbackHandler, "fl");
-    SetLayerNormal(button);
+    button->setFeedbackHandler(FeedbackHandler, "f");
+    button->pixelColor(color);
+    button->backgroundColor("darkgray");
+    button->border(1, "lightgray");
     return button;
 }
 
@@ -53,52 +45,24 @@ void setup() {
 
     digitalWrite(PIN_COOL, 0);
 
-    pBlue = CreateLayer("Blue", PIN_BLUE);
-    pGreen = CreateLayer("Green", PIN_GREEN);
-    pRed = CreateLayer("Red", PIN_RED);
-    pWarm = CreateLayer("Warm", PIN_WARM);
-    pCool = CreateLayer("Cool", PIN_COOL);
+    pBlue = CreateLayer("Blue", PIN_BLUE, "lightskyblue");
+    pGreen = CreateLayer("Green", PIN_GREEN, "green");
+    pRed = CreateLayer("Red", PIN_RED, "tomato");
+    pWarm = CreateLayer("Warm", PIN_WARM, "gold");
+    pCool = CreateLayer("Cool", PIN_COOL, "white");
 
     dumbdisplay.configAutoPin(DD_AP_VERT);
 }
 
 void loop() {
     DDYield();
-    // digitalWrite(PIN_WARM, 1);
-    // delay(1000);
-    // digitalWrite(PIN_WARM, 0);
-    // delay(1000);
-
-    // digitalWrite(PIN_COOL, 1);
-    // delay(1000);
-    // digitalWrite(PIN_COOL, 0);
-    // delay(1000);
-
-    // digitalWrite(PIN_RED, 1);
-    // delay(1000);
-    // digitalWrite(PIN_RED, 0);
-    // delay(1000);
-
-    // digitalWrite(PIN_GREEN, 1);
-    // delay(1000);
-    // digitalWrite(PIN_GREEN, 0);
-    // delay(1000);
-
-    // digitalWrite(PIN_BLUE, 1);
-    // delay(1000);
-    // digitalWrite(PIN_BLUE, 0);
-    // delay(1000);
 }
 
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
     int pin = pLayer->customData.toInt();
-    SetLayerTurnedOn(pLayer);
     digitalWrite(pin, HIGH);
     delay(500);
     digitalWrite(pin, LOW);
     delay(500);
-    SetLayerNormal(pLayer);
-
 }
-
