@@ -129,7 +129,13 @@ class DDLayer: public DDObject {
     /* . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary) */
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     /* rely on getFeedback() being called */ 
-    /* autoFeedbackMethod ... see setFeedbackHandler() */
+    /* autoFeedbackMethod: */
+    /* . "" -- no auto feedback */
+    /* . "f" -- flash the default way (layer + border) */
+    /* . "fl" -- flash the layer */
+    /* . "fa" -- flash the area where the layer is clicked */
+    /* . "fas" -- flash the area (as a spot) where the layer is clicked */
+    /* . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary) */
     void enableFeedback(const String& autoFeedbackMethod = "");
     /** disable "feedback" */
     void disableFeedback();
