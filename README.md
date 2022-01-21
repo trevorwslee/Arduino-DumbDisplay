@@ -961,6 +961,7 @@ Instead of posting the sample sketch here, please find it with the link: https:/
 
 If you are interested, you may want to watch the video **Arduino JoyStick Shield and DumbDisplay** -- https://www.youtube.com/watch?v=9GYrZWXHfUo
 
+
 ## Survive DumbDisplay App Reconnection
 
 In certain "stateless" cases, like DumbDisplay is simply used as means to show values, it is possible for DumbDisplay to be able to meaningfully reconnect after DumbDisplay app disconnect / restart, since DumbDisplay app does not persist "state" information.
@@ -1079,6 +1080,49 @@ void setup() {
 ```
 
 For reference, you may want to refer to the example as shown by the video **ESP32 Deep Sleep Experiment using Arduino with DumbDisplay** -- https://www.youtube.com/watch?v=a61hRLIaqy8 
+
+
+## Using "Tunnel" to Download Images from the Web
+
+It is possible to download image from the Web, save it to your phone, and draw it out to a graphical DD Layer.
+
+This is done via an "image download tunnel" that you can create like
+
+```
+pTunnel = dumbdisplay.createImageDownloadTunnel("https://placekitten.com/680/480", "downloaded.png");
+```
+
+As preparation, you will need to grant DumbDisplay app permission to access your phone's storage. Select the menu item "settings" and click the button "access images". This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.
+
+Next, DumbDisplay app will create a folder, speciaically, `<your phone's picture storage>/DumbDisplay/`, and write a small sample image `dumbdisplay.png` there. From now on, DumbDisplay will access the folder for any image files that it will need to read / write.
+
+Since it takes a bit of time to download image file from the Web, you will need to check it's download status asyncrhonously like
+
+```
+while (true) {
+  ...
+  int result = pTunnel->checkResult();
+  if (result == 1) {
+    // web image downloaded and saved successfully
+    ...
+    break;
+  } else if (result == -1) {
+    // failed to download the image
+    ...
+    break;
+  }
+  ...
+}
+```
+
+When the image downloaded and saved successfully, you can draw it to a graphical DD layer like
+
+```
+pLayer->drawImageFileFit("downloaded.png");
+```
+
+For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/webimages/webimages.ino 
+
 
 
 # Reference
