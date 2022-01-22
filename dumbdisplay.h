@@ -445,7 +445,7 @@ class GraphicalDDLayer: public DDLayer {
     void loadImageFile(const String& imageFileName, int w = 0, int h = 0);
     void unloadImageFile(const String& imageFileName);
     /* draw image file in cache (if not already loaded to cache, load it) */
-    /* - x / y: position of the left-top corner
+    /* - x / y: position of the left-top corner */
     /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
     void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0);
     /* draw image file in cache (if not already loaded to cache, load it) */
