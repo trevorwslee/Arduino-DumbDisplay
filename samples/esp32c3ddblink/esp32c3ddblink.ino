@@ -9,6 +9,8 @@
 #include "esp32bledumbdisplay.h"
 
 
+// - use ESP32 BLE with name "ESP32C3"
+// - at the same time, enable Serial connection with 115200 baud 
 DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32C3", true, 115200));
 
 
@@ -40,6 +42,8 @@ LcdDDLayer* CreateLayer(const char* label, int pin, const char* color) {
     button->pixelColor(color);
     button->backgroundColor("darkgray");
     button->border(1, "gray");
+
+    // set "feedback" handler
     button->setFeedbackHandler(FeedbackHandler, "f");
     
     return button;
@@ -80,3 +84,4 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
     digitalWrite(pin, LOW);
     delay(500);
 }
+
