@@ -5,7 +5,6 @@
 //**********
 
 
-
 #define DD_4_ESP32
 #include "esp32bledumbdisplay.h"
 
@@ -30,18 +29,19 @@ LcdDDLayer* pBlue;
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback);
 
 LcdDDLayer* CreateLayer(const char* label, int pin, const char* color) {
+    // create a layer to simulate a button
     LcdDDLayer* button = dumbdisplay.createLcdLayer(12, 3);
-    button->customData = String(pin);
-//dumbdisplay.backgroundColor("lightblue");
+
+    // set pin to the layer's "custom data"
+    button->customData = String(pin);  
+
+    // setup appearance of the layer
     button->writeCenteredLine(label, 1);
-//delay(1000);    
     button->pixelColor(color);
-//delay(1000);    
     button->backgroundColor("darkgray");
-//delay(1000);    
     button->border(1, "gray");
-//delay(1000);    
     button->setFeedbackHandler(FeedbackHandler, "f");
+    
     return button;
 }
 
@@ -55,25 +55,26 @@ void setup() {
     digitalWrite(PIN_COOL, 0);
 
     pCool = CreateLayer("Cool", PIN_COOL, "white");
-//delay(1000);
     pWarm = CreateLayer("Warm", PIN_WARM, "gold");
-//delay(1000);
     pRed = CreateLayer("Red", PIN_RED, "tomato");
-//delay(1000);
     pGreen = CreateLayer("Green", PIN_GREEN, "green");
-//delay(1000);
     pBlue = CreateLayer("Blue", PIN_BLUE, "lightskyblue");
 
+    // auto "pin" the layers (buttons) vertically
     dumbdisplay.configAutoPin(DD_AP_VERT);
 }
 
 void loop() {
+    // just yield to DumbDisplay to do its work
     DDYield();
 }
 
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
+    // layer (button) clicked ... get pin from the layer's "custom data"
     int pin = pLayer->customData.toInt();
+
+    // flash the onboard LED of the pin 
     digitalWrite(pin, HIGH);
     delay(500);
     digitalWrite(pin, LOW);

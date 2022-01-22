@@ -328,6 +328,9 @@ void _Connect() {
     }
     long startMillis = millis();
     while (true) {
+      if (true) {
+        delay(1);
+      }  
       long now = millis();
       if (now > nextTime) {
 #ifdef DEBUG_WITH_LED
