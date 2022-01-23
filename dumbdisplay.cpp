@@ -50,6 +50,7 @@
 // not flush seems to be a bit better for Serial (lost data)
 #define FLUSH_AFTER_SENT_COMMAND false
 #define YIELD_AFTER_SEND_COMMAND false
+#define YIELD_AFTER_HANDLE_FEEDBACK true
 
 //#define DD_SID "Arduino-c1"
 #define DD_SID "Arduino-c2"
@@ -58,6 +59,7 @@
 #include "_dd_commands.h"
 
 
+#define YIELD() delay(1)
 
 
 DDSerial* _The_DD_Serial = NULL;
@@ -173,6 +175,7 @@ void IOProxy::validConnection() {
     }
 #ifdef SUPPORT_RECONNECT
     if (this->reconnectEnabled && needReconnect) {
+      YIELD();
 #ifdef DEBUG_RECONNECT_WITH_COMMENT 
 this->print("// NEED TO RECONNECT\n");
 #endif
@@ -300,6 +303,7 @@ void _Connect() {
     long lastCallMillis = startMillis;
     bool firstCall = true;
     while (true) {
+      YIELD();
       if (_IO->preConnect(firstCall)) {
         break;
       }
@@ -328,9 +332,7 @@ void _Connect() {
     }
     long startMillis = millis();
     while (true) {
-      if (true) {
-        delay(1);
-      }  
+      YIELD();
       long now = millis();
       if (now > nextTime) {
 #ifdef DEBUG_WITH_LED
@@ -395,6 +397,7 @@ void _Connect() {
     long nextTime = 0;
     IOProxy ioProxy(_IO);
     while (true) {
+      YIELD();
       long now = millis();
       if (now > nextTime) {
 #ifdef DEBUG_WITH_LED
@@ -880,6 +883,9 @@ Serial.println("LT++++" + data + " - final:" + String(final));
 #endif      
     }
     _HandlingFeedback = false;
+    if (YIELD_AFTER_HANDLE_FEEDBACK) {
+      YIELD();
+    }    
   }
 }
 
