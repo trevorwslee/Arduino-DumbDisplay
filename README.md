@@ -16,7 +16,7 @@ Plase notice that the above mentioned video is just one of the several on using 
 * [DumbDisplay Android App](#dumbDisplay-android-app)
 * [Sample Code](#sample-code)
   * [More Samples](#more-samples)
-* [Feature](#feature)  
+* [Features](#features)  
   * [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism)
   * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
   * [Positioning of Layers](#positioning-of-layers)
@@ -740,7 +740,7 @@ void loop() {
 ```
 
 
-# Feature
+# Features
 
 
 ## DumbDispaly "Feedback" Mechanism
