@@ -73,6 +73,11 @@ lib_deps =
     https://github.com/trevorwslee/Arduino-DumbDisplay
 ```
 
+
+For demonstration on installing DumbDisplay Arduino Library for PlatformIO project, you may want to watch the video **Arduino UNO Programming with PlatformIO and DumbDisplay** -- https://www.youtube.com/watch?v=PkeFa2ih4EY 
+
+
+
 (To upgrade DumbDisplay Arduino Library for that PlatformIO project, you can simply delete the 'depended libraries' directory `.pio/libdeps` to force all to be re-installed.)
 
 
