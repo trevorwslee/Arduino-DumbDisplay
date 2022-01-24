@@ -4,10 +4,10 @@ DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual
 
 You may want to watch the video **Introducing DumbDisplay -- the little helper for Arduino experiments** for a brief introduction -- https://www.youtube.com/watch?v=QZkhO6jTf0U
 
-Plase notice that the above mentioned video is just one of the several that I have on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
+Plase notice that the above mentioned video is just one of the several on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
 
 
-## For more details:
+## Enjoy
 
 * [Description](#description)
 * [Installing DumbDisplay Arduino Library](#installing-dumbdisplay-arduino-library)
@@ -18,6 +18,7 @@ Plase notice that the above mentioned video is just one of the several that I ha
   * [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism)
   * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
   * [More Samples](#more-samples)
+* [Featuring](#featuring)  
   * [Positioning of Layers](#positioning-of-layers)
   * [Record and Playback Commands](#record-and-playback-commands)
   * [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
@@ -889,6 +890,8 @@ void loop() {
 }
 ```
 
+# Featuring
+
 ## Positioning of Layers
 
 By default, layers are stacked one by one, with the one created first on the top of the stack. Each layer will be automatically stretched to fit the DumbDisplay, with the aspact ratio kept unchanged.
@@ -939,8 +942,6 @@ To get a feel, you may want to refer to the video *Raspberry Pi Pico playing son
 |  | |
 |--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/pico-speaker_connection.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmelody.jpg)|
-
-
 
 
 ## Record and Playback Commands
