@@ -23,6 +23,7 @@ For more details:
   * [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
   * [More "Feedback" Options](#more-feedback-options)
   * [Idle Callback and ESP32 Deep Sleep](#idle-callback-and-esp32-deep-sleep)
+  * [Using "Tunnel" to Download Images from the Web](#using-tunnel-to-download-images-from-the-web)
 * [Reference](#reference)
 * [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
 * [Thank You!](#thank-you)
