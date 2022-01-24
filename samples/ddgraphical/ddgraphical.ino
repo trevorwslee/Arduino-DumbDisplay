@@ -1,10 +1,21 @@
 #include "ssdumbdisplay.h"
 
+
+#define BLUETOOTH
+
+
+#ifdef BLUETOOTH
+
+
 // assume HC-06 connected, to pin 2 and 3
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
 
+#else
+
 // otherwise, can use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8
-// DumbDisplay dumbdisplay(new DDInputOutput(57600));
+DumbDisplay dumbdisplay(new DDInputOutput(115200));
+
+#endif
 
 
 

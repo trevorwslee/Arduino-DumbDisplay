@@ -25,6 +25,7 @@
 //#define DEBUG_RECEIVE_FEEDBACK
 //#define DEBUG_ECHO_FEEDBACK
 //#define DEBUG_VALIDATE_CONNECTION
+//#define DEBUG_TUNNEL_RESPONSE
 
 
 #define SUPPORT_LONG_PRESS_FEEDBACK
@@ -49,6 +50,7 @@
 // not flush seems to be a bit better for Serial (lost data)
 #define FLUSH_AFTER_SENT_COMMAND false
 #define YIELD_AFTER_SEND_COMMAND false
+#define YIELD_AFTER_HANDLE_FEEDBACK true
 
 //#define DD_SID "Arduino-c1"
 #define DD_SID "Arduino-c2"
@@ -57,6 +59,7 @@
 #include "_dd_commands.h"
 
 
+#define YIELD() delay(1)
 
 
 DDSerial* _The_DD_Serial = NULL;
@@ -172,6 +175,7 @@ void IOProxy::validConnection() {
     }
 #ifdef SUPPORT_RECONNECT
     if (this->reconnectEnabled && needReconnect) {
+      YIELD();
 #ifdef DEBUG_RECONNECT_WITH_COMMENT 
 this->print("// NEED TO RECONNECT\n");
 #endif
@@ -299,6 +303,7 @@ void _Connect() {
     long lastCallMillis = startMillis;
     bool firstCall = true;
     while (true) {
+      YIELD();
       if (_IO->preConnect(firstCall)) {
         break;
       }
@@ -327,6 +332,7 @@ void _Connect() {
     }
     long startMillis = millis();
     while (true) {
+      YIELD();
       long now = millis();
       if (now > nextTime) {
 #ifdef DEBUG_WITH_LED
@@ -391,6 +397,7 @@ void _Connect() {
     long nextTime = 0;
     IOProxy ioProxy(_IO);
     while (true) {
+      YIELD();
       long now = millis();
       if (now > nextTime) {
 #ifdef DEBUG_WITH_LED
@@ -778,8 +785,10 @@ void _HandleFeedback() {
               int lid = _LayerIdToLid(tid);
               DDTunnel* pTunnel = (DDTunnel*) _DDLayerArray[lid];
               if (pTunnel != NULL) {
+#ifdef DEBUG_TUNNEL_RESPONSE                
 //Serial.println(String("// ") + (final ? "F" : "."));
-//Serial.println("LT++++" + data + " - " + String(final));
+Serial.println("LT++++" + data + " - final:" + String(final));
+#endif
                 pTunnel->handleInput(data, final);
               }
             }
@@ -874,6 +883,9 @@ void _HandleFeedback() {
 #endif      
     }
     _HandlingFeedback = false;
+    if (YIELD_AFTER_HANDLE_FEEDBACK) {
+      YIELD();
+    }    
   }
 }
 
@@ -1185,7 +1197,7 @@ void TurtleDDLayer::penDown() {
   _sendCommand0(layerId, "pd");
 }
 void TurtleDDLayer::penSize(int size) {
-  _sendCommand1(layerId, "pensize", String(size));
+  _sendCommand1(layerId, C_pensize, String(size));
 }
 // void TurtleDDLayer::penColor(long color) {
 //   _sendCommand1(layerId, "pencolor", HEX_COLOR(color));
@@ -1420,6 +1432,15 @@ void GraphicalDDLayer::rightTurn(int angle) {
 void GraphicalDDLayer::setHeading(int angle) {
   _sendCommand1(layerId, C_seth, String(angle));
 }
+// void GraphicalDDLayer::goTo(int x, int y, bool withPen) {
+//   _sendCommand2(layerId, withPen ? "goto" : "jto", String(x), String(y));
+// }
+// void GraphicalDDLayer::penUp() {
+//   _sendCommand0(layerId, "pu");
+// }
+// void GraphicalDDLayer::penDown() {
+//   _sendCommand0(layerId, "pd");
+// }
 void GraphicalDDLayer::penSize(int size) {
   _sendCommand1(layerId, C_pensize, String(size));
 }
@@ -1453,9 +1474,22 @@ void GraphicalDDLayer::polygon(int side, int vertexCount) {
 void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
   _sendCommand2(layerId, inside ? C_cpolyin : C_cpoly, String(radius), String(vertexCount));
 }
-void GraphicalDDLayer:: write(const String& text, bool draw) {
+void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h) {
+  _sendCommand3(layerId, C_loadimagefile, imageFileName, String(w), String(h));
+}
+void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
+  _sendCommand1(layerId, C_unloadimagefile, imageFileName);
+}
+void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h) {
+  _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+}
+void GraphicalDDLayer::drawImageFileFit(const String& imageFileName, int x, int y, int w, int h, const String& align) {
+  _sendCommand6(layerId, C_drawimagefilefit, imageFileName, String(x), String(y), String(w), String(h), align);
+}
+void GraphicalDDLayer::write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? C_drawtext : C_write, text);
 }
+
 
 void SevenSegmentRowDDLayer::segmentColor(const String& color) {
   _sendCommand1(layerId, C_segcolor, color);
@@ -1529,8 +1563,8 @@ void PlotterDDLayer::set(const String& key1, float value1, const String& key2, f
 // }
 
 #ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize):
-  DDObject(DD_OBJECT_TYPE_TUNNEL), type(type), tunnelId(String(tunnelId)), endPoint(endPoint) {
+DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow/*, int8_t bufferSize*/):
+  DDObject(DD_OBJECT_TYPE_TUNNEL), type(type), tunnelId(String(tunnelId)), params(params), endPoint(endPoint) {
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
   // this->nextArrayIdx = 0;
@@ -1546,14 +1580,24 @@ DDTunnel::~DDTunnel() {
   //delete this->dataArray;
 } 
 void DDTunnel::reconnect() {
-  //nextArrayIdx = 0;
-  //validArrayIdx = 0;
-  done = false;
-  //for (int i = 0; i < arraySize; i++) {
-    //dataArray[i] = "";
-  //}
-  _sendSpecialCommand("lt", tunnelId, "reconnect", type + "@" + endPoint);
-  connectMillis = millis();
+  if (endPoint != "") {
+    //nextArrayIdx = 0;
+    //validArrayIdx = 0;
+    done = false;
+    //for (int i = 0; i < arraySize; i++) {
+      //dataArray[i] = "";
+    //}
+    String data;
+    data.concat(type);
+    if (params.length() > 0) {
+      data.concat(":");
+      data.concat(params);
+    }
+    data.concat("@");
+    data.concat(endPoint);
+    _sendSpecialCommand("lt", tunnelId, "reconnect", data/*type + "@" + endPoint*/);
+    connectMillis = millis();
+  }
 }
 void DDTunnel::release() {
   if (!done) {
@@ -1569,6 +1613,9 @@ bool DDTunnel::_eof() {
   _HandleFeedback();
 #ifdef TUNNEL_TIMEOUT_MILLIS
     if (done) {
+#ifdef DEBUG_TUNNEL_RESPONSE
+Serial.println("_EOF: DONE");
+#endif                
       return true;
     }
     long diff = millis() - connectMillis;
@@ -1605,8 +1652,9 @@ void DDTunnel::handleInput(const String& data, bool final) {
     this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
 }
-DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize):
-  DDTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
+DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
+  DDTunnel(type, tunnelId, params, endPoint, connectNow/*, bufferSize*/) {
+  bufferSize = bufferSize + 1;  // need one more
   this->arraySize = bufferSize;
   this->dataArray = new String[bufferSize];
   this->nextArrayIdx = 0;
@@ -1634,10 +1682,32 @@ void DDBufferedTunnel::release() {
   this->DDTunnel::release();
 }
 int DDBufferedTunnel::_count() {
-  return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
+  //int count = (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
+  int count = (arraySize + nextArrayIdx - validArrayIdx) % arraySize;
+#ifdef DEBUG_TUNNEL_RESPONSE                
+Serial.print("COUNT: ");
+Serial.println(count);
+#endif
+  return count;
 }
 bool DDBufferedTunnel::_eof() {
-  return nextArrayIdx == validArrayIdx && this->DDTunnel::_eof();
+  if (!this->DDTunnel::_eof()) {
+    return false;
+  }
+// #ifdef DEBUG_TUNNEL_RESPONSE                
+// Serial.print("CHECK EOF ...");
+// Serial.print("validArrayIdx:");
+// Serial.print(validArrayIdx);
+// Serial.print(" / nextArrayIdx:");
+// Serial.println(nextArrayIdx);
+// #endif
+  return nextArrayIdx == validArrayIdx; 
+  //bool eof = (nextArrayIdx == validArrayIdx) && this->DDTunnel::_eof();
+// #ifdef DEBUG_TUNNEL_RESPONSE                
+// Serial.print("EOF:");
+// Serial.println(eof);
+// #endif
+//  return eof;
 }
 bool DDBufferedTunnel::_readLine(String &buffer) {
   if (nextArrayIdx == validArrayIdx) {
@@ -1656,6 +1726,14 @@ bool DDBufferedTunnel::_readLine(String &buffer) {
 //   _sendSpecialCommand("lt", tunnelId, NULL, data);
 // }
 void DDBufferedTunnel::handleInput(const String& data, bool final) {
+#ifdef DEBUG_TUNNEL_RESPONSE
+Serial.print("DATA:");
+Serial.print(data);
+Serial.print(" ... validArrayIdx:");
+Serial.print(validArrayIdx);
+Serial.print(" / nextArrayIdx:");
+Serial.print(nextArrayIdx);
+#endif
 //if (final) Serial.println("//final:" + data);
   if (!final || data != "") {
     dataArray[nextArrayIdx] = data;
@@ -1667,6 +1745,12 @@ void DDBufferedTunnel::handleInput(const String& data, bool final) {
   //if (final)
     //this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
+#ifdef DEBUG_TUNNEL_RESPONSE
+Serial.print(" ==> validArrayIdx:");
+Serial.print(validArrayIdx);
+Serial.print(" / nextArrayIdx:");
+Serial.println(nextArrayIdx);
+#endif  
 }
 String BasicDDTunnel::readLine() {
   String buffer;
@@ -1697,6 +1781,31 @@ bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
   //   fieldValue = buffer;
   // }
   // return true;
+}
+int SimpleToolDDTunnel::checkResult() {
+  if (this->result == 0) {
+    if (count() > 0) {
+      String fieldId;
+      String fieldValue;
+      read(fieldId, fieldValue);
+#ifdef DEBUG_TUNNEL_RESPONSE      
+Serial.print("GOT ");
+Serial.print(fieldId);
+Serial.print(" = ");
+Serial.println(fieldValue); 
+#endif    
+      if (fieldId == "result") {
+        this->result = fieldValue == "ok" ? 1 : -1;
+      }
+    } else if (eof()) {
+      // not quite expected
+#ifdef DEBUG_TUNNEL_RESPONSE      
+Serial.println("XXX EOF???");
+#endif
+      this->result = -1;
+    }
+  }
+  return this->result;
 }
 JsonDDTunnelMultiplexer::JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int8_t tunnelCount) {
   this->tunnelCount = tunnelCount;
@@ -1864,30 +1973,33 @@ void DumbDisplay:: walkLayers(void (*walker)(DDLayer *)) {
 }
 void DumbDisplay::recordLayerSetupCommands() {
   _Connect();
-  _sendCommand0("", "RECC");
+  _sendCommand0("", C_RECC);
 }
 void DumbDisplay::playbackLayerSetupCommands(const String& persist_id) {
-  _sendCommand2("", "SAVEC", persist_id, TO_BOOL(true));
-  _sendCommand0("", "PLAYC");
+  _sendCommand2("", C_SAVEC, persist_id, TO_BOOL(true));
+  _sendCommand0("", C_PLAYC);
 #ifdef SUPPORT_RECONNECT
   _ConnectedIOProxy->setReconnectRCId(persist_id);
 #endif
 }
 void DumbDisplay::recordLayerCommands() {
   _Connect();
-  _sendCommand0("", "RECC");
+  _sendCommand0("", C_RECC);
 }
 void DumbDisplay::stopRecordLayerCommands() {
   _sendCommand0("", "STOPC");
 }
 void DumbDisplay::playbackLayerCommands() {
-  _sendCommand0("", "PLAYC");
+  _sendCommand0("", C_PLAYC);
 }
 void DumbDisplay::saveLayerCommands(const String& id, bool persist) {
-  _sendCommand2("", "SAVEC", id, TO_BOOL(persist));
+  _sendCommand2("", C_SAVEC, id, TO_BOOL(persist));
 }
 void DumbDisplay::loadLayerCommands(const String& id) {
   _sendCommand1("", "LOADC", id);
+}
+void DumbDisplay::capture(const String& imageFileName, int width, int height) {
+  _sendCommand3("", C_CAPTURE, imageFileName, String(width), String (height));
 }
 void DumbDisplay::backgroundColor(const String& color) {
   _Connect();
@@ -1922,7 +2034,7 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool conne
   // if (connectNow) {
   //   _sendSpecialCommand("lt", tunnelId, "connect", "ddbasic@" + endPoint);
   // }
-  BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", tid, endPoint, connectNow, bufferSize);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", tid, "", endPoint, connectNow, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
@@ -1932,10 +2044,18 @@ JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connect
   // if (connectNow) {
   //   _sendSpecialCommand("lt", tunnelId, "connect", "ddsimplejson@" + endPoint);
   // }
-  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, endPoint, connectNow, bufferSize);
+  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, "", endPoint, connectNow, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
+SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName) {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, imageName, endPoint, true, 1);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
+
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   pTunnel->release();
   delete pTunnel;

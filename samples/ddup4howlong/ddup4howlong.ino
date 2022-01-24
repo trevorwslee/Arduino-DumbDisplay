@@ -1,12 +1,18 @@
 #include "ssdumbdisplay.h"
 
+//#define BLUETOOTH
+
+#ifdef BLUETOOTH
 
 // assume HC-06 connected, to pin 2 and 3; and assume it is using baud 9600
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 9600));
 
-// otherwise, can use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8
-// DumbDisplay dumbdisplay(new DDInputOutput(57600));
+#else
 
+//otherwise, can use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
+
+#endif
 
 SevenSegmentRowDDLayer *sevenSeg;
 void setup() {

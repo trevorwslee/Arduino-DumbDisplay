@@ -367,16 +367,23 @@ class SerialSource:
                                     #         tunnel.close()
                                     #         while self.tunnels.get(tid) != None:
                                     #             time.sleep(0.1)
-                                    if type == 'ddsimplejson':
-                                        tunnel = JsonTunnel(self.ser, tid, end_point)
-                                    else:
+                                    if type == 'ddbasic':
                                         tunnel = Tunnel(self.ser, tid, end_point)
-                                    self.tunnels[tunnel.tunnel_id] = tunnel
-                                    if _LOG_TUNNEL:
-                                        log_prefix = 'Re-' if lt_command == "reconnect" else ''
-                                        print(log_prefix + 'Create tunnel ' + tunnel.tunnel_id)
-                                    threading.Thread(target=tunnel.serve, daemon=True).start()
-                                #self.tunnels.append(tunnel)
+                                    elif type == 'ddsimplejson':
+                                        if True:
+                                            tunnel = None
+                                        else:
+                                            tunnel = JsonTunnel(self.ser, tid, end_point)
+                                    else:
+                                        tunnel = None
+                                    if tunnel != None:    
+                                        self.tunnels[tunnel.tunnel_id] = tunnel
+                                        if _LOG_TUNNEL:
+                                            log_prefix = 'Re-' if lt_command == "reconnect" else ''
+                                            print(log_prefix + 'Create tunnel ' + tunnel.tunnel_id)
+                                        threading.Thread(target=tunnel.serve, daemon=True).start()
+                                    else:
+                                        insert_it = True   
                             elif lt_command == 'disconnect':
                                 tunnel = self.tunnels.get(tid)
                                 if _LOG_TUNNEL:

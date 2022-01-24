@@ -1,13 +1,13 @@
-# DumbDisplay Arduino Library (v0.8.0)
+# DumbDisplay Arduino Library (v0.8.1)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / STM32 / Respberry Pi Pico experiments.
 
 You may want to watch the video **Introducing DumbDisplay -- the little helper for Arduino experiments** for a brief introduction -- https://www.youtube.com/watch?v=QZkhO6jTf0U
 
-Plase notice that the above mentioned video is just one of the several that I have on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
+Plase notice that the above mentioned video is just one of the several on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
 
 
-For more details:
+## Enjoy
 
 * [Description](#description)
 * [Installing DumbDisplay Arduino Library](#installing-dumbdisplay-arduino-library)
@@ -15,14 +15,16 @@ For more details:
   * [PlatformIO](#platformio)
 * [DumbDisplay Android App](#dumbDisplay-android-app)
 * [Sample Code](#sample-code)
+  * [More Samples](#more-samples)
+* [Features](#features)  
   * [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism)
   * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
-  * [More Samples](#more-samples)
   * [Positioning of Layers](#positioning-of-layers)
   * [Record and Playback Commands](#record-and-playback-commands)
   * [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
   * [More "Feedback" Options](#more-feedback-options)
   * [Idle Callback and ESP32 Deep Sleep](#idle-callback-and-esp32-deep-sleep)
+  * [Using "Tunnel" to Download Images from the Web](#using-tunnel-to-download-images-from-the-web)
 * [Reference](#reference)
 * [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
 * [Thank You!](#thank-you)
@@ -70,6 +72,11 @@ If you have an Arduino framework PlatformIO project that wants to make use of Du
 lib_deps =
     https://github.com/trevorwslee/Arduino-DumbDisplay
 ```
+
+
+For demonstration on installing DumbDisplay Arduino Library for PlatformIO project, you may want to watch the video **Arduino UNO Programming with PlatformIO and DumbDisplay** -- https://www.youtube.com/watch?v=PkeFa2ih4EY 
+
+
 
 (To upgrade DumbDisplay Arduino Library for that PlatformIO project, you can simply delete the 'depended libraries' directory `.pio/libdeps` to force all to be re-installed.)
 
@@ -214,158 +221,6 @@ Notes:
   ```
   dumbdisplay.deleteLayer(led);
   ```
-
-## DumbDispaly "Feedback" Mechanism
-
-You can also try out "layer feedback" from DumbDisplay like
-
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonoffloopmb/ddonoffloopmb.ino
-
-
-```
-#include "ssdumbdisplay.h"
-
-/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
-DumbDisplay dumbdisplay(new DDInputOutput(57600));
-
-MbDDLayer* pMbLayer = NULL;
-
-void setup() {
-    // create the MB layer with size 10x10
-    pMbLayer = dumbdisplay.createMicrobitLayer(10, 10);
-    // enable "feedback" -- auto flashing the clicked area
-    pMbLayer->enableFeedback("fa");
-}
-
-void loop() {
-    // check for "feedback"
-    const DDFeedback *pFeedback = pMbLayer->getFeedback();
-    if (pFeedback != NULL) {
-        // act upon "feedback"
-        pMbLayer->toggle(pFeedback->x, pFeedback->y); 
-    }
-}
-```
-
-Alternativelly, can setup "callback" function to handle "feedback" passively, like
-
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonoffmb/ddonoffmb.ino
-
-```
-#include "ssdumbdisplay.h"
-
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
-
-MbDDLayer* pMbLayer = NULL;
-
-void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
-    // got a click on (x, y) ... toogle it
-    pMbLayer->toggle(feedback.x, feedback.y);
-}
-
-void setup() {
-    // create the MB layer with size 10x10
-    pMbLayer = dumbdisplay.createMicrobitLayer(10, 10);
-    // setup "callback" function to handle "feedback" passively -- auto flashing the clicked area
-    pMbLayer->setFeedbackHandler(FeedbackHandler, "fa");
-}
-
-void loop() {
-    // give DD a chance to capture feedback
-    DDYield();
-}
-```
-
-Please note that DumbDisplay library will check for "feedback" in several occasions:
-* before every get "feedback" with `getFeedback()`
-* after every send of command
-* once when `DDYield()` is called
-* during the "wait loop" of `DDDelay()`
-* calling "tunnel" to check for EOF
-
-
-## DumbDispaly "Tunnel"
-
-
-With the help of DumbDisplay WIFI Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
-
-In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears that Android does not allow all connections, possibly due to the port restriction.
-
-```
-DumbDisplay dumbdisplay(new DDInputOutput(9600));
-BasicDDTunnel *pTunnel;
-void setup() {
- pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17"); 
-}
-void loop() {
-  if (!pTunnel->eof()) {  // check not "reached" EOF
-    if (pTunnel->count() > 0) {  // check something is there to read
-      const String& data = pTunnel->readLine();    // read what got so far
-      dumbdisplay.writeComment("{" + data + "}");  // write out what got as comment to DumbDisplay
-    }
-  } 
-  DDDelay(200);  // delay a bit, and give DD a chance to so some work
-}
-```
-
-In case a "tunnel" reached EOF, and need be reinvoked:
-
-```
-pTunnel->reconnect();
-```
-
-In case a "tunnel" finishes all its tasks in the middle of the sketch, it should be released in order for Arduino to claim back resources:
-
-```
-dumbdisplay.deleteTunnel(pTunnel);
-```
-
-In a more complicated case, you may want to get data from Internet open REST api that returns JSON. For simple "GET" case, `JsonDDTunnel` "tunnel" may be able to help:
-
-* you construct `JsonDDTunnel` "tunnel" and make REST request like:
-  ```
-  pTunnel = dumbdisplay.createJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong"); 
-  ```
-* you read JSON data from the "tunnel" a piece at a time;
-  e.g. if the JSON is
-  ```
-  { 
-    "full_name": "Bruce Lee",
-    "name":
-    {
-      "first": "Bruce",
-      "last": "Lee"
-    },
-    "gender": "Male",
-    "age": 32
-  }
-  ```  
- 
-  then, the following JSON pieces will be returned:
-  * `full_name` = `Bruce Lee`
-  * `name.first` = `Bruce`
-  * `name.last` = `Lee`
-  * `gender` = `Male`
-  * `age` = `32`
-  
-  notes:
-  * all returned values will be text
-  * control characters like `\r` not supported
-  * HTTPS not yet supported
-
-* use `count()` to check if the "tunnel" has anything to read, and use `read()` to read what got, like:
-  ```
-  while (!pTunnel->eof()) {
-    while (pTunnel->count() > 0) {
-      String fieldId;
-      String fieldValue;
-      pTunnel->read(fieldId, fieldValue);  // fieldId and fieldValue combined is a piece of JSON data 
-      dumbdisplay.writeComment(fieldId + "=" + fieldValue);
-    }
-  }  
-  ```
-  note that `eof()` will check whether everything has returned and read before signaling EOF.
 
 
 ## More Samples
@@ -889,6 +744,163 @@ void loop() {
 }
 ```
 
+
+# Features
+
+
+## DumbDispaly "Feedback" Mechanism
+
+You can also try out "layer feedback" from DumbDisplay like
+
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonoffloopmb/ddonoffloopmb.ino
+
+
+```
+#include "ssdumbdisplay.h"
+
+/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
+
+MbDDLayer* pMbLayer = NULL;
+
+void setup() {
+    // create the MB layer with size 10x10
+    pMbLayer = dumbdisplay.createMicrobitLayer(10, 10);
+    // enable "feedback" -- auto flashing the clicked area
+    pMbLayer->enableFeedback("fa");
+}
+
+void loop() {
+    // check for "feedback"
+    const DDFeedback *pFeedback = pMbLayer->getFeedback();
+    if (pFeedback != NULL) {
+        // act upon "feedback"
+        pMbLayer->toggle(pFeedback->x, pFeedback->y); 
+    }
+}
+```
+
+Alternativelly, can setup "callback" function to handle "feedback" passively, like
+
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonoffmb/ddonoffmb.ino
+
+```
+#include "ssdumbdisplay.h"
+
+// assume HC-06 connected, to pin 2 and 3
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
+
+MbDDLayer* pMbLayer = NULL;
+
+void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
+    // got a click on (x, y) ... toogle it
+    pMbLayer->toggle(feedback.x, feedback.y);
+}
+
+void setup() {
+    // create the MB layer with size 10x10
+    pMbLayer = dumbdisplay.createMicrobitLayer(10, 10);
+    // setup "callback" function to handle "feedback" passively -- auto flashing the clicked area
+    pMbLayer->setFeedbackHandler(FeedbackHandler, "fa");
+}
+
+void loop() {
+    // give DD a chance to capture feedback
+    DDYield();
+}
+```
+
+Please note that DumbDisplay library will check for "feedback" in several occasions:
+* before every get "feedback" with `getFeedback()`
+* after every send of command
+* once when `DDYield()` is called
+* during the "wait loop" of `DDDelay()`
+* calling "tunnel" to check for EOF
+
+
+## DumbDispaly "Tunnel"
+
+
+With the help of DumbDisplay WIFI Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
+
+In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears that Android does not allow all connections, possibly due to the port restriction.
+
+```
+DumbDisplay dumbdisplay(new DDInputOutput(9600));
+BasicDDTunnel *pTunnel;
+void setup() {
+ pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17"); 
+}
+void loop() {
+  if (!pTunnel->eof()) {  // check not "reached" EOF
+    if (pTunnel->count() > 0) {  // check something is there to read
+      const String& data = pTunnel->readLine();    // read what got so far
+      dumbdisplay.writeComment("{" + data + "}");  // write out what got as comment to DumbDisplay
+    }
+  } 
+  DDDelay(200);  // delay a bit, and give DD a chance to so some work
+}
+```
+
+In case a "tunnel" reached EOF, and need be reinvoked:
+
+```
+pTunnel->reconnect();
+```
+
+In case a "tunnel" finishes all its tasks in the middle of the sketch, it should be released in order for Arduino to claim back resources:
+
+```
+dumbdisplay.deleteTunnel(pTunnel);
+```
+
+In a more complicated case, you may want to get data from Internet open REST api that returns JSON. For simple "GET" case, `JsonDDTunnel` "tunnel" may be able to help:
+
+* you construct `JsonDDTunnel` "tunnel" and make REST request like:
+  ```
+  pTunnel = dumbdisplay.createJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong"); 
+  ```
+* you read JSON data from the "tunnel" a piece at a time;
+  e.g. if the JSON is
+  ```
+  { 
+    "full_name": "Bruce Lee",
+    "name":
+    {
+      "first": "Bruce",
+      "last": "Lee"
+    },
+    "gender": "Male",
+    "age": 32
+  }
+  ```  
+ 
+  then, the following JSON pieces will be returned:
+  * `full_name` = `Bruce Lee`
+  * `name.first` = `Bruce`
+  * `name.last` = `Lee`
+  * `gender` = `Male`
+  * `age` = `32`
+  
+  notes:
+  * all returned values will be text
+  * control characters like `\r` not supported
+  
+* use `count()` to check if the "tunnel" has anything to read, and use `read()` to read what got, like:
+  ```
+  while (!pTunnel->eof()) {
+    while (pTunnel->count() > 0) {
+      String fieldId;
+      String fieldValue;
+      pTunnel->read(fieldId, fieldValue);  // fieldId and fieldValue combined is a piece of JSON data 
+      dumbdisplay.writeComment(fieldId + "=" + fieldValue);
+    }
+  }  
+  ```
+  note that `eof()` will check whether everything has returned and read before signaling EOF.
+
+
+
 ## Positioning of Layers
 
 By default, layers are stacked one by one, with the one created first on the top of the stack. Each layer will be automatically stretched to fit the DumbDisplay, with the aspact ratio kept unchanged.
@@ -941,8 +953,6 @@ To get a feel, you may want to refer to the video *Raspberry Pi Pico playing son
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/pico-speaker_connection.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmelody.jpg)|
 
 
-
-
 ## Record and Playback Commands
 
 It is apparent that turning on LEDs, drawing on graphical LCDs, etc, by sending text-based commands is not particularly efficient. Indeed, screen flickering is a commonplace, especial when there are lots of activities.
@@ -961,6 +971,7 @@ Instead of posting the sample sketch here, please find it with the link: https:/
 
 
 If you are interested, you may want to watch the video **Arduino JoyStick Shield and DumbDisplay** -- https://www.youtube.com/watch?v=9GYrZWXHfUo
+
 
 ## Survive DumbDisplay App Reconnection
 
@@ -1082,6 +1093,49 @@ void setup() {
 For reference, you may want to refer to the example as shown by the video **ESP32 Deep Sleep Experiment using Arduino with DumbDisplay** -- https://www.youtube.com/watch?v=a61hRLIaqy8 
 
 
+## Using "Tunnel" to Download Images from the Web
+
+It is possible to download image from the Web, save it to your phone, and draw it out to a graphical DD Layer.
+
+This is done via an "image download tunnel" that you can create like
+
+```
+pTunnel = dumbdisplay.createImageDownloadTunnel("https://placekitten.com/680/480", "downloaded.png");
+```
+
+As preparation, you will need to grant DumbDisplay app permission to access your phone's storage. Select the menu item "settings" and click the button "access images". This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.
+
+Next, DumbDisplay app will create a folder, speciaically, `<your phone's picture storage>/DumbDisplay/`, and write a small sample image `dumbdisplay.png` there. From now on, DumbDisplay will access the folder for any image files that it will need to read / write.
+
+Since it takes a bit of time to download image file from the Web, you will need to check it's download status asyncrhonously like
+
+```
+while (true) {
+  ...
+  int result = pTunnel->checkResult();
+  if (result == 1) {
+    // web image downloaded and saved successfully
+    ...
+    break;
+  } else if (result == -1) {
+    // failed to download the image
+    ...
+    break;
+  }
+  ...
+}
+```
+
+When the image downloaded and saved successfully, you can draw it to a graphical DD layer like
+
+```
+pLayer->drawImageFileFit("downloaded.png");
+```
+
+For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/webimages/webimages.ino 
+
+
+
 # Reference
 
 For reference, please look into the declarations of the different related classes in the header files; mostly dumbdisplay.h -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/dumbdisplay.h
@@ -1132,6 +1186,14 @@ MIT
 
 
 # Change History
+
+
+v0.8.1
+  - aded "image download tunnel"
+  - "JSON tunnel" now supports HTTPs
+  - added load/save/draw image to "graphical layer"
+  - bug fixes
+
 
 v0.8.0
   - added more basic layer functions

@@ -107,24 +107,13 @@ class DDLayer: public DDObject {
     /* set no layer background color */
     void noBackgroundColor();
     /* set whether layer visible (not visible means hidden) */
-    //void setVisible(bool visible);
     void visible(bool visible);
     /* set whether layer transparent */
-    //void setTransparent(bool transparent);
     void transparent(bool transparent);
     /* set layer opacity percentage */
-    //void setOpacity(int opacity);
     void opacity(int opacity);
     /* set layer's alpha channel (0 - 255) */
-    //void setAlpha(int alpha);
     void alpha(int alpha);
-    // /* DEPRECATED */
-    // inline void visibility(bool visible) {
-    //   setVisible(visible);
-    // }
-    // /* DEPRECATED */
-    // void opacity(int opacity);
-    //void reorder(bool bringUp);
     /* normally used for "feedback" -- flash the default way (layer + border) */
     void flash();
     /* normally used for "feedback" -- flash the area (x, y) where the layer is clicked */
@@ -140,7 +129,13 @@ class DDLayer: public DDObject {
     /* . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary) */
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     /* rely on getFeedback() being called */ 
-    /* autoFeedbackMethod ... see setFeedbackHandler() */
+    /* autoFeedbackMethod: */
+    /* . "" -- no auto feedback */
+    /* . "f" -- flash the default way (layer + border) */
+    /* . "fl" -- flash the layer */
+    /* . "fa" -- flash the area where the layer is clicked */
+    /* . "fas" -- flash the area (as a spot) where the layer is clicked */
+    /* . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary) */
     void enableFeedback(const String& autoFeedbackMethod = "");
     /** disable "feedback" */
     void disableFeedback();
@@ -413,8 +408,14 @@ class GraphicalDDLayer: public DDLayer {
     void leftTurn(int angle);
     /* right turn */
     void rightTurn(int angle);
+    // /* go to (x, y); with pen or not */
+    // void goTo(int x, int y, bool withPen = true);
     /* set heading angle */
     void setHeading(int angle);
+    // /* pen up */
+    // void penUp();
+    // /* pen down */
+    // void penDown();
     /* set pen size */
     void penSize(int size);
     /* set pen color (i.e. text color) */
@@ -439,6 +440,18 @@ class GraphicalDDLayer: public DDLayer {
     /* - given circle radius and vertex count */
     /* - whether inside the imaginary circle or outside of it */ 
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
+    /* load image file to cache */
+    /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
+    void loadImageFile(const String& imageFileName, int w = 0, int h = 0);
+    void unloadImageFile(const String& imageFileName);
+    /* draw image file in cache (if not already loaded to cache, load it) */
+    /* - x / y: position of the left-top corner */
+    /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
+    void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0);
+    /* draw image file in cache (if not already loaded to cache, load it) */
+    /* - x / y / w / h: aread to draw the image; 0 means the default value */ 
+    /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered */
+    void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /* write text; will not auto wrap */
     /* - draw means draw the text (honor heading direction) */
     void write(const String& text, bool draw = false);
@@ -497,10 +510,14 @@ class PlotterDDLayer: public DDLayer {
 
 class DDTunnel: public DDObject {
   public:
-    DDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize);
+    DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow/*, int8_t bufferSize*/);
     virtual ~DDTunnel();
     virtual void release();
     virtual void reconnect();
+    void reconnectTo(const String& endPoint) {
+      this->endPoint = endPoint;
+      reconnect();
+    }
     const String& getTunnelId() { return tunnelId; }
   protected:
     //int _count();
@@ -512,6 +529,7 @@ class DDTunnel: public DDObject {
   protected:
     String type;
     String tunnelId;
+    String params;
     String endPoint;
     long connectMillis;
     // int arraySize;
@@ -525,7 +543,7 @@ class DDTunnel: public DDObject {
 
 class DDBufferedTunnel: public DDTunnel {
   public:
-    DDBufferedTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize);
+    DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize);
     virtual ~DDBufferedTunnel();
     virtual void release();
     virtual void reconnect();
@@ -554,7 +572,7 @@ class DDBufferedTunnel: public DDTunnel {
  */ 
 class BasicDDTunnel: public DDBufferedTunnel {
   public:
-    BasicDDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int8_t bufferSize): DDBufferedTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
+    BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
     /* count buffer ready to be read */
     inline int count() { return _count(); }
@@ -591,7 +609,7 @@ class BasicDDTunnel: public DDBufferedTunnel {
  */
 class JsonDDTunnel: public DDBufferedTunnel {
   public:
-    JsonDDTunnel(const String& type, int8_t tunnelId, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, endPoint, connectNow, bufferSize) {
+    JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
     /* count buffer ready (pieces of JSON) to be read */
     inline int count() { return _count(); }
@@ -600,6 +618,21 @@ class JsonDDTunnel: public DDBufferedTunnel {
     /* read a piece of JSON data */
     bool read(String& fieldId, String& fieldValue);
 };
+
+class SimpleToolDDTunnel: public JsonDDTunnel {
+  public:
+    SimpleToolDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): JsonDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+      this->result = 0;
+    }
+  public:
+    /* 0: not done */
+    /* 1: done */
+    /* -1: failed */
+    int checkResult(); 
+  private:
+    int result; 
+};
+
 
 /** will not delete "tunnels" passed in */
 class JsonDDTunnelMultiplexer {
@@ -665,9 +698,14 @@ class DumbDisplay {
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
     /* if not connect now, need to connect via reconnect() */
-    BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 4);
+    BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 3);
     /* if not connect now, need to connect via reconnect() */
-    JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 4);
+    JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 3);
+    /* download image from the web and save the downloaded image */
+    /* you will get reuslt as JSON: {"result":"ok"} or {"result":"failed"} */
+    /* for simplicity, use SimpleToolDDTunnel.checkResult() to check result */
+    /* MUST use deleteTunnel() to delete the "download tunnel" after use */
+    SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName);
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
     /* set DD background color with common "color name" */
@@ -698,6 +736,11 @@ class DumbDisplay {
     /* - use playbackLayerCommands() to playback loaded commands */
     /* - if not recording commands, this basically remove saved commands */
     void loadLayerCommands(const String& id);
+    /* capture and save display as image */
+    /* IMPORTANT: old file with the same name will be  replaced */
+    /* - imageFileName: name of image file; if it ends with ".png", saved image format will be PNG; other, saved image format will be JPED */
+    /* - width / height: size of the display on which to render the layers */ 
+    void capture(const String& imageFileName, int width, int height);
     /* write out a comment to DD */
     void writeComment(const String& comment);
     void tone(uint32_t freq, uint32_t duration);
@@ -705,6 +748,7 @@ class DumbDisplay {
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
+    /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     /**
      * recorder the layer
