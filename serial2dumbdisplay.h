@@ -23,6 +23,9 @@ class DDSerial2IO: public DDInputOutput {
     void print(const char *p) {
       Serial2.print(p); 
     }
+    void write(uint8_t b) {
+      Serial2->write(b); 
+    }
     bool preConnect(bool firstCall) {
       Serial2.begin(baud);
       return true;

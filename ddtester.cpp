@@ -604,6 +604,10 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
   }
 
   if (true) {
+    dumbdisplay.debugOnly(128);
+  }
+
+  if (true) {
     dumbdisplay.backgroundColor(DD_HEX_COLOR(0xE0FFFF));
   }
 

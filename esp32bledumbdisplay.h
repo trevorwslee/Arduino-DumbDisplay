@@ -53,6 +53,9 @@ class DDBLESerialIO: public DDInputOutput {
     void print(const char *p) {
       pCallbacks->print(p);
     }
+    void write(uint8_t b) {
+      pCallbacks->write(p); 
+    }
     bool preConnect(bool firstCall) {
 #ifdef DD_DEBUG_BLE
       if (!setupForSerial) {

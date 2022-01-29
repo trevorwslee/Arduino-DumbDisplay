@@ -10,7 +10,7 @@ Plase notice that the above mentioned video is just one of the several on using 
 ## Enjoy
 
 * [Description](#description)
-* [Installing DumbDisplay Arduino Library](#installing-dumbdisplay-arduino-library)
+* [Installation](#installation)
   * [Arduino IDE](#arduino-ide)
   * [PlatformIO](#platformio)
 * [DumbDisplay Android App](#dumbDisplay-android-app)
@@ -51,7 +51,7 @@ A few types of layers can be created:
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected micro-controller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism) for more on "layer feedback" mechanism.
 
 
-# Installing DumbDisplay Arduino Library
+# Installation
 
 ## Arduino IDE
 

@@ -27,6 +27,9 @@ class DDInputOutput {
       //Serial.print(p);
       if (_The_DD_Serial != NULL) _The_DD_Serial->print(p);
     }
+    virtual void write(uint8_t b) {
+      if (_The_DD_Serial != NULL) _The_DD_Serial->write(b);
+    }
     virtual void flush() {
       //Serial.flush();
       if (_The_DD_Serial != NULL) _The_DD_Serial->flush();
