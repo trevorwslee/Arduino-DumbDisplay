@@ -697,6 +697,7 @@ void __SendSpecialCommand(const char* specialType, const String& specialId, cons
 void __SendByteArrayAfterCommand(const uint8_t *bytes, int byteCount) {
   _IO->print("|bytes|>");
   _IO->print(":");
+  _IO->print(String(byteCount))
   _IO->write(':');
   //_IO->flush();
   //char buffer[2];
