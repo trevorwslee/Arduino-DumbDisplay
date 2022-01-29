@@ -695,11 +695,12 @@ void __SendSpecialCommand(const char* specialType, const String& specialId, cons
   }
 }
 void __SendByteArrayAfterCommand(const uint8_t *bytes, int byteCount) {
-  _IO->print("^^:");
+  _IO->print("|bytes|>");
   _IO->print(":");
+  _IO->write(':');
   //_IO->flush();
-  char buffer[2];
-  buffer[1] = 0;
+  //char buffer[2];
+  //buffer[1] = 0;
   for (int i = 0; i < byteCount; i++) {
     uint8_t b = bytes[i];
     bool escaped = false;
@@ -715,13 +716,13 @@ void __SendByteArrayAfterCommand(const uint8_t *bytes, int byteCount) {
       b = '_';
     }
     if (escaped) {
-      //_IO->write(92);
-      buffer[0] = 92;
-      _IO->print(buffer);
+      _IO->write(92);
+      //buffer[0] = 92;
+      //_IO->print(buffer);
     }
-    //_IO->write(b);
-    buffer[0] = b;
-    _IO->print(buffer);
+    _IO->write(b);
+    //buffer[0] = b;
+    //_IO->print(buffer);
   }
   //_IO->flush();
   _IO->print("\n");
