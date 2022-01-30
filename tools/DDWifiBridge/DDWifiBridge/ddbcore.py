@@ -91,7 +91,7 @@ class DDBridge(ddbmod.DDBridge):
         return sent
 
 
-def _Connect(port, baud):
+def _Connect(port, baud) -> pyserial.Serial:
     DdUI.printLogMessage("Connect to {0} with baud rate {1}".format(port, baud))
     if port != "":
         ser = pyserial.Serial(port=port,baudrate=baud,
@@ -192,7 +192,9 @@ def RunDDBridgeMain(ddui, connect_param_dict = None):
             try:
                 SerialLoop()
             except Exception as err:
-                ddui.printControlMessage("*** exception -- {0}".format(err))
+                err_msg = "*** exception -- {0}".format(err)
+                print(err_msg, err)
+                ddui.printControlMessage(err_msg)
                 traceback.print_exc()
                 Ser.close()
             Ser = None

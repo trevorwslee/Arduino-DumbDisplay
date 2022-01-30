@@ -2,3 +2,5 @@ __pycache__
 _SYNCAPP
 DDWifiBridge.egg-info
 DDWifiBridge/ddwifibridge.ini
+/DDWifiBridge.iml
+.idea

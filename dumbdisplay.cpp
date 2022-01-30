@@ -694,7 +694,7 @@ void __SendSpecialCommand(const char* specialType, const String& specialId, cons
     yield();
   }
 }
-void __SendByteArrayAfterCommand(const uint8_t *bytes, int byteCount) {
+void __SendByteArrayPortion(const uint8_t *bytes, int byteCount) {
   _IO->print("|bytes|>");
   _IO->print(String(byteCount));
   _IO->print(":");
@@ -702,46 +702,6 @@ void __SendByteArrayAfterCommand(const uint8_t *bytes, int byteCount) {
     uint8_t b = bytes[i];
     _IO->write(b);
   }
-  if (FLUSH_AFTER_SENT_COMMAND) {
-    _IO->flush();
-  }
-  if (YIELD_AFTER_SEND_COMMAND) {
-    yield();
-  }
-}
-void __OLD_SendByteArrayAfterCommand(const uint8_t *bytes, int byteCount) {
-  _IO->print("|bytes|>");
-  _IO->print(String(byteCount));
-  _IO->print(":");
-  _IO->write(':');
-  //_IO->flush();
-  //char buffer[2];
-  //buffer[1] = 0;
-  for (int i = 0; i < byteCount; i++) {
-    uint8_t b = bytes[i];
-    bool escaped = false;
-    if (b == 0) {
-      b = '0';
-    } else if (b == '0') {
-      escaped = true;
-    } else if (b == 10) {
-      escaped = true;
-      b = 'n';
-    } else if (b == 92) {
-      escaped = true;
-      b = '_';
-    }
-    if (escaped) {
-      _IO->write(92);
-      //buffer[0] = 92;
-      //_IO->print(buffer);
-    }
-    _IO->write(b);
-    //buffer[0] = b;
-    //_IO->print(buffer);
-  }
-  //_IO->flush();
-  _IO->print("\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
     _IO->flush();
   }
@@ -1034,35 +994,8 @@ inline void _sendSpecialCommand(const char* specialType, const String& specialId
 }
 #endif
 void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount) {
-  __SendByteArrayAfterCommand(bytes, byteCount);
-  // _IO->print("^^:");
-  // _IO->print(":");
-  // //char buffer[2];
-  // //buffer[1] = 0;
-  // for (int i = 0; i < byteCount; i++) {
-  //   uint8_t b = bytes[i];
-  //   bool escaped = false;
-  //   if (b == 0) {
-  //     b = '0';
-  //   } else if (b == '0') {
-  //     escaped = true;
-  //   } else if (b == 10) {
-  //     escaped = true;
-  //     b = 'n';
-  //   } else if (b == 92) {
-  //     escaped = true;
-  //     b = '_';
-  //   }
-  //   if (escaped) {
-  //     _IO->write(92);
-  //     //buffer[0] = 92;
-  //     //_IO->print(buffer);
-  //   }
-  //   _IO->write(b);
-  //   //buffer[0] = b;
-  //   //_IO->print(buffer);
-  // }
-  // _IO->print("\n");
+  __SendByteArrayPortion(bytes, byteCount);
+  _sendCommand0("", C_KAL);  // send a "keep alive" command to make sure and new-line is sent
 }
 
 
@@ -2125,7 +2058,11 @@ void DumbDisplay::debugOnly(int i) {
   uint8_t bytes[i];
   for (int j = 0; j < i; j++) {
     bytes[j] = (uint8_t) (j % 256);
-    //bytes[j] = (uint8_t) (128 + (j % 128));
+    // if (i <= 10) {
+    //   bytes[j] = (uint8_t) (128 + (j % 128));
+    // } else {
+    //   bytes[j] = (uint8_t) (j % 256);
+    // }
   }
   _sendByteArrayAfterCommand(bytes, i);
 }

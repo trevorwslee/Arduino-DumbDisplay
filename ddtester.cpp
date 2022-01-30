@@ -605,7 +605,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
 
   if (true) {
     dumbdisplay.writeComment("DEBUG ONLY");
-    dumbdisplay.debugOnly(1);
+    dumbdisplay.debugOnly(512);
   }
 
   if (true) {
