@@ -17,8 +17,8 @@ DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32CamDD", true, 115200));
 #else
 
 #include "wifidumbdisplay.h"
-const char* ssid = "TrevorWireless";
-const char* password = "joysftrevorws";
+const char* ssid = <wifi SSID>;
+const char* password = <wifi password>;
 DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
 
 #endif
