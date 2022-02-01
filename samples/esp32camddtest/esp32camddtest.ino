@@ -44,14 +44,23 @@ GraphicalDDLayer* imageLayer;
 #endif
 
 
+void setupFlashPWM();
 bool initialiseCamera(framesize_t frameSize);
 void captureAndSaveImage(bool useFlash);
-void setupFlashPWM();
 
 
 
 bool cameraReady = false;
 DDValueRecord<bool> flashOn(false, true);
+DDValueRecord<int> imageSize(0, -1);
+
+// framesize_t getFrameSize() {
+//   switch (imageSize) {
+//     case 1: return FRAMESIZE_SVGA;
+//     case 2: return FRAMESIZE_XGA;
+//     default: return FRAMESIZE_VGA;
+//   }
+// }
 
 void setup() {
 
@@ -66,21 +75,51 @@ void setup() {
 #endif
 
   flashLayer = dumbdisplay.createLcdLayer(12, 1);
+  flashLayer->border(1, "darkgray", "round");
   flashLayer->enableFeedback("f");
 
   imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
   imageLayer->backgroundColor("ivory");
   imageLayer->padding(10);
-  imageLayer->border(20, "blue", "round");
+  imageLayer->border(20, "blue");
   imageLayer->enableFeedback("f");
 
 
   dumbdisplay.configAutoPin(DD_AP_VERT);
 
 
+// #ifdef ENABLE_ESP32_CAM
+//   dumbdisplay.writeComment("Initializing camera ...");
+//   cameraReady = initialiseCamera(getFrameSize()/*FRAMESIZE_VGA*/); 
+//   if (cameraReady) {
+//     dumbdisplay.writeComment("... initialized camera!");
+//   } else {
+//     dumbdisplay.writeComment("... failed to initialize camera!");
+//   }
+// #else
+//   dumbdisplay.writeComment("No camera!");
+// #endif
+
+  imageLayer->drawImageFileFit("dumbdisplay.png");
+
+
+}
+void loop() {
+  if (imageSize.record()) {
 #ifdef ENABLE_ESP32_CAM
+    framesize_t frameSize;
+    switch (imageSize) {
+      case 1:
+        frameSize = FRAMESIZE_SVGA;
+        break;
+      case 2: 
+        frameSize = FRAMESIZE_XGA;
+        break;
+      default:
+        frameSize = FRAMESIZE_VGA;
+    }
   dumbdisplay.writeComment("Initializing camera ...");
-  cameraReady = initialiseCamera(FRAMESIZE_VGA); 
+  cameraReady = initialiseCamera(frameSize); 
   if (cameraReady) {
     dumbdisplay.writeComment("... initialized camera!");
   } else {
@@ -89,12 +128,7 @@ void setup() {
 #else
   dumbdisplay.writeComment("No camera!");
 #endif
-
-  imageLayer->drawImageFileFit("dumbdisplay.png");
-
-
-}
-void loop() {
+  }
   if (flashOn.record()) {
     if (flashOn) {
       flashLayer->writeCenteredLine("FLASH ON");
