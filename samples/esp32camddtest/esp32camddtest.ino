@@ -1,40 +1,41 @@
 #include <Arduino.h>
 
 
-#define HAS_ESP32_CAM
+#ifdef ESP32
+#define ENABLE_ESP32_CAM
+#define DISABLE_BROWNOUT
+#endif
+
 
 #define BLUETOOTH
 
 
 
 #ifdef BLUETOOTH
-
-
 #include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32CamDD", true, 115200));
-
-
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32Cam", true, 115200));
 #else
-
 #include "wifidumbdisplay.h"
 const char* ssid = <wifi SSID>;
 const char* password = <wifi password>;
 DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
-
 #endif
 
 
+
+const int imageLayerWidth = 1024;
+const int imageLayerHeight = 768;
 const char* imageName = "esp32camdd_test.jpg";
+
 
 LcdDDLayer* flashLayer;
 GraphicalDDLayer* imageLayer;
 
 
-
-#ifdef HAS_ESP32_CAM
-  // Used to disable brownout detection
- #include "soc/soc.h"
- #include "soc/rtc_cntl_reg.h"
+#ifdef DISABLE_BROWNOUT
+// Used to disable brownout detection
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
 #endif
 
 
@@ -43,23 +44,26 @@ void captureAndSaveImage(bool useFlash);
 void setupFlashPWM();
 
 
+
+bool cameraReady = false;
 DDValueRecord<bool> flashOn(false, true);
 
-//bool ready = false;
 void setup() {
 
+#ifdef DISABLE_BROWNOUT
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);     // Turn-off the 'brownout detector'
+#endif
 
-#ifdef HAS_ESP32_CAM
+#ifdef ENABLE_ESP32_CAM
    //pinMode(indicatorLED, OUTPUT);
    //digitalWrite(indicatorLED, HIGH);
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);     // Turn-off the 'brownout detector'
   setupFlashPWM();    // configure PWM for the illumination LED
 #endif
 
   flashLayer = dumbdisplay.createLcdLayer(12, 1);
   flashLayer->enableFeedback("f");
 
-  imageLayer = dumbdisplay.createGraphicalLayer(500, 400);
+  imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
   imageLayer->backgroundColor("ivory");
   imageLayer->padding(10);
   imageLayer->border(20, "blue", "round");
@@ -69,12 +73,13 @@ void setup() {
   dumbdisplay.configAutoPin(DD_AP_VERT);
 
 
-#ifdef HAS_ESP32_CAM
+#ifdef ENABLE_ESP32_CAM
   dumbdisplay.writeComment("Initializing camera ...");
-  if (!initialiseCamera()) {
-    dumbdisplay.writeComment("... failed to initialize camera!");
-  } else {
+  cameraReady = initialiseCamera(); 
+  if (cameraReady) {
     dumbdisplay.writeComment("... initialized camera!");
+  } else {
+    dumbdisplay.writeComment("... failed to initialize camera!");
   }
 #else
   dumbdisplay.writeComment("No camera!");
@@ -102,10 +107,14 @@ void loop() {
 
   feedback = imageLayer->getFeedback();
   if (feedback != NULL) {
-#ifdef HAS_ESP32_CAM
-    captureAndSaveImage(flashOn);
+#ifdef ENABLE_ESP32_CAM
+    if (cameraReady) {
+     captureAndSaveImage(flashOn);
+    } else {
+      dumbdisplay.writeComment("!!! camera not ready !!!");
+    }
 #else    
-    dumbdisplay.capture(imageName, 640, 480);
+    dumbdisplay.capture(imageName, imageLayerWidth, imageLayerHeight);
 #endif
     imageLayer->unloadImageFile(imageName);
     imageLayer->drawImageFileFit(imageName);
@@ -115,7 +124,7 @@ void loop() {
 
 
 
-#ifdef HAS_ESP32_CAM
+#ifdef ENABLE_ESP32_CAM
 
 
 
