@@ -2053,6 +2053,10 @@ void DumbDisplay::tone(uint32_t freq, uint32_t duration) {
   _Connect();
   _sendCommand2("", C_TONE, TO_C_INT(freq), TO_C_INT(duration));
 }
+void DumbDisplay::saveImage(const String& imageName, const uint8_t *bytes, int byteCount) {
+  _sendCommand1("", C_SAVEIMG, imageName);
+  _sendByteArrayAfterCommand(bytes, byteCount);
+}
 void DumbDisplay::debugOnly(int i) {
   _sendCommand2("", "DEBUGONLY", String(i), TO_C_INT(i));
   uint8_t bytes[i];

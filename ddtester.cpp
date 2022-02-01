@@ -604,8 +604,13 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
   }
 
   if (true) {
-    dumbdisplay.writeComment("DEBUG ONLY");
-    dumbdisplay.debugOnly(512);
+    int size = 16;
+#if defined(ESP32) || defined(ESP8266)
+    size = 2048; 
+#endif
+    dumbdisplay.writeComment("DEBUG ONLY >>>");
+    dumbdisplay.debugOnly(size);
+    dumbdisplay.writeComment(">>> (" + String(size) + ") DEBUG ONLY");
   }
 
   if (true) {

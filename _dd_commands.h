@@ -4,6 +4,7 @@
 #define C_SAVEC            "#03"
 #define C_PLAYC            "#04"
 #define C_KAL              "#05"
+#define C_SAVEIMG          "#06"
 
 #define C_border           "#10"
 #define C_padding          "#11" 

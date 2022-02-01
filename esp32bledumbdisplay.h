@@ -5,8 +5,12 @@
 #ifndef esp32bledumbdisplay_h
 #define esp32bledumbdisplay_h
 
-#ifndef DD_4_ESP32
-#error DD_4_ESP32 need be defined in order to use DumbDisplay for ESP32 BLE
+// #ifndef DD_4_ESP32
+// #error DD_4_ESP32 need be defined in order to use DumbDisplay for ESP32 BLE
+// #else
+
+#ifndef ESP32
+#error DDBLESerialIO is for ESP32
 #else
 
 #include <BLEDevice.h>
@@ -54,7 +58,7 @@ class DDBLESerialIO: public DDInputOutput {
       pCallbacks->print(p);
     }
     void write(uint8_t b) {
-      pCallbacks->write(p); 
+      pCallbacks->write(b); 
     }
     bool preConnect(bool firstCall) {
 #ifdef DD_DEBUG_BLE

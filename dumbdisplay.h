@@ -738,12 +738,13 @@ class DumbDisplay {
     void loadLayerCommands(const String& id);
     /* capture and save display as image */
     /* IMPORTANT: old file with the same name will be  replaced */
-    /* - imageFileName: name of image file; if it ends with ".png", saved image format will be PNG; other, saved image format will be JPED */
+    /* - imageFileName: name of image file; if it ends with ".png", saved image format will be PNG; other, saved image format will be JPEG */
     /* - width / height: size of the display on which to render the layers */ 
     void capture(const String& imageFileName, int width, int height);
     /* write out a comment to DD */
     void writeComment(const String& comment);
     void tone(uint32_t freq, uint32_t duration);
+    void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
     void debugOnly(int i);
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  

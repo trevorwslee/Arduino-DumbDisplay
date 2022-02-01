@@ -5,9 +5,14 @@
 #ifndef esp32dumbdisplay_h
 #define esp32dumbdisplay_h
 
-#ifndef DD_4_ESP32
-#error DD_4_ESP32 need be defined in order to use DumbDisplay for ESP32
+// #ifndef DD_4_ESP32
+// #error DD_4_ESP32 need be defined in order to use DumbDisplay for ESP32
+// #else
+
+#ifndef ESP32
+#error DDBluetoothSerialIO is for ESP32
 #else
+
 
 #include "BluetoothSerial.h"
 #include "dumbdisplay.h"
