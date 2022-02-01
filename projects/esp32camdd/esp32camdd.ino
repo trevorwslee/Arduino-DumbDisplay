@@ -23,9 +23,11 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
 
 #endif
 
+
 const char* imageName = "esp32camdd_test.jpg";
 
-GraphicalDDLayer* pGraphical;
+LcdDDLayer* flashLayer;
+GraphicalDDLayer* imageLayer;
 
 
 
@@ -41,6 +43,8 @@ void captureAndSaveImage(bool useFlash);
 void setupFlashPWM();
 
 
+DDValueRecord<bool> flashOn(false, true);
+
 //bool ready = false;
 void setup() {
 
@@ -52,11 +56,17 @@ void setup() {
   setupFlashPWM();    // configure PWM for the illumination LED
 #endif
 
-  pGraphical = dumbdisplay.createGraphicalLayer(500, 400);
-  pGraphical->backgroundColor("ivory");
-  pGraphical->padding(10);
-  pGraphical->border(20, "blue", "round");
-  pGraphical->enableFeedback("f");
+  flashLayer = dumbdisplay.createLcdLayer(12, 1);
+  flashLayer->enableFeedback("f");
+
+  imageLayer = dumbdisplay.createGraphicalLayer(500, 400);
+  imageLayer->backgroundColor("ivory");
+  imageLayer->padding(10);
+  imageLayer->border(20, "blue", "round");
+  imageLayer->enableFeedback("f");
+
+
+  dumbdisplay.configAutoPin(DD_AP_VERT);
 
 
 #ifdef HAS_ESP32_CAM
@@ -70,22 +80,35 @@ void setup() {
   dumbdisplay.writeComment("No camera!");
 #endif
 
-  pGraphical->drawImageFileFit("dumbdisplay.png");
+  imageLayer->drawImageFileFit("dumbdisplay.png");
 
 
 }
 void loop() {
-  const DDFeedback* pFeedback = pGraphical->getFeedback();
-  if (pFeedback != NULL) {
+  if (flashOn.record()) {
+    if (flashOn) {
+      flashLayer->writeCenteredLine("FLASH ON");
+    } else {
+      flashLayer->writeCenteredLine("FLASH OFF");
+    }  
+  }
+
+  const DDFeedback* feedback = NULL;
+  
+  feedback = flashLayer->getFeedback();
+  if (feedback != NULL) {
+    flashOn = !flashOn;
+  }
+
+  feedback = imageLayer->getFeedback();
+  if (feedback != NULL) {
 #ifdef HAS_ESP32_CAM
-    //dumbdisplay.writeComment("Capture and save image ...");
-    captureAndSaveImage(true);
-    //dumbdisplay.writeComment("... done capture and save image!");
+    captureAndSaveImage(flashOn);
 #else    
     dumbdisplay.capture(imageName, 640, 480);
 #endif
-    pGraphical->unloadImageFile(imageName);
-    pGraphical->drawImageFileFit(imageName);
+    imageLayer->unloadImageFile(imageName);
+    imageLayer->drawImageFileFit(imageName);
   }
 }
 
@@ -182,11 +205,11 @@ const bool serialDebug = 1;                            // show debug info. on se
  #define PCLK_GPIO_NUM     22      // pixel_clock_pin
 
 
-uint32_t lastStatus = millis();           // last time status light changed status (to flash all ok led)
- bool sdcardPresent;                       // flag if an sd card is detected
- int imageCounter;                         // image file name on sd card counter
- String spiffsFilename = "/image.jpg";     // image name to use when storing in spiffs
- String ImageResDetails = "Unknown";       // image resolution info
+// uint32_t lastStatus = millis();           // last time status light changed status (to flash all ok led)
+//  bool sdcardPresent;                       // flag if an sd card is detected
+//  int imageCounter;                         // image file name on sd card counter
+//  String spiffsFilename = "/image.jpg";     // image name to use when storing in spiffs
+//  String ImageResDetails = "Unknown";       // image resolution info
 
 
 
@@ -308,161 +331,27 @@ void setupFlashPWM() {
 
 void captureAndSaveImage(bool useFlash) {
 
-//  byte sRes = 0;                // result flag
-   //fs::FS &fs = SD_MMC;          // sd card file system
+  if (useFlash) brightLed(255);   // change LED brightness (0 - 255)
+  camera_fb_t *fb = esp_camera_fb_get();             // capture image frame from camera
+  if (useFlash) brightLed(0);   // change LED brightness back to previous state
+  if (fb == NULL) {
+    if (serialDebug) Serial.println("Error: Camera capture failed");
+     return;
+  }
 
- // capture the image from camera
-   //int currentBrightness = brightLEDbrightness;
-   if (useFlash) brightLed(255);   // change LED brightness (0 - 255)
-   camera_fb_t *fb = esp_camera_fb_get();             // capture image frame from camera
-   if (useFlash) brightLed(0);   // change LED brightness back to previous state
-   if (!fb) {
-     if (serialDebug) Serial.println("Error: Camera capture failed");
-     return/* 0*/;
-   }
-
-   if (serialDebug) {
+  if (serialDebug) {
      Serial.print("Captured image with ");
      Serial.print(fb->len);
      Serial.println(" bytes");
-   }
+  }
 
-   dumbdisplay.writeComment("Saving image (" + String(fb->len) + ") ...");
-   dumbdisplay.saveImage(imageName, fb->buf, fb->len);
-   dumbdisplay.writeComment("... save image");
-
-//  // save image to Spiffs
-//    if (!sdcardPresent) {
-//      if (serialDebug) Serial.println("Storing image to spiffs only");
-//      SPIFFS.remove(spiffsFilename);                         // if file name already exists delete it
-//      File file = SPIFFS.open(spiffsFilename, FILE_WRITE);   // create new file
-//      if (!file) {
-//        if (serialDebug) Serial.println("Failed to create file in Spiffs - will format and try again");
-//        if (!SPIFFS.format()) {                              // format spiffs
-//          if (serialDebug) Serial.println("Spiffs format failed");
-//        } else {
-//          file = SPIFFS.open(spiffsFilename, FILE_WRITE);    // try again to create new file
-//          if (!file) {
-//            if (serialDebug) Serial.println("Still unable to create file in spiffs");
-//          }
-//        }
-//      }
-//      if (file) {       // if file has been created ok write image data to it
-//        if (file.write(fb->buf, fb->len)) {
-//          sRes = 1;    // flag as saved ok
-//        } else {
-//          if (serialDebug) Serial.println("Error: failed to write image data to spiffs file");
-//        }
-//      }
-//      if (sRes == 1 && serialDebug) {
-//        Serial.print("The picture has been saved to Spiffs as " + spiffsFilename);
-//        Serial.print(" - Size: ");
-//        Serial.print(file.size());
-//        Serial.println(" bytes");
-//      }
-//      file.close();
-//    }
+  dumbdisplay.writeComment("Saving image (" + String(fb->len) + ") ...");
+  dumbdisplay.saveImage(imageName, fb->buf, fb->len);
+  dumbdisplay.writeComment("... save image");
 
 
-//  // save the image to sd card
-//    if (sdcardPresent) {
-//      if (serialDebug) Serial.printf("Storing image #%d to sd card \n", imageCounter);
-//      String SDfilename = "/img/" + String(imageCounter + 1) + ".jpg";              // build the image file name
-//      File file = fs.open(SDfilename, FILE_WRITE);                                  // create file on sd card
-//      if (!file) {
-//        if (serialDebug) Serial.println("Error: Failed to create file on sd-card: " + SDfilename);
-//      } else {
-//        if (file.write(fb->buf, fb->len)) {                                         // File created ok so save image to it
-//          if (serialDebug) Serial.println("Image saved to sd card");
-//          imageCounter ++;                                                          // increment image counter
-//          sRes = 2;    // flag as saved ok
-//        } else {
-//          if (serialDebug) Serial.println("Error: failed to save image data file on sd card");
-//        }
-//        file.close();              // close image file on sd card
-//      }
-//    }
-
- esp_camera_fb_return(fb);        // return frame so memory can be released
-
- //return sRes;
-
-} // storeImage
-
-
-byte storeImage() {
-
- byte sRes = 0;                // result flag
- fs::FS &fs = SD_MMC;          // sd card file system
-
- // capture the image from camera
-   int currentBrightness = 255;//brightLEDbrightness;
-   if (flashRequired) brightLed(255);   // change LED brightness (0 - 255)
-   camera_fb_t *fb = esp_camera_fb_get();             // capture image frame from camera
-   if (flashRequired) brightLed(currentBrightness);   // change LED brightness back to previous state
-   if (!fb) {
-     if (serialDebug) Serial.println("Error: Camera capture failed");
-     return 0;
-   }
-
- // save image to Spiffs
-   if (!sdcardPresent) {
-     if (serialDebug) Serial.println("Storing image to spiffs only");
-     SPIFFS.remove(spiffsFilename);                         // if file name already exists delete it
-     File file = SPIFFS.open(spiffsFilename, FILE_WRITE);   // create new file
-     if (!file) {
-       if (serialDebug) Serial.println("Failed to create file in Spiffs - will format and try again");
-       if (!SPIFFS.format()) {                              // format spiffs
-         if (serialDebug) Serial.println("Spiffs format failed");
-       } else {
-         file = SPIFFS.open(spiffsFilename, FILE_WRITE);    // try again to create new file
-         if (!file) {
-           if (serialDebug) Serial.println("Still unable to create file in spiffs");
-         }
-       }
-     }
-     if (file) {       // if file has been created ok write image data to it
-       if (file.write(fb->buf, fb->len)) {
-         sRes = 1;    // flag as saved ok
-       } else {
-         if (serialDebug) Serial.println("Error: failed to write image data to spiffs file");
-       }
-     }
-     if (sRes == 1 && serialDebug) {
-       Serial.print("The picture has been saved to Spiffs as " + spiffsFilename);
-       Serial.print(" - Size: ");
-       Serial.print(file.size());
-       Serial.println(" bytes");
-     }
-     file.close();
-   }
-
-
- // save the image to sd card
-   if (sdcardPresent) {
-     if (serialDebug) Serial.printf("Storing image #%d to sd card \n", imageCounter);
-     String SDfilename = "/img/" + String(imageCounter + 1) + ".jpg";              // build the image file name
-     File file = fs.open(SDfilename, FILE_WRITE);                                  // create file on sd card
-     if (!file) {
-       if (serialDebug) Serial.println("Error: Failed to create file on sd-card: " + SDfilename);
-     } else {
-       if (file.write(fb->buf, fb->len)) {                                         // File created ok so save image to it
-         if (serialDebug) Serial.println("Image saved to sd card");
-         imageCounter ++;                                                          // increment image counter
-         sRes = 2;    // flag as saved ok
-       } else {
-         if (serialDebug) Serial.println("Error: failed to save image data file on sd card");
-       }
-       file.close();              // close image file on sd card
-     }
-   }
-
- esp_camera_fb_return(fb);        // return frame so memory can be released
-
- return sRes;
-
-} // storeImage
-
+  esp_camera_fb_return(fb);        // return frame so memory can be released
+}
 
 
 
