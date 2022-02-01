@@ -6,6 +6,11 @@
 #define DISABLE_BROWNOUT
 #endif
 
+#ifdef ENABLE_ESP32_CAM
+#include "esp_camera.h"         // https://github.com/espressif/esp32-camera
+#endif
+
+
 
 #define BLUETOOTH
 
@@ -33,13 +38,13 @@ GraphicalDDLayer* imageLayer;
 
 
 #ifdef DISABLE_BROWNOUT
-// Used to disable brownout detection
+// for disable brownout detection
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
 #endif
 
 
-bool initialiseCamera();
+bool initialiseCamera(framesize_t frameSize);
 void captureAndSaveImage(bool useFlash);
 void setupFlashPWM();
 
@@ -75,7 +80,7 @@ void setup() {
 
 #ifdef ENABLE_ESP32_CAM
   dumbdisplay.writeComment("Initializing camera ...");
-  cameraReady = initialiseCamera(); 
+  cameraReady = initialiseCamera(FRAMESIZE_VGA); 
   if (cameraReady) {
     dumbdisplay.writeComment("... initialized camera!");
   } else {
@@ -134,8 +139,6 @@ const bool serialDebug = 1;                            // show debug info. on se
 
 
 
-#include "esp_camera.h"         // https://github.com/espressif/esp32-camera
-
 
 // #include <base64.h>             // for encoding buffer to display image on page
 // #include <WiFi.h>
@@ -158,9 +161,9 @@ const bool serialDebug = 1;                            // show debug info. on se
  //#define useMCP23017 0                                  // if MCP23017 IO expander chip is being used (on pins 12 and 13)
 
  // Camera related
-   bool flashRequired = 1;                              // If flash to be used when capturing image (1 = yes)
-   framesize_t FRAME_SIZE_IMAGE = FRAMESIZE_VGA;        // Image resolution:
-                                                        //               default = "const framesize_t FRAME_SIZE_IMAGE = FRAMESIZE_VGA"
+  //  bool flashRequired = 1;                              // If flash to be used when capturing image (1 = yes)
+  //  framesize_t FRAME_SIZE_IMAGE = FRAMESIZE_VGA;        // Image resolution:
+  //                                                       //               default = "const framesize_t FRAME_SIZE_IMAGE = FRAMESIZE_VGA"
                                                         //               160x120 (QQVGA), 128x160 (QQVGA2), 176x144 (QCIF), 240x176 (HQVGA),
                                                         //               320x240 (QVGA), 400x296 (CIF), 640x480 (VGA, default), 800x600 (SVGA),
                                                         //               1024x768 (XGA), 1280x1024 (SXGA), 1600x1200 (UXGA)
@@ -260,7 +263,7 @@ bool cameraImageSettings() {
 
 
 
-bool initialiseCamera() {
+bool initialiseCamera(framesize_t frameSize) {
 
    camera_config_t config;
    config.ledc_channel = LEDC_CHANNEL_0;
@@ -283,7 +286,7 @@ bool initialiseCamera() {
    config.pin_reset = RESET_GPIO_NUM;
    config.xclk_freq_hz = 20000000;               // XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
    config.pixel_format = PIXFORMAT;              // Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
-   config.frame_size = FRAME_SIZE_IMAGE;         // Image sizes: 160x120 (QQVGA), 128x160 (QQVGA2), 176x144 (QCIF), 240x176 (HQVGA), 320x240 (QVGA),
+   config.frame_size = frameSize/*FRAME_SIZE_IMAGE*/;         // Image sizes: 160x120 (QQVGA), 128x160 (QQVGA2), 176x144 (QCIF), 240x176 (HQVGA), 320x240 (QVGA),
                                                  //              400x296 (CIF), 640x480 (VGA, default), 800x600 (SVGA), 1024x768 (XGA), 1280x1024 (SXGA),
                                                  //              1600x1200 (UXGA)
    config.jpeg_quality = 15;                     // 0-63 lower number means higher quality
