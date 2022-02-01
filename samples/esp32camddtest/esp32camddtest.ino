@@ -34,6 +34,7 @@ const char* imageName = "esp32camdd_test.jpg";
 
 
 LcdDDLayer* flashLayer;
+LcdDDLayer* imageSizeLayer;
 GraphicalDDLayer* imageLayer;
 
 
@@ -44,9 +45,9 @@ GraphicalDDLayer* imageLayer;
 #endif
 
 
-void setupFlashPWM();
+//void setupFlashPWM();
 bool initialiseCamera(framesize_t frameSize);
-void captureAndSaveImage(bool useFlash);
+bool captureAndSaveImage(bool useFlash);
 
 
 
@@ -68,15 +69,19 @@ void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);     // Turn-off the 'brownout detector'
 #endif
 
-#ifdef ENABLE_ESP32_CAM
-   //pinMode(indicatorLED, OUTPUT);
-   //digitalWrite(indicatorLED, HIGH);
-  setupFlashPWM();    // configure PWM for the illumination LED
-#endif
+// #ifdef ENABLE_ESP32_CAM
+//    //pinMode(indicatorLED, OUTPUT);
+//    //digitalWrite(indicatorLED, HIGH);
+//   setupFlashPWM();    // configure PWM for the illumination LED
+// #endif
 
   flashLayer = dumbdisplay.createLcdLayer(12, 1);
   flashLayer->border(1, "darkgray", "round");
   flashLayer->enableFeedback("f");
+
+  imageSizeLayer = dumbdisplay.createLcdLayer(12, 1);
+  imageSizeLayer->border(1, "darkgray", "round");
+  imageSizeLayer->enableFeedback("f");
 
   imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
   imageLayer->backgroundColor("ivory");
@@ -85,7 +90,10 @@ void setup() {
   imageLayer->enableFeedback("f");
 
 
-  dumbdisplay.configAutoPin(DD_AP_VERT);
+  dumbdisplay.configAutoPin(DD_AP_VERT_2(
+    DD_AP_HORI_2(flashLayer->getLayerId(), imageSizeLayer->getLayerId()),
+    imageLayer->getLayerId()
+  ));
 
 
 // #ifdef ENABLE_ESP32_CAM
@@ -111,20 +119,26 @@ void loop() {
     switch (imageSize) {
       case 1:
         frameSize = FRAMESIZE_SVGA;
+        imageSizeLayer->writeCenteredLine("800x600");
         break;
       case 2: 
         frameSize = FRAMESIZE_XGA;
+        imageSizeLayer->writeCenteredLine("1024x768");
         break;
       default:
         frameSize = FRAMESIZE_VGA;
+        imageSizeLayer->writeCenteredLine("640x480");
+      if (true) {
+        frameSize = FRAMESIZE_VGA;
+      }  
     }
-  dumbdisplay.writeComment("Initializing camera ...");
-  cameraReady = initialiseCamera(frameSize); 
-  if (cameraReady) {
-    dumbdisplay.writeComment("... initialized camera!");
-  } else {
-    dumbdisplay.writeComment("... failed to initialize camera!");
-  }
+    dumbdisplay.writeComment("Initializing camera ...");
+    cameraReady = initialiseCamera(frameSize); 
+    if (cameraReady) {
+      dumbdisplay.writeComment("... initialized camera!");
+    } else {
+      dumbdisplay.writeComment("... failed to initialize camera!");
+    }
 #else
   dumbdisplay.writeComment("No camera!");
 #endif
@@ -144,19 +158,38 @@ void loop() {
     flashOn = !flashOn;
   }
 
+  feedback = imageSizeLayer->getFeedback();
+  if (feedback != NULL) {
+    if (imageSize < 2) {
+      imageSize = imageSize + 1;
+    } else {
+      imageSize = 0;
+    }
+  }
+
   feedback = imageLayer->getFeedback();
   if (feedback != NULL) {
 #ifdef ENABLE_ESP32_CAM
     if (cameraReady) {
-     captureAndSaveImage(flashOn);
+      if (false) {
+        if (flashOn) {
+          dumbdisplay.writeComment("**** ON *****");
+        }
+      }
+      if (captureAndSaveImage(flashOn)) {
+        imageLayer->unloadImageFile(imageName);
+        imageLayer->drawImageFileFit(imageName);
+      } else {
+        dumbdisplay.writeComment("Failed to capture image!");
+      }
     } else {
       dumbdisplay.writeComment("!!! camera not ready !!!");
+      //imageLayer->unloadImageFile(imageName);
+      //imageLayer->drawImageFileFit("dumbdisplay.png");
     }
 #else    
     dumbdisplay.capture(imageName, imageLayerWidth, imageLayerHeight);
 #endif
-    imageLayer->unloadImageFile(imageName);
-    imageLayer->drawImageFileFit(imageName);
   }
 }
 
@@ -297,7 +330,14 @@ bool cameraImageSettings() {
 
 
 
+void setupFlashPWM();
+
 bool initialiseCamera(framesize_t frameSize) {
+   if (true) {
+      esp_camera_deinit();     // disable camera
+      delay(50);
+      setupFlashPWM();    // configure PWM for the illumination LED
+   }
 
    camera_config_t config;
    config.ledc_channel = LEDC_CHANNEL_0;
@@ -352,7 +392,7 @@ bool initialiseCamera(framesize_t frameSize) {
 void brightLed(byte ledBrightness){
    //brightLEDbrightness = ledBrightness;    // store setting
    ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
-   //if (serialDebug) Serial.println("Brightness changed to " + String(ledBrightness) );
+   if (serialDebug) Serial.println("Brightness used = " + String(ledBrightness) );
 }
 
 
@@ -375,14 +415,14 @@ void setupFlashPWM() {
 // }
 
 
-void captureAndSaveImage(bool useFlash) {
+bool captureAndSaveImage(bool useFlash) {
 
   if (useFlash) brightLed(255);   // change LED brightness (0 - 255)
   camera_fb_t *fb = esp_camera_fb_get();             // capture image frame from camera
   if (useFlash) brightLed(0);   // change LED brightness back to previous state
   if (fb == NULL) {
     if (serialDebug) Serial.println("Error: Camera capture failed");
-     return;
+     return false;
   }
 
   if (serialDebug) {
@@ -397,6 +437,8 @@ void captureAndSaveImage(bool useFlash) {
 
 
   esp_camera_fb_return(fb);        // return frame so memory can be released
+
+  return true;
 }
 
 
