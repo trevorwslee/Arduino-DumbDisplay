@@ -1,19 +1,8 @@
 #include <Arduino.h>
-
-
-#ifdef ESP32
-#define ENABLE_ESP32_CAM
-#define DISABLE_BROWNOUT
-#endif
-
-#ifdef ENABLE_ESP32_CAM
-#include "esp_camera.h"         // https://github.com/espressif/esp32-camera
-#endif
-
+#include "esp_camera.h" 
 
 
 #define BLUETOOTH
-
 
 
 #ifdef BLUETOOTH
@@ -28,6 +17,7 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
 
 
 
+
 const int imageLayerWidth = 1024;
 const int imageLayerHeight = 768;
 const char* imageName = "esp32camdd_test.jpg";
@@ -38,43 +28,16 @@ LcdDDLayer* imageSizeLayer;
 GraphicalDDLayer* imageLayer;
 
 
-#ifdef DISABLE_BROWNOUT
-// for disable brownout detection
-#include "soc/soc.h"
-#include "soc/rtc_cntl_reg.h"
-#endif
-
-
-//void setupFlashPWM();
 bool initialiseCamera(framesize_t frameSize);
 bool captureAndSaveImage(bool useFlash);
-
 
 
 bool cameraReady = false;
 DDValueRecord<bool> flashOn(false, true);
 DDValueRecord<int> imageSize(0, -1);
 
-// framesize_t getFrameSize() {
-//   switch (imageSize) {
-//     case 1: return FRAMESIZE_SVGA;
-//     case 2: return FRAMESIZE_XGA;
-//     default: return FRAMESIZE_VGA;
-//   }
-// }
 
 void setup() {
-
-#ifdef DISABLE_BROWNOUT
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);     // Turn-off the 'brownout detector'
-#endif
-
-// #ifdef ENABLE_ESP32_CAM
-//    //pinMode(indicatorLED, OUTPUT);
-//    //digitalWrite(indicatorLED, HIGH);
-//   setupFlashPWM();    // configure PWM for the illumination LED
-// #endif
-
   flashLayer = dumbdisplay.createLcdLayer(12, 1);
   flashLayer->border(1, "darkgray", "round");
   flashLayer->enableFeedback("f");
@@ -95,26 +58,11 @@ void setup() {
     imageLayer->getLayerId()
   ));
 
-
-// #ifdef ENABLE_ESP32_CAM
-//   dumbdisplay.writeComment("Initializing camera ...");
-//   cameraReady = initialiseCamera(getFrameSize()/*FRAMESIZE_VGA*/); 
-//   if (cameraReady) {
-//     dumbdisplay.writeComment("... initialized camera!");
-//   } else {
-//     dumbdisplay.writeComment("... failed to initialize camera!");
-//   }
-// #else
-//   dumbdisplay.writeComment("No camera!");
-// #endif
-
   imageLayer->drawImageFileFit("dumbdisplay.png");
-
-
 }
+
 void loop() {
   if (imageSize.record()) {
-#ifdef ENABLE_ESP32_CAM
     framesize_t frameSize;
     switch (imageSize) {
       case 1:
@@ -140,9 +88,6 @@ void loop() {
     } else {
       dumbdisplay.writeComment("... failed to initialize camera!");
     }
-#else
-  dumbdisplay.writeComment("No camera!");
-#endif
   }
   if (flashOn.record()) {
     if (flashOn) {
@@ -170,7 +115,6 @@ void loop() {
 
   feedback = imageLayer->getFeedback();
   if (feedback != NULL) {
-#ifdef ENABLE_ESP32_CAM
     if (cameraReady) {
       if (captureAndSaveImage(flashOn)) {
         imageLayer->unloadImageFile(imageName);
@@ -180,88 +124,26 @@ void loop() {
         dumbdisplay.writeComment("Failed to capture image!");
       }
     } else {
-      dumbdisplay.writeComment("!!! camera not ready !!!");
-      //imageLayer->unloadImageFile(imageName);
-      //imageLayer->drawImageFileFit("dumbdisplay.png");
+      dumbdisplay.writeComment("Camera not ready!");
     }
-#else    
-    dumbdisplay.capture(imageName, imageLayerWidth, imageLayerHeight);
-#endif
   }
 }
 
 
 
 
-#ifdef ENABLE_ESP32_CAM
-
-
-
 const bool serialDebug = 1;                            // show debug info. on serial port (1=enabled, disable if using pins 1 and 3 as gpio)
 
+#define PIXFORMAT PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
+// int cameraImageExposure = 0;                         // Camera exposure (0 - 1200)   If gain and exposure both set to zero then auto adjust is enabled
+// int cameraImageGain = 0;                             // Image gain (0 - 30)
+int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
 
+const int brightLED = 4;                             // onboard Illumination/flash LED pin (4)
+const int ledFreq = 5000;                            // PWM settings
+const int ledChannel = 15;                           // camera uses timer1
+const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
 
-
-
-
-// #include <base64.h>             // for encoding buffer to display image on page
-// #include <WiFi.h>
-// #include <WebServer.h>
-// #include <HTTPClient.h>
-// #include "driver/ledc.h"        // used to configure pwm on illumination led
-
-// // spiffs used to store images if no sd card present
-#include <SPIFFS.h>
-#include <FS.h>                // gives file access on spiffs
-
-
- #include "SD_MMC.h"                         // sd card - see https://randomnerdtutorials.com/esp32-cam-take-photo-save-microsd-card/
-//  #include <SPI.h>
-//  #include <FS.h>                             // gives file access
- #define SD_CS 5                             // sd chip select pin = 5
-
-
- 
- //#define useMCP23017 0                                  // if MCP23017 IO expander chip is being used (on pins 12 and 13)
-
- // Camera related
-  //  bool flashRequired = 1;                              // If flash to be used when capturing image (1 = yes)
-  //  framesize_t FRAME_SIZE_IMAGE = FRAMESIZE_VGA;        // Image resolution:
-  //                                                       //               default = "const framesize_t FRAME_SIZE_IMAGE = FRAMESIZE_VGA"
-                                                        //               160x120 (QQVGA), 128x160 (QQVGA2), 176x144 (QCIF), 240x176 (HQVGA),
-                                                        //               320x240 (QVGA), 400x296 (CIF), 640x480 (VGA, default), 800x600 (SVGA),
-                                                        //               1024x768 (XGA), 1280x1024 (SXGA), 1600x1200 (UXGA)
-   #define PIXFORMAT PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
-   int cameraImageExposure = 0;                         // Camera exposure (0 - 1200)   If gain and exposure both set to zero then auto adjust is enabled
-   int cameraImageGain = 0;                             // Image gain (0 - 30)
-   int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
-
- //const int TimeBetweenStatus = 600;                     // speed of flashing system running ok status light (milliseconds)
-
- //const int indicatorLED = 33;                           // onboard small LED pin (33)
-
- // Bright LED (Flash)
-   const int brightLED = 4;                             // onboard Illumination/flash LED pin (4)
-   //int brightLEDbrightness = 0;                         // initial brightness (0 - 255)
-   const int ledFreq = 5000;                            // PWM settings
-   const int ledChannel = 15;                           // camera uses timer1
-   const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
-
- //const int iopinA = 13;                                 // general io pin 13
- //const int iopinB = 12;                                 // general io pin 12 (must not be high at boot)
-
- //const int serialSpeed = 115200;                        // Serial data speed to use
-
- // NTP - Internet time
-  //  const char* ntpServer = "pool.ntp.org";
-  //  const char* TZ_INFO    = "GMT+0BST-1,M3.5.0/01:00:00,M10.5.0/02:00:00";  // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
-  //  long unsigned lastNTPtime;
-  //  tm timeinfo;
-  //  time_t now;
-
-// camera settings (for the standard - OV2640 - CAMERA_MODEL_AI_THINKER)
-// see: https://randomnerdtutorials.com/esp32-cam-camera-pin-gpios/
-// set camera resolution etc. in 'initialiseCamera()' and 'cameraImageSettings()'
  #define CAMERA_MODEL_AI_THINKER
  #define PWDN_GPIO_NUM     32      // power to camera (on/off)
  #define RESET_GPIO_NUM    -1      // -1 = not used
@@ -281,53 +163,42 @@ const bool serialDebug = 1;                            // show debug info. on se
  #define PCLK_GPIO_NUM     22      // pixel_clock_pin
 
 
-// uint32_t lastStatus = millis();           // last time status light changed status (to flash all ok led)
-//  bool sdcardPresent;                       // flag if an sd card is detected
-//  int imageCounter;                         // image file name on sd card counter
-//  String spiffsFilename = "/image.jpg";     // image name to use when storing in spiffs
-//  String ImageResDetails = "Unknown";       // image resolution info
-
-
-
-
-
-
-
 
 bool cameraImageSettings() {
 
   if (serialDebug) Serial.println("Applying camera settings");
 
    sensor_t *s = esp_camera_sensor_get();
-   // something to try?:     if (s->id.PID == OV3660_PID)
    if (s == NULL) {
      if (serialDebug) Serial.println("Error: problem reading camera sensor settings");
      return 0;
    }
 
-   // if both set to zero enable auto adjust
-   if (cameraImageExposure == 0 && cameraImageGain == 0) {
-     // enable auto adjust
-       s->set_gain_ctrl(s, 1);                       // auto gain on
-       s->set_exposure_ctrl(s, 1);                   // auto exposure on
-       s->set_awb_gain(s, 1);                        // Auto White Balance enable (0 or 1)
-       s->set_brightness(s, cameraImageBrightness);  // (-2 to 2) - set brightness
-   } else {
-     // Apply manual settings
-       s->set_gain_ctrl(s, 0);                       // auto gain off
-       s->set_awb_gain(s, 1);                        // Auto White Balance enable (0 or 1)
-       s->set_exposure_ctrl(s, 0);                   // auto exposure off
-       s->set_brightness(s, cameraImageBrightness);  // (-2 to 2) - set brightness
-       s->set_agc_gain(s, cameraImageGain);          // set gain manually (0 - 30)
-       s->set_aec_value(s, cameraImageExposure);     // set exposure manually  (0-1200)
-   }
+    // enable auto adjust
+    s->set_gain_ctrl(s, 1);                       // auto gain on
+    s->set_exposure_ctrl(s, 1);                   // auto exposure on
+    s->set_awb_gain(s, 1);                        // Auto White Balance enable (0 or 1)
+    s->set_brightness(s, cameraImageBrightness);  // (-2 to 2) - set brightness
 
    return 1;
 }  // cameraImageSettings
 
 
 
-void setupFlashPWM();
+void brightLed(byte ledBrightness){
+   ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
+   if (serialDebug) Serial.println("Brightness used = " + String(ledBrightness) );
+}
+
+
+
+void setupFlashPWM() {
+    ledcSetup(ledChannel, ledFreq, ledRresolution);
+    ledcAttachPin(brightLED, ledChannel);
+    brightLed(32);
+    brightLed(0);
+}
+
 
 bool initialiseCamera(framesize_t frameSize) {
    if (true) {
@@ -370,11 +241,6 @@ bool initialiseCamera(framesize_t frameSize) {
      config.frame_size = FRAMESIZE_CIF;
    }
 
-   //#if defined(CAMERA_MODEL_ESP_EYE)
-   //  pinMode(13, INPUT_PULLUP);
-   //  pinMode(14, INPUT_PULLUP);
-   //#endif
-
    esp_err_t camerr = esp_camera_init(&config);  // initialise the camera
    if (camerr != ESP_OK) {
      if (serialDebug) Serial.printf("ERROR: Camera init failed with error 0x%x", camerr);
@@ -385,31 +251,6 @@ bool initialiseCamera(framesize_t frameSize) {
    return (camerr == ESP_OK);                    // return boolean result of camera initialisation
 }
 
-// change illumination LED brightness
-void brightLed(byte ledBrightness){
-   //brightLEDbrightness = ledBrightness;    // store setting
-   ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
-   if (serialDebug) Serial.println("Brightness used = " + String(ledBrightness) );
-}
-
-
-
-void setupFlashPWM() {
-    ledcSetup(ledChannel, ledFreq, ledRresolution);
-    ledcAttachPin(brightLED, ledChannel);
-    brightLed(32/*brightLEDbrightness*/);
-    brightLed(0);
-}
-
-
-// void flashLED(int reps) {
-//  for(int x=0; x < reps; x++) {
-//    digitalWrite(indicatorLED,LOW);
-//    delay(1000);
-//    digitalWrite(indicatorLED,HIGH);
-//    delay(500);
-//  }
-// }
 
 
 bool captureAndSaveImage(bool useFlash) {
@@ -440,4 +281,3 @@ bool captureAndSaveImage(bool useFlash) {
 
 
 
-#endif
