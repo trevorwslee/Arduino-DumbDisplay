@@ -1504,6 +1504,10 @@ void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside)
 void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h) {
   _sendCommand3(layerId, C_loadimagefile, imageFileName, String(w), String(h));
 }
+void GraphicalDDLayer::cacheImage(const String& imageName, const uint8_t *bytes, int byteCount) {
+  _sendCommand2("", C_CACHEIMG, layerId, imageName);
+  _sendByteArrayAfterCommand(bytes, byteCount);
+}
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
 }
