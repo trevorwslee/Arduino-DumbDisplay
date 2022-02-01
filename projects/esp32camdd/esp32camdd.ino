@@ -1,13 +1,11 @@
 #include <Arduino.h>
 
 
-#define CONNECTED_CAMERA
-#define DUMBDISPLAY_UI
+#define HAS_ESP32_CAM
 
 #define BLUETOOTH
 
 
-#ifdef DUMBDISPLAY_UI
 
 #ifdef BLUETOOTH
 
@@ -29,10 +27,9 @@ const char* imageName = "esp32camdd_test.jpg";
 
 GraphicalDDLayer* pGraphical;
 
-#endif
 
 
-#ifdef CONNECTED_CAMERA
+#ifdef HAS_ESP32_CAM
   // Used to disable brownout detection
  #include "soc/soc.h"
  #include "soc/rtc_cntl_reg.h"
@@ -40,7 +37,7 @@ GraphicalDDLayer* pGraphical;
 
 
 bool initialiseCamera();
-void captureAndSaveImage();
+void captureAndSaveImage(bool useFlash);
 void setupFlashPWM();
 
 
@@ -48,28 +45,26 @@ void setupFlashPWM();
 void setup() {
 
 
-#ifdef CONNECTED_CAMERA
+#ifdef HAS_ESP32_CAM
    //pinMode(indicatorLED, OUTPUT);
    //digitalWrite(indicatorLED, HIGH);
-  //WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);     // Turn-off the 'brownout detector'
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);     // Turn-off the 'brownout detector'
   setupFlashPWM();    // configure PWM for the illumination LED
 #endif
 
-#ifdef DUMBDISPLAY_UI
-
   pGraphical = dumbdisplay.createGraphicalLayer(500, 400);
   pGraphical->backgroundColor("ivory");
-  //pGraphical->padding(20);
+  pGraphical->padding(10);
   pGraphical->border(20, "blue", "round");
   pGraphical->enableFeedback("f");
 
 
-#ifdef CONNECTED_CAMERA
-  dumbdisplay.writeComment("Initializing camera!");
+#ifdef HAS_ESP32_CAM
+  dumbdisplay.writeComment("Initializing camera ...");
   if (!initialiseCamera()) {
-    dumbdisplay.writeComment("Failed to initialize camera!");
+    dumbdisplay.writeComment("... failed to initialize camera!");
   } else {
-    dumbdisplay.writeComment("Initialized camera!");
+    dumbdisplay.writeComment("... initialized camera!");
   }
 #else
   dumbdisplay.writeComment("No camera!");
@@ -78,35 +73,26 @@ void setup() {
   pGraphical->drawImageFileFit("dumbdisplay.png");
 
 
-#else
-  Serial.begin(115200);
-  initialiseCamera();
-#endif
-
 }
 void loop() {
-#ifdef DUMBDISPLAY_UI
   const DDFeedback* pFeedback = pGraphical->getFeedback();
   if (pFeedback != NULL) {
-#ifdef CONNECTED_CAMERA
-    captureAndSaveImage();
+#ifdef HAS_ESP32_CAM
+    dumbdisplay.writeComment("Capture and save image ...");
+    captureAndSaveImage(true);
+    dumbdisplay.writeComment("... done capture and save image!");
 #else    
     dumbdisplay.capture(imageName, 640, 480);
 #endif
     pGraphical->unloadImageFile(imageName);
     pGraphical->drawImageFileFit(imageName);
   }
-#else
-  delay(2000);
-  Serial.println(">>> >>>");
-  captureAndSaveImage();
-#endif
 }
 
 
 
 
-#ifdef CONNECTED_CAMERA
+#ifdef HAS_ESP32_CAM
 
 
 
@@ -157,7 +143,7 @@ const bool serialDebug = 1;                            // show debug info. on se
 
  // Bright LED (Flash)
    const int brightLED = 4;                             // onboard Illumination/flash LED pin (4)
-   int brightLEDbrightness = 0;                         // initial brightness (0 - 255)
+   //int brightLEDbrightness = 0;                         // initial brightness (0 - 255)
    const int ledFreq = 5000;                            // PWM settings
    const int ledChannel = 15;                           // camera uses timer1
    const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
@@ -165,7 +151,7 @@ const bool serialDebug = 1;                            // show debug info. on se
  //const int iopinA = 13;                                 // general io pin 13
  //const int iopinB = 12;                                 // general io pin 12 (must not be high at boot)
 
- const int serialSpeed = 115200;                        // Serial data speed to use
+ //const int serialSpeed = 115200;                        // Serial data speed to use
 
  // NTP - Internet time
   //  const char* ntpServer = "pool.ntp.org";
@@ -295,9 +281,9 @@ bool initialiseCamera() {
 
 // change illumination LED brightness
 void brightLed(byte ledBrightness){
-   brightLEDbrightness = ledBrightness;    // store setting
+   //brightLEDbrightness = ledBrightness;    // store setting
    ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
-   if (serialDebug) Serial.println("Brightness changed to " + String(ledBrightness) );
+   //if (serialDebug) Serial.println("Brightness changed to " + String(ledBrightness) );
 }
 
 
@@ -305,7 +291,8 @@ void brightLed(byte ledBrightness){
 void setupFlashPWM() {
     ledcSetup(ledChannel, ledFreq, ledRresolution);
     ledcAttachPin(brightLED, ledChannel);
-    brightLed(brightLEDbrightness);
+    brightLed(64/*brightLEDbrightness*/);
+    brightLed(0);
 }
 
 
@@ -319,16 +306,16 @@ void setupFlashPWM() {
 // }
 
 
-void captureAndSaveImage() {
+void captureAndSaveImage(bool useFlash) {
 
 //  byte sRes = 0;                // result flag
    //fs::FS &fs = SD_MMC;          // sd card file system
 
  // capture the image from camera
-   int currentBrightness = brightLEDbrightness;
-   if (flashRequired) brightLed(255);   // change LED brightness (0 - 255)
+   //int currentBrightness = brightLEDbrightness;
+   if (useFlash) brightLed(255);   // change LED brightness (0 - 255)
    camera_fb_t *fb = esp_camera_fb_get();             // capture image frame from camera
-   if (flashRequired) brightLed(currentBrightness);   // change LED brightness back to previous state
+   if (useFlash) brightLed(0);   // change LED brightness back to previous state
    if (!fb) {
      if (serialDebug) Serial.println("Error: Camera capture failed");
      return/* 0*/;
@@ -412,7 +399,7 @@ byte storeImage() {
  fs::FS &fs = SD_MMC;          // sd card file system
 
  // capture the image from camera
-   int currentBrightness = brightLEDbrightness;
+   int currentBrightness = 255;//brightLEDbrightness;
    if (flashRequired) brightLed(255);   // change LED brightness (0 - 255)
    camera_fb_t *fb = esp_camera_fb_get();             // capture image frame from camera
    if (flashRequired) brightLed(currentBrightness);   // change LED brightness back to previous state
