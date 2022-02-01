@@ -78,9 +78,9 @@ void loop() {
   const DDFeedback* pFeedback = pGraphical->getFeedback();
   if (pFeedback != NULL) {
 #ifdef HAS_ESP32_CAM
-    dumbdisplay.writeComment("Capture and save image ...");
+    //dumbdisplay.writeComment("Capture and save image ...");
     captureAndSaveImage(true);
-    dumbdisplay.writeComment("... done capture and save image!");
+    //dumbdisplay.writeComment("... done capture and save image!");
 #else    
     dumbdisplay.capture(imageName, 640, 480);
 #endif
@@ -291,7 +291,7 @@ void brightLed(byte ledBrightness){
 void setupFlashPWM() {
     ledcSetup(ledChannel, ledFreq, ledRresolution);
     ledcAttachPin(brightLED, ledChannel);
-    brightLed(64/*brightLEDbrightness*/);
+    brightLed(32/*brightLEDbrightness*/);
     brightLed(0);
 }
 
@@ -327,12 +327,9 @@ void captureAndSaveImage(bool useFlash) {
      Serial.println(" bytes");
    }
 
-#ifdef DUMBDISPLAY_UI
    dumbdisplay.writeComment("Saving image (" + String(fb->len) + ") ...");
    dumbdisplay.saveImage(imageName, fb->buf, fb->len);
    dumbdisplay.writeComment("... save image");
-#else
-#endif
 
 //  // save image to Spiffs
 //    if (!sdcardPresent) {
