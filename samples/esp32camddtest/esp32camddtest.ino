@@ -125,12 +125,13 @@ void loop() {
         frameSize = FRAMESIZE_XGA;
         imageSizeLayer->writeCenteredLine("1024x768");
         break;
+      case 3:  
+        frameSize = FRAMESIZE_HD;
+        imageSizeLayer->writeCenteredLine("1280x720");
+        break;
       default:
         frameSize = FRAMESIZE_VGA;
         imageSizeLayer->writeCenteredLine("640x480");
-      if (true) {
-        frameSize = FRAMESIZE_VGA;
-      }  
     }
     dumbdisplay.writeComment("Initializing camera ...");
     cameraReady = initialiseCamera(frameSize); 
@@ -160,7 +161,7 @@ void loop() {
 
   feedback = imageSizeLayer->getFeedback();
   if (feedback != NULL) {
-    if (imageSize < 2) {
+    if (imageSize < 3) {
       imageSize = imageSize + 1;
     } else {
       imageSize = 0;
@@ -171,13 +172,9 @@ void loop() {
   if (feedback != NULL) {
 #ifdef ENABLE_ESP32_CAM
     if (cameraReady) {
-      if (false) {
-        if (flashOn) {
-          dumbdisplay.writeComment("**** ON *****");
-        }
-      }
       if (captureAndSaveImage(flashOn)) {
         imageLayer->unloadImageFile(imageName);
+        imageLayer->clear();
         imageLayer->drawImageFileFit(imageName);
       } else {
         dumbdisplay.writeComment("Failed to capture image!");
