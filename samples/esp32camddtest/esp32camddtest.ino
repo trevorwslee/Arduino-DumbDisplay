@@ -34,10 +34,12 @@ LcdDDLayer* captureModeLayer;
 GraphicalDDLayer* imageLayer;
 
 
-LcdDDLayer* createAndSetupButton(DumbDisplay& dumbdisplay, const char* fontColor = "blue") {
-  LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(10, 1);
-  buttonLayer->pixelColor(fontColor);
-  buttonLayer->border(1, "darkgray", "round");
+LcdDDLayer* createAndSetupButton(DumbDisplay& dumbdisplay, const char* bgColor = "blue") {
+  LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(11, 1);
+  buttonLayer->border(2, "gray", "round");
+  buttonLayer->padding(1);
+  buttonLayer->backgroundColor(bgColor);
+  buttonLayer->pixelColor("white");
   buttonLayer->enableFeedback("f");
   return buttonLayer;
 }
