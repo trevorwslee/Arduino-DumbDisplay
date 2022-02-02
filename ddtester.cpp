@@ -606,11 +606,14 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
   if (true) {
     int size = 16;
 #if defined(ESP32) || defined(ESP8266)
-    size = 2048; 
+    //size = 2048;
+    size = 4096; 
 #endif
     dumbdisplay.writeComment("DEBUG ONLY >>>");
+    long startMs = millis();
     dumbdisplay.debugOnly(size);
-    dumbdisplay.writeComment(">>> (" + String(size) + ") DEBUG ONLY");
+    long takenMs = millis() - startMs;
+    dumbdisplay.writeComment(">>> " + String((float) takenMs / 1000.0) + "s >>> (" + String(size) + ") DEBUG ONLY");
   }
 
   if (true) {

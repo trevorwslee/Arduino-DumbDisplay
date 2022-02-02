@@ -44,6 +44,9 @@ class DDBluetoothSerialIO: public DDInputOutput {
     void write(uint8_t b) {
       serialBT.write(b); 
     }
+    void write(const uint8_t *buf, size_t size) {
+      serialBT.write(buf, size); 
+    }
     bool preConnect(bool firstCall) {
       DDInputOutput::preConnect(firstCall);
       serialBT.begin(btLocalName);

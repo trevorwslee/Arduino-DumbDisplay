@@ -26,6 +26,9 @@ class DDSerial2IO: public DDInputOutput {
     void write(uint8_t b) {
       Serial2->write(b); 
     }
+    void write(const uint8_t *buf, size_t size) {
+      Serial2->write(buf, size); 
+    }
     bool preConnect(bool firstCall) {
       Serial2.begin(baud);
       return true;

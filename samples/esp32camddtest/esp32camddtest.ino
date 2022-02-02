@@ -2,6 +2,10 @@
 #include "esp_camera.h" 
 
 
+#include "esp_camera.h"         // https://github.com/espressif/esp32-camera
+
+
+
 #define BLUETOOTH
 
 
@@ -18,68 +22,100 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
 
 
 
+
 const int imageLayerWidth = 1024;
 const int imageLayerHeight = 768;
 const char* imageName = "esp32camdd_test.jpg";
 
 
 LcdDDLayer* flashLayer;
-LcdDDLayer* imageSizeLayer;
+LcdDDLayer* resolutionLayer;
+LcdDDLayer* captureModeLayer;
 GraphicalDDLayer* imageLayer;
 
 
+LcdDDLayer* createAndSetupButton(DumbDisplay& dumbdisplay, const char* fontColor = "blue") {
+  LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(10, 1);
+  buttonLayer->pixelColor(fontColor);
+  buttonLayer->border(1, "darkgray", "round");
+  buttonLayer->enableFeedback("f");
+  return buttonLayer;
+}
+
+GraphicalDDLayer * createAndSetupImageLayer(DumbDisplay& dumbdisplay) {
+  GraphicalDDLayer* imgLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
+  imgLayer->backgroundColor("ivory");
+  imgLayer->padding(10);
+  imgLayer->border(20, "blue");
+  imgLayer->enableFeedback("f");
+  return imgLayer;
+}
+
+
 bool initialiseCamera(framesize_t frameSize);
-bool captureAndSaveImage(bool useFlash);
-
-
-bool cameraReady = false;
-DDValueRecord<bool> flashOn(false, true);
-DDValueRecord<int> imageSize(0, -1);
+bool captureAndSaveImage(bool useFlash, bool cacheOnly);
 
 
 void setup() {
-  flashLayer = dumbdisplay.createLcdLayer(12, 1);
-  flashLayer->border(1, "darkgray", "round");
-  flashLayer->enableFeedback("f");
 
-  imageSizeLayer = dumbdisplay.createLcdLayer(12, 1);
-  imageSizeLayer->border(1, "darkgray", "round");
-  imageSizeLayer->enableFeedback("f");
+  flashLayer = createAndSetupButton(dumbdisplay);
+  resolutionLayer = createAndSetupButton(dumbdisplay);
+  captureModeLayer = createAndSetupButton(dumbdisplay, "red");
 
-  imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
-  imageLayer->backgroundColor("ivory");
-  imageLayer->padding(10);
-  imageLayer->border(20, "blue");
-  imageLayer->enableFeedback("f");
-
+  imageLayer = createAndSetupImageLayer(dumbdisplay);
 
   dumbdisplay.configAutoPin(DD_AP_VERT_2(
-    DD_AP_HORI_2(flashLayer->getLayerId(), imageSizeLayer->getLayerId()),
+    DD_AP_HORI_3(flashLayer->getLayerId(), resolutionLayer->getLayerId(), captureModeLayer->getLayerId()),
     imageLayer->getLayerId()
   ));
 
   imageLayer->drawImageFileFit("dumbdisplay.png");
 }
 
+
+bool cameraReady = false;
+DDValueRecord<bool> flashOn(false, true);
+DDValueRecord<byte> imageSize(1, 0);
+DDValueRecord<bool> streaming(false, true);
+
+
 void loop() {
+  if (flashOn.record()) {
+    if (flashOn) {
+      flashLayer->writeCenteredLine("FLASH ON");
+    } else {
+      flashLayer->writeCenteredLine("FLASH OFF");
+    }  
+  }
+  if (streaming.record()) {
+    if (streaming) {
+      captureModeLayer->writeCenteredLine("STREAM");
+    } else {
+      captureModeLayer->writeCenteredLine("STILL");
+    }
+  }
   if (imageSize.record()) {
     framesize_t frameSize;
     switch (imageSize) {
       case 1:
+        frameSize = FRAMESIZE_VGA;
+        resolutionLayer->writeCenteredLine("640x480");
+        break;
+      case 2:
         frameSize = FRAMESIZE_SVGA;
-        imageSizeLayer->writeCenteredLine("800x600");
+        resolutionLayer->writeCenteredLine("800x600");
         break;
-      case 2: 
+      case 3: 
         frameSize = FRAMESIZE_XGA;
-        imageSizeLayer->writeCenteredLine("1024x768");
+        resolutionLayer->writeCenteredLine("1024x768");
         break;
-      case 3:  
+      case 4:  
         frameSize = FRAMESIZE_HD;
-        imageSizeLayer->writeCenteredLine("1280x720");
+        resolutionLayer->writeCenteredLine("1280x720");
         break;
       default:
-        frameSize = FRAMESIZE_VGA;
-        imageSizeLayer->writeCenteredLine("640x480");
+        frameSize = FRAMESIZE_QVGA;
+        resolutionLayer->writeCenteredLine("320x240");
     }
     dumbdisplay.writeComment("Initializing camera ...");
     cameraReady = initialiseCamera(frameSize); 
@@ -89,36 +125,31 @@ void loop() {
       dumbdisplay.writeComment("... failed to initialize camera!");
     }
   }
-  if (flashOn.record()) {
-    if (flashOn) {
-      flashLayer->writeCenteredLine("FLASH ON");
-    } else {
-      flashLayer->writeCenteredLine("FLASH OFF");
-    }  
-  }
 
-  const DDFeedback* feedback = NULL;
-  
-  feedback = flashLayer->getFeedback();
-  if (feedback != NULL) {
+  if (flashLayer->getFeedback()) {
     flashOn = !flashOn;
   }
 
-  feedback = imageSizeLayer->getFeedback();
-  if (feedback != NULL) {
-    if (imageSize < 3) {
+  if (resolutionLayer->getFeedback()) {
+    if (imageSize < 4) {
       imageSize = imageSize + 1;
     } else {
-      imageSize = 0;
+      imageSize = 1;
     }
   }
 
-  feedback = imageLayer->getFeedback();
-  if (feedback != NULL) {
+  if (captureModeLayer->getFeedback()) {
+    streaming = !streaming;
+  }
+
+  bool capture = imageLayer->getFeedback() != NULL || (cameraReady && streaming);
+  if (capture) {
     if (cameraReady) {
-      if (captureAndSaveImage(flashOn)) {
-        imageLayer->unloadImageFile(imageName);
-        imageLayer->clear();
+      if (captureAndSaveImage(flashOn, streaming)) {
+        if (!streaming) {
+          imageLayer->unloadImageFile(imageName);
+          imageLayer->clear();
+        }      
         imageLayer->drawImageFileFit(imageName);
       } else {
         dumbdisplay.writeComment("Failed to capture image!");
@@ -132,18 +163,43 @@ void loop() {
 
 
 
+
+
+
 const bool serialDebug = 1;                            // show debug info. on serial port (1=enabled, disable if using pins 1 and 3 as gpio)
 
-#define PIXFORMAT PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
-// int cameraImageExposure = 0;                         // Camera exposure (0 - 1200)   If gain and exposure both set to zero then auto adjust is enabled
-// int cameraImageGain = 0;                             // Image gain (0 - 30)
-int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
 
-const int brightLED = 4;                             // onboard Illumination/flash LED pin (4)
-const int ledFreq = 5000;                            // PWM settings
-const int ledChannel = 15;                           // camera uses timer1
-const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
+   #define PIXFORMAT PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
+   //int cameraImageExposure = 0;                         // Camera exposure (0 - 1200)   If gain and exposure both set to zero then auto adjust is enabled
+   //int cameraImageGain = 0;                             // Image gain (0 - 30)
+   int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
 
+ //const int TimeBetweenStatus = 600;                     // speed of flashing system running ok status light (milliseconds)
+
+ //const int indicatorLED = 33;                           // onboard small LED pin (33)
+
+ // Bright LED (Flash)
+   const int brightLED = 4;                             // onboard Illumination/flash LED pin (4)
+   //int brightLEDbrightness = 0;                         // initial brightness (0 - 255)
+   const int ledFreq = 5000;                            // PWM settings
+   const int ledChannel = 15;                           // camera uses timer1
+   const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
+
+ //const int iopinA = 13;                                 // general io pin 13
+ //const int iopinB = 12;                                 // general io pin 12 (must not be high at boot)
+
+ //const int serialSpeed = 115200;                        // Serial data speed to use
+
+ // NTP - Internet time
+  //  const char* ntpServer = "pool.ntp.org";
+  //  const char* TZ_INFO    = "GMT+0BST-1,M3.5.0/01:00:00,M10.5.0/02:00:00";  // enter your time zone (https://remotemonitoringsystems.ca/time-zone-abbreviations.php)
+  //  long unsigned lastNTPtime;
+  //  tm timeinfo;
+  //  time_t now;
+
+// camera settings (for the standard - OV2640 - CAMERA_MODEL_AI_THINKER)
+// see: https://randomnerdtutorials.com/esp32-cam-camera-pin-gpios/
+// set camera resolution etc. in 'initialiseCamera()' and 'cameraImageSettings()'
  #define CAMERA_MODEL_AI_THINKER
  #define PWDN_GPIO_NUM     32      // power to camera (on/off)
  #define RESET_GPIO_NUM    -1      // -1 = not used
@@ -164,48 +220,38 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
 
 
 
+
+
 bool cameraImageSettings() {
 
   if (serialDebug) Serial.println("Applying camera settings");
 
-   sensor_t *s = esp_camera_sensor_get();
-   if (s == NULL) {
-     if (serialDebug) Serial.println("Error: problem reading camera sensor settings");
-     return 0;
-   }
+  sensor_t *s = esp_camera_sensor_get();
+  // something to try?:     if (s->id.PID == OV3660_PID)
+  if (s == NULL) {
+    if (serialDebug) Serial.println("Error: problem reading camera sensor settings");
+    return 0;
+  }
 
-    // enable auto adjust
-    s->set_gain_ctrl(s, 1);                       // auto gain on
-    s->set_exposure_ctrl(s, 1);                   // auto exposure on
-    s->set_awb_gain(s, 1);                        // Auto White Balance enable (0 or 1)
-    s->set_brightness(s, cameraImageBrightness);  // (-2 to 2) - set brightness
+  // enable auto adjust
+  s->set_gain_ctrl(s, 1);                       // auto gain on
+  s->set_exposure_ctrl(s, 1);                   // auto exposure on
+  s->set_awb_gain(s, 1);                        // Auto White Balance enable (0 or 1)
+  s->set_brightness(s, cameraImageBrightness);  // (-2 to 2) - set brightness
 
    return 1;
 }  // cameraImageSettings
 
 
 
-void brightLed(byte ledBrightness){
-   ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
-   if (serialDebug) Serial.println("Brightness used = " + String(ledBrightness) );
-}
-
-
-
-void setupFlashPWM() {
-    ledcSetup(ledChannel, ledFreq, ledRresolution);
-    ledcAttachPin(brightLED, ledChannel);
-    brightLed(32);
-    brightLed(0);
-}
-
+void setupFlashPWM();
 
 bool initialiseCamera(framesize_t frameSize) {
-   if (true) {
-      esp_camera_deinit();     // disable camera
-      delay(50);
-      setupFlashPWM();    // configure PWM for the illumination LED
-   }
+  if (true) {
+    esp_camera_deinit();     // disable camera
+    delay(50);
+    setupFlashPWM();    // configure PWM for the illumination LED
+  }
 
    camera_config_t config;
    config.ledc_channel = LEDC_CHANNEL_0;
@@ -228,7 +274,7 @@ bool initialiseCamera(framesize_t frameSize) {
    config.pin_reset = RESET_GPIO_NUM;
    config.xclk_freq_hz = 20000000;               // XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
    config.pixel_format = PIXFORMAT;              // Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
-   config.frame_size = frameSize/*FRAME_SIZE_IMAGE*/;         // Image sizes: 160x120 (QQVGA), 128x160 (QQVGA2), 176x144 (QCIF), 240x176 (HQVGA), 320x240 (QVGA),
+   config.frame_size = frameSize;                // Image sizes: 160x120 (QQVGA), 128x160 (QQVGA2), 176x144 (QCIF), 240x176 (HQVGA), 320x240 (QVGA),
                                                  //              400x296 (CIF), 640x480 (VGA, default), 800x600 (SVGA), 1024x768 (XGA), 1280x1024 (SXGA),
                                                  //              1600x1200 (UXGA)
    config.jpeg_quality = 15;                     // 0-63 lower number means higher quality
@@ -251,9 +297,23 @@ bool initialiseCamera(framesize_t frameSize) {
    return (camerr == ESP_OK);                    // return boolean result of camera initialisation
 }
 
+// change illumination LED brightness
+void brightLed(byte ledBrightness){
+   ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
+}
 
 
-bool captureAndSaveImage(bool useFlash) {
+
+void setupFlashPWM() {
+    ledcSetup(ledChannel, ledFreq, ledRresolution);
+    ledcAttachPin(brightLED, ledChannel);
+    brightLed(32);
+    brightLed(0);
+}
+
+
+
+bool captureAndSaveImage(bool useFlash, bool cacheOnly) {
 
   if (useFlash) brightLed(255);   // change LED brightness (0 - 255)
   camera_fb_t *fb = esp_camera_fb_get();             // capture image frame from camera
@@ -263,15 +323,19 @@ bool captureAndSaveImage(bool useFlash) {
      return false;
   }
 
-  if (serialDebug) {
-     Serial.print("Captured image with ");
-     Serial.print(fb->len);
-     Serial.println(" bytes");
-  }
+  // if (serialDebug) {
+  //    Serial.print("Captured image with ");
+  //    Serial.print(fb->len);
+  //    Serial.println(" bytes");
+  // }
 
-  dumbdisplay.writeComment("Saving image (" + String(fb->len) + ") ...");
-  dumbdisplay.saveImage(imageName, fb->buf, fb->len);
-  dumbdisplay.writeComment("... save image");
+  if (cacheOnly) {
+    imageLayer->cacheImage(imageName, fb->buf, fb->len);
+  } else {
+    dumbdisplay.writeComment("Saving image (" + String(fb->len) + ") ...");
+    dumbdisplay.saveImage(imageName, fb->buf, fb->len);
+    dumbdisplay.writeComment("... save image");
+  }
 
 
   esp_camera_fb_return(fb);        // return frame so memory can be released

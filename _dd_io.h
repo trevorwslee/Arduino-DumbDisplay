@@ -30,6 +30,11 @@ class DDInputOutput {
     virtual void write(uint8_t b) {
       if (_The_DD_Serial != NULL) _The_DD_Serial->write(b);
     }
+    virtual void write(const uint8_t *buf, size_t size) {
+      for (int i = 0; i < size; i++) {
+        write(buf[i]);
+      }
+    }    
     virtual void flush() {
       //Serial.flush();
       if (_The_DD_Serial != NULL) _The_DD_Serial->flush();

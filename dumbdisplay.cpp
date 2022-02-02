@@ -698,9 +698,13 @@ void __SendByteArrayPortion(const uint8_t *bytes, int byteCount) {
   _IO->print("|bytes|>");
   _IO->print(String(byteCount));
   _IO->print(":");
-  for (int i = 0; i < byteCount; i++) {
-    uint8_t b = bytes[i];
-    _IO->write(b);
+  if (true) {
+    _IO->write(bytes, byteCount);
+  } else {
+    for (int i = 0; i < byteCount; i++) {
+      uint8_t b = bytes[i];
+      _IO->write(b);
+    }
   }
   if (FLUSH_AFTER_SENT_COMMAND) {
     _IO->flush();
