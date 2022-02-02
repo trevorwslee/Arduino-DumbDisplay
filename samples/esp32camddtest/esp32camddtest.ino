@@ -144,10 +144,10 @@ void loop() {
     streaming = !streaming;
   }
 
-  bool capture = imageLayer->getFeedback() != NULL || (cameraReady && streaming);
-  if (capture) {
+  bool capture = imageLayer->getFeedback() != NULL;
+  if (capture || (cameraReady && streaming)) {
     if (cameraReady) {
-      if (captureAndSaveImage(flashOn, streaming)) {
+      if (captureAndSaveImage(flashOn, !capture && streaming)) {
         if (!streaming) {
           imageLayer->unloadImageFile(imageName);
           imageLayer->clear();
