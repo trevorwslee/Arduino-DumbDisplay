@@ -1,3 +1,9 @@
+// for a desciption of the experiment, please watch the YouTube video 
+// -- Experiment on using ESP32-CAM to Capture and Stream Pictures to Mobile Phone
+// -- https://youtu.be/D0tinZi5l5s
+
+
+
 #include <Arduino.h>
 #include "esp_camera.h" 
 
@@ -297,7 +303,7 @@ bool captureAndSaveImage(bool useFlash, bool cacheOnly) {
   } else {
     dumbdisplay.writeComment("Saving image (" + String(fb->len) + ") ...");
     dumbdisplay.saveImage(imageName, fb->buf, fb->len);
-    dumbdisplay.writeComment("... save image");
+    dumbdisplay.writeComment("... saved image");
   }
 
   esp_camera_fb_return(fb);        // return frame so memory can be released
