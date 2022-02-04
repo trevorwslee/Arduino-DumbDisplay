@@ -1103,9 +1103,11 @@ This is done via an "image download tunnel" that you can create like
 pTunnel = dumbdisplay.createImageDownloadTunnel("https://placekitten.com/680/480", "downloaded.png");
 ```
 
-As preparation, you will need to grant DumbDisplay app permission to access your phone's storage. Select the menu item "settings" and click the button "access images". This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.
+As preparation, you will need to grant DumbDisplay app permission to access your phone's storage.
 
-Next, DumbDisplay app will create a folder, speciaically, `<your phone's picture storage>/DumbDisplay/`, and write a small sample image `dumbdisplay.png` there. From now on, DumbDisplay will access the folder for any image files that it will need to read / write.
+Select the menu item "settings" and click the button "access images". This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.
+
+Once permission granted, DumbDisplay app will create a folder, speciaically, `<your phone's picture storage>/DumbDisplay/`, and write a small sample image `dumbdisplay.png` there. From now on, DumbDisplay will access the folder for any image files that it will need to read / write.
 
 Since it takes a bit of time to download image file from the Web, you will need to check it's download status asyncrhonously like
 
@@ -1132,7 +1134,7 @@ When the image downloaded and saved successfully, you can draw it to a graphical
 pLayer->drawImageFileFit("downloaded.png");
 ```
 
-For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/webimages/webimages.ino 
+For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/webimage/webimage.ino 
 
 
 
