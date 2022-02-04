@@ -1,5 +1,5 @@
 // for a desciption of the experiment, please watch the YouTube video 
-// -- Experiment on using ESP32-CAM to Capture and Stream Pictures to Mobile Phone
+// -- ESP32-CAM Experiment -- Capture and Stream Pictures to Mobile Phone
 // -- https://youtu.be/D0tinZi5l5s
 
 
