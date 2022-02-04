@@ -440,6 +440,9 @@ class GraphicalDDLayer: public DDLayer {
     /* - given circle radius and vertex count */
     /* - whether inside the imaginary circle or outside of it */ 
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
+    /* write text; will not auto wrap */
+    /* - draw means draw the text (honor heading direction) */
+    void write(const String& text, bool draw = false);
     /* load image file to cache */
     /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
     void loadImageFile(const String& imageFileName, int w = 0, int h = 0);
@@ -452,9 +455,8 @@ class GraphicalDDLayer: public DDLayer {
     /* - x / y / w / h: aread to draw the image; 0 means the default value */ 
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered */
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
-    /* write text; will not auto wrap */
-    /* - draw means draw the text (honor heading direction) */
-    void write(const String& text, bool draw = false);
+    /* as if the image is saved then loaded */
+    void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount);
 };
 
 
@@ -738,12 +740,14 @@ class DumbDisplay {
     void loadLayerCommands(const String& id);
     /* capture and save display as image */
     /* IMPORTANT: old file with the same name will be  replaced */
-    /* - imageFileName: name of image file; if it ends with ".png", saved image format will be PNG; other, saved image format will be JPED */
+    /* - imageFileName: name of image file; if it ends with ".png", saved image format will be PNG; other, saved image format will be JPEG */
     /* - width / height: size of the display on which to render the layers */ 
     void capture(const String& imageFileName, int width, int height);
     /* write out a comment to DD */
     void writeComment(const String& comment);
     void tone(uint32_t freq, uint32_t duration);
+    void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
+    void debugOnly(int i);
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */

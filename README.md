@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.8.1)
+# DumbDisplay Arduino Library (v0.8.2)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / STM32 / Respberry Pi Pico experiments.
 
@@ -10,7 +10,7 @@ Plase notice that the above mentioned video is just one of the several on using 
 ## Enjoy
 
 * [Description](#description)
-* [Installing DumbDisplay Arduino Library](#installing-dumbdisplay-arduino-library)
+* [Installation](#installation)
   * [Arduino IDE](#arduino-ide)
   * [PlatformIO](#platformio)
 * [DumbDisplay Android App](#dumbDisplay-android-app)
@@ -51,7 +51,7 @@ A few types of layers can be created:
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected micro-controller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism) for more on "layer feedback" mechanism.
 
 
-# Installing DumbDisplay Arduino Library
+# Installation
 
 ## Arduino IDE
 
@@ -1186,6 +1186,11 @@ MIT
 
 
 # Change History
+
+
+v0.8.2
+  - add "save image" support, basically for ESP32-Cam board
+  - bug fixes
 
 
 v0.8.1

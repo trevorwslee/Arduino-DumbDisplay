@@ -25,6 +25,9 @@ class DDSerial {
     virtual void print(const char *p) {
       Serial.print(p);
     }
+    virtual void write(uint8_t b) {
+      Serial.write(b);
+    }
     virtual void flush() {
       Serial.flush();
     }

@@ -81,6 +81,7 @@ class IOProxy {
     void clear();
     void print(const String &s);
     void print(const char *p);
+    void write(uint8_t b);
     void keepAlive();
     void validConnection();
     void setReconnectRCId(const String& rcId) {
@@ -139,6 +140,9 @@ void IOProxy::print(const String &s) {
 }
 void IOProxy::print(const char *p) {
   pIO->print(p);
+}
+void IOProxy::write(uint8_t b) {
+  pIO->write(b);
 }
 void IOProxy::keepAlive() {
 #if defined (SHOW_KEEP_ALIVE) || defined(DEBUG_RECONNECT_WITH_COMMENT)
@@ -690,6 +694,25 @@ void __SendSpecialCommand(const char* specialType, const String& specialId, cons
     yield();
   }
 }
+void __SendByteArrayPortion(const uint8_t *bytes, int byteCount) {
+  _IO->print("|bytes|>");
+  _IO->print(String(byteCount));
+  _IO->print(":");
+  if (true) {
+    _IO->write(bytes, byteCount);
+  } else {
+    for (int i = 0; i < byteCount; i++) {
+      uint8_t b = bytes[i];
+      _IO->write(b);
+    }
+  }
+  if (FLUSH_AFTER_SENT_COMMAND) {
+    _IO->flush();
+  }
+  if (YIELD_AFTER_SEND_COMMAND) {
+    yield();
+  }
+}
 void _SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
   _SendingCommand = true;
@@ -969,12 +992,15 @@ inline void _sendCommand7(const String& layerId, const char *command, const Stri
 inline void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
   _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
 }
-
 #ifdef SUPPORT_TUNNEL
 inline void _sendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
   _SendSpecialCommand(specialType, specialId, specialCommand, specialData);
 }
 #endif
+void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount) {
+  __SendByteArrayPortion(bytes, byteCount);
+  _sendCommand0("", C_KAL);  // send a "keep alive" command to make sure and new-line is sent
+}
 
 
 
@@ -1112,6 +1138,11 @@ void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFe
 }
 void DDLayer::debugOnly(int i) {
   _sendCommand2(layerId, "debugonly", String(i), TO_C_INT(i));
+  // byte bytes[i];
+  // for (int j = 0; j < i; j++) {
+  //   bytes[j] = j;
+  // }
+  // _sendByteArrayAfterCommand(bytes, i);
 }
 
 
@@ -1476,6 +1507,10 @@ void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside)
 }
 void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h) {
   _sendCommand3(layerId, C_loadimagefile, imageFileName, String(w), String(h));
+}
+void GraphicalDDLayer::cacheImage(const String& imageName, const uint8_t *bytes, int byteCount) {
+  _sendCommand2("", C_CACHEIMG, layerId, imageName);
+  _sendByteArrayAfterCommand(bytes, byteCount);
 }
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
@@ -2025,6 +2060,23 @@ void DumbDisplay::writeComment(const String& comment) {
 void DumbDisplay::tone(uint32_t freq, uint32_t duration) {
   _Connect();
   _sendCommand2("", C_TONE, TO_C_INT(freq), TO_C_INT(duration));
+}
+void DumbDisplay::saveImage(const String& imageName, const uint8_t *bytes, int byteCount) {
+  _sendCommand1("", C_SAVEIMG, imageName);
+  _sendByteArrayAfterCommand(bytes, byteCount);
+}
+void DumbDisplay::debugOnly(int i) {
+  _sendCommand2("", "DEBUGONLY", String(i), TO_C_INT(i));
+  uint8_t bytes[i];
+  for (int j = 0; j < i; j++) {
+    bytes[j] = (uint8_t) (j % 256);
+    // if (i <= 10) {
+    //   bytes[j] = (uint8_t) (128 + (j % 128));
+    // } else {
+    //   bytes[j] = (uint8_t) (j % 256);
+    // }
+  }
+  _sendByteArrayAfterCommand(bytes, i);
 }
 
 

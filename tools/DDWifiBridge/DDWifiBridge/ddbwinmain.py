@@ -179,7 +179,10 @@ class DDWinUserInterface(ddbcore.DDUserInterface):
                     if pos != check_pos:
                         Auto_scroll_state.set(False)
             #Window.update()
-            Text_box.insert(tk.END, transDir + ' ' + line + '\n')
+            if isinstance(line, bytes):
+                Text_box.insert(tk.END, '......\n')
+            else:
+                Text_box.insert(tk.END, transDir + ' ' + line + '\n')
     def printLogMessage(self, msg):
         print(msg)
     def printControlMessage(self, msg):

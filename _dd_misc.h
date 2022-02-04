@@ -20,13 +20,17 @@ class DDValueStore {
 template <class T>
 class DDValueRecord {
   public:
+    /* initial value and known value will be set to the same */
     DDValueRecord(T value): value(value), knownValue(value) {}
+    /* can set initial known value to be different from value */
     DDValueRecord(T value, T knownValue): value(value), knownValue(knownValue) {}
     inline operator T() { return value; } 
     inline T get() { return value; }
     inline void operator =(T value) { this->value = value; }
     inline void set(T value) { this->value = value; }
     inline T getRecorded() { return knownValue; }
+    /* make value set previously known; i.e. set known value to be the same as value */
+    /* return whether known value as different from value */ 
     bool record() {
       bool same = value == knownValue;
       knownValue = value;

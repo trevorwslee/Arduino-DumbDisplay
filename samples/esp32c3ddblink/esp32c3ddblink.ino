@@ -5,6 +5,11 @@
 //**********
 
 
+// for a desciption of the experiment, please watch the YouTube video 
+// -- ESP32-C3 Blink Test with Arduino IDE and DumbDisplay
+// -- https://www.youtube.com/watch?v=BAnvHOs5Fks
+
+
 #define DD_4_ESP32
 #include "esp32bledumbdisplay.h"
 

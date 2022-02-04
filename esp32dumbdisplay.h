@@ -5,9 +5,14 @@
 #ifndef esp32dumbdisplay_h
 #define esp32dumbdisplay_h
 
-#ifndef DD_4_ESP32
-#error DD_4_ESP32 need be defined in order to use DumbDisplay for ESP32
+// #ifndef DD_4_ESP32
+// #error DD_4_ESP32 need be defined in order to use DumbDisplay for ESP32
+// #else
+
+#ifndef ESP32
+#error DDBluetoothSerialIO is for ESP32
 #else
+
 
 #include "BluetoothSerial.h"
 #include "dumbdisplay.h"
@@ -35,6 +40,12 @@ class DDBluetoothSerialIO: public DDInputOutput {
     }
     void print(const char *p) {
       serialBT.print(p); 
+    }
+    void write(uint8_t b) {
+      serialBT.write(b); 
+    }
+    void write(const uint8_t *buf, size_t size) {
+      serialBT.write(buf, size); 
     }
     bool preConnect(bool firstCall) {
       DDInputOutput::preConnect(firstCall);

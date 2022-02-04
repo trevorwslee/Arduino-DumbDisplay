@@ -1,7 +1,8 @@
-
 import socket
 import threading
 import time
+
+import serial as pyserial
 
 #from . import JsonStreamParserCore
 from . import jsonparse
@@ -33,10 +34,13 @@ class DDBridge:
             line = ori_line
             if line == None:
                 return False
-            transDir = line[0]
-            line = line[1:]
-            if _DEBUG_TUNNEL and line.startswith('<lt.'):
-                print("** TUNNEL-TX:" + line)
+            if isinstance(line, bytes):
+                transDir = '>'  # assume only going out
+            else:
+                transDir = line[0]
+                line = line[1:]
+                if _DEBUG_TUNNEL and line.startswith('<lt.'):
+                    print("** TUNNEL-TX:" + line)
             if not self._sendLine(line, transDir):
                 if pushback_if_failed:
                     self._pushbackLine(ori_line)
@@ -54,9 +58,12 @@ class DDBridge:
             if no_further_insert:
                 self.no_further_insert = True
                 self.line_list = []
-            self.line_list.append(transDir + line)
-            if _DEBUG_TUNNEL_INS and line.startswith('<lt.'):
-                print("** TUNNEL-INS-" + str(len(self.line_list)) + ":" + line)
+            if isinstance(line, bytes):
+                self.line_list.append(line)
+            else:
+                self.line_list.append(transDir + line)
+                if _DEBUG_TUNNEL_INS and line.startswith('<lt.'):
+                    print("** TUNNEL-INS-" + str(len(self.line_list)) + ":" + line)
         self.lock.release()
     def _popLine(self):
         line = None
@@ -175,7 +182,10 @@ class Tunnel:
                     pass
         return sent
     def __send(self, line):
-        data = bytes(line + "\n", 'UTF8')
+        if isinstance(line, bytes):
+            data = line
+        else:
+            data = bytes(line + "\n", 'UTF8')
         self.sock.sendall(data)
         if _LOG_TUNNEL_IO:
             print(self.tunnel_id + ".>>>>> :" + line)
@@ -275,10 +285,10 @@ class JsonTunnel(Tunnel):
 
 
 class SerialSource:
-    def __init__(self, ser, bridge):
-        self.ser = ser
+    def __init__(self, ser: pyserial.Serial, bridge: DDBridge):
+        self.ser: pyserial.Serial = ser
         self.error = None
-        self.bridge = bridge
+        self.bridge: DDBridge = bridge
         self.tunnels = {}
     def timeSlice(self, bridge):
         bridge.transportLine()
@@ -307,15 +317,55 @@ class SerialSource:
     def _serialServe(self):
         #ser_line = ""
         ser_bytes = bytes()
+        sending_byte_count = None
+        buffered_bytes = []
         while True:
-            for b in self.ser.read():
-                #c = chr(b)
-                #if c == '\n':
-                if b == 10:
+            #for b in self.ser.read():
+            while True:
+                if len(buffered_bytes) > 0:
+                    b = buffered_bytes.pop(0)
+                else:
+                    b = self.ser.read()
+                check_b = True
+                if sending_byte_count != None:
+                    if len(ser_bytes) < sending_byte_count:
+                        check_b = False
+                    else:
+                        self.bridge.insertSourceLine(ser_bytes)
+                        ser_bytes = bytes()
+                        sending_byte_count = None
+                if check_b and b == b'\n': # 10: # '\n'
                     try:
                         ser_line = ser_bytes.decode('UTF8')
                     except UnicodeDecodeError:
-                        print('xxx failed to decode input')
+                        ser_line = None
+                        try:
+                            check_line = ser_bytes[0:9].decode('UTF8')
+                            if check_line.startswith("|bytes|>"):
+                                for i in range(0, len(ser_bytes)):
+                                    b = ser_bytes[i]
+                                    if b == b':': #58:  # ':'
+                                        ser_line = ser_bytes[0:i+1].decode('UTF8')
+                                        break
+                        except:
+                            ser_line = None
+                        if ser_line == None:
+                            print('xxx failed to decode input')
+                            ser_bytes = bytes()
+                            continue
+                    try:
+                        if ser_line.startswith("|bytes|>"):
+                            idx = ser_line.index(':')
+                            sending_byte_count = idx + 1 + int(ser_line[8:idx])
+                            byte_count = len(ser_bytes)
+                            if byte_count >= sending_byte_count:
+                                ser_bytes = ser_bytes[0:sending_byte_count]
+                                buffered_bytes = ser_bytes[sending_byte_count:] + [b]
+                            else:
+                                buffered_bytes = [b]
+                            continue
+                    except:
+                        print('xxx failed to check bytes')
                         ser_bytes = bytes()
                         continue
                     insert_it = True
@@ -398,11 +448,10 @@ class SerialSource:
                                 tunnel.insertSourceLine(lt_data)
                     if insert_it:
                         self.bridge.insertSourceLine(ser_line)
-                    #ser_line = ""
                     ser_bytes = bytes()
                 else:
-                    ser_bytes = ser_bytes + b.to_bytes(1, 'big')
-                    #ser_line = ser_line + c
+                    #ser_bytes = ser_bytes + b.to_bytes(1, 'big')
+                    ser_bytes = ser_bytes + b
 
 class WifiTarget:
     def __init__(self, bridge, host, port):
@@ -430,7 +479,10 @@ class WifiTarget:
     def forward(self, line):
         sent = False
         if self.conn != None:
-            data = bytes(line + "\n", 'UTF8')
+            if isinstance(line, bytes):
+                data = line
+            else:
+                data = bytes(line + "\n", 'UTF8')
             try:
                 self.conn.sendall(data)
                 sent = True

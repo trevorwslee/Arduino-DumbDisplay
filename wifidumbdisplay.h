@@ -43,6 +43,12 @@ class DDWiFiServerIO: public DDInputOutput {
     void print(const char *p) {
       client.print(p);
     }
+    void write(uint8_t b) {
+      client.write(b);
+    }
+    void write(const uint8_t *buf, size_t size) {
+      client.write(buf, size);
+    }
     bool preConnect(bool firstCall) {
       if (firstCall) {
         if (logToSerial)
