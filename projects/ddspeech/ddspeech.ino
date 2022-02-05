@@ -1,15 +1,20 @@
 
-#include <Arduino.h>
+#ifdef ESP32
+
+#define synthesizer Serial2
+
+#else
+
 #include <SoftwareSerial.h>
-
-
 SoftwareSerial synthesizer(9, 8);  // pin 9 connect to TX of XFS5152CE board; 8 connect to RX of XFS5152CE board
+
+#endif
 
 
 #define TEST_VOICE
 
 
-int utf8ToUtf16(char* utf8, uint8_t* utf16Buffer) {
+int utf8ToUtf16(const char* utf8, uint8_t* utf16Buffer) {
     int idx = 0;
     int i = 0;
     while (true) {
@@ -77,12 +82,13 @@ void loop() {
 
 #ifdef TEST_VOICE
     if (isIdle) {
+        isIdle = false;
         synthesizer.write((byte)0xFD);
         if (true) {
             //String text = "[v1][h0]科大讯飞! 科大訊飛! Apple, orange and banana!";
             String text = "[v1][h0]巴黎世家人氣老爹鞋低至6折!粉紅Triple S波鞋只需$5,880!";
             int text_len = text.length();
-            uint8_t buffer[4 * text_len];
+            uint8_t buffer[2 * text_len];
             int len = utf8ToUtf16(text.c_str(), buffer);
             int out_len = 2 + len;
             synthesizer.write((byte)((out_len&0xFF00)>8));

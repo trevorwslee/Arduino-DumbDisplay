@@ -26,6 +26,7 @@
 //#define DEBUG_ECHO_FEEDBACK
 //#define DEBUG_VALIDATE_CONNECTION
 //#define DEBUG_TUNNEL_RESPONSE
+//#define DEBUG_SHOW_FEEDBACK
 
 
 #define SUPPORT_LONG_PRESS_FEEDBACK
@@ -764,6 +765,10 @@ void _HandleFeedback() {
 //    String* pFeedback = _ReadFeedback(buffer);
 // #endif
     if (pFeedback != NULL) {
+#ifdef DEBUG_SHOW_FEEDBACK
+      Serial.print("FB: ");
+      Serial.println(*pFeedback);
+#endif      
 #ifdef MORE_KEEP_ALIVE
           // keep alive wheneven received someting
         _ConnectedIOProxy->keepAlive();
@@ -1719,10 +1724,10 @@ void DDBufferedTunnel::release() {
 int DDBufferedTunnel::_count() {
   //int count = (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
   int count = (arraySize + nextArrayIdx - validArrayIdx) % arraySize;
-#ifdef DEBUG_TUNNEL_RESPONSE                
-Serial.print("COUNT: ");
-Serial.println(count);
-#endif
+// #ifdef DEBUG_TUNNEL_RESPONSE                
+// Serial.print("COUNT: ");
+// Serial.println(count);
+// #endif
   return count;
 }
 bool DDBufferedTunnel::_eof() {
