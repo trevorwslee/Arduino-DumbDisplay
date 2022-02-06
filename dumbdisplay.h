@@ -627,6 +627,7 @@ class SimpleToolDDTunnel: public JsonDDTunnel {
       this->result = 0;
     }
   public:
+    virtual void reconnect();
     /* 0: not done */
     /* 1: done */
     /* -1: failed */

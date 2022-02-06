@@ -1822,6 +1822,10 @@ bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
   // }
   // return true;
 }
+void SimpleToolDDTunnel::reconnect() {
+  this->result = 0;
+  this->DDBufferedTunnel::reconnect();
+}
 int SimpleToolDDTunnel::checkResult() {
   if (this->result == 0) {
     if (count() > 0) {
