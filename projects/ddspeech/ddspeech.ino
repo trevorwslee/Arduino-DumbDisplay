@@ -1,4 +1,4 @@
-#define DUMBDISPLAY
+//#define DUMBDISPLAY
 
 
 #ifdef DUMBDISPLAY
@@ -78,6 +78,42 @@ int UTF8ToUnicode(const char* utf8, uint8_t* utf16Buffer) {
     return idx;
 }
 
+void synthesizeSpeech(const String& text) {
+    synthesizer.write((byte)0xFD);
+    int text_len = text.length();
+    uint8_t buffer[2 * text_len];
+    int len = UTF8ToUnicode(text.c_str(), buffer);
+    int out_len = 2 + len;
+    synthesizer.write((byte)((out_len&0xFF00)>8));
+    synthesizer.write((byte)(out_len&0x00FF));
+    synthesizer.write((byte)0x01);
+    synthesizer.write((byte)0x03);
+#ifndef DUMBDISPLAY
+    Serial.print("{");
+    Serial.print(text);
+    Serial.print("}=");
+    Serial.println(len);
+#endif           
+    synthesizer.write(buffer, len);
+}
+// void test(const String& text) {
+//     int text_len = text.length();
+//     uint8_t buffer[2 * text_len];
+//     int len = UTF8ToUnicode(text.c_str(), buffer);
+//     int out_len = 2 + len;
+//     synthesizer.write((byte)((out_len&0xFF00)>8));
+//     synthesizer.write((byte)(out_len&0x00FF));
+//     synthesizer.write((byte)0x01);
+//     synthesizer.write((byte)0x03);
+// #ifndef DUMBDISPLAY
+//     Serial.print("!!!{");
+//     Serial.print(text);
+//     Serial.print("}=");
+//     Serial.println(len);
+//  #endif           
+//     synthesizer.write(buffer, len);
+// }
+
 
 #ifdef DUMBDISPLAY
 LcdDDLayer* lcd;
@@ -98,7 +134,7 @@ void setup() {
 #ifndef DUMBDISPLAY
     Serial.println("Hello! Let's get started!");
     if (true) {
-        String text = "A科B大C讯D飞";
+        String text = "科大讯飞";
         //String text = "ABCD";
         uint8_t buffer[64];
         int len = UTF8ToUnicode(text.c_str(), buffer);
@@ -135,87 +171,92 @@ void loop() {
 #ifdef TEST_VOICE
     if (isIdle) {
         isIdle = false;
-        synthesizer.write((byte)0xFD);
-        if (true) {
-            //String text = "[v1][h0]科大讯飞! 科大訊飛! Apple, orange and banana!";
-            String text = "[v1][h0]巴黎世家人氣老爹鞋低至6折!粉紅Triple S波鞋只需$5,880!";
-            int text_len = text.length();
-            uint8_t buffer[2 * text_len];
-            int len = UTF8ToUnicode(text.c_str(), buffer);
-            int out_len = 2 + len;
-            synthesizer.write((byte)((out_len&0xFF00)>8));
-            synthesizer.write((byte)(out_len&0x00FF));
-            synthesizer.write((byte)0x01);
-            synthesizer.write((byte)0x03);
-#ifndef DUMBDISPLAY
-            Serial.print("{");
-            Serial.print(text);
-            Serial.print("}=");
-            Serial.println(len);
- #endif           
-            synthesizer.write(buffer, len);
-            //synthesizer.print(text);
-            // for (int i = 0; i < len; i++) {
-            //     uint8_t b = buffer[i];
-            //     synthesizer.write(b);
-            // }
-        } else if (true) {
-            String text = "[v1][h0][m54]apple and orange";//"快";
-            //String text = "快";
-            if (true) {
-                int len = 2 + text.length();
-                synthesizer.write((byte)((len&0xFF00)>8));
-                synthesizer.write((byte)(len&0x00FF));
-            } else {    
-                synthesizer.write((byte)0x00);
-                synthesizer.write((byte)(2 + text.length())/*0x07*/);
-            }
-            synthesizer.write((byte)0x01);
-            synthesizer.write((byte)0x00);
-            if (false) {
-                for (int i = 0; i < text.length(); i++) {
-                    char c = text.charAt(i);
-                    Serial.print("[");
-                    Serial.print(c);
-                    Serial.print("]");
-                    synthesizer.write((byte) c);
-                }
-                Serial.println(text.length());
-            } else {
-                Serial.print("{");
-                Serial.print(text);
-                Serial.print("}=");
-                Serial.println(text.length());
-                synthesizer.print(text);
-            }
-        } else {
-            if (false) {
-                // UNICODE
-                synthesizer.write((byte)0x00);
-                synthesizer.write((byte)0x06);
-                synthesizer.write((byte)0x01);
-                synthesizer.write((byte)0x03);
-                // 5feb 4e50
-                synthesizer.write((byte)0xeb);
-                synthesizer.write((byte)0x5f);
-                synthesizer.write((byte)0x50);
-                synthesizer.write((byte)0x4e);
-            } else {
-                synthesizer.write((byte)0x00);
-                synthesizer.write((byte)0x0A);
-                synthesizer.write((byte)0x01);
-                synthesizer.write((byte)0x00);
-                synthesizer.write((byte)0xBF);
-                synthesizer.write((byte)0xC6);
-                synthesizer.write((byte)0xB4);
-                synthesizer.write((byte)0xF3);
-                synthesizer.write((byte)0xD1);
-                synthesizer.write((byte)0xB6);
-                synthesizer.write((byte)0xB7);
-                synthesizer.write((byte)0xC9);
-            }
-        }
-        delay(5000);
+        synthesizeSpeech("[v1][h0]港大生功課「回收USB線」 吸引兩上市公司合作 設40回收點");
+//         synthesizer.write((byte)0xFD);
+//         if (true) {
+//             //synthesizeSpeech("[v1][h0]港大生功課「回收USB線」 吸引兩上市公司合作 設40回收點");
+//             test("[v1][h0]港大生功課「回收USB線」 吸引兩上市公司合作 設40回收點");
+//         } else if (true) {
+//             //String text = "[v1][h0]科大讯飞! 科大訊飛! Apple, orange and banana!";
+//             //String text = "[v1][h0]巴黎世家人氣老爹鞋低至6折!粉紅Triple S波鞋只需$5,880!";
+//             String text = "[v1][h0]港大生功課「回收USB線」 吸引兩上市公司合作 設40回收點";
+//             int text_len = text.length();
+//             uint8_t buffer[2 * text_len];
+//             int len = UTF8ToUnicode(text.c_str(), buffer);
+//             int out_len = 2 + len;
+//             synthesizer.write((byte)((out_len&0xFF00)>8));
+//             synthesizer.write((byte)(out_len&0x00FF));
+//             synthesizer.write((byte)0x01);
+//             synthesizer.write((byte)0x03);
+// #ifndef DUMBDISPLAY
+//             Serial.print("{");
+//             Serial.print(text);
+//             Serial.print("}=");
+//             Serial.println(len);
+//  #endif           
+//             synthesizer.write(buffer, len);
+//             //synthesizer.print(text);
+//             // for (int i = 0; i < len; i++) {
+//             //     uint8_t b = buffer[i];
+//             //     synthesizer.write(b);
+//             // }
+//         } else if (true) {
+//             String text = "[v1][h0][m54]apple and orange";//"快";
+//             //String text = "快";
+//             if (true) {
+//                 int len = 2 + text.length();
+//                 synthesizer.write((byte)((len&0xFF00)>8));
+//                 synthesizer.write((byte)(len&0x00FF));
+//             } else {    
+//                 synthesizer.write((byte)0x00);
+//                 synthesizer.write((byte)(2 + text.length())/*0x07*/);
+//             }
+//             synthesizer.write((byte)0x01);
+//             synthesizer.write((byte)0x00);
+//             if (false) {
+//                 for (int i = 0; i < text.length(); i++) {
+//                     char c = text.charAt(i);
+//                     Serial.print("[");
+//                     Serial.print(c);
+//                     Serial.print("]");
+//                     synthesizer.write((byte) c);
+//                 }
+//                 Serial.println(text.length());
+//             } else {
+//                 Serial.print("{");
+//                 Serial.print(text);
+//                 Serial.print("}=");
+//                 Serial.println(text.length());
+//                 synthesizer.print(text);
+//             }
+//         } else {
+//             if (false) {
+//                 // UNICODE
+//                 synthesizer.write((byte)0x00);
+//                 synthesizer.write((byte)0x06);
+//                 synthesizer.write((byte)0x01);
+//                 synthesizer.write((byte)0x03);
+//                 // 5feb 4e50
+//                 synthesizer.write((byte)0xeb);
+//                 synthesizer.write((byte)0x5f);
+//                 synthesizer.write((byte)0x50);
+//                 synthesizer.write((byte)0x4e);
+//             } else {
+//                 synthesizer.write((byte)0x00);
+//                 synthesizer.write((byte)0x0A);
+//                 synthesizer.write((byte)0x01);
+//                 synthesizer.write((byte)0x00);
+//                 synthesizer.write((byte)0xBF);
+//                 synthesizer.write((byte)0xC6);
+//                 synthesizer.write((byte)0xB4);
+//                 synthesizer.write((byte)0xF3);
+//                 synthesizer.write((byte)0xD1);
+//                 synthesizer.write((byte)0xB6);
+//                 synthesizer.write((byte)0xB7);
+//                 synthesizer.write((byte)0xC9);
+//             }
+//         }
+//         delay(5000);
     }
 #endif
 
