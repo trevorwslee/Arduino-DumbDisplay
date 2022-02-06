@@ -1,5 +1,8 @@
+#include <Arduino.h>
+
+
 #define ENABLE_DUMBDISPLAY
-//#define TEST_VOICE
+//#define TEST_SPEECH
 
 
 
@@ -79,15 +82,15 @@ int UTF8ToUnicode(const char* utf8, uint8_t* utf16Buffer) {
 }
 
 void synthesizeSpeech(const String& text) {
-    synthesizer.write((byte)0xFD);
+    synthesizer.write((byte) 0xFD);
     int text_len = text.length();
     uint8_t buffer[2 * text_len];
     int len = UTF8ToUnicode(text.c_str(), buffer);
     int out_len = 2 + len;
-    synthesizer.write((byte)((out_len&0xFF00)>8));
-    synthesizer.write((byte)(out_len&0x00FF));
-    synthesizer.write((byte)0x01);
-    synthesizer.write((byte)0x03);
+    synthesizer.write((byte) ((out_len & 0xFF00) > 8));
+    synthesizer.write((byte) (out_len & 0x00FF));
+    synthesizer.write((byte) 0x01);
+    synthesizer.write((byte) 0x03);
 #ifndef ENABLE_DUMBDISPLAY
     Serial.print("{");
     Serial.print(text);
@@ -99,7 +102,7 @@ void synthesizeSpeech(const String& text) {
 
 
 #ifdef ENABLE_DUMBDISPLAY
-LcdDDLayer* lcd;
+GraphicalDDLayer* adhoc;
 #endif
 
 void setup() {
@@ -131,8 +134,9 @@ void setup() {
 #endif
 
 #ifdef ENABLE_DUMBDISPLAY
-    lcd = dumbdisplay.createLcdLayer(32, 3);
-    lcd->enableFeedback("f:keys");
+    adhoc = dumbdisplay.createGraphicalLayer(100, 50);
+    adhoc->setTextWrap(true);
+    adhoc->enableFeedback("f:keys");
 #endif
 }
 
@@ -143,10 +147,11 @@ long checkMillis = 0;
 bool isIdle = false;
 void loop() {
 #ifdef ENABLE_DUMBDISPLAY
-    const DDFeedback* feedback = lcd->getFeedback();
+    const DDFeedback* feedback = adhoc->getFeedback();
     if (feedback != NULL) {
         if (feedback->text.length() > 0) {
-            lcd->writeLine(feedback->text, 1);
+            adhoc->clear();
+            adhoc->print(feedback->text);
             if (isIdle) {
                 isIdle = false;
                 synthesizeSpeech("[v1][h0]" + feedback->text);
@@ -157,7 +162,7 @@ void loop() {
     }
 #endif
 
-#ifdef TEST_VOICE
+#if defined (TEST_SPEECH) || !defined(ENABLE_DUMBDISPLAY)
     if (isIdle) {
         isIdle = false;
         synthesizeSpeech("[v1][h0]港大生功課「回收USB線」 吸引兩上市公司合作 設40回收點");
@@ -171,10 +176,10 @@ void loop() {
 #else        
         Serial.println("checking status ...");
 #endif        
-        synthesizer.write((byte)0xFD);
-        synthesizer.write((byte)0x00);
-        synthesizer.write((byte)0x01);
-        synthesizer.write((byte)0x21);
+        synthesizer.write((byte) 0xFD);
+        synthesizer.write((byte) 0x00);
+        synthesizer.write((byte) 0x01);
+        synthesizer.write((byte) 0x21);
     } else {
         if (synthesizer.available()) {
             int status = synthesizer.read();
