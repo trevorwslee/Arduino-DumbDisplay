@@ -2,15 +2,17 @@
 
 
 #ifdef DUMBDISPLAY
-#ifdef ESP32
-#include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true, 115200));
-#else
-//#include "ssdumbdisplay.h"
-//DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
 #include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
-#endif
+// #ifdef ESP32
+// #include "esp32dumbdisplay.h"
+// DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true, 115200));
+// #else
+// //#include "ssdumbdisplay.h"
+// //DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
+// #include "dumbdisplay.h"
+// DumbDisplay dumbdisplay(new DDInputOutput(115200));
+// #endif
 #endif
 
 
@@ -122,7 +124,7 @@ long checkMillis = 0;
 bool isIdle = false;
 void loop() {
 #ifdef DUMBDISPLAY
-    DDFeedback* feedback = lcd->getFeedback();
+    const DDFeedback* feedback = lcd->getFeedback();
     if (feedback != NULL) {
         if (feedback->text.length() > 0) {
             lcd->writeLine(feedback->text, 1);
