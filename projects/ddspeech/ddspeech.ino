@@ -101,10 +101,15 @@ void synthesizeSpeech(const String& text) {
 }
 
 
+
 #ifdef ENABLE_DUMBDISPLAY
 LcdDDLayer* wordsButton;
+LcdDDLayer* newsButton;
 GraphicalDDLayer* textLayer;
 #endif
+
+
+
 
 void setup() {
 // #ifdef ESP32
@@ -138,16 +143,24 @@ void setup() {
     wordsButton = dumbdisplay.createLcdLayer(12, 1);
     wordsButton->border(1, "darkgray", "round");
     wordsButton->enableFeedback("f:keys");
-    wordsButton->writeCenteredLine("WORDS");
+    wordsButton->writeCenteredLine("Words");
+
+    newsButton = dumbdisplay.createLcdLayer(12, 1);
+    newsButton->border(1, "darkgray", "round");
+    newsButton->enableFeedback("f");
+    newsButton->writeCenteredLine("News");
+
     textLayer = dumbdisplay.createGraphicalLayer(200, 100);
     textLayer->border(2, "darkblue");
     textLayer->padding(5);
     textLayer->setTextColor("blue");
     textLayer->backgroundColor("ivory");
     textLayer->setTextWrap(true);
-    //textLayer->enableFeedback("f:keys");
 
-    dumbdisplay.configAutoPin(DD_AP_VERT);
+    dumbdisplay.configAutoPin(DD_AP_VERT_2(
+        DD_AP_HORI_2(wordsButton->getLayerId(), newsButton->getLayerId()),
+        textLayer->getLayerId()
+    ));
 #endif
 }
 
