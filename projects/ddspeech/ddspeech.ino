@@ -102,7 +102,8 @@ void synthesizeSpeech(const String& text) {
 
 
 #ifdef ENABLE_DUMBDISPLAY
-GraphicalDDLayer* adhoc;
+LcdDDLayer* wordsButton;
+GraphicalDDLayer* textLayer;
 #endif
 
 void setup() {
@@ -134,9 +135,19 @@ void setup() {
 #endif
 
 #ifdef ENABLE_DUMBDISPLAY
-    adhoc = dumbdisplay.createGraphicalLayer(100, 50);
-    adhoc->setTextWrap(true);
-    adhoc->enableFeedback("f:keys");
+    wordsButton = dumbdisplay.createLcdLayer(12, 1);
+    wordsButton->border(1, "darkgray", "round");
+    wordsButton->enableFeedback("f:keys");
+    wordsButton->writeCenteredLine("WORDS");
+    textLayer = dumbdisplay.createGraphicalLayer(200, 100);
+    textLayer->border(2, "darkblue");
+    textLayer->padding(5);
+    textLayer->setTextColor("blue");
+    textLayer->backgroundColor("ivory");
+    textLayer->setTextWrap(true);
+    //textLayer->enableFeedback("f:keys");
+
+    dumbdisplay.configAutoPin(DD_AP_VERT);
 #endif
 }
 
@@ -147,11 +158,12 @@ long checkMillis = 0;
 bool isIdle = false;
 void loop() {
 #ifdef ENABLE_DUMBDISPLAY
-    const DDFeedback* feedback = adhoc->getFeedback();
+    const DDFeedback* feedback = wordsButton->getFeedback();
     if (feedback != NULL) {
         if (feedback->text.length() > 0) {
-            adhoc->clear();
-            adhoc->print(feedback->text);
+            textLayer->clear();
+            textLayer->setCursor(0, 0);
+            textLayer->print(feedback->text);
             if (isIdle) {
                 isIdle = false;
                 synthesizeSpeech("[v1][h0]" + feedback->text);
