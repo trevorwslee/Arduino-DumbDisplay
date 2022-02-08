@@ -885,6 +885,7 @@ In a more complicated case, you may want to get data from Internet open REST api
   notes:
   * all returned values will be text
   * control characters like `\r` not supported
+  * since lots of data could be acquired,  `Serial` connection might not be suitable due to it's small buffer size
   
 * use `count()` to check if the "tunnel" has anything to read, and use `read()` to read what got, like:
   ```

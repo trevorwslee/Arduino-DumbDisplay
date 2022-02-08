@@ -24,7 +24,7 @@ void setup() {
     Serial.begin(115200);
     synthesizer.begin(115200);
 
-    String text = "[h0]Peace be with you! Jesus loves you!";  // [h0] annotates that the text that follows should be read out (instead of spelt out)
+    String text = "[h0]Greeting! Peace be with you! Jesus loves you!";  // [h0] annotates that the text that follows should be read out (instead of spelt out)
 
     Serial.println();
     Serial.print("{");

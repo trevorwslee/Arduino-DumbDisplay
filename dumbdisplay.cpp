@@ -798,7 +798,10 @@ void _HandleFeedback() {
               if (idx != -1) {
                 String command = tid.substring(idx + 1);
                 tid = tid.substring(0, idx);
+#ifdef DEBUG_SHOW_FEEDBACK
 //Serial.println("LT-command" + data);
+Serial.println("LT-command:[" + command + "]");
+#endif
                 if (command == "final") {
                   final = true;
                 } else if (command == "error") {
