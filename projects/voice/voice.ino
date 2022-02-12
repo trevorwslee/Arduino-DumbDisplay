@@ -21,16 +21,9 @@ SoftwareSerial synthesizer(9, 8);
 
 
 void setup() {
-    Serial.begin(115200);
     synthesizer.begin(115200);
 
-    String text = "[h0]Greeting! Peace be with you! Jesus loves you!";  // [h0] annotates that the text that follows should be read out (instead of spelt out)
-
-    Serial.println();
-    Serial.print("{");
-    Serial.print(text);
-    Serial.print("}=");
-    Serial.println(text.length());
+    String text = "[h0]Hi! Peace be with you! Jesus loves you!";  // [h0] annotates that the text that follows should be read out (instead of spelt out)
 
     synthesizer.write((byte) 0xFD);                 // header
     synthesizer.write((byte) 0x00);                 // data len: higher order byte

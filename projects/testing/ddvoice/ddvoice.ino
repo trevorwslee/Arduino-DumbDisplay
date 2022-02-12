@@ -1,26 +1,31 @@
-
-
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
 
 
 
+// ***
+// *** ESP32 DEV Kit
+// ***
+// *   Serial2 -- GPIO16 (RXD 2) => TX of XFS5152CE board; GPIO17 (TXD 2) => RX of XFS5152CE
+#define synthesizer Serial2
+// * GPIO23 
+#define PIN_SPEAKER_ENABLE 23
+
+
+// ***
+// *** newsapi.org 
+// ***
+// *   reference: https://newsapi.org/docs/endpoints/top-headlines
 #define NEWS_API_ENDPOINT "https://newsapi.org/v2/top-headlines?apiKey=cf8b2b54b5a7499dafd18938294204d9"
+
+
 #define IMAGE_FILE_NAME   "tempimage.png"
+
+
 
 
 #include "esp32dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
-
-
-
-#ifdef ESP32
-#define PIN_SPEAKER_ENABLE 23
-#define synthesizer Serial2
-#else
-#include <SoftwareSerial.h>
-SoftwareSerial synthesizer(9, 8);  // pin 9 connect to TX of XFS5152CE board; 8 connect to RX of XFS5152CE board
-#endif
 
 
 
@@ -62,8 +67,6 @@ int UTF8ToUnicode(const char* utf8, uint8_t* utf16Buffer) {
 
 
 void synthesizeVoice(const String& text) {
-    //digitalWrite(PIN_SPEAKER_ENABLE, HIGH);
-    synthesizer.write((byte) 0xFD);
     int text_len = text.length();
     uint8_t buffer[2 * text_len];
     int len = UTF8ToUnicode(text.c_str(), buffer);
@@ -106,20 +109,14 @@ void enableButtons() {
 void setup() {
     WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);     // turn off the 'brownout detector'
 
-
     synthesizer.begin(115200);
-
     pinMode(PIN_SPEAKER_ENABLE, OUTPUT);
     digitalWrite(PIN_SPEAKER_ENABLE, LOW);
-
-    delay(1000);
 
     langsButton = dumbdisplay.createLcdLayer(12, 1);
     langsButton->backgroundColor("indigo");
     langsButton->border(1, "gray", "round");
     langsButton->enableFeedback("f");
-    //wordsButton->enableFeedback("f:keys");
-    //wordsButton->writeCenteredLine("Words");
 
     newsButton = dumbdisplay.createLcdLayer(12, 1);
     newsButton->backgroundColor("navy");
@@ -136,8 +133,7 @@ void setup() {
     textLayer->enableFeedback("f:keys");
 
 #ifdef NEWS_API_ENDPOINT
-    //newsTunnel = dumbdisplay.createJsonTunnel(NEWS_API_ENDPOINT, false);
-    newsTunnel = dumbdisplay.createFilteredJsonTunnel("", "title,description,urlToImage");  
+    newsTunnel = dumbdisplay.createFilteredJsonTunnel("", "title,urlToImage");  
     imageTunnel = dumbdisplay.createImageDownloadTunnel("", IMAGE_FILE_NAME);
 #endif
 
@@ -225,27 +221,15 @@ void loop() {
         String endpoint = NEWS_API_ENDPOINT + ("&pageSize=1&category=" + category) + ("&country=" + country);
         newsTunnel->reconnectTo(endpoint);
         String title = "";
-        String description = "";
         String imageUrl = "";
         while (!newsTunnel->eof()) {
-            // if (title.length() > 0 && description.length() > 0 && imageUrl.length() > 0) {
-            //     break;
-            // }
             if (newsTunnel->count() > 0) {
                 textLayer->print(".");
                 String fieldId;
                 String fieldValue;
                 newsTunnel->read(fieldId, fieldValue);
-                //dumbdisplay.writeComment(fieldId + "=" + fieldValue);
-                //textLayer->print(fieldId + " ... ");
                 if (fieldId == "articles.0.title") {
                     title = fieldValue;
-                    if (true) {
-                        dumbdisplay.writeComment(fieldValue);
-                    }
-                }
-                else if (fieldId == "articles.0.description") {
-                    description = fieldValue;
                 }
                 else if (fieldId == "articles.0.urlToImage") {
                     imageUrl = fieldValue;
@@ -253,9 +237,8 @@ void loop() {
             }
         }
         resetDisplaying();
-        if (title.length() > 0 || description.length() > 0) {
-            textLayer->println(title + ":");
-            textLayer->println(description);
+        if (title.length() > 0) {
+            textLayer->println(title);
             isIdle = false;
             String text = "[v1][h0]" + title;
             if (englishOnly) {
@@ -264,20 +247,16 @@ void loop() {
                 text = "[g1]" + text;
             }
             synthesizeVoice(text);
-            //synthesizeSpeech("[v1][h0][g2]" + title + ": " + description);
         }
         if (imageUrl.length() > 0) {
-            //dumbdisplay.writeComment("IMAGE:" + imageUrl);
             imageTunnel->reconnectTo(imageUrl);
             while (true) {
                 int result = imageTunnel->checkResult();
                 if (result == 1) {
-//Serial.println(result);
                     imageLayer->unloadImageFile(IMAGE_FILE_NAME);
                     imageLayer->drawImageFileFit(IMAGE_FILE_NAME);
                 }
                 if (result != 0) {
-                    //dumbdisplay.writeComment("*** " + String(result));
                     break;
                 }
             }
@@ -301,9 +280,6 @@ void loop() {
         if (synthesizer.available()) {
             int status = synthesizer.read();
             isIdle = status == 0x4F;
-            // if (isIdle) {
-            //     digitalWrite(PIN_SPEAKER_ENABLE, LOW);
-            // }
             if (false) {
                 if (isIdle) {
                     dumbdisplay.writeComment("... status=IDLE");
