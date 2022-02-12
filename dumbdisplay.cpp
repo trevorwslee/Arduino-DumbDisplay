@@ -2112,6 +2112,13 @@ JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connect
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
+JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, const String& fileNames, bool connectNow, int8_t bufferSize) {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, fileNames, endPoint, connectNow, bufferSize);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
 SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
