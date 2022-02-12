@@ -1,7 +1,7 @@
 
 
-#include "soc/soc.h"
-#include "soc/rtc_cntl_reg.h"
+// #include "soc/soc.h"
+// #include "soc/rtc_cntl_reg.h"
 
 
 
@@ -9,7 +9,7 @@
 #define IMAGE_FILE_NAME   "tempimage.png"
 
 
-#define PIN_SPEAKER_ENABLE 23
+//#define PIN_SPEAKER_ENABLE 23
 #define synthesizer Serial2
 
 
@@ -99,15 +99,13 @@ void enableButtons() {
 
 
 void setup() {
-    WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);     // turn off the 'brownout detector'
+    //WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);     // turn off the 'brownout detector'
 
 
     synthesizer.begin(115200);
 
-    pinMode(PIN_SPEAKER_ENABLE, OUTPUT);
-    digitalWrite(PIN_SPEAKER_ENABLE, LOW);
-
-    delay(1000);
+    //pinMode(PIN_SPEAKER_ENABLE, OUTPUT);
+    //digitalWrite(PIN_SPEAKER_ENABLE, LOW);
 
     langsButton = dumbdisplay.createLcdLayer(12, 1);
     langsButton->backgroundColor("indigo");
@@ -145,7 +143,7 @@ void setup() {
     ));
 
     enableButtons();
-    digitalWrite(PIN_SPEAKER_ENABLE, HIGH);
+    //digitalWrite(PIN_SPEAKER_ENABLE, HIGH);
 }
 
 
