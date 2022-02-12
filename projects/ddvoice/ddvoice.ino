@@ -9,18 +9,14 @@
 #define IMAGE_FILE_NAME   "tempimage.png"
 
 
-#include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
-
-
-
-#ifdef ESP32
 #define PIN_SPEAKER_ENABLE 23
 #define synthesizer Serial2
-#else
-#include <SoftwareSerial.h>
-SoftwareSerial synthesizer(9, 8);  // pin 9 connect to TX of XFS5152CE board; 8 connect to RX of XFS5152CE board
-#endif
+
+
+
+
+#include "esp32dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
 
 
 
@@ -62,7 +58,6 @@ int UTF8ToUnicode(const char* utf8, uint8_t* utf16Buffer) {
 
 
 void synthesizeVoice(const String& text) {
-    //digitalWrite(PIN_SPEAKER_ENABLE, HIGH);
     synthesizer.write((byte) 0xFD);
     int text_len = text.length();
     uint8_t buffer[2 * text_len];
@@ -118,8 +113,6 @@ void setup() {
     langsButton->backgroundColor("indigo");
     langsButton->border(1, "gray", "round");
     langsButton->enableFeedback("f");
-    //wordsButton->enableFeedback("f:keys");
-    //wordsButton->writeCenteredLine("Words");
 
     newsButton = dumbdisplay.createLcdLayer(12, 1);
     newsButton->backgroundColor("navy");
@@ -136,7 +129,6 @@ void setup() {
     textLayer->enableFeedback("f:keys");
 
 #ifdef NEWS_API_ENDPOINT
-    //newsTunnel = dumbdisplay.createJsonTunnel(NEWS_API_ENDPOINT, false);
     newsTunnel = dumbdisplay.createFilteredJsonTunnel("", "title,description,urlToImage");  
     imageTunnel = dumbdisplay.createImageDownloadTunnel("", IMAGE_FILE_NAME);
 #endif
@@ -228,16 +220,11 @@ void loop() {
         String description = "";
         String imageUrl = "";
         while (!newsTunnel->eof()) {
-            // if (title.length() > 0 && description.length() > 0 && imageUrl.length() > 0) {
-            //     break;
-            // }
             if (newsTunnel->count() > 0) {
                 textLayer->print(".");
                 String fieldId;
                 String fieldValue;
                 newsTunnel->read(fieldId, fieldValue);
-                //dumbdisplay.writeComment(fieldId + "=" + fieldValue);
-                //textLayer->print(fieldId + " ... ");
                 if (fieldId == "articles.0.title") {
                     title = fieldValue;
                     if (true) {
@@ -264,20 +251,16 @@ void loop() {
                 text = "[g1]" + text;
             }
             synthesizeVoice(text);
-            //synthesizeSpeech("[v1][h0][g2]" + title + ": " + description);
         }
         if (imageUrl.length() > 0) {
-            //dumbdisplay.writeComment("IMAGE:" + imageUrl);
             imageTunnel->reconnectTo(imageUrl);
             while (true) {
                 int result = imageTunnel->checkResult();
                 if (result == 1) {
-//Serial.println(result);
                     imageLayer->unloadImageFile(IMAGE_FILE_NAME);
                     imageLayer->drawImageFileFit(IMAGE_FILE_NAME);
                 }
                 if (result != 0) {
-                    //dumbdisplay.writeComment("*** " + String(result));
                     break;
                 }
             }
@@ -301,16 +284,6 @@ void loop() {
         if (synthesizer.available()) {
             int status = synthesizer.read();
             isIdle = status == 0x4F;
-            // if (isIdle) {
-            //     digitalWrite(PIN_SPEAKER_ENABLE, LOW);
-            // }
-            if (false) {
-                if (isIdle) {
-                    dumbdisplay.writeComment("... status=IDLE");
-                } else {
-                    dumbdisplay.writeComment(String("... status=" + String(status)));
-                }      
-            } 
         }
     }
 }
