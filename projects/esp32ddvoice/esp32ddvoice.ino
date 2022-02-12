@@ -1,16 +1,18 @@
-
-
-// #include "soc/soc.h"
-// #include "soc/rtc_cntl_reg.h"
-
-
-
-#define NEWS_API_ENDPOINT "https://newsapi.org/v2/top-headlines?apiKey=cf8b2b54b5a7499dafd18938294204d9"
-#define IMAGE_FILE_NAME   "tempimage.png"
-
-
-//#define PIN_SPEAKER_ENABLE 23
+// ***
+// *** ESP32 DEV Kit
+// ***
+// *   Serial2 -- GPIO16 (RXD 2) => TX of XFS5152CE board; GPIO17 (TXD 2) => RX of XFS5152CE
 #define synthesizer Serial2
+
+
+// ***
+// *** newsapi.org 
+// ***
+// *   reference: https://newsapi.org/docs/endpoints/top-headlines
+#define NEWS_API_ENDPOINT "https://newsapi.org/v2/top-headlines?apiKey=cf8b2b54b5a7499dafd18938294204d9"
+
+
+#define IMAGE_FILE_NAME   "tempimage.png"
 
 
 
@@ -77,10 +79,8 @@ LcdDDLayer* newsButton;
 GraphicalDDLayer* textLayer;
 GraphicalDDLayer* imageLayer;
 
-#ifdef NEWS_API_ENDPOINT
 JsonDDTunnel* newsTunnel;
 SimpleToolDDTunnel* imageTunnel;
-#endif
 
 
 void resetDisplaying() {
@@ -99,13 +99,7 @@ void enableButtons() {
 
 
 void setup() {
-    //WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);     // turn off the 'brownout detector'
-
-
     synthesizer.begin(115200);
-
-    //pinMode(PIN_SPEAKER_ENABLE, OUTPUT);
-    //digitalWrite(PIN_SPEAKER_ENABLE, LOW);
 
     langsButton = dumbdisplay.createLcdLayer(12, 1);
     langsButton->backgroundColor("indigo");
@@ -118,7 +112,7 @@ void setup() {
     newsButton->enableFeedback("f");
     newsButton->writeCenteredLine("News");
 
-    textLayer = dumbdisplay.createGraphicalLayer(200, 100);
+    textLayer = dumbdisplay.createGraphicalLayer(200, 80);
     textLayer->border(2, "darkblue");
     textLayer->padding(5);
     textLayer->setTextColor("blue");
@@ -126,13 +120,12 @@ void setup() {
     textLayer->setTextWrap(true);
     textLayer->enableFeedback("f:keys");
 
-#ifdef NEWS_API_ENDPOINT
-    newsTunnel = dumbdisplay.createFilteredJsonTunnel("", "title,description,urlToImage");  
+    newsTunnel = dumbdisplay.createFilteredJsonTunnel("", "title,urlToImage");  
     imageTunnel = dumbdisplay.createImageDownloadTunnel("", IMAGE_FILE_NAME);
-#endif
 
     imageLayer = dumbdisplay.createGraphicalLayer(300, 150);
-    imageLayer->border(10, "azure", "round");  
+    imageLayer->padding(5);
+    imageLayer->border(10, "gray", "round");  
     imageLayer->noBackgroundColor();
     imageLayer->penColor("navy");
 
@@ -143,7 +136,6 @@ void setup() {
     ));
 
     enableButtons();
-    //digitalWrite(PIN_SPEAKER_ENABLE, HIGH);
 }
 
 
@@ -152,7 +144,6 @@ long checkMillis = 0;
 bool isIdle = false;
 
 DDValueRecord<bool> englishOnly(true, false);
-
 
 void loop() {
     if (englishOnly.record()) {
@@ -185,7 +176,6 @@ void loop() {
         enableButtons();
     }
 
-#ifdef NEWS_API_ENDPOINT
     if (newsButton->getFeedback()) {
         resetDisplaying();
         textLayer->print("... ");
@@ -215,7 +205,6 @@ void loop() {
         String endpoint = NEWS_API_ENDPOINT + ("&pageSize=1&category=" + category) + ("&country=" + country);
         newsTunnel->reconnectTo(endpoint);
         String title = "";
-        String description = "";
         String imageUrl = "";
         while (!newsTunnel->eof()) {
             if (newsTunnel->count() > 0) {
@@ -229,18 +218,14 @@ void loop() {
                         dumbdisplay.writeComment(fieldValue);
                     }
                 }
-                else if (fieldId == "articles.0.description") {
-                    description = fieldValue;
-                }
                 else if (fieldId == "articles.0.urlToImage") {
                     imageUrl = fieldValue;
                 }
             }
         }
         resetDisplaying();
-        if (title.length() > 0 || description.length() > 0) {
-            textLayer->println(title + ":");
-            textLayer->println(description);
+        if (title.length() > 0) {
+            textLayer->println(title);
             isIdle = false;
             String text = "[v1][h0]" + title;
             if (englishOnly) {
@@ -265,7 +250,6 @@ void loop() {
         }
         enableButtons();
     }
-#endif
 
     if (langsButton->getFeedback()) {
         englishOnly = !englishOnly;
@@ -273,7 +257,6 @@ void loop() {
 
     if ((millis() - checkMillis) > 2000) {
         checkMillis = millis();
-        if (false) dumbdisplay.writeComment("checking status ...");
         synthesizer.write((byte) 0xFD);
         synthesizer.write((byte) 0x00);
         synthesizer.write((byte) 0x01);
