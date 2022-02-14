@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.8.2)
+# DumbDisplay Arduino Library (v0.8.3)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / STM32 / Respberry Pi Pico experiments.
 
@@ -25,6 +25,7 @@ Plase notice that the above mentioned video is just one of the several on using 
   * [More "Feedback" Options](#more-feedback-options)
   * [Idle Callback and ESP32 Deep Sleep](#idle-callback-and-esp32-deep-sleep)
   * [Using "Tunnel" to Download Images from the Web](#using-tunnel-to-download-images-from-the-web)
+  * [Save Pictures to Phone Captured with ESP32 Cam](#save-pictures-to-phone-captured-with-esp32-cam)
 * [Reference](#reference)
 * [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
 * [Thank You!](#thank-you)
@@ -1138,6 +1139,20 @@ pLayer->drawImageFileFit("downloaded.png");
 For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/webimage/webimage.ino 
 
 
+## Save Pictures to Phone Captured with ESP32 Cam
+
+DumbDisplay Arduino Library provides a mechanism to save pictures captured, like with ESP32 Cam, to you Android phone's internal storage, like
+
+```
+	camera_fb_t *fb = esp_camera_fb_get();
+  ...
+  dumbdisplay.saveImage("esp32-cam-captured-image.jpg", fb->buf, fb->len);
+```
+
+For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/esp32camddtest/esp32camddtest.ino 
+
+You may also want to watch the YouTube Video ESP32-CAM Experiment -- Capture and Stream Pictures to Mobile Phone -- https://www.youtube.com/watch?v=D0tinZi5l5s for a brief description of the experiment.
+
 
 # Reference
 
@@ -1189,6 +1204,11 @@ MIT
 
 
 # Change History
+
+
+v0.8.3
+  - add more options for "JSON Tunnel"
+  - bug fixes
 
 
 v0.8.2

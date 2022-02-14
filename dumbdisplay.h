@@ -523,6 +523,11 @@ class DDTunnel: public DDObject {
       this->endPoint = endPoint;
       reconnect();
     }
+    void reconnectToSetParams(const String& endPoint, const String& params) {
+      this->endPoint = endPoint;
+      this->params = params;
+      reconnect();
+    }
     const String& getTunnelId() { return tunnelId; }
   protected:
     //int _count();
