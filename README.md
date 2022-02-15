@@ -1144,7 +1144,7 @@ For a complete sample, please refer to the sample sketch https://github.com/trev
 DumbDisplay Arduino Library provides a mechanism to save pictures captured, like with ESP32 Cam, to you Android phone's internal storage, like
 
 ```
-	camera_fb_t *fb = esp_camera_fb_get();
+  camera_fb_t *fb = esp_camera_fb_get();
   ...
   dumbdisplay.saveImage("esp32-cam-captured-image.jpg", fb->buf, fb->len);
 ```

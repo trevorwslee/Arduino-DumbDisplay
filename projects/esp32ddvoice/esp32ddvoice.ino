@@ -214,11 +214,7 @@ void loop() {
                 newsTunnel->read(fieldId, fieldValue);
                 if (fieldId == "articles.0.title") {
                     title = fieldValue;
-                    if (true) {
-                        dumbdisplay.writeComment(fieldValue);
-                    }
-                }
-                else if (fieldId == "articles.0.urlToImage") {
+                } else if (fieldId == "articles.0.urlToImage") {
                     imageUrl = fieldValue;
                 }
             }
