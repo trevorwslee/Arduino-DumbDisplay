@@ -605,7 +605,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
 
   if (true) {
     int size = 16;
-#if defined(ESP32) || defined(ESP8266)
+#if defined(ESP32)
     //size = 2048;
     size = 4096; 
 #endif

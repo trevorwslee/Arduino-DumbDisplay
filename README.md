@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.8.2)
+# DumbDisplay Arduino Library (v0.8.3)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / STM32 / Respberry Pi Pico experiments.
 
@@ -25,6 +25,7 @@ Plase notice that the above mentioned video is just one of the several on using 
   * [More "Feedback" Options](#more-feedback-options)
   * [Idle Callback and ESP32 Deep Sleep](#idle-callback-and-esp32-deep-sleep)
   * [Using "Tunnel" to Download Images from the Web](#using-tunnel-to-download-images-from-the-web)
+  * [Save Pictures to Phone Captured with ESP32 Cam](#save-pictures-to-phone-captured-with-esp32-cam)
 * [Reference](#reference)
 * [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
 * [Thank You!](#thank-you)
@@ -885,6 +886,7 @@ In a more complicated case, you may want to get data from Internet open REST api
   notes:
   * all returned values will be text
   * control characters like `\r` not supported
+  * since lots of data could be acquired,  `Serial` connection might not be suitable due to it's small buffer size
   
 * use `count()` to check if the "tunnel" has anything to read, and use `read()` to read what got, like:
   ```
@@ -1103,9 +1105,11 @@ This is done via an "image download tunnel" that you can create like
 pTunnel = dumbdisplay.createImageDownloadTunnel("https://placekitten.com/680/480", "downloaded.png");
 ```
 
-As preparation, you will need to grant DumbDisplay app permission to access your phone's storage. Select the menu item "settings" and click the button "access images". This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.
+As preparation, you will need to grant DumbDisplay app permission to access your phone's storage.
 
-Next, DumbDisplay app will create a folder, speciaically, `<your phone's picture storage>/DumbDisplay/`, and write a small sample image `dumbdisplay.png` there. From now on, DumbDisplay will access the folder for any image files that it will need to read / write.
+Select the menu item "settings" and click the button "access images". This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.
+
+Once permission granted, DumbDisplay app will create a folder, speciaically, `<your phone's picture storage>/DumbDisplay/`, and write a small sample image `dumbdisplay.png` there. From now on, DumbDisplay will access the folder for any image files that it will need to read / write.
 
 Since it takes a bit of time to download image file from the Web, you will need to check it's download status asyncrhonously like
 
@@ -1132,8 +1136,22 @@ When the image downloaded and saved successfully, you can draw it to a graphical
 pLayer->drawImageFileFit("downloaded.png");
 ```
 
-For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/webimages/webimages.ino 
+For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/webimage/webimage.ino 
 
+
+## Save Pictures to Phone Captured with ESP32 Cam
+
+DumbDisplay Arduino Library provides a mechanism to save pictures captured, like with ESP32 Cam, to you Android phone's internal storage, like
+
+```
+  camera_fb_t *fb = esp_camera_fb_get();
+  ...
+  dumbdisplay.saveImage("esp32-cam-captured-image.jpg", fb->buf, fb->len);
+```
+
+For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/esp32camddtest/esp32camddtest.ino 
+
+You may also want to watch the YouTube Video ESP32-CAM Experiment -- Capture and Stream Pictures to Mobile Phone -- https://www.youtube.com/watch?v=D0tinZi5l5s for a brief description of the experiment.
 
 
 # Reference
@@ -1186,6 +1204,11 @@ MIT
 
 
 # Change History
+
+
+v0.8.3
+  - add more options for "JSON Tunnel"
+  - bug fixes
 
 
 v0.8.2

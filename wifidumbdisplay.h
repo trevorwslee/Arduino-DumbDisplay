@@ -3,7 +3,7 @@
 
 #include "dumbdisplay.h"
 
-#ifdef DD_4_ESP8266
+#ifdef ESP8266
 #include <ESP8266WiFi.h>
 #else
 #include <WiFi.h>

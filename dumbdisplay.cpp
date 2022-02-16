@@ -26,6 +26,7 @@
 //#define DEBUG_ECHO_FEEDBACK
 //#define DEBUG_VALIDATE_CONNECTION
 //#define DEBUG_TUNNEL_RESPONSE
+//#define DEBUG_SHOW_FEEDBACK
 
 
 #define SUPPORT_LONG_PRESS_FEEDBACK
@@ -764,6 +765,10 @@ void _HandleFeedback() {
 //    String* pFeedback = _ReadFeedback(buffer);
 // #endif
     if (pFeedback != NULL) {
+#ifdef DEBUG_SHOW_FEEDBACK
+      Serial.print("FB: ");
+      Serial.println(*pFeedback);
+#endif      
 #ifdef MORE_KEEP_ALIVE
           // keep alive wheneven received someting
         _ConnectedIOProxy->keepAlive();
@@ -793,7 +798,10 @@ void _HandleFeedback() {
               if (idx != -1) {
                 String command = tid.substring(idx + 1);
                 tid = tid.substring(0, idx);
+#ifdef DEBUG_SHOW_FEEDBACK
 //Serial.println("LT-command" + data);
+Serial.println("LT-command:[" + command + "]");
+#endif
                 if (command == "final") {
                   final = true;
                 } else if (command == "error") {
@@ -1719,10 +1727,10 @@ void DDBufferedTunnel::release() {
 int DDBufferedTunnel::_count() {
   //int count = (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
   int count = (arraySize + nextArrayIdx - validArrayIdx) % arraySize;
-#ifdef DEBUG_TUNNEL_RESPONSE                
-Serial.print("COUNT: ");
-Serial.println(count);
-#endif
+// #ifdef DEBUG_TUNNEL_RESPONSE                
+// Serial.print("COUNT: ");
+// Serial.println(count);
+// #endif
   return count;
 }
 bool DDBufferedTunnel::_eof() {
@@ -1816,6 +1824,10 @@ bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
   //   fieldValue = buffer;
   // }
   // return true;
+}
+void SimpleToolDDTunnel::reconnect() {
+  this->result = 0;
+  this->DDBufferedTunnel::reconnect();
 }
 int SimpleToolDDTunnel::checkResult() {
   if (this->result == 0) {
@@ -2097,6 +2109,13 @@ JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connect
   //   _sendSpecialCommand("lt", tunnelId, "connect", "ddsimplejson@" + endPoint);
   // }
   JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, "", endPoint, connectNow, bufferSize);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
+JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, const String& fileNames, bool connectNow, int8_t bufferSize) {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, fileNames, endPoint, connectNow, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }

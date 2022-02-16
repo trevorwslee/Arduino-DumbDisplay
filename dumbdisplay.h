@@ -56,6 +56,9 @@
 #define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
 
 
+#define DD_TUNNEL_DEF_BUFFER_SIZE 3
+
+
 #include "_dd_serial.h"
 #include "_dd_io.h"
 #include "_dd_feedback.h"
@@ -520,6 +523,11 @@ class DDTunnel: public DDObject {
       this->endPoint = endPoint;
       reconnect();
     }
+    void reconnectToSetParams(const String& endPoint, const String& params) {
+      this->endPoint = endPoint;
+      this->params = params;
+      reconnect();
+    }
     const String& getTunnelId() { return tunnelId; }
   protected:
     //int _count();
@@ -627,6 +635,7 @@ class SimpleToolDDTunnel: public JsonDDTunnel {
       this->result = 0;
     }
   public:
+    virtual void reconnect();
     /* 0: not done */
     /* 1: done */
     /* -1: failed */
@@ -700,9 +709,12 @@ class DumbDisplay {
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
     /* if not connect now, need to connect via reconnect() */
-    BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 3);
+    BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
     /* if not connect now, need to connect via reconnect() */
-    JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = 3);
+    JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
+    /* if not connect now, need to connect via reconnect() */
+    /* - fieldNames: comma-delimited list of field names to accept; note that matching is 'case-insensitive containment match' */ 
+    JsonDDTunnel* createFilteredJsonTunnel(const String& endPoint, const String& fileNames, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
     /* download image from the web and save the downloaded image */
     /* you will get reuslt as JSON: {"result":"ok"} or {"result":"failed"} */
     /* for simplicity, use SimpleToolDDTunnel.checkResult() to check result */

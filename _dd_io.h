@@ -31,7 +31,7 @@ class DDInputOutput {
       if (_The_DD_Serial != NULL) _The_DD_Serial->write(b);
     }
     virtual void write(const uint8_t *buf, size_t size) {
-      for (int i = 0; i < size; i++) {
+      for (size_t i = 0; i < size; i++) {
         write(buf[i]);
       }
     }    
