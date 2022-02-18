@@ -10,7 +10,7 @@
 #else
 
 // for Arduino UNO compatible board
-// - pin 9 connect to TX of XFS5152CE board; 8 connect to RX of XFS5152CE board
+// - pin 9 connect to TX of XFS5152CE board; pin 8 connect to RX of XFS5152CE board
 // - use SoftwareSerial
 
 #include <SoftwareSerial.h>

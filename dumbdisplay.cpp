@@ -873,7 +873,7 @@ Serial.println("LT++++" + data + " - final:" + String(final));
       if (token != NULL) {
         y = atoi(token);
         ok = true;
-        token = strtok(NULL, ",");
+        token = strtok(NULL, "");  // want the rest
       }
       if (token != NULL) {
         pText = token;
