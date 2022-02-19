@@ -9,7 +9,7 @@
 // *** newsapi.org 
 // ***
 // *   reference: https://newsapi.org/docs/endpoints/top-headlines
-#define NEWS_API_ENDPOINT "https://newsapi.org/v2/top-headlines?apiKey=cf8b2b54b5a7499dafd18938294204d9"
+#define NEWS_API_ENDPOINT "https://newsapi.org/v2/top-headlines?apiKey=APIKEY"
 
 
 #define IMAGE_FILE_NAME   "tempimage.png"
