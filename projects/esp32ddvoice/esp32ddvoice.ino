@@ -1,3 +1,9 @@
+// for a desciption of the experiment
+// -- Arduino Speech Synthesizer Experiment with XFS5152CE
+// -- https://www.youtube.com/watch?v=3aVNp6xhqVM 
+
+
+
 // ***
 // *** ESP32 DEV Kit
 // ***
