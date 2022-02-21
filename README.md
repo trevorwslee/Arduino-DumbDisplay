@@ -919,7 +919,7 @@ The automatic pinning of layers is the easier. You only need to call the DumbDis
                                     pLcdLayer->getLayerId()),
                                 pTurtleLayer->getLayerId()));
 ```
-`DD_AP_HORI_2()` / `DD_AP_VERT_2()` macro pins 2 layers one by one horizontally / vertically. It accepts 2 arguments, with each one either a layer id, or another *DD_AP_XXX* macro. 
+`DD_AP_HORI_2()` / `DD_AP_VERT_2()` macro pins 2 layers side by side horizontally / vertically. It accepts 2 arguments, with each one either a layer id, or another *DD_AP_XXX* macro. 
 
 The manual way of pinning layers is a bit more complicated. First, a "pin frame" needs be defined with a fixed size; by default, the size is 100 by 100. To change the "pin frame" fixed size, use the DumbDisplay method `configPinFrame()`. 
 
