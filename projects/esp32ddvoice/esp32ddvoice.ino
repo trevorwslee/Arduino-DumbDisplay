@@ -9,7 +9,7 @@
 // *** newsapi.org 
 // ***
 // *   reference: https://newsapi.org/docs/endpoints/top-headlines
-#define NEWS_API_ENDPOINT "https://newsapi.org/v2/top-headlines?apiKey=APIKEY"
+#define NEWS_API_ENDPOINT "https://newsapi.org/v2/top-headlines?apiKey=<APIKEY>"
 
 
 #define IMAGE_FILE_NAME   "tempimage.png"
@@ -199,7 +199,7 @@ void loop() {
         String country = "us";
         if (!englishOnly) {
             if (rand() % 2 == 0) {
-                country="hk";
+                country = "hk";
             }
         }
         String endpoint = NEWS_API_ENDPOINT + ("&pageSize=1&category=" + category) + ("&country=" + country);
