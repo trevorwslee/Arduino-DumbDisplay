@@ -103,6 +103,11 @@ class DDLayer: public DDObject {
     /* size unit ... see border() */
     void padding(float left, float top, float right, float bottom);
     void noPadding();
+    /* size unit ... see border() */
+    void margin(float size);
+    /* size unit ... see border() */
+    void margin(float left, float top, float right, float bottom);
+    void noMargin();
     /* clear the layer */
     void clear();
     /* set layer background color with common "color name" */

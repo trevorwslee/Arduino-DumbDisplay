@@ -1091,6 +1091,15 @@ void DDLayer::padding(float left, float top, float right, float bottom) {
 void DDLayer::noPadding() {
   _sendCommand0(layerId, C_padding);
 }
+void DDLayer::margin(float size) {
+  _sendCommand1(layerId, C_margin, TO_NUM(size));
+}
+void DDLayer::margin(float left, float top, float right, float bottom) {
+  _sendCommand4(layerId, C_margin, TO_NUM(left), TO_NUM(top), TO_NUM(right), TO_NUM(bottom));
+}
+void DDLayer::noMargin() {
+  _sendCommand0(layerId, C_margin);
+}
 void DDLayer::clear() {
   _sendCommand0(layerId, C_clear);
 }
