@@ -2135,6 +2135,13 @@ SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoin
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
+BasicDDTunnel* DumbDisplay::createDateTimeServiceTunnel() {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel("datetimeservice", tid, "", "", false, 1);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
 
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   pTunnel->release();

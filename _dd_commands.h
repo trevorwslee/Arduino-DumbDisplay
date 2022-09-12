@@ -93,6 +93,10 @@
 #define C_drawimagefile    "#98"
 #define C_drawimagefilefit "#99"
 
+#define C_goto             "#a0"
+#define C_zoomto           "#a1"
+#define C_zoom             "#a2"
+
 
 #define C_fd               "fd"
 #define C_lt               "lt"

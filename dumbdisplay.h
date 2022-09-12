@@ -596,7 +596,7 @@ class BasicDDTunnel: public DDBufferedTunnel {
     /* read a line from buffer */
     String readLine();
     /* read a line from buffer, in to the buffer passed in */
-    inline void readLine(String &buffer) { _readLine(buffer); }
+    inline bool readLine(String &buffer) { return _readLine(buffer); }
     /* write a line */
     inline void writeLine(const String& data) { _writeLine(data); }
 };
@@ -725,6 +725,10 @@ class DumbDisplay {
     /* for simplicity, use SimpleToolDDTunnel.checkResult() to check result */
     /* MUST use deleteTunnel() to delete the "download tunnel" after use */
     SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName);
+    /* reconnectTo with commands like */
+    /* . now */
+    /* . now-millis */
+    BasicDDTunnel* createDateTimeServiceTunnel();
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
     /* set DD background color with common "color name" */
