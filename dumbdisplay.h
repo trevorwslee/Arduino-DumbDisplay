@@ -599,6 +599,9 @@ class BasicDDTunnel: public DDBufferedTunnel {
     inline bool readLine(String &buffer) { return _readLine(buffer); }
     /* write a line */
     inline void writeLine(const String& data) { _writeLine(data); }
+  public:
+    /* read a piece of JSON data */
+    bool read(String& fieldId, String& fieldValue);
 };
 
 /**
@@ -622,21 +625,34 @@ class BasicDDTunnel: public DDBufferedTunnel {
  *   `gender` = `Male`
  *   `age` = `32`
  */
-class JsonDDTunnel: public DDBufferedTunnel {
+class JsonDDTunnel: public BasicDDTunnel {
   public:
-    JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
-    /* count buffer ready (pieces of JSON) to be read */
-    inline int count() { return _count(); }
-    /* reached EOF? */
-    inline bool eof() { return _eof(); }
-    /* read a piece of JSON data */
-    bool read(String& fieldId, String& fieldValue);
+    // /* count buffer ready (pieces of JSON) to be read */
+    // inline int count() { return _count(); }
+    // /* reached EOF? */
+    // inline bool eof() { return _eof(); }
+    // /* read a piece of JSON data */
+    // bool read(String& fieldId, String& fieldValue);
 };
+// class JsonDDTunnel: public DDBufferedTunnel {
+//   public:
+//     JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+//     }
+//     /* count buffer ready (pieces of JSON) to be read */
+//     inline int count() { return _count(); }
+//     /* reached EOF? */
+//     inline bool eof() { return _eof(); }
+//     /* read a piece of JSON data */
+//     bool read(String& fieldId, String& fieldValue);
+// };
 
-class SimpleToolDDTunnel: public JsonDDTunnel {
+class SimpleToolDDTunnel: public BasicDDTunnel {
   public:
-    SimpleToolDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): JsonDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    SimpleToolDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
       this->result = 0;
     }
   public:

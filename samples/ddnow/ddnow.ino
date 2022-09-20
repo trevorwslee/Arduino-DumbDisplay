@@ -42,13 +42,20 @@ void loop() {
         dumbdisplay.writeComment("clicked");
         datetimeTunnel->reconnectTo("now");
     }
-    if (datetimeTunnel->count() > 0) {
-        String result = datetimeTunnel->readLine();
+    String result;
+    if (datetimeTunnel->readLine(result)) {
         graphical->clear();
         graphical->setCursor(0, 0);
         graphical->println("NOW:");
         graphical->println(result);
     }
+    // if (datetimeTunnel->count() > 0) {
+    //     String result = datetimeTunnel->readLine();
+    //     graphical->clear();
+    //     graphical->setCursor(0, 0);
+    //     graphical->println("NOW:");
+    //     graphical->println(result);
+    // }
 }
 
 

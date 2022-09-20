@@ -1809,7 +1809,7 @@ String BasicDDTunnel::readLine() {
   _readLine(buffer);
   return buffer;
 }
-bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
+bool BasicDDTunnel::read(String& fieldId, String& fieldValue) {
   fieldId = "";
   if (!_readLine(fieldValue)) {
     return false;
@@ -1834,6 +1834,31 @@ bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
   // }
   // return true;
 }
+// bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
+//   fieldId = "";
+//   if (!_readLine(fieldValue)) {
+//     return false;
+//   }
+//   int idx = fieldValue.indexOf(":");
+//   if (idx != -1) {
+//     fieldId = fieldValue.substring(0, idx);
+//     fieldValue = fieldValue.substring(idx + 1);
+//   }
+//   return true;
+//   // String buffer;
+//   // if (!_readLine(buffer)) {
+//   //   return false;
+//   // }
+//   // int idx = buffer.indexOf(":");
+//   // if (idx != -1) {
+//   //   fieldId = buffer.substring(0, idx);
+//   //   fieldValue = buffer.substring(idx + 1);
+//   // } else {
+//   //   fieldId = "";
+//   //   fieldValue = buffer;
+//   // }
+//   // return true;
+// }
 void SimpleToolDDTunnel::reconnect() {
   this->result = 0;
   this->DDBufferedTunnel::reconnect();
@@ -2121,10 +2146,10 @@ JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connect
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
-JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, const String& fileNames, bool connectNow, int8_t bufferSize) {
+JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, const String& fieldNames, bool connectNow, int8_t bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, fileNames, endPoint, connectNow, bufferSize);
+  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, fieldNames, endPoint, connectNow, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
