@@ -1592,6 +1592,15 @@ void PlotterDDLayer::set(const String& key1, float value1, const String& key2, f
   _sendCommand8(layerId, "", key1, TO_C_NUM(value1), key2, TO_C_NUM(value2), key3, TO_C_NUM(value3), key4, TO_C_NUM(value4));
 }  
 
+void TomTomMapDDLayer::goTo(float latitude, float longitude, const String& label) {
+  _sendCommand3(layerId, C_goto, TO_NUM(latitude), TO_NUM(longitude), label);
+}
+void TomTomMapDDLayer::zoomTo(float latitude, float longitude, float zoomLevel, const String& label) {
+  _sendCommand4(layerId, C_zoomto, TO_NUM(latitude), TO_NUM(longitude), TO_NUM(zoomLevel), label);
+}
+void TomTomMapDDLayer::zoom(float zoomLevel) {
+  _sendCommand1(layerId, C_zoom, TO_NUM(zoomLevel));
+}
 
 
 // bool DDInputOutput::available() {
@@ -2051,6 +2060,14 @@ PlotterDDLayer* DumbDisplay::createPlotterLayer(int width, int height, int pixel
   String layerId = String(lid);
   _sendCommand4(layerId, "SU", String("plotterview"), String(width), String(height), String(pixelsPerSecond));
   PlotterDDLayer* pLayer = new PlotterDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
+}
+TomTomMapDDLayer* DumbDisplay::createTomTomMapLayer(int width, int height) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("tomtommap"), String(width), String(height));
+  TomTomMapDDLayer* pLayer = new TomTomMapDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
 }

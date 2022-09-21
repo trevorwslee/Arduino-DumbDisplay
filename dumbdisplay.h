@@ -516,6 +516,18 @@ class PlotterDDLayer: public DDLayer {
     void set(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3, const String& key4, float value4);  
 };
 
+/**
+ * a 'device dependent view' layer, which means that it is solely rendered by the Android view that it hosts 
+ */
+class TomTomMapDDLayer: public DDLayer {
+  public:
+    TomTomMapDDLayer(int8_t layerId): DDLayer(layerId) {
+    }
+  void goTo(float latitude, float longitude, const String& label = "");
+  void zoomTo(float latitude, float longitude, float zoomLevel = 15.0, const String& label = "");
+  void zoom(float zoomLevel);
+};
+
 
 
 class DDTunnel: public DDObject {
@@ -743,6 +755,7 @@ class DumbDisplay {
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
+    TomTomMapDDLayer* createTomTomMapLayer(int width, int height);
     /* create a 'tunnel' to interface with Internet (similar to socket) */
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
