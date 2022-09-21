@@ -1888,6 +1888,31 @@ Serial.println("XXX EOF???");
   }
   return this->result;
 }
+
+void GpsServiceDDTunnel::reconnectForLocation(int repeat) {
+  if (repeat == -1) {
+      reconnectTo("location");
+  } else {
+      reconnectTo("location?repeat=" + repeat);
+  }
+}
+bool GpsServiceDDTunnel::readLocation(DDLocation& location) {
+  String value;
+  if (!_readLine(value)) {
+    return false;
+  }
+  int idx = value.indexOf("/");
+  if (idx == -1) {
+    return false;
+  }
+  String latitude = value.substring(0, idx);
+  String longitude = value.substring(idx + 1);
+  location.latitude = latitude.toFloat();
+  location.longitude = longitude.toFloat();
+  return true;
+
+}
+
 JsonDDTunnelMultiplexer::JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int8_t tunnelCount) {
   this->tunnelCount = tunnelCount;
   //this->tunnels = tunnels;
@@ -2167,6 +2192,15 @@ BasicDDTunnel* DumbDisplay::createDateTimeServiceTunnel() {
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
+
+GpsServiceDDTunnel* DumbDisplay::createGpsServiceTunnel() {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  GpsServiceDDTunnel* pTunnel = new GpsServiceDDTunnel("gpsservice", tid, "", "", false, 1);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
+
 
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   pTunnel->release();

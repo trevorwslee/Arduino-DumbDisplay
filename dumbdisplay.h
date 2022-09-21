@@ -665,6 +665,23 @@ class SimpleToolDDTunnel: public BasicDDTunnel {
     int result; 
 };
 
+struct DDLocation {
+  float latitude;
+  float longitude;
+};
+
+
+class GpsServiceDDTunnel: public BasicDDTunnel {
+  public:
+    GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    }
+  public:
+    /* - repeat: how often (seconds) data will be sent back; -1 means no repeat */ 
+    void reconnectForLocation(int repeat = -1);
+    bool readLocation(DDLocation& location);  
+};
+
 
 /** will not delete "tunnels" passed in */
 class JsonDDTunnelMultiplexer {
@@ -745,6 +762,7 @@ class DumbDisplay {
     /* . now */
     /* . now-millis */
     BasicDDTunnel* createDateTimeServiceTunnel();
+    GpsServiceDDTunnel* createGpsServiceTunnel();
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
     /* set DD background color with common "color name" */
