@@ -16,6 +16,7 @@ TomTomMapDDLayer *tomtommap;
 BasicDDTunnel *datetimeTunnel;
 GpsServiceDDTunnel *gpsTunnel;
 
+
 void prepareTunnels() {
   // create a date-time service tunnel
   datetimeTunnel = dumbdisplay.createDateTimeServiceTunnel();
@@ -23,8 +24,8 @@ void prepareTunnels() {
   // create a GPS service tunnel
   gpsTunnel = dumbdisplay.createGpsServiceTunnel();
   gpsTunnel->reconnectForLocation(2);  // reconnect to service for GPS location, continuously
-
 }
+
 
 void setup() {
     // record the layout, basiclly for the ability of DD app reconnecting
@@ -48,10 +49,10 @@ void setup() {
 
 
 
+DDConnectVersionTracker cvTracker(-1);
 String datetime;
 DDLocation location;
 
-DDConnectVersionTracker cvTracker(-1);
 void loop() {
     if (cvTracker.checkChanged(dumbdisplay)) {
         // there has been a reconnection ==> prepare tunnels
