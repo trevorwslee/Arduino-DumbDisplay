@@ -949,7 +949,7 @@ The only "device dependent view" layer is ```TomTomMapDDLayer```.
 
 |  | |
 |--|--|
-|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddnowhere.jpg)|For demonstration, the above "now/here" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. The complete "nowhere" sample is https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddnowhere/ddnowhere.ino|
+|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddnowhere.jpg)|For demonstration, the above "now/here" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. The complete "nowhere" sample is https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/ddnowhere/ddnowhere.ino|
 
 
 
