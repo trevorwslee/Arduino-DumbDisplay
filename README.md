@@ -945,7 +945,7 @@ Nevertheless, do note that:
 * The 'device dependent view' DD Layer sizing is just lik graphical LCD layer, but be warned that the embeeded
   Android View will ***not*** be scaled, like other DD Layers.
 
-The only "device dependent view" layer is ```TomTomMapDDLayer```. In later section, the above "nowhere" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. 
+The only "device dependent view" layer is ```TomTomMapDDLayer```. In later section, the above "now/here" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. 
 
 
 

@@ -1902,7 +1902,7 @@ void GpsServiceDDTunnel::reconnectForLocation(int repeat) {
   if (repeat == -1) {
       reconnectTo("location");
   } else {
-      reconnectTo("location?repeat=" + repeat);
+      reconnectTo("location?repeat=" + String(repeat));
   }
 }
 bool GpsServiceDDTunnel::readLocation(DDLocation& location) {
