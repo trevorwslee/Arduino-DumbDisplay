@@ -20,6 +20,7 @@ Plase notice that the above mentioned video is just one of the several on using 
   * [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism)
   * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
   * [Service "Tunnels"](#service-tunnels)
+  * ["Device Dependent View" Layers](#device-dependent-view-layers)
   * [Positioning of Layers](#positioning-of-layers)
   * [Record and Playback Commands](#record-and-playback-commands)
   * [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
@@ -934,6 +935,17 @@ The two service "tunnels" are:
     }  
   ```   
   The complete "here" sample sketch: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddhere/ddhere.ino
+
+## "Device Dependent View" Layers
+
+A "device dependent view" layer is a layer that embeeds a specific kind of Android View as a DD Layer. And hence, it's rendering is totally controlled by the Android View itself. DumbDisplay app simply provides a place where it can reside.
+
+Nevertheless, do note that:
+* DDLayer's margin, boarder, padding, as well as visibility, will work as expected.
+* The 'device dependent view' DD Layer sizing is just lik graphical LCD layer, but be warned that the embeeded
+  Android View will ***not*** be scaled, like other DD Layers.
+
+The only "device dependent view" layer is ```TomTomMapDDLayer```. In later section, the above "nowhere" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. 
 
 
 
