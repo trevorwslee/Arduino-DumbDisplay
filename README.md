@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.8.4)
+# DumbDisplay Arduino Library (v0.9.0)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / STM32 / Respberry Pi Pico experiments.
 
@@ -19,6 +19,7 @@ Plase notice that the above mentioned video is just one of the several on using 
 * [Features](#features)  
   * [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism)
   * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
+  * [Service "Tunnels"](#service-tunnels)
   * [Positioning of Layers](#positioning-of-layers)
   * [Record and Playback Commands](#record-and-playback-commands)
   * [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
@@ -36,9 +37,9 @@ Plase notice that the above mentioned video is just one of the several on using 
 
 # Description
 
-Instead of connecting real gadgets to your Arduino IDE compatible microcontroller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets on your Android phone.
+Instead of connecting real gadgets to your Arduino IDE compatible microcontroller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets remotely on your Android phone.
 
-By doing so you can defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few microcontroller pins for other experiment needs.
+By doing so you can defer buying / connecting real gadgets until later stage of your experiment. Also, you should be able to save a few microcontroller pins for other experiment needs.
 
 A few types of layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
@@ -48,6 +49,7 @@ A few types of layers can be created:
 * Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 * Plotter, which works similar to the plotter of DumbDisplay, but plotting data provided by sending commands
+* TomTom map "device dependent view" layer
 
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected micro-controller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism) for more on "layer feedback" mechanism.
 
@@ -902,6 +904,38 @@ In a more complicated case, you may want to get data from Internet open REST api
   note that `eof()` will check whether everything has returned and read before signaling EOF.
 
 
+## Service "Tunnels"
+
+Service "tunnels" is a kind of "tunnels" that aids getting specific external data, by making use of your Android's phone features.
+
+The two service "tunnels" are:
+* "Date-time service tunnel" for getting current date-time from your Android phone
+  ```
+    BasicDDTunnel *datetimeTunnel = dumbdisplay.createDateTimeServiceTunnel();
+    datetimeTunnel->reconnectTo("now");
+    ...
+    String datetime;
+    if (datetimeTunnel->readLine(datetime)) {
+      ...
+    } 
+  ```
+  Note that other than getting "now" date-time as text, you can use "now-millis" to get date-time in milli-seconds.  
+  The complete "now" sample sketch: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddnow/ddnow.ino
+* "GPS service tunnel" for getting your Android phone's location
+  In order for DumbDisplay app to access your phone's GPS service, permission is needed;
+  please select DumbDisplay app menu item ***Settings*** and click the ***Location Service button***.
+  ```
+    GpsServiceDDTunnel *gpsTunnel = dumbdisplay.createGpsServiceTunnel();
+    gpsTunnel->reconnectForLocation();
+    ...
+    DDLocation location;
+    if (gpsTunnel->readLocation(location)) {
+      ...
+    }  
+  ```   
+  The complete "here" sample sketch: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddhere/ddhere.ino
+
+
 
 ## Positioning of Layers
 
@@ -1204,6 +1238,11 @@ MIT
 
 
 # Change History
+
+v0.9.0
+  - added 'service tunnel'
+  - added TomTom map layer
+  - big fixes
 
 v0.8.4
   - added layer margin support

@@ -21,7 +21,7 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 GraphicalDDLayer *graphical;
 LcdDDLayer *button;
-BasicDDTunnel *datetimeTunnel;
+GpsServiceDDTunnel *gpsTunnel;
 
 void setup() {
   // create a graphical LCD layer for showing the current date-time got  
@@ -29,29 +29,29 @@ void setup() {
 
   // create a LCD layer, as a button, to get click feedback
   button = dumbdisplay.createLcdLayer(12, 1);
-  button->writeCenteredLine("check NOW");
+  button->writeCenteredLine("check HERE");
   button->enableFeedback("fl");
 
   // auto pin the two layers created above vertically
   dumbdisplay.configAutoPin(DD_AP_VERT);
 
-  // create a date-time service tunnel
-  datetimeTunnel = dumbdisplay.createDateTimeServiceTunnel();
+  // create a GPS service tunnel
+  gpsTunnel = dumbdisplay.createGpsServiceTunnel();
 }
 
 
 void loop() {
     if (button->getFeedback() != NULL) {
-        // button clicked ==> get current date-time
-        datetimeTunnel->reconnectTo("now");
+        // button clicked ==> request GPS location
+        gpsTunnel->reconnectForLocation();
     }
-    String datetime;
-    if (datetimeTunnel->readLine(datetime)) {
-        // got current date-time feedback ==> display it
+    DDLocation location;
+    if (gpsTunnel->readLocation(location)) {
+        // got GPS location feedback ==> display the location
         graphical->clear();
         graphical->setCursor(0, 0);
-        graphical->println("NOW:");
-        graphical->println(datetime);
+        graphical->println("LOC:");
+        graphical->println("LAT:" + String(location.latitude, 4) + " / LONG:" + String(location.longitude, 4));
     }
     DDYield();  // give DumbDisplay a chance to do it's work
 }

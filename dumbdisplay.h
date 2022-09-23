@@ -755,7 +755,9 @@ class DumbDisplay {
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
-    TomTomMapDDLayer* createTomTomMapLayer(int width, int height);
+    /* . mapKey must be provide; plesae visit TomTom's website to get one of your own */
+    /*   if pass in "" as mapKey, will use my testing one */
+    TomTomMapDDLayer* createTomTomMapLayer(const String& mapKey, int width, int height);
     /* create a 'tunnel' to interface with Internet (similar to socket) */
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */

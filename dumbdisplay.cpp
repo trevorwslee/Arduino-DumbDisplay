@@ -2063,10 +2063,10 @@ PlotterDDLayer* DumbDisplay::createPlotterLayer(int width, int height, int pixel
   _PostCreateLayer(pLayer);
   return pLayer;
 }
-TomTomMapDDLayer* DumbDisplay::createTomTomMapLayer(int width, int height) {
+TomTomMapDDLayer* DumbDisplay::createTomTomMapLayer(const String& mapKey, int width, int height) {
   int lid = _AllocLid();
   String layerId = String(lid);
-  _sendCommand3(layerId, "SU", String("tomtommap"), String(width), String(height));
+  _sendCommand4(layerId, "SU", String("tomtommap"), mapKey, String(width), String(height));
   TomTomMapDDLayer* pLayer = new TomTomMapDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
