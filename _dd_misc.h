@@ -44,6 +44,7 @@ class DDValueRecord {
 
 class DDConnectVersionTracker {
   public:
+    /* . version: pass in -1 so that it will be considered a version change even when fresh start */
     DDConnectVersionTracker(int version = 0) {
       this->version = version;
     }

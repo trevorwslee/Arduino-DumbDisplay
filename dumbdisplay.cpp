@@ -1091,6 +1091,15 @@ void DDLayer::padding(float left, float top, float right, float bottom) {
 void DDLayer::noPadding() {
   _sendCommand0(layerId, C_padding);
 }
+void DDLayer::margin(float size) {
+  _sendCommand1(layerId, C_margin, TO_NUM(size));
+}
+void DDLayer::margin(float left, float top, float right, float bottom) {
+  _sendCommand4(layerId, C_margin, TO_NUM(left), TO_NUM(top), TO_NUM(right), TO_NUM(bottom));
+}
+void DDLayer::noMargin() {
+  _sendCommand0(layerId, C_margin);
+}
 void DDLayer::clear() {
   _sendCommand0(layerId, C_clear);
 }
@@ -1583,6 +1592,15 @@ void PlotterDDLayer::set(const String& key1, float value1, const String& key2, f
   _sendCommand8(layerId, "", key1, TO_C_NUM(value1), key2, TO_C_NUM(value2), key3, TO_C_NUM(value3), key4, TO_C_NUM(value4));
 }  
 
+void TomTomMapDDLayer::goTo(float latitude, float longitude, const String& label) {
+  _sendCommand3(layerId, C_goto, TO_NUM(latitude), TO_NUM(longitude), label);
+}
+void TomTomMapDDLayer::zoomTo(float latitude, float longitude, float zoomLevel, const String& label) {
+  _sendCommand4(layerId, C_zoomto, TO_NUM(latitude), TO_NUM(longitude), TO_NUM(zoomLevel), label);
+}
+void TomTomMapDDLayer::zoom(float zoomLevel) {
+  _sendCommand1(layerId, C_zoom, TO_NUM(zoomLevel));
+}
 
 
 // bool DDInputOutput::available() {
@@ -1800,7 +1818,7 @@ String BasicDDTunnel::readLine() {
   _readLine(buffer);
   return buffer;
 }
-bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
+bool BasicDDTunnel::read(String& fieldId, String& fieldValue) {
   fieldId = "";
   if (!_readLine(fieldValue)) {
     return false;
@@ -1825,6 +1843,31 @@ bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
   // }
   // return true;
 }
+// bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
+//   fieldId = "";
+//   if (!_readLine(fieldValue)) {
+//     return false;
+//   }
+//   int idx = fieldValue.indexOf(":");
+//   if (idx != -1) {
+//     fieldId = fieldValue.substring(0, idx);
+//     fieldValue = fieldValue.substring(idx + 1);
+//   }
+//   return true;
+//   // String buffer;
+//   // if (!_readLine(buffer)) {
+//   //   return false;
+//   // }
+//   // int idx = buffer.indexOf(":");
+//   // if (idx != -1) {
+//   //   fieldId = buffer.substring(0, idx);
+//   //   fieldValue = buffer.substring(idx + 1);
+//   // } else {
+//   //   fieldId = "";
+//   //   fieldValue = buffer;
+//   // }
+//   // return true;
+// }
 void SimpleToolDDTunnel::reconnect() {
   this->result = 0;
   this->DDBufferedTunnel::reconnect();
@@ -1854,6 +1897,31 @@ Serial.println("XXX EOF???");
   }
   return this->result;
 }
+
+void GpsServiceDDTunnel::reconnectForLocation(int repeat) {
+  if (repeat == -1) {
+      reconnectTo("location");
+  } else {
+      reconnectTo("location?repeat=" + String(repeat));
+  }
+}
+bool GpsServiceDDTunnel::readLocation(DDLocation& location) {
+  String value;
+  if (!_readLine(value)) {
+    return false;
+  }
+  int idx = value.indexOf("/");
+  if (idx == -1) {
+    return false;
+  }
+  String latitude = value.substring(0, idx);
+  String longitude = value.substring(idx + 1);
+  location.latitude = latitude.toFloat();
+  location.longitude = longitude.toFloat();
+  return true;
+
+}
+
 JsonDDTunnelMultiplexer::JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int8_t tunnelCount) {
   this->tunnelCount = tunnelCount;
   //this->tunnels = tunnels;
@@ -1995,6 +2063,14 @@ PlotterDDLayer* DumbDisplay::createPlotterLayer(int width, int height, int pixel
   _PostCreateLayer(pLayer);
   return pLayer;
 }
+TomTomMapDDLayer* DumbDisplay::createTomTomMapLayer(const String& mapKey, int width, int height) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand4(layerId, "SU", String("tomtommap"), mapKey, String(width), String(height));
+  TomTomMapDDLayer* pLayer = new TomTomMapDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
+}
 void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }
@@ -2112,10 +2188,10 @@ JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connect
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
-JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, const String& fileNames, bool connectNow, int8_t bufferSize) {
+JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, const String& fieldNames, bool connectNow, int8_t bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, fileNames, endPoint, connectNow, bufferSize);
+  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, fieldNames, endPoint, connectNow, bufferSize);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
@@ -2126,6 +2202,22 @@ SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoin
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
+BasicDDTunnel* DumbDisplay::createDateTimeServiceTunnel() {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel("datetimeservice", tid, "", "", false, 1);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
+
+GpsServiceDDTunnel* DumbDisplay::createGpsServiceTunnel() {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  GpsServiceDDTunnel* pTunnel = new GpsServiceDDTunnel("gpsservice", tid, "", "", false, 1);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
+
 
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   pTunnel->release();

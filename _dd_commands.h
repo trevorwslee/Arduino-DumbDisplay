@@ -19,6 +19,7 @@
 #define C_opacity          "#19"
 #define C_transparent      "#20"
 #define C_alpha            "#21"
+#define C_margin           "#22" 
 
 
 #define C_fillscreen       "#30"
@@ -91,6 +92,10 @@
 #define C_unloadimagefile  "#97"
 #define C_drawimagefile    "#98"
 #define C_drawimagefilefit "#99"
+
+#define C_goto             "#a0"
+#define C_zoomto           "#a1"
+#define C_zoom             "#a2"
 
 
 #define C_fd               "fd"

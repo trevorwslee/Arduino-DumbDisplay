@@ -95,7 +95,7 @@ class DDLayer: public DDObject {
     /* - 7SegmentRowLayer; each 7-segment is composed of fixed 220 x 320 pixels */
     /* - LedGridLayer; a LED is considered as a pixel */  
     /* shape -- can be "flat", "hair", "round", "raised" or "sunken" */  
-    /* extraSize just added to size; however if shape is "round", it affect the "roundness" */
+    /* extraSize just added to size; however if shape is "round", it affects the "roundness" */
     void border(float size, const String& color, const String& shape = "flat", float extraSize = 0);
     void noBorder();
     /* size unit ... see border() */
@@ -103,6 +103,11 @@ class DDLayer: public DDObject {
     /* size unit ... see border() */
     void padding(float left, float top, float right, float bottom);
     void noPadding();
+    /* size unit ... see border() */
+    void margin(float size);
+    /* size unit ... see border() */
+    void margin(float left, float top, float right, float bottom);
+    void noMargin();
     /* clear the layer */
     void clear();
     /* set layer background color with common "color name" */
@@ -511,6 +516,18 @@ class PlotterDDLayer: public DDLayer {
     void set(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3, const String& key4, float value4);  
 };
 
+/**
+ * a 'device dependent view' layer, which means that it is solely rendered by the Android view that it hosts 
+ */
+class TomTomMapDDLayer: public DDLayer {
+  public:
+    TomTomMapDDLayer(int8_t layerId): DDLayer(layerId) {
+    }
+  void goTo(float latitude, float longitude, const String& label = "");
+  void zoomTo(float latitude, float longitude, float zoomLevel = 15.0, const String& label = "");
+  void zoom(float zoomLevel);
+};
+
 
 
 class DDTunnel: public DDObject {
@@ -591,9 +608,12 @@ class BasicDDTunnel: public DDBufferedTunnel {
     /* read a line from buffer */
     String readLine();
     /* read a line from buffer, in to the buffer passed in */
-    inline void readLine(String &buffer) { _readLine(buffer); }
+    inline bool readLine(String &buffer) { return _readLine(buffer); }
     /* write a line */
     inline void writeLine(const String& data) { _writeLine(data); }
+  public:
+    /* read a piece of JSON data */
+    bool read(String& fieldId, String& fieldValue);
 };
 
 /**
@@ -617,21 +637,34 @@ class BasicDDTunnel: public DDBufferedTunnel {
  *   `gender` = `Male`
  *   `age` = `32`
  */
-class JsonDDTunnel: public DDBufferedTunnel {
+class JsonDDTunnel: public BasicDDTunnel {
   public:
-    JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
-    /* count buffer ready (pieces of JSON) to be read */
-    inline int count() { return _count(); }
-    /* reached EOF? */
-    inline bool eof() { return _eof(); }
-    /* read a piece of JSON data */
-    bool read(String& fieldId, String& fieldValue);
+    // /* count buffer ready (pieces of JSON) to be read */
+    // inline int count() { return _count(); }
+    // /* reached EOF? */
+    // inline bool eof() { return _eof(); }
+    // /* read a piece of JSON data */
+    // bool read(String& fieldId, String& fieldValue);
 };
+// class JsonDDTunnel: public DDBufferedTunnel {
+//   public:
+//     JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+//     }
+//     /* count buffer ready (pieces of JSON) to be read */
+//     inline int count() { return _count(); }
+//     /* reached EOF? */
+//     inline bool eof() { return _eof(); }
+//     /* read a piece of JSON data */
+//     bool read(String& fieldId, String& fieldValue);
+// };
 
-class SimpleToolDDTunnel: public JsonDDTunnel {
+class SimpleToolDDTunnel: public BasicDDTunnel {
   public:
-    SimpleToolDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): JsonDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    SimpleToolDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
       this->result = 0;
     }
   public:
@@ -642,6 +675,23 @@ class SimpleToolDDTunnel: public JsonDDTunnel {
     int checkResult(); 
   private:
     int result; 
+};
+
+struct DDLocation {
+  float latitude;
+  float longitude;
+};
+
+
+class GpsServiceDDTunnel: public BasicDDTunnel {
+  public:
+    GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    }
+  public:
+    /* - repeat: how often (seconds) data will be sent back; -1 means no repeat */ 
+    void reconnectForLocation(int repeat = -1);
+    bool readLocation(DDLocation& location);  
 };
 
 
@@ -705,6 +755,9 @@ class DumbDisplay {
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
+    /* . mapKey must be provide; plesae visit TomTom's website to get one of your own */
+    /*   if pass in "" as mapKey, will use my testing one */
+    TomTomMapDDLayer* createTomTomMapLayer(const String& mapKey, int width, int height);
     /* create a 'tunnel' to interface with Internet (similar to socket) */
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
@@ -720,6 +773,11 @@ class DumbDisplay {
     /* for simplicity, use SimpleToolDDTunnel.checkResult() to check result */
     /* MUST use deleteTunnel() to delete the "download tunnel" after use */
     SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName);
+    /* reconnectTo with commands like */
+    /* . now */
+    /* . now-millis */
+    BasicDDTunnel* createDateTimeServiceTunnel();
+    GpsServiceDDTunnel* createGpsServiceTunnel();
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
     /* set DD background color with common "color name" */

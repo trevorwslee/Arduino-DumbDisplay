@@ -603,7 +603,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
     dumbdisplay.logToSerial(log_msg);
   }
 
-  if (true) {
+  if (false) {
     int size = 16;
 #if defined(ESP32)
     //size = 2048;

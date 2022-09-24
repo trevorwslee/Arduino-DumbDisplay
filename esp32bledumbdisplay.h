@@ -146,6 +146,15 @@ class DDBLESerialIO: public DDInputOutput {
           _print(s.c_str());
 #endif
         }  
+        void write(uint8_t b) {
+          int s = b;
+          pTx->setValue(s);
+#ifdef DD_LE_INDICATE          
+          pTx->indicate();
+#else          
+          pTx->notify();
+#endif
+        }
         bool available() {
           while (true) {
             if (!buffering) {

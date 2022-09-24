@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.8.3)
+# DumbDisplay Arduino Library (v0.9.0)
 
 DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / STM32 / Respberry Pi Pico experiments.
 
@@ -19,6 +19,8 @@ Plase notice that the above mentioned video is just one of the several on using 
 * [Features](#features)  
   * [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism)
   * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
+  * [Service "Tunnels"](#service-tunnels)
+  * ["Device Dependent View" Layers](#device-dependent-view-layers)
   * [Positioning of Layers](#positioning-of-layers)
   * [Record and Playback Commands](#record-and-playback-commands)
   * [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
@@ -36,9 +38,9 @@ Plase notice that the above mentioned video is just one of the several on using 
 
 # Description
 
-Instead of connecting real gadgets to your Arduino IDE compatible microcontroller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets on your Android phone.
+Instead of connecting real gadgets to your Arduino IDE compatible microcontroller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets remotely on your Android phone.
 
-By doing so you can defer buying / connecting real gadgets until later stage of your experiment; also, you should be able to save a few microcontroller pins for other experiment needs.
+By doing so you can defer buying / connecting real gadgets until later stage of your experiment. Also, you may be able to save a few microcontroller pins for other experiment needs.
 
 A few types of layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
@@ -48,6 +50,7 @@ A few types of layers can be created:
 * Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 * Plotter, which works similar to the plotter of DumbDisplay, but plotting data provided by sending commands
+* TomTom map "device dependent view" layer, for showing location (latitude/longitude)
 
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected micro-controller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism) for more on "layer feedback" mechanism.
 
@@ -56,7 +59,9 @@ Note that with the "layer feedback" mechanism, user interaction (like clicking o
 
 ## Arduino IDE
 
-The basic steps are
+The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show; install it.
+
+Alternative, you can choose to use the more fluid manual approach. The basic steps are
 1) download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
 2) to install, use Arduino IDE menu option **Sktech** | **Include Library** | **Add .ZIP library...** and choose the ZIP you just downloaded
 
@@ -67,7 +72,7 @@ For demonstration on installing DumbDisplay Arduino Library, you may want to wat
 
 ## PlatformIO
 
-If you have an Arduino framework PlatformIO project that wants to make use of DumbDisplay Arduino Library, you can simply modify the project's *platformio.ini* adding to *lib_deps* like:
+If you have an Arduino framework PlatformIO project that you want to make use of DumbDisplay Arduino Library, you can simply modify the project's *platformio.ini* adding to *lib_deps* like:
 
 ```
 lib_deps =
@@ -89,15 +94,15 @@ Obviously, you will need to install an app on your Android phone. Indeed, for Ar
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth by HC-05 / HC-06; even HC-08)
 * BluetoothSerial (for ESP32)
-* Bluetooth LE (for ESP32)
+* Bluetooth LE (for ESP32 and ESP32C3)
 * WIFI (e.g. ESP01, ESP8266 and ESP32)
 * Serial (USB connected via OTG adapter)
 * Serial <-> WIFI via the simple included tool -- [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge)
-* Serial2 (hardware serial)
+* Serial2 (hardware serial, like for Raspberry Pi Pico)
 
 Notes:
-* I have only tested DumbDisplay with the micro-controller boards that I have -- namely, Arduino Uno, ESP01, ESP8266, ESP32, STM32F103 and Raspberry Pi Pico.
-* In case DumbDisplay does not "handshake" with your microcontroller board correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduion.
+* Out of so many microcontroller boards, I have only tested DumbDisplay with the micro-controller boards that I have acquired.
+* In case DumbDisplay does not "handshake" with your microcontroller board correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduino.
 * In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection) for more on the topic.
 
  
@@ -216,8 +221,8 @@ void loop() {
 ```
 
 Notes:
-* DumbDisplay library will work cooperatively with your code, therefore, do give a change for DumbDisplay library chances to do its work. Please call `DDYeild()` and/or `DDDelay()` appropriately whenever possible. 
-* Many commands sent will be "compressed", and will look a bit cryptic.
+* DumbDisplay library will work cooperatively with your code; therefore, do give DumbDisplay library chances to do its work. Please call `DDYeild()` and/or `DDDelay()` appropriately whenever possible. 
+* Many commands sent will be "compressed", and will look a bit cryptic (when shown on DumbDisplay app)
 * In case a layer finishes all its usages in the middle of the sketch, it should be deleted in order for Arduino to claim back resources:
   ```
   dumbdisplay.deleteLayer(led);
@@ -824,7 +829,7 @@ Please note that DumbDisplay library will check for "feedback" in several occasi
 
 With the help of DumbDisplay WIFI Bridge (more on it in coming section), Arduino Uno can make use of DumbDisplay's "Tunnel" to get simple things from the Internet, like "quote of the day" from djxmmx.net.
 
-In fact, DumbDisplay Android app also provides this "tunnel" feature; however, it appears that Android does not allow all connections, possibly due to the port restriction.
+In fact, DumbDisplay Android app also provides this "tunnel" feature, and richer; however, it appears that Android does not allow all connections, possibly due to the port restriction.
 
 ```
 DumbDisplay dumbdisplay(new DDInputOutput(9600));
@@ -843,7 +848,7 @@ void loop() {
 }
 ```
 
-In case a "tunnel" reached EOF, and need be reinvoked:
+In case a "tunnel" reaches EOF, and needs be reinvoked:
 
 ```
 pTunnel->reconnect();
@@ -901,6 +906,53 @@ In a more complicated case, you may want to get data from Internet open REST api
   ```
   note that `eof()` will check whether everything has returned and read before signaling EOF.
 
+
+## Service "Tunnels"
+
+Service "tunnels" is a kind of "tunnels" that aids getting specific external data, by making use of your Android's phone features.
+
+The two service "tunnels" are:
+* "Date-time service tunnel" for getting current date-time from your Android phone
+  ```
+    BasicDDTunnel *datetimeTunnel = dumbdisplay.createDateTimeServiceTunnel();
+    datetimeTunnel->reconnectTo("now");
+    ...
+    String datetime;
+    if (datetimeTunnel->readLine(datetime)) {
+      ...
+    } 
+  ```
+  Note that other than getting "now" date-time as text, you can use "now-millis" to get date-time in milli-seconds.  
+  The complete "now" sample sketch: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddnow/ddnow.ino
+* "GPS service tunnel" for getting your Android phone's location
+  In order for DumbDisplay app to access your phone's GPS service, permission is needed;
+  please select DumbDisplay app menu item ***Settings*** and click the ***Location Service button***.
+  ```
+    GpsServiceDDTunnel *gpsTunnel = dumbdisplay.createGpsServiceTunnel();
+    gpsTunnel->reconnectForLocation();
+    ...
+    DDLocation location;
+    if (gpsTunnel->readLocation(location)) {
+      ...
+    }  
+  ```   
+  The complete "here" sample sketch: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddhere/ddhere.ino
+
+
+## "Device Dependent View" Layers
+
+A "device dependent view" layer is a layer that embeeds a specific kind of Android View as a DD Layer. And hence, it's rendering is totally controlled by the Android View itself. DumbDisplay app simply provides a place where it will reside.
+
+Nevertheless, do note that:
+* DDLayer's margin, border, padding, as well as visibility, will work as expected.
+* The "device dependent view" DD Layer sizing is just like graphical LCD layer, but be warned that the embeeded
+  Android View will ***not*** be scaled, like other DD Layers.
+
+The only "device dependent view" layer is ```TomTomMapDDLayer```.
+
+|  | |
+|--|--|
+|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddnowhere.jpg)|For demonstration, the above "now/here" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. The complete "nowhere" sample is https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddnowhere/ddnowhere.ino|
 
 
 ## Positioning of Layers
@@ -1107,9 +1159,9 @@ pTunnel = dumbdisplay.createImageDownloadTunnel("https://placekitten.com/680/480
 
 As preparation, you will need to grant DumbDisplay app permission to access your phone's storage.
 
-Select the menu item "settings" and click the button "access images". This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.
+Select the menu item ***settings*** and click the button ***access images***. This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.
 
-Once permission granted, DumbDisplay app will create a folder, speciaically, `<your phone's picture storage>/DumbDisplay/`, and write a small sample image `dumbdisplay.png` there. From now on, DumbDisplay will access the folder for any image files that it will need to read / write.
+Once permission granted, DumbDisplay app will create a private folder, and write a small sample image `dumbdisplay.png` there. From now on, DumbDisplay will access the folder for any image files that it will need to read / write.
 
 Since it takes a bit of time to download image file from the Web, you will need to check it's download status asyncrhonously like
 
@@ -1154,7 +1206,7 @@ For a complete sample, please refer to the sample sketch https://github.com/trev
 You may also want to watch the YouTube Video ESP32-CAM Experiment -- Capture and Stream Pictures to Mobile Phone -- https://www.youtube.com/watch?v=D0tinZi5l5s for a brief description of the experiment.
 
 
-# Reference
+# Library Code Header as Reference
 
 For reference, please look into the declarations of the different related classes in the header files; mostly dumbdisplay.h -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/dumbdisplay.h
 
@@ -1204,6 +1256,15 @@ MIT
 
 
 # Change History
+
+v0.9.0
+  - added 'service tunnel'
+  - added TomTom map layer
+  - big fixes
+
+v0.8.4
+  - added layer margin support
+  - big fixes
 
 
 v0.8.3
