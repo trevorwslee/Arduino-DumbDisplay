@@ -1,7 +1,7 @@
 {
     "name": "DumbDisplay Arduino Library",
     "version": "0.9.0",
-    "description": "DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / Respberry Pi Pico experiments.",
+    "description": "DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.",
     "keywords": "Arduino, ESP, Display, Remote, DumbDisplay", 
     "license": "MIT",  
     "frameworks": ["arduino"],
