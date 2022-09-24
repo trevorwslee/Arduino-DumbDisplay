@@ -1,6 +1,6 @@
 # DumbDisplay Arduino Library (v0.9.0)
 
-DumbDisplay Ardunio Library enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your Arduino / ESP / STM32 / Respberry Pi Pico experiments.
+[DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
 You may want to watch the video **Introducing DumbDisplay -- the little helper for Arduino experiments** for a brief introduction -- https://www.youtube.com/watch?v=QZkhO6jTf0U
 
@@ -61,7 +61,7 @@ Note that with the "layer feedback" mechanism, user interaction (like clicking o
 
 The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show; install it.
 
-Alternative, you can choose to use the more fluid manual approach. The basic steps are
+Alternative, you can choose to use the more "fluid" manual approach. The basic steps are
 1) download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
 2) to install, use Arduino IDE menu option **Sktech** | **Include Library** | **Add .ZIP library...** and choose the ZIP you just downloaded
 
@@ -75,6 +75,7 @@ For demonstration on installing DumbDisplay Arduino Library, you may want to wat
 If you have an Arduino framework PlatformIO project that you want to make use of DumbDisplay Arduino Library, you can simply modify the project's *platformio.ini* adding to *lib_deps* like:
 
 ```
+[env]
 lib_deps =
     https://github.com/trevorwslee/Arduino-DumbDisplay
 ```
