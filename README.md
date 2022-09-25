@@ -946,8 +946,8 @@ A "device dependent view" layer is a layer that embeeds a specific kind of Andro
 
 Nevertheless, do note that:
 * DDLayer's margin, border, padding, as well as visibility, will work as expected.
-* The "device dependent view" DD Layer sizing is just like graphical LCD layer, but be warned that the embeeded
-  Android View will ***not*** be scaled, like other DD Layers.
+* The "device dependent view" DD Layer size -- of the "opening" for the Android view -- is just like graphical LCD layer,
+  but be warned that it will ***not*** be scaled, like other DD Layers.
 
 The only "device dependent view" layer is ```TomTomMapDDLayer```.
 
