@@ -1602,6 +1602,13 @@ void TomTomMapDDLayer::zoom(float zoomLevel) {
   _sendCommand1(layerId, C_zoom, TO_NUM(zoomLevel));
 }
 
+void TerminalDDLayer::print(const String& val) {
+  _sendCommand1(layerId, C_print, val);
+}
+void TerminalDDLayer::println(const String& val) {
+  _sendCommand1(layerId, C_println, val);
+}
+
 
 // bool DDInputOutput::available() {
 //   return Serial.available();
@@ -2058,7 +2065,7 @@ SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
 PlotterDDLayer* DumbDisplay::createPlotterLayer(int width, int height, int pixelsPerSecond) {
   int lid = _AllocLid();
   String layerId = String(lid);
-  _sendCommand4(layerId, "SU", String("plotterview"), String(width), String(height), String(pixelsPerSecond));
+  _sendCommand4(layerId, "SU", String("plotter"), String(width), String(height), String(pixelsPerSecond));
   PlotterDDLayer* pLayer = new PlotterDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
@@ -2071,6 +2078,15 @@ TomTomMapDDLayer* DumbDisplay::createTomTomMapLayer(const String& mapKey, int wi
   _PostCreateLayer(pLayer);
   return pLayer;
 }
+TerminalDDLayer* DumbDisplay::createTerminalLayer(int width, int height) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("terminal"), String(width), String(height));
+  TerminalDDLayer* pLayer = new TerminalDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
+}
+
 void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }

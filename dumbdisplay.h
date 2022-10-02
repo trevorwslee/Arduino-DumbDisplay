@@ -523,9 +523,39 @@ class TomTomMapDDLayer: public DDLayer {
   public:
     TomTomMapDDLayer(int8_t layerId): DDLayer(layerId) {
     }
-  void goTo(float latitude, float longitude, const String& label = "");
-  void zoomTo(float latitude, float longitude, float zoomLevel = 15.0, const String& label = "");
-  void zoom(float zoomLevel);
+    void goTo(float latitude, float longitude, const String& label = "");
+    void zoomTo(float latitude, float longitude, float zoomLevel = 15.0, const String& label = "");
+    void zoom(float zoomLevel);
+};
+
+/**
+ * a 'device dependent view' layer, which act as a terminal, for logging etc 
+ */
+class TerminalDDLayer: public DDLayer {
+  public:
+    TerminalDDLayer(int8_t layerId): DDLayer(layerId) {
+    }
+    void print(const String& val);
+    void println(const String& val);
+    inline void print(int intVal) { 
+      String val(intVal);
+      print(val);
+    }
+    inline void println(int intVal) { 
+      String val(intVal);
+      print(val);
+    }
+    inline void print(float floatVal) { 
+      String val(floatVal);
+      print(val);
+    }
+    inline void println(float floatVal) { 
+      String val(floatVal);
+      print(val);
+    }
+    inline void println() {
+      println(""); 
+    }
 };
 
 
@@ -758,6 +788,7 @@ class DumbDisplay {
     /* . mapKey must be provide; plesae visit TomTom's website to get one of your own */
     /*   if pass in "" as mapKey, will use my testing one */
     TomTomMapDDLayer* createTomTomMapLayer(const String& mapKey, int width, int height);
+    TerminalDDLayer* createTerminalLayer(int width, int height);
     /* create a 'tunnel' to interface with Internet (similar to socket) */
     /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
     /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */

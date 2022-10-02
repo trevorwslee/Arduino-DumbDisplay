@@ -97,6 +97,8 @@
 #define C_zoomto           "#a1"
 #define C_zoom             "#a2"
 
+#define C_println          "#a3"
+
 
 #define C_fd               "fd"
 #define C_lt               "lt"

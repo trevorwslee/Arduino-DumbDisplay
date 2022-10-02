@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.0)
+# DumbDisplay Arduino Library (v0.9.1)
 
 [DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -949,6 +949,54 @@ Nevertheless, do note that:
 * The "device dependent view" DD Layer size -- of the "opening" for the Android view -- is just like graphical LCD layer,
   but be warned that it will ***not*** be scaled, like other DD Layers.
 
+There are two "device dependent view" layer available.
+
+## "Device Dependent View" Layers
+
+### Terminal Layer
+
+```TerminalDDLayer``` is a simple "device dependent view" layer that simulates the function of a simple serial terminal (monitor) like DumbDisplay app itself. You create such layer like
+
+A sample use is: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/project/ddgps/ddgps.ino
+
+The sample demonstrates how to read simple GPS location data from module like NEO-7M U-BLOX, formats and output the data
+to a ```TerminalDDLayer```:
+
+```
+  ...
+  #define NEO_RX 6   // RX pin of NEO-7M U-BLOX
+  #define NEO_TX 5   // TX pin of NEO-7M U-BLOX
+  SoftwareSerial gpsSerial(NEO_TX, NEO_RX);
+  GpsSignalReader gpsSignalReader(gpsSerial);
+  DumbDisplay dumbdisplay(new DDInputOutput(115200));
+  TerminalDDLayer* terminal;
+  void setup() {
+    gpsSerial.begin(9600);
+    terminal= dumbdisplay.createTerminalLayer(600, 800);
+  }
+GpsSignal gpsSignal;
+void loop() {
+  if (gpsSignalReader.readOnce(gpsSignal)) {
+    terminal->print("- utc: ");
+    terminal->print(gpsSignal.utc_time);
+    terminal->print(" ... ");
+    if (gpsSignal.position_fixed) {
+      terminal->print("position fixed -- ");
+      terminal->print("lat:");
+      terminal->print(gpsSignal.latutude);
+      terminal->print(" long:");
+      terminal->print(gpsSignal.longitude);
+     ...
+    }
+  }
+```
+
+The above sketch assumes using OTG USB adaptor for connection to Android DumbDisplay app. And as a result, bringing the above GPS experiment outdoor should be easier. Not only the microcontroller board can be powered by your Android phone, you can observe running traces of the sketch with your phone as well.
+
+
+### TomTom Map Layer
+
+
 The only "device dependent view" layer is ```TomTomMapDDLayer```.
 
 |  | |
@@ -1257,6 +1305,10 @@ MIT
 
 
 # Change History
+
+v0.9.1
+  - added 'terminal' layer
+  - bug fixes
 
 v0.9.0
   - added 'service tunnel'
