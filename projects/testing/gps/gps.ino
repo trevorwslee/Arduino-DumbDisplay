@@ -45,7 +45,7 @@ bool GpsSignalReader::readOnce(GpsSignal& gpsSignal, bool logToSerial) {
       if (reading_header_idx < HEADER_LEN) {
         if (c != HEADER[reading_header_idx++]) {
           reading = false;
-          return;
+          return false;
         }
       } else {
         //Serial.write(c);
