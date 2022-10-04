@@ -1,6 +1,6 @@
 
-// * assume OTG adaptor
-// * or DumbDisplayWifiBridge
+// * needs SoftwareSerial.h
+// * assume OTG adaptor or DumbDisplayWifiBridge
 
 
 // --------------------------------------
@@ -60,7 +60,6 @@ bool GpsSignalReader::readOnce(GpsSignal& gpsSignal) {
       } else {
         if (c == '\r') {
           reading = false;
-          // got all values
           if (utc_time[0] != 0) {
             memcpy(gpsSignal.utc_time, utc_time, sizeof(utc_time));
             gpsSignal.position_fixed = position_fixed;
@@ -151,15 +150,24 @@ TomTomMapDDLayer *tomtommap;    // for showing the location fixed, on a TomTom m
 
 
 
+long startMillis;
+long lastMillis;
 void setup() {
+  startMillis = millis();
+  lastMillis = startMillis;
+
   // it appears that it is better to explicityly make connection to DD app first
   dumbdisplay.connect();
 
   // the default UART baud rate for communicating with NEO-7M is 9600
   gpsSerial.begin(9600);
 
+
+  //dumbdisplay.recordLayerSetupCommands();
+
   // create the layers, as described above
-  graphical = dumbdisplay.createGraphicalLayer(220, 30);
+  graphical = dumbdisplay.createGraphicalLayer(250, 30);
+  graphical->setTextFont("DL::Ubuntu Mono");
   graphical->border(3, "black");
   graphical->padding(3);
   graphical->penColor("blue");
@@ -177,16 +185,15 @@ void setup() {
     DD_AP_VERT_3(graphical->getLayerId(),
                  terminal->getLayerId(),
                  tomtommap->getLayerId()));
+
+  //dumbdisplay.playbackLayerSetupCommands("ddgpsmap");
 }
 
-long startTimeMillis = millis();
-long lastMillis = startTimeMillis;
 bool waited = false;
 GpsSignal gpsSignal;
 void loop() {
   long nowMillis = millis();
-  long diffMillis = nowMillis - lastMillis;
-  if (diffMillis > 2000) {
+  if ((nowMillis - lastMillis) > 2000) {
     terminal->print(".");
     waited = true;
     lastMillis = nowMillis;
@@ -221,8 +228,8 @@ void loop() {
     } else {
       graphical->print("not fixed");
     }
-    if ((nowMillis - startTimeMillis) > 5000 && gpsSignal.position_fixed) {
-      // show TomTom map ... notice the "5000 millis from start" requirement
+    if (((nowMillis - startMillis) > 20000) && gpsSignal.position_fixed) {
+      // show TomTom map ... notice the "20000 millis from start" requirement
       terminal->visible(false);
       tomtommap->visible(true);
     }  
