@@ -2,13 +2,9 @@
 
 
 #define USE_BLUETOOTH
-//#define USE_RECORD
 
-boolean enableSerial = true;
-unsigned long serialBaud = 57600;
 #ifdef USE_BLUETOOTH
-unsigned long baud = DUMBDISPLAY_BAUD;
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), baud, enableSerial, serialBaud));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
 #else
 DumbDisplay dumbdisplay(new DDInputOutput(serialBaud));
 #endif

@@ -252,7 +252,7 @@ class TurtleDDLayer: public DDLayer {
     /* set font */
     /* - fontName */
     /* - textSize: 0 means default */
-    void setTextFont(const String& fontName, int textSize = 0);
+    void setTextFont(const String& fontName = "", int textSize = 0);
     /* draw a dot */
     void dot(int size, const String& color);
     /* draw circle; centered or not */
@@ -363,7 +363,7 @@ class GraphicalDDLayer: public DDLayer {
     /* set font */
     /* - fontName */
     /* - textSize: 0 means default */
-    void setTextFont(const String& fontName, int textSize = 0);
+    void setTextFont(const String& fontName = "", int textSize = 0);
     /* set whether "print" will auto wrap or not */
     void setTextWrap(bool wrapOn);
     /* fill screen with color */

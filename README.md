@@ -4,7 +4,7 @@
 
 You may want to watch the video **Introducing DumbDisplay -- the little helper for Arduino experiments** for a brief introduction -- https://www.youtube.com/watch?v=QZkhO6jTf0U
 
-Plase notice that the above mentioned video is just one of the several on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
+Please notice that the above mentioned video is just one of the several on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
 
 
 ## Enjoy
@@ -21,6 +21,7 @@ Plase notice that the above mentioned video is just one of the several on using 
   * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
   * [Service "Tunnels"](#service-tunnels)
   * ["Device Dependent View" Layers](#device-dependent-view-layers)
+  * [Downloadable Font Support](#downloadable-font-support)
   * [Positioning of Layers](#positioning-of-layers)
   * [Record and Playback Commands](#record-and-playback-commands)
   * [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
@@ -50,6 +51,7 @@ A few types of layers can be created:
 * Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 * Plotter, which works similar to the plotter of DumbDisplay, but plotting data provided by sending commands
+* Terminal "device dependent view" layer, for logging sketch traces
 * TomTom map "device dependent view" layer, for showing location (latitude/longitude)
 
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected micro-controller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism) for more on "layer feedback" mechanism.
@@ -951,8 +953,6 @@ Nevertheless, do note that:
 
 There are two "device dependent view" layer available.
 
-## "Device Dependent View" Layers
-
 ### Terminal Layer
 
 ```TerminalDDLayer``` is a simple "device dependent view" layer that simulates the function of a simple serial terminal (monitor) like DumbDisplay app itself. You create such layer like
@@ -1002,6 +1002,22 @@ The only "device dependent view" layer is ```TomTomMapDDLayer```.
 |  | |
 |--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddnowhere.jpg)|For demonstration, the above "now/here" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. The complete "nowhere" sample is https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddnowhere/ddnowhere.ino|
+
+
+## Downloadable Font Support
+
+Layers like ```GraphicalDDLayer``` can use specified font for rendering text; however, there are not many fonts in normal Android installments.
+DumbDisplay app supports the use of  selective downloadable font open sourced by Google, namely, B612, Cutive, Noto Sans, Oxygen, Roboto, Share Tech, Spline Sans and Ubuntu.
+
+```
+  ...
+  GraphicalDDLayer *graphical = dumbdisplay.createGraphicalLayer(150, 300);
+  ...
+  graphical->setTextFont("DL::Roboto");
+  ...
+```
+
+For a complete sample sketch of using downloadable font, please refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddfonts/ddfonts.ino
 
 
 ## Positioning of Layers
