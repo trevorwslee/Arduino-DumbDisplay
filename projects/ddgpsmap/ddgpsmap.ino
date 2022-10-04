@@ -1,7 +1,18 @@
-#include <Arduino.h>
-#include <SoftwareSerial.h>
 
-#include "dumbdisplay.h"
+// * assume OTG adaptor
+// * or DumbDisplayWifiBridge
+
+
+// --------------------------------------
+
+// *****
+// * code for eading GPS signal from NEO-7M U-BLOX module
+// * . simply read and interpret fixed position info
+// * . not very interesting
+// *****
+
+// will need software serial for reading data from NEO-7M U-BLOX
+#include <SoftwareSerial.h>
 
 
 struct GpsSignal {
@@ -16,7 +27,7 @@ class GpsSignalReader {
   public:
     GpsSignalReader(SoftwareSerial& gpsSerial)
       : gpsSerial(gpsSerial) {}
-    bool readOnce(GpsSignal& gpsSignal, bool logToSerial = false);
+    bool readOnce(GpsSignal& gpsSignal);
   private:
     float latLongConvert(float latLong);  
   private:
@@ -37,10 +48,9 @@ class GpsSignalReader {
     float altitude;
 };
 
-bool GpsSignalReader::readOnce(GpsSignal& gpsSignal, bool logToSerial) {
+bool GpsSignalReader::readOnce(GpsSignal& gpsSignal) {
   if (gpsSerial.available()) {
     char c = gpsSerial.read();
-    //Serial.write(c);
     if (reading) {
       if (reading_header_idx < HEADER_LEN) {
         if (c != HEADER[reading_header_idx++]) {
@@ -48,54 +58,21 @@ bool GpsSignalReader::readOnce(GpsSignal& gpsSignal, bool logToSerial) {
           return false;
         }
       } else {
-        //Serial.write(c);
         if (c == '\r') {
-          if (logToSerial) {
-            Serial.print(field_buffer);  // check sum field
-            Serial.println();
-          }
           reading = false;
           // got all values
           if (utc_time[0] != 0) {
-            if (logToSerial) {
-              Serial.print("* UTC: ");
-              Serial.print(utc_time);
-              Serial.print(" ... ");
-            }
-            if (position_fixed) {
-              if (logToSerial) {
-                Serial.print("position fixed -- ");
-                Serial.print("LAT:");
-                Serial.print(latitude);
-                Serial.print(" LONG:");
-                Serial.print(longitude);
-                Serial.print(" ALT:");
-                Serial.print(altitude);
-              }
-            } else {
-              if (logToSerial) {
-                Serial.print("position NOT fixed");
-              }
-            }
-            if (logToSerial) {
-              Serial.println();
-            }
             memcpy(gpsSignal.utc_time, utc_time, sizeof(utc_time));
             gpsSignal.position_fixed = position_fixed;
             gpsSignal.latitude = latLongConvert(latitude);
-            gpsSignal.longitude = latLongConvert(longitude);  // the "longitude" read is actually 100 times bigger
+            gpsSignal.longitude = latLongConvert(longitude);
             gpsSignal.altitude = altitude;
             return true;
           }
         }
         if (c == ',') {
-          if (logToSerial) {
-            Serial.print(field_buffer);
-            Serial.print("|");
-          }
           if (reading_field_idx > 0) {
             if (read_field_count == 0) {
-              // just read UTC time
               utc_time[0] = field_buffer[0];
               utc_time[1] = field_buffer[1];
               utc_time[2] = ':';
@@ -148,6 +125,12 @@ float GpsSignalReader::latLongConvert(float latLong) {
 }  
 
 
+// --------------------------------------
+
+
+
+
+#include "dumbdisplay.h"
 
 
 #define NEO_RX 6   // RX pin of NEO-7M U-BLOX
@@ -161,27 +144,43 @@ GpsSignalReader gpsSignalReader(gpsSerial);
 // create the DumbDisplay object; assuming USB connection with 115200 baud
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
-GraphicalDDLayer* graphical;
-TerminalDDLayer* terminal;
+// declares serverial layers for the UI
+GraphicalDDLayer* graphical;    // for showing the UTC time and position fixed, from the GPS module
+TerminalDDLayer* terminal;      // for showing trace of reading data from GPS module
+TomTomMapDDLayer *tomtommap;    // for showing the location fixed, on a TomTom map
+
 
 
 void setup() {
   // it appears that it is better to explicityly make connection to DD app first
   dumbdisplay.connect();
 
+  // the default UART baud rate for communicating with NEO-7M is 9600
   gpsSerial.begin(9600);
 
-  graphical = dumbdisplay.createGraphicalLayer(200, 30);
-  graphical->padding(2);
+  // create the layers, as described above
+  graphical = dumbdisplay.createGraphicalLayer(220, 30);
+  graphical->border(3, "black");
+  graphical->padding(3);
+  graphical->penColor("blue");
+  graphical->backgroundColor("white");
   terminal = dumbdisplay.createTerminalLayer(600, 800);
-  terminal->border(5, "blue", "round");
+  terminal->border(5, "blue");
+  terminal->padding(5);
+  tomtommap = dumbdisplay.createTomTomMapLayer("", 600, 800);
+  tomtommap->border(5, "blue");
+  tomtommap->padding(5);
+  tomtommap->visible(false);  // initially hidden
 
+  // basically, 'pin' the layers one by one vertically
   dumbdisplay.configAutoPin(
-    DD_AP_VERT_2(graphical->getLayerId(),
-                 terminal->getLayerId()));
+    DD_AP_VERT_3(graphical->getLayerId(),
+                 terminal->getLayerId(),
+                 tomtommap->getLayerId()));
 }
 
-long lastMillis = millis();
+long startTimeMillis = millis();
+long lastMillis = startTimeMillis;
 bool waited = false;
 GpsSignal gpsSignal;
 void loop() {
@@ -208,14 +207,25 @@ void loop() {
       terminal->print(gpsSignal.longitude);
       terminal->print(" alt:");
       terminal->print(gpsSignal.altitude);
-      graphical->clear();
-      graphical->setCursor(0, 0);
-      graphical->println("LOC:");
-      graphical->println("LAT:" + String(gpsSignal.latitude, 4) + " / LONG:" + String(gpsSignal.longitude, 4));
     } else {
       terminal->print("position NOT fixed");
     }
     terminal->println();
+    graphical->clear();
+    graphical->setCursor(0, 0);
+    graphical->println("UTC -- " + String(gpsSignal.utc_time));
+    graphical->print("LOC -- ");
+    if (gpsSignal.position_fixed) {
+      graphical->println("LAT:" + String(gpsSignal.latitude, 4) + " / LONG:" + String(gpsSignal.longitude, 4));
+      tomtommap->zoomTo(gpsSignal.latitude, gpsSignal.longitude);
+    } else {
+      graphical->print("not fixed");
+    }
+    if ((nowMillis - startTimeMillis) > 5000 && gpsSignal.position_fixed) {
+      // show TomTom map ... notice the "5000 millis from start" requirement
+      terminal->visible(false);
+      tomtommap->visible(true);
+    }  
     lastMillis = nowMillis;
   }
 }
