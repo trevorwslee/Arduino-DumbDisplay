@@ -10,7 +10,7 @@
 // -- https://www.youtube.com/watch?v=BAnvHOs5Fks
 
 
-#define DD_4_ESP32
+//#define DD_4_ESP32
 #include "esp32bledumbdisplay.h"
 
 

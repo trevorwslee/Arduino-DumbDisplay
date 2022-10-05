@@ -1,10 +1,10 @@
-# DumbDisplay Arduino Library (v0.9.0)
+# DumbDisplay Arduino Library (v0.9.1)
 
 [DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
 You may want to watch the video **Introducing DumbDisplay -- the little helper for Arduino experiments** for a brief introduction -- https://www.youtube.com/watch?v=QZkhO6jTf0U
 
-Plase notice that the above mentioned video is just one of the several on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
+Please notice that the above mentioned video is just one of the several on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
 
 
 ## Enjoy
@@ -21,6 +21,7 @@ Plase notice that the above mentioned video is just one of the several on using 
   * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
   * [Service "Tunnels"](#service-tunnels)
   * ["Device Dependent View" Layers](#device-dependent-view-layers)
+  * [Downloadable Font Support](#downloadable-font-support)
   * [Positioning of Layers](#positioning-of-layers)
   * [Record and Playback Commands](#record-and-playback-commands)
   * [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
@@ -50,6 +51,7 @@ A few types of layers can be created:
 * Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 * Plotter, which works similar to the plotter of DumbDisplay, but plotting data provided by sending commands
+* Terminal "device dependent view" layer, for logging sketch traces
 * TomTom map "device dependent view" layer, for showing location (latitude/longitude)
 
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected micro-controller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism) for more on "layer feedback" mechanism.
@@ -946,14 +948,78 @@ A "device dependent view" layer is a layer that embeeds a specific kind of Andro
 
 Nevertheless, do note that:
 * DDLayer's margin, border, padding, as well as visibility, will work as expected.
-* The "device dependent view" DD Layer sizing is just like graphical LCD layer, but be warned that the embeeded
-  Android View will ***not*** be scaled, like other DD Layers.
+* The "device dependent view" DD Layer size -- of the "opening" for the Android view -- is just like graphical LCD layer,
+  but be warned that it will ***not*** be scaled, like other DD Layers.
+
+There are two "device dependent view" layer available.
+
+### Terminal Layer
+
+```TerminalDDLayer``` is a simple "device dependent view" layer that simulates the function of a simple serial terminal (monitor) like DumbDisplay app itself. You create such layer like
+
+A sample use is: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/project/ddgps/ddgps.ino
+
+The sample demonstrates how to read simple GPS location data from module like NEO-7M U-BLOX, formats and output the data
+to a ```TerminalDDLayer```:
+
+```
+  ...
+  #define NEO_RX 6   // RX pin of NEO-7M U-BLOX
+  #define NEO_TX 5   // TX pin of NEO-7M U-BLOX
+  SoftwareSerial gpsSerial(NEO_TX, NEO_RX);
+  GpsSignalReader gpsSignalReader(gpsSerial);
+  DumbDisplay dumbdisplay(new DDInputOutput(115200));
+  TerminalDDLayer* terminal;
+  void setup() {
+    gpsSerial.begin(9600);
+    terminal= dumbdisplay.createTerminalLayer(600, 800);
+  }
+GpsSignal gpsSignal;
+void loop() {
+  if (gpsSignalReader.readOnce(gpsSignal)) {
+    terminal->print("- utc: ");
+    terminal->print(gpsSignal.utc_time);
+    terminal->print(" ... ");
+    if (gpsSignal.position_fixed) {
+      terminal->print("position fixed -- ");
+      terminal->print("lat:");
+      terminal->print(gpsSignal.latutude);
+      terminal->print(" long:");
+      terminal->print(gpsSignal.longitude);
+     ...
+    }
+  }
+```
+
+The above sketch assumes using OTG USB adaptor for connection to Android DumbDisplay app. And as a result, bringing the above GPS experiment outdoor should be easier. Not only the microcontroller board can be powered by your Android phone, you can observe running traces of the sketch with your phone as well.
+
+
+### TomTom Map Layer
+
 
 The only "device dependent view" layer is ```TomTomMapDDLayer```.
 
 |  | |
 |--|--|
 |![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddnowhere.jpg)|For demonstration, the above "now/here" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. The complete "nowhere" sample is https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddnowhere/ddnowhere.ino|
+
+
+## Downloadable Font Support
+
+Layers like ```GraphicalDDLayer``` can use specified font for rendering text; however, there are not many fonts in normal Android installments.
+DumbDisplay app supports the use of  selective downloadable font open sourced by Google, namely, B612, Cutive, Noto Sans, Oxygen, Roboto, Share Tech, Spline Sans and Ubuntu.
+
+```
+  ...
+  GraphicalDDLayer *graphical = dumbdisplay.createGraphicalLayer(150, 300);
+  ...
+  graphical->setTextFont("DL::Roboto");
+  ...
+```
+
+Note that in order to ensure that these Google's fonts are ready when they are used, please check ***Settings | Pre-Download Fonts***
+
+For a complete sample sketch of using downloadable font, please refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddfonts/ddfonts.ino
 
 
 ## Positioning of Layers
@@ -1257,6 +1323,10 @@ MIT
 
 
 # Change History
+
+v0.9.1
+  - added 'terminal' layer
+  - bug fixes
 
 v0.9.0
   - added 'service tunnel'

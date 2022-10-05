@@ -23,20 +23,26 @@
 // create the DumbDisplay object; assuming USB connection with 115200 baud
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
-// declare a LED layer object, to be created in setup()
-LedGridDDLayer *led;
+
+// declare a 7-segment layer object, to be created in setup()
+SevenSegmentRowDDLayer *sevenSeg;
 
 
 void setup() {
-    // create the LED layer object, with only a single LED
-    led = dumbdisplay.createLedGridLayer();
+    // create the 7-segment layer object, with only a single 7-segment digit
+    sevenSeg = dumbdisplay.create7SegmentRowLayer();
 }
-
 
 void loop() {
-    // toggle the LED
-    led->toggle();
+    for (int digit = 0; digit < 10; digit++) {
+        // show the digit on the 7-segment
+        sevenSeg->showNumber(digit);
 
-    // delay for a second
-    delay(1000);
+        // delay a second
+        delay(1000);
+   }
 }
+
+
+
+
