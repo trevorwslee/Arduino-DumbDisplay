@@ -1017,6 +1017,8 @@ DumbDisplay app supports the use of  selective downloadable font open sourced by
   ...
 ```
 
+Note that in order to ensure that these Google's fonts are ready when they are used, please check ***Settings | Pre-Download Fonts***
+
 For a complete sample sketch of using downloadable font, please refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddfonts/ddfonts.ino
 
 
