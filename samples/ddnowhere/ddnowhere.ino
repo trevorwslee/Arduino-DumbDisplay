@@ -40,7 +40,7 @@ void setup() {
     graphical->border(3, "darkgray");
 
     // create a Tom Tom map layer
-    tomtommap = dumbdisplay.createTomTomMapLayer("", 300, 200);
+    tomtommap = dumbdisplay.createTomTomMapLayer("", 300, 200);  // *** a TomTom map api key is required; here, "" is used for demo purpose
     tomtommap->border(5, "darkgray", "round");
 
     // auto pin the two layers created above vertically
