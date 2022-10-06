@@ -957,7 +957,7 @@ There are two "device dependent view" layer available.
 
 ```TerminalDDLayer``` is a simple "device dependent view" layer that simulates the function of a simple serial terminal (monitor) like DumbDisplay app itself. You create such layer like
 
-A sample use is: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/project/ddgps/ddgps.ino
+A sample use is: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/ddgpsmap/ddgpsmap.ino
 
 The sample demonstrates how to read simple GPS location data from module like NEO-7M U-BLOX, formats and output the data
 to a ```TerminalDDLayer```:

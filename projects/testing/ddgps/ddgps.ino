@@ -177,7 +177,7 @@ void setup() {
   terminal = dumbdisplay.createTerminalLayer(600, 800);
   terminal->border(5, "blue", "round");
   terminal->visible(false);
-  tomtommap = dumbdisplay.createTomTomMapLayer("", 600, 800);
+  tomtommap = dumbdisplay.createTomTomMapLayer("", 600, 800);  // *** a TomTom map api key is required; here, "" is used for demo purpose
   tomtommap->border(5, "blue", "round");
   tomtommap->visible(false);
 
