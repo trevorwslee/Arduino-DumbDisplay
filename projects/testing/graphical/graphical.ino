@@ -1,12 +1,13 @@
-#include "ssdumbdisplay.h"
 
 
-#define USE_BLUETOOTH
+//#define USE_BLUETOOTH
 
 #ifdef USE_BLUETOOTH
+#include "ssdumbdisplay.h"
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
 #else
-DumbDisplay dumbdisplay(new DDInputOutput(serialBaud));
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput(9600));
 #endif
 
 
