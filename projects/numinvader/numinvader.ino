@@ -43,7 +43,11 @@ class LaserGun {
         void initialize() {
             ss->showNumber(variant);
         }
-        void setButtonPressed(bool leftPressed, bool rightPressed) {
+        void loop() {
+            int left = digitalRead(BUTTON_LEFT);
+            int right = digitalRead(BUTTON_RIGHT);  
+            bool leftPressed = left == 0;
+            bool rightPressed = right == 0;
             int switchVariant = switchVariantTracker.setPressed(leftPressed);
             int fired = fireTracker.setPressed(rightPressed);
             if (switchVariant != -1) {
@@ -53,6 +57,13 @@ class LaserGun {
                     digitalWrite(LED_LEFT, 1);
                 } else {
                     digitalWrite(LED_LEFT, 0);
+                }
+            }
+            if (fired != -1) {
+                if (fired == 1) {
+                    digitalWrite(LED_RIGHT, 1);
+                } else {
+                    digitalWrite(LED_RIGHT, 0);
                 }
             }
         }
@@ -84,11 +95,6 @@ void setup() {
     pinMode(LED_LEFT, OUTPUT);
     pinMode(LED_RIGHT, OUTPUT);
 
-    //digitalWrite(LED_LEFT, 1);
-    //digitalWrite(LED_RIGHT, 1);
-
-
-
     laserGun.ss = dumbdisplay.create7SegmentRowLayer(1);
     laserGun.ss->border(5, "black", "round");
     laserGun.ss->padding(5);
@@ -108,9 +114,7 @@ void setup() {
 
 
 void loop() {
-    int left = digitalRead(BUTTON_LEFT);
-    int right = digitalRead(BUTTON_RIGHT);
-    laserGun.setButtonPressed(left == 0, right == 0);
+    laserGun.loop();
 }
 
 
