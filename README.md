@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.1)
+# DumbDisplay Arduino Library (v0.9.2)
 
 [DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -98,7 +98,7 @@ The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth by HC-05 / HC-06; even HC-08)
 * BluetoothSerial (for ESP32)
 * Bluetooth LE (for ESP32 and ESP32C3)
-* WIFI (e.g. ESP01, ESP8266 and ESP32)
+* WIFI (e.g. ESP01, ESP8266, ESP32 and PicoW)
 * Serial (USB connected via OTG adapter)
 * Serial <-> WIFI via the simple included tool -- [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge)
 * Serial2 (hardware serial, like for Raspberry Pi Pico)
@@ -177,7 +177,7 @@ You have several options for connecting to DumbDisplay Android app.
     - "ESP32BLE" is name used by `BLE`
   - **you should not be using ESP32's BLE for other purposes**
   - **be warned that `DDBLESerialIO` is slow**; if possible choose `DDBluetoothSerialIO` over `DDBLESerialIO` 
-* Via WIFI as a `WiFiServer` (for ESP01/ESP8266/ESP32) -- https://www.arduino.cc/en/Reference/WiFi  
+* Via WIFI as a `WiFiServer` (for ESP01/ESP8266/ESP32/PicoW) -- https://www.arduino.cc/en/Reference/WiFi  
   ```
     #define DD_4_ESP8266
     #include "wifidumbdisplay.h"
@@ -187,7 +187,7 @@ You have several options for connecting to DumbDisplay Android app.
     DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password, serverPort));
   ```
   - ESP01 is basically a ESP8266
-  - for ESP32, please define DD_4_ESP32 instead of DD_4_ESP8266
+  - for ESP32 / PicoW, no need to define DD_4_ESP8266
   - WIFI credentials are passed to `WiFi`
   - By default, will setup and log using `Serial` with baud rate 115200; and you should see log lines like:
   ```
@@ -1323,6 +1323,11 @@ MIT
 
 
 # Change History
+
+
+v0.9.2
+  - enhanced 7-segment layers
+  - bug fixes
 
 v0.9.1
   - added 'terminal' layer

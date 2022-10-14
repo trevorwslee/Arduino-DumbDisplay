@@ -489,13 +489,15 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /* like turnOn(), exception that the digit will be cleared first */
     /* - empty segments basically means turn all segments of the digit off */
     void setOn(const String& segments = "", int digitIdx = 0);
+    /* show a digit */
+    void showDigit(int digit, int digitIdx = 0);
     /* show number */
     void showNumber(float number, const String& padding = " ");
     /* show HEX number */
     void showHexNumber(int number);
     /* show formatted number (even number with hex digits) */
     /* e.g. "12.00", "00.34", "-.12", "0ff" */
-    void showFormatted(const String& formatted);
+    void showFormatted(const String& formatted, bool completeReplace = true, int startIdx = 0);
 };
 
 class PlotterDDLayer: public DDLayer {

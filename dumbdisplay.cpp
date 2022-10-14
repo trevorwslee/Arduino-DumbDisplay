@@ -1561,6 +1561,9 @@ void SevenSegmentRowDDLayer::turnOff(const String& segments, int digitIdx) {
 void SevenSegmentRowDDLayer::setOn(const String& segments, int digitIdx) {
   _sendCommand2(layerId, C_setsegon, segments, String(digitIdx));
 }
+void SevenSegmentRowDDLayer::showDigit(int digit, int digitIdx) {
+  _sendCommand2(layerId, C_showdigit, String(digit) , String(digitIdx));
+}
 void SevenSegmentRowDDLayer::showNumber(float number, const String& padding) {
   if (IS_FLOAT_WHOLE(number)) {
     _sendCommand2(layerId, C_shownumber, String((int) number), padding);
@@ -1571,8 +1574,8 @@ void SevenSegmentRowDDLayer::showNumber(float number, const String& padding) {
 void SevenSegmentRowDDLayer::showHexNumber(int number) {
   _sendCommand1(layerId, C_showhex, String(number));
 }
-void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
-  _sendCommand1(layerId, C_showformatted, formatted);
+void SevenSegmentRowDDLayer::showFormatted(const String& formatted, bool completeReplace, int startIdx) {
+  _sendCommand3(layerId, C_showformatted, formatted, TO_BOOL(completeReplace), String(startIdx));
 }
 
 void PlotterDDLayer::label(const String& key, const String& lab) {

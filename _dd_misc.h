@@ -6,6 +6,7 @@ template <class T>
 class DDValueStore {
   public:
     DDValueStore(T value): storedValue(value) {}
+    /* return true only if some value different set */
     bool set(T value) {
       bool same = storedValue == value;
       storedValue = value;
