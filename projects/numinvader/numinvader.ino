@@ -83,31 +83,38 @@ class Invaders {
 public:
   void initialize() {
     variantCount = 0;
+    variants[INVADER_COUNT] = 0;
     invalidStepMillis = INVADE_INIT_STEP_MILLIS;
     nextInvadeMillis = millis() + invalidStepMillis;
   }
 public:
-  void loop() {
+  boolean loop() {
     long nowMillis = millis();
     long diffMillis = nextInvadeMillis - nowMillis;
     if (diffMillis <= 0) {
+      char *frontVariant = variants + INVADER_COUNT - variantCount;  // it is not only pointing the the first, it is all the variants as a string
       if (variantCount < INVADER_COUNT) {
-        variants[variantCount++] = random(0, 10);
+        if (variantCount > 0) {
+          memmove(frontVariant - 1, frontVariant, variantCount);  // move the front variant (and all that after it) to the left side by 1
+        }
+        frontVariant -= 1;
+        variantCount += 1;
+        variants[INVADER_COUNT - 1] = '0' + random(0, 10);  // the right-most now has space for a new invader variant
       }
-      int ssDigit = variants[variantCount - 1];
-      int ssDigitIdx = INVADER_COUNT - variantCount;
-      ss->showDigit(ssDigit, ssDigitIdx);
+      int shiftIdx = INVADER_COUNT - variantCount;  // we only have that many variants, so, shift it 
+      ss->showFormatted(frontVariant, shiftIdx);  // print the variants; notice of 'shift idx'
       invalidStepMillis -= INVADE_STEP_FAST_MILLIS;
       if (invalidStepMillis < MIN_INVALID_STEP_MILLIS) {
         invalidStepMillis = MIN_INVALID_STEP_MILLIS;
       }
       nextInvadeMillis = nowMillis + invalidStepMillis;
     }
+    return variantCount < INVADER_COUNT;
   }
 public:
   SevenSegmentRowDDLayer* ss;
   int variantCount;
-  int variants[INVADER_COUNT];
+  char variants[INVADER_COUNT + 1];
   long invalidStepMillis;
   long nextInvadeMillis;
 };

@@ -1574,8 +1574,8 @@ void SevenSegmentRowDDLayer::showNumber(float number, const String& padding) {
 void SevenSegmentRowDDLayer::showHexNumber(int number) {
   _sendCommand1(layerId, C_showhex, String(number));
 }
-void SevenSegmentRowDDLayer::showFormatted(const String& formatted) {
-  _sendCommand1(layerId, C_showformatted, formatted);
+void SevenSegmentRowDDLayer::showFormatted(const String& formatted, int startIdx) {
+  _sendCommand2(layerId, C_showformatted, formatted, String(startIdx));
 }
 
 void PlotterDDLayer::label(const String& key, const String& lab) {

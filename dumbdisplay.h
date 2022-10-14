@@ -497,7 +497,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
     void showHexNumber(int number);
     /* show formatted number (even number with hex digits) */
     /* e.g. "12.00", "00.34", "-.12", "0ff" */
-    void showFormatted(const String& formatted);
+    void showFormatted(const String& formatted, int startIdx = 0);
 };
 
 class PlotterDDLayer: public DDLayer {
