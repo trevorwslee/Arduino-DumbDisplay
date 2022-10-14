@@ -99,6 +99,8 @@
 
 //#define C_println          "#a3"
 
+#define C_showdigit        "#a4"
+
 
 #define C_fd               "fd"
 #define C_lt               "lt"

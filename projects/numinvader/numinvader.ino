@@ -11,7 +11,7 @@
 
 const int INVADER_COUNT = 10;
 const long INVADE_INIT_STEP_MILLIS = 1000;
-const long INVADE_STEP_FAST_MILLIS = 50;
+const long INVADE_STEP_FAST_MILLIS = 20;
 const long MIN_INVALID_STEP_MILLIS = 500;
 
 class ButtonPressTracker {
@@ -82,8 +82,7 @@ public:
 class Invaders {
 public:
   void initialize() {
-    activeInvaderCount = 0;
-    activeInvaders[0] = 0;
+    variantCount = 0;
     invalidStepMillis = INVADE_INIT_STEP_MILLIS;
     nextInvadeMillis = millis() + invalidStepMillis;
   }
@@ -92,10 +91,12 @@ public:
     long nowMillis = millis();
     long diffMillis = nextInvadeMillis - nowMillis;
     if (diffMillis <= 0) {
-      if (activeInvaderCount < INVADER_COUNT) {
-        activeInvaders[activeInvaderCount++] = '.';
+      if (variantCount < INVADER_COUNT) {
+        variants[variantCount++] = random(0, 10);
       }
-      ss->showFormatted(activeInvaders);
+      int ssDigit = variants[variantCount - 1];
+      int ssDigitIdx = INVADER_COUNT - variantCount;
+      ss->showDigit(ssDigit, ssDigitIdx);
       invalidStepMillis -= INVADE_STEP_FAST_MILLIS;
       if (invalidStepMillis < MIN_INVALID_STEP_MILLIS) {
         invalidStepMillis = MIN_INVALID_STEP_MILLIS;
@@ -105,8 +106,8 @@ public:
   }
 public:
   SevenSegmentRowDDLayer* ss;
-  int activeInvaderCount;
-  char activeInvaders[INVADER_COUNT + 1];
+  int variantCount;
+  int variants[INVADER_COUNT];
   long invalidStepMillis;
   long nextInvadeMillis;
 };
