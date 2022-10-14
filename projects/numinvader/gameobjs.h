@@ -1,11 +1,12 @@
-#include "tracker.h"
+#include "tracker.h"  // for ButtonPressTracker  
+#include "sound.h" // for playing sound effect
+
 
 const int INIT_LASER_GUN_COUNT = 3;
 const int MAX_INVADER_COUNT = 8;
 const long INVADE_INIT_STEP_MILLIS = 2000;
 const long INVADE_STEP_FAST_MILLIS = 50;
 const long MIN_INVALID_STEP_MILLIS = 500;
-
 
 
 class LaserGun {
@@ -39,15 +40,20 @@ public:
       } else {
         digitalWrite(LED_RIGHT, 0);
       }
-      return variantType;
-    } else {
-      return -1;
+      if (fired == 1) {
+        return variantType;
+      }
     }
+    return -1;
   }
   bool lostOne() {
     if (lifeCount > 0) {
       lifeCount -= 1;
       life7Seg->showDigit(lifeCount);
+      PlayMissLifeSoundEffect();    
+      if (lifeCount == 0) {
+        PlayEndGameSoundEffect();
+      }  
     }
     return lifeCount > 0;
   }
@@ -92,29 +98,30 @@ public:
       }
       int shiftIdx = MAX_INVADER_COUNT - variantCount;  // we only have that many variants, so, shift it 
       invader7Seg->showFormatted(frontVariant, true, shiftIdx);  // print the variants; notice of 'shift idx'
-      // invalidStepMillis -= INVADE_STEP_FAST_MILLIS;
-      // if (invalidStepMillis < MIN_INVALID_STEP_MILLIS) {
-      //   invalidStepMillis = MIN_INVALID_STEP_MILLIS;
-      // }
       nextInvadeMillis = nowMillis + invalidStepMillis;
     }
     return variantCount < MAX_INVADER_COUNT;
   }
-  void firedAt(char variantType) {
+  bool firedAt(char variantType) {
     if (variantCount > 0) {
       char *frontVariant = variants + MAX_INVADER_COUNT - variantCount;
       char frontVariantType = *frontVariant - '0';
       if (variantType == frontVariantType) {
         int shiftIdx = MAX_INVADER_COUNT - variantCount;  // we only have that many variants, so, shift it 
         invader7Seg->showFormatted("-", false, shiftIdx);
+        PlayHitSoundEffect();
         variantCount -= 1;
         invalidStepMillis -= INVADE_STEP_FAST_MILLIS;
         if (invalidStepMillis < MIN_INVALID_STEP_MILLIS) {
           invalidStepMillis = MIN_INVALID_STEP_MILLIS;
         }
         nextInvadeMillis = millis() + 200;
+        return true;
+      } else {
+        PlayMissSoundEffect();
       }
     }
+    return false;
   }
   void reset() {
     variantCount = 0;
