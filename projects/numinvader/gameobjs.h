@@ -51,6 +51,10 @@ public:
     }
     return lifeCount > 0;
   }
+  void reset() {
+    lifeCount = INIT_LASER_GUN_COUNT;
+    life7Seg->showDigit(lifeCount);
+  }
 public:
   SevenSegmentRowDDLayer* life7Seg;
   SevenSegmentRowDDLayer* laserGun7Seg;
@@ -119,9 +123,11 @@ public:
     invader7Seg->clear();    
   }
   void end() {
-    variantCount = -1;  // signal game ended
-    for (int i = 0; i < MAX_INVADER_COUNT; i++) {
-      invader7Seg->showFormatted("_", false, i);
+    if (variantCount > 0) {
+      variantCount = -1;  // signal game ended
+      for (int i = 0; i < MAX_INVADER_COUNT; i++) {
+        invader7Seg->showFormatted("_", false, i);
+      }
     }
   }
   inline bool ended() {
@@ -149,6 +155,7 @@ public:
     int firedVariantType = laserGun.loop();
     if (firedVariantType != -1) {
       if (invaders.ended()) {
+        laserGun.reset();
         invaders.reset();
       } else {
         invaders.firedAt(firedVariantType);
