@@ -148,6 +148,7 @@ public:
   }
 public:
   void initialize() {
+    randomSeed(millis());
     laserGun.initialize();
     invaders.initialize();
   }
