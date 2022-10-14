@@ -1,13 +1,14 @@
 #include <Arduino.h>
 #include "dumbdisplay.h"
 
+
 #define BUTTON_LEFT PIN_A1
 #define BUTTON_RIGHT PIN_A4
 
 #define LED_LEFT PIN_A2
 #define LED_RIGHT PIN_A3
 
-#include "gameobjs.h"
+#include "gameobjs.h"  // for game objects
 
 
 DumbDisplay dumbdisplay(new DDInputOutput(115200));

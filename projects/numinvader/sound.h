@@ -18,9 +18,9 @@ void PlayMissLifeSoundEffect() {
   dumbdisplay.tone(300, 50);
 }
 void PlayEndGameSoundEffect() {
+  dumbdisplay.tone(200, 100);
   dumbdisplay.tone(400, 200);
-  dumbdisplay.tone(500, 200);
-  dumbdisplay.tone(600, 200);
-  dumbdisplay.tone(700, 200);
+  dumbdisplay.tone(300, 200);
+  dumbdisplay.tone(600, 100);
 }
 
