@@ -1529,6 +1529,11 @@ void GraphicalDDLayer::cacheImage(const String& imageName, const uint8_t *bytes,
   _sendCommand2("", C_CACHEIMG, layerId, imageName);
   _sendByteArrayAfterCommand(bytes, byteCount);
 }
+void GraphicalDDLayer::cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color) {
+  int byteCount = width * height / 8; 
+  _sendCommand5("", C_CACHEPIXIMG, layerId, imageName, String(width), String(height), color);
+  _sendByteArrayAfterCommand(bytes, byteCount);
+}
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
 }
@@ -2174,7 +2179,7 @@ void DumbDisplay::saveImage(const String& imageName, const uint8_t *bytes, int b
 }
 void DumbDisplay::savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color) {
   int byteCount = width * height / 8; 
-  _sendCommand4("", C_SAVEIMG, imageName, String(width), String(height), color);
+  _sendCommand4("", C_SAVEPIXIMG, imageName, String(width), String(height), color);
   _sendByteArrayAfterCommand(bytes, byteCount);
 }
 void DumbDisplay::debugOnly(int i) {
