@@ -1,19 +1,18 @@
 // ***
 // * notes for HC-06 / HC-08:
-// * . default baud rate if 9600
-// * . serial monitor needs no line ending
+// * . default baud rate is 9600
+// * . serial monitor needs line ending; ie no NL and no CR
 // * notes for HC-05:
-// * . default baud rate if 38400
+// * . need be in AT mode; need to hold its button while powering on; LED on HC-05 will flash slowly
+// * . baud rate is 38400
 // * . serial monitor needs NL and CR
-// * . need to hold its button while powering on, in order to turn on its AT mode; notice,  LED on HC-5 will flash slowly
-// * . use baud 38400
 // ***
 
 
 #include <SoftwareSerial.h>
   
 
-SoftwareSerial hc06(2, 3);  // 2 => TX of HC06; 3 => RX of HC06
+SoftwareSerial hc(2, 3);  // 2 => TX of HC; 3 => RX of HC
 
 
 // for HC-6
@@ -41,7 +40,7 @@ SoftwareSerial hc06(2, 3);  // 2 => TX of HC06; 3 => RX of HC06
 //  reset to default: AT+DEFAULT
 
 
-const unsigned long baud = 38400;  // default for hc-06 / hc-08 is 9600; for hc-05, set to 38400 
+const unsigned long baud = 9600;  // default for HC-06 / HC-08 is 9600; for HC-05, set to 38400 (assume HC-05 in AT mode)
 
 
 void setup() {
@@ -51,20 +50,21 @@ void setup() {
   Serial.println("Hello from Arduino. Please enter AT command:");
   
   // initialize HC06
-  hc06.begin(baud);
+  hc.begin(baud);
 
 }
 
 void loop() {
   
   // write data from HC06 to Serial
-  if (hc06.available()) {
-    Serial.write(hc06.read());
+  if (hc.available()) {
+    Serial.write(hc.read());
   }
   
   // write data from Serial to HC06
   if (Serial.available()) {
-    hc06.write(Serial.read());
+    hc.write(Serial.read());
   }  
-
 }
+
+

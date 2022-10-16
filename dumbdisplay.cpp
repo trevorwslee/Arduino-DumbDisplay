@@ -2172,6 +2172,11 @@ void DumbDisplay::saveImage(const String& imageName, const uint8_t *bytes, int b
   _sendCommand1("", C_SAVEIMG, imageName);
   _sendByteArrayAfterCommand(bytes, byteCount);
 }
+void DumbDisplay::savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color) {
+  int byteCount = width * height / 8; 
+  _sendCommand4("", C_SAVEIMG, imageName, String(width), String(height), color);
+  _sendByteArrayAfterCommand(bytes, byteCount);
+}
 void DumbDisplay::debugOnly(int i) {
   _sendCommand2("", "DEBUGONLY", String(i), TO_C_INT(i));
   uint8_t bytes[i];
