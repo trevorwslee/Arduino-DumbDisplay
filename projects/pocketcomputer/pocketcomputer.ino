@@ -2,101 +2,559 @@
 // * https://learn.adafruit.com/adafruit-gfx-graphics-library/graphics-primitives
 
 
-// #include "ssdumbdisplay.h"
-// DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
-#include "wifidumbdisplay.h"
-const char* ssid = "TrevorWireless";
-const char* password = "joysftrevorws";
-DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
+#include "calculator.h"
+#include "stopwatch.h"
+#include "game.h"
+#include "calendar.h"
+#include "menu.h"
+
+#define COLOR_BG "darkblue"
+#define COLOR_0 "cyan"
+#define COLOR_1 "ivory"
+#define TEXT_SIZE_MENU 9
+#define TEXT_SIZE_2 9
+#define TEXT_SIZE_4 9
+
+#define BLUETOOTH
+#ifdef BLUETOOTH
+#include "ssdumbdisplay.h"
+// assume HC-05 connected; 2 => TX of HC05; 3 => RX of HC05
+// still can connect with OTG
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
+#else
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput(115200));
+#endif
 
 
-// 'logo', 64x30px
-const unsigned char epd_bitmap_logo [] PROGMEM = {
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-  0x07, 0x0e, 0x60, 0x03, 0x00, 0x1f, 0x87, 0xc0, 0x07, 0x0e, 0x60, 0x03, 0x00, 0x1f, 0xcf, 0xe0, 
-  0x07, 0x0e, 0x00, 0x00, 0x00, 0x1d, 0xcf, 0xe0, 0x07, 0x9e, 0x00, 0x00, 0x00, 0x18, 0xcc, 0xe0, 
-  0x07, 0x9e, 0x67, 0x63, 0x00, 0x18, 0xcc, 0xe0, 0x07, 0x9e, 0x67, 0xf3, 0x00, 0x18, 0xcc, 0x00, 
-  0x07, 0xfe, 0x67, 0xf3, 0x00, 0x1f, 0xcc, 0x00, 0x07, 0xfe, 0x67, 0x73, 0x00, 0x1f, 0xcc, 0x00, 
-  0x06, 0xfe, 0x67, 0x73, 0x00, 0x1f, 0x8c, 0x00, 0x06, 0xee, 0x67, 0x73, 0x00, 0x18, 0x0c, 0x00, 
-  0x06, 0x6e, 0x67, 0x73, 0x00, 0x18, 0x0c, 0xe0, 0x06, 0x6e, 0x67, 0x73, 0x00, 0x18, 0x0c, 0xe0, 
-  0x06, 0x0e, 0x67, 0x73, 0x00, 0x18, 0x0f, 0xe0, 0x06, 0x0e, 0x67, 0x73, 0x00, 0x18, 0x0f, 0xe0, 
-  0x06, 0x06, 0x67, 0x73, 0x00, 0x18, 0x07, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-// 'calc', 24x24px
-const unsigned char myBitmapcalc [] PROGMEM = {
-  0x07, 0xff, 0xe0, 0x08, 0x00, 0x10, 0x10, 0x00, 0x08, 0x11, 0xff, 0x88, 0x12, 0x00, 0x48, 0x14, 
-  0x00, 0x28, 0x14, 0x00, 0x28, 0x14, 0x00, 0x28, 0x14, 0x00, 0x28, 0x14, 0x00, 0x28, 0x12, 0x00, 
-  0x48, 0x11, 0xff, 0x88, 0x10, 0x00, 0x08, 0x10, 0x00, 0x08, 0x11, 0x00, 0x08, 0x13, 0x81, 0xc8, 
-  0x11, 0x00, 0x08, 0x10, 0x00, 0x08, 0x13, 0x80, 0x48, 0x11, 0x00, 0x88, 0x13, 0x81, 0x08, 0x10, 
-  0x00, 0x08, 0x08, 0x00, 0x10, 0x07, 0xff, 0xe0
-};
-// 'stop', 24x24px
-const unsigned char myBitmapstop [] PROGMEM = {
-  0x00, 0xff, 0x00, 0x00, 0xff, 0x00, 0x00, 0xff, 0x00, 0x00, 0x7e, 0x00, 0x00, 0x18, 0x00, 0x00, 
-  0x00, 0x30, 0x00, 0xff, 0x38, 0x01, 0xff, 0x98, 0x07, 0x81, 0xe0, 0x07, 0x18, 0xe0, 0x0e, 0x18, 
-  0x70, 0x0c, 0x18, 0x30, 0x1c, 0x18, 0x38, 0x18, 0x18, 0x18, 0x18, 0x3c, 0x18, 0x18, 0x18, 0x18, 
-  0x18, 0x00, 0x18, 0x1c, 0x00, 0x38, 0x0c, 0x00, 0x30, 0x0e, 0x00, 0x70, 0x07, 0x00, 0xe0, 0x03, 
-  0xe7, 0xc0, 0x01, 0xff, 0x80, 0x00, 0x3c, 0x00
-};
-// 'gam', 24x24px
-const unsigned char myBitmapgam [] PROGMEM = {
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x0f, 0xc1, 0xf0, 0x1f, 
-  0xff, 0xf8, 0x1f, 0xff, 0xfc, 0x3c, 0xff, 0x9c, 0x3c, 0xff, 0x9c, 0x30, 0x3f, 0x9e, 0x70, 0x1e, 
-  0xfe, 0x7c, 0xfc, 0x7e, 0x7c, 0xfe, 0xfe, 0x7e, 0xff, 0xfe, 0x7f, 0xff, 0xfe, 0x7f, 0xff, 0xfe, 
-  0x7f, 0x81, 0xfe, 0x7f, 0x80, 0xfe, 0x7f, 0x00, 0xfe, 0x3e, 0x00, 0x7c, 0x00, 0x00, 0x00, 0x00, 
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-// 'calen', 24x24px
-const unsigned char myBitmapcalen [] PROGMEM = {
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x0c, 0x20, 0x07, 0xff, 0xe0, 0x0a, 0x18, 0xd0, 0x12, 
-  0x10, 0x88, 0x10, 0x00, 0x08, 0x13, 0x99, 0xc8, 0x12, 0xa5, 0x48, 0x12, 0xbd, 0x48, 0x11, 0x18, 
-  0x88, 0x10, 0x00, 0x08, 0x12, 0xbd, 0x48, 0x12, 0xa5, 0x48, 0x13, 0x99, 0xc8, 0x10, 0x00, 0x08, 
-  0x13, 0xbd, 0xc8, 0x12, 0xa5, 0x48, 0x13, 0xbd, 0xc8, 0x10, 0x00, 0x08, 0x08, 0x00, 0x10, 0x07, 
-  0xff, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-// 'phone', 24x24px
-const unsigned char myBitmapphone [] PROGMEM = {
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3f, 0x81, 0xfc, 0x3f, 0xc3, 0xfc, 0x3f, 
-  0xe7, 0xfc, 0x39, 0xe7, 0x9c, 0x38, 0x66, 0x1e, 0x3f, 0xe7, 0xfc, 0x79, 0xe7, 0x9e, 0x78, 0x66, 
-  0x1e, 0x7f, 0xe7, 0xfe, 0x39, 0xe7, 0x9c, 0x78, 0x66, 0x1e, 0x7f, 0xe7, 0xfe, 0x3f, 0xe7, 0xfc, 
-  0x7f, 0xe7, 0xfc, 0x3f, 0xe7, 0xfc, 0x01, 0xe7, 0x80, 0x00, 0x66, 0x00, 0x00, 0x24, 0x00, 0x00, 
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
+GraphicalDDLayer *display;
 
 
-GraphicalDDLayer *graphical1;
-GraphicalDDLayer *graphical2;
 
+byte fase = 0;
+
+
+void drawCalc() {
+  display->clear();
+  //display.clearDisplay();
+  display->drawRoundRect(0, 0, 64, 128, 3, COLOR_1);
+  display->fillRoundRect(6, 16, 52, 16, 2, COLOR_1);
+
+  display->setCursor(6, 4);
+  display->print("CALC");
+
+
+
+  for (int i = 0; i < n; i++) {
+    posY[i] = fromTop + (boxH * i) + (space * i);
+    for (int j = 0; j < m; j++) {
+      posX[j] = fromLeft + (boxW * j) + (space * j);
+      display->fillRoundRect(posX[j], posY[i], boxW, boxH, 2, COLOR_1);
+      display->setCursor(posX[j] + (boxW / 2) - 3, posY[i] + (boxH / 2) - 3);
+      display->setTextColor(COLOR_0);
+      display->print(String(buttons[j][i]));
+    }
+  }
+  display->setTextColor(COLOR_1);
+  display->fillRoundRect(posX[cx], posY[cy], boxW, boxH, 2, COLOR_0);
+  display->drawRoundRect(posX[cx], posY[cy], boxW, boxH, 2, COLOR_1);
+  display->setCursor(posX[cx] + (boxW / 2) - 2, posY[cy] + (boxH / 2) - 4);
+  display->print(String(buttons[cx][cy]));
+
+  display->setCursor(6, 4);
+  display->print("CALC");
+  display->setCursor(10, 20);
+  display->setTextColor(COLOR_0);
+
+  temp = num * 10;
+  if (temp % 10 == 0)
+    display->print(String((int)num));
+  else
+    display->print(String(num));
+  //display->display();
+  display->setTextColor(COLOR_1);
+}
+
+void checkButtonsCalc() {
+  if (digitalRead(up) == 0) {
+    if (db1 == 0) {
+      db1 = 1;
+      cx++;
+    }
+  } else db1 = 0;
+
+  if (digitalRead(down) == 0) {
+    if (db2 == 0) {
+      db2 = 1;
+      cy++;
+    }
+  } else db2 = 0;
+
+  if (cx == 4)
+    cx = 0;
+  if (cy == 4)
+    cy = 0;
+
+  if (digitalRead(presS) == 0) {
+    if (db3 == 0) {
+      db3 = 1;
+
+      if (buttons[cx][cy] == '0' || buttons[cx][cy] == '1' || buttons[cx][cy] == '2' || buttons[cx][cy] == '3' || buttons[cx][cy] == '4' || buttons[cx][cy] == '5' || buttons[cx][cy] == '6' || buttons[cx][cy] == '7' || buttons[cx][cy] == '8' || buttons[cx][cy] == '9' || buttons[cx][cy] == '.') {
+        num = num * (digit * 10) + buttons[cx][cy] - '0';
+        digit = 1;
+      }
+
+      if (buttons[cx][cy] == 'C') {
+        num = 0;
+        cx = 0;
+        cy = 0;
+        operation = 0;
+      }
+
+      if (buttons[cx][cy] == '+') {
+        operation = 1;
+        n1 = num;
+        num = 0;
+      }
+      if (buttons[cx][cy] == '-') {
+        operation = 2;
+        n1 = num;
+        num = 0;
+      }
+      if (buttons[cx][cy] == '*') {
+        operation = 3;
+        n1 = num;
+        num = 0;
+      }
+      if (buttons[cx][cy] == '/') {
+        operation = 4;
+        n1 = num;
+        num = 0;
+      }
+
+      if (buttons[cx][cy] == '=') {
+
+        if (operation == 1) {
+          float r = n1 + num;
+          num = r;
+          n1 = num;
+        }
+
+        if (operation == 2) {
+          float r = n1 - num;
+          num = r;
+          n1 = num;
+        }
+
+        if (operation == 3) {
+          float r = n1 * num;
+          num = r;
+          n1 = num;
+        }
+
+        if (operation == 4) {
+          float r = n1 / num;
+          num = r;
+          n1 = num;
+        }
+
+        delay(200);
+      }
+    }
+  } else db3 = 0;
+}
+
+void drawStop() {
+  //display.setFont();
+  display->clear();
+  display->setTextColor(COLOR_1);
+  display->setCursor(0, 0);
+  display->print("STOPWATCH");
+
+
+
+
+
+  display->setCursor(0, 20);
+  display->setTextSize(TEXT_SIZE_2);
+  display->print(String(s_min));
+  display->setCursor(24, 20);
+  display->print(String(":"));
+  display->setCursor(34, 20);
+  display->print(String(s_sec));
+
+  display->setTextSize(TEXT_SIZE_4);
+  display->setCursor(6, 64);
+  display->print(String((int)s_milis));
+
+
+
+  //display.display();
+
+  if (s_fase == 1) {
+    s_milis = s_milis + 3.5;
+
+    if (s_milis > 99) {
+      s_sec++;
+      s_milis = 0;
+    }
+
+    if (s_sec > 59) {
+      s_min++;
+      s_sec = 0;
+    }
+  }
+  display->setTextSize(0);
+}
+
+void checkButtonsStop() {
+  if (digitalRead(presS) == 0) {
+    if (db3 == 0) {
+      db3 = 1;
+      s_fase++;
+      if (s_fase == 3) {
+        s_fase = 0;
+        s_milis = 0;
+        s_sec = 0;
+        s_min = 0;
+      }
+    }
+  } else db3 = 0;
+}
+
+void drawGame() {
+  display->clear();
+
+  display->setCursor(40, 0);
+  display->print(String(gameScore));
+  display->setCursor(2, 0);
+  display->print("Score:");
+  display->drawLine(0, 9, 0, 127, COLOR_1);
+  display->drawLine(63, 9, 63, 127, COLOR_1);
+  display->drawLine(0, 9, 63, 9, COLOR_1);
+  display->fillRect(playerX, 118, playerW, 2, COLOR_1);
+  display->fillCircle(ballX, ballY, 1, COLOR_1);
+
+  for (int i = 0; i < 14; i++)
+    if (enL[i] == 1)
+      display->fillRect(enX[i], enY[i], 8, 2, COLOR_1);
+
+  //display.display();
+}
+
+void checkButtonsGame() {
+
+  if (digitalRead(presS) == 0) {
+    if (db3 == 0) {
+      db3 = 1;
+      controler = !controler;
+      digitalWrite(3, controler);
+    }
+  } else db3 = 0;
+
+
+  if (controler == 1) {
+    playerX = map(analogRead(A0), 0, 1023, 1, 63 - playerW);
+  }
+
+  if (controler == 0) {
+    if (digitalRead(down) == 0)
+      if (playerX > 1)
+        playerX--;
+
+    if (digitalRead(up) == 0)
+      if (playerX < 62 - playerW)
+        playerX++;
+  }
+}
+
+void GameReset() {
+  ballX = random(10, 50);
+  ballY = 50;
+  ballDirectionX = 1;
+  ballDirectionY = 1;
+  gameScore = 0;
+  for (int i = 0; i < 14; i++)
+    enL[i] = 1;
+}
+
+void gameOver() {
+  display->clear();
+  display->setCursor(6, 20);
+  display->print(String(gameScore));
+  display->setTextSize(2);
+  display->setCursor(6, 40);
+  display->print("GAME");
+  display->setCursor(6, 60);
+  display->print("OVER");
+  display->setTextSize(0);
+  //display.display();
+  delay(3000);
+  GameReset();
+}
+
+void checkColision() {
+  if (ballX < 4 || ballX > 62)
+    ballDirectionX = ballDirectionX * -1;
+  if (ballY < 10)
+    ballDirectionY = ballDirectionY * -1;
+
+  if (ballY > 116 && ballX > playerX && ballX < playerX + playerW)
+    ballDirectionY = ballDirectionY * -1;
+
+  for (int i = 0; i < 14; i++)
+    if (ballX > enX[i] && ballX < enX[i] + 8 && ballY > enY[i] && ballY < enY[i] + 2 && enL[i] == 1) {
+      ballDirectionY = ballDirectionY * -1;
+      enL[i] = 0;
+      gameScore++;
+    }
+
+  ballX = ballX + ballDirectionX;
+  ballY = ballY + ballDirectionY;
+
+  if (ballY > 124)
+    gameOver();
+
+
+  if (gameScore % 14 == 0 && gameScore != 0)
+    GameReset();
+}
+
+void calendarDraw() {
+  display->setRotation(0);
+  display->clear();
+  display->setCursor(0, 0);
+  display->print("Mo Tu We Th Fr Sa Su");
+  int d = 1;
+  int dd = 1;
+  for (int i = 0; i < 6; i++)
+    for (int j = 0; j < 7; j++) {
+      if (dd <= dayS[chosenMonth] && d >= startDay[chosenMonth]) {
+        display->setCursor(j * 18, (i + 1) * 9);
+        display->print(String(dd));
+        dd++;
+      }
+      d++;
+    }
+  display->setCursor(70, 55);
+  display->print(String(chosenMonth + 1));
+  display->print("/2022");
+
+  //display.display();
+}
+
+void checkButtonsCalendar() {
+  if (digitalRead(up) == 0) {
+    if (db1 == 0) {
+      db1 = 1;
+      if (chosenMonth > 0)
+        chosenMonth--;
+    }
+  } else db1 = 0;
+
+  if (digitalRead(down) == 0) {
+    if (db2 == 0) {
+      db2 = 1;
+      if (chosenMonth < 11)
+        chosenMonth++;
+    }
+  } else db2 = 0;
+}
+
+void drawMenu() {
+  display->clear();
+
+  display->setTextSize(TEXT_SIZE_MENU);
+
+  display->setCursor(34, 92/*94*/);
+  display->print("Beep");
+  display->setCursor(38, 104);
+  if (sounds == 1)
+    display->print("ON");
+  else
+    display->print("OFF");
+
+  display->setCursor(2/*0*/, 116/*120*/);
+  if (chosenMenu == 0)
+    display->print("Calculator");
+  if (chosenMenu == 1)
+    display->print("Stopwatch");
+  if (chosenMenu == 2)
+    display->print("Games");
+  if (chosenMenu == 3)
+    display->print("Calendar");
+  if (chosenMenu == 4)
+    display->print("PhoneBook");
+
+  display->drawImageFile("logo.png", 0, 0);
+  //display.drawBitmap(0,0,epd_bitmap_logo,64,30,1);
+
+  display->drawImageFile("calc.png", menuX[0], menuY[0]);
+  //display.drawBitmap(menuX[0],menuY[0],myBitmapcalc,24,24,1);
+
+  display->drawImageFile("stop.png", menuX[1], menuY[1]);
+  //display.drawBitmap(menuX[1],menuY[1],myBitmapstop,24,24,1);
+
+  display->drawImageFile("game.png", menuX[2], menuY[2]);
+  //display.drawBitmap(menuX[2],menuY[2],myBitmapgam,24,24,1);
+
+  display->drawImageFile("calen.png", menuX[3], menuY[3]);
+  //display.drawBitmap(menuX[3],menuY[3],myBitmapcalen,24,24,1);
+
+  display->drawImageFile("phone.png", menuX[4], menuY[4]);
+  //display.drawBitmap(menuX[4],menuY[4],myBitmapphone,24,24,1);
+
+  display->drawRoundRect(menuX[chosenMenu] - 2, menuY[chosenMenu] - 2, 28, 28, 2, COLOR_1);
+  //display.display();
+}
+
+void checkButtonsMenu() {
+  if (digitalRead(up) == 0) {
+    if (db1 == 0) {
+      db1 = 1;
+      if (sounds == 1) tone(9, 1100, 50);
+      if (chosenMenu > 0)
+        chosenMenu--;
+    }
+  } else db1 = 0;
+
+  if (digitalRead(down) == 0) {
+    if (db2 == 0) {
+      db2 = 1;
+      if (sounds == 1) tone(9, 1100, 50);
+      if (chosenMenu < 5)
+        chosenMenu++;
+    }
+  } else db2 = 0;
+
+  if (digitalRead(presS) == 0) {
+    if (chosenMenu == 5)
+      sounds = !sounds;
+    else
+      fase = chosenMenu + 1;
+    if (sounds == 1) tone(9, 1100, 50);
+    delay(400);
+  }
+}
+
+void resetAll() {  //display.setFont();
+  cy = 0;
+  cy = 0;
+  n1 = 0;
+  n2 = 0;
+  num = 0;
+  digit = 0;
+  operation = 0;
+}
+
+void phoneDraw() {
+  display->clear();
+  display->setCursor(0, 4);
+  display->print("Mike");
+  display->setCursor(0, 14);
+  display->print("0436789");
+  display->drawLine(0, 1, 63, 1, COLOR_1);
+
+  display->setCursor(0, 28);
+  display->print("Betty");
+  display->setCursor(0, 38);
+  display->print("6574834");
+  display->drawLine(0, 25, 63, 25, COLOR_1);
+
+  display->setCursor(0, 52);
+  display->print("JohnConor");
+  display->setCursor(0, 62);
+  display->print("6453722");
+  display->drawLine(0, 49, 63, 49, COLOR_1);
+
+  display->setCursor(0, 76);
+  display->print("Luke");
+  display->setCursor(0, 86);
+  display->print("2275849");
+  display->drawLine(0, 73, 63, 73, COLOR_1);
+
+  //display.display();
+}
 
 void setup() {
-    graphical1 = dumbdisplay.createGraphicalLayer(64, 64);
-    graphical2 = dumbdisplay.createGraphicalLayer(64, 64);
-    graphical1->backgroundColor("yellow");
-    graphical2->backgroundColor("green");
+  display = dumbdisplay.createGraphicalLayer(64, 128);
+  display->backgroundColor(COLOR_BG);
 
-    dumbdisplay.configAutoPin(DD_AP_VERT);
+  display->setCursor(0, 10);
+  display->print("... init ...");
+
+  display->cachePixelImage("logo.png", epd_bitmap_logo, 64, 30, COLOR_1);
+  display->cachePixelImage("calc.png", myBitmapcalc, 24, 24, COLOR_1);
+  display->cachePixelImage("stop.png", myBitmapstop, 24, 24, COLOR_1);
+  display->cachePixelImage("game.png", myBitmapgam, 24, 24, COLOR_1);
+  display->cachePixelImage("calen.png", myBitmapcalen, 24, 24, COLOR_1);
+  display->cachePixelImage("phone.png", myBitmapphone, 24, 24, COLOR_1);
+
+  playerX = random(10, 50);
+
+  //pinMode(up,INPUT_PULLUP);
+  //pinMode(presS,INPUT_PULLUP);
+  //pinMode(down,INPUT_PULLUP);
+  //pinMode(3,OUTPUT);
+
+  //display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
+  //display.display();
+
+  display->clear();
+  //display->setRotation(3);
+  playerX = random(10, 50);
+  //display.clearDisplay();
+  //display.setFont(0);
+  //display.setTextColor(WHITE);
+  //display.display();
 
 
-    // uint8_t bytes[8] = { 0xff, 0xf0, 0x0f, 0xff,
-    //                      0xff, 0xf0, 0x0f, 0xff };
-    // int width = 32;
-    // int height = 2;
-    // dumbdisplay.savePixelImage("test_pixel_bmp.png", bytes, width, height);
-
-    dumbdisplay.savePixelImage("logo.png", epd_bitmap_logo, 64, 30, "red");
-    graphical1->drawImageFileFit("logo.png");
-
-    graphical2->cachePixelImage("calc.png", myBitmapcalc, 24, 24, "blue");
-    graphical2->drawImageFileFit("calc.png");
-
+    drawMenu();
 }
 
 void loop() {
+}
+
+void _loop() {
+
+  if (fase == 0) {
+    checkButtonsMenu();
+    drawMenu();
+  }
+
+  if (fase == 1) {
+    checkButtonsCalc();
+    drawCalc();
+  }
+
+  if (fase == 2) {
+    checkButtonsStop();
+    drawStop();
+  }
+
+  if (fase == 3) {
+    checkColision();
+    checkButtonsGame();
+    drawGame();
+  }
+
+  if (fase == 4) {
+    calendarDraw();
+    checkButtonsCalendar();
+  }
+
+  if (fase == 5) {
+    phoneDraw();
+  }
+
+
+
+  if (digitalRead(down) == 0 && digitalRead(presS) == 0) {
+    GameReset();
+    display->setRotation(3);
+    resetAll();
+    fase = 0;
+    delay(500);
+  }
 }
 

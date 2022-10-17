@@ -1401,6 +1401,9 @@ void LcdDDLayer::noBgPixelColor() {
 }
 
 
+void GraphicalDDLayer::setRotation(int8_t rotationType) {
+  _sendCommand1(layerId, C_setrot, String(rotationType));
+}
 void GraphicalDDLayer::setCursor(int x, int y) {
   _sendCommand2(layerId, C_setcursor, String(x), String(y));
 }

@@ -351,6 +351,7 @@ class GraphicalDDLayer: public DDLayer {
   public:
     GraphicalDDLayer(int8_t layerId): DDLayer(layerId) {
     }
+    void setRotation(int8_t rotationType);
     /* set cursor */
     void setCursor(int x, int y);
     /* move cursor by ... */
