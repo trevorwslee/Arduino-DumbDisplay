@@ -15,6 +15,8 @@
 #define TEXT_SIZE_2 9
 #define TEXT_SIZE_4 9
 
+
+#include "pgm_util.h"
 #define BLUETOOTH
 #ifdef BLUETOOTH
 #include "ssdumbdisplay.h"
@@ -25,6 +27,7 @@ DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200,
 #include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
 #endif
+
 
 
 GraphicalDDLayer *display;
@@ -483,12 +486,19 @@ void setup() {
   display->setCursor(0, 10);
   display->print("... init ...");
 
-  display->cachePixelImage("logo.png", epd_bitmap_logo, 64, 30, COLOR_1);
-  display->cachePixelImage("calc.png", myBitmapcalc, 24, 24, COLOR_1);
-  display->cachePixelImage("stop.png", myBitmapstop, 24, 24, COLOR_1);
-  display->cachePixelImage("game.png", myBitmapgam, 24, 24, COLOR_1);
-  display->cachePixelImage("calen.png", myBitmapcalen, 24, 24, COLOR_1);
-  display->cachePixelImage("phone.png", myBitmapphone, 24, 24, COLOR_1);
+  // display->cachePixelImage("logo.png", epd_bitmap_logo, 64, 30, COLOR_1);
+  // display->cachePixelImage("calc.png", myBitmapcalc, 24, 24, COLOR_1);
+  // display->cachePixelImage("stop.png", myBitmapstop, 24, 24, COLOR_1);
+  // display->cachePixelImage("game.png", myBitmapgam, 24, 24, COLOR_1);
+  // display->cachePixelImage("calen.png", myBitmapcalen, 24, 24, COLOR_1);
+  // display->cachePixelImage("phone.png", myBitmapphone, 24, 24, COLOR_1);
+  unsigned char buffer[240];
+  display->cachePixelImage("logo.png", PgmCopyBytes(epd_bitmap_logo, sizeof(epd_bitmap_logo), buffer), 64, 30, COLOR_1);
+  display->cachePixelImage("calc.png", PgmCopyBytes(myBitmapcalc, sizeof(myBitmapcalc), buffer), 24, 24, COLOR_1);
+  display->cachePixelImage("stop.png", PgmCopyBytes(myBitmapstop, sizeof(myBitmapstop), buffer), 24, 24, COLOR_1);
+  display->cachePixelImage("game.png", PgmCopyBytes(myBitmapgam, sizeof(myBitmapgam), buffer), 24, 24, COLOR_1);
+  display->cachePixelImage("calen.png", PgmCopyBytes(myBitmapcalen, sizeof(myBitmapcalen), buffer), 24, 24, COLOR_1);
+  display->cachePixelImage("phone.png", PgmCopyBytes(myBitmapphone, sizeof(myBitmapphone), buffer), 24, 24, COLOR_1);
 
   playerX = random(10, 50);
 
