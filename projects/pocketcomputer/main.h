@@ -1,12 +1,25 @@
 
 
-const uint8_t up PIN_A1;
-const uint8_t down PIN_A4;
-const uint8_t presS PIN_A0;
+// const uint8_t up PIN_A1;
+// const uint8_t down PIN_A4;
+// const uint8_t presS PIN_A0;
 
 
-byte fase = 0;
+// pins
+// const int a_btn = 2;
+// const int c_btn = 4;
+// const int d_btn = 5;
+// const int b_btn = 3;
+// const int e_btn = 6;
+// const int f_btn = 7;
+// const int k_btn = 8;
+// const int x_joystick = A0;
+// const int y_joystick = A1;
 
+
+const uint8_t up = 2;
+const uint8_t down = 4;
+const uint8_t presS = 3;
 
 
 const int8_t MS_MENU = 0;
@@ -14,6 +27,10 @@ const int8_t MS_MENU = 0;
 int8_t dms = -1;
 int8_t dss = -1;
 
+void resetDisplayState() {
+  dms = -1;
+  dss = -1;
+}
 boolean checkDisplayState(int8_t mainState, int8_t subState) {
   int8_t oridms = dms;
   int8_t oridss = dss;
@@ -22,6 +39,9 @@ boolean checkDisplayState(int8_t mainState, int8_t subState) {
   return oridms != dms || oridss != dss;
 }
 
+
+
+byte fase = 0;
 
 
 void drawCalc() {
@@ -428,6 +448,7 @@ void checkButtonsMenu() {
       fase = chosenMenu + 1;
     if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
     delay(400);
+    resetDisplayState();
   }
 }
 

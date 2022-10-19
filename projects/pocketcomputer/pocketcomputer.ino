@@ -45,7 +45,6 @@ void setup() {
   pinMode(down,INPUT_PULLUP);
   //pinMode(3,OUTPUT);
 
-
   display = dumbdisplay.createGraphicalLayer(64, 128);
   display->backgroundColor(COLOR_BG);
 
