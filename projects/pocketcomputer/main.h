@@ -23,8 +23,15 @@ const uint8_t left = 5;
 const uint8_t up = 2;
 const uint8_t right = 3;
 const uint8_t down = 4;
+
+const uint8_t horizontal = A0;
+const uint8_t vertical = A1;
+
+
 const uint8_t presS = 8;
 const uint8_t analogy = A0;
+
+
 
 
 const int8_t MS_MENU = 0;
@@ -50,6 +57,10 @@ ButtonPressTracker upTracker;
 ButtonPressTracker rightTracker;
 ButtonPressTracker downTracker;
 ButtonPressTracker selectTracker;
+
+JoyStickPressTracker horizontalTracker;
+JoyStickPressTracker verticalTracker;
+
 
 
 
@@ -105,16 +116,16 @@ void drawCalc() {
 }
 
 void checkButtonsCalc() {
-  if (upTracker.setPressed(digitalRead(up) == 0)) {
+  int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
+  int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
+
+  if (upTracker.setPressed(digitalRead(up) == 0) || verticalPress == 1) {
       cy = (cy + 3) % 4;
-  }
-  if (downTracker.setPressed(digitalRead(down) == 0)) {
+  } else if (downTracker.setPressed(digitalRead(down) == 0) || verticalPress == -1) {
       cy = (cy + 1) % 4;
-  }
-  if (rightTracker.setPressed(digitalRead(right) == 0)) {
+  } else if (rightTracker.setPressed(digitalRead(right) == 0) || horizontalPress == 1) {
       cx = (cx + 1) % 4;
-  }
-  if (leftTracker.setPressed(digitalRead(left) == 0)) {
+  } else if (leftTracker.setPressed(digitalRead(left) == 0) || horizontalPress == -1) {
       cx = (cx + 3) % 4;
   }
 
@@ -423,14 +434,19 @@ void drawMenu() {
 }
 
 void checkButtonsMenu() {
+
+  //dumbdisplay.writeComment(String(analogRead(horizontal)));
+  int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
+  int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
+
   if (upTracker.setPressed(digitalRead(up) == 0) || 
-      leftTracker.setPressed(digitalRead(left) == 0)) {
+      leftTracker.setPressed(digitalRead(left) == 0) ||
+      horizontalPress == -1 || verticalPress == -1) {
     if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
     chosenMenu = (chosenMenu + 5) % 6;
-  }
-
-  if (downTracker.setPressed(digitalRead(down) == 0) ||
-      rightTracker.setPressed(digitalRead(right) == 0)) {
+  } else if (downTracker.setPressed(digitalRead(down) == 0) ||
+      rightTracker.setPressed(digitalRead(right) == 0) ||
+      horizontalPress == 1 || verticalPress == 1) {
     if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
     chosenMenu = (chosenMenu + 1) % 6;
   }

@@ -25,3 +25,52 @@ private:
   bool pressed;
   long blackOutMillis;
 };
+
+class JoyStickPressTracker {
+public:
+  JoyStickPressTracker() {
+    this->reading = 0;
+    this->pressedDir = 0;
+    this->pressedMillis = 0;
+    this->needReset = false;
+  }
+  int8_t setReading(int reading) {
+    int oriReading = this->reading;
+    int8_t oriPressedDir = this->pressedDir;
+    this->reading = reading;
+    if ((reading - threshold) < 0) {
+      this->pressedDir = -1;
+    } else if (reading + threshold > maxReading) {
+      this->pressedDir = 1;
+    } else {
+      this->pressedDir = 0;
+    }
+    if (!this->needReset && this->pressedMillis != 0 && (this->pressedDir == oriPressedDir)) {
+      long diffMillis = millis() - this->pressedMillis;
+      if (diffMillis > 50) {
+        this->pressedDir = 0;
+        this->pressedMillis = 0;
+        this->needReset = true;
+        return oriPressedDir;
+      } 
+    } else {
+      if (this->pressedDir != 0) {
+        if (this->pressedMillis == 0) {
+          this->pressedMillis = millis();
+        }
+      } else {
+        this->pressedMillis = 0;
+        this->needReset = false;
+      }
+    }
+    return 0;
+  }
+private:
+  const int maxReading = 1024;
+  const int threshold = 10;  
+private:
+  int reading;  
+  int8_t pressedDir;
+  long pressedMillis;
+  bool needReset;
+};
