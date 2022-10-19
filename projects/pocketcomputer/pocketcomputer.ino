@@ -10,10 +10,10 @@
 
 
 const char* COLOR_BG = "darkblue";
-const char* COLOR_0 = "cyan";
+const char* COLOR_0 = "navy";
 const char* COLOR_1 = "ivory";
 const uint8_t TEXT_SIZE_MENU = 9;
-const uint8_t TEXT_SIZE_2 = 9;
+const uint8_t TEXT_SIZE_2 = 11;
 const int TEXT_SIZE_4 = 9;
 
 
@@ -115,7 +115,7 @@ void loop() {
 
   if (digitalRead(down) == 0 && digitalRead(presS) == 0) {
     GameReset();
-    display->setRotation(3);
+    //display->setRotation(3);
     resetAll();
     fase = 0;
     delay(500);

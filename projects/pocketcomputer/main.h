@@ -19,9 +19,11 @@
 // const int y_joystick = A1;
 
 
+const uint8_t left = 5;
 const uint8_t up = 2;
+const uint8_t right = 3;
 const uint8_t down = 4;
-const uint8_t presS = 3;
+const uint8_t presS = 8;
 const uint8_t analogy = A0;
 
 
@@ -43,7 +45,9 @@ boolean checkDisplayState(int8_t mainState, int8_t subState) {
   return oridms != dms || oridss != dss;
 }
 
+ButtonPressTracker leftTracker;
 ButtonPressTracker upTracker;
+ButtonPressTracker rightTracker;
 ButtonPressTracker downTracker;
 ButtonPressTracker selectTracker;
 
@@ -55,7 +59,7 @@ byte fase = 0;
 
 
 void drawCalc() {
-  int8_t ss = cx << 1 | cy;
+  int8_t ss = 10 * cx + cy;
   if (!checkDisplayState(MS_CALC, ss)) {
     return;
   }
@@ -102,92 +106,84 @@ void drawCalc() {
 
 void checkButtonsCalc() {
   if (upTracker.setPressed(digitalRead(up) == 0)) {
-    if (db1 == 0) {
-      db1 = 1;
-      cx++;
-    }
-  } else db1 = 0;
-
+      cy = (cy + 3) % 4;
+  }
   if (downTracker.setPressed(digitalRead(down) == 0)) {
-    if (db2 == 0) {
-      db2 = 1;
-      cy++;
-    }
-  } else db2 = 0;
-
-  if (cx == 4)
-    cx = 0;
-  if (cy == 4)
-    cy = 0;
+      cy = (cy + 1) % 4;
+  }
+  if (rightTracker.setPressed(digitalRead(right) == 0)) {
+      cx = (cx + 1) % 4;
+  }
+  if (leftTracker.setPressed(digitalRead(left) == 0)) {
+      cx = (cx + 3) % 4;
+  }
 
   if (selectTracker.setPressed(digitalRead(presS) == 0)) {
-    if (db3 == 0) {
-      db3 = 1;
 
-      if (buttons[cx][cy] == '0' || buttons[cx][cy] == '1' || buttons[cx][cy] == '2' || buttons[cx][cy] == '3' || buttons[cx][cy] == '4' || buttons[cx][cy] == '5' || buttons[cx][cy] == '6' || buttons[cx][cy] == '7' || buttons[cx][cy] == '8' || buttons[cx][cy] == '9' || buttons[cx][cy] == '.') {
-        num = num * (digit * 10) + buttons[cx][cy] - '0';
-        digit = 1;
-      }
-
-      if (buttons[cx][cy] == 'C') {
-        num = 0;
-        cx = 0;
-        cy = 0;
-        operation = 0;
-      }
-
-      if (buttons[cx][cy] == '+') {
-        operation = 1;
-        n1 = num;
-        num = 0;
-      }
-      if (buttons[cx][cy] == '-') {
-        operation = 2;
-        n1 = num;
-        num = 0;
-      }
-      if (buttons[cx][cy] == '*') {
-        operation = 3;
-        n1 = num;
-        num = 0;
-      }
-      if (buttons[cx][cy] == '/') {
-        operation = 4;
-        n1 = num;
-        num = 0;
-      }
-
-      if (buttons[cx][cy] == '=') {
-
-        if (operation == 1) {
-          float r = n1 + num;
-          num = r;
-          n1 = num;
-        }
-
-        if (operation == 2) {
-          float r = n1 - num;
-          num = r;
-          n1 = num;
-        }
-
-        if (operation == 3) {
-          float r = n1 * num;
-          num = r;
-          n1 = num;
-        }
-
-        if (operation == 4) {
-          float r = n1 / num;
-          num = r;
-          n1 = num;
-        }
-
-        delay(200);
-      }
+    if (buttons[cx][cy] == '0' || buttons[cx][cy] == '1' || buttons[cx][cy] == '2' || buttons[cx][cy] == '3' || buttons[cx][cy] == '4' || buttons[cx][cy] == '5' || buttons[cx][cy] == '6' || buttons[cx][cy] == '7' || buttons[cx][cy] == '8' || buttons[cx][cy] == '9' || buttons[cx][cy] == '.') {
+      num = num * (digit * 10) + buttons[cx][cy] - '0';
+      digit = 1;
     }
+
+    if (buttons[cx][cy] == 'C') {
+      num = 0;
+      cx = 0;
+      cy = 0;
+      operation = 0;
+    }
+
+    if (buttons[cx][cy] == '+') {
+      operation = 1;
+      n1 = num;
+      num = 0;
+    }
+    if (buttons[cx][cy] == '-') {
+      operation = 2;
+      n1 = num;
+      num = 0;
+    }
+    if (buttons[cx][cy] == '*') {
+      operation = 3;
+      n1 = num;
+      num = 0;
+    }
+    if (buttons[cx][cy] == '/') {
+      operation = 4;
+      n1 = num;
+      num = 0;
+    }
+
+    if (buttons[cx][cy] == '=') {
+
+      if (operation == 1) {
+        float r = n1 + num;
+        num = r;
+        n1 = num;
+      }
+
+      if (operation == 2) {
+        float r = n1 - num;
+        num = r;
+        n1 = num;
+      }
+
+      if (operation == 3) {
+        float r = n1 * num;
+        num = r;
+        n1 = num;
+      }
+
+      if (operation == 4) {
+        float r = n1 / num;
+        num = r;
+        n1 = num;
+      }
+
+      delay(200);
+    }
+
     resetDisplayState();
-  } else db3 = 0;
+  }
 }
 
 void drawStop() {
@@ -235,17 +231,14 @@ void drawStop() {
 
 void checkButtonsStop() {
   if (digitalRead(presS) == 0) {
-    if (db3 == 0) {
-      db3 = 1;
-      s_fase++;
-      if (s_fase == 3) {
-        s_fase = 0;
-        s_milis = 0;
-        s_sec = 0;
-        s_min = 0;
-      }
+    s_fase++;
+    if (s_fase == 3) {
+      s_fase = 0;
+      s_milis = 0;
+      s_sec = 0;
+      s_min = 0;
     }
-  } else db3 = 0;
+  }
 }
 
 void drawGame() {
@@ -271,12 +264,9 @@ void drawGame() {
 void checkButtonsGame() {
 
   if (digitalRead(presS) == 0) {
-    if (db3 == 0) {
-      db3 = 1;
-      controler = !controler;
-      digitalWrite(3, controler);
-    }
-  } else db3 = 0;
+    controler = !controler;
+    digitalWrite(3, controler);
+  }
 
 
   if (controler == 1) {
@@ -371,20 +361,14 @@ void calendarDraw() {
 
 void checkButtonsCalendar() {
   if (digitalRead(up) == 0) {
-    if (db1 == 0) {
-      db1 = 1;
-      if (chosenMonth > 0)
-        chosenMonth--;
-    }
-  } else db1 = 0;
+    if (chosenMonth > 0)
+      chosenMonth--;
+  }
 
   if (digitalRead(down) == 0) {
-    if (db2 == 0) {
-      db2 = 1;
-      if (chosenMonth < 11)
-        chosenMonth++;
-    }
-  } else db2 = 0;
+    if (chosenMonth < 11)
+      chosenMonth++;
+  };
 }
 
 void drawMenu() {
@@ -439,23 +423,18 @@ void drawMenu() {
 }
 
 void checkButtonsMenu() {
-  if (upTracker.setPressed(digitalRead(up) == 0)) {
-    if (db1 == 0) {
-      db1 = 1;
-      if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
-      if (chosenMenu > 0)
-        chosenMenu--;
-    }
-  } else db1 = 0;
+  if (upTracker.setPressed(digitalRead(up) == 0) || 
+      leftTracker.setPressed(digitalRead(left) == 0)) {
+    if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
+    chosenMenu = (chosenMenu + 5) % 6;
+  }
 
-  if (downTracker.setPressed(digitalRead(down) == 0)) {
-    if (db2 == 0) {
-      db2 = 1;
-      if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
-      if (chosenMenu < 5)
-        chosenMenu++;
-    }
-  } else db2 = 0;
+  if (downTracker.setPressed(digitalRead(down) == 0) ||
+      rightTracker.setPressed(digitalRead(right) == 0)) {
+    if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
+    chosenMenu = (chosenMenu + 1) % 6;
+  }
+
 
   if (selectTracker.setPressed(digitalRead(presS) == 0)) {
     if (chosenMenu == 5)
