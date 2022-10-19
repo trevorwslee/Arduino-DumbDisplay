@@ -1,5 +1,7 @@
 
 
+#include "buttonpresstracker.h"
+
 // const uint8_t up PIN_A1;
 // const uint8_t down PIN_A4;
 // const uint8_t presS PIN_A0;
@@ -20,9 +22,11 @@
 const uint8_t up = 2;
 const uint8_t down = 4;
 const uint8_t presS = 3;
+const uint8_t analogy = A0;
 
 
 const int8_t MS_MENU = 0;
+const int8_t MS_CALC = 1;
 
 int8_t dms = -1;
 int8_t dss = -1;
@@ -39,12 +43,23 @@ boolean checkDisplayState(int8_t mainState, int8_t subState) {
   return oridms != dms || oridss != dss;
 }
 
+ButtonPressTracker upTracker;
+ButtonPressTracker downTracker;
+ButtonPressTracker selectTracker;
+
+
+
 
 
 byte fase = 0;
 
 
 void drawCalc() {
+  int8_t ss = cx << 1 | cy;
+  if (!checkDisplayState(MS_CALC, ss)) {
+    return;
+  }
+
   display->clear();
   //display.clearDisplay();
   display->drawRoundRect(0, 0, 64, 128, 3, COLOR_1);
@@ -86,14 +101,14 @@ void drawCalc() {
 }
 
 void checkButtonsCalc() {
-  if (digitalRead(up) == 0) {
+  if (upTracker.setPressed(digitalRead(up) == 0)) {
     if (db1 == 0) {
       db1 = 1;
       cx++;
     }
   } else db1 = 0;
 
-  if (digitalRead(down) == 0) {
+  if (downTracker.setPressed(digitalRead(down) == 0)) {
     if (db2 == 0) {
       db2 = 1;
       cy++;
@@ -105,7 +120,7 @@ void checkButtonsCalc() {
   if (cy == 4)
     cy = 0;
 
-  if (digitalRead(presS) == 0) {
+  if (selectTracker.setPressed(digitalRead(presS) == 0)) {
     if (db3 == 0) {
       db3 = 1;
 
@@ -171,6 +186,7 @@ void checkButtonsCalc() {
         delay(200);
       }
     }
+    resetDisplayState();
   } else db3 = 0;
 }
 
@@ -263,9 +279,9 @@ void checkButtonsGame() {
   } else db3 = 0;
 
 
-  // if (controler == 1) {
-  //   playerX = map(analogRead(A0), 0, 1023, 1, 63 - playerW);
-  // }
+  if (controler == 1) {
+    playerX = map(analogRead(analogy/*A0*/), 0, 1023, 1, 63 - playerW);
+  }
 
   if (controler == 0) {
     if (digitalRead(down) == 0)
@@ -423,7 +439,7 @@ void drawMenu() {
 }
 
 void checkButtonsMenu() {
-  if (digitalRead(up) == 0) {
+  if (upTracker.setPressed(digitalRead(up) == 0)) {
     if (db1 == 0) {
       db1 = 1;
       if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
@@ -432,7 +448,7 @@ void checkButtonsMenu() {
     }
   } else db1 = 0;
 
-  if (digitalRead(down) == 0) {
+  if (downTracker.setPressed(digitalRead(down) == 0)) {
     if (db2 == 0) {
       db2 = 1;
       if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
@@ -441,7 +457,7 @@ void checkButtonsMenu() {
     }
   } else db2 = 0;
 
-  if (digitalRead(presS) == 0) {
+  if (selectTracker.setPressed(digitalRead(presS) == 0)) {
     if (chosenMenu == 5)
       sounds = !sounds;
     else

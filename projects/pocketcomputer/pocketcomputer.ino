@@ -113,12 +113,12 @@ void loop() {
 
 
 
-  // if (digitalRead(down) == 0 && digitalRead(presS) == 0) {
-  //   GameReset();
-  //   display->setRotation(3);
-  //   resetAll();
-  //   fase = 0;
-  //   delay(500);
-  // }
+  if (digitalRead(down) == 0 && digitalRead(presS) == 0) {
+    GameReset();
+    display->setRotation(3);
+    resetAll();
+    fase = 0;
+    delay(500);
+  }
 }
 
