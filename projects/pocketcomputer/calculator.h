@@ -1,6 +1,6 @@
-const int up PROGMEM = 4;
-const int presS PROGMEM = 6;
-const int down  PROGMEM= 5;
+// const int up PROGMEM = 4;
+// const int presS PROGMEM = 6;
+// const int down  PROGMEM= 5;
 
 const byte fromTop PROGMEM=60;
 const byte fromLeft PROGMEM=4;
