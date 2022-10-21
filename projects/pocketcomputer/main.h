@@ -1,6 +1,6 @@
 
 
-#include "buttonpresstracker.h"
+#include "PressTracker.h"
 
 // const uint8_t up PIN_A1;
 // const uint8_t down PIN_A4;
@@ -28,7 +28,7 @@ const uint8_t horizontal = A0;
 const uint8_t vertical = A1;
 
 
-const uint8_t presS = 8;
+//const uint8_t presS = 8;
 const uint8_t analogy = A0;
 
 
@@ -52,11 +52,11 @@ boolean checkDisplayState(int8_t mainState, int8_t subState) {
   return oridms != dms || oridss != dss;
 }
 
-ButtonPressTracker leftTracker;
-ButtonPressTracker upTracker;
+//ButtonPressTracker leftTracker;
+//ButtonPressTracker upTracker;
 ButtonPressTracker rightTracker;
-ButtonPressTracker downTracker;
-ButtonPressTracker selectTracker;
+//ButtonPressTracker downTracker;
+//ButtonPressTracker selectTracker;
 
 JoyStickPressTracker horizontalTracker;
 JoyStickPressTracker verticalTracker;
@@ -119,17 +119,17 @@ void checkButtonsCalc() {
   int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
   int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
 
-  if (upTracker.setPressed(digitalRead(up) == 0) || verticalPress == 1) {
+  if (/*upTracker.setPressed(digitalRead(up) == 0) || */verticalPress == 1) {
       cy = (cy + 3) % 4;
-  } else if (downTracker.setPressed(digitalRead(down) == 0) || verticalPress == -1) {
+  } else if (/*downTracker.setPressed(digitalRead(down) == 0) || */verticalPress == -1) {
       cy = (cy + 1) % 4;
-  } else if (rightTracker.setPressed(digitalRead(right) == 0) || horizontalPress == 1) {
+  } else if (/*rightTracker.setPressed(digitalRead(right) == 0) || */horizontalPress == 1) {
       cx = (cx + 1) % 4;
-  } else if (leftTracker.setPressed(digitalRead(left) == 0) || horizontalPress == -1) {
+  } else if (/*leftTracker.setPressed(digitalRead(left) == 0) || */horizontalPress == -1) {
       cx = (cx + 3) % 4;
   }
 
-  if (selectTracker.setPressed(digitalRead(presS) == 0)) {
+  if (rightTracker/*selectTracker*/.setPressed(digitalRead(right/*presS*/) == 0)) {
 
     if (buttons[cx][cy] == '0' || buttons[cx][cy] == '1' || buttons[cx][cy] == '2' || buttons[cx][cy] == '3' || buttons[cx][cy] == '4' || buttons[cx][cy] == '5' || buttons[cx][cy] == '6' || buttons[cx][cy] == '7' || buttons[cx][cy] == '8' || buttons[cx][cy] == '9' || buttons[cx][cy] == '.') {
       num = num * (digit * 10) + buttons[cx][cy] - '0';
@@ -241,7 +241,7 @@ void drawStop() {
 }
 
 void checkButtonsStop() {
-  if (digitalRead(presS) == 0) {
+  if (digitalRead(right/*presS*/) == 0) {
     s_fase++;
     if (s_fase == 3) {
       s_fase = 0;
@@ -274,7 +274,7 @@ void drawGame() {
 
 void checkButtonsGame() {
 
-  if (digitalRead(presS) == 0) {
+  if (digitalRead(right/*presS*/) == 0) {
     controler = !controler;
     digitalWrite(3, controler);
   }
@@ -439,20 +439,20 @@ void checkButtonsMenu() {
   int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
   int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
 
-  if (upTracker.setPressed(digitalRead(up) == 0) || 
+  if (/*upTracker.setPressed(digitalRead(up) == 0) || 
       leftTracker.setPressed(digitalRead(left) == 0) ||
-      horizontalPress == -1 || verticalPress == -1) {
+      */horizontalPress == -1 || verticalPress == 1) {
     if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
     chosenMenu = (chosenMenu + 5) % 6;
-  } else if (downTracker.setPressed(digitalRead(down) == 0) ||
+  } else if (/*downTracker.setPressed(digitalRead(down) == 0) ||
       rightTracker.setPressed(digitalRead(right) == 0) ||
-      horizontalPress == 1 || verticalPress == 1) {
+      */horizontalPress == 1 || verticalPress == -1) {
     if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
     chosenMenu = (chosenMenu + 1) % 6;
   }
 
 
-  if (selectTracker.setPressed(digitalRead(presS) == 0)) {
+  if (rightTracker/*selectTracker*/.setPressed(digitalRead(right/*presS*/) == 0)) {
     if (chosenMenu == 5)
       sounds = !sounds;
     else

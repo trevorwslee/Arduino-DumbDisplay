@@ -35,7 +35,7 @@ public:
     this->needReset = false;
   }
   int8_t setReading(int reading) {
-    int oriReading = this->reading;
+    //int oriReading = this->reading;
     int8_t oriPressedDir = this->pressedDir;
     this->reading = reading;
     if ((reading - threshold) < 0) {
@@ -67,7 +67,8 @@ public:
   }
 private:
   const int maxReading = 1024;
-  const int threshold = 10;  
+  //const int threshold = 10;  
+  const int threshold = 5;  
 private:
   int reading;  
   int8_t pressedDir;

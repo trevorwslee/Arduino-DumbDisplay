@@ -17,12 +17,12 @@ const uint8_t TEXT_SIZE_2 = 11;
 const int TEXT_SIZE_4 = 9;
 
 
-#define BLUETOOTH
+//#define BLUETOOTH
 #ifdef BLUETOOTH
 #include "ssdumbdisplay.h"
-// assume HC-05 connected; 2 => TX of HC05; 3 => RX of HC05
+// assume HC-05 connected; 11 => TX of HC05; 10 => RX of HC05
 // still can connect with OTG
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 115200));
 #else
 #include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
@@ -41,8 +41,10 @@ GraphicalDDLayer *display;
 void setup() {
 
   pinMode(up,INPUT_PULLUP);
-  pinMode(presS,INPUT_PULLUP);
+  //pinMode(presS,INPUT_PULLUP);
   pinMode(down,INPUT_PULLUP);
+  pinMode(left,INPUT_PULLUP);
+  pinMode(right,INPUT_PULLUP);
   //pinMode(3,OUTPUT);
 
   display = dumbdisplay.createGraphicalLayer(64, 128);
@@ -113,7 +115,7 @@ void loop() {
 
 
 
-  if (digitalRead(down) == 0 && digitalRead(presS) == 0) {
+  if (digitalRead(down) == 0 && digitalRead(right/*presS*/) == 0) {
     GameReset();
     //display->setRotation(3);
     resetAll();
