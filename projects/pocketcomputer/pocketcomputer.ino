@@ -138,7 +138,7 @@ void loop() {
   }
 
   if (fase == 3) {
-    //checkColision();
+    checkColision();
     checkButtonsGame();
     drawGame();
   }

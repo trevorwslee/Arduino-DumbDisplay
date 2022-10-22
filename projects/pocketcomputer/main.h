@@ -169,7 +169,7 @@ void _drawGame() {
     display->drawLine(63, 9, 63, 127, COLOR_1);
     display->drawLine(0, 9, 63, 9, COLOR_1);
     //display->fillRect(playerX, 118, playerW, 2, COLOR_1);
-    display->fillCircle(ballX, ballY, 1, COLOR_1);
+    //display->fillCircle(ballX, ballY, 1, COLOR_1);
 
     for (int i = 0; i < 14; i++)
       if (enL[i] == 1)
@@ -183,6 +183,13 @@ void _drawGame() {
 
   display->setCursor(40, 0);
   display->print(String(gameScore));
+
+  if (gl_ballX != -1) {
+    display->fillCircle(gl_ballX, gl_ballY, 1, COLOR_BG);
+  }
+  display->fillCircle(ballX, ballY, 1, COLOR_1);
+  gl_ballX = ballX;
+  gl_ballY = ballY;
 
   //display.display();
 }
@@ -237,7 +244,7 @@ void gameOver() {
   GameReset();
 }
 
-void checkColision() {
+void _checkColision() {
   if (ballX < 4 || ballX > 62)
     ballDirectionX = ballDirectionX * -1;
   if (ballY < 10)
@@ -253,6 +260,8 @@ void checkColision() {
       gameScore++;
     }
 
+  gl_ballX = ballX;
+  gl_ballY = ballY;
   ballX = ballX + ballDirectionX;
   ballY = ballY + ballDirectionY;
 
@@ -372,6 +381,8 @@ void resetAll() {  //display.setFont();
   //digit = 0;
   //operation = 0;
   g_shown = false;
+  gl_ballX = -1;
+  gl_ballY = -1;
 }
 
 void phoneDraw() {
@@ -455,13 +466,31 @@ void drawStop() {
   dumbdisplay.playbackLayerCommands();
 }
 void drawGame() {
-  int32_t ss = (100 * playerX + gameScore) + (gameOver ? 10000 : 0);
+  //int32_t ss = (100 * playerX + gameScore) + (gameOver ? 10000 : 0);
+  int32_t ss;
+  if (!g_shown) {
+    ss = 3;  // last 2 bits 11
+  } else if (gl_ballX != ballX) {
+    ss = 1;  // last 2 bits 01
+  } else if (gl_ballY != ballY) {
+    ss = 2;  // last 2 bits 10
+  } else {
+    ss = (100 * playerX + gameScore) * 4;  // last 2 bits 00
+  }
   if (!checkDisplayState(MS_STOP, ss)) {
     return;
   }
   dumbdisplay.recordLayerCommands();
   _drawGame();
   dumbdisplay.playbackLayerCommands();
+}
+void checkColision() {
+  long now = millis();
+  if ((now - gl_check) < 200) {
+    return;
+  }
+  _checkColision();
+  gl_check = now;
 }
 
 
