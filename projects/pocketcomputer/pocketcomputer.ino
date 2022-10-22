@@ -17,15 +17,26 @@ const uint8_t TEXT_SIZE_2 = 11;
 const int TEXT_SIZE_4 = 9;
 
 
-//#define BLUETOOTH
-#ifdef BLUETOOTH
-#include "ssdumbdisplay.h"
-// assume HC-05 connected; 11 => TX of HC05; 10 => RX of HC05
-// still can connect with OTG
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 115200));
+#define BLUETOOTH
+
+#if defined(FOR_PICO)
+  // GP8 => RX of HC06; GP9 => TX of HC06
+  #define DD_4_PICO_TX 8
+  #define DD_4_PICO_RX 9
+  #include "picodumbdisplay.h"
+  /* HC-06 connectivity */
+  DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
+#elif defined (BLUETOOTH)
+  #include "ssdumbdisplay.h"
+  // // assume HC-05 connected; 11 => TX of HC05; 10 => RX of HC05
+  // // still can connect with OTG
+  // DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 115200));
+  // assume HC-05 connected; 2 => TX of HC05; 3 => RX of HC05
+  // still can connect with OTG
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
 #else
-#include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput(115200));
 #endif
 
 
@@ -41,10 +52,12 @@ GraphicalDDLayer *display;
 void setup() {
 
   pinMode(up,INPUT_PULLUP);
-  //pinMode(presS,INPUT_PULLUP);
+  pinMode(presS,INPUT_PULLUP);
   pinMode(down,INPUT_PULLUP);
   pinMode(left,INPUT_PULLUP);
   pinMode(right,INPUT_PULLUP);
+  pinMode(horizontal,INPUT);
+  pinMode(vertical,INPUT);
   //pinMode(3,OUTPUT);
 
   display = dumbdisplay.createGraphicalLayer(64, 128);

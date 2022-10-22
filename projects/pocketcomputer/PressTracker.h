@@ -29,7 +29,9 @@ private:
 class JoyStickPressTracker {
 public:
   JoyStickPressTracker() {
-    this->reading = 0;
+    this->maxReading = 1023;
+    this->threshold = 10;  
+    //this->reading = 0;
     this->pressedDir = 0;
     this->pressedMillis = 0;
     this->needReset = false;
@@ -37,10 +39,10 @@ public:
   int8_t setReading(int reading) {
     //int oriReading = this->reading;
     int8_t oriPressedDir = this->pressedDir;
-    this->reading = reading;
-    if ((reading - threshold) < 0) {
+    //this->reading = reading;
+    if ((reading - threshold) <= 0) {
       this->pressedDir = -1;
-    } else if (reading + threshold > maxReading) {
+    } else if ((reading + threshold) >= maxReading) {
       this->pressedDir = 1;
     } else {
       this->pressedDir = 0;
@@ -66,12 +68,11 @@ public:
     return 0;
   }
 private:
-  const int maxReading = 1024;
-  //const int threshold = 10;  
-  const int threshold = 5;  
+  int maxReading;
+  int threshold;  
 private:
-  int reading;  
-  int8_t pressedDir;
+  //int reading;  
+  int pressedDir;
   long pressedMillis;
   bool needReset;
 };

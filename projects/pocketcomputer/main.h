@@ -1,6 +1,7 @@
 
 
 #include "PressTracker.h"
+#include "BasicCalculator.h"
 
 // const uint8_t up PIN_A1;
 // const uint8_t down PIN_A4;
@@ -19,17 +20,25 @@
 // const int y_joystick = A1;
 
 
+
+// Uno
 const uint8_t left = 5;
 const uint8_t up = 2;
-const uint8_t right = 3;
+const uint8_t right = 15/*3*/;
 const uint8_t down = 4;
-
 const uint8_t horizontal = A0;
 const uint8_t vertical = A1;
+const uint8_t presS = 3/*15*/;
 
 
-//const uint8_t presS = 8;
-const uint8_t analogy = A0;
+// Pico
+// const uint8_t left = 5;
+// const uint8_t up = 2;
+// const uint8_t right = 3;
+// const uint8_t down = 4;
+// const uint8_t horizontal = 27;
+// const uint8_t vertical = 26;
+// const uint8_t presS = 15;
 
 
 
@@ -54,19 +63,39 @@ boolean checkDisplayState(int8_t mainState, int8_t subState) {
 
 //ButtonPressTracker leftTracker;
 //ButtonPressTracker upTracker;
-ButtonPressTracker rightTracker;
+//ButtonPressTracker rightTracker;
 //ButtonPressTracker downTracker;
-//ButtonPressTracker selectTracker;
+ButtonPressTracker selectTracker;
 
 JoyStickPressTracker horizontalTracker;
 JoyStickPressTracker verticalTracker;
 
 
+PrimitiveCalculator calculator(6);
 
 
 
 
-byte fase = 0;
+byte fase = 1;
+
+
+// const char* FormatForDisplay(float n, char* buffer) {
+//     double num = n;
+//     sprintf(buffer, "%f", num);  // will have decimal point
+//     int len = strlen(buffer);
+//     while (len > 1) {
+//         if (buffer[len - 1] != '0') {
+//             break;
+//         }
+//         buffer[--len] = 0;
+//     }
+//     if (len > 0) {
+//         if (buffer[len - 1] == '.') {
+//             buffer[--len] = 0;
+//         }
+//     }
+//     return buffer;
+// }
 
 
 void drawCalc() {
@@ -80,17 +109,15 @@ void drawCalc() {
   display->drawRoundRect(0, 0, 64, 128, 3, COLOR_1);
   display->fillRoundRect(6, 16, 52, 16, 2, COLOR_1);
 
-  display->setCursor(6, 4);
+  display->setCursor(6, 2);
   display->print("CALC");
-
-
 
   for (int i = 0; i < n; i++) {
     posY[i] = fromTop + (boxH * i) + (space * i);
     for (int j = 0; j < m; j++) {
       posX[j] = fromLeft + (boxW * j) + (space * j);
       display->fillRoundRect(posX[j], posY[i], boxW, boxH, 2, COLOR_1);
-      display->setCursor(posX[j] + (boxW / 2) - 3, posY[i] + (boxH / 2) - 3);
+      display->setCursor(posX[j] + (boxW / 2) - 3, posY[i] + (boxH / 2) - 6);
       display->setTextColor(COLOR_0);
       display->print(String(buttons[j][i]));
     }
@@ -98,20 +125,16 @@ void drawCalc() {
   display->setTextColor(COLOR_1);
   display->fillRoundRect(posX[cx], posY[cy], boxW, boxH, 2, COLOR_0);
   display->drawRoundRect(posX[cx], posY[cy], boxW, boxH, 2, COLOR_1);
-  display->setCursor(posX[cx] + (boxW / 2) - 2, posY[cy] + (boxH / 2) - 4);
+  display->setCursor(posX[cx] + (boxW / 2) - 3, posY[cy] + (boxH / 2) - 6);
   display->print(String(buttons[cx][cy]));
 
-  display->setCursor(6, 4);
+  display->setCursor(7, 3);
   display->print("CALC");
-  display->setCursor(10, 20);
+  display->setCursor(10, 18);
   display->setTextColor(COLOR_0);
 
-  temp = num * 10;
-  if (temp % 10 == 0)
-    display->print(String((int)num));
-  else
-    display->print(String(num));
-  //display->display();
+  const char* formatted = calculator.getFormatted();
+  display->print(String(formatted));
   display->setTextColor(COLOR_1);
 }
 
@@ -129,70 +152,15 @@ void checkButtonsCalc() {
       cx = (cx + 3) % 4;
   }
 
-  if (rightTracker/*selectTracker*/.setPressed(digitalRead(right/*presS*/) == 0)) {
-
-    if (buttons[cx][cy] == '0' || buttons[cx][cy] == '1' || buttons[cx][cy] == '2' || buttons[cx][cy] == '3' || buttons[cx][cy] == '4' || buttons[cx][cy] == '5' || buttons[cx][cy] == '6' || buttons[cx][cy] == '7' || buttons[cx][cy] == '8' || buttons[cx][cy] == '9' || buttons[cx][cy] == '.') {
-      num = num * (digit * 10) + buttons[cx][cy] - '0';
-      digit = 1;
-    }
-
-    if (buttons[cx][cy] == 'C') {
-      num = 0;
-      cx = 0;
-      cy = 0;
-      operation = 0;
-    }
-
-    if (buttons[cx][cy] == '+') {
-      operation = 1;
-      n1 = num;
-      num = 0;
-    }
-    if (buttons[cx][cy] == '-') {
-      operation = 2;
-      n1 = num;
-      num = 0;
-    }
-    if (buttons[cx][cy] == '*') {
-      operation = 3;
-      n1 = num;
-      num = 0;
-    }
-    if (buttons[cx][cy] == '/') {
-      operation = 4;
-      n1 = num;
-      num = 0;
-    }
-
-    if (buttons[cx][cy] == '=') {
-
-      if (operation == 1) {
-        float r = n1 + num;
-        num = r;
-        n1 = num;
+  if (selectTracker.setPressed(digitalRead(presS) == 0)) {
+    char what = buttons[cx][cy];
+    if (what == 'C') {
+      calculator.reset();
+    } else {
+      if (!calculator.push(what)) {
+        dumbdisplay.tone(/*9, */2100, 50);
       }
-
-      if (operation == 2) {
-        float r = n1 - num;
-        num = r;
-        n1 = num;
-      }
-
-      if (operation == 3) {
-        float r = n1 * num;
-        num = r;
-        n1 = num;
-      }
-
-      if (operation == 4) {
-        float r = n1 / num;
-        num = r;
-        n1 = num;
-      }
-
-      delay(200);
     }
-
     resetDisplayState();
   }
 }
@@ -241,7 +209,7 @@ void drawStop() {
 }
 
 void checkButtonsStop() {
-  if (digitalRead(right/*presS*/) == 0) {
+  if (digitalRead(presS) == 0) {
     s_fase++;
     if (s_fase == 3) {
       s_fase = 0;
@@ -274,14 +242,14 @@ void drawGame() {
 
 void checkButtonsGame() {
 
-  if (digitalRead(right/*presS*/) == 0) {
+  if (digitalRead(presS) == 0) {
     controler = !controler;
     digitalWrite(3, controler);
   }
 
 
   if (controler == 1) {
-    playerX = map(analogRead(analogy/*A0*/), 0, 1023, 1, 63 - playerW);
+    playerX = map(analogRead(horizontal/*A0*/), 0, 1023, 1, 63 - playerW);
   }
 
   if (controler == 0) {
@@ -434,7 +402,6 @@ void drawMenu() {
 }
 
 void checkButtonsMenu() {
-
   //dumbdisplay.writeComment(String(analogRead(horizontal)));
   int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
   int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
@@ -452,7 +419,7 @@ void checkButtonsMenu() {
   }
 
 
-  if (rightTracker/*selectTracker*/.setPressed(digitalRead(right/*presS*/) == 0)) {
+  if (selectTracker.setPressed(digitalRead(presS) == 0)) {
     if (chosenMenu == 5)
       sounds = !sounds;
     else
@@ -468,7 +435,7 @@ void resetAll() {  //display.setFont();
   cy = 0;
   n1 = 0;
   n2 = 0;
-  num = 0;
+  //num = 0;
   digit = 0;
   operation = 0;
 }

@@ -60,12 +60,7 @@ class PrimitiveCalculator {
             reset();
         }
     public:
-        float getNum() {
-            if (entering == 0) {
-                if (lhs.isValid()) {
-                    return lhs.num;
-                }
-            }
+        inline float getNum() {
             return _getNum();
         }
         inline bool isInError() {
@@ -82,12 +77,12 @@ class PrimitiveCalculator {
             // this->entering = 0;
             // _setNum(0);
             _restart(0);
-            //this->lhs.reset();
-            //this->prev_lhs.reset();
+            this->lhs.reset();
+            this->prev_lhs.reset();
         }
         bool push(char what) {
             bool ok = _push(what);
-            if (ok/* && this->entering == 0*/) {
+            if (ok && this->entering == 0) {
                 float num = _getNum();
                 if (num == NAN || num == -NAN || num == INFINITY || num == -INFINITY) {
                     this->entering = 'E';
@@ -103,8 +98,7 @@ class PrimitiveCalculator {
                 if (this->lhs.isValid()) {
                     if (_IsOperOrEq(what)) {
                         if (this->lhs.oper == '*' || this->lhs.oper == '/') {
-                            _setNum(_Calc(this->lhs.num, this->lhs.oper, _getNum()));
-                            //_restart(_Calc(this->lhs.num, this->lhs.oper, _getNum()));
+                            _restart(_Calc(this->lhs.num, this->lhs.oper, _getNum()));
                         } else if (this->lhs.oper == '+' || this->lhs.oper == '-') {
                             if (this->prev_lhs.isValid()) {
                               this->lhs.num = _Calc(this->prev_lhs, this->lhs.num);
@@ -125,7 +119,7 @@ class PrimitiveCalculator {
                     if (this->prev_lhs.isValid()) {
                         res = _Calc(this->prev_lhs, res);
                     } 
-                    _restart(res, '!');
+                    _restart(res);
                     return true;
                 }
             }
@@ -241,12 +235,10 @@ class PrimitiveCalculator {
             this->fracPart = 0;
             this->fracPartSize = 0;
         }
-        void _restart(float num, char entering = 0) {
+        void _restart(float num) {
             _setNum(num);
-            this->entering = entering;
+            this->entering = 0;
             this->negate = false;
-            this->lhs.reset();
-            this->prev_lhs.reset();
             //this->intPartWidth = 0;  // doesn't count the init 0
         }
     private:
