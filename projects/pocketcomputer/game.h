@@ -10,6 +10,7 @@ byte gameScore=0;
 //bool g_shown = false;
 // byte gl_ballX = -1;
 // byte gl_ballY = -1;
+bool g_started = false;
 long gl_check = 0;
 
 byte enX[14] ={4,16,28,40,52,8,20,32,44,16,28,40,20,32};

@@ -229,7 +229,7 @@ void GameReset() {
   gameScore = 0;
   for (int i = 0; i < 14; i++)
     enL[i] = 1;
-  //g_shown = false;  
+  g_started = false;  
 }
 
 void gameOver() {
@@ -241,7 +241,7 @@ void gameOver() {
   display->print("GAME");
   display->setCursor(6, 60);
   display->print("OVER");
-  display->setTextSize(0);
+  //display->setTextSize(0);
   //display.display();
   delay(3000);
   GameReset();
@@ -267,6 +267,13 @@ void _checkColision() {
   //gl_ballY = ballY;
   ballX = ballX + ballDirectionX;
   ballY = ballY + ballDirectionY;
+
+  if (ballX > 4 && ballX < 60 &&
+      ballY > 4 && ballY < 124) {
+    // if within, make it goes faster    
+    ballX = ballX + ballDirectionX;
+    ballY = ballY + ballDirectionY;
+  }
 
   if (ballY > 124)
     gameOver();
@@ -480,7 +487,7 @@ void drawGame(byte lastBallX, byte lastBallY, bool playerMoved, bool scoreChange
   // } else if (scoreChanged) {
   //   ss = 4;
   // }
-  bool refreshAll = dms != MS_STOP; 
+  bool refreshAll = !g_started/*dms != MS_STOP*/; 
   bool ballMoved = lastBallX != ballX || lastBallY != ballY;
   if (!checkDisplayState(MS_STOP, 0) && (!refreshAll && !ballMoved && !playerMoved && !scoreChanged)) {
     return;
@@ -488,10 +495,11 @@ void drawGame(byte lastBallX, byte lastBallY, bool playerMoved, bool scoreChange
   dumbdisplay.recordLayerCommands();
   _drawGame(refreshAll, lastBallX, lastBallY, playerMoved, scoreChanged);
   dumbdisplay.playbackLayerCommands();
+  g_started = true;
 }
 void checkColision() {
   long now = millis();
-  if ((now - gl_check) < 200) {
+  if ((now - gl_check) < 150) {
     return;
   }
   _checkColision();
