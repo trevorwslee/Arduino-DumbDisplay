@@ -1,6 +1,31 @@
 // * youtube.com/watch?v=NTaq6f7NV5U
 // * https://learn.adafruit.com/adafruit-gfx-graphics-library/graphics-primitives
 
+#define ONLY_BUTTONS
+
+// const uint8_t left = PIN_A1;
+// const uint8_t presS = PIN_A0;
+// const uint8_t right = PIN_A4;
+
+// Uno
+const uint8_t left = 5;
+const uint8_t up = 2;
+const uint8_t right = 15/*3*/;
+const uint8_t down = 4;
+const uint8_t horizontal = A0;
+const uint8_t vertical = A1;
+const uint8_t presS = 3/*15*/;
+
+
+// Pico
+// const uint8_t left = 5;
+// const uint8_t up = 2;
+// const uint8_t right = 3;
+// const uint8_t down = 4;
+// const uint8_t horizontal = 27;
+// const uint8_t vertical = 26;
+// const uint8_t presS = 15;
+
 
 #include "calculator.h"
 #include "stopwatch.h"
@@ -10,6 +35,7 @@
 
 
 const char* COLOR_BG = "darkblue";
+const char* COLOR_TEXT = "beige";
 const char* COLOR_0 = "navy";
 const char* COLOR_1 = "ivory";
 const uint8_t TEXT_SIZE_MENU = 9;
@@ -28,12 +54,12 @@ const int TEXT_SIZE_4 = 9;
   DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
 #elif defined (BLUETOOTH)
   #include "ssdumbdisplay.h"
-  // assume HC-05 connected; 11 => TX of HC05; 10 => RX of HC05
-  // still can connect with OTG
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 115200));
-  // // assume HC-05 connected; 2 => TX of HC05; 3 => RX of HC05
+  // // assume HC-05 connected; 11 => TX of HC05; 10 => RX of HC05
   // // still can connect with OTG
-  // DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
+  // DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 115200));
+  // assume HC-05 connected; 2 => TX of HC05; 3 => RX of HC05
+  // still can connect with OTG
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 9600, true, 115200));
 #else
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput(115200));
@@ -84,6 +110,8 @@ void setup() {
 
   //display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
   //display.display();
+
+  display->setTextColor(COLOR_TEXT);
 
   display->clear();
   //display->setRotation(3);

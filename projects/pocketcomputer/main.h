@@ -3,45 +3,6 @@
 #include "PressTracker.h"
 #include "BasicCalculator.h"
 
-// const uint8_t up PIN_A1;
-// const uint8_t down PIN_A4;
-// const uint8_t presS PIN_A0;
-
-
-// pins
-// const int a_btn = 2;
-// const int c_btn = 4;
-// const int d_btn = 5;
-// const int b_btn = 3;
-// const int e_btn = 6;
-// const int f_btn = 7;
-// const int k_btn = 8;
-// const int x_joystick = A0;
-// const int y_joystick = A1;
-
-
-
-// Uno
-const uint8_t left = 5;
-const uint8_t up = 2;
-const uint8_t right = 15/*3*/;
-const uint8_t down = 4;
-const uint8_t horizontal = A0;
-const uint8_t vertical = A1;
-const uint8_t presS = 3/*15*/;
-
-
-// Pico
-// const uint8_t left = 5;
-// const uint8_t up = 2;
-// const uint8_t right = 3;
-// const uint8_t down = 4;
-// const uint8_t horizontal = 27;
-// const uint8_t vertical = 26;
-// const uint8_t presS = 15;
-
-
-
 
 const int8_t MS_MENU = 0;
 const int8_t MS_CALC = 1;
@@ -61,49 +22,20 @@ boolean checkDisplayState(int8_t mainState, int8_t subState) {
   return oridms != dms || oridss != dss;
 }
 
-//ButtonPressTracker leftTracker;
-//ButtonPressTracker upTracker;
-//ButtonPressTracker rightTracker;
-//ButtonPressTracker downTracker;
 ButtonPressTracker selectTracker;
-
 JoyStickPressTracker horizontalTracker;
 JoyStickPressTracker verticalTracker;
-
-
 PrimitiveCalculator calculator(6);
 
 
 
 
-byte fase = 1;
+////////////////////////////////
 
 
-// const char* FormatForDisplay(float n, char* buffer) {
-//     double num = n;
-//     sprintf(buffer, "%f", num);  // will have decimal point
-//     int len = strlen(buffer);
-//     while (len > 1) {
-//         if (buffer[len - 1] != '0') {
-//             break;
-//         }
-//         buffer[--len] = 0;
-//     }
-//     if (len > 0) {
-//         if (buffer[len - 1] == '.') {
-//             buffer[--len] = 0;
-//         }
-//     }
-//     return buffer;
-// }
+byte fase = 0;
 
-
-void drawCalc() {
-  int8_t ss = 10 * cx + cy;
-  if (!checkDisplayState(MS_CALC, ss)) {
-    return;
-  }
-
+void _drawCalc() {
   display->clear();
   //display.clearDisplay();
   display->drawRoundRect(0, 0, 64, 128, 3, COLOR_1);
@@ -112,13 +44,14 @@ void drawCalc() {
   display->setCursor(6, 2);
   display->print("CALC");
 
+  display->setTextColor(COLOR_0);
   for (int i = 0; i < n; i++) {
     posY[i] = fromTop + (boxH * i) + (space * i);
     for (int j = 0; j < m; j++) {
       posX[j] = fromLeft + (boxW * j) + (space * j);
       display->fillRoundRect(posX[j], posY[i], boxW, boxH, 2, COLOR_1);
       display->setCursor(posX[j] + (boxW / 2) - 3, posY[i] + (boxH / 2) - 6);
-      display->setTextColor(COLOR_0);
+      //display->setTextColor(COLOR_0);
       display->print(String(buttons[j][i]));
     }
   }
@@ -128,14 +61,14 @@ void drawCalc() {
   display->setCursor(posX[cx] + (boxW / 2) - 3, posY[cy] + (boxH / 2) - 6);
   display->print(String(buttons[cx][cy]));
 
-  display->setCursor(7, 3);
-  display->print("CALC");
+  // display->setCursor(7, 3);
+  // display->print("CALC");
   display->setCursor(10, 18);
   display->setTextColor(COLOR_0);
-
   const char* formatted = calculator.getFormatted();
   display->print(String(formatted));
-  display->setTextColor(COLOR_1);
+  //display->setTextColor(COLOR_1);
+  display->setTextColor(COLOR_TEXT);
 }
 
 void checkButtonsCalc() {
@@ -350,11 +283,7 @@ void checkButtonsCalendar() {
   };
 }
 
-void drawMenu() {
-  if (!checkDisplayState(MS_MENU, chosenMenu)) {
-    return;
-  }
-
+void _drawMenu() {
   display->clear();
 
   display->setTextSize(TEXT_SIZE_MENU);
@@ -468,3 +397,29 @@ void phoneDraw() {
 
   //display.display();
 }
+
+
+
+////////////////////
+
+
+
+void drawMenu() {
+  if (!checkDisplayState(MS_MENU, chosenMenu)) {
+    return;
+  }
+  dumbdisplay.recordLayerCommands();
+  _drawMenu();
+  dumbdisplay.playbackLayerCommands();
+}
+void drawCalc() {
+  int8_t ss = 10 * cx + cy;
+  if (!checkDisplayState(MS_CALC, ss)) {
+    return;
+  }
+  dumbdisplay.recordLayerCommands();
+  _drawCalc();
+  dumbdisplay.playbackLayerCommands();
+}
+
+
