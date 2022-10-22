@@ -1,7 +1,7 @@
 // * youtube.com/watch?v=NTaq6f7NV5U
 // * https://learn.adafruit.com/adafruit-gfx-graphics-library/graphics-primitives
 
-#define ONLY_BUTTONS
+#define WITH_JOYSTICK
 
 // const uint8_t left = PIN_A1;
 // const uint8_t presS = PIN_A0;
@@ -9,12 +9,12 @@
 
 // Uno
 const uint8_t left = 5;
-const uint8_t up = 2;
-const uint8_t right = 15/*3*/;
-const uint8_t down = 4;
+//const uint8_t up = 15/*2*/; 
+const uint8_t right = 3;
+//const uint8_t down = 4;
+const uint8_t presS = 2/*15*/;
 const uint8_t horizontal = A0;
 const uint8_t vertical = A1;
-const uint8_t presS = 3/*15*/;
 
 
 // Pico
@@ -81,11 +81,11 @@ GraphicalDDLayer *display;
 
 void setup() {
 
-  pinMode(up,INPUT_PULLUP);
-  pinMode(presS,INPUT_PULLUP);
-  pinMode(down,INPUT_PULLUP);
+  //pinMode(up,INPUT_PULLUP);
+  //pinMode(down,INPUT_PULLUP);
   pinMode(left,INPUT_PULLUP);
   pinMode(right,INPUT_PULLUP);
+  pinMode(presS,INPUT_PULLUP);
   pinMode(horizontal,INPUT);
   pinMode(vertical,INPUT);
   //pinMode(3,OUTPUT);
@@ -158,7 +158,7 @@ void loop() {
 
 
 
-  if (digitalRead(down) == 0 && digitalRead(right/*presS*/) == 0) {
+  if ((digitalRead(left/*down*/) == 0 || digitalRead(right/*down*/) == 0) && digitalRead(presS) == 0) {
     GameReset();
     //display->setRotation(3);
     resetAll();

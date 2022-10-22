@@ -23,9 +23,13 @@ boolean checkDisplayState(int8_t mainState, int32_t subState) {
   return oridms != dms || oridss != dss;
 }
 
+ButtonPressTracker leftTracker;
+ButtonPressTracker rightTracker;
 ButtonPressTracker selectTracker;
+#ifdef WITH_JOYSTICK
 JoyStickPressTracker horizontalTracker;
 JoyStickPressTracker verticalTracker;
+#endif
 PrimitiveCalculator calculator(6);
 
 
@@ -73,18 +77,35 @@ void _drawCalc() {
 }
 
 void checkButtonsCalc() {
+
+
+  if (leftTracker.setPressed(digitalRead(left) == 0)) {
+      cx = cx - 1;
+      if (cx == -1) {
+        cx = 3;
+        cy = (cy + 3) % 4;
+      }
+  }
+  if (rightTracker.setPressed(digitalRead(right) == 0)) {
+      cx = cx + 1;
+      if (cx == 4) {
+        cx = 0;
+        cy = (cy + 1) % 4;
+      }
+  }
+#ifdef WITH_JOYSTICK
   int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
   int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
-
-  if (/*upTracker.setPressed(digitalRead(up) == 0) || */verticalPress == 1) {
+  if (verticalPress == 1) {
       cy = (cy + 3) % 4;
-  } else if (/*downTracker.setPressed(digitalRead(down) == 0) || */verticalPress == -1) {
+  } else if (verticalPress == -1) {
       cy = (cy + 1) % 4;
-  } else if (/*rightTracker.setPressed(digitalRead(right) == 0) || */horizontalPress == 1) {
+  } else if (horizontalPress == 1) {
       cx = (cx + 1) % 4;
-  } else if (/*leftTracker.setPressed(digitalRead(left) == 0) || */horizontalPress == -1) {
+  } else if (horizontalPress == -1) {
       cx = (cx + 3) % 4;
   }
+#endif
 
   if (selectTracker.setPressed(digitalRead(presS) == 0)) {
     char what = buttons[cx][cy];
@@ -178,7 +199,9 @@ void _drawGame(bool refreshAll, byte lastBallX, byte lastBallY, bool playerMoved
   }
 
   if (refreshAll || playerMoved) {
-    display->fillRect(1, 118, 62, 2, COLOR_BG);
+    if (!refreshAll) {
+      display->fillRect(1, 118, 62, 2, COLOR_BG);
+    }
     display->fillRect(playerX, 118, playerW, 2, COLOR_1);
   }
 
@@ -187,12 +210,10 @@ void _drawGame(bool refreshAll, byte lastBallX, byte lastBallY, bool playerMoved
     display->print(String(gameScore));
   }
 
-  if (refreshAll || lastBallX != ballX || lastBallY != ballY) {
+  if (!refreshAll && (lastBallX != ballX || lastBallY != ballY)) {
     display->fillCircle(lastBallX, lastBallY, 1, COLOR_BG);
   }
   display->fillCircle(ballX, ballY, 1, COLOR_1);
-  //gl_ballX = ballX;
-  //gl_ballY = ballY;
 
   //display.display();
 }
@@ -307,12 +328,12 @@ void calendarDraw() {
 }
 
 void checkButtonsCalendar() {
-  if (digitalRead(up) == 0) {
+  if (digitalRead(left/*up*/) == 0) {
     if (chosenMonth > 0)
       chosenMonth--;
   }
 
-  if (digitalRead(down) == 0) {
+  if (digitalRead(right/*down*/) == 0) {
     if (chosenMonth < 11)
       chosenMonth++;
   };
@@ -478,7 +499,7 @@ void drawStop() {
 void drawGame(byte lastBallX, byte lastBallY, bool playerMoved, bool scoreChanged) {
   bool refreshAll = !g_started || scoreChanged;  // even only score change, refresh all 
   bool ballMoved = lastBallX != ballX || lastBallY != ballY;
-  if (!checkDisplayState(MS_STOP, 0) && (!refreshAll && !ballMoved && !playerMoved && !scoreChanged)) {
+  if (/*!checkDisplayState(MS_STOP, 0) && */!refreshAll && !ballMoved && !playerMoved && !scoreChanged) {
     return;
   }
   dumbdisplay.recordLayerCommands();
