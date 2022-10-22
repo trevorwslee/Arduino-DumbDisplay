@@ -9,15 +9,15 @@ const int8_t MS_CALC = 1;
 const int8_t MS_STOP = 2;
 
 int8_t dms = -1;
-int8_t dss = -1;
+int32_t dss = -1;
 
 void resetDisplayState() {
   dms = -1;
   dss = -1;
 }
-boolean checkDisplayState(int8_t mainState, int8_t subState) {
+boolean checkDisplayState(int8_t mainState, int32_t subState) {
   int8_t oridms = dms;
-  int8_t oridss = dss;
+  int32_t oridss = dss;
   dms = mainState;
   dss = subState;
   return oridms != dms || oridss != dss;
@@ -107,18 +107,23 @@ void _drawStop() {
   display->setCursor(0, 0);
   display->print("STOPWATCH");
 
+  char buffer[10];
+
   display->setCursor(0, 20);
   display->setTextSize(TEXT_SIZE_2);
-  display->print(String(s_min));
+  sprintf(buffer, "%02d", s_min);
+  display->print(buffer);
+
   display->setCursor(24, 20);
   display->print(String(":"));
   display->setCursor(34, 20);
-  display->print(String(s_sec));
+  sprintf(buffer, "%02d", s_sec);
+  display->print(buffer);
 
   display->setTextSize(TEXT_SIZE_4);
   display->setCursor(6, 64);
-  //display->print(String((int)s_milis));
-  display->print("000");
+  sprintf(buffer, "%d00", s_10_sec);
+  display->print(buffer);
 
   //display.display();
 
@@ -400,7 +405,7 @@ void drawMenu() {
   dumbdisplay.playbackLayerCommands();
 }
 void drawCalc() {
-  int8_t ss = 10 * cx + cy;
+  int32_t ss = 10 * cx + cy;
   if (!checkDisplayState(MS_CALC, ss)) {
     return;
   }
@@ -413,9 +418,12 @@ void drawStop() {
     long now = millis();
     if (s_start != -1) {
       long diff = now - s_start;
-      long diff_sec = diff / 1000;
-      if (diff_sec > 0) {
-        long new_sec = s_sec + diff_sec;
+      long diff_10_sec = diff / 100;
+      if (diff_10_sec > 0) {
+        long new_10_sec = s_10_sec + diff_10_sec;
+        s_10_sec = new_10_sec % 10;
+        long new_sec = s_sec + new_10_sec / 10;
+        //long new_sec = s_sec + diff_sec;
         s_sec = new_sec % 60;
         long inc_min = new_sec / 60;
         s_min = (s_min + inc_min) % 60; 
@@ -425,7 +433,7 @@ void drawStop() {
       s_start = now;
     }
   }
-  int8_t ss = 60 * s_min + s_sec;
+  int32_t ss = 10 * (60 * s_min + s_sec) + (s_10_sec / 2);  // s_10_sec divide by 2 to make it refresh less frequent
   if (!checkDisplayState(MS_STOP, ss)) {
     return;
   }

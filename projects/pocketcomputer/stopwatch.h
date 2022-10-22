@@ -2,6 +2,7 @@ int s_sec=0;
 int s_min=0;
 //float s_milis=0;
 
+int s_10_sec = 0;
 long s_start = -1;
 
 long tt=0;
