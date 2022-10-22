@@ -6,6 +6,7 @@
 
 const int8_t MS_MENU = 0;
 const int8_t MS_CALC = 1;
+const int8_t MS_STOP = 2;
 
 int8_t dms = -1;
 int8_t dss = -1;
@@ -68,7 +69,7 @@ void _drawCalc() {
   const char* formatted = calculator.getFormatted();
   display->print(String(formatted));
   //display->setTextColor(COLOR_1);
-  display->setTextColor(COLOR_TEXT);
+  display->setTextColor(COLOR_DEF);
 }
 
 void checkButtonsCalc() {
@@ -98,16 +99,13 @@ void checkButtonsCalc() {
   }
 }
 
-void drawStop() {
+void _drawStop() {
+  
   //display.setFont();
   display->clear();
   display->setTextColor(COLOR_1);
   display->setCursor(0, 0);
   display->print("STOPWATCH");
-
-
-
-
 
   display->setCursor(0, 20);
   display->setTextSize(TEXT_SIZE_2);
@@ -119,36 +117,37 @@ void drawStop() {
 
   display->setTextSize(TEXT_SIZE_4);
   display->setCursor(6, 64);
-  display->print(String((int)s_milis));
-
-
+  //display->print(String((int)s_milis));
+  display->print("000");
 
   //display.display();
 
-  if (s_fase == 1) {
-    s_milis = s_milis + 3.5;
+  // if (s_fase == 1) {
+  //   s_milis = s_milis + 3.5;
 
-    if (s_milis > 99) {
-      s_sec++;
-      s_milis = 0;
-    }
+  //   if (s_milis > 99) {
+  //     s_sec++;
+  //     s_milis = 0;
+  //   }
 
-    if (s_sec > 59) {
-      s_min++;
-      s_sec = 0;
-    }
-  }
-  display->setTextSize(0);
+  //   if (s_sec > 59) {
+  //     s_min++;
+  //     s_sec = 0;
+  //   }
+  // }
+  //display->setTextSize(0);
+  display->setTextSize(TEXT_SIZE_DEF);
 }
 
 void checkButtonsStop() {
-  if (digitalRead(presS) == 0) {
+  if (selectTracker.setPressed(digitalRead(presS) == 0)) {
     s_fase++;
     if (s_fase == 3) {
       s_fase = 0;
-      s_milis = 0;
+      //s_milis = 0;
       s_sec = 0;
       s_min = 0;
+      s_start = -1;
     }
   }
 }
@@ -286,7 +285,7 @@ void checkButtonsCalendar() {
 void _drawMenu() {
   display->clear();
 
-  display->setTextSize(TEXT_SIZE_MENU);
+  display->setTextSize(TEXT_SIZE_DEF);
 
   display->setCursor(34, 92/*94*/);
   display->print("Beep");
@@ -309,22 +308,11 @@ void _drawMenu() {
     display->print("PhoneBook");
 
   display->drawImageFile("logo.png", 0, 0);
-  //display.drawBitmap(0,0,epd_bitmap_logo,64,30,1);
-
   display->drawImageFile("calc.png", menuX[0], menuY[0]);
-  //display.drawBitmap(menuX[0],menuY[0],myBitmapcalc,24,24,1);
-
   display->drawImageFile("stop.png", menuX[1], menuY[1]);
-  //display.drawBitmap(menuX[1],menuY[1],myBitmapstop,24,24,1);
-
   display->drawImageFile("game.png", menuX[2], menuY[2]);
-  //display.drawBitmap(menuX[2],menuY[2],myBitmapgam,24,24,1);
-
   display->drawImageFile("calen.png", menuX[3], menuY[3]);
-  //display.drawBitmap(menuX[3],menuY[3],myBitmapcalen,24,24,1);
-
   display->drawImageFile("phone.png", menuX[4], menuY[4]);
-  //display.drawBitmap(menuX[4],menuY[4],myBitmapphone,24,24,1);
 
   display->drawRoundRect(menuX[chosenMenu] - 2, menuY[chosenMenu] - 2, 28, 28, 2, COLOR_1);
   //display.display();
@@ -347,7 +335,6 @@ void checkButtonsMenu() {
     chosenMenu = (chosenMenu + 1) % 6;
   }
 
-
   if (selectTracker.setPressed(digitalRead(presS) == 0)) {
     if (chosenMenu == 5)
       sounds = !sounds;
@@ -365,8 +352,8 @@ void resetAll() {  //display.setFont();
   n1 = 0;
   n2 = 0;
   //num = 0;
-  digit = 0;
-  operation = 0;
+  //digit = 0;
+  //operation = 0;
 }
 
 void phoneDraw() {
@@ -419,6 +406,31 @@ void drawCalc() {
   }
   dumbdisplay.recordLayerCommands();
   _drawCalc();
+  dumbdisplay.playbackLayerCommands();
+}
+void drawStop() {
+  if (s_fase == 1) {
+    long now = millis();
+    if (s_start != -1) {
+      long diff = now - s_start;
+      long diff_sec = diff / 1000;
+      if (diff_sec > 0) {
+        long new_sec = s_sec + diff_sec;
+        s_sec = new_sec % 60;
+        long inc_min = new_sec / 60;
+        s_min = (s_min + inc_min) % 60; 
+        s_start = now;
+      }
+    } else {
+      s_start = now;
+    }
+  }
+  int8_t ss = 60 * s_min + s_sec;
+  if (!checkDisplayState(MS_STOP, ss)) {
+    return;
+  }
+  dumbdisplay.recordLayerCommands();
+  _drawStop();
   dumbdisplay.playbackLayerCommands();
 }
 

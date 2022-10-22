@@ -35,12 +35,13 @@ const uint8_t presS = 3/*15*/;
 
 
 const char* COLOR_BG = "darkblue";
-const char* COLOR_TEXT = "beige";
+const char* COLOR_DEF = "beige";
 const char* COLOR_0 = "navy";
 const char* COLOR_1 = "ivory";
-const uint8_t TEXT_SIZE_MENU = 9;
-const uint8_t TEXT_SIZE_2 = 11;
-const int TEXT_SIZE_4 = 9;
+const uint8_t TEXT_SIZE_DEF = 9;
+//const uint8_t TEXT_SIZE_MENU = 9;
+const uint8_t TEXT_SIZE_2 = 24;
+const int TEXT_SIZE_4 = 28;
 
 
 #define BLUETOOTH
@@ -111,7 +112,7 @@ void setup() {
   //display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
   //display.display();
 
-  display->setTextColor(COLOR_TEXT);
+  display->setTextColor(COLOR_DEF);
 
   display->clear();
   //display->setRotation(3);
