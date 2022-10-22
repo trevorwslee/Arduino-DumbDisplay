@@ -28,12 +28,12 @@ const int TEXT_SIZE_4 = 9;
   DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
 #elif defined (BLUETOOTH)
   #include "ssdumbdisplay.h"
-  // // assume HC-05 connected; 11 => TX of HC05; 10 => RX of HC05
-  // // still can connect with OTG
-  // DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 115200));
-  // assume HC-05 connected; 2 => TX of HC05; 3 => RX of HC05
+  // assume HC-05 connected; 11 => TX of HC05; 10 => RX of HC05
   // still can connect with OTG
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 115200));
+  // // assume HC-05 connected; 2 => TX of HC05; 3 => RX of HC05
+  // // still can connect with OTG
+  // DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
 #else
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput(115200));

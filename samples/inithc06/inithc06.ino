@@ -1,7 +1,7 @@
 // ***
 // * notes for HC-06 / HC-08:
 // * . default baud rate is 9600
-// * . serial monitor needs line ending; ie no NL and no CR
+// * . serial monitor needs no line ending; ie no NL and no CR
 // * notes for HC-05:
 // * . need be in AT mode; need to hold its button while powering on; LED on HC-05 will flash slowly
 // * . baud rate is 38400
@@ -11,11 +11,11 @@
 
 #include <SoftwareSerial.h>
   
-
+//SoftwareSerial hc(11, 10);
 SoftwareSerial hc(2, 3);  // 2 => TX of HC; 3 => RX of HC
 
 
-// for HC-6
+// for HC-06
 //   9600: AT+BAUD4
 //   57600: AT+BAUD7
 //   115200: AT+BAUD8
@@ -40,7 +40,7 @@ SoftwareSerial hc(2, 3);  // 2 => TX of HC; 3 => RX of HC
 //  reset to default: AT+DEFAULT
 
 
-const unsigned long baud = 38400;  // default for HC-06 / HC-08 is 9600; for HC-05, set to 38400 (assume HC-05 in AT mode)
+const unsigned long baud = 115200;  // default for HC-06 / HC-08 is 9600; for HC-05, set to 38400 (assume HC-05 in AT mode)
 
 
 void setup() {
