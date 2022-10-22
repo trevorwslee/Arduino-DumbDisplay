@@ -43,8 +43,11 @@ const uint8_t TEXT_SIZE_DEF = 9;
 const uint8_t TEXT_SIZE_2 = 24;
 const int TEXT_SIZE_4 = 28;
 
+//const uint8_t DisplayWidth = 64;
+//const uint8_t DisplayHeight = 128;
 
-#define BLUETOOTH
+
+//#define BLUETOOTH
 
 #if defined(FOR_PICO)
   // GP8 => RX of HC06; GP9 => TX of HC06
@@ -93,12 +96,6 @@ void setup() {
   display->setCursor(0, 10);
   display->print("... init ...");
 
-  // display->cachePixelImage("logo.png", epd_bitmap_logo, 64, 30, COLOR_1);
-  // display->cachePixelImage("calc.png", myBitmapcalc, 24, 24, COLOR_1);
-  // display->cachePixelImage("stop.png", myBitmapstop, 24, 24, COLOR_1);
-  // display->cachePixelImage("game.png", myBitmapgam, 24, 24, COLOR_1);
-  // display->cachePixelImage("calen.png", myBitmapcalen, 24, 24, COLOR_1);
-  // display->cachePixelImage("phone.png", myBitmapphone, 24, 24, COLOR_1);
   unsigned char buffer[240];
   display->cachePixelImage("logo.png", PgmCopyBytes(epd_bitmap_logo, sizeof(epd_bitmap_logo), buffer), 64, 30, COLOR_1);
   display->cachePixelImage("calc.png", PgmCopyBytes(myBitmapcalc, sizeof(myBitmapcalc), buffer), 24, 24, COLOR_1);
@@ -141,7 +138,7 @@ void loop() {
   }
 
   if (fase == 3) {
-    checkColision();
+    //checkColision();
     checkButtonsGame();
     drawGame();
   }

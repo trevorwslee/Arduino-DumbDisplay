@@ -157,47 +157,58 @@ void checkButtonsStop() {
   }
 }
 
-void drawGame() {
-  display->clear();
+void _drawGame() {
+
+  if (!g_shown) {
+    display->clear();
+
+    display->setCursor(2, 0);
+    display->print("Score:");
+
+    display->drawLine(0, 9, 0, 127, COLOR_1);
+    display->drawLine(63, 9, 63, 127, COLOR_1);
+    display->drawLine(0, 9, 63, 9, COLOR_1);
+    //display->fillRect(playerX, 118, playerW, 2, COLOR_1);
+    display->fillCircle(ballX, ballY, 1, COLOR_1);
+
+    for (int i = 0; i < 14; i++)
+      if (enL[i] == 1)
+        display->fillRect(enX[i], enY[i], 8, 2, COLOR_1);
+
+    g_shown = true;    
+  }
+
+  display->fillRect(1, 118, 62, 2, COLOR_BG);
+  display->fillRect(playerX, 118, playerW, 2, COLOR_1);
 
   display->setCursor(40, 0);
   display->print(String(gameScore));
-  display->setCursor(2, 0);
-  display->print("Score:");
-  display->drawLine(0, 9, 0, 127, COLOR_1);
-  display->drawLine(63, 9, 63, 127, COLOR_1);
-  display->drawLine(0, 9, 63, 9, COLOR_1);
-  display->fillRect(playerX, 118, playerW, 2, COLOR_1);
-  display->fillCircle(ballX, ballY, 1, COLOR_1);
-
-  for (int i = 0; i < 14; i++)
-    if (enL[i] == 1)
-      display->fillRect(enX[i], enY[i], 8, 2, COLOR_1);
 
   //display.display();
 }
 
 void checkButtonsGame() {
 
-  if (digitalRead(presS) == 0) {
-    controler = !controler;
-    digitalWrite(3, controler);
-  }
+  // if (digitalRead(presS) == 0) {
+  //   controler = !controler;
+  //   digitalWrite(3, controler);
+  // }
 
 
-  if (controler == 1) {
-    playerX = map(analogRead(horizontal/*A0*/), 0, 1023, 1, 63 - playerW);
-  }
+  // if (controler == 1) {
+  //   playerX = map(analogRead(horizontal/*A0*/), 0, 1023, 1, 63 - playerW);
+  // }
+  playerX = map(analogRead(horizontal/*A0*/), 0, 1023, 1, 63 - playerW);
 
-  if (controler == 0) {
-    if (digitalRead(down) == 0)
-      if (playerX > 1)
-        playerX--;
+  // if (controler == 0) {
+  //   if (digitalRead(down) == 0)
+  //     if (playerX > 1)
+  //       playerX--;
 
-    if (digitalRead(up) == 0)
-      if (playerX < 62 - playerW)
-        playerX++;
-  }
+  //   if (digitalRead(up) == 0)
+  //     if (playerX < 62 - playerW)
+  //       playerX++;
+  // }
 }
 
 void GameReset() {
@@ -208,6 +219,7 @@ void GameReset() {
   gameScore = 0;
   for (int i = 0; i < 14; i++)
     enL[i] = 1;
+  g_shown = false;  
 }
 
 void gameOver() {
@@ -359,6 +371,7 @@ void resetAll() {  //display.setFont();
   //num = 0;
   //digit = 0;
   //operation = 0;
+  g_shown = false;
 }
 
 void phoneDraw() {
@@ -439,6 +452,15 @@ void drawStop() {
   }
   dumbdisplay.recordLayerCommands();
   _drawStop();
+  dumbdisplay.playbackLayerCommands();
+}
+void drawGame() {
+  int32_t ss = (100 * playerX + gameScore) + (gameOver ? 10000 : 0);
+  if (!checkDisplayState(MS_STOP, ss)) {
+    return;
+  }
+  dumbdisplay.recordLayerCommands();
+  _drawGame();
   dumbdisplay.playbackLayerCommands();
 }
 
