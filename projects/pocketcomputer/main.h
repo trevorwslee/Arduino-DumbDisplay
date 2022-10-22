@@ -236,12 +236,12 @@ void gameOver() {
   display->clear();
   display->setCursor(6, 20);
   display->print(String(gameScore));
-  display->setTextSize(2);
+  display->setTextSize(TEXT_SIZE_2);
   display->setCursor(6, 40);
   display->print("GAME");
   display->setCursor(6, 60);
   display->print("OVER");
-  //display->setTextSize(0);
+  display->setTextSize(TEXT_SIZE_DEF);
   //display.display();
   delay(3000);
   GameReset();
@@ -476,18 +476,7 @@ void drawStop() {
   dumbdisplay.playbackLayerCommands();
 }
 void drawGame(byte lastBallX, byte lastBallY, bool playerMoved, bool scoreChanged) {
-  //int32_t ss = (100 * playerX + gameScore) + (gameOver ? 10000 : 0);
-  // int32_t ss = 0;
-  // if (!g_shown) {
-  //   ss = 1;
-  // } else if (ballMoved) {
-  //   ss = 2;
-  // } else if (playerMoved) {
-  //   ss = 3;
-  // } else if (scoreChanged) {
-  //   ss = 4;
-  // }
-  bool refreshAll = !g_started/*dms != MS_STOP*/; 
+  bool refreshAll = !g_started || scoreChanged;  // even only score change, refresh all 
   bool ballMoved = lastBallX != ballX || lastBallY != ballY;
   if (!checkDisplayState(MS_STOP, 0) && (!refreshAll && !ballMoved && !playerMoved && !scoreChanged)) {
     return;
