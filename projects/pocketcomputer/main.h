@@ -157,9 +157,9 @@ void checkButtonsStop() {
   }
 }
 
-void _drawGame() {
+void _drawGame(bool refreshAll, byte lastBallX, byte lastBallY, bool playerMoved, bool scoreChanged) {
 
-  if (!g_shown) {
+  if (refreshAll) {
     display->clear();
 
     display->setCursor(2, 0);
@@ -174,22 +174,25 @@ void _drawGame() {
     for (int i = 0; i < 14; i++)
       if (enL[i] == 1)
         display->fillRect(enX[i], enY[i], 8, 2, COLOR_1);
-
-    g_shown = true;    
+    //g_shown = true;    
   }
 
-  display->fillRect(1, 118, 62, 2, COLOR_BG);
-  display->fillRect(playerX, 118, playerW, 2, COLOR_1);
+  if (refreshAll || playerMoved) {
+    display->fillRect(1, 118, 62, 2, COLOR_BG);
+    display->fillRect(playerX, 118, playerW, 2, COLOR_1);
+  }
 
-  display->setCursor(40, 0);
-  display->print(String(gameScore));
+  if (refreshAll || scoreChanged) {
+    display->setCursor(40, 0);
+    display->print(String(gameScore));
+  }
 
-  if (gl_ballX != -1) {
-    display->fillCircle(gl_ballX, gl_ballY, 1, COLOR_BG);
+  if (refreshAll || lastBallX != ballX || lastBallY != ballY) {
+    display->fillCircle(lastBallX, lastBallY, 1, COLOR_BG);
   }
   display->fillCircle(ballX, ballY, 1, COLOR_1);
-  gl_ballX = ballX;
-  gl_ballY = ballY;
+  //gl_ballX = ballX;
+  //gl_ballY = ballY;
 
   //display.display();
 }
@@ -226,7 +229,7 @@ void GameReset() {
   gameScore = 0;
   for (int i = 0; i < 14; i++)
     enL[i] = 1;
-  g_shown = false;  
+  //g_shown = false;  
 }
 
 void gameOver() {
@@ -260,8 +263,8 @@ void _checkColision() {
       gameScore++;
     }
 
-  gl_ballX = ballX;
-  gl_ballY = ballY;
+  //gl_ballX = ballX;
+  //gl_ballY = ballY;
   ballX = ballX + ballDirectionX;
   ballY = ballY + ballDirectionY;
 
@@ -380,9 +383,9 @@ void resetAll() {  //display.setFont();
   //num = 0;
   //digit = 0;
   //operation = 0;
-  g_shown = false;
-  gl_ballX = -1;
-  gl_ballY = -1;
+  //g_shown = false;
+  //gl_ballX = -1;
+  //gl_ballY = -1;
 }
 
 void phoneDraw() {
@@ -465,23 +468,25 @@ void drawStop() {
   _drawStop();
   dumbdisplay.playbackLayerCommands();
 }
-void drawGame() {
+void drawGame(byte lastBallX, byte lastBallY, bool playerMoved, bool scoreChanged) {
   //int32_t ss = (100 * playerX + gameScore) + (gameOver ? 10000 : 0);
-  int32_t ss;
-  if (!g_shown) {
-    ss = 3;  // last 2 bits 11
-  } else if (gl_ballX != ballX) {
-    ss = 1;  // last 2 bits 01
-  } else if (gl_ballY != ballY) {
-    ss = 2;  // last 2 bits 10
-  } else {
-    ss = (100 * playerX + gameScore) * 4;  // last 2 bits 00
-  }
-  if (!checkDisplayState(MS_STOP, ss)) {
+  // int32_t ss = 0;
+  // if (!g_shown) {
+  //   ss = 1;
+  // } else if (ballMoved) {
+  //   ss = 2;
+  // } else if (playerMoved) {
+  //   ss = 3;
+  // } else if (scoreChanged) {
+  //   ss = 4;
+  // }
+  bool refreshAll = dms != MS_STOP; 
+  bool ballMoved = lastBallX != ballX || lastBallY != ballY;
+  if (!checkDisplayState(MS_STOP, 0) && (!refreshAll && !ballMoved && !playerMoved && !scoreChanged)) {
     return;
   }
   dumbdisplay.recordLayerCommands();
-  _drawGame();
+  _drawGame(refreshAll, lastBallX, lastBallY, playerMoved, scoreChanged);
   dumbdisplay.playbackLayerCommands();
 }
 void checkColision() {
@@ -494,3 +499,29 @@ void checkColision() {
 }
 
 
+void handleMenu() {
+  checkButtonsMenu();
+  drawMenu();
+}
+void handleCalc() {
+  checkButtonsCalc();
+  drawCalc();
+}
+void handleStop() {
+  checkButtonsStop();
+  drawStop();
+}
+void handleGame() {
+  byte lastBallX = ballX;
+  byte lastBallY = ballY;
+  byte lastScore = gameScore;
+  checkColision();
+  //bool ballMoved = lastBallX != ballX || lastBallY != ballY;
+  bool scoreChanged = lastScore != gameScore;
+
+  byte lastPlayerX = playerX;
+  checkButtonsGame();
+  bool playerMoved = lastPlayerX != playerX;
+
+  drawGame(lastBallX, lastBallY, playerMoved, scoreChanged);
+}

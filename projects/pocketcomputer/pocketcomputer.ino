@@ -123,24 +123,28 @@ void setup() {
 void loop() {
 
   if (fase == 0) {
-    checkButtonsMenu();
-    drawMenu();
+    //checkButtonsMenu();
+    //drawMenu();
+    handleMenu();
   }
 
   if (fase == 1) {
-    checkButtonsCalc();
-    drawCalc();
+    //checkButtonsCalc();
+    //drawCalc();
+    handleCalc();
   }
 
   if (fase == 2) {
-    checkButtonsStop();
-    drawStop();
+    //checkButtonsStop();
+    //drawStop();
+    handleStop();
   }
 
   if (fase == 3) {
-    checkColision();
-    checkButtonsGame();
-    drawGame();
+    //checkColision();
+    //checkButtonsGame();
+    //drawGame();
+    handleGame();
   }
 
   if (fase == 4) {
