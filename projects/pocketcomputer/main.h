@@ -33,7 +33,7 @@ ButtonPressTracker selectTracker(presS);
 JoyStickPressTracker horizontalTracker(horizontal);
 JoyStickPressTracker verticalTracker(vertical);
 #endif
-PrimitiveCalculator calculator(6);
+PrimitiveCalculator calculator(8);
 
 
 
@@ -237,12 +237,14 @@ void checkButtonsGame() {
         playerX++;
     }
   } else {
+#ifdef WITH_JOYSTICK    
     if (controler == 0 && horizontalTracker.checkPressed() != 0) {
       controler = 1;
     }
     if (controler == 1) {
       playerX = map(horizontalTracker.readBypass(), 0, 1023, 1, 63 - playerW);
     }
+#endif    
   }
 
   // if (digitalRead(presS) == 0) {
@@ -519,6 +521,7 @@ void drawMenu() {
   if (!checkDisplayState(MS_MENU, chosenMenu)) {
     return;
   }
+  //dumbdisplay.writeComment("here");
   dumbdisplay.recordLayerCommands();
   _drawMenu();
   dumbdisplay.playbackLayerCommands();

@@ -1,20 +1,27 @@
 // * youtube.com/watch?v=NTaq6f7NV5U
 // * https://learn.adafruit.com/adafruit-gfx-graphics-library/graphics-primitives
 
-#define WITH_JOYSTICK
+#define JOYSTICK_SHIELD
+//#define BLUETOOTH
 
-// const uint8_t left = PIN_A1;
-// const uint8_t presS = PIN_A0;
-// const uint8_t right = PIN_A4;
+#ifdef JOYSTICK_SHIELD
 
-// Uno
-const uint8_t left = 5;
-//const uint8_t up = 15/*2*/; 
-const uint8_t right = 3;
-//const uint8_t down = 4;
-const uint8_t presS = 2/*15*/;
-const uint8_t horizontal = A0;
-const uint8_t vertical = A1;
+  #define WITH_JOYSTICK
+  const uint8_t left = 5;
+  const uint8_t right = 3;
+  const uint8_t presS = 2;
+  const uint8_t horizontal = A0;
+  const uint8_t vertical = A1;
+
+#else
+
+  const uint8_t left = PIN_A1;
+  const uint8_t right = PIN_A4;
+  const uint8_t presS = PIN_A2;
+
+#endif
+
+
 
 
 // Pico
@@ -46,8 +53,6 @@ const int TEXT_SIZE_4 = 28;
 //const uint8_t DisplayWidth = 64;
 //const uint8_t DisplayHeight = 128;
 
-
-//#define BLUETOOTH
 
 #if defined(FOR_PICO)
   // GP8 => RX of HC06; GP9 => TX of HC06
@@ -81,6 +86,9 @@ GraphicalDDLayer *display;
 
 void setup() {
 
+  dumbdisplay.connect();
+  dumbdisplay.writeComment("initializing ...");
+
   //pinMode(up,INPUT_PULLUP);
   //pinMode(down,INPUT_PULLUP);
   pinMode(left,INPUT_PULLUP);
@@ -93,6 +101,7 @@ void setup() {
 #endif  
 
   display = dumbdisplay.createGraphicalLayer(64, 128);
+  
   display->backgroundColor(COLOR_BG);
   display->setTextColor(COLOR_DEF);
 
@@ -115,6 +124,8 @@ void setup() {
   display->setTextFont("MONOSPACE");
   display->clear();
 
+  dumbdisplay.writeComment("... done initialization");
+
   randomSeed(millis());
 
   //display->setRotation(3);
@@ -126,6 +137,7 @@ void setup() {
   //display.setFont(0);
   //display.setTextColor(WHITE);
   //display.display();
+
 }
 
 void loop() {

@@ -106,17 +106,20 @@ void loop() {
     displaySizeMain();
     otherMain();
     if (true) {
-        char buffer[30];
-        //double num = 12.5678;
-        //double num = 12.5671;
-        //double num = -12.5671;
-        //double num = -12.5678;
-        double num = 0;
-        int intPart = (int) num;
-        num = abs(num - intPart);
-        int fracPart = (int) (0.5 + pow(10, 4) * num);
-        sprintf(buffer, "%d.%d", intPart, fracPart);  // will have decimal point
-        //String str(0.123);
-        Serial.println(buffer);
+        double num;
+        const char* formatted;
+        num = 12345678; formatted = CaculatorFormatForDisplay(num, 10); Serial.println(formatted);
+        num = -12345678; formatted = CaculatorFormatForDisplay(num, 10); Serial.println(formatted);
+        // char buffer[30];
+        // double ori_num = 1234567;
+        // int32_t intPart = (int32_t) ori_num;
+        // double num = abs(ori_num - intPart);
+        // int32_t fracPart = (int) (0.5 + pow(10, 4) * num);
+        // sprintf(buffer, "%d.%d", intPart, fracPart);  // will have decimal point
+        // Serial.print(ori_num);
+        // Serial.print("==>");
+        // Serial.print(intPart);
+        // Serial.print("==>");
+        // Serial.println(buffer);
     }
 }
