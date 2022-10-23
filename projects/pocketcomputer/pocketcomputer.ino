@@ -159,8 +159,9 @@ void loop() {
   }
 
   if (fase == 4) {
-    calendarDraw();
-    checkButtonsCalendar();
+    //calendarDraw();
+    //checkButtonsCalendar();
+    handleCalendar();
   }
 
   if (fase == 5) {

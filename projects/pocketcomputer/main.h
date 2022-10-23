@@ -8,6 +8,7 @@ const int8_t MS_MENU = 0;
 const int8_t MS_CALC = 1;
 const int8_t MS_STOP = 2;
 const int8_t MS_GAME = 3;
+const int8_t MS_CALEN = 4;
 
 int8_t dms = -1;
 int32_t dss = -1;
@@ -328,8 +329,8 @@ void _checkColision() {
     GameReset();
 }
 
-void calendarDraw() {
-  display->setRotation(0);
+void _calendarDraw() {
+  display->setRotation(3);
   display->clear();
   display->setCursor(0, 0);
   display->print("Mo Tu We Th Fr Sa Su");
@@ -348,16 +349,26 @@ void calendarDraw() {
   display->print(String(chosenMonth + 1));
   display->print("/2022");
 
+  display->setRotation(0);
   //display.display();
 }
 
 void checkButtonsCalendar() {
-  if (digitalRead(left/*up*/) == 0) {
+  bool leftPressed = leftTracker.checkPressed();
+  bool rightPressed = rightTracker.checkPressed(); 
+
+#ifdef WITH_JOYSTICK
+  if (!leftPressed && !rightPressed) {
+      int8_t horizontalPress = horizontalTracker.checkPressed();
+      leftPressed = horizontalPress == -1;
+      rightPressed = horizontalPress == 1;
+  }
+#endif
+
+  if (leftPressed) {
     if (chosenMonth > 0)
       chosenMonth--;
-  }
-
-  if (digitalRead(right/*down*/) == 0) {
+  } else if (rightPressed) {
     if (chosenMonth < 11)
       chosenMonth++;
   };
@@ -550,6 +561,14 @@ void checkColision() {
   _checkColision();
   gl_check = now;
 }
+void calendarDraw() {
+  if (!checkDisplayState(MS_CALEN, chosenMonth)) {
+    return;
+  }
+  dumbdisplay.recordLayerCommands();
+  _calendarDraw();
+  dumbdisplay.playbackLayerCommands();
+}
 
 
 bool checkReset() {
@@ -590,4 +609,8 @@ void handleGame() {
   bool playerMoved = lastPlayerX != playerX;
 
   drawGame(lastBallX, lastBallY, playerMoved, scoreChanged);
+}
+void handleCalendar() {
+    calendarDraw();
+    checkButtonsCalendar();
 }
