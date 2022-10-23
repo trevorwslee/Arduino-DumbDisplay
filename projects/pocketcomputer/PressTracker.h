@@ -51,6 +51,11 @@ public:
   int8_t checkPressed() {
     return setReading(analogRead(this->pin));
   }  
+  int readBypass() {
+    int reading = analogRead(this->pin);
+    setReading(reading);
+    return reading;
+  }  
 private:
   int8_t setReading(int reading) {
     //int oriReading = this->reading;

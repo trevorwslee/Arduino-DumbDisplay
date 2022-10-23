@@ -220,6 +220,24 @@ void _drawGame(bool refreshAll, byte lastBallX, byte lastBallY, bool playerMoved
 }
 
 void checkButtonsGame() {
+  bool leftPressed = leftTracker.checkPressed();
+  bool rightPressed = rightTracker.checkPressed();
+  if (leftPressed || rightPressed) {
+    controler = 0;
+    if (leftPressed) {
+      if (playerX > 1)
+        playerX--;
+    } else if (rightPressed) {
+      if (playerX < 62 - playerW)
+        playerX++;
+    }
+  }
+  if (controler == 0 && horizontalTracker.checkPressed() != 0) {
+    controler = 1;
+  }
+  if (controler == 1) {
+    playerX = map(horizontalTracker.readBypass(), 0, 1023, 1, 63 - playerW);
+  }
 
   // if (digitalRead(presS) == 0) {
   //   controler = !controler;
@@ -230,7 +248,8 @@ void checkButtonsGame() {
   // if (controler == 1) {
   //   playerX = map(analogRead(horizontal/*A0*/), 0, 1023, 1, 63 - playerW);
   // }
-  playerX = map(analogRead(horizontal/*A0*/), 0, 1023, 1, 63 - playerW);
+  //playerX = map(analogRead(horizontal/*A0*/), 0, 1023, 1, 63 - playerW);
+
 
   // if (controler == 0) {
   //   if (digitalRead(down) == 0)
@@ -291,7 +310,7 @@ void _checkColision() {
   ballY = ballY + ballDirectionY;
 
   if (ballX > 4 && ballX < 60 &&
-      ballY > 4 && ballY < 124) {
+      ballY > 34 && ballY < 120) {
     // if within, make it goes faster    
     ballX = ballX + ballDirectionX;
     ballY = ballY + ballDirectionY;
