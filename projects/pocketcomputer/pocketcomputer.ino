@@ -112,6 +112,7 @@ void setup() {
   //display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
   //display.display();
 
+  display->setTextFont("MONOSPACE");
   display->clear();
 
   randomSeed(millis());

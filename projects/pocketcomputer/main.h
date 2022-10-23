@@ -330,10 +330,26 @@ void _checkColision() {
 }
 
 void _calendarDraw() {
+  byte dayS[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+  byte startDay[12];// ={6,2,2,5,7,3,5,1,4,6,2,4};
+  if ((calenYear % 4) == 0 && (calenYear % 100) != 0 && (calenYear % 400) == 0) {
+    dayS[1] += 1;
+  }
+  byte dow = calenStartDOW;
+  for (int i = 0; i < 12; i++) {
+    startDay[i] = dow;
+    dow = (dow + dayS[i]) % 7; 
+  }
+
   display->setRotation(3);
   display->clear();
   display->setCursor(0, 0);
-  display->print("Mo Tu We Th Fr Sa Su");
+  //display->print("Mo Tu We Th Fr Sa Su");
+  char* dowS[7] = {"Mo","Tu","We","Th","Fr","Sa","Su"};
+  for (int i = 0; i < 7; i++) {
+    display->setCursor(i * 18, 0);
+    display->print(dowS[i]);
+  }
   int d = 1;
   int dd = 1;
   for (int i = 0; i < 6; i++)
@@ -347,7 +363,8 @@ void _calendarDraw() {
     }
   display->setCursor(70, 55);
   display->print(String(chosenMonth + 1));
-  display->print("/2022");
+  //display->print("/2022")
+  display->print(String("/") + String(calenYear));
 
   display->setRotation(0);
   //display.display();
