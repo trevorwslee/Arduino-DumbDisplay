@@ -86,9 +86,11 @@ void setup() {
   pinMode(left,INPUT_PULLUP);
   pinMode(right,INPUT_PULLUP);
   pinMode(presS,INPUT_PULLUP);
+
+#ifdef WITH_JOYSTICK  
   pinMode(horizontal,INPUT);
   pinMode(vertical,INPUT);
-  //pinMode(3,OUTPUT);
+#endif  
 
   display = dumbdisplay.createGraphicalLayer(64, 128);
   display->backgroundColor(COLOR_BG);
@@ -112,10 +114,13 @@ void setup() {
 
   display->clear();
 
-  randomSeed(millis());  // hopefull, not the same millis every time
+  randomSeed(millis());
 
   //display->setRotation(3);
-  playerX = random(10, 50);
+  
+  GameReset();
+//  playerX = random(10, 50);
+
   //display.clearDisplay();
   //display.setFont(0);
   //display.setTextColor(WHITE);

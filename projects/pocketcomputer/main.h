@@ -7,6 +7,7 @@
 const int8_t MS_MENU = 0;
 const int8_t MS_CALC = 1;
 const int8_t MS_STOP = 2;
+const int8_t MS_GAME = 3;
 
 int8_t dms = -1;
 int32_t dss = -1;
@@ -265,6 +266,7 @@ void checkButtonsGame() {
 }
 
 void GameReset() {
+  playerX = random(10, 50);
   ballX = random(10, 50);
   ballY = 50;
   ballDirectionX = 1;
@@ -529,9 +531,10 @@ void drawStop() {
   dumbdisplay.playbackLayerCommands();
 }
 void drawGame(byte lastBallX, byte lastBallY, bool playerMoved, bool scoreChanged) {
+  checkDisplayState(MS_GAME, 0);
   bool refreshAll = !g_started || scoreChanged;  // even only score change, refresh all 
   bool ballMoved = lastBallX != ballX || lastBallY != ballY;
-  if (/*!checkDisplayState(MS_STOP, 0) && */!refreshAll && !ballMoved && !playerMoved && !scoreChanged) {
+  if (!refreshAll && !ballMoved && !playerMoved && !scoreChanged) {
     return;
   }
   dumbdisplay.recordLayerCommands();
@@ -547,6 +550,7 @@ void checkColision() {
   _checkColision();
   gl_check = now;
 }
+
 
 bool checkReset() {
   if (selectTracker.checkPressedBypass() &&
