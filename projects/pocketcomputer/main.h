@@ -23,12 +23,12 @@ boolean checkDisplayState(int8_t mainState, int32_t subState) {
   return oridms != dms || oridss != dss;
 }
 
-ButtonPressTracker leftTracker;
-ButtonPressTracker rightTracker;
-ButtonPressTracker selectTracker;
+ButtonPressTracker leftTracker(left);
+ButtonPressTracker rightTracker(right);
+ButtonPressTracker selectTracker(presS);
 #ifdef WITH_JOYSTICK
-JoyStickPressTracker horizontalTracker;
-JoyStickPressTracker verticalTracker;
+JoyStickPressTracker horizontalTracker(horizontal);
+JoyStickPressTracker verticalTracker(vertical);
 #endif
 PrimitiveCalculator calculator(6);
 
@@ -79,13 +79,13 @@ void _drawCalc() {
 void checkButtonsCalc() {
 
 
-  if (leftTracker.setPressed(digitalRead(left) == 0)) {
+  if (leftTracker.checkPressed()) {
       cx = cx - 1;
       if (cx == -1) {
         cx = 3;
         cy = (cy + 3) % 4;
       }
-  } else if (rightTracker.setPressed(digitalRead(right) == 0)) {
+  } else if (rightTracker.checkPressed()) {
       cx = cx + 1;
       if (cx == 4) {
         cx = 0;
@@ -94,8 +94,8 @@ void checkButtonsCalc() {
   }
 #ifdef WITH_JOYSTICK
   else {
-    int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
-    int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
+    int8_t horizontalPress = horizontalTracker.checkPressed();
+    int8_t verticalPress = verticalTracker.checkPressed();
     if (verticalPress == 1) {
         cy = (cy + 3) % 4;
     } else if (verticalPress == -1) {
@@ -108,7 +108,7 @@ void checkButtonsCalc() {
   }
 #endif
 
-  if (selectTracker.setPressed(digitalRead(presS) == 0)) {
+  if (selectTracker.checkPressed()) {
     char what = buttons[cx][cy];
     if (what == 'C') {
       calculator.reset();
@@ -167,7 +167,7 @@ void _drawStop() {
 }
 
 void checkButtonsStop() {
-  if (selectTracker.setPressed(digitalRead(presS) == 0)) {
+  if (selectTracker.checkPressed()) {
     s_fase++;
     if (s_fase == 3) {
       s_fase = 0;
@@ -379,15 +379,15 @@ void _drawMenu() {
 void checkButtonsMenu() {
   //dumbdisplay.writeComment(String(analogRead(horizontal)));
   byte oriMenu = chosenMenu;
-  if (leftTracker.setPressed(digitalRead(left) == 0)) { 
+  if (leftTracker.checkPressed()) { 
     chosenMenu = (chosenMenu + 5) % 6;
-  } else if (rightTracker.setPressed(digitalRead(right) == 0)) { 
+  } else if (rightTracker.checkPressed()) { 
     chosenMenu = (chosenMenu + 1) % 6;
   }
 #ifdef WITH_JOYSTICK  
   else {
-    int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
-    int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
+    int8_t horizontalPress = horizontalTracker.checkPressed();
+    int8_t verticalPress = verticalTracker.checkPressed();
     if (horizontalPress == -1) {
       chosenMenu = (chosenMenu + 5) % 6;
     } else if (horizontalPress == 1) {
@@ -403,7 +403,7 @@ void checkButtonsMenu() {
     if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
   }
 
-  if (selectTracker.setPressed(digitalRead(presS) == 0)) {
+  if (selectTracker.checkPressed()) {
     if (chosenMenu == 5)
       sounds = !sounds;
     else
@@ -528,8 +528,8 @@ void checkColision() {
 }
 
 bool checkReset() {
-  if (selectTracker.setPressedBypass(digitalRead(presS) == 0) &&
-      (leftTracker.setPressedBypass(digitalRead(left) == 0) || rightTracker.setPressedBypass(digitalRead(right) == 0))) {
+  if (selectTracker.checkPressedBypass() &&
+      (leftTracker.checkPressedBypass() || rightTracker.checkPressedBypass())) {
     GameReset();
     //display->setRotation(3);
     resetAll();

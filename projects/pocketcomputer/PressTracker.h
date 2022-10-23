@@ -1,9 +1,18 @@
 class ButtonPressTracker {
 public:
-  ButtonPressTracker() {
+  ButtonPressTracker(uint8_t pin) {
+    this->pin = pin;
     this->pressed = false;  // assume initially not pressed
     this->blackOutMillis = 0;
   }
+  bool checkPressed() {
+    return setPressed(digitalRead(this->pin) == 0);
+  }
+  bool checkPressedBypass() {
+    setPressed(digitalRead(this->pin) == 0);
+    return pressed;
+  }
+private:
   bool setPressed(bool pressed) {
     long nowMillis = millis();
     if (blackOutMillis != 0) {
@@ -21,25 +30,28 @@ public:
     }
     return false;
   }
-  bool setPressedBypass(bool pressed) {
-    setPressed(pressed);
-    return pressed;
-  }
 private:
+  uint8_t pin;
   bool pressed;
   long blackOutMillis;
 };
 
 class JoyStickPressTracker {
 public:
-  JoyStickPressTracker() {
+  JoyStickPressTracker(uint8_t pin) {
     this->maxReading = 1023;
-    this->threshold = 10;  
+    this->threshold = 10;
+    this->pin = pin;  
     //this->reading = 0;
     this->pressedDir = 0;
     this->pressedMillis = 0;
     this->needReset = false;
   }
+public:
+  int8_t checkPressed() {
+    return setReading(analogRead(this->pin));
+  }  
+private:
   int8_t setReading(int reading) {
     //int oriReading = this->reading;
     int8_t oriPressedDir = this->pressedDir;
@@ -76,6 +88,7 @@ private:
   int threshold;  
 private:
   //int reading;  
+  uint8_t pin;
   int pressedDir;
   long pressedMillis;
   bool needReset;
