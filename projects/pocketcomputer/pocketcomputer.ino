@@ -126,6 +126,10 @@ void loop() {
     //checkButtonsMenu();
     //drawMenu();
     handleMenu();
+  } else {
+    if (checkReset()) {
+      return;
+    }
   }
 
   if (fase == 1) {
@@ -157,13 +161,5 @@ void loop() {
   }
 
 
-
-  if ((digitalRead(left/*down*/) == 0 || digitalRead(right/*down*/) == 0) && digitalRead(presS) == 0) {
-    GameReset();
-    //display->setRotation(3);
-    resetAll();
-    fase = 0;
-    delay(500);
-  }
 }
 

@@ -5,7 +5,7 @@ byte ballY=50;
 byte ballDirectionX=1;
 byte ballDirectionY=1;
 byte gameScore=0;
-//bool controler=0;
+bool controler=0;
 
 //bool g_shown = false;
 // byte gl_ballX = -1;

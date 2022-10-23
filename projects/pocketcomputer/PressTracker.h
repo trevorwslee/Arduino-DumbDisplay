@@ -21,6 +21,10 @@ public:
     }
     return false;
   }
+  bool setPressedBypass(bool pressed) {
+    setPressed(pressed);
+    return pressed;
+  }
 private:
   bool pressed;
   long blackOutMillis;

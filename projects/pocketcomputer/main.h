@@ -85,8 +85,7 @@ void checkButtonsCalc() {
         cx = 3;
         cy = (cy + 3) % 4;
       }
-  }
-  if (rightTracker.setPressed(digitalRead(right) == 0)) {
+  } else if (rightTracker.setPressed(digitalRead(right) == 0)) {
       cx = cx + 1;
       if (cx == 4) {
         cx = 0;
@@ -94,16 +93,18 @@ void checkButtonsCalc() {
       }
   }
 #ifdef WITH_JOYSTICK
-  int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
-  int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
-  if (verticalPress == 1) {
-      cy = (cy + 3) % 4;
-  } else if (verticalPress == -1) {
-      cy = (cy + 1) % 4;
-  } else if (horizontalPress == 1) {
-      cx = (cx + 1) % 4;
-  } else if (horizontalPress == -1) {
-      cx = (cx + 3) % 4;
+  else {
+    int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
+    int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
+    if (verticalPress == 1) {
+        cy = (cy + 3) % 4;
+    } else if (verticalPress == -1) {
+        cy = (cy + 1) % 4;
+    } else if (horizontalPress == 1) {
+        cx = (cx + 1) % 4;
+    } else if (horizontalPress == -1) {
+        cx = (cx + 3) % 4;
+    }
   }
 #endif
 
@@ -377,19 +378,29 @@ void _drawMenu() {
 
 void checkButtonsMenu() {
   //dumbdisplay.writeComment(String(analogRead(horizontal)));
-  int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
-  int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
-
-  if (/*upTracker.setPressed(digitalRead(up) == 0) || 
-      leftTracker.setPressed(digitalRead(left) == 0) ||
-      */horizontalPress == -1 || verticalPress == 1) {
-    if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
+  byte oriMenu = chosenMenu;
+  if (leftTracker.setPressed(digitalRead(left) == 0)) { 
     chosenMenu = (chosenMenu + 5) % 6;
-  } else if (/*downTracker.setPressed(digitalRead(down) == 0) ||
-      rightTracker.setPressed(digitalRead(right) == 0) ||
-      */horizontalPress == 1 || verticalPress == -1) {
-    if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
+  } else if (rightTracker.setPressed(digitalRead(right) == 0)) { 
     chosenMenu = (chosenMenu + 1) % 6;
+  }
+#ifdef WITH_JOYSTICK  
+  else {
+    int8_t horizontalPress = horizontalTracker.setReading(analogRead(horizontal));
+    int8_t verticalPress = verticalTracker.setReading(analogRead(vertical));
+    if (horizontalPress == -1) {
+      chosenMenu = (chosenMenu + 5) % 6;
+    } else if (horizontalPress == 1) {
+      chosenMenu = (chosenMenu + 1) % 6;
+    } else if (verticalPress == -1) {
+      chosenMenu = (chosenMenu + 2) % 6;
+    } else if (verticalPress == 1) {
+      chosenMenu = (chosenMenu + 4) % 6;
+    }
+  }
+#endif
+  if (oriMenu != chosenMenu) {
+    if (sounds == 1) dumbdisplay.tone(/*9, */1100, 50);
   }
 
   if (selectTracker.setPressed(digitalRead(presS) == 0)) {
@@ -516,7 +527,19 @@ void checkColision() {
   gl_check = now;
 }
 
-
+bool checkReset() {
+  if (selectTracker.setPressedBypass(digitalRead(presS) == 0) &&
+      (leftTracker.setPressedBypass(digitalRead(left) == 0) || rightTracker.setPressedBypass(digitalRead(right) == 0))) {
+    GameReset();
+    //display->setRotation(3);
+    resetAll();
+    fase = 0;
+    delay(500);
+    return true;
+  } else {
+    return false;
+  }
+}
 void handleMenu() {
   checkButtonsMenu();
   drawMenu();
