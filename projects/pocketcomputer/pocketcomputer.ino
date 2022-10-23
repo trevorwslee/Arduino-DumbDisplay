@@ -166,7 +166,8 @@ void loop() {
   }
 
   if (fase == 5) {
-    phoneDraw();
+    //phoneDraw();
+    handlePhone();
   }
 
 

@@ -9,6 +9,7 @@ const int8_t MS_CALC = 1;
 const int8_t MS_STOP = 2;
 const int8_t MS_GAME = 3;
 const int8_t MS_CALEN = 4;
+const int8_t MS_PHONE = 5;
 
 int8_t dms = -1;
 int32_t dss = -1;
@@ -169,11 +170,12 @@ void _drawStop() {
 }
 
 void checkButtonsStop() {
-  if (selectTracker.checkPressed()) {
+  if (leftTracker.checkPressed() || rightTracker.checkPressed() || selectTracker.checkPressed()) {
     s_fase++;
     if (s_fase == 3) {
       s_fase = 0;
       //s_milis = 0;
+      s_10_sec = 0;
       s_sec = 0;
       s_min = 0;
       s_start = -1;
@@ -478,7 +480,7 @@ void resetAll() {  //display.setFont();
   //gl_ballY = -1;
 }
 
-void phoneDraw() {
+void _phoneDraw() {
   display->clear();
   display->setCursor(0, 4);
   display->print("Mike");
@@ -586,6 +588,14 @@ void calendarDraw() {
   _calendarDraw();
   dumbdisplay.playbackLayerCommands();
 }
+void phoneDraw() {
+  if (!checkDisplayState(MS_PHONE, 0)) {
+    return;
+  }
+  dumbdisplay.recordLayerCommands();
+  _phoneDraw();
+  dumbdisplay.playbackLayerCommands();
+}
 
 
 bool checkReset() {
@@ -630,4 +640,7 @@ void handleGame() {
 void handleCalendar() {
     calendarDraw();
     checkButtonsCalendar();
+}
+void handlePhone() {
+  phoneDraw();
 }
