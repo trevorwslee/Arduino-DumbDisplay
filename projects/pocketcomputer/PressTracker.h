@@ -4,28 +4,45 @@ public:
     this->pin = pin;
     this->pressed = false;  // assume initially not pressed
     this->blackOutMillis = 0;
+    this->nextRepeatMillis = 0;
+    //this->repeat = 0;
   }
-  bool checkPressed() {
-    return setPressed(digitalRead(this->pin) == 0);
+  bool checkPressed(int repeat = 0) {
+    return setPressed(digitalRead(this->pin) == 0, repeat);
   }
   bool checkPressedBypass() {
     setPressed(digitalRead(this->pin) == 0);
     return pressed;
   }
 private:
-  bool setPressed(bool pressed) {
+  bool setPressed(bool pressed, int repeat = 0) {
+    if (repeat == 0) {
+      this->nextRepeatMillis = 0;
+    }
     long nowMillis = millis();
-    if (blackOutMillis != 0) {
-      long diff = blackOutMillis - nowMillis;
+    if (this->blackOutMillis != 0) {
+      long diff = this->blackOutMillis - nowMillis;
       if (diff < 0) {
-        blackOutMillis = 0;
+        this->blackOutMillis = 0;
       }
     }
-    if (blackOutMillis == 0) {
+    if (this->blackOutMillis == 0) {
       if (pressed != this->pressed) {
         this->pressed = pressed;
-        blackOutMillis = nowMillis + 50;
+        this->blackOutMillis = nowMillis + 50;
+        if (repeat != 0 && this->pressed) {
+          this->nextRepeatMillis = nowMillis + repeat;
+        } else {
+          this->nextRepeatMillis = 0;
+        }
         return this->pressed;
+      }
+    }
+    if (this->nextRepeatMillis != 0) {
+      long diff = this->nextRepeatMillis - nowMillis;
+      if (diff < 0) {
+        this->nextRepeatMillis = nowMillis + repeat;
+        return true;
       }
     }
     return false;
@@ -34,6 +51,7 @@ private:
   uint8_t pin;
   bool pressed;
   long blackOutMillis;
+  long nextRepeatMillis;
 };
 
 class JoyStickPressTracker {

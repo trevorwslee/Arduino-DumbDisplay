@@ -92,6 +92,7 @@ void setup() {
 
   display = dumbdisplay.createGraphicalLayer(64, 128);
   display->backgroundColor(COLOR_BG);
+  display->setTextColor(COLOR_DEF);
 
   display->setCursor(0, 10);
   display->print("... init ...");
@@ -104,14 +105,15 @@ void setup() {
   display->cachePixelImage("calen.png", PgmCopyBytes(myBitmapcalen, sizeof(myBitmapcalen), buffer), 24, 24, COLOR_1);
   display->cachePixelImage("phone.png", PgmCopyBytes(myBitmapphone, sizeof(myBitmapphone), buffer), 24, 24, COLOR_1);
 
-  playerX = random(10, 50);
+  //playerX = random(10, 50);
 
   //display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
   //display.display();
 
-  display->setTextColor(COLOR_DEF);
-
   display->clear();
+
+  randomSeed(millis());  // hopefull, not the same millis every time
+
   //display->setRotation(3);
   playerX = random(10, 50);
   //display.clearDisplay();
