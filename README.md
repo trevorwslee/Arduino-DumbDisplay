@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.2)
+# DumbDisplay Arduino Library (v0.9.3)
 
 [DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -29,6 +29,7 @@ Please notice that the above mentioned video is just one of the several on using
   * [Idle Callback and ESP32 Deep Sleep](#idle-callback-and-esp32-deep-sleep)
   * [Using "Tunnel" to Download Images from the Web](#using-tunnel-to-download-images-from-the-web)
   * [Save Pictures to Phone Captured with ESP32 Cam](#save-pictures-to-phone-captured-with-esp32-cam)
+  * [Caching Single-bit Bitmap to Phone](#caching-single-bit-bitmap-to-phone)
 * [Reference](#reference)
 * [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
 * [Thank You!](#thank-you)
@@ -1273,6 +1274,51 @@ For a complete sample, please refer to the sample sketch https://github.com/trev
 You may also want to watch the YouTube Video ESP32-CAM Experiment -- Capture and Stream Pictures to Mobile Phone -- https://www.youtube.com/watch?v=D0tinZi5l5s for a brief description of the experiment.
 
 
+## Caching Single-bit Bitmap to Phone
+
+A single-bit bitmap image is a common image format for displaying image in Arduino environment. And here in DumbDisplay, such 
+image is referred to as pixel image (as opposed to full colored image).
+
+To certain extend, DumbDisplay supports displaying these pixel images to graphical image as well. 
+Two steps are involves:
+
+* The pixel image is transferred to DumbDisplay at initialization time, like
+
+```
+// 'phone', 24x24px
+const unsigned char phoneBitmap [] PROGMEM = {
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3f, 0x81, 0xfc, 0x3f, 0xc3, 0xfc, 0x3f, 
+  0xe7, 0xfc, 0x39, 0xe7, 0x9c, 0x38, 0x66, 0x1e, 0x3f, 0xe7, 0xfc, 0x79, 0xe7, 0x9e, 0x78, 0x66, 
+  0x1e, 0x7f, 0xe7, 0xfe, 0x39, 0xe7, 0x9c, 0x78, 0x66, 0x1e, 0x7f, 0xe7, 0xfe, 0x3f, 0xe7, 0xfc, 
+  0x7f, 0xe7, 0xfc, 0x3f, 0xe7, 0xfc, 0x01, 0xe7, 0x80, 0x00, 0x66, 0x00, 0x00, 0x24, 0x00, 0x00, 
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+...
+  void setup() {
+    ...
+    unsigned char buffer[240];
+    display->cachePixelImage("phone.png", PgmCopyBytes(phoneBitmap, sizeof(phoneBitmap), buffer), 24, 24, COLOR_1);
+    ...
+  }
+```
+Under the hook, the pixel image is actually converted to, say in this case, PNG format.
+* The cached pixel is displayed to graphical layer as needed, like
+```
+  ...
+  display->drawImageFile("phone.png", 0, 0); 
+  ...
+```
+Notice how the previously mentioned display image file command is used here.
+
+
+| sample code |  |
+|--|--|
+|For a complete example, and much more than just displaying bitmap image, please refer to my adaption of the "Pocket Computer" Arduino Nano project I found in YouTube -- [Arduino Pocket Computer featuring calculator, stopwatch, calendar, game and phone book](https://www.youtube.com/watch?v=NTaq6f7NV5U)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpocketcomputer.png)|
+
+
+ 
+
+
 # Library Code Header as Reference
 
 For reference, please look into the declarations of the different related classes in the header files; mostly dumbdisplay.h -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/dumbdisplay.h
@@ -1325,6 +1371,11 @@ MIT
 # Change History
 
 
+v0.9.3
+  - enhanced graphical layers
+  - bug fixes
+
+
 v0.9.2
   - enhanced 7-segment layers
   - bug fixes
@@ -1355,7 +1406,7 @@ v0.8.2
 
 v0.8.1
   - aded "image download tunnel"
-  - "JSON tunnel" now supports HTTPs
+  - "JSON tunnel" now supports HTTPs (via Android phone)
   - added load/save/draw image to "graphical layer"
   - bug fixes
 

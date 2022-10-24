@@ -1,5 +1,17 @@
 #include <Arduino.h>
-#include "dumbdisplay.h"
+
+#define BLUETOOTH
+
+#ifdef BLUETOOTH
+  #include "ssdumbdisplay.h"
+  // assume HC-05 connected; 2 => TX of HC05; 3 => RX of HC05
+  // still can connect with OTG
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
+#else
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput(115200));
+#endif
+
 
 
 #define BUTTON_LEFT PIN_A1
@@ -10,8 +22,6 @@
 
 #include "gameobjs.h"  // for game objects
 
-
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 
 // game objects, defined in gameobjs.h
@@ -42,6 +52,8 @@ void setup() {
   invaders.invader7Seg->border(5, "red", "round");
   invaders.invader7Seg->padding(5);
 
+  // 'pin' the layers (7 segment displays) one by one horizontally
+  //  note that tomtommap is not visible initially
   dumbdisplay.configAutoPin(DD_AP_HORI);
 
   controller.initialize();

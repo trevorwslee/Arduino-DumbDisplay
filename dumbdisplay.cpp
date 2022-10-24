@@ -1401,6 +1401,9 @@ void LcdDDLayer::noBgPixelColor() {
 }
 
 
+void GraphicalDDLayer::setRotation(int8_t rotationType) {
+  _sendCommand1(layerId, C_setrot, String(rotationType));
+}
 void GraphicalDDLayer::setCursor(int x, int y) {
   _sendCommand2(layerId, C_setcursor, String(x), String(y));
 }
@@ -1527,6 +1530,11 @@ void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h) 
 }
 void GraphicalDDLayer::cacheImage(const String& imageName, const uint8_t *bytes, int byteCount) {
   _sendCommand2("", C_CACHEIMG, layerId, imageName);
+  _sendByteArrayAfterCommand(bytes, byteCount);
+}
+void GraphicalDDLayer::cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color) {
+  int byteCount = width * height / 8; 
+  _sendCommand5("", C_CACHEPIXIMG, layerId, imageName, String(width), String(height), color);
   _sendByteArrayAfterCommand(bytes, byteCount);
 }
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
@@ -2170,6 +2178,11 @@ void DumbDisplay::tone(uint32_t freq, uint32_t duration) {
 }
 void DumbDisplay::saveImage(const String& imageName, const uint8_t *bytes, int byteCount) {
   _sendCommand1("", C_SAVEIMG, imageName);
+  _sendByteArrayAfterCommand(bytes, byteCount);
+}
+void DumbDisplay::savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color) {
+  int byteCount = width * height / 8; 
+  _sendCommand4("", C_SAVEPIXIMG, imageName, String(width), String(height), color);
   _sendByteArrayAfterCommand(bytes, byteCount);
 }
 void DumbDisplay::debugOnly(int i) {

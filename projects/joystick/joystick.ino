@@ -75,7 +75,7 @@ const int width = 128;
 const int height = 88;
 
 // setup to connect with bluetooth, as well as be able to connect with serial
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 57600));
+DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(11, 10), 115200, true, 115200));
 
 GraphicalDDLayer *pLayer;
 
