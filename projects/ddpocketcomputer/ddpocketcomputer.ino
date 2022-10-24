@@ -2,7 +2,6 @@
 // * https://learn.adafruit.com/adafruit-gfx-graphics-library/graphics-primitives
 
 #define JOYSTICK_SHIELD
-//#define BLUETOOTH
 
 #ifdef JOYSTICK_SHIELD
 
@@ -20,8 +19,6 @@
   const uint8_t presS = PIN_A2;
 
 #endif
-
-
 
 
 // Pico
@@ -46,12 +43,9 @@ const char* COLOR_DEF = "beige";
 const char* COLOR_0 = "navy";
 const char* COLOR_1 = "ivory";
 const uint8_t TEXT_SIZE_DEF = 9;
-//const uint8_t TEXT_SIZE_MENU = 9;
 const uint8_t TEXT_SIZE_2 = 24;
 const int TEXT_SIZE_4 = 28;
 
-//const uint8_t DisplayWidth = 64;
-//const uint8_t DisplayHeight = 128;
 
 
 #if defined(FOR_PICO)
@@ -79,10 +73,9 @@ const int TEXT_SIZE_4 = 28;
 GraphicalDDLayer *display;
 
 
-#include "main.h"
-
-
+#include "core.h"
 #include "pgm_util.h"
+
 
 void setup() {
 

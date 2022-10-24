@@ -4,6 +4,8 @@
 #include "BasicCalculator.h"
 
 
+const int8_t GameSpeed = 30;
+
 const int8_t MS_MENU = 0;
 const int8_t MS_CALC = 1;
 const int8_t MS_STOP = 2;
@@ -53,9 +55,9 @@ void _drawCalc() {
   display->print("CALC");
 
   display->setTextColor(COLOR_0);
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < 4/*n*/; i++) {
     posY[i] = fromTop + (boxH * i) + (space * i);
-    for (int j = 0; j < m; j++) {
+    for (int j = 0; j < 4/*m*/; j++) {
       posX[j] = fromLeft + (boxW * j) + (space * j);
       display->fillRoundRect(posX[j], posY[i], boxW, boxH, 2, COLOR_1);
       display->setCursor(posX[j] + (boxW / 2) - 3, posY[i] + (boxH / 2) - 6);
@@ -224,7 +226,7 @@ void _drawGame(bool refreshAll, byte lastBallX, byte lastBallY, bool playerMoved
 }
 
 void checkButtonsGame() {
-  int repeat = 50;
+  int repeat = GameSpeed;
   bool leftPressed = leftTracker.checkPressed(repeat);
   bool rightPressed = rightTracker.checkPressed(repeat);
   if (leftPressed || rightPressed) {
@@ -318,12 +320,12 @@ void _checkColision() {
   ballX = ballX + ballDirectionX;
   ballY = ballY + ballDirectionY;
 
-  if (ballX > 4 && ballX < 60 &&
-      ballY > 34 && ballY < 120) {
-    // if within free area, make it goes faster    
-    ballX = ballX + ballDirectionX;
-    ballY = ballY + ballDirectionY;
-  }
+  // if (ballX > 4 && ballX < 60 &&
+  //     ballY > 34 && ballY < 120) {
+  //   // if within free area, make it goes faster    
+  //   ballX = ballX + ballDirectionX;
+  //   ballY = ballY + ballDirectionY;
+  // }
 
   if (ballY > 124)
     gameOver();
@@ -472,8 +474,8 @@ void checkButtonsMenu() {
 void resetAll() {  //display.setFont();
   cy = 0;
   cy = 0;
-  n1 = 0;
-  n2 = 0;
+  //n1 = 0;
+  //n2 = 0;
   //num = 0;
   //digit = 0;
   //operation = 0;
@@ -577,7 +579,7 @@ void drawGame(byte lastBallX, byte lastBallY, bool playerMoved, bool scoreChange
 }
 void checkColision() {
   long now = millis();
-  if ((now - gl_check) < 150) {
+  if ((now - gl_check) < GameSpeed) {
     return;
   }
   _checkColision();
@@ -614,24 +616,27 @@ bool checkReset() {
     return false;
   }
 }
+
 void handleMenu() {
   checkButtonsMenu();
   drawMenu();
 }
+
 void handleCalc() {
   checkButtonsCalc();
   drawCalc();
 }
+
 void handleStop() {
   checkButtonsStop();
   drawStop();
 }
+
 void handleGame() {
   byte lastBallX = ballX;
   byte lastBallY = ballY;
   byte lastScore = gameScore;
   checkColision();
-  //bool ballMoved = lastBallX != ballX || lastBallY != ballY;
   bool scoreChanged = lastScore != gameScore;
 
   byte lastPlayerX = playerX;
@@ -640,10 +645,12 @@ void handleGame() {
 
   drawGame(lastBallX, lastBallY, playerMoved, scoreChanged);
 }
+
 void handleCalendar() {
-    calendarDraw();
-    checkButtonsCalendar();
+  calendarDraw();
+  checkButtonsCalendar();
 }
+
 void handlePhone() {
   phoneDraw();
 }
