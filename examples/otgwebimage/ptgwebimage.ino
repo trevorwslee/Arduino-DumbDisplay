@@ -1,71 +1,71 @@
+/**
+ * to run and see the result of this sketch, you will need two addition things:
+ * . you will need to install Android DumbDisplay app from Play store
+ *   https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
+ * . although there are several ways for microcontroller board to establish connection
+ *   with DumbDisplay app, here, the simple OTG USB connection is assume;
+ *   hence, you will need an OTG adaptor cable for connecting your microcontroller board
+ *   to your Android phone
+ * . after uploading the sketch to your microcontroller board, plug the USB cable
+ *   to the OTG adaptor connected to your Android phone
+ * . open the DumbDisplay app and make connection to your microcontroller board via the USB cable;
+ *   hopefully, the UI is obvious enough :)
+ * . for more details on DumbDisplay Arduino Library, please refer to
+ *   https://github.com/trevorwslee/Arduino-DumbDisplay#readme
+ * there is a related blog post that you may want to take a look:
+ * . https://create.arduino.cc/projecthub/trevorwslee/blink-test-with-virtual-display-dumbdisplay-5c8350
+ */
 
-
-//#define BLUETOOTH
-
-#ifdef BLUETOOTH
-
-#include "ssdumbdisplay.h"
-
-// assume HC-06 connected, to pin 2 and 3; and assume it is using baud 9600
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 9600));
-
-#else
 
 #include "dumbdisplay.h"
 
-//otherwise, can use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
-#endif
 
-
-
-GraphicalDDLayer *pLayer;
-SimpleToolDDTunnel *pTunnel;
+GraphicalDDLayer *graphical;
+SimpleToolDDTunnel *tunnel_unlocked;
+SimpleToolDDTunnel *tunnel_locked;
 
 void setup() {
-  // create a graphical layer for drawing the web image to
-  pLayer = dumbdisplay.createGraphicalLayer(500, 300);
-  pLayer->border(10, "azure", "round");  
-  pLayer->noBackgroundColor();
-  pLayer->penColor("navy");
+  // create a graphical layer for drawing the web images to
+  graphical = dumbdisplay.createGraphicalLayer(200, 300);
 
-  // create a tunnel for downloading web image ... initially, no URL yet ... downloaded.png is the name of the image to save
-  pTunnel = dumbdisplay.createImageDownloadTunnel("", "downloaded.png");
+  // create tunnels for downloading web images ... and save to your phone
+  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", "lock-unlocked.png");
+  //delay(500);
+  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", "lock-locked.png");
+  //delay(500);
 }
 
+bool locked = false;
 void loop() {
-    // set the URL to download web image ... using a bit different size so that web image will be different 
-    String url = String("https://placekitten.com/680/") + String(460 + rand() % 20);
-    pTunnel->reconnectTo(url);
+  // get result whether web image downloaded .. 0: downloading; 1: downloaded ok; -1: failed to download 
+  int result_unlocked = tunnel_unlocked->checkResult();
+  int result_locked = tunnel_locked->checkResult();
 
-    while (true) {
-      int result = pTunnel->checkResult();
-      if (result == 1) {
-        // web image downloaded and saved successfully
-        pLayer->clear();
-        // unload to make sure the cache is cleared
-        pLayer->unloadImageFile("downloaded.png");
-        // draw the image
-        pLayer->drawImageFileFit("downloaded.png", 10, 10);
-      } else if (result == -1) {
-        // failed to download the image
-        pLayer->clear();
-        pLayer->setCursor(10, 10);
-        pLayer->println("XXX failed to download XXX");
-      }
-      if (result != 0) {
-        break;
-      }
-    }
-    pLayer->backgroundColor("azure");  // set background color
-    pLayer->enableFeedback("f");       // enable "auto feedback" 
-    while (true) {                     // loop and wait for layer clicked
-      if (pLayer->getFeedback() != NULL) {
-        break;
-      }
-    }
-    pLayer->noBackgroundColor();  // no background color 
-    pLayer->disableFeedback();    // disable "feedback"
-    delay(500);
+  int result;
+  const char* image_file_name;
+  if (locked) {
+    image_file_name = "lock-locked.png";
+    result = result_locked;
+  } else {
+    image_file_name = "lock-unlocked.png";
+    result = result_unlocked;
+  }
+  if (result == 1) {
+    graphical->drawImageFile(image_file_name);
+  } else if (result == 0) {
+    // downloading
+    graphical->clear();
+    graphical->setCursor(10, 10);
+    graphical->println("... ...");
+    graphical->print(image_file_name);
+    graphical->println("... ...");
+  } else if (result == -1) {
+    graphical->clear();
+    graphical->setCursor(10, 10);
+    graphical->println("XXX failed to download XXX");
+  }
+  locked = !locked;
+  DDDelay(1000);
 }
