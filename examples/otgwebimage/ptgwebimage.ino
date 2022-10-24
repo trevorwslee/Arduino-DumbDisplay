@@ -59,7 +59,7 @@ void loop() {
     graphical->clear();
     graphical->setCursor(10, 10);
     graphical->println("... ...");
-    graphical->print(image_file_name);
+    graphical->println(image_file_name);
     graphical->println("... ...");
   } else if (result == -1) {
     graphical->clear();
