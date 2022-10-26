@@ -1,6 +1,10 @@
 // * youtube.com/watch?v=NTaq6f7NV5U
 // * https://learn.adafruit.com/adafruit-gfx-graphics-library/graphics-primitives
 
+
+
+// if using Arduino UNO with Joy Stick Shield, please define JOYSTICK_SHIELD
+// otherwise, assume Arduino Nano
 #define JOYSTICK_SHIELD
 
 #ifdef JOYSTICK_SHIELD
@@ -31,11 +35,11 @@
 // const uint8_t presS = 15;
 
 
-#include "calculator.h"
-#include "stopwatch.h"
-#include "game.h"
-#include "calendar.h"
-#include "menu.h"
+// #include "calculator.h"
+// #include "stopwatch.h"
+// #include "game.h"
+// #include "calendar.h"
+// #include "menu.h"
 
 
 const char* COLOR_BG = "darkblue";

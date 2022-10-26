@@ -67,5 +67,5 @@ void loop() {
     graphical->println("XXX failed to download XXX");
   }
   locked = !locked;
-  DDDelay(1000);
+  delay(1000);
 }
