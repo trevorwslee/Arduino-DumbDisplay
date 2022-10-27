@@ -154,7 +154,7 @@ class PrimitiveCalculator {
                     if (this->prev_lhs.isValid()) {
                         res = _Calc(this->prev_lhs, res);
                     } 
-                    _restart(res, '!');
+                    _restart(res, '='/*'!'*/);
                     return true;
                 }
             }
@@ -182,6 +182,9 @@ class PrimitiveCalculator {
             } else {
                 if (entering == '!') {
                     return false;
+                }
+                if (entering == '=') {
+                    this->numPart = 0;
                 }
                 this->numPart = 10 * this->numPart + (double) digit;
                 this->entering = 'I';

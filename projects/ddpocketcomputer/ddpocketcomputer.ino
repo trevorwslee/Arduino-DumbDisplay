@@ -3,21 +3,17 @@
 
 
 
-// if using Arduino UNO with Joy Stick Shield, please define JOYSTICK_SHIELD
+
+// if using Arduino UNO (assume with Joy Stick Shield)
 // otherwise, assume Arduino Nano
-#define JOYSTICK_SHIELD
-
-#ifdef JOYSTICK_SHIELD
-
+#if defined(ARDUINO_AVR_UNO)
   #define WITH_JOYSTICK
   const uint8_t left = 5;
   const uint8_t right = 3;
   const uint8_t presS = 2;
   const uint8_t horizontal = A0;
   const uint8_t vertical = A1;
-
 #else
-
   const uint8_t left = PIN_A1;
   const uint8_t right = PIN_A4;
   const uint8_t presS = PIN_A2;

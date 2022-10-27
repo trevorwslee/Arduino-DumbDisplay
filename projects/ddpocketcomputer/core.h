@@ -78,7 +78,11 @@ void _drawCalc() {
   display->setCursor(10, 18);
   display->setTextColor(COLOR_0);
   const char* formatted = calculator.getFormatted();
-  display->print(String(formatted));
+  if (formatted != NULL) {
+    display->print(String(formatted));
+  } else {
+    display->print("???");
+  }
   //display->setTextColor(COLOR_1);
   display->setTextColor(COLOR_DEF);
 }
