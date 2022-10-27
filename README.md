@@ -1313,7 +1313,7 @@ Notice how the previously mentioned display image file command is used here.
 
 | sample code |  |
 |--|--|
-|For a complete example, and much more than just displaying bitmap image, please refer to my adaption of the "Pocket Computer" Arduino Nano project I found in YouTube -- [Arduino Pocket Computer featuring calculator, stopwatch, calendar, game and phone book](https://www.youtube.com/watch?v=NTaq6f7NV5U)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpocketcomputer.png)|
+|For a complete example, and much more than just displaying bitmap image, please refer to my adaption of the "Pocket Computer" Arduino Nano project I found in YouTube -- [Arduino Pocket Computer featuring calculator, stopwatch, calendar, game and phone book](https://www.youtube.com/watch?v=NTaq6f7NV5U) by Volos Projects|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpocketcomputer.png)|
 
 
  

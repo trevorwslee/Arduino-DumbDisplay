@@ -1,4 +1,90 @@
 
+// *** calculator
+
+// const int up PROGMEM = 4;
+// const int presS PROGMEM = 6;
+// const int down  PROGMEM= 5;
+
+const byte fromTop /*PROGMEM*/=60;
+const byte fromLeft /*PROGMEM*/=4;
+const byte boxW /*PROGMEM*/=12;
+const byte boxH /*PROGMEM*/=14;
+const byte space /*PROGMEM*/=2;
+
+// const byte n /*PROGMEM*/=4;
+// const byte m /*PROGMEM*/=4;
+
+int posX[16];
+int posY[16];
+
+//int temp=0;
+int cx,cy=0;
+// float n1=0;
+// float n2=0;
+//float num=0;
+//byte digit=0;
+//int operation=0;
+//int db1,db2,db3=0;  
+
+char buttons[4][4]={{'7','4','1','0'},{'8','5','2','='},{'9','6','3','+'},{'C','/','*','-'}};
+
+
+// *** calendar
+
+//byte  dayS[12] ={31,28,31,30,31,30,31,31,30,31,30,31};
+//byte startDay[12] ={6,2,2,5,7,3,5,1,4,6,2,4};
+
+
+int16_t calenYear = 2022; //  2000 to 2100
+byte calenStartDOW = 6; // Sunday: 0; ... Saturday: 6
+
+
+byte chosenMonth=0;
+
+
+// *** game
+
+byte playerX=12;
+const byte playerW PROGMEM=14;
+byte ballX=30;
+byte ballY=50;
+byte ballDirectionX=1;
+byte ballDirectionY=1;
+byte gameScore=0;
+bool controler=0;
+
+//bool g_shown = false;
+// byte gl_ballX = -1;
+// byte gl_ballY = -1;
+bool g_started = false;
+long gl_check = 0;
+
+byte enX[14] ={4,16,28,40,52,8,20,32,44,16,28,40,20,32};
+byte enY[14]={18,18,18,18,18,22,22,22,22,26,26,26,30,30};
+bool enL[14]={1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+
+
+// *** stopwatch
+
+int s_sec=0;
+int s_min=0;
+//float s_milis=0;
+
+int s_10_sec = 0;
+long s_start = -1;
+
+//long tt=0;
+//long tt2=0;
+
+//String Seconds_string;
+//String Minutes_string;
+int s_fase=0;
+
+
+
+// *** menu
+
+
 byte menuX[6]={4,32,4,32,4,32};
 byte menuY[6]={34,34,62,62,90,90};
 bool sounds=1;
@@ -67,3 +153,5 @@ const unsigned char myBitmapphone [] PROGMEM = {
   0x7f, 0xe7, 0xfc, 0x3f, 0xe7, 0xfc, 0x01, 0xe7, 0x80, 0x00, 0x66, 0x00, 0x00, 0x24, 0x00, 0x00, 
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+
+

@@ -1,5 +1,7 @@
 
 
+#include "misc.h"
+
 #include "PressTracker.h"
 #include "BasicCalculator.h"
 
@@ -76,7 +78,11 @@ void _drawCalc() {
   display->setCursor(10, 18);
   display->setTextColor(COLOR_0);
   const char* formatted = calculator.getFormatted();
-  display->print(String(formatted));
+  if (formatted != NULL) {
+    display->print(String(formatted));
+  } else {
+    display->print("???");
+  }
   //display->setTextColor(COLOR_1);
   display->setTextColor(COLOR_DEF);
 }
@@ -117,9 +123,12 @@ void checkButtonsCalc() {
     char what = buttons[cx][cy];
     if (what == 'C') {
       calculator.reset();
+      if (sounds == 1) dumbdisplay.tone(800, 50);
     } else {
-      if (!calculator.push(what)) {
-        dumbdisplay.tone(/*9, */2100, 50);
+      if (calculator.push(what)) {
+        if (sounds == 1) dumbdisplay.tone(1100, 50);
+      } else {
+        if (sounds == 1) dumbdisplay.tone(/*9, */2100, 50);
       }
     }
     resetDisplayState();
@@ -182,6 +191,7 @@ void checkButtonsStop() {
       s_min = 0;
       s_start = -1;
     }
+    if (sounds == 1) dumbdisplay.tone(1100, 50);
   }
 }
 
@@ -305,14 +315,17 @@ void _checkColision() {
   if (ballY < 10)
     ballDirectionY = ballDirectionY * -1;
 
-  if (ballY > 116 && ballX > playerX && ballX < playerX + playerW)
+  if (ballY > 116 && ballX > playerX && ballX < playerX + playerW) {
     ballDirectionY = ballDirectionY * -1;
+    if (sounds == 1) dumbdisplay.tone(1100, 50);
+  }
 
   for (int i = 0; i < 14; i++)
     if (ballX > enX[i] && ballX < enX[i] + 8 && ballY > enY[i] && ballY < enY[i] + 2 && enL[i] == 1) {
       ballDirectionY = ballDirectionY * -1;
       enL[i] = 0;
       gameScore++;
+      if (sounds == 1) dumbdisplay.tone(1800, 50);
     }
 
   //gl_ballX = ballX;
@@ -327,8 +340,10 @@ void _checkColision() {
   //   ballY = ballY + ballDirectionY;
   // }
 
-  if (ballY > 124)
+  if (ballY > 124) {
+    if (sounds == 1) dumbdisplay.tone(800, 50);
     gameOver();
+  }
 
 
   if (gameScore % 14 == 0 && gameScore != 0)
@@ -389,12 +404,16 @@ void checkButtonsCalendar() {
 #endif
 
   if (leftPressed) {
-    if (chosenMonth > 0)
+    if (chosenMonth > 0) {
       chosenMonth--;
+      if (sounds == 1) dumbdisplay.tone(1100, 50);
+    }
   } else if (rightPressed) {
-    if (chosenMonth < 11)
+    if (chosenMonth < 11) {
       chosenMonth++;
-  };
+      if (sounds == 1) dumbdisplay.tone(1100, 50);
+    }
+  }
 }
 
 void _drawMenu() {
@@ -606,6 +625,10 @@ void phoneDraw() {
 bool checkReset() {
   if (selectTracker.checkPressedBypass() &&
       (leftTracker.checkPressedBypass() || rightTracker.checkPressedBypass())) {
+    if (sounds == 1) {
+      dumbdisplay.tone(1800, 50);
+      dumbdisplay.tone(800, 50);
+    }
     GameReset();
     //display->setRotation(3);
     resetAll();

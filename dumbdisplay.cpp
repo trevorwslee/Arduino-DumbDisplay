@@ -1770,6 +1770,9 @@ int DDBufferedTunnel::_count() {
   return count;
 }
 bool DDBufferedTunnel::_eof() {
+  if (true) {
+      _HandleFeedback();
+  }
   if (!this->DDTunnel::_eof()) {
     return false;
   }

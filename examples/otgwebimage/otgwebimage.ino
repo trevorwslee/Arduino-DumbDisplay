@@ -32,9 +32,7 @@ void setup() {
 
   // create tunnels for downloading web images ... and save to your phone
   tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", "lock-unlocked.png");
-  //delay(500);
   tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", "lock-locked.png");
-  //delay(500);
 }
 
 bool locked = false;
@@ -57,15 +55,15 @@ void loop() {
   } else if (result == 0) {
     // downloading
     graphical->clear();
-    graphical->setCursor(10, 10);
+    graphical->setCursor(0, 10);
     graphical->println("... ...");
     graphical->println(image_file_name);
     graphical->println("... ...");
   } else if (result == -1) {
     graphical->clear();
-    graphical->setCursor(10, 10);
+    graphical->setCursor(0, 10);
     graphical->println("XXX failed to download XXX");
   }
   locked = !locked;
-  DDDelay(1000);
+  delay(1000);
 }
