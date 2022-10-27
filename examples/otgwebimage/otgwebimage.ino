@@ -55,13 +55,13 @@ void loop() {
   } else if (result == 0) {
     // downloading
     graphical->clear();
-    graphical->setCursor(10, 10);
+    graphical->setCursor(0, 10);
     graphical->println("... ...");
     graphical->println(image_file_name);
     graphical->println("... ...");
   } else if (result == -1) {
     graphical->clear();
-    graphical->setCursor(10, 10);
+    graphical->setCursor(0, 10);
     graphical->println("XXX failed to download XXX");
   }
   locked = !locked;
