@@ -35,17 +35,18 @@ char buttons[4][4]={{'7','4','1','0'},{'8','5','2','='},{'9','6','3','+'},{'C','
 //byte startDay[12] ={6,2,2,5,7,3,5,1,4,6,2,4};
 
 
-int16_t calenYear = 2022; //  2000 to 2100
-byte calenStartDOW = 6; // Sunday: 0; ... Saturday: 6
+int16_t calenYear = 2021;  // year after a leap year
+byte calenStartDOW = 5; // Sunday: 0; ... Saturday: 6
 
 
 byte chosenMonth=0;
+int16_t chosenYear = 2023;
 
 
 // *** game
 
 byte playerX=12;
-const byte playerW PROGMEM=14;
+const byte playerW =14;
 byte ballX=30;
 byte ballY=50;
 byte ballDirectionX=1;

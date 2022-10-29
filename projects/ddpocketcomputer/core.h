@@ -353,10 +353,17 @@ void _checkColision() {
 void _calendarDraw() {
   byte dayS[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
   byte startDay[12];// ={6,2,2,5,7,3,5,1,4,6,2,4};
-  if ((calenYear % 4) == 0 && (calenYear % 100) != 0 && (calenYear % 400) == 0) {
+  if ((chosenYear/*calenYear*/ % 4) == 0 && (chosenYear/*calenYear*/ % 100) != 0 && (chosenYear/*calenYear*/ % 400) == 0) {
     dayS[1] += 1;
   }
-  byte dow = calenStartDOW;
+  int16_t yearDiff = chosenYear - calenYear;
+  int16_t daysDiff = 365 * yearDiff + (yearDiff / 4); // not accurate if there are years divisible by 100 or 400
+  byte dow = (calenStartDOW + (daysDiff % 7)) % 7;
+  // if (chosenMonth == 0) {
+  //   dumbdisplay.writeComment(String("yearDiff:" + String(yearDiff)));
+  //   dumbdisplay.writeComment(String("daysDiff:" + String(daysDiff)));
+  //   dumbdisplay.writeComment(String("DOW:" + String(dow)));
+  // }
   for (int i = 0; i < 12; i++) {
     startDay[i] = dow;
     dow = (dow + dayS[i]) % 7; 
@@ -385,7 +392,7 @@ void _calendarDraw() {
   display->setCursor(70, 55);
   display->print(String(chosenMonth + 1));
   //display->print("/2022")
-  display->print(String("/") + String(calenYear));
+  display->print(String("/") + String(chosenYear/*calenYear*/));
 
   display->setRotation(0);
   //display.display();
@@ -407,11 +414,19 @@ void checkButtonsCalendar() {
     if (chosenMonth > 0) {
       chosenMonth--;
       if (sounds == 1) dumbdisplay.tone(1100, 50);
+    } else if (chosenYear > calenYear) {
+      chosenYear -= 1;
+      chosenMonth = 11;
+      if (sounds == 1) dumbdisplay.tone(1300, 50);
     }
   } else if (rightPressed) {
     if (chosenMonth < 11) {
       chosenMonth++;
       if (sounds == 1) dumbdisplay.tone(1100, 50);
+    } else {
+      chosenYear += 1;
+      chosenMonth = 0;
+      if (sounds == 1) dumbdisplay.tone(1300, 50);
     }
   }
 }
@@ -605,7 +620,8 @@ void checkColision() {
   gl_check = now;
 }
 void calendarDraw() {
-  if (!checkDisplayState(MS_CALEN, chosenMonth)) {
+  int32_t ss = 12 * chosenYear + chosenMonth;
+  if (!checkDisplayState(MS_CALEN, ss)) {
     return;
   }
   dumbdisplay.recordLayerCommands();
