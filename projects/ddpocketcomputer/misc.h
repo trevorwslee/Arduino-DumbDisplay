@@ -46,7 +46,7 @@ int16_t chosenYear = 2023;
 // *** game
 
 byte playerX=12;
-const byte playerW PROGMEM=14;
+const byte playerW =14;
 byte ballX=30;
 byte ballY=50;
 byte ballDirectionX=1;
