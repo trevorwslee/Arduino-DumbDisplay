@@ -357,14 +357,13 @@ void _calendarDraw() {
     dayS[1] += 1;
   }
   int16_t yearDiff = chosenYear - calenYear;
-  //int16_t daysDiff = 365 * yearDiff + ((yearDiff + 1) / 4); // assume only leap years between
-  int16_t daysDiff = 365 * yearDiff + ((yearDiff + 1) / 4); // assume only leap years between
+  int16_t daysDiff = 365 * yearDiff + (yearDiff / 4); // not accurate if there are years divisible by 100 or 400
   byte dow = (calenStartDOW + (daysDiff % 7)) % 7;
-  if (chosenMonth == 0) {
-    dumbdisplay.writeComment(String("yearDiff:" + String(yearDiff)));
-    dumbdisplay.writeComment(String("daysDiff:" + String(daysDiff)));
-    dumbdisplay.writeComment(String("DOW:" + String(dow)));
-  }
+  // if (chosenMonth == 0) {
+  //   dumbdisplay.writeComment(String("yearDiff:" + String(yearDiff)));
+  //   dumbdisplay.writeComment(String("daysDiff:" + String(daysDiff)));
+  //   dumbdisplay.writeComment(String("DOW:" + String(dow)));
+  // }
   for (int i = 0; i < 12; i++) {
     startDay[i] = dow;
     dow = (dow + dayS[i]) % 7; 
