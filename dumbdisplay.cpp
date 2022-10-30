@@ -16,6 +16,8 @@
 
 #define MORE_KEEP_ALIVE
 
+#define SUPPORT_ENCODE_OPER
+
 #define TO_BOOL(val) (val ? "1" : "0")
 
 
@@ -54,7 +56,8 @@
 #define YIELD_AFTER_HANDLE_FEEDBACK true
 
 //#define DD_SID "Arduino-c1"
-#define DD_SID "Arduino-c2"
+//#define DD_SID "Arduino-c2"
+#define DD_SID "Arduino-c3"
 
 
 #include "_dd_commands.h"
@@ -582,17 +585,34 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
     _IO->print(layerId/*.c_str()*/);
     _IO->print(".");
   }
+#ifdef SUPPORT_ENCODE_OPER
+  if (_DDCompatibility >= 3 && layerId != "" && command[0] == '#') {
+    char encoded[3];
+    encoded[0] = 14 + ((command[1] > '9') ? ((command[1] - 'a') + 10) : (command[1] - '0'));
+    encoded[1] = 14 + ((command[2] > '9') ? ((command[2] - 'a') + 10) : (command[2] - '0'));
+    encoded[2] = 0;
+    _IO->print(encoded);
+  } else { 
+    _IO->print(command);
+    if (pParam1 != NULL) {
+      _IO->print(":");
+    }
+  }   
+#else
   _IO->print(command);
-#ifdef DD_DEBUG_SEND_COMMAND          
+  #ifdef DD_DEBUG_SEND_COMMAND          
   Serial.print(" ...");
-#endif        
+  #endif        
   if (pParam1 != NULL) {
-#ifdef DD_DEBUG_SEND_COMMAND          
-  Serial.print(" [1|");
-  Serial.print(*pParam1);
-  Serial.print(" |]");
-#endif        
+  #ifdef DD_DEBUG_SEND_COMMAND          
+    Serial.print(" [1|");
+    Serial.print(*pParam1);
+    Serial.print(" |]");
+  #endif        
     _IO->print(":");
+  }
+#endif
+  if (pParam1 != NULL) {
     _IO->print(*pParam1/*pParam1->c_str()*/);
     if (pParam2 != NULL) {
       _IO->print(",");
