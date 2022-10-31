@@ -24,7 +24,7 @@ void setup() {
 
 
   // create a LCD layer for display some info about the picture shown
-  lcd = dumbdisplay.createLcdLayer(16, 1);
+  lcd = dumbdisplay.createLcdLayer(16, 2);
   lcd->bgPixelColor("darkgray");
   lcd->pixelColor("lightblue");
   lcd->border(2, "blue");
@@ -48,50 +48,73 @@ void setup() {
   tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", "lock-locked.png");
 }
 
-long nextMillis = 0;
+
 bool locked = false;
-bool blinking = true;
+
+bool allReady = false;
+long lastShownMillis = 0;
+
+DDConnectVersionTracker cvTracker;
 
 void loop() {
+  // get result whether web image downloaded .. 0: downloading; 1: downloaded ok; -1: failed to download 
+  int lockedResult = tunnel_locked->checkResult();
+  int unlockedResult = tunnel_unlocked->checkResult();
   const DDFeedback* feedback = graphical->getFeedback();
-  if (feedback != NULL) {
-    if (feedback->type == DOUBLECLICK) {
-      blinking = !blinking;
+ 
+  bool refresh = false;
+
+  if (!allReady) {
+    // all all ready ... if not refresh for a while (1000 ms), refresh
+    long now = millis();
+    long diff = now - lastShownMillis;
+    if (diff > 1000) {
+      locked = !locked;
+      refresh = true;
+    }
+  } else {
+    // if all ready ... see if double clicked ... if so, refresh
+    if (feedback != NULL) {
+      if (feedback->type == DOUBLECLICK) {
+        locked = !locked;
+        refresh = true;
+      }
     }
   }
-  long nowMillis = millis();
-  long diffMillis =  nextMillis - nowMillis;
-  if (diffMillis > 0) {
+
+  if (!refresh) {
+    // check if reconnected ... if so, refresh
+    if (cvTracker.checkChanged(dumbdisplay)) {
+      refresh = true;
+    } 
+  }
+  
+  if (!refresh) {
     return;
   }
-  nextMillis = nowMillis + 1000;
 
-  // get result whether web image downloaded .. 0: downloading; 1: downloaded ok; -1: failed to download 
-  int result_unlocked = tunnel_unlocked->checkResult();
-  int result_locked = tunnel_locked->checkResult();
+
+  allReady = lockedResult == 1 && unlockedResult == 1;
 
   int result;
-  const char* image_file_name;
+  const char* imageFileName;
   if (locked) {
-    image_file_name = "lock-locked.png";
-    result = result_locked;
+    imageFileName = "lock-locked.png";
+    result = lockedResult;
   } else {
-    image_file_name = "lock-unlocked.png";
-    result = result_unlocked;
+    imageFileName = "lock-unlocked.png";
+    result = unlockedResult;
   }
   if (result == 1) {
-    graphical->drawImageFile(image_file_name);
-    if (blinking) {
-      lcd->writeCenteredLine(locked ? "Lock locked" : "Lock unlocked");
-    } else {
-      lcd->writeCenteredLine("paused");
-    }
+    graphical->drawImageFile(imageFileName);
+    lcd->writeCenteredLine(locked ? "Lock locked" : "Lock unlocked");
+    lcd->writeCenteredLine(allReady ? "(READY)" : "...", 1);
   } else if (result == 0) {
     // downloading
     graphical->clear();
     graphical->setCursor(0, 10);
     graphical->println("... ...");
-    graphical->println(image_file_name);
+    graphical->println(imageFileName);
     graphical->println("... ...");
     lcd->writeCenteredLine("...");
   } else if (result == -1) {
@@ -100,7 +123,6 @@ void loop() {
     graphical->println("XXX failed to download XXX");
     lcd->writeCenteredLine("failed");
   }
-  if (blinking) {
-    locked = !locked;
-  }
+
+  lastShownMillis = millis();
 }
