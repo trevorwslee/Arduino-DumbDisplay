@@ -28,13 +28,13 @@ void setup() {
   lcd->bgPixelColor("darkgray");
   lcd->pixelColor("lightblue");
   lcd->border(2, "blue");
+  lcd->writeCenteredLine("... ...");
 
   // create a graphical layer for drawing the web images to
   graphical = dumbdisplay.createGraphicalLayer(200, 300);
   graphical->padding(0);
   graphical->margin(2);
   graphical->border(2, "darkgreen");
-
   graphical->enableFeedback();
 
   // auto "pin" the two layers vertically, one above the other

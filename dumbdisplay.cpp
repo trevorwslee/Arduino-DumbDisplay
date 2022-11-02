@@ -715,12 +715,60 @@ void __SendSpecialCommand(const char* specialType, const String& specialId, cons
     yield();
   }
 }
-void __SendByteArrayPortion(const uint8_t *bytes, int byteCount) {
+int __CountZeroCompressedBytes(const uint8_t *bytes, int byteCount, bool outputAsWell) {
+  int compressedByteCount = 0;
+  uint8_t zeroCount = 0;
+  for (int i = 0; i < byteCount; i++) {
+    bool isLast = i == (byteCount - 1);
+    uint8_t b = bytes[i];
+    bool isZero = b == 0;
+    if (isZero) {
+      zeroCount++;
+    }
+    if (!isZero || zeroCount == 120 || isLast) {
+      if (zeroCount > 0) {
+        compressedByteCount += 2;
+        if (outputAsWell) {
+          _IO->write(0);
+          _IO->write(zeroCount);
+        }
+        zeroCount = 0;
+      }
+      if (!isZero) {
+        compressedByteCount += 1;
+        if (outputAsWell) {
+          _IO->write(b);
+        }
+      }
+    }
+  }
+  return compressedByteCount;
+}
+void __SendByteArrayPortion(const uint8_t *bytes, int byteCount, char compressMethod) {
+  if (_DDCompatibility < 3) {
+    compressMethod = 0;
+  }
+  int compressedByteCount = -1;
+  if (compressMethod == '0') {
+    compressedByteCount = __CountZeroCompressedBytes(bytes, byteCount, false);
+    if (compressedByteCount > byteCount) {
+      compressMethod = 0;
+      compressedByteCount = -1;
+    }
+  }
   _IO->print("|bytes|>");
   _IO->print(String(byteCount));
+  if (compressedByteCount != -1) {
+    _IO->print("@0>");
+    _IO->print(String(compressedByteCount));
+  }
   _IO->print(":");
   if (true) {
-    _IO->write(bytes, byteCount);
+    if (compressedByteCount != -1) {
+      __CountZeroCompressedBytes(bytes, byteCount, true);
+    } else {
+      _IO->write(bytes, byteCount);
+    }
   } else {
     for (int i = 0; i < byteCount; i++) {
       uint8_t b = bytes[i];
@@ -1025,8 +1073,8 @@ inline void _sendSpecialCommand(const char* specialType, const String& specialId
   _SendSpecialCommand(specialType, specialId, specialCommand, specialData);
 }
 #endif
-void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount) {
-  __SendByteArrayPortion(bytes, byteCount);
+void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount, char compressMethod = 0) {
+  __SendByteArrayPortion(bytes, byteCount, compressMethod);
   _sendCommand0("", C_KAL);  // send a "keep alive" command to make sure and new-line is sent
 }
 
@@ -1552,10 +1600,10 @@ void GraphicalDDLayer::cacheImage(const String& imageName, const uint8_t *bytes,
   _sendCommand2("", C_CACHEIMG, layerId, imageName);
   _sendByteArrayAfterCommand(bytes, byteCount);
 }
-void GraphicalDDLayer::cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color) {
+void GraphicalDDLayer::cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color, char compressMethod) {
   int byteCount = width * height / 8; 
   _sendCommand5("", C_CACHEPIXIMG, layerId, imageName, String(width), String(height), color);
-  _sendByteArrayAfterCommand(bytes, byteCount);
+  _sendByteArrayAfterCommand(bytes, byteCount, compressMethod);
 }
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);

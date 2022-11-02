@@ -55,6 +55,7 @@
 
 #define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
 
+#define DD_COMPRESS_BA_0 '0'
 
 #define DD_TUNNEL_DEF_BUFFER_SIZE 3
 
@@ -466,7 +467,7 @@ class GraphicalDDLayer: public DDLayer {
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /* as if the image is saved then loaded */
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount);
-    void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "");
+    void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
 };
 
 
