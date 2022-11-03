@@ -373,7 +373,7 @@ void _calendarDraw() {
   display->clear();
   display->setCursor(0, 0);
   //display->print("Mo Tu We Th Fr Sa Su");
-  char* dowS[7] = {"Mo","Tu","We","Th","Fr","Sa","Su"};
+  const char* dowS[7] = {"Mo","Tu","We","Th","Fr","Sa","Su"};
   for (int i = 0; i < 7; i++) {
     display->setCursor(i * 18, 0);
     display->print(dowS[i]);

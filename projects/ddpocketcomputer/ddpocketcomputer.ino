@@ -12,11 +12,18 @@
   const uint8_t presS = 2;
   const uint8_t horizontal = A0;
   const uint8_t vertical = A1;
-#else
+#elif defined(ARDUINO_AVR_NANO)
   const uint8_t left = PIN_A1;
   const uint8_t right = PIN_A4;
   const uint8_t presS = PIN_A2;
+#elif defined(PICO_SDK_VERSION_MAJOR)
+  const uint8_t left = 15;
+  const uint8_t right = 16; 
+  const uint8_t presS = 14;
+#else
+  #error not configured for board yet
 #endif
+
 
 
 
