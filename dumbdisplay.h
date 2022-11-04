@@ -466,8 +466,9 @@ class GraphicalDDLayer: public DDLayer {
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered */
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /* as if the image is saved then loaded */
-    void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount);
+    void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
+    void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
 };
 
 
@@ -853,7 +854,7 @@ class DumbDisplay {
     void writeComment(const String& comment);
     void tone(uint32_t freq, uint32_t duration);
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
-    void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "");
+    void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressMethod = 0);
     void savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     void debugOnly(int i);
     /* pin a layer @ some position of an imaginary grid of units */
