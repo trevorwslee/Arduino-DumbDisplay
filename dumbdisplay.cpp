@@ -19,6 +19,7 @@
 #define SUPPORT_ENCODE_OPER
 
 #define TO_BOOL(val) (val ? "1" : "0")
+#define TO_EDIAN() String(DDCheckEndian())
 
 
 //#define DD_DEBUG_HS
@@ -2255,6 +2256,11 @@ void DumbDisplay::savePixelImage(const String& imageName, const uint8_t *bytes, 
   int byteCount = width * height / 8; 
   _sendCommand4("", C_SAVEPIXIMG, imageName, String(width), String(height), color);
   _sendByteArrayAfterCommand(bytes, byteCount);
+}
+void DumbDisplay::savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options, char compressMethod) {
+  int byteCount = 2 * width * height; 
+  _sendCommand5("", C_SAVEPIXIMG16, imageName, String(width), String(height), TO_EDIAN(), options);
+  _sendByteArrayAfterCommand((uint8_t*) data, byteCount, compressMethod);
 }
 void DumbDisplay::debugOnly(int i) {
   _sendCommand2("", "DEBUGONLY", String(i), TO_C_INT(i));

@@ -2,6 +2,22 @@
 #define _dd_misc_h
 
 
+//#define LITTLE_ENDIAN 0
+//#define BIG_ENDIAN    1
+
+// return
+// . 0 -- LITTLE_ENDIAN
+// . 1 -- BIG_ENDIAN
+inline int DDCheckEndian() {
+    int i = 1;
+    const char* p = (const char*) &i;
+    if (p[0] == 1)
+        return 0;//LITTLE_ENDIAN;
+    else
+        return 1;//BIG_ENDIAN;
+}
+
+
 template <class T>
 class DDValueStore {
   public:

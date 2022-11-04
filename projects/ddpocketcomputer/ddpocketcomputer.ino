@@ -37,9 +37,16 @@ const int TEXT_SIZE_4 = 28;
 
 
 
-#include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
-
+#if defined(PICO_SDK_VERSION_MAJOR)
+  // GP8 => RX of HC06; GP9 => TX of HC06
+  #define DD_4_PICO_TX 8
+  #define DD_4_PICO_RX 9
+  #include "picodumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
+#else
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput(115200));
+#endif
 
 
 GraphicalDDLayer *display;

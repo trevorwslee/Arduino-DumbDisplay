@@ -8,6 +8,8 @@
 #define C_CACHEIMG         "#07"
 #define C_SAVEPIXIMG       "#08"
 #define C_CACHEPIXIMG      "#09"
+#define C_SAVEPIXIMG16     "#0a"
+// will reserver #fn if after 0f
 
 #define C_border           "#10"
 #define C_padding          "#11" 

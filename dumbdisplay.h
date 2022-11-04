@@ -854,6 +854,7 @@ class DumbDisplay {
     void tone(uint32_t freq, uint32_t duration);
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
     void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "");
+    void savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     void debugOnly(int i);
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
