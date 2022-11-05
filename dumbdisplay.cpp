@@ -758,8 +758,13 @@ int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBy
     if (!isZero || zeroCount == 120 || isLast) {
       if (zeroCount > 0) {
         if (toBytes != NULL) {
+#ifdef ZERO_COMPRESS_NO_BUFFER
+          _IO->write(0);
+          _IO->write(zeroCount);
+#else
           toBytes[compressedByteCount++] = 0;
           toBytes[compressedByteCount++] = zeroCount;
+#endif          
         } else {
           compressedByteCount += 2;
         }
@@ -767,7 +772,11 @@ int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBy
       }
       if (!isZero) {
         if (toBytes != NULL) {
+#ifdef ZERO_COMPRESS_NO_BUFFER
+          _IO->write(b);
+#else
           toBytes[compressedByteCount++] = b;
+#endif          
         } else {
           compressedByteCount += 1;
         }
@@ -799,10 +808,15 @@ void __SendByteArrayPortion(const uint8_t *bytes, int byteCount, char compressMe
   if (true) {
     if (compressedByteCount != -1) {
       //__CountZeroCompressedBytes(bytes, byteCount, true);
+#ifdef ZERO_COMPRESS_NO_BUFFER
+      uint8_t dummy;
+      __FillZeroCompressedBytes(bytes, byteCount, &dummy);
+#else
       uint8_t *compressedBytes = new uint8_t[compressedByteCount];
       __FillZeroCompressedBytes(bytes, byteCount, compressedBytes);
       _IO->write(compressedBytes, compressedByteCount);
       delete compressedBytes;
+#endif
     } else {
       _IO->write(bytes, byteCount);
     }
