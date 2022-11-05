@@ -18,6 +18,10 @@
 
 #define SUPPORT_ENCODE_OPER
 
+#ifdef __AVR__
+  #define PGM_READ_BYTERS
+#endif
+
 #define TO_BOOL(val) (val ? "1" : "0")
 #define TO_EDIAN() String(DDCheckEndian())
 
@@ -750,7 +754,11 @@ int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBy
   uint8_t zeroCount = 0;
   for (int i = 0; i < byteCount; i++) {
     bool isLast = i == (byteCount - 1);
+#ifdef PGM_READ_BYTERS
+    uint8_t b = pgm_read_byte(bytes + i);
+#else
     uint8_t b = bytes[i];
+#endif
     bool isZero = b == 0;
     if (isZero) {
       zeroCount++;
@@ -758,9 +766,10 @@ int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBy
     if (!isZero || zeroCount == 120 || isLast) {
       if (zeroCount > 0) {
         if (toBytes != NULL) {
-#ifdef ZERO_COMPRESS_NO_BUFFER
+#ifdef PGM_READ_BYTERS
           _IO->write(0);
           _IO->write(zeroCount);
+          compressedByteCount += 2;
 #else
           toBytes[compressedByteCount++] = 0;
           toBytes[compressedByteCount++] = zeroCount;
@@ -772,8 +781,9 @@ int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBy
       }
       if (!isZero) {
         if (toBytes != NULL) {
-#ifdef ZERO_COMPRESS_NO_BUFFER
+#ifdef PGM_READ_BYTERS
           _IO->write(b);
+          compressedByteCount += 1;
 #else
           toBytes[compressedByteCount++] = b;
 #endif          
@@ -808,7 +818,7 @@ void __SendByteArrayPortion(const uint8_t *bytes, int byteCount, char compressMe
   if (true) {
     if (compressedByteCount != -1) {
       //__CountZeroCompressedBytes(bytes, byteCount, true);
-#ifdef ZERO_COMPRESS_NO_BUFFER
+#ifdef PGM_READ_BYTERS
       uint8_t dummy;
       __FillZeroCompressedBytes(bytes, byteCount, &dummy);
 #else
@@ -818,7 +828,13 @@ void __SendByteArrayPortion(const uint8_t *bytes, int byteCount, char compressMe
       delete compressedBytes;
 #endif
     } else {
+#ifdef PGM_READ_BYTERS
+      for (int i = 0; i < byteCount; i++) {
+        _IO->write(pgm_read_byte(bytes[i]));
+      }
+#else
       _IO->write(bytes, byteCount);
+#endif
     }
   } else {
     for (int i = 0; i < byteCount; i++) {
