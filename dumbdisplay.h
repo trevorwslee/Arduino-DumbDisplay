@@ -55,6 +55,7 @@
 
 #define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
 
+#define DD_PROGRAM_SPACE_COMPRESS_BA_0 '!'
 #define DD_COMPRESS_BA_0 '0'
 
 #define DD_TUNNEL_DEF_BUFFER_SIZE 3

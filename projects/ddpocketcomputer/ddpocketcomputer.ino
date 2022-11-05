@@ -85,6 +85,12 @@ void setup() {
   display->cachePixelImage("game.png", PgmCopyBytes(myBitmapgam, sizeof(myBitmapgam), buffer), 24, 24, COLOR_1, DD_COMPRESS_BA_0);
   display->cachePixelImage("calen.png", PgmCopyBytes(myBitmapcalen, sizeof(myBitmapcalen), buffer), 24, 24, COLOR_1, DD_COMPRESS_BA_0);
   display->cachePixelImage("phone.png", PgmCopyBytes(myBitmapphone, sizeof(myBitmapphone), buffer), 24, 24, COLOR_1, DD_COMPRESS_BA_0);
+  // display->cachePixelImage("logo.png", epd_bitmap_logo, 64, 30, COLOR_1, DD_COMPRESS_BA_0);
+  // display->cachePixelImage("calc.png", myBitmapcalc, 24, 24, COLOR_1, DD_COMPRESS_BA_0);
+  // display->cachePixelImage("stop.png", myBitmapstop, 24, 24, COLOR_1, DD_COMPRESS_BA_0);
+  // display->cachePixelImage("game.png", myBitmapgam, 24, 24, COLOR_1, DD_COMPRESS_BA_0);
+  // display->cachePixelImage("calen.png", myBitmapcalen, 24, 24, COLOR_1, DD_COMPRESS_BA_0);
+  // display->cachePixelImage("phone.png", myBitmapphone, 24, 24, COLOR_1, DD_COMPRESS_BA_0);
 
   display->setTextFont("MONOSPACE");
   display->clear();

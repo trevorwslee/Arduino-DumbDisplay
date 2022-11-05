@@ -18,9 +18,9 @@
 
 #define SUPPORT_ENCODE_OPER
 
-#ifdef __AVR__
-  #define PGM_READ_BYTERS
-#endif
+// #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+//   #define PGM_READ_BYTERS
+// #endif
 
 #define TO_BOOL(val) (val ? "1" : "0")
 #define TO_EDIAN() String(DDCheckEndian())
@@ -749,16 +749,17 @@ void __SendSpecialCommand(const char* specialType, const String& specialId, cons
 //   }
 //   return compressedByteCount;
 // }
-int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBytes) {
+int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBytes, bool readFromProgramSpace) {
   int compressedByteCount = 0;
   uint8_t zeroCount = 0;
   for (int i = 0; i < byteCount; i++) {
     bool isLast = i == (byteCount - 1);
-#ifdef PGM_READ_BYTERS
-    uint8_t b = pgm_read_byte(bytes + i);
-#else
-    uint8_t b = bytes[i];
-#endif
+    uint8_t b;
+    if (readFromProgramSpace) {
+      b = pgm_read_byte(bytes + i);
+    } else {
+      b = bytes[i];
+    }
     bool isZero = b == 0;
     if (isZero) {
       zeroCount++;
@@ -766,14 +767,14 @@ int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBy
     if (!isZero || zeroCount == 120 || isLast) {
       if (zeroCount > 0) {
         if (toBytes != NULL) {
-#ifdef PGM_READ_BYTERS
-          _IO->write(0);
-          _IO->write(zeroCount);
-          compressedByteCount += 2;
-#else
-          toBytes[compressedByteCount++] = 0;
-          toBytes[compressedByteCount++] = zeroCount;
-#endif          
+          if (readFromProgramSpace) {
+            _IO->write(0);
+            _IO->write(zeroCount);
+            compressedByteCount += 2;
+          } else {
+            toBytes[compressedByteCount++] = 0;
+            toBytes[compressedByteCount++] = zeroCount;
+          }
         } else {
           compressedByteCount += 2;
         }
@@ -781,12 +782,12 @@ int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBy
       }
       if (!isZero) {
         if (toBytes != NULL) {
-#ifdef PGM_READ_BYTERS
-          _IO->write(b);
-          compressedByteCount += 1;
-#else
-          toBytes[compressedByteCount++] = b;
-#endif          
+          if (readFromProgramSpace) {
+            _IO->write(b);
+            compressedByteCount += 1;
+          } else {
+            toBytes[compressedByteCount++] = b;
+          }
         } else {
           compressedByteCount += 1;
         }
@@ -796,13 +797,20 @@ int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBy
   return compressedByteCount;
 }
 void __SendByteArrayPortion(const uint8_t *bytes, int byteCount, char compressMethod) {
+  bool readFromProgramSpace = false;
+  if (compressMethod == DD_PROGRAM_SPACE_COMPRESS_BA_0) {
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+    readFromProgramSpace = true;
+#endif
+    compressMethod = DD_COMPRESS_BA_0;
+  }
   if (_DDCompatibility < 3) {
     compressMethod = 0;
   }
   int compressedByteCount = -1;
-  if (compressMethod == '0') {
+  if (compressMethod == DD_COMPRESS_BA_0) {
     //compressedByteCount = __CountZeroCompressedBytes(bytes, byteCount, false);
-    compressedByteCount = __FillZeroCompressedBytes(bytes, byteCount, NULL);
+    compressedByteCount = __FillZeroCompressedBytes(bytes, byteCount, NULL, readFromProgramSpace);
     if (compressedByteCount > byteCount) {
       compressMethod = 0;
       compressedByteCount = -1;
@@ -818,23 +826,23 @@ void __SendByteArrayPortion(const uint8_t *bytes, int byteCount, char compressMe
   if (true) {
     if (compressedByteCount != -1) {
       //__CountZeroCompressedBytes(bytes, byteCount, true);
-#ifdef PGM_READ_BYTERS
-      uint8_t dummy;
-      __FillZeroCompressedBytes(bytes, byteCount, &dummy);
-#else
-      uint8_t *compressedBytes = new uint8_t[compressedByteCount];
-      __FillZeroCompressedBytes(bytes, byteCount, compressedBytes);
-      _IO->write(compressedBytes, compressedByteCount);
-      delete compressedBytes;
-#endif
-    } else {
-#ifdef PGM_READ_BYTERS
-      for (int i = 0; i < byteCount; i++) {
-        _IO->write(pgm_read_byte(bytes[i]));
+      if (readFromProgramSpace) {
+        uint8_t dummy;
+        __FillZeroCompressedBytes(bytes, byteCount, &dummy, true);
+      } else {
+        uint8_t *compressedBytes = new uint8_t[compressedByteCount];
+        __FillZeroCompressedBytes(bytes, byteCount, compressedBytes, false);
+        _IO->write(compressedBytes, compressedByteCount);
+        delete compressedBytes;
       }
-#else
-      _IO->write(bytes, byteCount);
-#endif
+    } else {
+      if (readFromProgramSpace) {
+        for (int i = 0; i < byteCount; i++) {
+          _IO->write(pgm_read_byte(bytes[i]));
+        }
+      } else {
+        _IO->write(bytes, byteCount);
+      }
     }
   } else {
     for (int i = 0; i < byteCount; i++) {
@@ -1674,7 +1682,7 @@ void GraphicalDDLayer::cachePixelImage(const String& imageName, const uint8_t *b
 }
 void GraphicalDDLayer::cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options, char compressMethod) {
   int byteCount = 2 * width * height; 
-  _sendCommand5("", C_CACHEPIXIMG16, imageName, String(width), String(height), TO_EDIAN(), options);
+  _sendCommand6("", C_CACHEPIXIMG16, layerId, imageName, String(width), String(height), TO_EDIAN(), options);
   _sendByteArrayAfterCommand((uint8_t*) data, byteCount, compressMethod);
 }
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
