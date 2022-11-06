@@ -472,6 +472,7 @@ class GraphicalDDLayer: public DDLayer {
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
     void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
+    void saveCachedImageFiles(const String& stitchAsImageName = "");
 };
 
 

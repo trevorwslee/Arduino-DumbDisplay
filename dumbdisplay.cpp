@@ -1688,6 +1688,9 @@ void GraphicalDDLayer::cachePixelImage16(const String& imageName, const uint16_t
   _sendCommand6("", C_CACHEPIXIMG16, layerId, imageName, String(width), String(height), TO_EDIAN(), options);
   _sendByteArrayAfterCommand((uint8_t*) data, byteCount, compressMethod);
 }
+void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
+  _sendCommand2("", "SAVECACHEDIMGS", layerId, stitchAsImageName);
+}
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
 }

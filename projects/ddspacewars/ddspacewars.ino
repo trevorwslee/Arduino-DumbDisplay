@@ -258,17 +258,13 @@ void setup(void)
   graphical->fillScreen(TFT_BLACK);
   // tft.setSwapBytes(true);
 
-  dumbdisplay.writeComment("start caching ...");
 
-  dumbdisplay.writeComment("... caching back2 ...");
 #if defined (SAVE_IMAGES)
-  String imgNames = String("back2.png");
-  //graphical->cachePixelImage16("back2.png", back2, 240, 135, "", DD_COMPRESS_BA_0);
-  dumbdisplay.savePixelImage16("back2.png", back2, 240, 135, "", DD_COMPRESS_BA_0);
-#else
-    graphical->loadImageFileCropped("spacewarsimgs.png", 0, 0, 240, 135, "back2.png");
-#endif
-
+  dumbdisplay.writeComment("start caching ...");
+  dumbdisplay.writeComment("... caching back2 ...");
+  //String imgNames = String("back2.png");
+  graphical->cachePixelImage16("back2.png", back2, 240, 135, "", DD_COMPRESS_BA_0);
+  //dumbdisplay.savePixelImage16("back2.png", back2, 240, 135, "", DD_COMPRESS_BA_0);
   if (true)
   {
     dumbdisplay.recordLayerCommands();
@@ -276,33 +272,29 @@ void setup(void)
     graphical->fillRect(0, 78, 120, 25, TFT_BLACK);
     dumbdisplay.playbackLayerCommands();
   }
-
   dumbdisplay.writeComment("... cachine sens ...");
-#if defined (SAVE_IMAGES)
-  imgNames = imgNames + "+" + "sens.png";
-  //graphical->cachePixelImage16("sens.png", sens, 72, 72, "", DD_COMPRESS_BA_0);
-  dumbdisplay.savePixelImage16("sens.png", sens, 72, 72, "", DD_COMPRESS_BA_0);
-#else
-  graphical->loadImageFileCropped("spacewarsimgs.png", 240, 0, 72, 72, "sens.png");
-#endif
-
+  //imgNames = imgNames + "+" + "sens.png";
+  graphical->cachePixelImage16("sens.png", sens, 72, 72, "", DD_COMPRESS_BA_0);
+  //dumbdisplay.savePixelImage16("sens.png", sens, 72, 72, "", DD_COMPRESS_BA_0);
   for (int i = 0; i < LEVEL_COUNT; i++)
   {
     int level = i + 1;
     String name = "earth-" + String(level - 1);
     dumbdisplay.writeComment("... caching " + name + " ...");
-#if defined (SAVE_IMAGES)
-    imgNames = imgNames + "+" + name + ".png";
-    //graphical->cachePixelImage16(name + ".png", earth[level - 1], 55, 54, "", DD_COMPRESS_BA_0);
-    dumbdisplay.savePixelImage16(name + ".png", earth[level - 1], 55, 54, "", DD_COMPRESS_BA_0);
-#else
-    graphical->loadImageFileCropped("spacewarsimgs.png", 312 + i * 55, 0, 55, 54, name + ".png");
-#endif
+    //imgNames = imgNames + "+" + name + ".png";
+    graphical->cachePixelImage16(name + ".png", earth[level - 1], 55, 54, "", DD_COMPRESS_BA_0);
+    //dumbdisplay.savePixelImage16(name + ".png", earth[level - 1], 55, 54, "", DD_COMPRESS_BA_0);
   }
-
   dumbdisplay.writeComment("... done caching");
-#if defined (SAVE_IMAGES)
-  dumbdisplay.stitchImages(imgNames, "spacewarsimgs.png");
+  graphical->saveCachedImageFiles("spacewarsimgs.png");
+  //dumbdisplay.stitchImages(imgNames, "spacewarsimgs.png");
+#else
+  graphical->loadImageFileCropped("spacewarsimgs.png", 0, 0, 240, 135, "back2.png");
+  graphical->loadImageFileCropped("spacewarsimgs.png", 240, 0, 72, 72, "sens.png");
+  for (int i = 0; i < LEVEL_COUNT; i++)
+  {
+    graphical->loadImageFileCropped("spacewarsimgs.png", 312 + i * 55, 0, 55, 54, "earth-" + String(level - 1) + ".png");
+  }
 #endif
 
   for (int i = 0; i < 30; i++)
