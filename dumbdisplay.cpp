@@ -1695,7 +1695,11 @@ void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
 }
 void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h) {
-  _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+  if (w == 0 && h == 0) {
+    _sendCommand3(layerId, C_drawimagefile, imageFileName, String(x), String(y));
+  } else {
+    _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+  }
 }
 void GraphicalDDLayer::drawImageFileFit(const String& imageFileName, int x, int y, int w, int h, const String& align) {
   _sendCommand6(layerId, C_drawimagefilefit, imageFileName, String(x), String(y), String(w), String(h), align);
