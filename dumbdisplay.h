@@ -456,7 +456,9 @@ class GraphicalDDLayer: public DDLayer {
     void write(const String& text, bool draw = false);
     /* load image file to cache */
     /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
-    void loadImageFile(const String& imageFileName, int w = 0, int h = 0);
+    /* - asImageFileNmae: better provide a different name for the scaled cached */
+    void loadImageFile(const String& imageFileName, int w = 0, int h = 0, const String& asImageFileName = "");
+    void loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName = "");
     void unloadImageFile(const String& imageFileName);
     /* draw image file in cache (if not already loaded to cache, load it) */
     /* - x / y: position of the left-top corner */
@@ -857,6 +859,8 @@ class DumbDisplay {
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
     void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressMethod = 0);
     void savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
+    /* - imageNames: '+' delimited */
+    void stitchImages(const String& imageNames, const String& asImageName);
     void debugOnly(int i);
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  

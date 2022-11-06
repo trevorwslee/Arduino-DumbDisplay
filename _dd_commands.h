@@ -98,12 +98,13 @@
 #define C_drawimagefile    "#98"
 #define C_drawimagefilefit "#99"
 
-#define C_goto             "#a0"
-#define C_zoomto           "#a1"
-#define C_zoom             "#a2"
+#define C_goto                 "#a0"
+#define C_zoomto               "#a1"
+#define C_zoom                 "#a2"
 //#define C_println          "#a3"
-#define C_showdigit        "#a4"
-#define C_setrot           "#a5"
+#define C_showdigit            "#a4"
+#define C_setrot               "#a5"
+#define C_loadimagefilecropped "#a6"
 
 
 #define C_fd               "fd"

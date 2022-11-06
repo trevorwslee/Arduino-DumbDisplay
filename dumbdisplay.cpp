@@ -1668,8 +1668,11 @@ void GraphicalDDLayer::polygon(int side, int vertexCount) {
 void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
   _sendCommand2(layerId, inside ? C_cpolyin : C_cpoly, String(radius), String(vertexCount));
 }
-void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h) {
-  _sendCommand3(layerId, C_loadimagefile, imageFileName, String(w), String(h));
+void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h, const String& asImageFileName) {
+  _sendCommand4(layerId, C_loadimagefile, imageFileName, String(w), String(h), asImageFileName);
+}
+void GraphicalDDLayer::loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName) {
+  _sendCommand6(layerId, C_loadimagefilecropped, imageFileName, String(x), String(y), String(w), String(h), asImageFileName);
 }
 void GraphicalDDLayer::cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressMethod) {
   _sendCommand2("", C_CACHEIMG, layerId, imageName);
@@ -2340,6 +2343,9 @@ void DumbDisplay::savePixelImage16(const String& imageName, const uint16_t *data
   int byteCount = 2 * width * height; 
   _sendCommand5("", C_SAVEPIXIMG16, imageName, String(width), String(height), TO_EDIAN(), options);
   _sendByteArrayAfterCommand((uint8_t*) data, byteCount, compressMethod);
+}
+void DumbDisplay::stitchImages(const String& imageNames, const String& asImageName) {
+  _sendCommand2("", "STITCHIMGS", imageNames, asImageName);
 }
 void DumbDisplay::debugOnly(int i) {
   _sendCommand2("", "DEBUGONLY", String(i), TO_C_INT(i));
