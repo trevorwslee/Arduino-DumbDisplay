@@ -111,20 +111,26 @@ JoyStickPressTracker verticalTracker(VERTICAL);
 
 
 
+const int BuletCount = 10;
+const int RocketCount = 4;
 const long DueGapMillis = 40;
 const float buletSpeed = 5;
 const float init_es = 1.5;
+const float init_rocketSpeed = 3;
 
 
 
 class Position {
   public:
+    Position() {
+      reset(0, 0);
+    }
     Position(float pos_x, float pos_y) {
       reset(pos_x, pos_y);
     }
-    Position(float pos_both_xy) {
-      reset(pos_both_xy, pos_both_xy);
-    }
+    // Position(float pos_both_xy) {
+    //   reset(pos_both_xy, pos_both_xy);
+    // }
   public:
     void moveBy(float inc_x, float inc_y) {
       this->pos_x += inc_x;
@@ -229,15 +235,17 @@ FrameControl frameControl;
 int brojac=0;// Invoke custom library
 //float buletX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 //float buletY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
-Position buletXY[10] = { Position(-10), Position(-10), Position(-10), Position(-10), Position(-10),
-                         Position(-10), Position(-10), Position(-10), Position(-10), Position(-10) };
+Position buletXY[BuletCount];/* = { Position(-10), Position(-10), Position(-10), Position(-10), Position(-10),
+                         Position(-10), Position(-10), Position(-10), Position(-10), Position(-10) };*/
 
 float EbuletX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 float EbuletY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 
-float rocketX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
-float rocketY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
-float rocketSpeed=0.22;
+//float rocketX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
+//float rocketY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
+Position rocketXY[RocketCount];/* = { Position(-20), Position(-20), Position(-20), Position(-20), Position(-20), 
+                          Position(-20), Position(-20), Position(-20), Position(-20), Position(-20) };*/
+float rocketSpeed=init_rocketSpeed/*0.22*/;
 int rockets=3;
 
 int counter=0;
@@ -318,14 +326,22 @@ void restart()
   eHealth = 50;
   mHealth = eHealth;
   EbulletSpeed = 0.42;
-  rocketSpeed = 0.22;
+  rocketSpeed = init_rocketSpeed/*0.22*/;
 
+
+  for (int i = 0; i < BuletCount; i++) {
+    buletXY[i].reset(-20, -20);
+  }
+  for (int i = 0; i < RocketCount; i++) {
+    rocketXY[i].reset(-20, -20);
+  }
   for (int i = 0; i < 10; i++)
   {
     //buletX[i] = -20;
-    buletXY[i].reset(-20, -20);
+    //buletXY[i].reset(-20, -20);
     EbuletX[i] = -20;
-    rocketX[i] = -20;
+    //rocketX[i] = -20;
+    //rocketXY[i].reset(-20, -20);
   }
 }
 
@@ -341,7 +357,8 @@ void newLevel()
 
   rockets = 3;
   rDamage = 8 + (level * 2);
-  rocketSpeed = 0.22 + (level * 0.02);
+  //rocketSpeed = 0.22 + (level * 0.02);
+  rocketSpeed = init_rocketSpeed + (init_rocketSpeed / 3 * level);
   ri[0] = 0;
   ri[1] = 0;
   ri[2] = 0;
@@ -354,7 +371,8 @@ void newLevel()
     //buletX[i] = -20;
     buletXY[i].reset(-20, -20);
     EbuletX[i] = -20;
-    rocketX[i] = -20;
+    //rocketX[i] = -20;
+    rocketXY[i].reset(-20, -20);
   }
 
   graphical->fillScreen(TFT_BLACK);
@@ -595,8 +613,8 @@ void loop()
     if (/*digitalRead(12) == 0*/leftTracker.checkPressed() && rockets > 0) // Rocket button B button
     {
       rockets--;
-      rocketX[rcounter] = xy.getX() + 34;
-      rocketY[rcounter] = xy.getY() + 14;
+      rocketXY[rcounter].moveTo(xy.getX() + 34, xy.getY() + 14);
+      //rocketY[rcounter] = xy.getY() + 14;
       rcounter = rcounter + 1;
       ri[rockets] = -100;
       graphical->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
@@ -667,14 +685,18 @@ void loop()
 
     for (int i = 0; i < 10; i++)
     { // firing rockets
-      if (rocketX[i] > 0)
+      if (rocketXY[i].getX() > 0)
       {
-        //tft.pushImage(rocketX[i], rocketY[i], 24, 12, rocket);
-        graphical->drawImageFile(IF_ROCKET, rocketX[i], rocketY[i]);
-        rocketX[i] = rocketX[i] + rocketSpeed;
+        if (rocketXY[i].checkMoved()) {
+          //tft.pushImage(rocketX[i], rocketY[i], 24, 12, rocket);
+          graphical->drawImageFile(IF_ROCKET, rocketXY[i].getX(), rocketXY[i].getY());
+        }
+        if (frameDue) {
+          rocketXY[i].moveBy(rocketSpeed, 0);
+        }
       }
-      if (rocketX[i] > 240)
-        rocketX[i] = -30;
+      if (rocketXY[i].getX() > 240)
+        rocketXY[i].moveXTo(-30);
     }
 
     // delay(1);
@@ -727,10 +749,10 @@ void loop()
 
     for (int j = 0; j < 10; j++) // did my ROCKET hit enemy
     {
-      if (rocketX[j] + 18 > exy.getX() && rocketY[j] > exy.getY() + 2 && rocketY[j] < exy.getY() + 52)
+      if (rocketXY[j].getX() + 18 > exy.getX() && rocketXY[j].getY() > exy.getY() + 2 && rocketXY[j].getY() < exy.getY() + 52)
       {
         //tft.pushImage(rocketX[j], rocketY[j], 24, 24, explosion);
-        graphical->drawImageFile(IF_EXPLOSION, rocketX[j], rocketY[j]);
+        graphical->drawImageFile(IF_EXPLOSION, rocketXY[j].getX(), rocketXY[j].getY());
         if (sound == 1)
         {
           dumbdisplay.tone(NOTE_C3, 40);
@@ -740,10 +762,10 @@ void loop()
         {
           delay(40);
         }
-        graphical->fillRect(rocketX[j], rocketY[j], 24, 24, TFT_BLACK);
+        graphical->fillRect(rocketXY[j].getX(), rocketXY[j].getY(), 24, 24, TFT_BLACK);
         // delay(30);
 
-        rocketX[j] = -50;
+        rocketXY[j].moveXTo(-50);
         brojac = brojac + 12;
         graphical->setCursor(200, 0/*, 2*/);
         graphical->print(String(brojac));
@@ -853,10 +875,10 @@ void loop()
       // fireTime = random(110 - (level * 15), 360 - (level * 30));
       // Ecounter++;
     }
-    if (counter == 9)
+    if (counter == BuletCount/*9*/)
       counter = 0;
 
-    if (rcounter == 3)
+    if (rcounter == RocketCount/*3*/)
       rcounter = 0;
 
     if (Ecounter == 9)
