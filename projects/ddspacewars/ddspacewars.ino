@@ -276,7 +276,7 @@ int mHealth=eHealth;
 int lives=4;
 //int ly[4]={0,0,0,0};
 //int ri[3]={0,0,0};
-int fireTime=10;//100;
+int fireTime=100;
 int fireCount=0;
 float EbulletSpeed=0.42;
 int rDamage=8; //rocket damage
@@ -874,15 +874,19 @@ if (false) {
     // for (int i = 0; i < 3; i++) // draw lifes
     //   tft.pushImage(70 + (i * 14), ri[i], 8, 14, ricon);
 
-    fireCount += 10;
-    if (fireTime >= fireCount)
-    {
-      EbuletX[Ecounter] = exy.getX() + 5;
-      EbuletY[Ecounter] = exy.getY() + 24;
-      fireCount = 0;
-      fireTime = random(110 - (level * 15), 360 - (level * 30));
-      Ecounter++;
+    if (frameDue) {
+      fireCount += 4;
+      if (fireTime <= fireCount)
+      {
+        EbuletX[Ecounter] = exy.getX() + 5;
+        EbuletY[Ecounter] = exy.getY() + 24;
+        fireCount = 0;
+        fireTime = random(110 - (level * 15), 360 - (level * 30));
+        Ecounter++;
+        dumbdisplay.writeComment("E fired ... " + String(Ecounter));
+      }
     }
+
     if (counter == BuletCount/*9*/)
       counter = 0;
 
