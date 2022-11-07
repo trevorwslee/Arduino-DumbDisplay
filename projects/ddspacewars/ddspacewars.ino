@@ -264,8 +264,8 @@ Position exy(170, 18);
 //float es=0.1;
 float es=init_es;
 
-float bx=-50;
-float by=0;
+//float bx=-50;
+//float by=0;
 
 //int pom=0; //pressdebounce for fire
 //int pom2=0; //pressdebounce for rockets
@@ -274,8 +274,8 @@ float sped=0.42;
 int eHealth=50;
 int mHealth=eHealth;
 int lives=4;
-int ly[4]={0,0,0,0};
-int ri[3]={0,0,0};
+//int ly[4]={0,0,0,0};
+//int ri[3]={0,0,0};
 int fireTime=100;
 int fireCount=0;
 float EbulletSpeed=0.42;
@@ -306,20 +306,20 @@ void restart()
   //ey = 18;
   //ex = 170;
   es = init_es/*0.1*/;
-  bx = -50;
-  by = 0;
+  //bx = -50;
+ // by = 0;
 
   rockets = 3;
   rDamage = 8;
   lives = 4;
   brojac = 0;
-  ri[0] = 0;
-  ri[1] = 0;
-  ri[2] = 0;
-  ly[0] = 0;
-  ly[1] = 0;
-  ly[2] = 0;
-  ly[3] = 0;
+  //ri[0] = 0;
+  //ri[1] = 0;
+ // ri[2] = 0;
+  //ly[0] = 0;
+  //ly[1] = 0;
+ // ly[2] = 0;
+ // ly[3] = 0;
   exy.reset(exy.getX(), 44);
 // ey = 44;
    sped = 0.42;
@@ -359,9 +359,9 @@ void newLevel()
   rDamage = 8 + (level * 2);
   //rocketSpeed = 0.22 + (level * 0.02);
   rocketSpeed = init_rocketSpeed + (init_rocketSpeed / 3 * level);
-  ri[0] = 0;
-  ri[1] = 0;
-  ri[2] = 0;
+  // ri[0] = 0;
+  // ri[1] = 0;
+  // ri[2] = 0;
 
   exy.reset(exy.getX(), 44);
   //ey = 44;
@@ -616,8 +616,8 @@ void loop()
       rocketXY[rcounter].moveTo(xy.getX() + 34, xy.getY() + 14);
       //rocketY[rcounter] = xy.getY() + 14;
       rcounter = rcounter + 1;
-      ri[rockets] = -100;
-      graphical->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
+      //ri[rockets] = -100;
+      //graphical->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
       // if (pom2 == 0)
       // {
       //   pom2 = 1;
@@ -645,18 +645,20 @@ void loop()
       pom3 = 0;
 */
 
-    // for (int i = 0; i < 30; i++)
-    // { // drawStars..........................................
-    //   graphical->drawPixel(spaceX[i], spaceY[i], TFT_BLACK);
-    //   spaceX[i] = spaceX[i] - 0.5;
-    //   graphical->drawPixel(spaceX[i], spaceY[i], TFT_GREY);
-    //   if (spaceX[i] < 0)
-    //   {
-    //     graphical->drawPixel(spaceX[i], spaceY[i], TFT_BLACK);
+if (false) {
+    for (int i = 0; i < 30; i++)
+    { // drawStars..........................................
+      graphical->drawPixel(spaceX[i], spaceY[i], TFT_BLACK);
+      spaceX[i] = spaceX[i] - 0.5;
+      graphical->drawPixel(spaceX[i], spaceY[i], TFT_GREY);
+      if (spaceX[i] < 0)
+      {
+        graphical->drawPixel(spaceX[i], spaceY[i], TFT_BLACK);
 
-    //     spaceX[i] = 244;
-    //   }
-    // }
+        spaceX[i] = 244;
+      }
+    }
+}
 
     //tft.pushImage(x, y, 49, 40, brod1);
     //tft.pushImage(ex, ey, 55, 54, earth[level - 1]);
@@ -797,7 +799,7 @@ void loop()
       if (EbuletX[j] < xy.getX() + 30 && EbuletX[j] > xy.getX() + 4 && EbuletY[j] > xy.getY() + 4 && EbuletY[j] < xy.getY() + 36)
       {
         EbuletX[j] = -50;
-        ly[lives - 1] = -40;
+        //ly[lives - 1] = -40;
         graphical->fillRect((lives - 1) * 14, 0, 14, 14, TFT_BLACK);
         lives--;
         if (lives == 0)
