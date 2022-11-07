@@ -276,7 +276,7 @@ int mHealth=eHealth;
 int lives=4;
 //int ly[4]={0,0,0,0};
 //int ri[3]={0,0,0};
-int fireTime=100;
+int fireTime=10;//100;
 int fireCount=0;
 float EbulletSpeed=0.42;
 int rDamage=8; //rocket damage
@@ -366,13 +366,19 @@ void newLevel()
   exy.reset(exy.getX(), 44);
   //ey = 44;
 
+  for (int i = 0; i < BuletCount; i++) {
+    buletXY[i].reset(-20, -20);
+  }
+  for (int i = 0; i < RocketCount; i++) {
+    rocketXY[i].reset(-20, -20);
+  }
   for (int i = 0; i < 10; i++)
   {
     //buletX[i] = -20;
-    buletXY[i].reset(-20, -20);
+//    buletXY[i].reset(-20, -20);
     EbuletX[i] = -20;
     //rocketX[i] = -20;
-    rocketXY[i].reset(-20, -20);
+  //  rocketXY[i].reset(-20, -20);
   }
 
   graphical->fillScreen(TFT_BLACK);
@@ -669,7 +675,7 @@ if (false) {
       graphical->drawImageFile(IF_EARTH(level), exy.getX(), exy.getY());
     }
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < BuletCount; i++)
     { // firing buletts
       if (buletXY[i].getX() > 0)
       {
@@ -685,7 +691,7 @@ if (false) {
         buletXY[i].moveXTo(-30);
     }
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < RocketCount; i++)
     { // firing rockets
       if (rocketXY[i].getX() > 0)
       {
@@ -703,7 +709,7 @@ if (false) {
 
     // delay(1);
 
-    for (int j = 0; j < 10; j++) // did my bulet hit enemy
+    for (int j = 0; j < BuletCount; j++) // did my bulet hit enemy
     {
       if (buletXY[j].getX() > exy.getX() + 20 && buletXY[j].getY() > exy.getY() + 2 && buletXY[j].getY() < exy.getY() + 52)
       {
@@ -749,7 +755,7 @@ if (false) {
       }
     }
 
-    for (int j = 0; j < 10; j++) // did my ROCKET hit enemy
+    for (int j = 0; j < RocketCount; j++) // did my ROCKET hit enemy
     {
       if (rocketXY[j].getX() + 18 > exy.getX() && rocketXY[j].getY() > exy.getY() + 2 && rocketXY[j].getY() < exy.getY() + 52)
       {
@@ -868,14 +874,14 @@ if (false) {
     // for (int i = 0; i < 3; i++) // draw lifes
     //   tft.pushImage(70 + (i * 14), ri[i], 8, 14, ricon);
 
-    fireCount++;
-    if (fireTime == fireCount)
+    fireCount += 10;
+    if (fireTime >= fireCount)
     {
-      // EbuletX[Ecounter] = exy.getX() + 5;
-      // EbuletY[Ecounter] = exy.getY() + 24;
-      // fireCount = 0;
-      // fireTime = random(110 - (level * 15), 360 - (level * 30));
-      // Ecounter++;
+      EbuletX[Ecounter] = exy.getX() + 5;
+      EbuletY[Ecounter] = exy.getY() + 24;
+      fireCount = 0;
+      fireTime = random(110 - (level * 15), 360 - (level * 30));
+      Ecounter++;
     }
     if (counter == BuletCount/*9*/)
       counter = 0;
