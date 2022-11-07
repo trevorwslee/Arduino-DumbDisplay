@@ -111,6 +111,11 @@ JoyStickPressTracker verticalTracker(VERTICAL);
 
 
 
+const long DueGapMillis = 40;
+const float buletSpeed = 5;
+const float init_es = 1.5;
+
+
 
 class Position {
   public:
@@ -192,7 +197,6 @@ class Position {
     bool moved;
 };
 
-const long DueGapMillis = 50;
 class FrameControl {
   public:
     FrameControl() {
@@ -220,7 +224,6 @@ class FrameControl {
 
 FrameControl frameControl; 
 
-//const int buletSpeed = 1;
 
 //TFT_eSPI tft = TFT_eSPI();  
 int brojac=0;// Invoke custom library
@@ -251,14 +254,13 @@ Position exy(170, 18);
 //float ex=170;
 
 //float es=0.1;
-const float init_es = 1.5;
 float es=init_es;
 
 float bx=-50;
 float by=0;
 
-int pom=0; //pressdebounce for fire
-int pom2=0; //pressdebounce for rockets
+//int pom=0; //pressdebounce for fire
+//int pom2=0; //pressdebounce for rockets
 float sped=0.42;
 //int blinkTime=0;
 int eHealth=50;
@@ -272,7 +274,7 @@ float EbulletSpeed=0.42;
 int rDamage=8; //rocket damage
 int tr=0;
 
-int pom3=0;
+//int pom3=0;
 bool sound=1; //sound on or off
 
 int fase=0; //fase 0=start screen,//fase 1=playing fase //fase 3=game over
@@ -555,7 +557,7 @@ void loop()
 
   if (fase == 1)
   {                                      // playing fase
-    bool fameDue = frameControl.checkDue();
+    bool frameDue = frameControl.checkDue();
 #if defined(WITH_JOYSTICK)  
     int8_t horizontalPress = horizontalTracker.checkPressed();
     int8_t verticalPress = verticalTracker.checkPressed();
@@ -575,33 +577,42 @@ void loop()
 
     if (/*digitalRead(13) == 0*/rightTracker.checkPressed()) // fire button A button
     {
-      if (pom == 0)
-      {
-        pom = 1;
+      buletXY[counter].moveTo(xy.getX() + 34, xy.getY() + 15);
+      //buletY[counter] = xy.getY() + 15;
+      counter = counter + 1;
+      // if (pom == 0)
+      // {
+      //   pom = 1;
 
-        buletXY[counter].moveTo(xy.getX() + 34, xy.getY() + 15);
-        //buletY[counter] = xy.getY() + 15;
-        counter = counter + 1;
-      }
+      //   buletXY[counter].moveTo(xy.getX() + 34, xy.getY() + 15);
+      //   //buletY[counter] = xy.getY() + 15;
+      //   counter = counter + 1;
+      // }
     }
-    else
-      pom = 0;
+    // else
+    //   pom = 0;
 
     if (/*digitalRead(12) == 0*/leftTracker.checkPressed() && rockets > 0) // Rocket button B button
     {
-      if (pom2 == 0)
-      {
-        pom2 = 1;
-        rockets--;
-        rocketX[rcounter] = xy.getX() + 34;
-        rocketY[rcounter] = xy.getY() + 14;
-        rcounter = rcounter + 1;
-        ri[rockets] = -100;
-        graphical->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
-      }
+      rockets--;
+      rocketX[rcounter] = xy.getX() + 34;
+      rocketY[rcounter] = xy.getY() + 14;
+      rcounter = rcounter + 1;
+      ri[rockets] = -100;
+      graphical->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
+      // if (pom2 == 0)
+      // {
+      //   pom2 = 1;
+      //   rockets--;
+      //   rocketX[rcounter] = xy.getX() + 34;
+      //   rocketY[rcounter] = xy.getY() + 14;
+      //   rcounter = rcounter + 1;
+      //   ri[rockets] = -100;
+      //   graphical->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
+      // }
     }
-    else
-      pom2 = 0;
+    // else
+    //   pom2 = 0;
 
 /*
     if (digitalRead(35) == 0) // buton 35 , on and off sound
@@ -643,8 +654,12 @@ void loop()
       if (buletXY[i].getX() > 0)
       {
         //tft.pushImage(c, 8, 8, bulet);
-        graphical->drawImageFile(IF_BULET, buletXY[i].getX(), buletXY[i].getY());
-        buletXY[i].moveBy(0.6, 0);
+        if (buletXY[i].checkMoved()) {
+          graphical->drawImageFile(IF_BULET, buletXY[i].getX(), buletXY[i].getY());
+        }
+        if (frameDue) {
+          buletXY[i].moveBy(buletSpeed/*0.6*/, 0);
+        }
       }
       if (buletXY[i].getX() > 240)
         buletXY[i].moveXTo(-30);
@@ -794,7 +809,7 @@ void loop()
       }
     }
 
-    if (fameDue) {
+    if (frameDue) {
       exy.moveBy(0, es);
       //ey = ey + es;
       if (exy.getY() > 80)
