@@ -192,6 +192,33 @@ class Position {
     bool moved;
 };
 
+const long DueGapMillis = 50;
+class FrameControl {
+  public:
+    FrameControl() {
+      reset();
+    }
+  public:
+    bool checkDue() {
+      long nowMillis = millis();
+      bool due = (this->nextDueMillis - nowMillis) <= 0;
+      if (due) {
+        if (this->nextDueMillis == 0) {
+          this->nextDueMillis = nowMillis;
+        }
+        this->nextDueMillis += DueGapMillis;
+      }
+      return due;
+    }
+    void reset() {
+      this->nextDueMillis = 0;
+    }  
+  private:
+    long nextDueMillis;  
+};
+
+
+FrameControl frameControl; 
 
 //const int buletSpeed = 1;
 
@@ -223,7 +250,9 @@ Position exy(170, 18);
 //float ey=18;
 //float ex=170;
 
-float es=0.1;
+//float es=0.1;
+const float init_es = 1.5;
+float es=init_es;
 
 float bx=-50;
 float by=0;
@@ -266,7 +295,7 @@ void restart()
   exy.reset(170, 18);
   //ey = 18;
   //ex = 170;
-  es = 0.1;
+  es = init_es/*0.1*/;
   bx = -50;
   by = 0;
 
@@ -305,7 +334,8 @@ void newLevel()
   EbulletSpeed = EbulletSpeed + 0.1;
   eHealth = 50 + (level * 5);
   mHealth = eHealth;
-  es = 0.05 + (0.035 * level);
+  //es = 0.05 + (0.035 * level);
+  es = init_es + (init_es / 3 * level);
 
   rockets = 3;
   rDamage = 8 + (level * 2);
@@ -525,6 +555,7 @@ void loop()
 
   if (fase == 1)
   {                                      // playing fase
+    bool fameDue = frameControl.checkDue();
 #if defined(WITH_JOYSTICK)  
     int8_t horizontalPress = horizontalTracker.checkPressed();
     int8_t verticalPress = verticalTracker.checkPressed();
@@ -763,13 +794,15 @@ void loop()
       }
     }
 
-    exy.moveBy(0, es);
-    //ey = ey + es;
-    if (exy.getY() > 80)
-      es = es * -1;
+    if (fameDue) {
+      exy.moveBy(0, es);
+      //ey = ey + es;
+      if (exy.getY() > 80)
+        es = es * -1;
 
-    if (exy.getY() < 18)
-      es = es * -1;
+      if (exy.getY() < 18)
+        es = es * -1;
+    }
 
     // if (blinkTime > 0)
     //   blinkTime++;
