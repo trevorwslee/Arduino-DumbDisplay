@@ -115,12 +115,13 @@ JoyStickPressTracker verticalTracker(VERTICAL);
 class Position {
   public:
     Position(float pos_x, float pos_y) {
-      set(pos_x, pos_y);
-      this->last_valid = false;
-      this->moved = true;
+      reset(pos_x, pos_y);
+    }
+    Position(float pos_both_xy) {
+      reset(pos_both_xy, pos_both_xy);
     }
   public:
-    void move(float inc_x, float inc_y) {
+    void moveBy(float inc_x, float inc_y) {
       this->pos_x += inc_x;
       this->pos_y += inc_y;
       this->last_x = this->x;
@@ -134,11 +135,9 @@ class Position {
         this->moved = true;
       }
     }
-    void set(float pos_x, float pos_y) {
+    void moveTo(float pos_x, float pos_y) {
       this->pos_x = pos_x;
       this->pos_y = pos_y;
-      this->last_x = this->x;
-      this->last_y = this->y;
       this->x = this->pos_x;
       this->y = this->pos_y;
       if (last_valid)
@@ -148,18 +147,38 @@ class Position {
         this->moved = true;
       }
     }
+    void moveXTo(float pos_x) {
+      moveTo(pos_x, this->pos_y);
+    }
+    void moveYTo(float pos_y) {
+      moveTo(this->pos_x, pos_y);
+    }
     bool checkMoved() {
       bool res = this->moved;
       this->moved = false;
       return res;
     }
-    void reset(float x, float y) {
-      this->pos_x = x;
-      this->pos_y = y;
+    void reset(float pos_x, float pos_y) {
+      this->pos_x = pos_x;
+      this->pos_y = pos_y;
       this->x = this->pos_x;
       this->y = this->pos_y;
       this->last_valid = false;
+      this->moved = true;
+      // if (last_valid)
+      //   this->moved = this->last_x != this->x || this->last_y != this->y;
+      // else {
+      //   this->last_valid = true;
+      //   this->moved = true;
+      // }
     }
+    // void reset(float x, float y) {
+    //   this->pos_x = x;
+    //   this->pos_y = y;
+    //   this->x = this->pos_x;
+    //   this->y = this->pos_y;
+    //   this->last_valid = false;
+    // }
     inline int getX() { return this->x; }
     inline int getY() { return this->y; }
   private:
@@ -178,8 +197,10 @@ class Position {
 
 //TFT_eSPI tft = TFT_eSPI();  
 int brojac=0;// Invoke custom library
-float buletX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
-float buletY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
+//float buletX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
+//float buletY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
+Position buletXY[10] = { Position(-10), Position(-10), Position(-10), Position(-10), Position(-10),
+                         Position(-10), Position(-10), Position(-10), Position(-10), Position(-10) };
 
 float EbuletX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 float EbuletY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
@@ -210,7 +231,7 @@ float by=0;
 int pom=0; //pressdebounce for fire
 int pom2=0; //pressdebounce for rockets
 float sped=0.42;
-int blinkTime=0;
+//int blinkTime=0;
 int eHealth=50;
 int mHealth=eHealth;
 int lives=4;
@@ -260,7 +281,7 @@ void restart()
   ly[1] = 0;
   ly[2] = 0;
   ly[3] = 0;
-  exy.set(exy.getX(), 44);
+  exy.reset(exy.getX(), 44);
 // ey = 44;
    sped = 0.42;
   eHealth = 50;
@@ -270,7 +291,8 @@ void restart()
 
   for (int i = 0; i < 10; i++)
   {
-    buletX[i] = -20;
+    //buletX[i] = -20;
+    buletXY[i].reset(-20, -20);
     EbuletX[i] = -20;
     rocketX[i] = -20;
   }
@@ -292,12 +314,13 @@ void newLevel()
   ri[1] = 0;
   ri[2] = 0;
 
-  exy.set(exy.getX(), 44);
+  exy.reset(exy.getX(), 44);
   //ey = 44;
 
   for (int i = 0; i < 10; i++)
   {
-    buletX[i] = -20;
+    //buletX[i] = -20;
+    buletXY[i].reset(-20, -20);
     EbuletX[i] = -20;
     rocketX[i] = -20;
   }
@@ -525,8 +548,8 @@ void loop()
       {
         pom = 1;
 
-        buletX[counter] = xy.getX() + 34;
-        buletY[counter] = xy.getY() + 15;
+        buletXY[counter].moveTo(xy.getX() + 34, xy.getY() + 15);
+        //buletY[counter] = xy.getY() + 15;
         counter = counter + 1;
       }
     }
@@ -586,14 +609,14 @@ void loop()
 
     for (int i = 0; i < 10; i++)
     { // firing buletts
-      if (buletX[i] > 0)
+      if (buletXY[i].getX() > 0)
       {
         //tft.pushImage(c, 8, 8, bulet);
-        graphical->drawImageFile(IF_BULET, buletX[i], buletY[i]);
-        buletX[i] = buletX[i] + 0.6;
+        graphical->drawImageFile(IF_BULET, buletXY[i].getX(), buletXY[i].getY());
+        buletXY[i].moveBy(0.6, 0);
       }
-      if (buletX[i] > 240)
-        buletX[i] = -30;
+      if (buletXY[i].getX() > 240)
+        buletXY[i].moveXTo(-30);
     }
 
     for (int i = 0; i < 10; i++)
@@ -612,10 +635,10 @@ void loop()
 
     for (int j = 0; j < 10; j++) // did my bulet hit enemy
     {
-      if (buletX[j] > exy.getX() + 20 && buletY[j] > exy.getY() + 2 && buletY[j] < exy.getY() + 52)
+      if (buletXY[j].getX() > exy.getX() + 20 && buletXY[j].getY() > exy.getY() + 2 && buletXY[j].getY() < exy.getY() + 52)
       {
         //tft.pushImage(buletX[j], buletY[j], 12, 12, ex2);
-        graphical->drawImageFile(IF_EX2, buletX[j], buletY[j]);
+        graphical->drawImageFile(IF_EX2, buletXY[j].getX(), buletXY[j].getY());
         if (sound == 1)
         {
           //tone(BUZZER_PIN, NOTE_C5, 12, BUZZER_CHANNEL);
@@ -626,8 +649,8 @@ void loop()
         {
           delay(12);
         }
-        graphical->fillRect(buletX[j], buletY[j], 12, 12, TFT_BLACK);
-        buletX[j] = -50;
+        graphical->fillRect(buletXY[j].getX(), buletXY[j].getY(), 12, 12, TFT_BLACK);
+        buletXY[j].moveXTo(-50);
         brojac = brojac + 1;
         graphical->setCursor(200, 0/*, 2*/);
         graphical->print(String(brojac));
@@ -652,7 +675,7 @@ void loop()
         /*
         digitalWrite(25, 1);
         */
-        blinkTime = 1;
+        //blinkTime = 1;
       }
     }
 
@@ -697,7 +720,7 @@ void loop()
           newLevel();
         }
         //digitalWrite(25, 0);
-        blinkTime = 1;
+        //blinkTime = 1;
       }
     }
 
@@ -727,7 +750,7 @@ void loop()
         /*
         digitalWrite(33, 1);
         */
-        blinkTime = 1;
+        //blinkTime = 1;
         if (sound == 1)
         {
           dumbdisplay.tone(NOTE_C6, 4);
@@ -740,7 +763,7 @@ void loop()
       }
     }
 
-    exy.move(0, es);
+    exy.moveBy(0, es);
     //ey = ey + es;
     if (exy.getY() > 80)
       es = es * -1;
@@ -748,15 +771,15 @@ void loop()
     if (exy.getY() < 18)
       es = es * -1;
 
-    if (blinkTime > 0)
-      blinkTime++;
+    // if (blinkTime > 0)
+    //   blinkTime++;
 
-    if (blinkTime > 2)
-    {
-      digitalWrite(25, 0);
-      digitalWrite(33, 0);
-      blinkTime = 0;
-    }
+    // if (blinkTime > 2)
+    // {
+    //   digitalWrite(25, 0);
+    //   digitalWrite(33, 0);
+    //   blinkTime = 0;
+    // }
 
     for (int i = 0; i < 10; i++)
     { // enemy shoots
