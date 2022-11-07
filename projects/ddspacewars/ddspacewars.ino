@@ -113,10 +113,12 @@ JoyStickPressTracker verticalTracker(VERTICAL);
 
 const int BuletCount = 10;
 const int RocketCount = 4;
+const int EbuletCount = 10;
 const long DueGapMillis = 40;
 const float buletSpeed = 5;
 const float init_es = 1.5;
 const float init_rocketSpeed = 3;
+const float init_EbuletSpeed = buletSpeed;
 
 
 
@@ -238,8 +240,9 @@ int brojac=0;// Invoke custom library
 Position buletXY[BuletCount];/* = { Position(-10), Position(-10), Position(-10), Position(-10), Position(-10),
                          Position(-10), Position(-10), Position(-10), Position(-10), Position(-10) };*/
 
-float EbuletX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
-float EbuletY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
+// float EbuletX[EBulletCount]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
+// float EbuletY[EBulletCount]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
+Position EbuletXY[EbuletCount];
 
 //float rocketX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 //float rocketY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
@@ -278,7 +281,7 @@ int lives=4;
 //int ri[3]={0,0,0};
 int fireTime=100;
 int fireCount=0;
-float EbulletSpeed=0.42;
+float EbuletSpeed=init_EbuletSpeed/*0.42*/;
 int rDamage=8; //rocket damage
 int tr=0;
 
@@ -325,7 +328,7 @@ void restart()
    sped = 0.42;
   eHealth = 50;
   mHealth = eHealth;
-  EbulletSpeed = 0.42;
+  EbuletSpeed = init_EbuletSpeed/*0.42*/;
   rocketSpeed = init_rocketSpeed/*0.22*/;
 
 
@@ -335,11 +338,11 @@ void restart()
   for (int i = 0; i < RocketCount; i++) {
     rocketXY[i].reset(-20, -20);
   }
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < EbuletCount; i++)
   {
     //buletX[i] = -20;
     //buletXY[i].reset(-20, -20);
-    EbuletX[i] = -20;
+    EbuletXY[i].reset(-20, -20);// = -20;
     //rocketX[i] = -20;
     //rocketXY[i].reset(-20, -20);
   }
@@ -349,7 +352,7 @@ void newLevel()
 {
   level++;
   sped = sped + 0.05;
-  EbulletSpeed = EbulletSpeed + 0.1;
+  EbuletSpeed = EbuletSpeed + init_EbuletSpeed / 3;
   eHealth = 50 + (level * 5);
   mHealth = eHealth;
   //es = 0.05 + (0.035 * level);
@@ -372,11 +375,11 @@ void newLevel()
   for (int i = 0; i < RocketCount; i++) {
     rocketXY[i].reset(-20, -20);
   }
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < EbuletCount; i++)
   {
     //buletX[i] = -20;
 //    buletXY[i].reset(-20, -20);
-    EbuletX[i] = -20;
+    EbuletXY[i].moveXTo(-20);
     //rocketX[i] = -20;
   //  rocketXY[i].reset(-20, -20);
   }
@@ -388,7 +391,7 @@ void newLevel()
 
   graphical->println("Enemy speed : " + String(es));
   graphical->println("Enemy health : " + String(eHealth));
-  graphical->println("Enemy bullet speed : " + String(EbulletSpeed));
+  graphical->println("Enemy bullet speed : " + String(EbuletSpeed));
   graphical->println("Remaining lives: " + String(lives));
   graphical->println("My speed : " + String(sped));
   graphical->println("Rocket damage : " + String(rDamage));
@@ -540,7 +543,7 @@ void handleRestart() {
 
     graphical->println("Enemy speed : " + String(es));
     graphical->println("Enemy health : " + String(eHealth));
-    graphical->println("Enemy bullet speed : " + String(EbulletSpeed));
+    graphical->println("Enemy bullet speed : " + String(EbuletSpeed));
     graphical->println("Remaining lives: " + String(lives));
     graphical->println("My speed : " + String(sped));
     graphical->println("Rocket damage : " + String(rDamage));
@@ -800,11 +803,11 @@ if (false) {
       }
     }
 
-    for (int j = 0; j < 10; j++) // Am I hit
+    for (int j = 0; j < EbuletCount; j++) // Am I hit
     {
-      if (EbuletX[j] < xy.getX() + 30 && EbuletX[j] > xy.getX() + 4 && EbuletY[j] > xy.getY() + 4 && EbuletY[j] < xy.getY() + 36)
+      if (EbuletXY[j].getX() < xy.getX() + 30 && EbuletXY[j].getX() > xy.getX() + 4 && EbuletXY[j].getY() > xy.getY() + 4 && EbuletXY[j].getY() < xy.getY() + 36)
       {
-        EbuletX[j] = -50;
+        EbuletXY[j].moveXTo(-50);
         //ly[lives - 1] = -40;
         graphical->fillRect((lives - 1) * 14, 0, 14, 14, TFT_BLACK);
         lives--;
@@ -859,13 +862,17 @@ if (false) {
     //   blinkTime = 0;
     // }
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < EbuletCount; i++)
     { // enemy shoots
-      if (EbuletX[i] > -10)
+      if (EbuletXY[i].getX() > -10)
       {
         //tft.pushImage(EbuletX[i], EbuletY[i], 7, 7, ebullet);
-        graphical->drawImageFile(IF_EBULLET, EbuletX[i], EbuletY[i]);
-        EbuletX[i] = EbuletX[i] - EbulletSpeed;
+        if (EbuletXY[i].checkMoved()) {
+          graphical->drawImageFile(IF_EBULLET, EbuletXY[i].getX(), EbuletXY[i].getY());
+        }
+        if (frameDue) {
+          EbuletXY[i].moveBy(-EbuletSpeed, 0);
+        }
       }
     }
 
@@ -878,12 +885,12 @@ if (false) {
       fireCount += 4;
       if (fireTime <= fireCount)
       {
-        EbuletX[Ecounter] = exy.getX() + 5;
-        EbuletY[Ecounter] = exy.getY() + 24;
+        EbuletXY[Ecounter].moveTo(exy.getX() + 5, exy.getY() + 24);
+        //EbuletY[Ecounter] = exy.getY() + 24;
         fireCount = 0;
         fireTime = random(110 - (level * 15), 360 - (level * 30));
         Ecounter++;
-        dumbdisplay.writeComment("E fired ... " + String(Ecounter));
+        //dumbdisplay.writeComment("E fired ... " + String(Ecounter));
       }
     }
 
@@ -893,7 +900,7 @@ if (false) {
     if (rcounter == RocketCount/*3*/)
       rcounter = 0;
 
-    if (Ecounter == 9)
+    if (Ecounter == EbuletCount/*9*/)
       Ecounter = 0;
   }
   if (fase == 2) // game over fase
