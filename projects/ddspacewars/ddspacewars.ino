@@ -1,18 +1,18 @@
 #if defined(ARDUINO_AVR_UNO)
-  #define WITH_JOYSTICK
-  #define DEBUG_LED_PIN 13
-  const uint8_t LEFT = 5;
-  const uint8_t RIGHT = 3;
-  // const uint8_t ENTER = 2;
-  const uint8_t HORIZONTAL = A0;
-  const uint8_t VERTICAL = A1;
+#define WITH_JOYSTICK
+#define DEBUG_LED_PIN 13
+const uint8_t LEFT = 5;
+const uint8_t RIGHT = 3;
+// const uint8_t ENTER = 2;
+const uint8_t HORIZONTAL = A0;
+const uint8_t VERTICAL = A1;
 #else
-  //#define SAVE_IMAGES
-  #define DEBUG_LED_PIN 25
-  #if defined(PICO_SDK_VERSION_MAJOR)
-  const uint8_t LEFT = 15;
-  const uint8_t RIGHT = 16;
-  // const uint8_t ENTER = 14;
+//#define SAVE_IMAGES
+#define DEBUG_LED_PIN 25
+#if defined(PICO_SDK_VERSION_MAJOR)
+const uint8_t LEFT = 15;
+const uint8_t RIGHT = 16;
+// const uint8_t ENTER = 14;
 #else
 #error not configured for board yet
 #endif
@@ -105,6 +105,7 @@ const int BuletCount = 10;
 const int RocketCount = 4;
 const int EbuletCount = 10;
 const long DueGapMillis = 40;
+const float init_sped = 2;
 const float buletSpeed = 5;
 const float init_es = 1.5;
 const float init_rocketSpeed = 3;
@@ -134,7 +135,9 @@ public:
     this->x = this->pos_x;
     this->y = this->pos_y;
     if (last_valid)
+    {
       this->moved = this->last_x != this->x || this->last_y != this->y;
+    }
     else
     {
       this->last_valid = true;
@@ -148,7 +151,9 @@ public:
     this->x = this->pos_x;
     this->y = this->pos_y;
     if (last_valid)
+    {
       this->moved = this->last_x != this->x || this->last_y != this->y;
+    }
     else
     {
       this->last_valid = true;
@@ -295,6 +300,7 @@ PositionGroup EbulletGroup(EbuletXY, EbuletCount);
 // float rocketY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 Position rocketXY[RocketCount]; /* = { Position(-20), Position(-20), Position(-20), Position(-20), Position(-20),
                            Position(-20), Position(-20), Position(-20), Position(-20), Position(-20) };*/
+PositionGroup rocketGroup(rocketXY, RocketCount);
 float rocketSpeed = init_rocketSpeed /*0.22*/;
 int rockets = 3;
 
@@ -319,7 +325,8 @@ float es = init_es;
 
 // int pom=0; //pressdebounce for fire
 // int pom2=0; //pressdebounce for rockets
-float sped = 0.42;
+//float sped = 0.42;
+float sped = init_sped;
 // int blinkTime=0;
 int eHealth = 50;
 int mHealth = eHealth;
@@ -382,7 +389,7 @@ void restart()
   // ly[3] = 0;
   exy.reset(exy.getX(), 44);
   // ey = 44;
-  sped = 0.42;
+  sped = init_sped;//0.42;
   eHealth = 50;
   mHealth = eHealth;
   EbuletSpeed = init_EbuletSpeed /*0.42*/;
@@ -392,11 +399,12 @@ void restart()
   // for (int i = 0; i < BuletCount; i++) {
   //   buletXY[i].reset(-20, -20);
   // }
-  for (int i = 0; i < RocketCount; i++)
-  {
-    rocketXY[i].reset(-20, -20);
-  }
-  EbulletGroup.resetAll(-20, -20);
+  rocketGroup.resetAll(-20, -20);
+  // for (int i = 0; i < RocketCount; i++)
+  // {
+  //   rocketXY[i].reset(-20, -20);
+  // }
+  // EbulletGroup.resetAll(-20, -20);
   // for (int i = 0; i < EbuletCount; i++)
   // {
   //   //buletX[i] = -20;
@@ -410,7 +418,7 @@ void restart()
 void newLevel()
 {
   level++;
-  sped = sped + 0.05;
+  sped = init_sped + level / 3;
   EbuletSpeed = EbuletSpeed + init_EbuletSpeed / 3;
   eHealth = 50 + (level * 5);
   mHealth = eHealth;
@@ -432,10 +440,11 @@ void newLevel()
   // for (int i = 0; i < BuletCount; i++) {
   //   buletXY[i].reset(-20, -20);
   // }
-  for (int i = 0; i < RocketCount; i++)
-  {
-    rocketXY[i].reset(-20, -20);
-  }
+  rocketGroup.resetAll(-20, -20);
+  // for (int i = 0; i < RocketCount; i++)
+  // {
+  //   rocketXY[i].reset(-20, -20);
+  // }
   EbulletGroup.resetAll(-20, -20);
   //   for (int i = 0; i < EbuletCount; i++)
   //   {
@@ -687,6 +696,9 @@ void loop()
     int8_t horizontalPress = horizontalTracker.checkPressed();
     int8_t verticalPress = verticalTracker.checkPressed();
 
+    int x = xy.getX();
+    int y = xy.getY();
+
     if (verticalPress == 1 && y < 94) // Move down
       y = y + sped;
 
@@ -698,6 +710,8 @@ void loop()
 
     if (horizontalPress == -1 && x > 0) // Move left
       x = x - sped;
+
+    xy.moveTo(x, y);
 #endif
 
     if (/*digitalRead(13) == 0*/ rightTracker.checkPressed()) // fire button A button
@@ -808,11 +822,16 @@ void loop()
         buletXY[i].moveXTo(-30);
     }
 
+    bool refreshRockets = rocketGroup.checkAnyMoved();
+    if (refreshRockets)
+    {
+      rocket_layer->clear();
+    }
     for (int i = 0; i < RocketCount; i++)
     { // firing rockets
       if (rocketXY[i].getX() > 0)
       {
-        if (rocketXY[i].checkMoved())
+        if (refreshRockets)
         {
           // tft.pushImage(rocketX[i], rocketY[i], 24, 12, rocket);
           rocket_layer->drawImageFile(IF_ROCKET, rocketXY[i].getX(), rocketXY[i].getY());
@@ -973,8 +992,9 @@ void loop()
     // }
 
     bool refreshEbullets = EbulletGroup.checkAnyMoved();
-    if (refreshEbullets) {
-      Ebulet_layer->clear();  
+    if (refreshEbullets)
+    {
+      Ebulet_layer->clear();
     }
     for (int i = 0; i < EbuletCount; i++)
     { // enemy shoots
