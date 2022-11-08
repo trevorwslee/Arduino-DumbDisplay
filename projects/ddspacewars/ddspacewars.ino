@@ -66,10 +66,11 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 #include "Note.h"
 
-const int NOTE_C3 = GetNoteFreq(-1, ToNoteIdx('C', 0));
+//const int NOTE_C3 = GetNoteFreq(-1, ToNoteIdx('C', 0));
 
 const int NOTE_A4 = GetNoteFreq(0, ToNoteIdx('A', 0));
 const int NOTE_B4 = GetNoteFreq(0, ToNoteIdx('B', 0));
+const int NOTE_C4 = GetNoteFreq(0, ToNoteIdx('C', 0));
 const int NOTE_D4 = GetNoteFreq(0, ToNoteIdx('D', 0));
 const int NOTE_E4 = GetNoteFreq(0, ToNoteIdx('E', 0));
 const int NOTE_F4 = GetNoteFreq(0, ToNoteIdx('F', 0));
@@ -104,7 +105,10 @@ JoyStickPressTracker verticalTracker(VERTICAL);
 const int BuletCount = 10;
 const int RocketCount = 4;
 const int EbuletCount = 10;
+const int StarCount = 30;
+
 const long DueGapMillis = 40;
+
 const float init_sped = 2;
 const float buletSpeed = 5;
 const float init_es = 1.5;
@@ -286,6 +290,7 @@ FrameControl frameControl;
 
 // TFT_eSPI tft = TFT_eSPI();
 int brojac = 0; // Invoke custom library
+
 // float buletX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 // float buletY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 Position buletXY[BuletCount]; /* = { Position(-10), Position(-10), Position(-10), Position(-10), Position(-10),
@@ -301,6 +306,7 @@ PositionGroup EbulletGroup(EbuletXY, EbuletCount);
 Position rocketXY[RocketCount]; /* = { Position(-20), Position(-20), Position(-20), Position(-20), Position(-20),
                            Position(-20), Position(-20), Position(-20), Position(-20), Position(-20) };*/
 PositionGroup rocketGroup(rocketXY, RocketCount);
+
 float rocketSpeed = init_rocketSpeed /*0.22*/;
 int rockets = 3;
 
@@ -325,7 +331,7 @@ float es = init_es;
 
 // int pom=0; //pressdebounce for fire
 // int pom2=0; //pressdebounce for rockets
-//float sped = 0.42;
+// float sped = 0.42;
 float sped = init_sped;
 // int blinkTime=0;
 int eHealth = 50;
@@ -337,28 +343,46 @@ int fireTime = 100;
 int fireCount = 0;
 float EbuletSpeed = init_EbuletSpeed /*0.42*/;
 int rDamage = 8; // rocket damage
-int tr = 0;
+//int tr = 0;
 
 // int pom3=0;
 bool sound = 1; // sound on or off
 
 int fase = 0; // fase 0=start screen,//fase 1=playing fase //fase 3=game over
 
-float spaceX[30];
-float spaceY[30];
+#if defined SHOW_STARS
+float spaceX[StarCount];
+float spaceY[StarCount];
+#endif
 
 GraphicalDDLayer *main_layer;
 GraphicalDDLayer *bulet_layer;
 GraphicalDDLayer *rocket_layer;
 GraphicalDDLayer *Ebulet_layer;
+GraphicalDDLayer *top_layer;
 
 void resetScreen()
 {
   bulet_layer->clear();
   rocket_layer->clear();
   Ebulet_layer->clear();
+  top_layer->clear();
   main_layer->fillScreen(TFT_BLACK);
 }
+
+void drawTop() {
+  top_layer->clear();
+  top_layer->setCursor(200, 0 /*, 2*/);
+  top_layer->print(String(brojac));
+  //eHealth--;
+  int tr = map(eHealth, 0, mHealth, 0, 70);
+  top_layer->fillRect(120, 3, 70, 7, TFT_GREEN);
+  top_layer->drawRect(119, 2, 72, 9, TFT_GREY);
+  top_layer->fillRect(120, 3, 70, 7, TFT_BLACK);
+  top_layer->fillRect(120, 3, tr, 7, TFT_GREEN);
+
+}
+
 
 void restart()
 {
@@ -389,7 +413,7 @@ void restart()
   // ly[3] = 0;
   exy.reset(exy.getX(), 44);
   // ey = 44;
-  sped = init_sped;//0.42;
+  sped = init_sped; // 0.42;
   eHealth = 50;
   mHealth = eHealth;
   EbuletSpeed = init_EbuletSpeed /*0.42*/;
@@ -486,11 +510,12 @@ void newLevel()
   main_layer->drawLine(0, 16, 240, 16, lightblue);
   main_layer->drawLine(0, 134, 240, 134, lightblue);
 
-  main_layer->setCursor(200, 0 /*,2*/);
-  main_layer->print(String(brojac));
+  drawTop();
+  // main_layer->setCursor(200, 0 /*,2*/);
+  // main_layer->print(String(brojac));
 
-  main_layer->fillRect(120, 3, 70, 7, TFT_GREEN);
-  main_layer->drawRect(119, 2, 72, 9, TFT_GREY);
+  // main_layer->fillRect(120, 3, 70, 7, TFT_GREEN);
+  // main_layer->drawRect(119, 2, 72, 9, TFT_GREY);
 }
 
 void setup(void)
@@ -524,11 +549,13 @@ void setup(void)
   digitalWrite(DEBUG_LED_PIN, 1);
 #endif
 
+  top_layer = dumbdisplay.createGraphicalLayer(240, 135);
   Ebulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
   rocket_layer = dumbdisplay.createGraphicalLayer(240, 135);
   bulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
   main_layer = dumbdisplay.createGraphicalLayer(240, 135);
 
+  top_layer->noBackgroundColor();
   Ebulet_layer->noBackgroundColor();
   rocket_layer->noBackgroundColor();
   bulet_layer->noBackgroundColor();
@@ -605,11 +632,13 @@ void setup(void)
     main_layer->loadImageFileCropped("spacewarsimgs.png", x + i * 55, 0, 55, 54, IF_EARTH(level));
   }
 
+#if defined SHOW_STARS
   for (int i = 0; i < 30; i++)
   {
     spaceX[i] = random(5, 235);
     spaceY[i] = random(18, 132);
   }
+#endif
 
   // main_layer->drawImageFile("back2.png"/*, 0, 0, 240, 135*/);
   // while (!selectTracker.checkPressed());
@@ -620,6 +649,21 @@ void setup(void)
 
   // newLevel();
   // while (true);
+
+  if (false) {
+    int freq = GetNoteFreq(-1, ToNoteIdx('A', 0)); 
+    dumbdisplay.writeComment(String(freq));
+    dumbdisplay.tone(freq, 1000);
+    delay(1000);
+    freq = GetNoteFreq(0, ToNoteIdx('A', 0)); 
+    dumbdisplay.writeComment(String(freq));
+    dumbdisplay.tone(freq, 1000);
+    delay(1000);
+    freq = GetNoteFreq(1, ToNoteIdx('A', 0)); 
+    dumbdisplay.writeComment(String(freq));
+    dumbdisplay.tone(freq, 1000);
+    delay(1000);
+  }
 }
 
 void handleRestart()
@@ -656,7 +700,7 @@ void handleRestart()
 
   main_layer->drawImageFile(IF_EARTH(level), 170, 5 /*, 55, 54, earth[level - 1]*/);
   main_layer->drawImageFile(IF_SENS, 170, 61 /*, 72, 72, sens*/);
-  delay(1000);
+  //delay(1000);
 
   // dumbdisplay.writeComment("2...");
   while (!rightTracker.checkPressed())
@@ -672,11 +716,12 @@ void handleRestart()
   main_layer->drawLine(0, 16, 240, 16, lightblue);
   main_layer->drawLine(0, 134, 240, 134, lightblue);
 
-  main_layer->setCursor(200, 0 /*, 2*/);
-  main_layer->print(String(brojac));
+  drawTop();
+  //main_layer->setCursor(200, 0 /*, 2*/);
+  //main_layer->print(String(brojac));
 
-  main_layer->fillRect(120, 3, 70, 7, TFT_GREEN);
-  main_layer->drawRect(119, 2, 72, 9, TFT_GREY);
+  // main_layer->fillRect(120, 3, 70, 7, TFT_GREEN);
+  // main_layer->drawRect(119, 2, 72, 9, TFT_GREY);
 
   fase = 1;
 }
@@ -766,21 +811,20 @@ void loop()
           pom3 = 0;
     */
 
-    if (false)
-    {
-      for (int i = 0; i < 30; i++)
-      { // drawStars..........................................
+#if defined SHOW_STARS
+    for (int i = 0; i < StarCount; i++)
+    { // drawStars..........................................
+      main_layer->drawPixel(spaceX[i], spaceY[i], TFT_BLACK);
+      spaceX[i] = spaceX[i] - 0.5;
+      main_layer->drawPixel(spaceX[i], spaceY[i], TFT_GREY);
+      if (spaceX[i] < 0)
+      {
         main_layer->drawPixel(spaceX[i], spaceY[i], TFT_BLACK);
-        spaceX[i] = spaceX[i] - 0.5;
-        main_layer->drawPixel(spaceX[i], spaceY[i], TFT_GREY);
-        if (spaceX[i] < 0)
-        {
-          main_layer->drawPixel(spaceX[i], spaceY[i], TFT_BLACK);
 
-          spaceX[i] = 244;
-        }
+        spaceX[i] = 244;
       }
     }
+#endif
 
     // tft.pushImage(x, y, 49, 40, brod1);
     // tft.pushImage(ex, ey, 55, 54, earth[level - 1]);
@@ -856,19 +900,26 @@ void loop()
         if (sound == 1)
         {
           // tone(BUZZER_PIN, NOTE_C5, 12, BUZZER_CHANNEL);
-          dumbdisplay.tone(NOTE_C5, 12);
+          dumbdisplay.tone(NOTE_C5, 120);
           // noTone(BUZZER_PIN, BUZZER_CHANNEL);
         }
-        delay(12);
+        delay(120);
         main_layer->fillRect(buletXY[j].getX(), buletXY[j].getY(), 12, 12, TFT_BLACK);
         buletXY[j].moveXTo(-50);
         brojac = brojac + 1;
-        main_layer->setCursor(200, 0 /*, 2*/);
-        main_layer->print(String(brojac));
         eHealth--;
-        tr = map(eHealth, 0, mHealth, 0, 70);
-        main_layer->fillRect(120, 3, 70, 7, TFT_BLACK);
-        main_layer->fillRect(120, 3, tr, 7, TFT_GREEN);
+        //main_layer->setCursor(200, 0 /*, 2*/);
+        //main_layer->print("XXX");
+        drawTop();
+        // top_layer->clear();
+        // top_layer->setCursor(200, 0 /*, 2*/);
+        // top_layer->print(String(brojac));
+        // eHealth--;
+        // tr = map(eHealth, 0, mHealth, 0, 70);
+        // top_layer->fillRect(120, 3, 70, 7, TFT_GREEN);
+        // top_layer->drawRect(119, 2, 72, 9, TFT_GREY);
+        // top_layer->fillRect(120, 3, 70, 7, TFT_BLACK);
+        // top_layer->fillRect(120, 3, tr, 7, TFT_GREEN);
 
         if (eHealth <= 0)
         {
@@ -877,7 +928,7 @@ void loop()
           dumbdisplay.tone(NOTE_E4, 100);
           dumbdisplay.tone(NOTE_D4, 80);
           dumbdisplay.tone(NOTE_G5, 100);
-          dumbdisplay.tone(NOTE_C3, 80);
+          dumbdisplay.tone(NOTE_C4/*NOTE_C3*/, 80);
           dumbdisplay.tone(NOTE_F4, 280);
           // noTone(BUZZER_PIN, BUZZER_CHANNEL);
           delay(700);
@@ -898,21 +949,23 @@ void loop()
         main_layer->drawImageFile(IF_EXPLOSION, rocketXY[j].getX(), rocketXY[j].getY());
         if (sound == 1)
         {
-          dumbdisplay.tone(NOTE_C3, 40);
+          dumbdisplay.tone(NOTE_C4/*NOTE_C3*/, 400);
           // noTone(BUZZER_PIN, BUZZER_CHANNEL);
         }
-        delay(40);
+        delay(400);
         main_layer->fillRect(rocketXY[j].getX(), rocketXY[j].getY(), 24, 24, TFT_BLACK);
         // delay(30);
 
         rocketXY[j].moveXTo(-50);
         brojac = brojac + 12;
-        main_layer->setCursor(200, 0 /*, 2*/);
-        main_layer->print(String(brojac));
         eHealth = eHealth - rDamage;
-        tr = map(eHealth, 0, mHealth, 0, 70);
-        main_layer->fillRect(120, 3, 70, 7, TFT_BLACK);
-        main_layer->fillRect(120, 3, tr, 7, TFT_GREEN);
+        drawTop();
+        // main_layer->setCursor(200, 0 /*, 2*/);
+        // main_layer->print(String(brojac));
+        // eHealth = eHealth - rDamage;
+        // tr = map(eHealth, 0, mHealth, 0, 70);
+        // main_layer->fillRect(120, 3, 70, 7, TFT_BLACK);
+        // main_layer->fillRect(120, 3, tr, 7, TFT_GREEN);
 
         if (eHealth <= 0)
         {
@@ -921,7 +974,7 @@ void loop()
           dumbdisplay.tone(NOTE_E4, 100);
           dumbdisplay.tone(NOTE_D4, 80);
           dumbdisplay.tone(NOTE_G5, 100);
-          dumbdisplay.tone(NOTE_C3, 80);
+          dumbdisplay.tone(NOTE_C4/*NOTE_C3*/, 80);
           dumbdisplay.tone(NOTE_F4, 280);
           // noTone(BUZZER_PIN, BUZZER_CHANNEL);
           delay(700);
@@ -963,10 +1016,10 @@ void loop()
         // blinkTime = 1;
         if (sound == 1)
         {
-          dumbdisplay.tone(NOTE_C6, 4);
+          dumbdisplay.tone(NOTE_C6, 40);
           // noTone(BUZZER_PIN, BUZZER_CHANNEL);
         }
-        delay(4);
+        delay(40);
       }
     }
 
