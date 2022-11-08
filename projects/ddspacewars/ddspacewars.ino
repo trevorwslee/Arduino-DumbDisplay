@@ -206,6 +206,35 @@ class Position {
     bool moved;
 };
 
+class PositionGroup
+{
+  public:
+    PositionGroup(Position* positions, int positionCount) {
+      this->positions = positions;
+      this->positionCount = positionCount;
+    }
+  public:
+    void resetAll(float pos_x, float pos_y) {
+      for (int i = 0; i < this->positionCount; i++) {
+        Position* position = this->positions + i;
+        position->reset(pos_x, pos_y);
+      }
+    }
+    bool checkAnyMoved() {
+      bool moved = false;
+      for (int i = 0; i < this->positionCount; i++) {
+        Position* position = this->positions + i;
+        if (position->checkMoved()) {
+          moved = true;
+        }
+      }
+      return moved;
+    }  
+  private:
+    Position* positions;
+    int positionCount;
+};
+
 class FrameControl {
   public:
     FrameControl() {
@@ -243,7 +272,7 @@ int brojac=0;// Invoke custom library
 //float buletY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 Position buletXY[BuletCount];/* = { Position(-10), Position(-10), Position(-10), Position(-10), Position(-10),
                          Position(-10), Position(-10), Position(-10), Position(-10), Position(-10) };*/
-
+PositionGroup buletGroup(buletXY, BuletCount);
 // float EbuletX[EBulletCount]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 // float EbuletY[EBulletCount]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 Position EbuletXY[EbuletCount];
@@ -298,7 +327,17 @@ float spaceX[30];
 float spaceY[30];
 
 
-GraphicalDDLayer* graphical;
+GraphicalDDLayer* main_layer;
+GraphicalDDLayer* bulet_layer;
+GraphicalDDLayer* rocket_layer;
+GraphicalDDLayer* Ebulet_layer;
+
+void resetScreen() {
+  bulet_layer->clear();
+  rocket_layer->clear();
+  Ebulet_layer->clear();
+  main_layer->fillScreen(TFT_BLACK);
+}
 
 void restart()
 {
@@ -336,9 +375,10 @@ void restart()
   rocketSpeed = init_rocketSpeed/*0.22*/;
 
 
-  for (int i = 0; i < BuletCount; i++) {
-    buletXY[i].reset(-20, -20);
-  }
+  buletGroup.resetAll(-20, -20);
+  // for (int i = 0; i < BuletCount; i++) {
+  //   buletXY[i].reset(-20, -20);
+  // }
   for (int i = 0; i < RocketCount; i++) {
     rocketXY[i].reset(-20, -20);
   }
@@ -373,9 +413,10 @@ void newLevel()
   exy.reset(exy.getX(), 44);
   //ey = 44;
 
-  for (int i = 0; i < BuletCount; i++) {
-    buletXY[i].reset(-20, -20);
-  }
+  buletGroup.resetAll(-20, -20);
+  // for (int i = 0; i < BuletCount; i++) {
+  //   buletXY[i].reset(-20, -20);
+  // }
   for (int i = 0; i < RocketCount; i++) {
     rocketXY[i].reset(-20, -20);
   }
@@ -388,37 +429,41 @@ void newLevel()
   //  rocketXY[i].reset(-20, -20);
   }
 
-  graphical->fillScreen(TFT_BLACK);
-  graphical->setCursor(0, 0 /*,4*/);
-  graphical->print("Level " + String(level));
-  graphical->setCursor(0, 22 /*,2*/);
+  resetScreen();
+//  fight_layer->clear();
+//  main_layer->fillScreen(TFT_BLACK);
+  main_layer->setCursor(0, 0 /*,4*/);
+  main_layer->print("Level " + String(level));
+  main_layer->setCursor(0, 22 /*,2*/);
 
-  graphical->println("Enemy speed : " + String(es));
-  graphical->println("Enemy health : " + String(eHealth));
-  graphical->println("Enemy bullet speed : " + String(EbuletSpeed));
-  graphical->println("Remaining lives: " + String(lives));
-  graphical->println("My speed : " + String(sped));
-  graphical->println("Rocket damage : " + String(rDamage));
-  graphical->println("Rocket speed : " + String(rocketSpeed));
+  main_layer->println("Enemy speed : " + String(es));
+  main_layer->println("Enemy health : " + String(eHealth));
+  main_layer->println("Enemy bullet speed : " + String(EbuletSpeed));
+  main_layer->println("Remaining lives: " + String(lives));
+  main_layer->println("My speed : " + String(sped));
+  main_layer->println("Rocket damage : " + String(rDamage));
+  main_layer->println("Rocket speed : " + String(rocketSpeed));
 
-  graphical->drawImageFile("earth-" + String(level - 1) + ".png", 170, 5);
-  graphical->drawImageFile("sens.png", 170, 61); // ,  72, 72, sens
+  main_layer->drawImageFile("earth-" + String(level - 1) + ".png", 170, 5);
+  main_layer->drawImageFile("sens.png", 170, 61); // ,  72, 72, sens
   delay(2600);
 
   while (!rightTracker.checkPressed());
   // while(digitalRead(13)==1)// wait until button a is pressed.............
   //int nezz = 0;
 
-  graphical->fillScreen(TFT_BLACK);
+  resetScreen();
+   //fight_layer->clear();
+  //main_layer->fillScreen(TFT_BLACK);
 
-  graphical->drawLine(0, 16, 240, 16, lightblue);
-  graphical->drawLine(0, 134, 240, 134, lightblue);
+  main_layer->drawLine(0, 16, 240, 16, lightblue);
+  main_layer->drawLine(0, 134, 240, 134, lightblue);
 
-  graphical->setCursor(200, 0 /*,2*/);
-  graphical->print(String(brojac));
+  main_layer->setCursor(200, 0 /*,2*/);
+  main_layer->print(String(brojac));
 
-  graphical->fillRect(120, 3, 70, 7, TFT_GREEN);
-  graphical->drawRect(119, 2, 72, 9, TFT_GREY);
+  main_layer->fillRect(120, 3, 70, 7, TFT_GREEN);
+  main_layer->drawRect(119, 2, 72, 9, TFT_GREY);
 }
 
 void setup(void)
@@ -452,68 +497,78 @@ void setup(void)
   digitalWrite(DEBUG_LED_PIN, 1);
 #endif
 
-  graphical = dumbdisplay.createGraphicalLayer(240, 135);
+  Ebulet_layer = dumbdisplay.createGraphicalLayer(240, 135); 
+  rocket_layer = dumbdisplay.createGraphicalLayer(240, 135); 
+  bulet_layer = dumbdisplay.createGraphicalLayer(240, 135); 
+  main_layer = dumbdisplay.createGraphicalLayer(240, 135);
+
+  Ebulet_layer->noBackgroundColor();
+  rocket_layer->noBackgroundColor();
+  bulet_layer->noBackgroundColor();
 
   //  tft.init();
   // tft.setRotation(1);
-  graphical->fillScreen(TFT_BLACK);
+  resetScreen();
+  //fight_layer->clear();
+  //main_layer->fillScreen(TFT_BLACK);
   // tft.setSwapBytes(true);
 
 
 #if defined (SAVE_IMAGES)
   dumbdisplay.writeComment("start caching ...");
   dumbdisplay.writeComment("... caching back2 ...");
-  graphical->cachePixelImage16(IF_BACK2/*"back2.png"*/, back2, 240, 135, "", DD_COMPRESS_BA_0);
+  main_layer->cachePixelImage16(IF_BACK2/*"back2.png"*/, back2, 240, 135, "", DD_COMPRESS_BA_0);
   if (true)
   {
     dumbdisplay.recordLayerCommands();
-    graphical->drawImageFile(IF_BACK2/*"back2.png"*/);
-    graphical->fillRect(0, 78, 120, 25, TFT_BLACK);
+    main_layer->drawImageFile(IF_BACK2/*"back2.png"*/);
+    main_layer->fillRect(0, 78, 120, 25, TFT_BLACK);
     dumbdisplay.playbackLayerCommands();
   }
   dumbdisplay.writeComment("... cachine sens ...");
-    graphical->cachePixelImage16(IF_SENS/*"sens.png"*/, sens, 72, 72, "", DD_COMPRESS_BA_0);
+    main_layer->cachePixelImage16(IF_SENS/*"sens.png"*/, sens, 72, 72, "", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine gameOver ...");
-    graphical->cachePixelImage16(IF_GAMEOVER/*"gameOver.png"*/, gameOver, 240, 135, "", DD_COMPRESS_BA_0);
+    main_layer->cachePixelImage16(IF_GAMEOVER/*"gameOver.png"*/, gameOver, 240, 135, "", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine brod1 ...");
-    graphical->cachePixelImage16(IF_BROD1/*"brod1.png"*/, brod1, 49, 40, "", DD_COMPRESS_BA_0);
+    main_layer->cachePixelImage16(IF_BROD1/*"brod1.png"*/, brod1, 49, 40, "", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine bulet ...");
-    graphical->cachePixelImage16(IF_BULET/*"bulet.png"*/, bulet, 8, 8, "", DD_COMPRESS_BA_0);
+    main_layer->cachePixelImage16(IF_BULET/*"bulet.png"*/, bulet, 8, 8, "0>a0", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine rocket ...");
-    graphical->cachePixelImage16(IF_ROCKET/*"rocket.png"*/, rocket, 24, 12, "", DD_COMPRESS_BA_0);
+    main_layer->cachePixelImage16(IF_ROCKET/*"rocket.png"*/, rocket, 24, 12, "0>a0", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine ex2 ...");
-    graphical->cachePixelImage16(IF_EX2/*"ex2.png"*/, ex2, 12, 12, "", DD_COMPRESS_BA_0);
+    main_layer->cachePixelImage16(IF_EX2/*"ex2.png"*/, ex2, 12, 12, "", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine explosion ...");
-    graphical->cachePixelImage16(IF_EXPLOSION/*"explosion.png"*/, explosion, 24, 24, "", DD_COMPRESS_BA_0);
+    main_layer->cachePixelImage16(IF_EXPLOSION/*"explosion.png"*/, explosion, 24, 24, "", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine buum ...");
-    graphical->cachePixelImage16(IF_BUUM/*"buum.png"*/, buum, 55, 55, "", DD_COMPRESS_BA_0);
+    main_layer->cachePixelImage16(IF_BUUM/*"buum.png"*/, buum, 55, 55, "", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine ebullet ...");
-    graphical->cachePixelImage16(IF_EBULLET/*"ebullet.png"*/, ebullet, 7, 7, "", DD_COMPRESS_BA_0);
+    main_layer->cachePixelImage16(IF_EBULLET/*"ebullet.png"*/, ebullet, 7, 7, "0>a0", DD_COMPRESS_BA_0);
   for (int i = 0; i < LEVEL_COUNT; i++)
   {
     int level = i + 1;
     dumbdisplay.writeComment("... caching earth-" + String(level - 1) + " ...");
-      graphical->cachePixelImage16(IF_EARTH(level)/*name + ".png"*/, earth[level - 1], 55, 54, "", DD_COMPRESS_BA_0);
+      main_layer->cachePixelImage16(IF_EARTH(level)/*name + ".png"*/, earth[level - 1], 55, 54, "", DD_COMPRESS_BA_0);
   }
   dumbdisplay.writeComment("... done caching");
-  graphical->saveCachedImageFiles(IF_SPACEWARS_IMGS/*"spacewarsimgs.png"*/);
-#else
+  main_layer->saveCachedImageFiles(IF_SPACEWARS_IMGS/*"spacewarsimgs.png"*/);
+#endif
+
   int x = 0;
-  graphical->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_BACK2); x += 240;
-  graphical->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 72, 72, IF_SENS); x += 72;
-  graphical->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_GAMEOVER); x += 240;
-  graphical->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 49, 40, IF_BROD1); x += 49;
-  graphical->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 8, 8, IF_BULET); x += 8;
-  graphical->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 24, 12, IF_ROCKET); x += 24;
-  graphical->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 12, 12, IF_EX2); x += 12;
-  graphical->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 24, 24, IF_EXPLOSION); x += 24;
-  graphical->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 55, 55, IF_BUUM); x += 55;
-  graphical->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 7, 7, IF_EBULLET); x += 7;
+  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_BACK2); x += 240;
+  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 72, 72, IF_SENS); x += 72;
+  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_GAMEOVER); x += 240;
+  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 49, 40, IF_BROD1); x += 49;
+  bulet_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 8, 8, IF_BULET); x += 8;
+  rocket_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 24, 12, IF_ROCKET); x += 24;
+  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 12, 12, IF_EX2); x += 12;
+  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 24, 24, IF_EXPLOSION); x += 24;
+  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 55, 55, IF_BUUM); x += 55;
+  Ebulet_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 7, 7, IF_EBULLET); x += 7;
   for (int i = 0; i < LEVEL_COUNT; i++)
   {
-    graphical->loadImageFileCropped("spacewarsimgs.png", x + i * 55, 0, 55, 54, IF_EARTH(level));
+    main_layer->loadImageFileCropped("spacewarsimgs.png", x + i * 55, 0, 55, 54, IF_EARTH(level));
   }
-#endif
+
 
   for (int i = 0; i < 30; i++)
   {
@@ -521,7 +576,7 @@ void setup(void)
     spaceY[i] = random(18, 132);
   }
 
-  // graphical->drawImageFile("back2.png"/*, 0, 0, 240, 135*/);
+  // main_layer->drawImageFile("back2.png"/*, 0, 0, 240, 135*/);
   // while (!selectTracker.checkPressed());
 
   // while(digitalRead(13)==1)// wait until button a is pressed.............
@@ -534,9 +589,11 @@ void setup(void)
 
 void handleRestart() {
     restart();
-    graphical->fillScreen(TFT_BLACK);
+    resetScreen();
+    //fight_layer->clear();
+    //main_layer->fillScreen(TFT_BLACK);
     //tft.setSwapBytes(true);
-    graphical->drawImageFile(IF_BACK2);
+    main_layer->drawImageFile(IF_BACK2);
 //dumbdisplay.writeComment("1...");
     while (!rightTracker.checkPressed());
 //dumbdisplay.writeComment("...1");
@@ -545,21 +602,23 @@ void handleRestart() {
     //   int nezz = 0;
     // }
     //tft.fillScreen(TFT_BLACK);
-    graphical->fillScreen(TFT_BLACK);
-    graphical->setCursor(0, 0/*, 4*/);
-    graphical->print("Level " + String(level));
-    graphical->setCursor(0, 22/*, 2*/);
+    resetScreen();
+    //fight_layer->clear();
+    //main_layer->fillScreen(TFT_BLACK);
+    main_layer->setCursor(0, 0/*, 4*/);
+    main_layer->print("Level " + String(level));
+    main_layer->setCursor(0, 22/*, 2*/);
 
-    graphical->println("Enemy speed : " + String(es));
-    graphical->println("Enemy health : " + String(eHealth));
-    graphical->println("Enemy bullet speed : " + String(EbuletSpeed));
-    graphical->println("Remaining lives: " + String(lives));
-    graphical->println("My speed : " + String(sped));
-    graphical->println("Rocket damage : " + String(rDamage));
-    graphical->println("Rocket speed : " + String(rocketSpeed));
+    main_layer->println("Enemy speed : " + String(es));
+    main_layer->println("Enemy health : " + String(eHealth));
+    main_layer->println("Enemy bullet speed : " + String(EbuletSpeed));
+    main_layer->println("Remaining lives: " + String(lives));
+    main_layer->println("My speed : " + String(sped));
+    main_layer->println("Rocket damage : " + String(rDamage));
+    main_layer->println("Rocket speed : " + String(rocketSpeed));
 
-    graphical->drawImageFile(IF_EARTH(level), 170, 5/*, 55, 54, earth[level - 1]*/);
-    graphical->drawImageFile(IF_SENS, 170, 61/*, 72, 72, sens*/);
+    main_layer->drawImageFile(IF_EARTH(level), 170, 5/*, 55, 54, earth[level - 1]*/);
+    main_layer->drawImageFile(IF_SENS, 170, 61/*, 72, 72, sens*/);
     delay(1000);
 
 //dumbdisplay.writeComment("2...");
@@ -568,16 +627,18 @@ void handleRestart() {
     // while (digitalRead(13) == 1) // wait until button a is pressed.............
     //   int nezz = 0;
 
-    graphical->fillScreen(TFT_BLACK);
+    resetScreen();
+    //fight_layer->clear();
+    //main_layer->fillScreen(TFT_BLACK);
 
-    graphical->drawLine(0, 16, 240, 16, lightblue);
-    graphical->drawLine(0, 134, 240, 134, lightblue);
+    main_layer->drawLine(0, 16, 240, 16, lightblue);
+    main_layer->drawLine(0, 134, 240, 134, lightblue);
 
-    graphical->setCursor(200, 0/*, 2*/);
-    graphical->print(String(brojac));
+    main_layer->setCursor(200, 0/*, 2*/);
+    main_layer->print(String(brojac));
 
-    graphical->fillRect(120, 3, 70, 7, TFT_GREEN);
-    graphical->drawRect(119, 2, 72, 9, TFT_GREY);
+    main_layer->fillRect(120, 3, 70, 7, TFT_GREEN);
+    main_layer->drawRect(119, 2, 72, 9, TFT_GREY);
 
     fase = 1;
 
@@ -635,7 +696,7 @@ void loop()
       //rocketY[rcounter] = xy.getY() + 14;
       rcounter = rcounter + 1;
       //ri[rockets] = -100;
-      //graphical->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
+      //main_layer->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
       // if (pom2 == 0)
       // {
       //   pom2 = 1;
@@ -644,7 +705,7 @@ void loop()
       //   rocketY[rcounter] = xy.getY() + 14;
       //   rcounter = rcounter + 1;
       //   ri[rockets] = -100;
-      //   graphical->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
+      //   main_layer->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
       // }
     }
     // else
@@ -666,12 +727,12 @@ void loop()
 if (false) {
     for (int i = 0; i < 30; i++)
     { // drawStars..........................................
-      graphical->drawPixel(spaceX[i], spaceY[i], TFT_BLACK);
+      main_layer->drawPixel(spaceX[i], spaceY[i], TFT_BLACK);
       spaceX[i] = spaceX[i] - 0.5;
-      graphical->drawPixel(spaceX[i], spaceY[i], TFT_GREY);
+      main_layer->drawPixel(spaceX[i], spaceY[i], TFT_GREY);
       if (spaceX[i] < 0)
       {
-        graphical->drawPixel(spaceX[i], spaceY[i], TFT_BLACK);
+        main_layer->drawPixel(spaceX[i], spaceY[i], TFT_BLACK);
 
         spaceX[i] = 244;
       }
@@ -681,19 +742,29 @@ if (false) {
     //tft.pushImage(x, y, 49, 40, brod1);
     //tft.pushImage(ex, ey, 55, 54, earth[level - 1]);
     if (xy.checkMoved()) {
-      graphical->drawImageFile(IF_BROD1, xy.getX(), xy.getY());
+      main_layer->drawImageFile(IF_BROD1, xy.getX(), xy.getY());
     }
     if (exy.checkMoved()) {
-      graphical->drawImageFile(IF_EARTH(level), exy.getX(), exy.getY());
+      main_layer->drawImageFile(IF_EARTH(level), exy.getX(), exy.getY());
     }
 
+    bool refreshBulet = buletGroup.checkAnyMoved();
+    // for (int i = 0; i < BuletCount; i++)
+    // {
+    //   if (buletXY[i].getX() > 0 && buletXY[i].checkMoved()) 
+    //   {
+    //     refreshBulet = true;
+    //   }
+    // }
+    if (refreshBulet) {
+      bulet_layer->clear();  
+    }
     for (int i = 0; i < BuletCount; i++)
     { // firing buletts
       if (buletXY[i].getX() > 0)
       {
-        //tft.pushImage(c, 8, 8, bulet);
-        if (buletXY[i].checkMoved()) {
-          graphical->drawImageFile(IF_BULET, buletXY[i].getX(), buletXY[i].getY());
+        if (refreshBulet) {
+          bulet_layer->drawImageFile(IF_BULET, buletXY[i].getX(), buletXY[i].getY());
         }
         if (frameDue) {
           buletXY[i].moveBy(buletSpeed/*0.6*/, 0);
@@ -709,7 +780,7 @@ if (false) {
       {
         if (rocketXY[i].checkMoved()) {
           //tft.pushImage(rocketX[i], rocketY[i], 24, 12, rocket);
-          graphical->drawImageFile(IF_ROCKET, rocketXY[i].getX(), rocketXY[i].getY());
+          rocket_layer->drawImageFile(IF_ROCKET, rocketXY[i].getX(), rocketXY[i].getY());
         }
         if (frameDue) {
           rocketXY[i].moveBy(rocketSpeed, 0);
@@ -726,7 +797,7 @@ if (false) {
       if (buletXY[j].getX() > exy.getX() + 20 && buletXY[j].getY() > exy.getY() + 2 && buletXY[j].getY() < exy.getY() + 52)
       {
         //tft.pushImage(buletX[j], buletY[j], 12, 12, ex2);
-        graphical->drawImageFile(IF_EX2, buletXY[j].getX(), buletXY[j].getY());
+        main_layer->drawImageFile(IF_EX2, buletXY[j].getX(), buletXY[j].getY());
         if (sound == 1)
         {
           //tone(BUZZER_PIN, NOTE_C5, 12, BUZZER_CHANNEL);
@@ -737,20 +808,20 @@ if (false) {
         {
           delay(12);
         }
-        graphical->fillRect(buletXY[j].getX(), buletXY[j].getY(), 12, 12, TFT_BLACK);
+        main_layer->fillRect(buletXY[j].getX(), buletXY[j].getY(), 12, 12, TFT_BLACK);
         buletXY[j].moveXTo(-50);
         brojac = brojac + 1;
-        graphical->setCursor(200, 0/*, 2*/);
-        graphical->print(String(brojac));
+        main_layer->setCursor(200, 0/*, 2*/);
+        main_layer->print(String(brojac));
         eHealth--;
         tr = map(eHealth, 0, mHealth, 0, 70);
-        graphical->fillRect(120, 3, 70, 7, TFT_BLACK);
-        graphical->fillRect(120, 3, tr, 7, TFT_GREEN);
+        main_layer->fillRect(120, 3, 70, 7, TFT_BLACK);
+        main_layer->fillRect(120, 3, tr, 7, TFT_GREEN);
 
         if (eHealth <= 0)
         {
           //tft.pushImage(ex, ey, 55, 55, buum);
-          graphical->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
+          main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
           dumbdisplay.tone(NOTE_E4, 100);
           dumbdisplay.tone(NOTE_D4, 80);
           dumbdisplay.tone(NOTE_G5, 100);
@@ -772,7 +843,7 @@ if (false) {
       if (rocketXY[j].getX() + 18 > exy.getX() && rocketXY[j].getY() > exy.getY() + 2 && rocketXY[j].getY() < exy.getY() + 52)
       {
         //tft.pushImage(rocketX[j], rocketY[j], 24, 24, explosion);
-        graphical->drawImageFile(IF_EXPLOSION, rocketXY[j].getX(), rocketXY[j].getY());
+        main_layer->drawImageFile(IF_EXPLOSION, rocketXY[j].getX(), rocketXY[j].getY());
         if (sound == 1)
         {
           dumbdisplay.tone(NOTE_C3, 40);
@@ -782,22 +853,22 @@ if (false) {
         {
           delay(40);
         }
-        graphical->fillRect(rocketXY[j].getX(), rocketXY[j].getY(), 24, 24, TFT_BLACK);
+        main_layer->fillRect(rocketXY[j].getX(), rocketXY[j].getY(), 24, 24, TFT_BLACK);
         // delay(30);
 
         rocketXY[j].moveXTo(-50);
         brojac = brojac + 12;
-        graphical->setCursor(200, 0/*, 2*/);
-        graphical->print(String(brojac));
+        main_layer->setCursor(200, 0/*, 2*/);
+        main_layer->print(String(brojac));
         eHealth = eHealth - rDamage;
         tr = map(eHealth, 0, mHealth, 0, 70);
-        graphical->fillRect(120, 3, 70, 7, TFT_BLACK);
-        graphical->fillRect(120, 3, tr, 7, TFT_GREEN);
+        main_layer->fillRect(120, 3, 70, 7, TFT_BLACK);
+        main_layer->fillRect(120, 3, tr, 7, TFT_GREEN);
 
         if (eHealth <= 0)
         {
           //tft.pushImage(ex, ey, 55, 55, buum);
-          graphical->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
+          main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
           dumbdisplay.tone(NOTE_E4, 100);
           dumbdisplay.tone(NOTE_D4, 80);
           dumbdisplay.tone(NOTE_G5, 100);
@@ -818,12 +889,12 @@ if (false) {
       {
         EbuletXY[j].moveXTo(-50);
         //ly[lives - 1] = -40;
-        graphical->fillRect((lives - 1) * 14, 0, 14, 14, TFT_BLACK);
+        main_layer->fillRect((lives - 1) * 14, 0, 14, 14, TFT_BLACK);
         lives--;
         if (lives == 0)
         {
           //tft.pushImage(x, y, 55, 55, buum);
-          graphical->drawImageFile(IF_BUUM, xy.getX(), xy.getY());
+          main_layer->drawImageFile(IF_BUUM, xy.getX(), xy.getY());
           dumbdisplay.tone(NOTE_G4, 100);
           dumbdisplay.tone(NOTE_B4, 80);
           dumbdisplay.tone(NOTE_C5, 100);
@@ -831,7 +902,9 @@ if (false) {
           dumbdisplay.tone(NOTE_F4, 280);
           //noTone(BUZZER_PIN, BUZZER_CHANNEL);
           delay(500);
-          graphical->fillScreen(TFT_BLACK);
+          resetScreen();
+          //fight_layer->clear();
+          //main_layer->fillScreen(TFT_BLACK);
           fase = 2;
         }
 
@@ -877,7 +950,7 @@ if (false) {
       {
         //tft.pushImage(EbuletX[i], EbuletY[i], 7, 7, ebullet);
         if (EbuletXY[i].checkMoved()) {
-          graphical->drawImageFile(IF_EBULLET, EbuletXY[i].getX(), EbuletXY[i].getY());
+          Ebulet_layer->drawImageFile(IF_EBULLET, EbuletXY[i].getX(), EbuletXY[i].getY());
         }
         if (frameDue) {
           EbuletXY[i].moveBy(-EbuletSpeed, 0);
@@ -914,14 +987,15 @@ if (false) {
   }
   if (fase == 2) // game over fase
   {
-
-    graphical->fillScreen(TFT_BLACK);
-    //graphical->pushImage(0, 0, 240, 135, gameOver);
-    graphical->drawImageFile(IF_GAMEOVER);
-    graphical->setCursor(24, 54/*, 2*/);
-    graphical->print("Score : " + String(brojac));
-    graphical->setCursor(24, 69/*, 2*/);
-    graphical->print("Level : " + String(level));
+    resetScreen();
+    //fight_layer->clear();
+    //main_layer->fillScreen(TFT_BLACK);
+    //main_layer->pushImage(0, 0, 240, 135, gameOver);
+    main_layer->drawImageFile(IF_GAMEOVER);
+    main_layer->setCursor(24, 54/*, 2*/);
+    main_layer->print("Score : " + String(brojac));
+    main_layer->setCursor(24, 69/*, 2*/);
+    main_layer->print("Level : " + String(level));
     while (!rightTracker.checkPressed());
     // while (digitalRead(13) == 1)
     // {
