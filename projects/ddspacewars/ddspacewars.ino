@@ -7,6 +7,7 @@
   const uint8_t VERTICAL = A1;
 #else
   //#define SAVE_IMAGES
+  #define DEBUG_LED_PIN 25
   #if defined(PICO_SDK_VERSION_MAJOR)
     const uint8_t LEFT = 15;
     const uint8_t RIGHT = 16; 
@@ -220,6 +221,9 @@ class FrameControl {
         }
         this->nextDueMillis += DueGapMillis;
       }
+#if defined (DEBUG_LED_PIN)
+    digitalWrite(DEBUG_LED_PIN, (this->nextDueMillis - nowMillis) > 10 ? 1 : 0);
+#endif
       return due;
     }
     void reset() {
@@ -442,6 +446,11 @@ void setup(void)
   pinMode(HORIZONTAL, INPUT);
   pinMode(VERTICAL, INPUT);
 #endif  
+
+#if defined (DEBUG_LED_PIN)
+  pinMode(DEBUG_LED_PIN, OUTPUT);
+  digitalWrite(DEBUG_LED_PIN, 1);
+#endif
 
   graphical = dumbdisplay.createGraphicalLayer(240, 135);
 
@@ -882,7 +891,7 @@ if (false) {
     //   tft.pushImage(70 + (i * 14), ri[i], 8, 14, ricon);
 
     if (frameDue) {
-      fireCount += 4;
+      fireCount += 2;
       if (fireTime <= fireCount)
       {
         EbuletXY[Ecounter].moveTo(exy.getX() + 5, exy.getY() + 24);
