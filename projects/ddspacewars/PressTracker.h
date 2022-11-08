@@ -66,8 +66,8 @@ public:
     this->needReset = false;
   }
 public:
-  int8_t checkPressed() {
-    return setReading(analogRead(this->pin));
+  int8_t checkPressed(int repeat = 0) {
+    return setReading(analogRead(this->pin), repeat);
   }  
   int readBypass() {
     int reading = analogRead(this->pin);
@@ -75,7 +75,12 @@ public:
     return reading;
   }  
 private:
-  int8_t setReading(int reading) {
+  int8_t setReading(int reading, int repeat = 0) {
+    if (repeat == 0) {
+      this->nextRepeatMillis = 0;
+      this->autoRepeatDir = 0;
+    }
+    long nowMillis = millis();
     //int oriReading = this->reading;
     int8_t oriPressedDir = this->pressedDir;
     //this->reading = reading;
@@ -85,13 +90,22 @@ private:
       this->pressedDir = 1;
     } else {
       this->pressedDir = 0;
+      this->nextRepeatMillis = 0;
+      this->autoRepeatDir = 0;
     }
     if (!this->needReset && this->pressedMillis != 0 && (this->pressedDir == oriPressedDir)) {
-      long diffMillis = millis() - this->pressedMillis;
+      long diffMillis = nowMillis - this->pressedMillis;
       if (diffMillis > 50) {
         this->pressedDir = 0;
         this->pressedMillis = 0;
         this->needReset = true;
+        if (repeat != 0 && oriPressedDir != 0) {
+          this->nextRepeatMillis = nowMillis + repeat;
+          this->autoRepeatDir = oriPressedDir;
+        } else {
+          this->nextRepeatMillis = 0;
+          this->autoRepeatDir = 0;
+        }
         return oriPressedDir;
       } 
     } else {
@@ -102,6 +116,13 @@ private:
       } else {
         this->pressedMillis = 0;
         this->needReset = false;
+      }
+    }
+    if (this->nextRepeatMillis != 0) {
+      long diff = this->nextRepeatMillis - nowMillis;
+      if (diff < 0) {
+        this->nextRepeatMillis = nowMillis + repeat;
+        return this->autoRepeatDir;
       }
     }
     return 0;
@@ -115,4 +136,6 @@ private:
   int pressedDir;
   long pressedMillis;
   bool needReset;
+  long nextRepeatMillis;
+  int autoRepeatDir;
 };

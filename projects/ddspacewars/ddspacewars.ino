@@ -693,8 +693,8 @@ void loop()
     bool frameDue = frameControl.checkDue();
 
 #if defined(WITH_JOYSTICK)
-    int8_t horizontalPress = horizontalTracker.checkPressed();
-    int8_t verticalPress = verticalTracker.checkPressed();
+    int8_t horizontalPress = horizontalTracker.checkPressed(50);
+    int8_t verticalPress = verticalTracker.checkPressed(50);
 
     int x = xy.getX();
     int y = xy.getY();
