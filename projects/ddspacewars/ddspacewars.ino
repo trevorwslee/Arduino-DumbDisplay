@@ -280,12 +280,14 @@ public:
 #if defined(DEBUG_LED_PIN)
     digitalWrite(DEBUG_LED_PIN, (this->nextDueMillis - nowMillis) > 10 ? 1 : 0);
 #endif
-    if (due) {
+    if (due)
+    {
       this->frameNum += 1;
     }
     return due;
   }
-  inline long getFrameNum() {
+  inline long getFrameNum()
+  {
     return this->frameNum;
   }
   void reset()
@@ -302,7 +304,7 @@ private:
 FrameControl frameControl;
 
 // TFT_eSPI tft = TFT_eSPI();
-int brojac/* = 0*/; // Invoke custom library
+int brojac /* = 0*/; // Invoke custom library
 
 // float buletX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 // float buletY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
@@ -348,22 +350,21 @@ float es = init_es;
 // float sped = 0.42;
 float sped = init_sped;
 // int blinkTime=0;
-int eHealth/* = 50*/;
-int mHealth/* = eHealth*/;
-int lives/* = 4*/;
+int eHealth /* = 50*/;
+int mHealth /* = eHealth*/;
+int lives /* = 4*/;
 // int ly[4]={0,0,0,0};
 // int ri[3]={0,0,0};
 int fireTime = 100;
 int fireCount = 0;
 float EbuletSpeed = init_EbuletSpeed /*0.42*/;
-int rDamage/* = 8*/; // rocket damage
+int rDamage /* = 8*/; // rocket damage
 // int tr = 0;
 
 // int pom3=0;
 bool sound = 1; // sound on or off
 
 int fase = 0; // fase 0=start screen,//fase 1=playing fase //fase 3=game over
-
 
 GraphicalDDLayer *bg_layer;
 GraphicalDDLayer *main_layer;
@@ -372,7 +373,7 @@ GraphicalDDLayer *rocket_layer;
 GraphicalDDLayer *Ebulet_layer;
 GraphicalDDLayer *top_layer;
 #if defined(SHOW_SPACE)
-  GraphicalDDLayer *space_layers[SpaceLayerCount];
+GraphicalDDLayer *space_layers[SpaceLayerCount];
 #endif
 
 void resetScreen()
@@ -382,12 +383,13 @@ void resetScreen()
   Ebulet_layer->clear();
   top_layer->clear();
 #if defined SHOW_SPACE
-  for (int i = 0; i < SpaceLayerCount; i++) {
+  for (int i = 0; i < SpaceLayerCount; i++)
+  {
     space_layers[i]->clear();
   }
 #endif
   main_layer->clear();
-  //main_layer->fillScreen(TFT_BLACK);
+  // main_layer->fillScreen(TFT_BLACK);
 }
 
 void drawTop()
@@ -581,14 +583,14 @@ void setup(void)
   main_layer = dumbdisplay.createGraphicalLayer(240, 135);
   main_layer->noBackgroundColor();
 #if defined(SHOW_SPACE)
-  for (int i = 0; i < SpaceLayerCount; i++) {
+  for (int i = 0; i < SpaceLayerCount; i++)
+  {
     space_layers[i] = dumbdisplay.createGraphicalLayer(240, 135);
     space_layers[i]->noBackgroundColor();
   }
 #endif
   bg_layer = dumbdisplay.createGraphicalLayer(240, 135);
   bg_layer->backgroundColor(TFT_BLACK);
-
 
   //  tft.init();
   // tft.setRotation(1);
@@ -661,8 +663,7 @@ void setup(void)
   {
     main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x + i * 55, 0, 55, 54, IF_EARTH(level));
   }
-  //main_layer->saveCachedImageFiles();
-
+  // main_layer->saveCachedImageFiles();
 
   // main_layer->drawImageFile("back2.png"/*, 0, 0, 240, 135*/);
   // while (!selectTracker.checkPressed());
@@ -733,377 +734,373 @@ void handleRestart()
   // main_layer->drawRect(119, 2, 72, 9, TFT_GREY);
 
 #if defined(SHOW_SPACE)
-  for (int i = 0; i < SpaceLayerCount; i++) {
-    //space_layers[i]->print("SPACE");
-    space_layers[i]->visible(false);
-    for (int j = 0; j < StarCount; j++) {
+  for (int i = 0; i < SpaceLayerCount; i++)
+  {
+    // space_layers[i]->print("SPACE");
+    space_layers[i]->transparent(true);
+    for (int j = 0; j < StarCount; j++)
+    {
       space_layers[i]->drawPixel(random(5, 235), random(18, 132), TFT_GREY);
-      //space_layers[i]->drawRect(random(5, 235), random(18, 132), 3, 3, TFT_GREY);
+      // space_layers[i]->drawRect(random(5, 235), random(18, 132), 3, 3, TFT_GREY);
     }
   }
 #endif
-
 
   fase = 1;
 }
 
-void handlePlay() 
+void handlePlay()
 {
-    bool frameDue = frameControl.checkDue();
-    long frameNum = frameControl.getFrameNum();
-    
+  bool frameDue = frameControl.checkDue();
+  long frameNum = frameControl.getFrameNum();
+
 #if defined(WITH_JOYSTICK)
-    int8_t horizontalPress = horizontalTracker.checkPressed(50);
-    int8_t verticalPress = verticalTracker.checkPressed(50);
+  int8_t horizontalPress = horizontalTracker.checkPressed(50);
+  int8_t verticalPress = verticalTracker.checkPressed(50);
 
-    int x = xy.getX();
-    int y = xy.getY();
+  int x = xy.getX();
+  int y = xy.getY();
 
-    if (verticalPress == -1 && y < 94) // Move down
-      y = y + sped;
+  if (verticalPress == -1 && y < 94) // Move down
+    y = y + sped;
 
-    if (verticalPress == 1 && y > 18) // Move up
-      y = y - sped;
+  if (verticalPress == 1 && y > 18) // Move up
+    y = y - sped;
 
-    if (horizontalPress == 1 && x < 125) // Move right
-      x = x + sped;
+  if (horizontalPress == 1 && x < 125) // Move right
+    x = x + sped;
 
-    if (horizontalPress == -1 && x > 0) // Move left
-      x = x - sped;
+  if (horizontalPress == -1 && x > 0) // Move left
+    x = x - sped;
 
-    xy.moveTo(x, y);
+  xy.moveTo(x, y);
 #endif
 
-    if (rightTracker.checkPressed())
-    {
-      buletXY[counter].moveTo(xy.getX() + 34, xy.getY() + 15);
-      counter = counter + 1;
-    }
+  if (rightTracker.checkPressed())
+  {
+    buletXY[counter].moveTo(xy.getX() + 34, xy.getY() + 15);
+    counter = counter + 1;
+  }
 
-    if (leftTracker.checkPressed() && rockets > 0)
-    {
-      rockets--;
-      rocketXY[rcounter].moveTo(xy.getX() + 34, xy.getY() + 14);
-      rcounter = rcounter + 1;
-    }
+  if (leftTracker.checkPressed() && rockets > 0)
+  {
+    rockets--;
+    rocketXY[rcounter].moveTo(xy.getX() + 34, xy.getY() + 14);
+    rcounter = rcounter + 1;
+  }
 
-    /*
-        if (digitalRead(35) == 0) // buton 35 , on and off sound
+  /*
+      if (digitalRead(35) == 0) // buton 35 , on and off sound
+      {
+        if (pom3 == 0)
         {
-          if (pom3 == 0)
-          {
-            pom3 = 1;
-            sound = !sound;
-          }
+          pom3 = 1;
+          sound = !sound;
         }
-        else
-          pom3 = 0;
-    */
+      }
+      else
+        pom3 = 0;
+  */
 
 #if defined(SHOW_SPACE)
-  if (frameDue && frameNum % 3 == 0) {
-    for (int i = 0; i < SpaceLayerCount; i++) {
-      space_layers[i]->visible(random(0, 2));
+  if (frameDue && frameNum % 3 == 0)
+  {
+    for (int i = 0; i < SpaceLayerCount; i++)
+    {
+      space_layers[i]->transparent(random(0, 2));
     }
   }
 #endif
 
-    bool refreshMain = xy.checkMoved() || exy.checkMoved();
-    bool refreshBulets = buletGroup.checkAnyMoved();
-    bool refreshRockets = rocketGroup.checkAnyMoved();
-    bool refreshEbullets = EbulletGroup.checkAnyMoved();
+  bool refreshMain = xy.checkMoved() || exy.checkMoved();
+  bool refreshBulets = buletGroup.checkAnyMoved();
+  bool refreshRockets = rocketGroup.checkAnyMoved();
+  bool refreshEbullets = EbulletGroup.checkAnyMoved();
 
-    bool freezeScreen = refreshMain || refreshBulets || refreshRockets || refreshEbullets;
-    if (freezeScreen)
-    {
-      dumbdisplay.recordLayerCommands();
-    }
+  bool freezeScreen = refreshMain || refreshBulets || refreshRockets || refreshEbullets;
+  if (freezeScreen)
+  {
+    dumbdisplay.recordLayerCommands();
+  }
 
-    if (refreshMain)
-    {
-      main_layer->clear();
-      main_layer->drawImageFile(IF_BROD1, xy.getX(), xy.getY());
-      main_layer->drawImageFile(IF_EARTH(level), exy.getX(), exy.getY());
-    }
+  if (refreshMain)
+  {
+    main_layer->clear();
+    main_layer->drawImageFile(IF_BROD1, xy.getX(), xy.getY());
+    main_layer->drawImageFile(IF_EARTH(level), exy.getX(), exy.getY());
+  }
 
-    if (refreshBulets)
+  if (refreshBulets)
+  {
+    bulet_layer->clear();
+  }
+  for (int i = 0; i < BuletCount; i++)
+  { // firing buletts
+    if (buletXY[i].getX() > 0)
     {
-      bulet_layer->clear();
-    }
-    for (int i = 0; i < BuletCount; i++)
-    { // firing buletts
-      if (buletXY[i].getX() > 0)
+      if (refreshBulets)
       {
-        if (refreshBulets)
-        {
-          bulet_layer->drawImageFile(IF_BULET, buletXY[i].getX(), buletXY[i].getY());
-        }
-        if (frameDue)
-        {
-          buletXY[i].moveBy(buletSpeed /*0.6*/, 0);
-        }
+        bulet_layer->drawImageFile(IF_BULET, buletXY[i].getX(), buletXY[i].getY());
       }
-      if (buletXY[i].getX() > 240)
-        buletXY[i].moveXTo(-30);
-    }
-
-    if (refreshRockets)
-    {
-      rocket_layer->clear();
-    }
-    for (int i = 0; i < RocketCount; i++)
-    { // firing rockets
-      if (rocketXY[i].getX() > 0)
+      if (frameDue)
       {
-        if (refreshRockets)
-        {
-          // tft.pushImage(rocketX[i], rocketY[i], 24, 12, rocket);
-          rocket_layer->drawImageFile(IF_ROCKET, rocketXY[i].getX(), rocketXY[i].getY());
-        }
-        if (frameDue)
-        {
-          rocketXY[i].moveBy(rocketSpeed, 0);
-        }
-      }
-      if (rocketXY[i].getX() > 240)
-        rocketXY[i].moveXTo(-30);
-    }
-
-    // if (freezeScreen)
-    // {
-    //   dumbdisplay.playbackLayerCommands();
-    // }
-
-
-    // delay(1);
-
-    for (int j = 0; j < BuletCount; j++) // did my bulet hit enemy
-    {
-      if (buletXY[j].getX() > exy.getX() + 20 && buletXY[j].getY() > exy.getY() + 2 && buletXY[j].getY() < exy.getY() + 52)
-      {
-        // tft.pushImage(buletX[j], buletY[j], 12, 12, ex2);
-        main_layer->drawImageFile(IF_EX2, buletXY[j].getX(), buletXY[j].getY());
-        if (sound == 1)
-        {
-          // tone(BUZZER_PIN, NOTE_C5, 12, BUZZER_CHANNEL);
-          dumbdisplay.tone(NOTE_C5, 120);
-          // noTone(BUZZER_PIN, BUZZER_CHANNEL);
-        }
-        delay(120);
-        main_layer->fillRect(buletXY[j].getX(), buletXY[j].getY(), 12, 12, TFT_BLACK);
-        buletXY[j].moveXTo(-50);
-        brojac = brojac + 1;
-        eHealth--;
-        // main_layer->setCursor(200, 0 /*, 2*/);
-        // main_layer->print("XXX");
-        drawTop();
-        // top_layer->clear();
-        // top_layer->setCursor(200, 0 /*, 2*/);
-        // top_layer->print(String(brojac));
-        // eHealth--;
-        // tr = map(eHealth, 0, mHealth, 0, 70);
-        // top_layer->fillRect(120, 3, 70, 7, TFT_GREEN);
-        // top_layer->drawRect(119, 2, 72, 9, TFT_GREY);
-        // top_layer->fillRect(120, 3, 70, 7, TFT_BLACK);
-        // top_layer->fillRect(120, 3, tr, 7, TFT_GREEN);
-
-        if (eHealth <= 0)
-        {
-          // tft.pushImage(ex, ey, 55, 55, buum);
-          main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
-          dumbdisplay.tone(NOTE_E4, 100);
-          dumbdisplay.tone(NOTE_D4, 80);
-          dumbdisplay.tone(NOTE_G5, 100);
-          dumbdisplay.tone(NOTE_C4 /*NOTE_C3*/, 80);
-          dumbdisplay.tone(NOTE_F4, 280);
-          // noTone(BUZZER_PIN, BUZZER_CHANNEL);
-          delay(700);
-          newLevel();
-        }
-        /*
-        digitalWrite(25, 1);
-        */
-        // blinkTime = 1;
+        buletXY[i].moveBy(buletSpeed /*0.6*/, 0);
       }
     }
+    if (buletXY[i].getX() > 240)
+      buletXY[i].moveXTo(-30);
+  }
 
-    for (int j = 0; j < RocketCount; j++) // did my ROCKET hit enemy
+  if (refreshRockets)
+  {
+    rocket_layer->clear();
+  }
+  for (int i = 0; i < RocketCount; i++)
+  { // firing rockets
+    if (rocketXY[i].getX() > 0)
     {
-      if (rocketXY[j].getX() + 18 > exy.getX() && rocketXY[j].getY() > exy.getY() + 2 && rocketXY[j].getY() < exy.getY() + 52)
+      if (refreshRockets)
       {
-        // tft.pushImage(rocketX[j], rocketY[j], 24, 24, explosion);
-        main_layer->drawImageFile(IF_EXPLOSION, rocketXY[j].getX(), rocketXY[j].getY());
-        if (sound == 1)
-        {
-          dumbdisplay.tone(NOTE_C4 /*NOTE_C3*/, 400);
-          // noTone(BUZZER_PIN, BUZZER_CHANNEL);
-        }
-        delay(400);
-        main_layer->fillRect(rocketXY[j].getX(), rocketXY[j].getY(), 24, 24, TFT_BLACK);
-        // delay(30);
-
-        rocketXY[j].moveXTo(-50);
-        brojac = brojac + 12;
-        eHealth = eHealth - rDamage;
-        drawTop();
-        // main_layer->setCursor(200, 0 /*, 2*/);
-        // main_layer->print(String(brojac));
-        // eHealth = eHealth - rDamage;
-        // tr = map(eHealth, 0, mHealth, 0, 70);
-        // main_layer->fillRect(120, 3, 70, 7, TFT_BLACK);
-        // main_layer->fillRect(120, 3, tr, 7, TFT_GREEN);
-
-        if (eHealth <= 0)
-        {
-          // tft.pushImage(ex, ey, 55, 55, buum);
-          main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
-          dumbdisplay.tone(NOTE_E4, 100);
-          dumbdisplay.tone(NOTE_D4, 80);
-          dumbdisplay.tone(NOTE_G5, 100);
-          dumbdisplay.tone(NOTE_C4 /*NOTE_C3*/, 80);
-          dumbdisplay.tone(NOTE_F4, 280);
-          // noTone(BUZZER_PIN, BUZZER_CHANNEL);
-          delay(700);
-          newLevel();
-        }
-        // digitalWrite(25, 0);
-        // blinkTime = 1;
+        // tft.pushImage(rocketX[i], rocketY[i], 24, 12, rocket);
+        rocket_layer->drawImageFile(IF_ROCKET, rocketXY[i].getX(), rocketXY[i].getY());
+      }
+      if (frameDue)
+      {
+        rocketXY[i].moveBy(rocketSpeed, 0);
       }
     }
+    if (rocketXY[i].getX() > 240)
+      rocketXY[i].moveXTo(-30);
+  }
 
-    for (int j = 0; j < EbuletCount; j++) // Am I hit
+  // delay(1);
+
+  for (int j = 0; j < BuletCount; j++) // did my bulet hit enemy
+  {
+    if (buletXY[j].getX() > exy.getX() + 20 && buletXY[j].getY() > exy.getY() + 2 && buletXY[j].getY() < exy.getY() + 52)
     {
-      if (EbuletXY[j].getX() < xy.getX() + 30 && EbuletXY[j].getX() > xy.getX() + 4 && EbuletXY[j].getY() > xy.getY() + 4 && EbuletXY[j].getY() < xy.getY() + 36)
+      // tft.pushImage(buletX[j], buletY[j], 12, 12, ex2);
+      main_layer->drawImageFile(IF_EX2, buletXY[j].getX(), buletXY[j].getY());
+      if (sound == 1)
       {
-        EbuletXY[j].moveXTo(-50);
-        // ly[lives - 1] = -40;
-        main_layer->fillRect((lives - 1) * 14, 0, 14, 14, TFT_BLACK);
-        lives--;
-        if (lives == 0)
-        {
-          // tft.pushImage(x, y, 55, 55, buum);
-          main_layer->drawImageFile(IF_BUUM, xy.getX(), xy.getY());
-          dumbdisplay.tone(NOTE_G4, 100);
-          dumbdisplay.tone(NOTE_B4, 80);
-          dumbdisplay.tone(NOTE_C5, 100);
-          dumbdisplay.tone(NOTE_A4, 80);
-          dumbdisplay.tone(NOTE_F4, 280);
-          // noTone(BUZZER_PIN, BUZZER_CHANNEL);
-          delay(500);
-          resetScreen();
-          // fight_layer->clear();
-          // main_layer->fillScreen(TFT_BLACK);
-          fase = 2;
-        }
+        // tone(BUZZER_PIN, NOTE_C5, 12, BUZZER_CHANNEL);
+        dumbdisplay.tone(NOTE_C5, 120);
+        // noTone(BUZZER_PIN, BUZZER_CHANNEL);
+      }
+      delay(120);
+      main_layer->fillRect(buletXY[j].getX(), buletXY[j].getY(), 12, 12, TFT_BLACK);
+      buletXY[j].moveXTo(-50);
+      brojac = brojac + 1;
+      eHealth--;
+      // main_layer->setCursor(200, 0 /*, 2*/);
+      // main_layer->print("XXX");
+      drawTop();
+      // top_layer->clear();
+      // top_layer->setCursor(200, 0 /*, 2*/);
+      // top_layer->print(String(brojac));
+      // eHealth--;
+      // tr = map(eHealth, 0, mHealth, 0, 70);
+      // top_layer->fillRect(120, 3, 70, 7, TFT_GREEN);
+      // top_layer->drawRect(119, 2, 72, 9, TFT_GREY);
+      // top_layer->fillRect(120, 3, 70, 7, TFT_BLACK);
+      // top_layer->fillRect(120, 3, tr, 7, TFT_GREEN);
 
-        /*
-        digitalWrite(33, 1);
-        */
-        // blinkTime = 1;
-        if (sound == 1)
-        {
-          dumbdisplay.tone(NOTE_C5 /*NOTE_C6*/, 400);
-          // noTone(BUZZER_PIN, BUZZER_CHANNEL);
-        }
-        delay(400);
+      if (eHealth <= 0)
+      {
+        // tft.pushImage(ex, ey, 55, 55, buum);
+        main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
+        dumbdisplay.tone(NOTE_E4, 100);
+        dumbdisplay.tone(NOTE_D4, 80);
+        dumbdisplay.tone(NOTE_G5, 100);
+        dumbdisplay.tone(NOTE_C4 /*NOTE_C3*/, 80);
+        dumbdisplay.tone(NOTE_F4, 280);
+        // noTone(BUZZER_PIN, BUZZER_CHANNEL);
+        delay(700);
+        newLevel();
+      }
+      /*
+      digitalWrite(25, 1);
+      */
+      // blinkTime = 1;
+    }
+  }
+
+  for (int j = 0; j < RocketCount; j++) // did my ROCKET hit enemy
+  {
+    if (rocketXY[j].getX() + 18 > exy.getX() && rocketXY[j].getY() > exy.getY() + 2 && rocketXY[j].getY() < exy.getY() + 52)
+    {
+      // tft.pushImage(rocketX[j], rocketY[j], 24, 24, explosion);
+      main_layer->drawImageFile(IF_EXPLOSION, rocketXY[j].getX(), rocketXY[j].getY());
+      if (sound == 1)
+      {
+        dumbdisplay.tone(NOTE_C4 /*NOTE_C3*/, 400);
+        // noTone(BUZZER_PIN, BUZZER_CHANNEL);
+      }
+      delay(400);
+      main_layer->fillRect(rocketXY[j].getX(), rocketXY[j].getY(), 24, 24, TFT_BLACK);
+      // delay(30);
+
+      rocketXY[j].moveXTo(-50);
+      brojac = brojac + 12;
+      eHealth = eHealth - rDamage;
+      drawTop();
+      // main_layer->setCursor(200, 0 /*, 2*/);
+      // main_layer->print(String(brojac));
+      // eHealth = eHealth - rDamage;
+      // tr = map(eHealth, 0, mHealth, 0, 70);
+      // main_layer->fillRect(120, 3, 70, 7, TFT_BLACK);
+      // main_layer->fillRect(120, 3, tr, 7, TFT_GREEN);
+
+      if (eHealth <= 0)
+      {
+        // tft.pushImage(ex, ey, 55, 55, buum);
+        main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
+        dumbdisplay.tone(NOTE_E4, 100);
+        dumbdisplay.tone(NOTE_D4, 80);
+        dumbdisplay.tone(NOTE_G5, 100);
+        dumbdisplay.tone(NOTE_C4 /*NOTE_C3*/, 80);
+        dumbdisplay.tone(NOTE_F4, 280);
+        // noTone(BUZZER_PIN, BUZZER_CHANNEL);
+        delay(700);
+        newLevel();
+      }
+      // digitalWrite(25, 0);
+      // blinkTime = 1;
+    }
+  }
+
+  for (int j = 0; j < EbuletCount; j++) // Am I hit
+  {
+    if (EbuletXY[j].getX() < xy.getX() + 30 && EbuletXY[j].getX() > xy.getX() + 4 && EbuletXY[j].getY() > xy.getY() + 4 && EbuletXY[j].getY() < xy.getY() + 36)
+    {
+      EbuletXY[j].moveXTo(-50);
+      // ly[lives - 1] = -40;
+      main_layer->fillRect((lives - 1) * 14, 0, 14, 14, TFT_BLACK);
+      lives--;
+      if (lives == 0)
+      {
+        // tft.pushImage(x, y, 55, 55, buum);
+        main_layer->drawImageFile(IF_BUUM, xy.getX(), xy.getY());
+        dumbdisplay.tone(NOTE_G4, 100);
+        dumbdisplay.tone(NOTE_B4, 80);
+        dumbdisplay.tone(NOTE_C5, 100);
+        dumbdisplay.tone(NOTE_A4, 80);
+        dumbdisplay.tone(NOTE_F4, 280);
+        // noTone(BUZZER_PIN, BUZZER_CHANNEL);
+        delay(500);
+        resetScreen();
+        // fight_layer->clear();
+        // main_layer->fillScreen(TFT_BLACK);
+        fase = 2;
+      }
+
+      /*
+      digitalWrite(33, 1);
+      */
+      // blinkTime = 1;
+      if (sound == 1)
+      {
+        dumbdisplay.tone(NOTE_C5 /*NOTE_C6*/, 400);
+        // noTone(BUZZER_PIN, BUZZER_CHANNEL);
+      }
+      delay(400);
+    }
+  }
+
+  if (frameDue)
+  {
+    exy.moveBy(0, es);
+    // ey = ey + es;
+    if (exy.getY() > 80)
+      es = es * -1;
+
+    if (exy.getY() < 18)
+      es = es * -1;
+  }
+
+  // if (blinkTime > 0)
+  //   blinkTime++;
+
+  // if (blinkTime > 2)
+  // {
+  //   digitalWrite(25, 0);
+  //   digitalWrite(33, 0);
+  //   blinkTime = 0;
+  // }
+
+  if (refreshEbullets)
+  {
+    Ebulet_layer->clear();
+  }
+  for (int i = 0; i < EbuletCount; i++)
+  { // enemy shoots
+    if (EbuletXY[i].getX() > -10)
+    {
+      // tft.pushImage(EbuletX[i], EbuletY[i], 7, 7, ebullet);
+      if (refreshEbullets)
+      {
+        Ebulet_layer->drawImageFile(IF_EBULLET, EbuletXY[i].getX(), EbuletXY[i].getY());
+      }
+      if (frameDue)
+      {
+        EbuletXY[i].moveBy(-EbuletSpeed, 0);
       }
     }
+  }
 
-    if (frameDue)
+  // for (int i = 0; i < 4; i++) // draw lifes
+  //   tft.pushImage(i * 14, ly[i], 12, 11, life);
+  // for (int i = 0; i < 3; i++) // draw lifes
+  //   tft.pushImage(70 + (i * 14), ri[i], 8, 14, ricon);
+
+  if (frameDue)
+  {
+    fireCount += 2;
+    if (fireTime <= fireCount)
     {
-      exy.moveBy(0, es);
-      // ey = ey + es;
-      if (exy.getY() > 80)
-        es = es * -1;
-
-      if (exy.getY() < 18)
-        es = es * -1;
+      EbuletXY[Ecounter].moveTo(exy.getX() + 5, exy.getY() + 24);
+      // EbuletY[Ecounter] = exy.getY() + 24;
+      fireCount = 0;
+      fireTime = random(110 - (level * 15), 360 - (level * 30));
+      Ecounter++;
+      // dumbdisplay.writeComment("E fired ... " + String(Ecounter));
     }
+  }
 
-    // if (blinkTime > 0)
-    //   blinkTime++;
+  if (counter == BuletCount /*9*/)
+    counter = 0;
 
-    // if (blinkTime > 2)
-    // {
-    //   digitalWrite(25, 0);
-    //   digitalWrite(33, 0);
-    //   blinkTime = 0;
-    // }
+  if (rcounter == RocketCount /*3*/)
+    rcounter = 0;
 
-    if (refreshEbullets)
-    {
-      Ebulet_layer->clear();
-    }
-    for (int i = 0; i < EbuletCount; i++)
-    { // enemy shoots
-      if (EbuletXY[i].getX() > -10)
-      {
-        // tft.pushImage(EbuletX[i], EbuletY[i], 7, 7, ebullet);
-        if (refreshEbullets)
-        {
-          Ebulet_layer->drawImageFile(IF_EBULLET, EbuletXY[i].getX(), EbuletXY[i].getY());
-        }
-        if (frameDue)
-        {
-          EbuletXY[i].moveBy(-EbuletSpeed, 0);
-        }
-      }
-    }
+  if (Ecounter == EbuletCount /*9*/)
+    Ecounter = 0;
 
-
-    // for (int i = 0; i < 4; i++) // draw lifes
-    //   tft.pushImage(i * 14, ly[i], 12, 11, life);
-    // for (int i = 0; i < 3; i++) // draw lifes
-    //   tft.pushImage(70 + (i * 14), ri[i], 8, 14, ricon);
-
-    if (frameDue)
-    {
-      fireCount += 2;
-      if (fireTime <= fireCount)
-      {
-        EbuletXY[Ecounter].moveTo(exy.getX() + 5, exy.getY() + 24);
-        // EbuletY[Ecounter] = exy.getY() + 24;
-        fireCount = 0;
-        fireTime = random(110 - (level * 15), 360 - (level * 30));
-        Ecounter++;
-        // dumbdisplay.writeComment("E fired ... " + String(Ecounter));
-      }
-    }
-
-    if (counter == BuletCount /*9*/)
-      counter = 0;
-
-    if (rcounter == RocketCount /*3*/)
-      rcounter = 0;
-
-    if (Ecounter == EbuletCount /*9*/)
-      Ecounter = 0;
-
-    if (freezeScreen)
-    {
-      dumbdisplay.playbackLayerCommands();
-    }
-
+  if (freezeScreen)
+  {
+    dumbdisplay.playbackLayerCommands();
+  }
 }
 
-void handleGameOver() {
-    resetScreen();
-    // fight_layer->clear();
-    // main_layer->fillScreen(TFT_BLACK);
-    // main_layer->pushImage(0, 0, 240, 135, gameOver);
-    main_layer->drawImageFile(IF_GAMEOVER);
-    main_layer->setCursor(24, 54 /*, 2*/);
-    main_layer->print("Score : " + String(brojac));
-    main_layer->setCursor(24, 69 /*, 2*/);
-    main_layer->print("Level : " + String(level));
-    while (!rightTracker.checkPressed())
-      ;
-    // while (digitalRead(13) == 1)
-    // {
-    //   int nezz = 0;
-    // }
+void handleGameOver()
+{
+  resetScreen();
+  // fight_layer->clear();
+  // main_layer->fillScreen(TFT_BLACK);
+  // main_layer->pushImage(0, 0, 240, 135, gameOver);
+  main_layer->drawImageFile(IF_GAMEOVER);
+  main_layer->setCursor(24, 54 /*, 2*/);
+  main_layer->print("Score : " + String(brojac));
+  main_layer->setCursor(24, 69 /*, 2*/);
+  main_layer->print("Level : " + String(level));
+  while (!rightTracker.checkPressed())
+    ;
+  // while (digitalRead(13) == 1)
+  // {
+  //   int nezz = 0;
+  // }
 
-    fase = 0;
+  fase = 0;
 }
 
 void loop()
@@ -1111,11 +1108,13 @@ void loop()
   if (fase == 0)
   {
     handleRestart();
-  } else if (fase == 1)
+  }
+  else if (fase == 1)
   { // playing fase
     handlePlay();
-  } else  if (fase == 2) // game over fase
+  }
+  else if (fase == 2) // game over fase
   {
     handleGameOver();
-  } 
+  }
 }
