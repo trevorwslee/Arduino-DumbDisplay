@@ -886,16 +886,23 @@ void loop()
 
     // tft.pushImage(x, y, 49, 40, brod1);
     // tft.pushImage(ex, ey, 55, 54, earth[level - 1]);
-    if (xy.checkMoved() || exy.checkMoved())
+    bool refreshMain = xy.checkMoved() || exy.checkMoved();
+    bool refreshBulets = buletGroup.checkAnyMoved();
+    bool refreshRockets = rocketGroup.checkAnyMoved();
+
+    bool freezeScreen = refreshMain || refreshBulets || refreshRockets;
+    if (freezeScreen)
     {
       dumbdisplay.recordLayerCommands();
+    }
+
+    if (refreshMain)
+    {
       main_layer->clear();
       main_layer->drawImageFile(IF_BROD1, xy.getX(), xy.getY());
       main_layer->drawImageFile(IF_EARTH(level), exy.getX(), exy.getY());
-      dumbdisplay.playbackLayerCommands();
     }
 
-    bool refreshBulets = buletGroup.checkAnyMoved();
     // for (int i = 0; i < BuletCount; i++)
     // {
     //   if (buletXY[i].getX() > 0 && buletXY[i].checkMoved())
@@ -924,7 +931,6 @@ void loop()
         buletXY[i].moveXTo(-30);
     }
 
-    bool refreshRockets = rocketGroup.checkAnyMoved();
     if (refreshRockets)
     {
       rocket_layer->clear();
@@ -946,6 +952,12 @@ void loop()
       if (rocketXY[i].getX() > 240)
         rocketXY[i].moveXTo(-30);
     }
+
+    if (freezeScreen)
+    {
+      dumbdisplay.playbackLayerCommands();
+    }
+
 
     // delay(1);
 
