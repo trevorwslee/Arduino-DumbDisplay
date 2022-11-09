@@ -8,6 +8,7 @@ const uint8_t HORIZONTAL = A0;
 const uint8_t VERTICAL = A1;
 #else
 //#define SAVE_IMAGES
+#define SHOW_SPACE
 #define DEBUG_LED_PIN 25
 #if defined(PICO_SDK_VERSION_MAJOR)
 const uint8_t LEFT = 15;
@@ -17,9 +18,6 @@ const uint8_t RIGHT = 16;
 #error not configured for board yet
 #endif
 #endif
-
-//#define SHOW_STARS
-#define SHOW_SPACE
 
 #if defined(SAVE_IMAGES)
 #include "rocket.h"
@@ -109,9 +107,6 @@ const int BuletCount = 10;
 const int RocketCount = 4;
 const int EbuletCount = 10;
 
-#if defined SHOW_STARS
-const int StarCount = 30;
-#endif
 #if defined SHOW_SPACE
 const int StarCount = 8;
 const int SpaceLayerCount = 4;
@@ -285,21 +280,29 @@ public:
 #if defined(DEBUG_LED_PIN)
     digitalWrite(DEBUG_LED_PIN, (this->nextDueMillis - nowMillis) > 10 ? 1 : 0);
 #endif
+    if (due) {
+      this->frameNum += 1;
+    }
     return due;
+  }
+  inline long getFrameNum() {
+    return this->frameNum;
   }
   void reset()
   {
     this->nextDueMillis = 0;
+    this->frameNum = 0;
   }
 
 private:
   long nextDueMillis;
+  long frameNum;
 };
 
 FrameControl frameControl;
 
 // TFT_eSPI tft = TFT_eSPI();
-int brojac = 0; // Invoke custom library
+int brojac/* = 0*/; // Invoke custom library
 
 // float buletX[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
 // float buletY[10]={-20,-20,-20,-20,-20,-20,-20,-20,-20,-20};
@@ -318,12 +321,13 @@ Position rocketXY[RocketCount]; /* = { Position(-20), Position(-20), Position(-2
 PositionGroup rocketGroup(rocketXY, RocketCount);
 
 float rocketSpeed = init_rocketSpeed /*0.22*/;
-int rockets = 3;
 
-int counter = 0;
-int rcounter = 0;
-int Ecounter = 0;
-int level = 1;
+int rockets;
+
+int counter;
+int rcounter;
+int Ecounter;
+int level;
 
 Position xy(10, 20);
 // float x=10;
@@ -344,15 +348,15 @@ float es = init_es;
 // float sped = 0.42;
 float sped = init_sped;
 // int blinkTime=0;
-int eHealth = 50;
-int mHealth = eHealth;
-int lives = 4;
+int eHealth/* = 50*/;
+int mHealth/* = eHealth*/;
+int lives/* = 4*/;
 // int ly[4]={0,0,0,0};
 // int ri[3]={0,0,0};
 int fireTime = 100;
 int fireCount = 0;
 float EbuletSpeed = init_EbuletSpeed /*0.42*/;
-int rDamage = 8; // rocket damage
+int rDamage/* = 8*/; // rocket damage
 // int tr = 0;
 
 // int pom3=0;
@@ -360,12 +364,6 @@ bool sound = 1; // sound on or off
 
 int fase = 0; // fase 0=start screen,//fase 1=playing fase //fase 3=game over
 
-#if defined SHOW_STARS
-// float spaceX[StarCount];
-// float spaceY[StarCount];
-Position spaceXY[StarCount];
-PositionGroup spaceGroup(spaceXY, StarCount);
-#endif
 
 GraphicalDDLayer *bg_layer;
 GraphicalDDLayer *main_layer;
@@ -373,9 +371,6 @@ GraphicalDDLayer *bulet_layer;
 GraphicalDDLayer *rocket_layer;
 GraphicalDDLayer *Ebulet_layer;
 GraphicalDDLayer *top_layer;
-#if defined(SHOW_STARS)
-GraphicalDDLayer *space_layer;
-#endif
 #if defined(SHOW_SPACE)
   GraphicalDDLayer *space_layers[SpaceLayerCount];
 #endif
@@ -386,9 +381,6 @@ void resetScreen()
   rocket_layer->clear();
   Ebulet_layer->clear();
   top_layer->clear();
-#if defined SHOW_STARS
-  space_layer->clear();
-#endif
 #if defined SHOW_SPACE
   for (int i = 0; i < SpaceLayerCount; i++) {
     space_layers[i]->clear();
@@ -586,10 +578,6 @@ void setup(void)
   rocket_layer->noBackgroundColor();
   bulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
   bulet_layer->noBackgroundColor();
-#if defined(SHOW_STARS)
-  space_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  space_layer->noBackgroundColor();
-#endif
   main_layer = dumbdisplay.createGraphicalLayer(240, 135);
   main_layer->noBackgroundColor();
 #if defined(SHOW_SPACE)
@@ -673,15 +661,8 @@ void setup(void)
   {
     main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x + i * 55, 0, 55, 54, IF_EARTH(level));
   }
+  //main_layer->saveCachedImageFiles();
 
-#if defined SHOW_STARS
-  for (int i = 0; i < StarCount; i++)
-  {
-    spaceXY[i].reset(random(5, 235), random(18, 132));
-    // spaceX[i] = random(5, 235);
-    // spaceY[i] = random(18, 132);
-  }
-#endif
 
   // main_layer->drawImageFile("back2.png"/*, 0, 0, 240, 135*/);
   // while (!selectTracker.checkPressed());
@@ -766,17 +747,11 @@ void handleRestart()
   fase = 1;
 }
 
-void loop()
+void handlePlay() 
 {
-  if (fase == 0)
-  {
-    handleRestart();
-  }
-
-  if (fase == 1)
-  { // playing fase
     bool frameDue = frameControl.checkDue();
-
+    long frameNum = frameControl.getFrameNum();
+    
 #if defined(WITH_JOYSTICK)
     int8_t horizontalPress = horizontalTracker.checkPressed(50);
     int8_t verticalPress = verticalTracker.checkPressed(50);
@@ -799,44 +774,18 @@ void loop()
     xy.moveTo(x, y);
 #endif
 
-    if (/*digitalRead(13) == 0*/ rightTracker.checkPressed()) // fire button A button
+    if (rightTracker.checkPressed())
     {
       buletXY[counter].moveTo(xy.getX() + 34, xy.getY() + 15);
-      // buletY[counter] = xy.getY() + 15;
       counter = counter + 1;
-      // if (pom == 0)
-      // {
-      //   pom = 1;
-
-      //   buletXY[counter].moveTo(xy.getX() + 34, xy.getY() + 15);
-      //   //buletY[counter] = xy.getY() + 15;
-      //   counter = counter + 1;
-      // }
     }
-    // else
-    //   pom = 0;
 
-    if (/*digitalRead(12) == 0*/ leftTracker.checkPressed() && rockets > 0) // Rocket button B button
+    if (leftTracker.checkPressed() && rockets > 0)
     {
       rockets--;
       rocketXY[rcounter].moveTo(xy.getX() + 34, xy.getY() + 14);
-      // rocketY[rcounter] = xy.getY() + 14;
       rcounter = rcounter + 1;
-      // ri[rockets] = -100;
-      // main_layer->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
-      //  if (pom2 == 0)
-      //  {
-      //    pom2 = 1;
-      //    rockets--;
-      //    rocketX[rcounter] = xy.getX() + 34;
-      //    rocketY[rcounter] = xy.getY() + 14;
-      //    rcounter = rcounter + 1;
-      //    ri[rockets] = -100;
-      //    main_layer->fillRect(70 + (rockets * 14), 0, 8, 14, TFT_BLACK);
-      //  }
     }
-    // else
-    //   pom2 = 0;
 
     /*
         if (digitalRead(35) == 0) // buton 35 , on and off sound
@@ -851,46 +800,20 @@ void loop()
           pom3 = 0;
     */
 
-#if defined SHOW_STARS
-    bool refreshStars = spaceGroup.checkAnyMoved();
-    if (refreshStars)
-    {
-      // dumbdisplay.writeComment("STARS");
-      space_layer->clear();
-    }
-    for (int i = 0; i < StarCount; i++)
-    { // drawStars..........................................
-      if (refreshStars)
-      {
-        space_layer->drawPixel(spaceXY[i].getX(), spaceXY[i].getY(), TFT_GREY);
-      }
-      if (frameDue)
-      {
-        spaceXY[i].moveBy(0.5, 0);
-        if (spaceXY[i].getX() < 0)
-        {
-          //        space_layer->drawPixel(spaceXY[i].getX(), spaceXY[i].getY(), TFT_BLACK);
-
-          spaceXY[i].moveXTo(244);
-        }
-      }
-    }
-#endif
 #if defined(SHOW_SPACE)
-  if (frameDue) {
+  if (frameDue && frameNum % 3 == 0) {
     for (int i = 0; i < SpaceLayerCount; i++) {
       space_layers[i]->visible(random(0, 2));
     }
   }
 #endif
 
-    // tft.pushImage(x, y, 49, 40, brod1);
-    // tft.pushImage(ex, ey, 55, 54, earth[level - 1]);
     bool refreshMain = xy.checkMoved() || exy.checkMoved();
     bool refreshBulets = buletGroup.checkAnyMoved();
     bool refreshRockets = rocketGroup.checkAnyMoved();
+    bool refreshEbullets = EbulletGroup.checkAnyMoved();
 
-    bool freezeScreen = refreshMain || refreshBulets || refreshRockets;
+    bool freezeScreen = refreshMain || refreshBulets || refreshRockets || refreshEbullets;
     if (freezeScreen)
     {
       dumbdisplay.recordLayerCommands();
@@ -903,13 +826,6 @@ void loop()
       main_layer->drawImageFile(IF_EARTH(level), exy.getX(), exy.getY());
     }
 
-    // for (int i = 0; i < BuletCount; i++)
-    // {
-    //   if (buletXY[i].getX() > 0 && buletXY[i].checkMoved())
-    //   {
-    //     refreshBulet = true;
-    //   }
-    // }
     if (refreshBulets)
     {
       bulet_layer->clear();
@@ -953,10 +869,10 @@ void loop()
         rocketXY[i].moveXTo(-30);
     }
 
-    if (freezeScreen)
-    {
-      dumbdisplay.playbackLayerCommands();
-    }
+    // if (freezeScreen)
+    // {
+    //   dumbdisplay.playbackLayerCommands();
+    // }
 
 
     // delay(1);
@@ -1114,7 +1030,6 @@ void loop()
     //   blinkTime = 0;
     // }
 
-    bool refreshEbullets = EbulletGroup.checkAnyMoved();
     if (refreshEbullets)
     {
       Ebulet_layer->clear();
@@ -1134,6 +1049,7 @@ void loop()
         }
       }
     }
+
 
     // for (int i = 0; i < 4; i++) // draw lifes
     //   tft.pushImage(i * 14, ly[i], 12, 11, life);
@@ -1162,9 +1078,15 @@ void loop()
 
     if (Ecounter == EbuletCount /*9*/)
       Ecounter = 0;
-  }
-  if (fase == 2) // game over fase
-  {
+
+    if (freezeScreen)
+    {
+      dumbdisplay.playbackLayerCommands();
+    }
+
+}
+
+void handleGameOver() {
     resetScreen();
     // fight_layer->clear();
     // main_layer->fillScreen(TFT_BLACK);
@@ -1182,5 +1104,18 @@ void loop()
     // }
 
     fase = 0;
-  }
+}
+
+void loop()
+{
+  if (fase == 0)
+  {
+    handleRestart();
+  } else if (fase == 1)
+  { // playing fase
+    handlePlay();
+  } else  if (fase == 2) // game over fase
+  {
+    handleGameOver();
+  } 
 }
