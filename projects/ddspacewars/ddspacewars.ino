@@ -108,7 +108,7 @@ const int RocketCount = 4;
 const int EbuletCount = 10;
 
 #if defined SHOW_SPACE
-const int StarCount = 8;
+const int StarCount = 15;
 const int SpaceLayerCount = 4;
 #endif
 
@@ -737,7 +737,7 @@ void handleRestart()
   for (int i = 0; i < SpaceLayerCount; i++)
   {
     // space_layers[i]->print("SPACE");
-    space_layers[i]->transparent(true);
+    space_layers[i]->transparent(random(0, 2));
     for (int j = 0; j < StarCount; j++)
     {
       space_layers[i]->drawPixel(random(5, 235), random(18, 132), TFT_GREY);
@@ -803,7 +803,7 @@ void handlePlay()
   */
 
 #if defined(SHOW_SPACE)
-  if (frameDue && frameNum % 3 == 0)
+  if (frameDue && frameNum % 15 == 0)
   {
     for (int i = 0; i < SpaceLayerCount; i++)
     {
