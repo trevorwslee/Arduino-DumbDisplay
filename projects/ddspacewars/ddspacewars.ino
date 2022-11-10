@@ -7,18 +7,35 @@ const uint8_t RIGHT = 3;
 // const uint8_t ENTER = 2;
 const uint8_t HORIZONTAL = A0;
 const uint8_t VERTICAL = A1;
-#else
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput(115200));
+#elif defined(PICO_SDK_VERSION_MAJOR)
 //#define SAVE_IMAGES
 #define SHOW_SPACE
 #define DEBUG_LED_PIN 25
-#if defined(PICO_SDK_VERSION_MAJOR)
 const uint8_t LEFT = 15;
 const uint8_t RIGHT = 16;
 // const uint8_t ENTER = 14;
+// GP8 => RX of HC06; GP9 => TX of HC06
+#define DD_4_PICO_TX 8
+#define DD_4_PICO_RX 9
+#include "picodumbdisplay.h"
+DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
+#elif defined(ESP32)
+//#define SAVE_IMAGES
+#define SHOW_SPACE
+#define DEBUG_LED_PIN 2
+const uint8_t LEFT = 4; 
+const uint8_t RIGHT = 0;   // BOOT
+// const uint8_t ENTER = 14;
+#include "esp32dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true, 115200));
 #else
 #error not configured for board yet
 #endif
-#endif
+
+
+
 
 #if defined(SAVE_IMAGES)
 #include "rocket.h"
@@ -37,7 +54,7 @@ const uint8_t RIGHT = 16;
 #include "gameOver.h"
 #endif
 
-#define LEVEL_COUNT 7
+//#define LEVEL_COUNT 7
 
 #define IF_BACK2 "back2"
 #define IF_SENS "sens"
@@ -52,19 +69,6 @@ const uint8_t RIGHT = 16;
 #define IF_EARTH(level) ("earth-" + String(level))
 #define IF_SPACEWARS_IMGS "spacewarsimgs"
 
-#if defined(ESP32)
-#include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true, 115200));
-#elif defined(PICO_SDK_VERSION_MAJOR)
-// GP8 => RX of HC06; GP9 => TX of HC06
-#define DD_4_PICO_TX 8
-#define DD_4_PICO_RX 9
-#include "picodumbdisplay.h"
-DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
-#else
-#include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
-#endif
 
 #include "Note.h"
 
@@ -103,6 +107,8 @@ JoyStickPressTracker verticalTracker(VERTICAL);
 #define lightblue DD_HEX_COLOR(0x2D18)
 #define orange DD_HEX_COLOR(0xFB60)
 #define purple DD_HEX_COLOR(0xFB9B)
+
+const int LevelCount = 6;
 
 const int BuletCount = 10;
 const int RocketCount = 4;
@@ -380,6 +386,9 @@ GraphicalDDLayer *top_layer;
 #if defined(SHOW_SPACE)
 GraphicalDDLayer *space_layers[SpaceLayerCount];
 #endif
+#if !defined(SHOW_IMAGES)
+SimpleToolDDTunnel *download_tunnel;
+#endif
 
 void resetScreen()
 {
@@ -544,141 +553,6 @@ void newLevel()
 
   // main_layer->fillRect(120, 3, 70, 7, TFT_GREEN);
   // main_layer->drawRect(119, 2, 72, 9, TFT_GREY);
-}
-
-void setup(void)
-{
-
-  //       pinMode(21,INPUT_PULLUP);
-  //       pinMode(22,INPUT_PULLUP);
-  //       pinMode(17,INPUT_PULLUP);
-  //       pinMode(2,INPUT_PULLUP);
-  //       pinMode(12,INPUT_PULLUP); //fire2 B
-  //       pinMode(13,INPUT_PULLUP); //fire1 A
-  //       pinMode(25,OUTPUT); //led2
-  //       pinMode(33,OUTPUT); //led1
-  //       pinMode(26,OUTPUT); //led3
-  //       pinMode(15,INPUT_PULLUP); //stisak
-  //       pinMode(13,INPUT_PULLUP); //buttonB
-  //       pinMode(0,INPUT); //LORA built in buttons
-  //       pinMode(35,INPUT);
-  // digitalWrite(26,1);
-
-  pinMode(LEFT, INPUT_PULLUP);
-  pinMode(RIGHT, INPUT_PULLUP);
-  // pinMode(ENTER, INPUT_PULLUP);
-#ifdef WITH_JOYSTICK
-  pinMode(HORIZONTAL, INPUT);
-  pinMode(VERTICAL, INPUT);
-#endif
-
-#if defined(DEBUG_LED_PIN)
-  pinMode(DEBUG_LED_PIN, OUTPUT);
-  digitalWrite(DEBUG_LED_PIN, 1);
-#endif
-
-  top_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  top_layer->noBackgroundColor();
-  Ebulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  Ebulet_layer->noBackgroundColor();
-  rocket_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  rocket_layer->noBackgroundColor();
-  bulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  bulet_layer->noBackgroundColor();
-  main_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  main_layer->noBackgroundColor();
-#if defined(SHOW_SPACE)
-  for (int i = 0; i < SpaceLayerCount; i++)
-  {
-    space_layers[i] = dumbdisplay.createGraphicalLayer(240, 135);
-    space_layers[i]->noBackgroundColor();
-  }
-#endif
-  bg_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  bg_layer->backgroundColor(TFT_BLACK);
-
-  //  tft.init();
-  // tft.setRotation(1);
-  resetScreen();
-  // fight_layer->clear();
-  // main_layer->fillScreen(TFT_BLACK);
-  //  tft.setSwapBytes(true);
-
-#if defined(SAVE_IMAGES)
-  dumbdisplay.writeComment("start caching ...");
-  dumbdisplay.writeComment("... caching back2 ...");
-  main_layer->cachePixelImage16(IF_BACK2 /*"back2.png"*/, back2, 240, 135, "", DD_COMPRESS_BA_0);
-  if (true)
-  {
-    dumbdisplay.recordLayerCommands();
-    main_layer->drawImageFile(IF_BACK2 /*"back2.png"*/);
-    main_layer->fillRect(0, 78, 120, 25, TFT_BLACK);
-    dumbdisplay.playbackLayerCommands();
-  }
-  dumbdisplay.writeComment("... cachine sens ...");
-  main_layer->cachePixelImage16(IF_SENS /*"sens.png"*/, sens, 72, 72, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine gameOver ...");
-  main_layer->cachePixelImage16(IF_GAMEOVER /*"gameOver.png"*/, gameOver, 240, 135, "", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine brod1 ...");
-  main_layer->cachePixelImage16(IF_BROD1 /*"brod1.png"*/, brod1, 49, 40, "", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine bulet ...");
-  main_layer->cachePixelImage16(IF_BULET /*"bulet.png"*/, bulet, 8, 8, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine rocket ...");
-  main_layer->cachePixelImage16(IF_ROCKET /*"rocket.png"*/, rocket, 24, 12, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine ex2 ...");
-  main_layer->cachePixelImage16(IF_EX2 /*"ex2.png"*/, ex2, 12, 12, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine explosion ...");
-  main_layer->cachePixelImage16(IF_EXPLOSION /*"explosion.png"*/, explosion, 24, 24, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine buum ...");
-  main_layer->cachePixelImage16(IF_BUUM /*"buum.png"*/, buum, 55, 55, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine ebullet ...");
-  main_layer->cachePixelImage16(IF_EBULLET /*"ebullet.png"*/, ebullet, 7, 7, "0>a0", DD_COMPRESS_BA_0);
-  for (int i = 0; i < LEVEL_COUNT; i++)
-  {
-    int level = i + 1;
-    dumbdisplay.writeComment("... caching earth-" + String(level - 1) + " ...");
-    main_layer->cachePixelImage16(IF_EARTH(level) /*name + ".png"*/, earth[level - 1], 55, 54, "0>a0", DD_COMPRESS_BA_0);
-  }
-  dumbdisplay.writeComment("... done caching");
-  main_layer->saveCachedImageFiles(IF_SPACEWARS_IMGS /*"spacewarsimgs.png"*/);
-#endif
-
-  int x = 0;
-  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_BACK2);
-  x += 240;
-  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 72, 72, IF_SENS);
-  x += 72;
-  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_GAMEOVER);
-  x += 240;
-  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 49, 40, IF_BROD1);
-  x += 49;
-  bulet_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 8, 8, IF_BULET);
-  x += 8;
-  rocket_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 24, 12, IF_ROCKET);
-  x += 24;
-  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 12, 12, IF_EX2);
-  x += 12;
-  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 24, 24, IF_EXPLOSION);
-  x += 24;
-  main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 55, 55, IF_BUUM);
-  x += 55;
-  Ebulet_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 7, 7, IF_EBULLET);
-  x += 7;
-  for (int i = 0; i < LEVEL_COUNT; i++)
-  {
-    main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x + i * 55, 0, 55, 54, IF_EARTH(level));
-  }
-  // main_layer->saveCachedImageFiles();
-
-  // main_layer->drawImageFile("back2.png"/*, 0, 0, 240, 135*/);
-  // while (!selectTracker.checkPressed());
-
-  // while(digitalRead(13)==1)// wait until button a is pressed.............
-  // int nezz=0;
-  //  digitalWrite(26,0);
-
-  // newLevel();
-  // while (true);
 }
 
 void handleRestart()
@@ -1107,8 +981,182 @@ void handleGameOver()
   fase = 0;
 }
 
+
+bool allReady = false;
+void setup(void)
+{
+
+  //       pinMode(21,INPUT_PULLUP);
+  //       pinMode(22,INPUT_PULLUP);
+  //       pinMode(17,INPUT_PULLUP);
+  //       pinMode(2,INPUT_PULLUP);
+  //       pinMode(12,INPUT_PULLUP); //fire2 B
+  //       pinMode(13,INPUT_PULLUP); //fire1 A
+  //       pinMode(25,OUTPUT); //led2
+  //       pinMode(33,OUTPUT); //led1
+  //       pinMode(26,OUTPUT); //led3
+  //       pinMode(15,INPUT_PULLUP); //stisak
+  //       pinMode(13,INPUT_PULLUP); //buttonB
+  //       pinMode(0,INPUT); //LORA built in buttons
+  //       pinMode(35,INPUT);
+  // digitalWrite(26,1);
+
+  pinMode(LEFT, INPUT_PULLUP);
+  pinMode(RIGHT, INPUT_PULLUP);
+  // pinMode(ENTER, INPUT_PULLUP);
+#ifdef WITH_JOYSTICK
+  pinMode(HORIZONTAL, INPUT);
+  pinMode(VERTICAL, INPUT);
+#endif
+
+#if defined(DEBUG_LED_PIN)
+  pinMode(DEBUG_LED_PIN, OUTPUT);
+  digitalWrite(DEBUG_LED_PIN, 1);
+#endif
+
+  top_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  top_layer->noBackgroundColor();
+  Ebulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  Ebulet_layer->noBackgroundColor();
+  rocket_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  rocket_layer->noBackgroundColor();
+  bulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  bulet_layer->noBackgroundColor();
+  main_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  main_layer->noBackgroundColor();
+#if defined(SHOW_SPACE)
+  for (int i = 0; i < SpaceLayerCount; i++)
+  {
+    space_layers[i] = dumbdisplay.createGraphicalLayer(240, 135);
+    space_layers[i]->noBackgroundColor();
+  }
+#endif
+  bg_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  bg_layer->backgroundColor(TFT_BLACK);
+
+  //  tft.init();
+  // tft.setRotation(1);
+  resetScreen();
+  // fight_layer->clear();
+  // main_layer->fillScreen(TFT_BLACK);
+  //  tft.setSwapBytes(true);
+
+#if defined(SAVE_IMAGES)
+  dumbdisplay.writeComment("start caching ...");
+  dumbdisplay.writeComment("... caching back2 ...");
+  main_layer->cachePixelImage16(IF_BACK2 /*"back2.png"*/, back2, 240, 135, "", DD_COMPRESS_BA_0);
+  if (true)
+  {
+    dumbdisplay.recordLayerCommands();
+    main_layer->drawImageFile(IF_BACK2 /*"back2.png"*/);
+    main_layer->fillRect(0, 78, 120, 25, TFT_BLACK);
+    dumbdisplay.playbackLayerCommands();
+  }
+  dumbdisplay.writeComment("... cachine sens ...");
+  main_layer->cachePixelImage16(IF_SENS /*"sens.png"*/, sens, 72, 72, "0>a0", DD_COMPRESS_BA_0);
+  dumbdisplay.writeComment("... cachine gameOver ...");
+  main_layer->cachePixelImage16(IF_GAMEOVER /*"gameOver.png"*/, gameOver, 240, 135, "", DD_COMPRESS_BA_0);
+  dumbdisplay.writeComment("... cachine brod1 ...");
+  main_layer->cachePixelImage16(IF_BROD1 /*"brod1.png"*/, brod1, 49, 40, "", DD_COMPRESS_BA_0);
+  dumbdisplay.writeComment("... cachine bulet ...");
+  main_layer->cachePixelImage16(IF_BULET /*"bulet.png"*/, bulet, 8, 8, "0>a0", DD_COMPRESS_BA_0);
+  dumbdisplay.writeComment("... cachine rocket ...");
+  main_layer->cachePixelImage16(IF_ROCKET /*"rocket.png"*/, rocket, 24, 12, "0>a0", DD_COMPRESS_BA_0);
+  dumbdisplay.writeComment("... cachine ex2 ...");
+  main_layer->cachePixelImage16(IF_EX2 /*"ex2.png"*/, ex2, 12, 12, "0>a0", DD_COMPRESS_BA_0);
+  dumbdisplay.writeComment("... cachine explosion ...");
+  main_layer->cachePixelImage16(IF_EXPLOSION /*"explosion.png"*/, explosion, 24, 24, "0>a0", DD_COMPRESS_BA_0);
+  dumbdisplay.writeComment("... cachine buum ...");
+  main_layer->cachePixelImage16(IF_BUUM /*"buum.png"*/, buum, 55, 55, "0>a0", DD_COMPRESS_BA_0);
+  dumbdisplay.writeComment("... cachine ebullet ...");
+  main_layer->cachePixelImage16(IF_EBULLET /*"ebullet.png"*/, ebullet, 7, 7, "0>a0", DD_COMPRESS_BA_0);
+  for (int i = 0; i < LevelCount; i++)
+  {
+    int level = i + 1;
+    dumbdisplay.writeComment("... caching earth-" + String(level - 1) + " ...");
+    main_layer->cachePixelImage16(IF_EARTH(level) /*name + ".png"*/, earth[level - 1], 55, 54, "0>a0", DD_COMPRESS_BA_0);
+  }
+//main_layer->saveCachedImageFiles();
+  dumbdisplay.writeComment("... done caching");
+  main_layer->saveCachedImageFiles(IF_SPACEWARS_IMGS /*"spacewarsimgs.png"*/);
+#else
+    dumbdisplay.writeComment("download images ...");
+    download_tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/spacewarsimgs.png", IF_SPACEWARS_IMGS);
+  // dumbdisplay.writeComment("download images ...");
+  // SimpleToolDDTunnel *tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", IF_SPACEWARS_IMGS);
+  // while (tunnel->checkResult() == 0);
+  // dumbdisplay.deleteTunnel(tunnel);
+  // dumbdisplay.writeComment("done download images");
+#endif
+  // int x = 0;
+  // main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_BACK2);
+  // x += 240;
+  // main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 72, 72, IF_SENS);
+  // x += 72;
+  // main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_GAMEOVER);
+  // x += 240;
+  // main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 49, 40, IF_BROD1);
+  // x += 49;
+  // bulet_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 8, 8, IF_BULET);
+  // x += 8;
+  // rocket_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 24, 12, IF_ROCKET);
+  // x += 24;
+  // main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 12, 12, IF_EX2);
+  // x += 12;
+  // main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 24, 24, IF_EXPLOSION);
+  // x += 24;
+  // main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 55, 55, IF_BUUM);
+  // x += 55;
+  // Ebulet_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 7, 7, IF_EBULLET);
+  // x += 7;
+  // for (int i = 0; i < LevelCount; i++)
+  // {
+  //   int level = i + 1;
+  //   main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x + i * 55, 0, 55, 54, IF_EARTH(level));
+  // }
+}
 void loop()
 {
+  if (!allReady) {
+#if !defined(SAVE_IMAGES)    
+      // dumbdisplay.writeComment("download images ...");
+      // download_tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", IF_SPACEWARS_IMGS);
+      if (download_tunnel->checkResult() == 0) {
+        return;
+      }
+      // for some reason, it crashes if delete
+      //dumbdisplay.deleteTunnel(download_tunnel);
+      dumbdisplay.writeComment("... done download images");
+#endif
+    int x = 0;
+    main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_BACK2);
+    x += 240;
+    main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 72, 72, IF_SENS);
+    x += 72;
+    main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_GAMEOVER);
+    x += 240;
+    main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 49, 40, IF_BROD1);
+    x += 49;
+    bulet_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 8, 8, IF_BULET);
+    x += 8;
+    rocket_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 24, 12, IF_ROCKET);
+    x += 24;
+    main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 12, 12, IF_EX2);
+    x += 12;
+    main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 24, 24, IF_EXPLOSION);
+    x += 24;
+    main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 55, 55, IF_BUUM);
+    x += 55;
+    Ebulet_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 7, 7, IF_EBULLET);
+    x += 7;
+    for (int i = 0; i < LevelCount; i++)
+    {
+      int level = i + 1;
+      main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x + i * 55, 0, 55, 54, IF_EARTH(level));
+    }
+    allReady = true;
+  }
+
   if (fase == 0)
   {
     handleRestart();
