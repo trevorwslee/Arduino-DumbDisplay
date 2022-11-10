@@ -1,5 +1,6 @@
 #if defined(ARDUINO_AVR_UNO)
 #define WITH_JOYSTICK
+//#define SHOW_SPACE
 #define DEBUG_LED_PIN 13
 const uint8_t LEFT = 5;
 const uint8_t RIGHT = 3;
@@ -109,12 +110,12 @@ const int EbuletCount = 10;
 
 #if defined SHOW_SPACE
 const int StarCount = 15;
-const int SpaceLayerCount = 4;
+const int SpaceLayerCount = 6;
 #endif
 
 const long DueGapMillis = 40;
 
-const float init_sped = 2;
+const float init_sped = 4;
 const float buletSpeed = 5;
 const float init_es = 1.5;
 const float init_rocketSpeed = 3;
@@ -276,10 +277,14 @@ public:
         this->nextDueMillis = nowMillis;
       }
       this->nextDueMillis += DueGapMillis;
-    }
 #if defined(DEBUG_LED_PIN)
-    digitalWrite(DEBUG_LED_PIN, (this->nextDueMillis - nowMillis) > 10 ? 1 : 0);
+      int status = (this->nextDueMillis - nowMillis) > 10 ? 1 : 0;
+      digitalWrite(DEBUG_LED_PIN, status);
+      // if (status == 0) {
+      //   dumbdisplay.writeComment("slow");
+      // }
 #endif
+    }
     if (due)
     {
       this->frameNum += 1;
@@ -741,7 +746,6 @@ void handleRestart()
     for (int j = 0; j < StarCount; j++)
     {
       space_layers[i]->drawPixel(random(5, 235), random(18, 132), TFT_GREY);
-      // space_layers[i]->drawRect(random(5, 235), random(18, 132), 3, 3, TFT_GREY);
     }
   }
 #endif
