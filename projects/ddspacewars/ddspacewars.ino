@@ -42,22 +42,26 @@
 #define IF_EARTH(level) ("earth-" + String(level))
 #define IF_SPACEWARS_IMGS "spacewarsimgs"
 
+// #include "Note.h"
+// const int NOTE_A4 = GetNoteFreq(0, ToNoteIdx('A', 0));
+// const int NOTE_B4 = GetNoteFreq(0, ToNoteIdx('B', 0));
+// const int NOTE_C4 = GetNoteFreq(0, ToNoteIdx('C', 0));
+// const int NOTE_D4 = GetNoteFreq(0, ToNoteIdx('D', 0));
+// const int NOTE_E4 = GetNoteFreq(0, ToNoteIdx('E', 0));
+// const int NOTE_F4 = GetNoteFreq(0, ToNoteIdx('F', 0));
+// const int NOTE_G4 = GetNoteFreq(0, ToNoteIdx('G', 0));
+// const int NOTE_C5 = GetNoteFreq(1, ToNoteIdx('C', 0));
+// const int NOTE_G5 = GetNoteFreq(1, ToNoteIdx('G', 0));
 
-#include "Note.h"
-
-const int NOTE_A4 = GetNoteFreq(0, ToNoteIdx('A', 0));
-const int NOTE_B4 = GetNoteFreq(0, ToNoteIdx('B', 0));
-const int NOTE_C4 = GetNoteFreq(0, ToNoteIdx('C', 0));
-const int NOTE_D4 = GetNoteFreq(0, ToNoteIdx('D', 0));
-const int NOTE_E4 = GetNoteFreq(0, ToNoteIdx('E', 0));
-const int NOTE_F4 = GetNoteFreq(0, ToNoteIdx('F', 0));
-const int NOTE_G4 = GetNoteFreq(0, ToNoteIdx('G', 0));
-
-const int NOTE_C5 = GetNoteFreq(1, ToNoteIdx('C', 0));
-const int NOTE_G5 = GetNoteFreq(1, ToNoteIdx('G', 0));
-
-// const int NOTE_C6 = GetNoteFreq(2, ToNoteIdx('C', 0));
-
+const int NOTE_A4 = 466;
+const int NOTE_B4 = 523;
+const int NOTE_C4 = 277;
+const int NOTE_D4 = 311;
+const int NOTE_E4 = 349;
+const int NOTE_F4 = 370;
+const int NOTE_G4 = 415;
+const int NOTE_C5 = 554;
+const int NOTE_G5 = 831;
 
 #include "PressTracker.h"
 
@@ -597,17 +601,17 @@ void handlePlay()
       eHealth--;
       drawTop();
 
-      if (eHealth <= 0)
-      {
-        main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
-        dumbdisplay.tone(NOTE_E4, 100);
-        dumbdisplay.tone(NOTE_D4, 80);
-        dumbdisplay.tone(NOTE_G5, 100);
-        dumbdisplay.tone(NOTE_C4, 80);
-        dumbdisplay.tone(NOTE_F4, 280);
-        delay(700);
-        newLevel();
-      }
+      // if (eHealth <= 0)
+      // {
+      //   main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
+      //   dumbdisplay.tone(NOTE_E4, 100);
+      //   dumbdisplay.tone(NOTE_D4, 80);
+      //   dumbdisplay.tone(NOTE_G5, 100);
+      //   dumbdisplay.tone(NOTE_C4, 80);
+      //   dumbdisplay.tone(NOTE_F4, 280);
+      //   delay(700);
+      //   newLevel();
+      // }
     }
   }
 
@@ -628,17 +632,17 @@ void handlePlay()
       eHealth = eHealth - rDamage;
       drawTop();
 
-      if (eHealth <= 0)
-      {
-        main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
-        dumbdisplay.tone(NOTE_E4, 100);
-        dumbdisplay.tone(NOTE_D4, 80);
-        dumbdisplay.tone(NOTE_G5, 100);
-        dumbdisplay.tone(NOTE_C4, 80);
-        dumbdisplay.tone(NOTE_F4, 280);
-        delay(700);
-        newLevel();
-      }
+      // if (eHealth <= 0)
+      // {
+      //   main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
+      //   dumbdisplay.tone(NOTE_E4, 100);
+      //   dumbdisplay.tone(NOTE_D4, 80);
+      //   dumbdisplay.tone(NOTE_G5, 100);
+      //   dumbdisplay.tone(NOTE_C4, 80);
+      //   dumbdisplay.tone(NOTE_F4, 280);
+      //   delay(700);
+      //   newLevel();
+      // }
     }
   }
 
@@ -649,18 +653,18 @@ void handlePlay()
       EbuletXY[j].moveXTo(-50);
       main_layer->fillRect((lives - 1) * 14, 0, 14, 14, TFT_BLACK);
       lives--;
-      if (lives == 0)
-      {
-        main_layer->drawImageFile(IF_BUUM, xy.getX(), xy.getY());
-        dumbdisplay.tone(NOTE_G4, 100);
-        dumbdisplay.tone(NOTE_B4, 80);
-        dumbdisplay.tone(NOTE_C5, 100);
-        dumbdisplay.tone(NOTE_A4, 80);
-        dumbdisplay.tone(NOTE_F4, 280);
-        delay(500);
-        resetScreen();
-        fase = 2;
-      }
+      // if (lives == 0)
+      // {
+      //   main_layer->drawImageFile(IF_BUUM, xy.getX(), xy.getY());
+      //   dumbdisplay.tone(NOTE_G4, 100);
+      //   dumbdisplay.tone(NOTE_B4, 80);
+      //   dumbdisplay.tone(NOTE_C5, 100);
+      //   dumbdisplay.tone(NOTE_A4, 80);
+      //   dumbdisplay.tone(NOTE_F4, 280);
+      //   delay(500);
+      //   resetScreen();
+      //   fase = 2;
+      // }
 
       if (sound == 1)
       {
@@ -711,6 +715,35 @@ void handlePlay()
     }
   }
 
+  if (freezeScreen)
+  {
+    dumbdisplay.playbackLayerCommands();
+  }
+
+  if (eHealth <= 0)
+  {
+    main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
+    dumbdisplay.tone(NOTE_E4, 100);
+    dumbdisplay.tone(NOTE_D4, 80);
+    dumbdisplay.tone(NOTE_G5, 100);
+    dumbdisplay.tone(NOTE_C4, 80);
+    dumbdisplay.tone(NOTE_F4, 280);
+    delay(700);
+    newLevel();
+  }
+  if (lives == 0)
+  {
+    main_layer->drawImageFile(IF_BUUM, xy.getX(), xy.getY());
+    dumbdisplay.tone(NOTE_G4, 100);
+    dumbdisplay.tone(NOTE_B4, 80);
+    dumbdisplay.tone(NOTE_C5, 100);
+    dumbdisplay.tone(NOTE_A4, 80);
+    dumbdisplay.tone(NOTE_F4, 280);
+    delay(500);
+    resetScreen();
+    fase = 2;
+  }
+
   if (counter == BuletCount)
     counter = 0;
 
@@ -720,10 +753,6 @@ void handlePlay()
   if (Ecounter == EbuletCount)
     Ecounter = 0;
 
-  if (freezeScreen)
-  {
-    dumbdisplay.playbackLayerCommands();
-  }
 }
 
 void handleGameOver()
@@ -743,6 +772,18 @@ void handleGameOver()
 bool allReady = false;
 void setup(void)
 {
+// Serial.begin(115200);
+// Serial.println("HELLO");
+// Serial.println("const int NOTE_A4 = " + String(NOTE_A4) + ";");
+// Serial.println("const int NOTE_B4 = " + String(NOTE_B4) + ";");
+// Serial.println("const int NOTE_C4 = " + String(NOTE_C4) + ";");
+// Serial.println("const int NOTE_D4 = " + String(NOTE_D4) + ";");
+// Serial.println("const int NOTE_E4 = " + String(NOTE_E4) + ";");
+// Serial.println("const int NOTE_F4 = " + String(NOTE_F4) + ";");
+// Serial.println("const int NOTE_G4 = " + String(NOTE_G4) + ";");
+// Serial.println("const int NOTE_C5 = " + String(NOTE_C5) + ";");
+// Serial.println("const int NOTE_G5 = " + String(NOTE_G5) + ";");
+
   pinMode(BTN_B, INPUT_PULLUP);
   pinMode(BTN_A, INPUT_PULLUP);
 #ifdef WITH_JOYSTICK

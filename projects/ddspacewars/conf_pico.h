@@ -7,10 +7,6 @@
 #define SHOW_SPACE
 #define DEBUG_LED_PIN 1
 
-// #define JOYSTICK_H_MIN_READING 1000
-// #define JOYSTICK_H_MAX_READING 50
-// #define JOYSTICK_V_MIN_READING 50
-// #define JOYSTICK_V_MAX_READING 1000
 #define WITH_JOYSTICK
 const bool joystickReverseHoriDir = true;
 const bool joystickReverseVertDir = false;
