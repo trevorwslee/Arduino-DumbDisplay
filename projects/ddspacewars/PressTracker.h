@@ -74,10 +74,20 @@ private:
 class JoyStickPressTracker
 {
 public:
-  JoyStickPressTracker(uint8_t pin)
+  JoyStickPressTracker(uint8_t pin, int minReading = 10, int maxReading = 1013)
   {
-    this->maxReading = 1023;
-    this->threshold = 10;
+    if (maxReading < minReading) {
+      int temp = maxReading;
+      maxReading = minReading;
+      minReading = temp;
+      this->reverseDir = true;
+    } else {
+      this->reverseDir = false;
+    }
+    // this->maxReading = 1023;
+    // this->threshold = 10;
+    this->maxReading = maxReading;
+    this->minReading = minReading;
     this->pin = pin;
     // this->reading = 0;
     this->pressedDir = 0;
@@ -106,16 +116,24 @@ private:
       this->autoRepeatDir = 0;
     }
     long nowMillis = millis();
-    // int oriReading = this->reading;
     int8_t oriPressedDir = this->pressedDir;
-    // this->reading = reading;
-    if ((reading - threshold) <= 0)
+    //if ((reading - threshold) <= 0)
+    if (reading <= this->minReading)
     {
-      this->pressedDir = -1;
+      if (this->reverseDir) {
+        this->pressedDir = 1;
+      } else {
+        this->pressedDir = -1;
+      }
     }
-    else if ((reading + threshold) >= maxReading)
+    //else if ((reading + threshold) >= maxReading)
+    else if (reading >= this->maxReading)
     {
-      this->pressedDir = 1;
+      if (this->reverseDir) {
+        this->pressedDir = -1;
+      } else {
+        this->pressedDir = 1;
+      }
     }
     else
     {
@@ -173,7 +191,9 @@ private:
 
 private:
   int maxReading;
-  int threshold;
+  int minReading;
+  bool reverseDir;
+  //int threshold;
 
 private:
   // int reading;

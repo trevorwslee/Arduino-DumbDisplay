@@ -1,41 +1,15 @@
+
+
 #if defined(ARDUINO_AVR_UNO)
-#define WITH_JOYSTICK
-//#define DOWNLOAD_IMAGES
-//#define SHOW_SPACE
-#define DEBUG_LED_PIN 13
-const uint8_t BTN_A = 3;
-const uint8_t BTN_B = 2;
-// const uint8_t ENTER = 5;
-const uint8_t HORIZONTAL = A0;
-const uint8_t VERTICAL = A1;
-#include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
+  #include "conf_uno.h"
 #elif defined(PICO_SDK_VERSION_MAJOR)
-//#define SAVE_IMAGES
-#define DOWNLOAD_IMAGES
-#define SHOW_SPACE
-#define DEBUG_LED_PIN 25
-const uint8_t BTN_A = 16;
-const uint8_t BTN_B = 15;
-// const uint8_t ENTER = 14;
-// GP8 => RX of HC06; GP9 => TX of HC06
-#define DD_4_PICO_TX 8
-#define DD_4_PICO_RX 9
-#include "picodumbdisplay.h"
-DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
+  #include "conf_pico.h"
 #elif defined(ESP32)
-//#define SAVE_IMAGES
-#define DOWNLOAD_IMAGES
-#define SHOW_SPACE
-#define DEBUG_LED_PIN 2
-const uint8_t BTN_A = 0; // BOOT
-const uint8_t BTN_B = 4;
-// const uint8_t ENTER = 14;
-#include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true, 115200));
+ #include "conf_esp32.h"
 #else
 #error not configured for board yet
 #endif
+
 
 #if defined(SAVE_IMAGES)
 #include "rocket.h"
@@ -54,6 +28,7 @@ DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true, 115200));
 #include "gameOver.h"
 #endif
 
+
 #define IF_BACK2 "back2"
 #define IF_SENS "sens"
 #define IF_GAMEOVER "gameOver"
@@ -66,6 +41,7 @@ DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true, 115200));
 #define IF_EBULLET "ebullet"
 #define IF_EARTH(level) ("earth-" + String(level))
 #define IF_SPACEWARS_IMGS "spacewarsimgs"
+
 
 #include "Note.h"
 
@@ -82,15 +58,17 @@ const int NOTE_G5 = GetNoteFreq(1, ToNoteIdx('G', 0));
 
 // const int NOTE_C6 = GetNoteFreq(2, ToNoteIdx('C', 0));
 
+
 #include "PressTracker.h"
 
 ButtonPressTracker btnATracker(BTN_A);
 ButtonPressTracker btnBTracker(BTN_B);
 
-#if defined(WITH_JOYSTICK)
-JoyStickPressTracker horizontalTracker(HORIZONTAL);
-JoyStickPressTracker verticalTracker(VERTICAL);
+#if defined(JOYSTICK_H_MAX_READING)
+JoyStickPressTracker horizontalTracker(HORIZONTAL, JOYSTICK_H_MIN_READING, JOYSTICK_H_MAX_READING);
+JoyStickPressTracker verticalTracker(VERTICAL, JOYSTICK_V_MIN_READING, JOYSTICK_V_MAX_READING);
 #endif
+
 
 #define TFT_BLACK "black"
 #define TFT_GREEN "green"
@@ -98,6 +76,7 @@ JoyStickPressTracker verticalTracker(VERTICAL);
 #define lightblue DD_HEX_COLOR(0x2D18)
 #define orange DD_HEX_COLOR(0xFB60)
 #define purple DD_HEX_COLOR(0xFB9B)
+
 
 const int LevelCount = 6;
 
@@ -497,7 +476,7 @@ void handlePlay()
   bool frameDue = frameControl.checkDue();
   long frameNum = frameControl.getFrameNum();
 
-#if defined(WITH_JOYSTICK)
+#if defined(JOYSTICK_H_MAX_READING)
   int8_t horizontalPress = horizontalTracker.checkPressed(50);
   int8_t verticalPress = verticalTracker.checkPressed(50);
 
@@ -805,41 +784,40 @@ void setup(void)
   if (true)
   {
     dumbdisplay.recordLayerCommands();
-    main_layer->drawImageFile(IF_BACK2 /*"back2.png"*/);
+    main_layer->drawImageFile(IF_BACK2);
     main_layer->fillRect(0, 78, 120, 25, TFT_BLACK);
     dumbdisplay.playbackLayerCommands();
   }
   dumbdisplay.writeComment("... cachine sens ...");
-  main_layer->cachePixelImage16(IF_SENS /*"sens.png"*/, sens, 72, 72, "0>a0", DD_COMPRESS_BA_0);
+  main_layer->cachePixelImage16(IF_SENS, sens, 72, 72, "0>a0", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine gameOver ...");
-  main_layer->cachePixelImage16(IF_GAMEOVER /*"gameOver.png"*/, gameOver, 240, 135, "", DD_COMPRESS_BA_0);
+  main_layer->cachePixelImage16(IF_GAMEOVER, gameOver, 240, 135, "", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine brod1 ...");
-  main_layer->cachePixelImage16(IF_BROD1 /*"brod1.png"*/, brod1, 49, 40, "", DD_COMPRESS_BA_0);
+  main_layer->cachePixelImage16(IF_BROD1, brod1, 49, 40, "0>a0", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine bulet ...");
-  main_layer->cachePixelImage16(IF_BULET /*"bulet.png"*/, bulet, 8, 8, "0>a0", DD_COMPRESS_BA_0);
+  main_layer->cachePixelImage16(IF_BULET, bulet, 8, 8, "0>a0", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine rocket ...");
-  main_layer->cachePixelImage16(IF_ROCKET /*"rocket.png"*/, rocket, 24, 12, "0>a0", DD_COMPRESS_BA_0);
+  main_layer->cachePixelImage16(IF_ROCKET, rocket, 24, 12, "0>a0", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine ex2 ...");
-  main_layer->cachePixelImage16(IF_EX2 /*"ex2.png"*/, ex2, 12, 12, "0>a0", DD_COMPRESS_BA_0);
+  main_layer->cachePixelImage16(IF_EX2, ex2, 12, 12, "0>a0", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine explosion ...");
-  main_layer->cachePixelImage16(IF_EXPLOSION /*"explosion.png"*/, explosion, 24, 24, "0>a0", DD_COMPRESS_BA_0);
+  main_layer->cachePixelImage16(IF_EXPLOSION, explosion, 24, 24, "0>a0", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine buum ...");
-  main_layer->cachePixelImage16(IF_BUUM /*"buum.png"*/, buum, 55, 55, "0>a0", DD_COMPRESS_BA_0);
+  main_layer->cachePixelImage16(IF_BUUM, buum, 55, 55, "0>a0", DD_COMPRESS_BA_0);
   dumbdisplay.writeComment("... cachine ebullet ...");
-  main_layer->cachePixelImage16(IF_EBULLET /*"ebullet.png"*/, ebullet, 7, 7, "0>a0", DD_COMPRESS_BA_0);
+  main_layer->cachePixelImage16(IF_EBULLET, ebullet, 7, 7, "0>a0", DD_COMPRESS_BA_0);
   for (int i = 0; i < LevelCount; i++)
   {
     int level = i + 1;
     dumbdisplay.writeComment("... caching earth-" + String(level - 1) + " ...");
-    main_layer->cachePixelImage16(IF_EARTH(level) /*name + ".png"*/, earth[level - 1], 55, 54, "0>a0", DD_COMPRESS_BA_0);
+    main_layer->cachePixelImage16(IF_EARTH(level), earth[level - 1], 55, 54, "0>a0", DD_COMPRESS_BA_0);
   }
   dumbdisplay.writeComment("... done caching");
-  main_layer->saveCachedImageFiles(IF_SPACEWARS_IMGS /*"spacewarsimgs.png"*/);
+  main_layer->saveCachedImageFiles(IF_SPACEWARS_IMGS);
 #endif
 #if defined(DOWNLOAD_IMAGES)
   dumbdisplay.writeComment("download images ...");
   download_tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/spacewarsimgs.png", IF_SPACEWARS_IMGS);
-  // download_tunnel = dumbdisplay.createImageDownloadTunnel("https://i.ibb.co/xz5CSDq/spacewarsimgs.png", IF_SPACEWARS_IMGS);
 #endif
 }
 void loop()
