@@ -5,13 +5,17 @@
 #include <limits.h>
 
 #define TRACK_PRESS
+#define TRACK_PRESSED_IS_2D
 
 const int VRX = A2;
 const int VRY = A1;
 const int SW = A0;
 
-const int XYPressThreshold = 300;
+const int XYPressThreshold = 100;
+bool trackedXYPressed2D = true;
 const long XYPressAutoRepeatMillis = 0; // 0 means no auto repeat
+
+
 
 #if defined(TRACK_PRESS)
 class ButtonPressTracker
@@ -121,9 +125,15 @@ public:
   }
 
 public:
-  int8_t checkPressed(int repeat = 0, bool forceDue = false)
+  int8_t checkPressed(int repeat = 0)
   {
-    return setReading(analogRead(this->pin), repeat, forceDue);
+    return setReading(analogRead(this->pin), repeat);
+  }
+  int readPressedBypass()
+  {
+    int reading = analogRead(this->pin);
+    setReading(reading);
+    return readingToPressedDir(reading);
   }
   int readBypass()
   {
@@ -133,7 +143,33 @@ public:
   }
 
 private:
-  int8_t setReading(int reading, int repeat = 0, bool forceDue = false)
+  int readingToPressedDir(int reading)
+  {
+    if (reading <= this->minReading)
+    {
+      if (this->reverseDir)
+      {
+        return 1;
+      }
+      else
+      {
+        return -1;
+      }
+    }
+    if (reading >= this->maxReading)
+    {
+      if (this->reverseDir)
+      {
+        return -1;
+      }
+      else
+      {
+        return 1;
+      }
+    }
+    return 0;
+  }
+  int8_t setReading(int reading, int repeat = 0)
   {
     if (repeat == 0)
     {
@@ -142,27 +178,10 @@ private:
     }
     long nowMillis = millis();
     int8_t oriPressedDir = this->pressedDir;
-    if (reading <= this->minReading)
+    int pressedDir = readingToPressedDir(reading);
+    if (pressedDir != 0)
     {
-      if (this->reverseDir)
-      {
-        this->pressedDir = 1;
-      }
-      else
-      {
-        this->pressedDir = -1;
-      }
-    }
-    else if (reading >= this->maxReading)
-    {
-      if (this->reverseDir)
-      {
-        this->pressedDir = -1;
-      }
-      else
-      {
-        this->pressedDir = 1;
-      }
+      this->pressedDir = pressedDir;
     }
     else
     {
@@ -170,10 +189,38 @@ private:
       this->nextRepeatMillis = 0;
       this->autoRepeatDir = 0;
     }
-    if (!this->needReset && this->pressedMillis != 0 && (this->pressedDir == oriPressedDir) || forceDue)
+    // if (reading <= this->minReading)
+    // {
+    //   if (this->reverseDir)
+    //   {
+    //     this->pressedDir = 1;
+    //   }
+    //   else
+    //   {
+    //     this->pressedDir = -1;
+    //   }
+    // }
+    // else if (reading >= this->maxReading)
+    // {
+    //   if (this->reverseDir)
+    //   {
+    //     this->pressedDir = -1;
+    //   }
+    //   else
+    //   {
+    //     this->pressedDir = 1;
+    //   }
+    // }
+    // else
+    // {
+    //   this->pressedDir = 0;
+    //   this->nextRepeatMillis = 0;
+    //   this->autoRepeatDir = 0;
+    // }
+    if (!this->needReset && this->pressedMillis != 0 && (this->pressedDir == oriPressedDir))
     {
       long diffMillis = nowMillis - this->pressedMillis;
-      if (diffMillis > 50 || forceDue)
+      if (diffMillis > 50)
       {
         this->pressedDir = 0;
         this->pressedMillis = 0;
@@ -231,30 +278,45 @@ private:
   long nextRepeatMillis;
   int autoRepeatDir;
 };
-class Joystick2DTracker {
-  public:
-    Joystick2DTracker(JoystickPressTracker &xTracker, JoystickPressTracker &yTracker): xTracker(xTracker), yTracker(yTracker)
+class Joystick2DTracker
+{
+public:
+  Joystick2DTracker(JoystickPressTracker &xTracker, JoystickPressTracker &yTracker) : xTracker(xTracker), yTracker(yTracker)
+  {
+    this->lastPressedMillis = 0;
+  }
+
+public:
+  bool checkPressed(int repeat = 0)
+  {
+    int xPressed = xTracker.checkPressed(repeat);
+    int yPressed = yTracker.checkPressed(repeat);
+    if (xPressed != 0 || yPressed != 0)
     {
-    }
-  public:
-    bool checkPressed(int repeat = 0) {
-      int xPressed = xTracker.checkPressed(repeat);
-      int yPressed = yTracker.checkPressed(repeat);
-      if (xPressed != 0 || yPressed != 0) {
-        this->checkResultXPressed = xTracker.checkPressed(0, true);
-        this->checkResultYPressed = yTracker.checkPressed(0, true);
+      long nowMillis = millis();
+      long diffMillis = nowMillis - this->lastPressedMillis;
+      if (diffMillis > 50)
+      {
+        this->checkResultXPressed = xTracker.readPressedBypass();
+        this->checkResultYPressed = yTracker.readPressedBypass();
+        this->lastPressedMillis = nowMillis;
         return true;
-      } else {
-        return 0;
       }
-    }  
-  private:
-    JoystickPressTracker &xTracker;
-    JoystickPressTracker &yTracker;
-  public:
-    int checkResultXPressed;
-    int checkResultYPressed;
-#  
+    }
+    else
+    {
+      return 0;
+    }
+  }
+
+private:
+  JoystickPressTracker &xTracker;
+  JoystickPressTracker &yTracker;
+
+public:
+  int checkResultXPressed;
+  int checkResultYPressed;
+  long lastPressedMillis;
 };
 const char *JoystickPressedToStr(int xPressed, int yPressed)
 {
@@ -270,11 +332,11 @@ const char *JoystickPressedToStr(int xPressed, int yPressed)
   {
     if (xPressed == -1)
     {
-      return yPressed == -1 ? "↖" : "↗";
+      return yPressed == -1 ? "↖" : "↙";
     }
     else
     {
-      return yPressed == -1 ? "↙" : "↘";
+      return yPressed == -1 ? "↗" : "↘";
     }
   }
   return NULL;
@@ -312,9 +374,12 @@ void setup()
   {
     yTracker = new JoystickPressTracker(VRY);
   }
-  if (xTracker != NULL && yTracker != NULL) {
+#if defined(TRACK_PRESSED_IS_2D)
+  if (xTracker != NULL && yTracker != NULL)
+  {
     xyTracker = new Joystick2DTracker(*xTracker, *yTracker);
   }
+#endif
   if (SW != -1)
   {
     btnTracker = new ButtonPressTracker(SW);
@@ -369,18 +434,26 @@ void loop()
   xTracker->setMinMax(minXPos + XYPressThreshold, maxXPos - XYPressThreshold);
   yTracker->setMinMax(minYPos + XYPressThreshold, maxYPos - XYPressThreshold);
   bool btnPressed = btnTracker->checkPressed(XYPressAutoRepeatMillis);
+  if (btnPressed) 
+  {
+    show = true;
+  }
   int xPressed = 0;
   int yPressed = 0;
-  if (xyTracker != NULL) {
-    if (xyTracker->checkPressed()) {
+  if (xyTracker != NULL)
+  {
+    if (xyTracker->checkPressed())
+    {
       xPressed = xyTracker->checkResultXPressed;
       yPressed = xyTracker->checkResultYPressed;
       show = true;
     }
-  } else {
+  }
+  else
+  {
     xPressed = xTracker->checkPressed(XYPressAutoRepeatMillis);
     yPressed = yTracker->checkPressed(XYPressAutoRepeatMillis);
-    if (xPressed || yPressed || btnPressed)
+    if (xPressed || yPressed)
     {
       show = true;
     }
