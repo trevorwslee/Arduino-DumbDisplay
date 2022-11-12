@@ -15,8 +15,6 @@ const int XYPressThreshold = 100;
 bool trackedXYPressed2D = true;
 const long XYPressAutoRepeatMillis = 0; // 0 means no auto repeat
 
-
-
 #if defined(TRACK_PRESS)
 class ButtonPressTracker
 {
@@ -431,10 +429,16 @@ void loop()
   bool show = (nowMillis - lastShowMillis) >= 500;
 
 #if defined(TRACK_PRESS)
-  xTracker->setMinMax(minXPos + XYPressThreshold, maxXPos - XYPressThreshold);
-  yTracker->setMinMax(minYPos + XYPressThreshold, maxYPos - XYPressThreshold);
+  if ((maxXPos - minXPos) > 800)
+  {
+    xTracker->setMinMax(minXPos + XYPressThreshold, maxXPos - XYPressThreshold);
+  }
+  if ((maxYPos - minYPos) > 800)
+  {
+    yTracker->setMinMax(minYPos + XYPressThreshold, maxYPos - XYPressThreshold);
+  }
   bool btnPressed = btnTracker->checkPressed(XYPressAutoRepeatMillis);
-  if (btnPressed) 
+  if (btnPressed)
   {
     show = true;
   }
@@ -480,7 +484,7 @@ void loop()
 
   if (show)
   {
-    Serial.print("X :");
+    Serial.print("X: ");
     Serial.print(xPos);
     Serial.print(" (");
     Serial.print(minXPos);

@@ -4,10 +4,9 @@ public:
   ButtonPressTracker(uint8_t pin)
   {
     this->pin = pin;
-    this->pressed = false; // assume initially not pressed
+    this->pressed = false;
     this->blackOutMillis = 0;
     this->nextRepeatMillis = 0;
-    // this->repeat = 0;
   }
   bool checkPressed(int repeat = 0)
   {
@@ -70,35 +69,55 @@ private:
   long blackOutMillis;
   long nextRepeatMillis;
 };
-
-class JoyStickPressTracker
+class JoystickPressTracker
 {
 public:
-  JoyStickPressTracker(uint8_t pin, int minReading = 10, int maxReading = 1013)
+  JoystickPressTracker(uint8_t pin, int minReading = 10, int maxReading = 1013)
   {
-    if (maxReading < minReading) {
-      int temp = maxReading;
-      maxReading = minReading;
-      minReading = temp;
-      this->reverseDir = true;
-    } else {
-      this->reverseDir = false;
-    }
-    // this->maxReading = 1023;
-    // this->threshold = 10;
-    this->maxReading = maxReading;
-    this->minReading = minReading;
     this->pin = pin;
-    // this->reading = 0;
-    this->pressedDir = 0;
-    this->pressedMillis = 0;
-    this->needReset = false;
+    this->autoThreshold = -1;
+    resetMinMax(minReading, maxReading, true);
+  }
+  JoystickPressTracker(uint8_t pin, bool reverseDir, bool autoTune) 
+  {
+    int autoThreshold = autoTune ? 100 : -1;
+    this->pin = pin;
+    this->autoThreshold = autoThreshold;
+    this->autoMin = 10000;
+    this->autoMax = -1;
+    int minReading = reverseDir ? 1013 : 10;
+    int maxReading = reverseDir ? 10 : 1013;
+    resetMinMax(minReading, maxReading, true);
+  }
+
+public:
+  void setMinMax(int minReading, int maxReading)
+  {
+    resetMinMax(minReading, maxReading, false);
   }
 
 public:
   int8_t checkPressed(int repeat = 0)
   {
-    return setReading(analogRead(this->pin), repeat);
+    int reading = analogRead(this->pin);
+    if (this->autoThreshold != -1) {
+      if (reading < this->autoMin) {
+        this->autoMin = reading;
+      }
+      if (reading > this->autoMax) {
+        this->autoMax = reading;
+      }
+      if ((this->autoMax - this->autoMin) >= 800) {
+        resetMinMax(this->autoMin + this->autoThreshold, this->autoMax - this->autoThreshold, false);
+      }
+    }
+    return setReading(reading, repeat);
+  }
+  int readPressedBypass()
+  {
+    int reading = analogRead(this->pin);
+    setReading(reading);
+    return readingToPressedDir(reading);
   }
   int readBypass()
   {
@@ -108,6 +127,32 @@ public:
   }
 
 private:
+  int readingToPressedDir(int reading)
+  {
+    if (reading <= this->minReading)
+    {
+      if (this->reverseDir)
+      {
+        return 1;
+      }
+      else
+      {
+        return -1;
+      }
+    }
+    if (reading >= this->maxReading)
+    {
+      if (this->reverseDir)
+      {
+        return -1;
+      }
+      else
+      {
+        return 1;
+      }
+    }
+    return 0;
+  }
   int8_t setReading(int reading, int repeat = 0)
   {
     if (repeat == 0)
@@ -117,23 +162,10 @@ private:
     }
     long nowMillis = millis();
     int8_t oriPressedDir = this->pressedDir;
-    //if ((reading - threshold) <= 0)
-    if (reading <= this->minReading)
+    int pressedDir = readingToPressedDir(reading);
+    if (pressedDir != 0)
     {
-      if (this->reverseDir) {
-        this->pressedDir = 1;
-      } else {
-        this->pressedDir = -1;
-      }
-    }
-    //else if ((reading + threshold) >= maxReading)
-    else if (reading >= this->maxReading)
-    {
-      if (this->reverseDir) {
-        this->pressedDir = -1;
-      } else {
-        this->pressedDir = 1;
-      }
+      this->pressedDir = pressedDir;
     }
     else
     {
@@ -188,19 +220,86 @@ private:
     }
     return 0;
   }
+  void resetMinMax(int minReading, int maxReading, bool forceReset)
+  {
+    if (forceReset || this->minReading != minReading || this->maxReading != maxReading)
+    {
+      if (forceReset) { 
+        if (maxReading < minReading)
+        {
+          int temp = maxReading;
+          maxReading = minReading;
+          minReading = temp;
+          this->reverseDir = true;
+        }
+        else
+        {
+          this->reverseDir = false;
+        }
+      }
+      this->maxReading = maxReading;
+      this->minReading = minReading;
+      this->pressedDir = 0;
+      this->pressedMillis = 0;
+      this->needReset = false;
+      this->nextRepeatMillis = 0;
+      this->autoRepeatDir = 0;
+    }
+  }
 
 private:
   int maxReading;
   int minReading;
   bool reverseDir;
-  //int threshold;
+  int autoThreshold; // -1 if not auto tune
+  int autoMin;
+  int autoMax;
 
 private:
-  // int reading;
   uint8_t pin;
   int pressedDir;
   long pressedMillis;
   bool needReset;
   long nextRepeatMillis;
   int autoRepeatDir;
+};
+class Joystick2DTracker
+{
+public:
+  Joystick2DTracker(JoystickPressTracker &xTracker, JoystickPressTracker &yTracker) : xTracker(xTracker), yTracker(yTracker)
+  {
+    this->lastPressedMillis = 0;
+  }
+
+public:
+  bool checkPressed(int repeat = 0)
+  {
+    int xPressed = xTracker.checkPressed(repeat);
+    int yPressed = yTracker.checkPressed(repeat);
+    if (xPressed != 0 || yPressed != 0)
+    {
+      long nowMillis = millis();
+      long diffMillis = nowMillis - this->lastPressedMillis;
+      if (diffMillis > 50)
+      {
+        this->checkResultXPressed = xTracker.readPressedBypass();
+        this->checkResultYPressed = yTracker.readPressedBypass();
+        this->lastPressedMillis = nowMillis;
+        return true;
+      }
+    }
+    else
+    {
+      return 0;
+    }
+  }
+
+private:
+  JoystickPressTracker &xTracker;
+  JoystickPressTracker &yTracker;
+
+public:
+  int checkResultXPressed;
+  int checkResultYPressed;
+  long lastPressedMillis;
 };

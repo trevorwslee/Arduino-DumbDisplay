@@ -64,9 +64,9 @@ const int NOTE_G5 = GetNoteFreq(1, ToNoteIdx('G', 0));
 ButtonPressTracker btnATracker(BTN_A);
 ButtonPressTracker btnBTracker(BTN_B);
 
-#if defined(JOYSTICK_H_MAX_READING)
-JoyStickPressTracker horizontalTracker(HORIZONTAL, JOYSTICK_H_MIN_READING, JOYSTICK_H_MAX_READING);
-JoyStickPressTracker verticalTracker(VERTICAL, JOYSTICK_V_MIN_READING, JOYSTICK_V_MAX_READING);
+#if defined(WITH_JOYSTICK)
+JoystickPressTracker horizontalTracker(HORIZONTAL, joystickReverseHoriDir, joystickAutoTune);
+JoystickPressTracker verticalTracker(VERTICAL, joystickReverseVertDir, joystickAutoTune);
 #endif
 
 
@@ -476,7 +476,7 @@ void handlePlay()
   bool frameDue = frameControl.checkDue();
   long frameNum = frameControl.getFrameNum();
 
-#if defined(JOYSTICK_H_MAX_READING)
+#if defined(WITH_JOYSTICK)
   int8_t horizontalPress = horizontalTracker.checkPressed(50);
   int8_t verticalPress = verticalTracker.checkPressed(50);
 
