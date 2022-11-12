@@ -10,6 +10,7 @@
 #error not configured for board yet
 #endif
 
+#define SHOW_LIVES
 
 #if defined(SAVE_IMAGES)
 #include "rocket.h"
@@ -343,6 +344,11 @@ void resetScreen()
 void drawTop()
 {
   top_layer->clear();
+#if defined(SHOW_LIVES)
+    for (int i = 0; i < lives; i++) {
+     top_layer->drawImageFile(IF_BROD1, 5 + i * 12, 3, 12);
+    }
+#endif    
   top_layer->setCursor(200, 0);
   top_layer->print(String(brojac));
   // eHealth--;
@@ -653,6 +659,9 @@ void handlePlay()
       EbuletXY[j].moveXTo(-50);
       main_layer->fillRect((lives - 1) * 14, 0, 14, 14, TFT_BLACK);
       lives--;
+#if defined(SHOW_LIVES)
+      drawTop();
+#endif      
       // if (lives == 0)
       // {
       //   main_layer->drawImageFile(IF_BUUM, xy.getX(), xy.getY());
@@ -882,6 +891,9 @@ void loop()
     main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_GAMEOVER);
     x += 240;
     main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 49, 40, IF_BROD1);
+#if defined (SHOW_LIVES)
+    top_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 49, 40, IF_BROD1);
+#endif
     x += 49;
     bulet_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 8, 8, IF_BULET);
     x += 8;
