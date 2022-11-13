@@ -12,6 +12,12 @@
 #endif
 
 
+#define TONE_KEY_PRESS 1200
+#define TONE_UNLOCK 1000
+#define TONE_LOCK 800
+#define TONE_FAIL 500
+
+
 LcdDDLayer *lcd;
 GraphicalDDLayer *graphical;
 SimpleToolDDTunnel *tunnel_unlocked;
@@ -80,7 +86,7 @@ int readColumnOfKeyPress() {
 long lastKeyMillis = 0;
 char getAKeyPress() {
   long nowMillis = millis();
-  if ((nowMillis - lastKeyMillis) < 200) {
+  if ((nowMillis - lastKeyMillis) < 300) {
     return 0;
   }
   for (int r = 0; r < 4; r++) {
@@ -97,13 +103,16 @@ char getAKeyPress() {
 
 
 const int maxComboSize = 4;
-char combinationSize = 0;
-char combinations[maxComboSize];  // maximum 4 chars
+
+struct Combo {
+  int combinationSize = 0;
+  char combinations[maxComboSize];  // maximum 4 chars
+};
 char comboBuffer[maxComboSize + 1];
-char* getCombo() {
+char* getCombo(const Combo& combo) {
     int i = 0;
-    for (; i < combinationSize; i++) {
-      comboBuffer[i] = combinations[i];
+    for (; i < combo.combinationSize; i++) {
+      comboBuffer[i] = combo.combinations[i];
     }
     for (; i < maxComboSize; i++) {
       comboBuffer[i] = '_';
@@ -111,16 +120,43 @@ char* getCombo() {
     comboBuffer[maxComboSize] = 0;
     return comboBuffer;
 }
-void setComboKey(char key) {
-  if (combinationSize == maxComboSize) {
-    memmove(combinations, combinations + 1, combinationSize - 1);
-    combinationSize--;
+void setComboKey(Combo &combo, char key) {
+  if (combo.combinationSize == maxComboSize) {
+    memmove(combo.combinations, combo.combinations + 1, combo.combinationSize - 1);
+    combo.combinationSize--;
   }
-  combinations[combinationSize++] = key;
+  combo.combinations[combo.combinationSize++] = key;
 } 
+void resetCombo(Combo &combo) {
+  combo.combinationSize = 0;
+}
+bool matchCombos(const Combo& combo1, const Combo& combo2) {
+  if (combo1.combinationSize != combo2.combinationSize) {
+    return false;
+  }
+  for (int i = 0; i < combo1.combinationSize; i++) {
+    if (combo1.combinations[i] != combo2.combinations[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+void copyCombos(const Combo& fromCombo, Combo& toCombo) {
+  toCombo.combinationSize = fromCombo.combinationSize;
+  memcpy(toCombo.combinations, fromCombo.combinations, toCombo.combinationSize);
+}
+
+Combo lockCombo;
+Combo enteringCombo;
+Combo newCombo;
 
 
+bool allReady = false;
+bool locked = false;
+bool renewing = false;
+long lastShownMillis = 0;
 
+DDConnectVersionTracker cvTracker;
 
 
 void setup() {
@@ -140,10 +176,9 @@ void setup() {
   dumbdisplay.recordLayerSetupCommands();
 
   // create a LCD layer for display some info about the picture shown
-  lcd = dumbdisplay.createLcdLayer(16, 2);
-  lcd->bgPixelColor("darkgray");
-  lcd->pixelColor("lightblue");
-  lcd->border(2, "blue");
+  lcd = dumbdisplay.createLcdLayer(16, 3);
+  lcd->pixelColor("darkblue");
+  lcd->border(2, "black");
   lcd->writeCenteredLine("... ...");
 
   // create a graphical layer for drawing the web images to
@@ -161,20 +196,11 @@ void setup() {
   // create tunnels for downloading web images ... and save to your phone
   // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", "lock-unlocked.png");
   // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", "lock-locked.png");
-  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/msxVZ", "lock-unlocked.png");
-  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/dpHSW", "lock-locked.png");
-  // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://t.ly/_QyV", "lock-unlocked.png");
-  // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://t.ly/7CTt", "lock-locked.png");
+  // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/msxVZ", "lock-unlocked.png");
+  // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/dpHSW", "lock-locked.png");
+  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://t.ly/_QyV", "lock-unlocked.png");
+  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://t.ly/7CTt", "lock-locked.png");
 }
-
-
-
-bool locked = false;
-
-bool allReady = false;
-long lastShownMillis = 0;
-
-DDConnectVersionTracker cvTracker;
 
 
 void loop() {
@@ -197,9 +223,52 @@ void loop() {
     // if all ready ... see if double clicked ... if so, refresh
     if (feedback != NULL) {
       if (feedback->type == DOUBLECLICK) {
-        locked = !locked;
+        if (locked) {
+          if (matchCombos(lockCombo, enteringCombo)) {
+            dumbdisplay.tone(TONE_UNLOCK, 200);
+            locked = false;
+            renewing = false;
+          } else {
+            dumbdisplay.tone(TONE_FAIL, 100);
+            dumbdisplay.tone(TONE_LOCK, 100);
+            dumbdisplay.tone(TONE_FAIL, 200);
+          }
+        } else {
+          dumbdisplay.tone(TONE_LOCK, 200);
+          locked = true;
+          resetCombo(enteringCombo);
+        }
         refresh = true;
       }
+    }
+    char key = getAKeyPress();
+    if (key != 0) {
+      dumbdisplay.writeComment(String(key));
+      dumbdisplay.tone(TONE_KEY_PRESS, 100);
+      if (locked) {
+        if (key == '*') {
+          resetCombo(enteringCombo);
+        } else  if (key != '#') {
+          setComboKey(enteringCombo, key);
+        }
+      } else {
+        if (key == '*') {
+          renewing = true;
+          resetCombo(newCombo);
+        } else {
+          if (renewing) {
+            if (key == '#') {
+              dumbdisplay.tone(TONE_LOCK, 100);
+              dumbdisplay.tone(TONE_UNLOCK, 100);
+              copyCombos(newCombo, lockCombo);
+              renewing = false; 
+            } else {
+              setComboKey(newCombo, key);
+            }
+          }
+        }
+      }
+      refresh = true;
     }
   }
 
@@ -209,19 +278,10 @@ void loop() {
       refresh = true;
     } 
   }
-  
-
-  char key = getAKeyPress();
-  if (key != 0) {
-    //dumbdisplay.writeComment(String(key));
-    setComboKey(key);
-    refresh = true;
-  }
 
   if (!refresh) {
     return;
   }
-
 
   allReady = lockedResult == 1 && unlockedResult == 1;
 
@@ -235,9 +295,27 @@ void loop() {
     result = unlockedResult;
   }
   if (result == 1) {
+    String status1;
+    String status2;
+    if (allReady) {
+      status1 = String(getCombo(lockCombo));
+      if (locked) {
+        status2 = String(getCombo(enteringCombo));
+      } else {
+        if (renewing) {
+          status2 = String(getCombo(newCombo));
+        } else {
+           status2 = "";
+        }  
+      }
+    } else {
+      status1 = "not";
+      status2 = "ready";
+    }
     graphical->drawImageFile(imageFileName);
     lcd->writeCenteredLine(locked ? "Lock locked" : "Lock unlocked");
-    lcd->writeCenteredLine(allReady ? getCombo() : "...", 1);
+    lcd->writeCenteredLine(status1, 1);
+    lcd->writeCenteredLine(status2, 2);
   } else if (result == 0) {
     // downloading
     graphical->clear();
