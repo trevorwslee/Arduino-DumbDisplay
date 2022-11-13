@@ -867,7 +867,9 @@ void setup(void)
 #endif
 #if defined(DOWNLOAD_IMAGES)
   dumbdisplay.writeComment("download images ...");
-  download_tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/spacewarsimgs.png", IF_SPACEWARS_IMGS);
+  //download_tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/spacewarsimgs.png", IF_SPACEWARS_IMGS);
+  download_tunnel = dumbdisplay.createImageDownloadTunnel("https://t.ly/V_wt", IF_SPACEWARS_IMGS);
+  dumbdisplay.writeComment("... ...");
 #endif
 }
 void loop()
@@ -875,12 +877,18 @@ void loop()
   if (!allReady)
   {
 #if defined(DOWNLOAD_IMAGES)
-    if (download_tunnel->checkResult() == 0)
+    int download_res = download_tunnel->checkResult();
+    if (download_res == 0)
     {
       return;
     }
     // for some reason, it crashes if delete
     // dumbdisplay.deleteTunnel(download_tunnel);
+    if (download_res == -1) {
+      dumbdisplay.writeComment("... failed to images");
+      delay(2000);
+      return;
+    }
     dumbdisplay.writeComment("... done download images");
 #endif
     int x = 0;
