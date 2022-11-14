@@ -6,7 +6,7 @@
   #include "esp32dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true, 115200));
 #else
-  #define KEYPAD_4_COLS
+  //#define KEYPAD_4_COLS
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput(115200));
 #endif
@@ -35,14 +35,14 @@ SimpleToolDDTunnel *tunnel_locked;
   #define PIN_C2  GPIO_NUM_33
   #define PIN_C3  GPIO_NUM_32
 #else
-  // #define PIN_R0 12
-  // #define PIN_R1 11
-  // #define PIN_R2 10
-  // #define PIN_R3  9
-  // #define PIN_C0  8
-  // #define PIN_C1  7 
-  // #define PIN_C2  6
-  // #define PIN_C3  5
+  #define PIN_R0 12
+  #define PIN_R1 11
+  #define PIN_R2 10
+  #define PIN_R3  9
+  #define PIN_C0  8
+  #define PIN_C1  7 
+  #define PIN_C2  6
+  #define PIN_C3  5
 #endif
 const char keys[4][4] = {
   { '1', '2', '3', 'A'},
@@ -298,12 +298,12 @@ void loop() {
     String status1;
     String status2;
     if (allReady) {
-      status1 = String(getCombo(lockCombo));
+      status1 = "🔒  " + String(getCombo(lockCombo));
       if (locked) {
-        status2 = String(getCombo(enteringCombo));
+        status2 = "🔑  " + String(getCombo(enteringCombo));
       } else {
         if (renewing) {
-          status2 = String(getCombo(newCombo));
+          status2 = "🆕  " + String(getCombo(newCombo));
         } else {
            status2 = "";
         }  
