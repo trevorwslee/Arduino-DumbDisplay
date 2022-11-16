@@ -26,6 +26,7 @@
   DumbDisplay dumbdisplay(new DDInputOutput(115200));
 #endif
 
+#define STORE_IN_EEPROM
 
 #define TONE_KEY 1500
 #define TONE_RFID 1400
@@ -198,6 +199,64 @@ bool matchRFIDPass(const char* rfid) {
 }
 #endif
 
+#if defined(STORE_IN_EEPROM)
+#include <EEPROM.h>
+void readComboFromEEPROM(Combo& combo) {
+  int offset = 0;
+  // check header first
+  for (uint8_t i = 0; i < 10; i++) {
+    uint8_t r = EEPROM.read(offset + i);
+    if (r != i) {
+      return;
+    }
+  }
+  combo.combinationSize = EEPROM.read(offset + 10);
+  for (int i = 0; i < maxComboSize; i++) {
+    combo.combinations[i] = EEPROM.read(offset + 11 + i);
+  }
+}
+void writeComboToEEPROM(const Combo& combo) {
+  int offset = 0;
+  // write some header
+  for (uint8_t i = 0; i < 10; i++) {
+   EEPROM.write(offset + i, i);
+  }
+  EEPROM.write(offset + 10, combo.combinationSize);
+  for (int i = 0; i < maxComboSize; i++) {
+    EEPROM.write(offset + 11 + i, combo.combinations[i]);
+  }
+}
+void readRFIDFromEEPROM(String& rfid) {
+  int offset = 30;
+  // check header first
+  for (uint8_t i = 0; i < 10; i++) {
+    uint8_t r = EEPROM.read(offset + i);
+    if (r != i) {
+      return;
+    }
+  }
+  uint8_t count = EEPROM.read(offset + 10);
+  char buffer[count + 1];
+  for (int i = 0; i < count; i++) {
+    buffer[i] = EEPROM.read(offset + 11 + i);
+  }
+  buffer[count] = 0;
+  rfid = String(buffer);
+}
+void writeRFIDToEEPROM(const char* rfid) {
+  int offset = 30;
+  // write some header
+  for (uint8_t i = 0; i < 10; i++) {
+   EEPROM.write(offset + i, i);
+  }
+  int len = strlen(rfid);
+  EEPROM.write(offset + 10, len);
+  for (int i = 0; i < len; i++) {
+    EEPROM.write(offset + 11 + i, rfid[i]);
+  }
+}
+#endif
+
 
 void onTried(bool matched, bool warnIfNoMatch) {
   if (matched) {
@@ -262,10 +321,19 @@ void setup() {
   // create tunnels for downloading web images ... and save to your phone
   // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", "lock-unlocked.png");
   // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", "lock-locked.png");
-  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/msxVZ", "lock-unlocked.png");
-  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/dpHSW", "lock-locked.png");
-  // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://t.ly/_QyV", "lock-unlocked.png");
-  // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://t.ly/7CTt", "lock-locked.png");
+  // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/msxVZ", "lock-unlocked.png");
+  // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/dpHSW", "lock-locked.png");
+  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://t.ly/_QyV", "lock-unlocked.png");
+  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://t.ly/7CTt", "lock-locked.png");
+
+
+#if defined(STORE_IN_EEPROM)
+  readComboFromEEPROM(lockCombo);
+  #if defined (SS_PIN)
+    readRFIDFromEEPROM(rfidPass);
+    dumbdisplay.writeComment("STORED RFID: " + rfidPass);
+  #endif
+#endif
 }
 
 
@@ -319,6 +387,9 @@ void loop() {
             if (key == '#') {
               copyCombos(newCombo, lockCombo);
               onNew();
+#if defined(STORE_IN_EEPROM)
+              writeComboToEEPROM(lockCombo);
+#endif
             } else {
               setComboKey(newCombo, key);
             }
@@ -330,7 +401,6 @@ void loop() {
   }
 
 #if defined (SS_PIN)
-    //String rfid;
     const char* rfid = readRFID();
     if (rfid != NULL) {
       dumbdisplay.writeComment("RFID: " + String(rfid));
@@ -342,6 +412,9 @@ void loop() {
             if (renewing) {
               rfidPass = String(rfid);
               onNew();
+#if defined(STORE_IN_EEPROM)
+              writeRFIDToEEPROM(rfid);
+#endif
             }
         }
         refresh = true;
