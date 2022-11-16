@@ -1,18 +1,34 @@
 #include <stdio.h>
 
 #if defined(ESP32)
+  #define PIN_R0  GPIO_NUM_13
+  #define PIN_R1  GPIO_NUM_12
+  #define PIN_R2  GPIO_NUM_14
+  #define PIN_R3  GPIO_NUM_27
+  #define PIN_C0  GPIO_NUM_26
+  #define PIN_C1  GPIO_NUM_25 
+  #define PIN_C2  GPIO_NUM_33
+  #define PIN_C3  GPIO_NUM_32
   // if using ESP32, assume you can use bluetooth with name ESP32
-  //#define KEYPAD_4_COLS
   #include "esp32dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true, 115200));
 #else
-  //#define KEYPAD_4_COLS
+  #define PIN_R0 8
+  #define PIN_R1 7
+  #define PIN_R2 6
+  #define PIN_R3 5
+  #define PIN_C0 4
+  #define PIN_C1 3 
+  #define PIN_C2 2
+  #define SS_PIN 10
+  #define RST_PIN 9
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput(115200));
 #endif
 
 
-#define TONE_KEY_PRESS 1200
+#define TONE_KEY 1500
+#define TONE_RFID 1400
 #define TONE_UNLOCK 1000
 #define TONE_LOCK 800
 #define TONE_FAIL 500
@@ -24,26 +40,6 @@ SimpleToolDDTunnel *tunnel_unlocked;
 SimpleToolDDTunnel *tunnel_locked;
 
 
-
-#if defined(ESP32)
-  #define PIN_R0  GPIO_NUM_13
-  #define PIN_R1  GPIO_NUM_12
-  #define PIN_R2  GPIO_NUM_14
-  #define PIN_R3  GPIO_NUM_27
-  #define PIN_C0  GPIO_NUM_26
-  #define PIN_C1  GPIO_NUM_25 
-  #define PIN_C2  GPIO_NUM_33
-  #define PIN_C3  GPIO_NUM_32
-#else
-  #define PIN_R0 12
-  #define PIN_R1 11
-  #define PIN_R2 10
-  #define PIN_R3  9
-  #define PIN_C0  8
-  #define PIN_C1  7 
-  #define PIN_C2  6
-  #define PIN_C3  5
-#endif
 const char keys[4][4] = {
   { '1', '2', '3', 'A'},
   { '4', '5', '6', 'B' },
@@ -51,19 +47,16 @@ const char keys[4][4] = {
   { '*', '0', '#', 'D'}
 };
 void setupForReadingRow(int r) {
-#if defined(PIN_R0)  
     digitalWrite(PIN_R0, r != 0);
     digitalWrite(PIN_R1, r != 1);
     digitalWrite(PIN_R2, r != 2);
     digitalWrite(PIN_R3, r != 3);
-#endif
 }
 int readColumnOfKeyPress() {
-#if defined(PIN_R0)  
   int c0 = digitalRead(PIN_C0);
   int c1 = digitalRead(PIN_C1);
   int c2 = digitalRead(PIN_C2);
-#ifdef KEYPAD_4_COLS
+#if defined(PIN_C3)  
   int c3 = digitalRead(PIN_C3);
 #else
   int c3 = 1;
@@ -79,9 +72,6 @@ int readColumnOfKeyPress() {
     c = 3;
   }
   return c;
-#else
-  return -1;
-#endif
 }
 long lastKeyMillis = 0;
 char getAKeyPress() {
@@ -159,8 +149,78 @@ long lastShownMillis = 0;
 DDConnectVersionTracker cvTracker;
 
 
+#if defined (SS_PIN)
+#include <SPI.h>
+#include <MFRC522.h>
+MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
+
+String rfidRead;
+long noRFIDMillis = millis();
+
+const char* readRFID() {
+  long nowMillis = millis();
+  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+    char buffer[16];
+    for (byte i = 0; i < mfrc522.uid.size; i++) {
+      sprintf(buffer + 2 * i, "%02x", mfrc522.uid.uidByte[i]);
+    }
+    bool accept = noRFIDMillis > 0 && (nowMillis - noRFIDMillis) >= 500;
+//accept = true;
+    noRFIDMillis = 0;
+    if (accept) {
+      rfidRead = buffer;
+      return rfidRead.c_str();
+    } else {
+      return NULL;
+    }
+  } else {
+    if (noRFIDMillis <= 0) {
+      noRFIDMillis = nowMillis;
+    }
+    return NULL;
+  }
+}
+
+String rfidPass;
+bool matchRFIDPass(const char* rfid) {
+  const char* csRFIDPass = rfidPass.c_str();
+  for (int i = 0;; i++) {
+    char p = csRFIDPass[i];
+    char c = rfid[i];
+    if (p == 0 && c == 0) {
+      break;
+    }
+    if (p == 0 || c == 0 || p != c) {
+      return false;
+    }
+  }
+  return true;
+}
+#endif
+
+
+void onTried(bool matched, bool warnIfNoMatch) {
+  if (matched) {
+    dumbdisplay.tone(TONE_UNLOCK, 200);
+    locked = false;
+    renewing = false;
+  } else if (warnIfNoMatch) {
+    dumbdisplay.tone(TONE_FAIL, 100);
+    dumbdisplay.tone(TONE_LOCK, 100);
+    dumbdisplay.tone(TONE_FAIL, 200);
+  }
+}
+void onNew() {
+  dumbdisplay.tone(TONE_LOCK, 100);
+  dumbdisplay.tone(TONE_UNLOCK, 100);
+  locked = true;
+  renewing = false; 
+}
+
+
+
+
 void setup() {
-#if defined(PIN_R0)  
   pinMode(PIN_R0, OUTPUT);
   pinMode(PIN_R1, OUTPUT);
   pinMode(PIN_R2, OUTPUT);
@@ -168,16 +228,22 @@ void setup() {
   pinMode(PIN_C0, INPUT_PULLUP);
   pinMode(PIN_C1, INPUT_PULLUP);
   pinMode(PIN_C2, INPUT_PULLUP);
-#ifdef KEYPAD_4_COLS
+#if defined(PIN_C3)  
   pinMode(PIN_C3, INPUT_PULLUP);
 #endif
+
+#if defined (SS_PIN)
+  SPI.begin();      // Initiate  SPI bus
+  mfrc522.PCD_Init();   // Initiate MFRC522
+	//delay(4);				// Optional delay. Some board do need more time after init to be ready, see Readme
 #endif
 
   dumbdisplay.recordLayerSetupCommands();
 
   // create a LCD layer for display some info about the picture shown
   lcd = dumbdisplay.createLcdLayer(16, 3);
-  lcd->pixelColor("darkblue");
+  //lcd->backgroundColor(DD_RGB_COLOR(0xee, 0xee, 0xee));
+  //lcd->pixelColor("darkblue");
   lcd->border(2, "black");
   lcd->writeCenteredLine("... ...");
 
@@ -196,10 +262,10 @@ void setup() {
   // create tunnels for downloading web images ... and save to your phone
   // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", "lock-unlocked.png");
   // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", "lock-locked.png");
-  // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/msxVZ", "lock-unlocked.png");
-  // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/dpHSW", "lock-locked.png");
-  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://t.ly/_QyV", "lock-unlocked.png");
-  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://t.ly/7CTt", "lock-locked.png");
+  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/msxVZ", "lock-unlocked.png");
+  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/dpHSW", "lock-locked.png");
+  // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://t.ly/_QyV", "lock-unlocked.png");
+  // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://t.ly/7CTt", "lock-locked.png");
 }
 
 
@@ -224,15 +290,7 @@ void loop() {
     if (feedback != NULL) {
       if (feedback->type == DOUBLECLICK) {
         if (locked) {
-          if (matchCombos(lockCombo, enteringCombo)) {
-            dumbdisplay.tone(TONE_UNLOCK, 200);
-            locked = false;
-            renewing = false;
-          } else {
-            dumbdisplay.tone(TONE_FAIL, 100);
-            dumbdisplay.tone(TONE_LOCK, 100);
-            dumbdisplay.tone(TONE_FAIL, 200);
-          }
+          onTried((matchCombos(lockCombo, enteringCombo)), true);
         } else {
           dumbdisplay.tone(TONE_LOCK, 200);
           locked = true;
@@ -244,13 +302,14 @@ void loop() {
     char key = getAKeyPress();
     if (key != 0) {
       dumbdisplay.writeComment(String(key));
-      dumbdisplay.tone(TONE_KEY_PRESS, 100);
+      dumbdisplay.tone(TONE_KEY, 100);
       if (locked) {
         if (key == '*') {
           resetCombo(enteringCombo);
         } else  if (key != '#') {
           setComboKey(enteringCombo, key);
         }
+        onTried((matchCombos(lockCombo, enteringCombo)), key == '#');
       } else {
         if (key == '*') {
           renewing = true;
@@ -258,10 +317,8 @@ void loop() {
         } else {
           if (renewing) {
             if (key == '#') {
-              dumbdisplay.tone(TONE_LOCK, 100);
-              dumbdisplay.tone(TONE_UNLOCK, 100);
               copyCombos(newCombo, lockCombo);
-              renewing = false; 
+              onNew();
             } else {
               setComboKey(newCombo, key);
             }
@@ -271,6 +328,27 @@ void loop() {
       refresh = true;
     }
   }
+
+#if defined (SS_PIN)
+    //String rfid;
+    const char* rfid = readRFID();
+    if (rfid != NULL) {
+      dumbdisplay.writeComment("RFID: " + String(rfid));
+      dumbdisplay.tone(TONE_RFID, 100);
+      if (allReady) {
+        if (locked) {
+          onTried(matchRFIDPass(rfid), true);
+        } else {
+            if (renewing) {
+              rfidPass = String(rfid);
+              onNew();
+            }
+        }
+        refresh = true;
+      }
+    }
+#endif
+
 
   if (!refresh) {
     // check if reconnected ... if so, refresh
@@ -301,11 +379,17 @@ void loop() {
       status1 = "🔒  " + String(getCombo(lockCombo));
       if (locked) {
         status2 = "🔑  " + String(getCombo(enteringCombo));
+        lcd->backgroundColor(DD_RGB_COLOR(0xff, 0xdd, 0xdd));
+        lcd->pixelColor("darkred");
       } else {
         if (renewing) {
           status2 = "🆕  " + String(getCombo(newCombo));
+          lcd->backgroundColor(DD_RGB_COLOR(0xdd, 0xdd, 0xff));
+          lcd->pixelColor("darkblue");
         } else {
            status2 = "";
+          lcd->backgroundColor(DD_RGB_COLOR(0xdd, 0xff, 0xdd));
+          lcd->pixelColor("darkgreen");
         }  
       }
     } else {
@@ -313,6 +397,7 @@ void loop() {
       status2 = "ready";
     }
     graphical->drawImageFile(imageFileName);
+    lcd->clear();
     lcd->writeCenteredLine(locked ? "Lock locked" : "Lock unlocked");
     lcd->writeCenteredLine(status1, 1);
     lcd->writeCenteredLine(status2, 2);
