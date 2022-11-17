@@ -1,32 +1,21 @@
 #include <stdio.h>
 
-#if defined(ESP32)
-  #define PIN_R0  GPIO_NUM_13
-  #define PIN_R1  GPIO_NUM_12
-  #define PIN_R2  GPIO_NUM_14
-  #define PIN_R3  GPIO_NUM_27
-  #define PIN_C0  GPIO_NUM_26
-  #define PIN_C1  GPIO_NUM_25 
-  #define PIN_C2  GPIO_NUM_33
-  #define PIN_C3  GPIO_NUM_32
-  // if using ESP32, assume you can use bluetooth with name ESP32
-  #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32", true, 115200));
-#else
-  #define PIN_R0 8
-  #define PIN_R1 7
-  #define PIN_R2 6
-  #define PIN_R3 5
-  #define PIN_C0 4
-  #define PIN_C1 3 
-  #define PIN_C2 2
-  #define SS_PIN 10
-  #define RST_PIN 9
-  #include "dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDInputOutput(115200));
-#endif
+
+#define PIN_R0 8
+#define PIN_R1 7
+#define PIN_R2 6
+#define PIN_R3 5
+#define PIN_C0 4
+#define PIN_C1 3 
+#define PIN_C2 2
+
+#define SS_PIN 10
+#define RST_PIN 9
+
+#define SIM_DOOR_LED_PIN A5
 
 #define STORE_IN_EEPROM
+
 
 #define TONE_KEY 1500
 #define TONE_RFID 1400
@@ -35,13 +24,21 @@
 #define TONE_FAIL 500
 
 
+
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput(115200));
+
+
+
+
 LcdDDLayer *lcd;
 GraphicalDDLayer *graphical;
 SimpleToolDDTunnel *tunnel_unlocked;
 SimpleToolDDTunnel *tunnel_locked;
+DDConnectVersionTracker cvTracker;
 
 
-const char keys[4][4] = {
+const char Keys[4][4] = {
   { '1', '2', '3', 'A'},
   { '4', '5', '6', 'B' },
   { '7', '8', '9', 'C' },
@@ -84,7 +81,7 @@ char getAKeyPress() {
     setupForReadingRow(r);
     int c = readColumnOfKeyPress();
     if (c != -1) {
-      char key = keys[r][c];
+      char key = Keys[r][c];
       lastKeyMillis = nowMillis;
       return key;
     }
@@ -93,26 +90,25 @@ char getAKeyPress() {
 }
 
 
-const int maxComboSize = 4;
-
+const int MaxComboSize = 4;
 struct Combo {
   int combinationSize = 0;
-  char combinations[maxComboSize];  // maximum 4 chars
+  char combinations[MaxComboSize];  // maximum 4 chars
 };
-char comboBuffer[maxComboSize + 1];
+char ComboBuffer[MaxComboSize + 1];
 char* getCombo(const Combo& combo) {
     int i = 0;
     for (; i < combo.combinationSize; i++) {
-      comboBuffer[i] = combo.combinations[i];
+      ComboBuffer[i] = combo.combinations[i];
     }
-    for (; i < maxComboSize; i++) {
-      comboBuffer[i] = '_';
+    for (; i < MaxComboSize; i++) {
+      ComboBuffer[i] = '_';
     }
-    comboBuffer[maxComboSize] = 0;
-    return comboBuffer;
+    ComboBuffer[MaxComboSize] = 0;
+    return ComboBuffer;
 }
-void setComboKey(Combo &combo, char key) {
-  if (combo.combinationSize == maxComboSize) {
+void addComboKey(Combo &combo, char key) {
+  if (combo.combinationSize == MaxComboSize) {
     memmove(combo.combinations, combo.combinations + 1, combo.combinationSize - 1);
     combo.combinationSize--;
   }
@@ -147,114 +143,176 @@ bool locked = false;
 bool renewing = false;
 long lastShownMillis = 0;
 
-DDConnectVersionTracker cvTracker;
-
 
 #if defined (SS_PIN)
 #include <SPI.h>
 #include <MFRC522.h>
-MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
-
-String rfidRead;
-long noRFIDMillis = millis();
-
-const char* readRFID() {
-  long nowMillis = millis();
-  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
-    char buffer[16];
-    for (byte i = 0; i < mfrc522.uid.size; i++) {
-      sprintf(buffer + 2 * i, "%02x", mfrc522.uid.uidByte[i]);
-    }
-    bool accept = noRFIDMillis > 0 && (nowMillis - noRFIDMillis) >= 500;
-//accept = true;
-    noRFIDMillis = 0;
-    if (accept) {
-      rfidRead = buffer;
-      return rfidRead.c_str();
+class RFIDControl
+{
+public:
+  RFIDControl(uint8_t ssPin, uint8_t rstPin): mfrc522(ssPin, rstPin) {
+    noRFIDMillis = millis();
+  }
+public:
+  void init() {
+    SPI.begin();
+    mfrc522.PCD_Init();
+  }  
+  const char* readRFID() {
+    long nowMillis = millis();
+    if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+      char buffer[16];
+      for (byte i = 0; i < mfrc522.uid.size; i++) {
+        sprintf(buffer + 2 * i, "%02x", mfrc522.uid.uidByte[i]);
+      }
+      bool accept = noRFIDMillis > 0 && (nowMillis - noRFIDMillis) >= 500;
+  //accept = true;
+      noRFIDMillis = 0;
+      if (accept) {
+        rfidRead = buffer;
+        return rfidRead.c_str();
+      } else {
+        return NULL;
+      }
     } else {
+      if (noRFIDMillis <= 0) {
+        noRFIDMillis = nowMillis;
+      }
       return NULL;
     }
-  } else {
-    if (noRFIDMillis <= 0) {
-      noRFIDMillis = nowMillis;
-    }
-    return NULL;
   }
-}
-
-String rfidPass;
-bool matchRFIDPass(const char* rfid) {
-  const char* csRFIDPass = rfidPass.c_str();
-  for (int i = 0;; i++) {
-    char p = csRFIDPass[i];
-    char c = rfid[i];
-    if (p == 0 && c == 0) {
-      break;
+  bool matchRFIDPass(const char* rfid) {
+    const char* csRFIDPass = rfidPass.c_str();
+    for (int i = 0;; i++) {
+      char p = csRFIDPass[i];
+      char c = rfid[i];
+      if (p == 0 && c == 0) {
+        break;
+      }
+      if (p == 0 || c == 0 || p != c) {
+        return false;
+      }
     }
-    if (p == 0 || c == 0 || p != c) {
-      return false;
-    }
+    return true;
   }
-  return true;
-}
+public:
+  String rfidPass;
+private: 
+  MFRC522 mfrc522;
+  String rfidRead;
+  long noRFIDMillis;
+};
+RFIDControl rfidControl(SS_PIN, RST_PIN);
 #endif
 
 #if defined(STORE_IN_EEPROM)
 #include <EEPROM.h>
-void readComboFromEEPROM(Combo& combo) {
-  int offset = 0;
-  // check header first
-  for (uint8_t i = 0; i < 10; i++) {
-    uint8_t r = EEPROM.read(offset + i);
-    if (r != i) {
-      return;
+class EEPROMStorage {
+public:
+  void readCombo(Combo& combo) {
+    int offset = 0;
+    // check header first
+    for (uint8_t i = 0; i < 10; i++) {
+      uint8_t r = EEPROM.read(offset + i);
+      if (r != i) {
+        return;
+      }
+    }
+    combo.combinationSize = EEPROM.read(offset + 10);
+    for (int i = 0; i < MaxComboSize; i++) {
+      combo.combinations[i] = EEPROM.read(offset + 11 + i);
     }
   }
-  combo.combinationSize = EEPROM.read(offset + 10);
-  for (int i = 0; i < maxComboSize; i++) {
-    combo.combinations[i] = EEPROM.read(offset + 11 + i);
-  }
-}
-void writeComboToEEPROM(const Combo& combo) {
-  int offset = 0;
-  // write some header
-  for (uint8_t i = 0; i < 10; i++) {
-   EEPROM.write(offset + i, i);
-  }
-  EEPROM.write(offset + 10, combo.combinationSize);
-  for (int i = 0; i < maxComboSize; i++) {
-    EEPROM.write(offset + 11 + i, combo.combinations[i]);
-  }
-}
-void readRFIDFromEEPROM(String& rfid) {
-  int offset = 30;
-  // check header first
-  for (uint8_t i = 0; i < 10; i++) {
-    uint8_t r = EEPROM.read(offset + i);
-    if (r != i) {
-      return;
+  void writeCombo(const Combo& combo) {
+    int offset = 0;
+    // write some header
+    for (uint8_t i = 0; i < 10; i++) {
+      EEPROM.write(offset + i, i);
+    }
+    EEPROM.write(offset + 10, combo.combinationSize);
+    for (int i = 0; i < MaxComboSize; i++) {
+      EEPROM.write(offset + 11 + i, combo.combinations[i]);
     }
   }
-  uint8_t count = EEPROM.read(offset + 10);
-  char buffer[count + 1];
-  for (int i = 0; i < count; i++) {
-    buffer[i] = EEPROM.read(offset + 11 + i);
+  void readRFID(String& rfid) {
+    int offset = 30;
+    // check header first
+    for (uint8_t i = 0; i < 10; i++) {
+      uint8_t r = EEPROM.read(offset + i);
+      if (r != i) {
+        return;
+      }
+    }
+    uint8_t count = EEPROM.read(offset + 10);
+    char buffer[count + 1];
+    for (int i = 0; i < count; i++) {
+      buffer[i] = EEPROM.read(offset + 11 + i);
+    }
+    buffer[count] = 0;
+    rfid = String(buffer);
   }
-  buffer[count] = 0;
-  rfid = String(buffer);
-}
-void writeRFIDToEEPROM(const char* rfid) {
-  int offset = 30;
-  // write some header
-  for (uint8_t i = 0; i < 10; i++) {
-   EEPROM.write(offset + i, i);
+  void writeRFID(const char* rfid) {
+    int offset = 30;
+    // write some header
+    for (uint8_t i = 0; i < 10; i++) {
+      EEPROM.write(offset + i, i);
+    }
+    int len = strlen(rfid);
+    EEPROM.write(offset + 10, len);
+    for (int i = 0; i < len; i++) {
+      EEPROM.write(offset + 11 + i, rfid[i]);
+    }
   }
-  int len = strlen(rfid);
-  EEPROM.write(offset + 10, len);
-  for (int i = 0; i < len; i++) {
-    EEPROM.write(offset + 11 + i, rfid[i]);
+};
+EEPROMStorage eepromStorage;
+#endif
+
+
+#if defined(SIM_DOOR_LED_PIN)
+class DoorHandler {
+public:
+  DoorHandler(uint8_t ledPin): ledPin(ledPin) {
+    toggleCounter = 0;
   }
-}
+  // doorState -- 0: not changed; 1: opened; 2: closed
+  void handleDoor(int doorState) {
+    if (doorState == 1) {
+      if (!opened) {
+        //dumbdisplay.writeComment("OPEN");
+        toggleCounter = 4;
+      }
+      opened = true;
+    } else if (doorState == 2) {
+      if (opened) {
+        //dumbdisplay.writeComment("CLOSE");
+        toggleCounter = 4;
+      }
+      opened = false;
+    } else {
+      if (toggleCounter > 0) {
+        long nowMillis = millis();
+        if ((toggleMillis - nowMillis) <= 0) {
+          if (toggleCounter % 2 == 0) {
+            digitalWrite(ledPin, opened ? 0 : 1);
+          } else {
+            digitalWrite(ledPin, opened ? 1 : 0);
+          }
+          if (--toggleCounter > 0) {
+            toggleMillis = nowMillis + 150;
+          } else {
+            toggleMillis = 0;
+          }
+        }
+      }
+    }
+  }  
+private:
+  uint8_t ledPin;
+  bool opened;
+  long toggleMillis;
+  int toggleCounter;
+};
+DoorHandler doorHandler(SIM_DOOR_LED_PIN);
 #endif
 
 
@@ -291,10 +349,12 @@ void setup() {
   pinMode(PIN_C3, INPUT_PULLUP);
 #endif
 
+#if defined(SIM_DOOR_LED_PIN)
+ pinMode(SIM_DOOR_LED_PIN, OUTPUT);
+#endif
+
 #if defined (SS_PIN)
-  SPI.begin();      // Initiate  SPI bus
-  mfrc522.PCD_Init();   // Initiate MFRC522
-	//delay(4);				// Optional delay. Some board do need more time after init to be ready, see Readme
+  rfidControl.init();
 #endif
 
   dumbdisplay.recordLayerSetupCommands();
@@ -328,11 +388,11 @@ void setup() {
 
 
 #if defined(STORE_IN_EEPROM)
-  readComboFromEEPROM(lockCombo);
-  #if defined (SS_PIN)
-    readRFIDFromEEPROM(rfidPass);
-    dumbdisplay.writeComment("STORED RFID: " + rfidPass);
-  #endif
+  eepromStorage.readCombo(lockCombo);
+ #if defined (SS_PIN)
+  eepromStorage.readRFID(rfidControl.rfidPass);
+  dumbdisplay.writeComment("STORED RFID: " + rfidControl.rfidPass);
+ #endif
 #endif
 }
 
@@ -344,9 +404,10 @@ void loop() {
   const DDFeedback* feedback = graphical->getFeedback();
  
   bool refresh = false;
+  bool wasLocked = locked;
 
   if (!allReady) {
-    // not all ready ... if not refresh for a while (1000 ms), refresh
+    // not all ready ... if not refreshed for a while (1000 ms), refresh
     long now = millis();
     long diff = now - lastShownMillis;
     if (diff > 1000) {
@@ -354,12 +415,14 @@ void loop() {
       refresh = true;
     }
   } else {
-    // if all ready ... see if double clicked ... if so, refresh
+    // if all ready ... see if double clicked ... if so, handle and refresh
     if (feedback != NULL) {
       if (feedback->type == DOUBLECLICK) {
         if (locked) {
+          // if locked ... check if combo matches ... if so, unlock
           onTried((matchCombos(lockCombo, enteringCombo)), true);
         } else {
+          // if not locked ... lock
           dumbdisplay.tone(TONE_LOCK, 200);
           locked = true;
           resetCombo(enteringCombo);
@@ -369,17 +432,23 @@ void loop() {
     }
     char key = getAKeyPress();
     if (key != 0) {
-      dumbdisplay.writeComment(String(key));
+      // a key on keypad pressed
       dumbdisplay.tone(TONE_KEY, 100);
       if (locked) {
+        // already locked ... handled entering of combo
         if (key == '*') {
+          // if key is '*', clear combo being entered
           resetCombo(enteringCombo);
         } else  if (key != '#') {
-          setComboKey(enteringCombo, key);
+          // if key is not '#', add the key to what combo being entered
+          addComboKey(enteringCombo, key);
         }
+        // try the combo
         onTried((matchCombos(lockCombo, enteringCombo)), key == '#');
       } else {
+        // not locked ... handle if changing combo
         if (key == '*') {
+          // if key is '*', start changing combo
           renewing = true;
           resetCombo(newCombo);
           dumbdisplay.tone(TONE_UNLOCK, 200);
@@ -387,13 +456,15 @@ void loop() {
         } else {
           if (renewing) {
             if (key == '#') {
+              // if changing combo and key pressed is '#', use the new combo
               copyCombos(newCombo, lockCombo);
               onNew();
 #if defined(STORE_IN_EEPROM)
-              writeComboToEEPROM(lockCombo);
+              eepromStorage.writeCombo(lockCombo);
 #endif
             } else {
-              setComboKey(newCombo, key);
+              // add the key to the new combo being entered
+              addComboKey(newCombo, key);
             }
           }
         }
@@ -404,30 +475,42 @@ void loop() {
   
 
 #if defined (SS_PIN)
-    const char* rfid = readRFID();
+    const char* rfid = rfidControl.readRFID();
     if (rfid != NULL) {
+      // got RFID
       dumbdisplay.writeComment("RFID: " + String(rfid));
       dumbdisplay.tone(TONE_RFID, 100);
       if (allReady) {
         if (locked) {
-          onTried(matchRFIDPass(rfid), true);
+          // if already locked ... try to match the RFID, to see if can unlock
+          onTried(rfidControl.matchRFIDPass(rfid), true);
         } else {
-            if (renewing) {
-              rfidPass = String(rfid);
-              onNew();
+          if (renewing) {
+            // if renewing combo and got RFID ... use the RFID as new RFID pass  
+            rfidControl.rfidPass = String(rfid);
+            onNew();
 #if defined(STORE_IN_EEPROM)
-              writeRFIDToEEPROM(rfid);
+            eepromStorage.writeRFID(rfid);
 #endif
-            }
+          }
         }
         refresh = true;
       }
     }
 #endif
 
+#if defined(SIM_DOOR_LED_PIN)
+  int doorState = 0;  // door state not changed
+  if (wasLocked && !locked) {
+    doorState = 1;  // door should open now
+  } else if (!wasLocked && locked) {
+    doorState = 2;  // door should close now
+  }
+  doorHandler.handleDoor(doorState);
+#endif
 
   if (!refresh) {
-    // check if reconnected ... if so, refresh
+    // check if reconnected ... if so, refresh anyway
     if (cvTracker.checkChanged(dumbdisplay)) {
       refresh = true;
     } 
