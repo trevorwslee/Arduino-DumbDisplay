@@ -382,6 +382,8 @@ void loop() {
         if (key == '*') {
           renewing = true;
           resetCombo(newCombo);
+          dumbdisplay.tone(TONE_UNLOCK, 200);
+          dumbdisplay.tone(TONE_KEY, 100);
         } else {
           if (renewing) {
             if (key == '#') {
@@ -399,6 +401,7 @@ void loop() {
       refresh = true;
     }
   }
+  
 
 #if defined (SS_PIN)
     const char* rfid = readRFID();
