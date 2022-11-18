@@ -7,9 +7,16 @@
 #define TRACK_PRESS
 #define TRACK_PRESSED_IS_2D
 
+
+#if defined(ARDUINO_AVR_NANO)
 const int VRX = A2;
 const int VRY = A1;
 const int SW = A0;
+#elif defined(PICO_SDK_VERSION_MAJOR)
+const int VRX = 26;
+const int VRY = 27;
+const int SW = 16;
+#endif
 
 const int XYPressThreshold = 100;
 bool trackedXYPressed2D = true;
@@ -404,7 +411,7 @@ void loop()
     yPos = analogRead(VRY);
   }
   int btnState = 0;
-  if (SW != -1)
+   if (SW != -1)
   {
     btnState = digitalRead(SW);
   }
@@ -437,7 +444,7 @@ void loop()
   {
     yTracker->setMinMax(minYPos + XYPressThreshold, maxYPos - XYPressThreshold);
   }
-  bool btnPressed = btnTracker->checkPressed(XYPressAutoRepeatMillis);
+  bool btnPressed = btnTracker != NULL && btnTracker->checkPressed(XYPressAutoRepeatMillis);
   if (btnPressed)
   {
     show = true;

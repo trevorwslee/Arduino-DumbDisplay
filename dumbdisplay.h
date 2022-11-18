@@ -813,7 +813,7 @@ class DumbDisplay {
     /* you will get reuslt as JSON: {"result":"ok"} or {"result":"failed"} */
     /* for simplicity, use SimpleToolDDTunnel.checkResult() to check result */
     /* MUST use deleteTunnel() to delete the "download tunnel" after use */
-    SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName);
+    SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload = true);
     /* reconnectTo with commands like */
     /* . now */
     /* . now-millis */

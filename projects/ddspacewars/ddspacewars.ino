@@ -1,11 +1,11 @@
 
 
 #if defined(ARDUINO_AVR_UNO)
-  #include "conf_uno.h"
+#include "conf_uno.h"
 #elif defined(PICO_SDK_VERSION_MAJOR)
-  #include "conf_pico.h"
+#include "conf_pico.h"
 #elif defined(ESP32)
- #include "conf_esp32.h"
+#include "conf_esp32.h"
 #else
 #error not configured for board yet
 #endif
@@ -29,7 +29,6 @@
 #include "gameOver.h"
 #endif
 
-
 #define IF_BACK2 "back2"
 #define IF_SENS "sens"
 #define IF_GAMEOVER "gameOver"
@@ -42,17 +41,6 @@
 #define IF_EBULLET "ebullet"
 #define IF_EARTH(level) ("earth-" + String(level))
 #define IF_SPACEWARS_IMGS "spacewarsimgs"
-
-// #include "Note.h"
-// const int NOTE_A4 = GetNoteFreq(0, ToNoteIdx('A', 0));
-// const int NOTE_B4 = GetNoteFreq(0, ToNoteIdx('B', 0));
-// const int NOTE_C4 = GetNoteFreq(0, ToNoteIdx('C', 0));
-// const int NOTE_D4 = GetNoteFreq(0, ToNoteIdx('D', 0));
-// const int NOTE_E4 = GetNoteFreq(0, ToNoteIdx('E', 0));
-// const int NOTE_F4 = GetNoteFreq(0, ToNoteIdx('F', 0));
-// const int NOTE_G4 = GetNoteFreq(0, ToNoteIdx('G', 0));
-// const int NOTE_C5 = GetNoteFreq(1, ToNoteIdx('C', 0));
-// const int NOTE_G5 = GetNoteFreq(1, ToNoteIdx('G', 0));
 
 const int NOTE_A4 = 466;
 const int NOTE_B4 = 523;
@@ -74,14 +62,12 @@ JoystickPressTracker horizontalTracker(HORIZONTAL, joystickReverseHoriDir, joyst
 JoystickPressTracker verticalTracker(VERTICAL, joystickReverseVertDir, joystickAutoTune);
 #endif
 
-
 #define TFT_BLACK "black"
 #define TFT_GREEN "green"
 #define TFT_GREY DD_HEX_COLOR(0x5AEB)
 #define lightblue DD_HEX_COLOR(0x2D18)
 #define orange DD_HEX_COLOR(0xFB60)
 #define purple DD_HEX_COLOR(0xFB9B)
-
 
 const int LevelCount = 6;
 
@@ -345,10 +331,11 @@ void drawTop()
 {
   top_layer->clear();
 #if defined(SHOW_LIVES)
-    for (int i = 0; i < lives; i++) {
-     top_layer->drawImageFile(IF_BROD1, 5 + i * 12, 3, 12);
-    }
-#endif    
+  for (int i = 0; i < lives; i++)
+  {
+    top_layer->drawImageFile(IF_BROD1, 5 + i * 12, 3, 12);
+  }
+#endif
   top_layer->setCursor(200, 0);
   top_layer->print(String(brojac));
   // eHealth--;
@@ -606,18 +593,6 @@ void handlePlay()
       brojac = brojac + 1;
       eHealth--;
       drawTop();
-
-      // if (eHealth <= 0)
-      // {
-      //   main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
-      //   dumbdisplay.tone(NOTE_E4, 100);
-      //   dumbdisplay.tone(NOTE_D4, 80);
-      //   dumbdisplay.tone(NOTE_G5, 100);
-      //   dumbdisplay.tone(NOTE_C4, 80);
-      //   dumbdisplay.tone(NOTE_F4, 280);
-      //   delay(700);
-      //   newLevel();
-      // }
     }
   }
 
@@ -637,18 +612,6 @@ void handlePlay()
       brojac = brojac + 12;
       eHealth = eHealth - rDamage;
       drawTop();
-
-      // if (eHealth <= 0)
-      // {
-      //   main_layer->drawImageFile(IF_BUUM, exy.getX(), exy.getY());
-      //   dumbdisplay.tone(NOTE_E4, 100);
-      //   dumbdisplay.tone(NOTE_D4, 80);
-      //   dumbdisplay.tone(NOTE_G5, 100);
-      //   dumbdisplay.tone(NOTE_C4, 80);
-      //   dumbdisplay.tone(NOTE_F4, 280);
-      //   delay(700);
-      //   newLevel();
-      // }
     }
   }
 
@@ -661,20 +624,7 @@ void handlePlay()
       lives--;
 #if defined(SHOW_LIVES)
       drawTop();
-#endif      
-      // if (lives == 0)
-      // {
-      //   main_layer->drawImageFile(IF_BUUM, xy.getX(), xy.getY());
-      //   dumbdisplay.tone(NOTE_G4, 100);
-      //   dumbdisplay.tone(NOTE_B4, 80);
-      //   dumbdisplay.tone(NOTE_C5, 100);
-      //   dumbdisplay.tone(NOTE_A4, 80);
-      //   dumbdisplay.tone(NOTE_F4, 280);
-      //   delay(500);
-      //   resetScreen();
-      //   fase = 2;
-      // }
-
+#endif
       if (sound == 1)
       {
         dumbdisplay.tone(NOTE_C5, 400);
@@ -761,7 +711,6 @@ void handlePlay()
 
   if (Ecounter == EbuletCount)
     Ecounter = 0;
-
 }
 
 void handleGameOver()
@@ -781,18 +730,6 @@ void handleGameOver()
 bool allReady = false;
 void setup(void)
 {
-// Serial.begin(115200);
-// Serial.println("HELLO");
-// Serial.println("const int NOTE_A4 = " + String(NOTE_A4) + ";");
-// Serial.println("const int NOTE_B4 = " + String(NOTE_B4) + ";");
-// Serial.println("const int NOTE_C4 = " + String(NOTE_C4) + ";");
-// Serial.println("const int NOTE_D4 = " + String(NOTE_D4) + ";");
-// Serial.println("const int NOTE_E4 = " + String(NOTE_E4) + ";");
-// Serial.println("const int NOTE_F4 = " + String(NOTE_F4) + ";");
-// Serial.println("const int NOTE_G4 = " + String(NOTE_G4) + ";");
-// Serial.println("const int NOTE_C5 = " + String(NOTE_C5) + ";");
-// Serial.println("const int NOTE_G5 = " + String(NOTE_G5) + ";");
-
   pinMode(BTN_B, INPUT_PULLUP);
   pinMode(BTN_A, INPUT_PULLUP);
 #ifdef WITH_JOYSTICK
@@ -867,8 +804,8 @@ void setup(void)
 #endif
 #if defined(DOWNLOAD_IMAGES)
   dumbdisplay.writeComment("download images ...");
-  //download_tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/spacewarsimgs.png", IF_SPACEWARS_IMGS);
-  download_tunnel = dumbdisplay.createImageDownloadTunnel("https://t.ly/V_wt", IF_SPACEWARS_IMGS);
+  // download_tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/spacewarsimgs.png", IF_SPACEWARS_IMGS, false);
+  download_tunnel = dumbdisplay.createImageDownloadTunnel("https://${DDSS}/spacewarsimgs.png", IF_SPACEWARS_IMGS, false);
   dumbdisplay.writeComment("... ...");
 #endif
 }
@@ -884,7 +821,8 @@ void loop()
     }
     // for some reason, it crashes if delete
     // dumbdisplay.deleteTunnel(download_tunnel);
-    if (download_res == -1) {
+    if (download_res == -1)
+    {
       dumbdisplay.writeComment("... failed to images");
       delay(2000);
       return;
@@ -899,7 +837,7 @@ void loop()
     main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_GAMEOVER);
     x += 240;
     main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 49, 40, IF_BROD1);
-#if defined (SHOW_LIVES)
+#if defined(SHOW_LIVES)
     top_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 49, 40, IF_BROD1);
 #endif
     x += 49;

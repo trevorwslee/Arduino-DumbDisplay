@@ -279,13 +279,15 @@ public:
     if (doorState == 1) {
       if (!opened) {
         //dumbdisplay.writeComment("OPEN");
-        toggleCounter = 4;
+        toggleCounter = 3;
+        //toggleMillis = 0;
       }
       opened = true;
     } else if (doorState == 2) {
       if (opened) {
         //dumbdisplay.writeComment("CLOSE");
-        toggleCounter = 4;
+        toggleCounter = 3;
+        //toggleMillis = 0;
       }
       opened = false;
     } else {
@@ -379,13 +381,10 @@ void setup() {
   dumbdisplay.playbackLayerSetupCommands("rc-lock");
 
   // create tunnels for downloading web images ... and save to your phone
-  // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", "lock-unlocked.png");
-  // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", "lock-locked.png");
-  // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/msxVZ", "lock-unlocked.png");
-  // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://shorturl.at/dpHSW", "lock-locked.png");
-  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://t.ly/_QyV", "lock-unlocked.png");
-  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://t.ly/7CTt", "lock-locked.png");
-
+  // tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", "lock-unlocked.png", false);
+  // tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", "lock-locked.png", false);
+  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://${DDSS}/lock-unlocked.png", "lock-unlocked.png", false);
+  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://${DDSS}/lock-locked.png", "lock-locked.png", false);
 
 #if defined(STORE_IN_EEPROM)
   eepromStorage.readCombo(lockCombo);

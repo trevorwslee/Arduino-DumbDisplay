@@ -2396,10 +2396,14 @@ JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, cons
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
-SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName) {
+SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, imageName, endPoint, true, 1);
+  String params = imageName;
+  if (!redownload) {
+    params = params + ",NRDL";
+  }
+  SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, params, endPoint, true, 1);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
