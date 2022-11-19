@@ -1,6 +1,7 @@
 
 
 #if defined(ARDUINO_AVR_UNO)
+  // *** config for Arduino UNO, with Joystick Shield
 
   //#define DOWNLOAD_IMAGES
   #define DEBUG_LED_PIN 13
@@ -13,6 +14,7 @@
   const bool joystickAutoTune = true;
 
 #elif defined(PICO_SDK_VERSION_MAJOR)
+  // *** config for Raspberry Pi Pico, with Joystick and buttons
 
   //#define SAVE_IMAGES
   #define DOWNLOAD_IMAGES
@@ -27,8 +29,11 @@
   const bool joystickAutoTune = true;
 
 #else
+
 #error not configured for board yet
+
 #endif
+
 
 #define SHOW_LIVES
 
@@ -92,7 +97,7 @@ void loop()
 #if defined(SAVE_IMAGES)
     dumbdisplay.writeComment("start caching ...");
     dumbdisplay.writeComment("... caching back2 ...");
-    main_layer->cachePixelImage16(IF_BACK2 /*"back2.png"*/, back2, 240, 135, "", DD_COMPRESS_BA_0);
+    main_layer->cachePixelImage16(IF_BACK2, back2, 240, 135, "", DD_COMPRESS_BA_0);
     if (true)
     {
       dumbdisplay.recordLayerCommands();
@@ -129,7 +134,7 @@ void loop()
 #endif
 #if defined(DOWNLOAD_IMAGES)
     dumbdisplay.writeComment("download images ...");
-    // download_tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/spacewarsimgs.png", IF_SPACEWARS_IMGS, false);
+    // image URL: https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/spacewarsimgs.png
     download_tunnel = dumbdisplay.createImageDownloadTunnel("https://${DDSS}/spacewarsimgs.png", IF_SPACEWARS_IMGS, false);
     dumbdisplay.writeComment("... ...");
 #endif
