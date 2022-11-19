@@ -1,11 +1,32 @@
 
 
 #if defined(ARDUINO_AVR_UNO)
-#include "conf_uno.h"
+
+  #define DOWNLOAD_IMAGES
+  //#define SHOW_SPACE
+  #define DEBUG_LED_PIN 13
+  #define BTN_A 3
+  #define BTN_B 2
+  #define HORIZONTAL A0
+  #define VERTICAL A1
+  const bool joystickReverseHoriDir = false;
+  const bool joystickReverseVertDir = false;
+  const bool joystickAutoTune = true;
+
 #elif defined(PICO_SDK_VERSION_MAJOR)
-#include "conf_pico.h"
-#elif defined(ESP32)
-#include "conf_esp32.h"
+
+  //#define SAVE_IMAGES
+  #define DOWNLOAD_IMAGES
+  #define SHOW_SPACE
+  #define DEBUG_LED_PIN 1
+  #define BTN_A 21
+  #define BTN_B 18
+  #define HORIZONTAL 26
+  #define VERTICAL 27
+  const bool joystickReverseHoriDir = true;
+  const bool joystickReverseVertDir = false;
+  const bool joystickAutoTune = true;
+
 #else
 #error not configured for board yet
 #endif
@@ -42,6 +63,10 @@ const int NOTE_G5 = 831;
 #define orange DD_HEX_COLOR(0xFB60)
 #define purple DD_HEX_COLOR(0xFB9B)
 
+
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput(115200));
+
 #include "Core.h"
 
 bool allReady = false;
@@ -49,7 +74,7 @@ void setup(void)
 {
   pinMode(BTN_B, INPUT_PULLUP);
   pinMode(BTN_A, INPUT_PULLUP);
-#ifdef WITH_JOYSTICK
+#if defined(HORIZONTAL)
   pinMode(HORIZONTAL, INPUT);
   pinMode(VERTICAL, INPUT);
 #endif
@@ -59,27 +84,27 @@ void setup(void)
   digitalWrite(DEBUG_LED_PIN, 0);
 #endif
 
-  top_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  top_layer->noBackgroundColor();
-  Ebulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  Ebulet_layer->noBackgroundColor();
-  rocket_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  rocket_layer->noBackgroundColor();
-  bulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  bulet_layer->noBackgroundColor();
+  // top_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  // top_layer->noBackgroundColor();
+  // Ebulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  // Ebulet_layer->noBackgroundColor();
+  // rocket_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  // rocket_layer->noBackgroundColor();
+  // bulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  // bulet_layer->noBackgroundColor();
   main_layer = dumbdisplay.createGraphicalLayer(240, 135);
   main_layer->noBackgroundColor();
-#if defined(SHOW_SPACE)
-  for (int i = 0; i < SpaceLayerCount; i++)
-  {
-    space_layers[i] = dumbdisplay.createGraphicalLayer(240, 135);
-    space_layers[i]->noBackgroundColor();
-  }
-#endif
-  bg_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  bg_layer->backgroundColor(TFT_BLACK);
+// #if defined(SHOW_SPACE)
+//   for (int i = 0; i < SpaceLayerCount; i++)
+//   {
+//     space_layers[i] = dumbdisplay.createGraphicalLayer(240, 135);
+//     space_layers[i]->noBackgroundColor();
+//   }
+// #endif
+//   bg_layer = dumbdisplay.createGraphicalLayer(240, 135);
+//   bg_layer->backgroundColor(TFT_BLACK);
 
-  resetScreen();
+  //resetScreen();
 
 #if defined(SAVE_IMAGES)
   dumbdisplay.writeComment("start caching ...");
@@ -136,16 +161,34 @@ void loop()
     {
       return;
     }
-    // for some reason, it crashes if delete
-    // dumbdisplay.deleteTunnel(download_tunnel);
     if (download_res == -1)
     {
-      dumbdisplay.writeComment("... failed to images");
+      dumbdisplay.writeComment("... failed to download images");
       delay(2000);
       return;
     }
     dumbdisplay.writeComment("... done download images");
+    dumbdisplay.deleteTunnel(download_tunnel);
 #endif
+  top_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  top_layer->noBackgroundColor();
+  Ebulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  Ebulet_layer->noBackgroundColor();
+  rocket_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  rocket_layer->noBackgroundColor();
+  bulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  bulet_layer->noBackgroundColor();
+  // main_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  // main_layer->noBackgroundColor();
+#if defined(SHOW_SPACE)
+  for (int i = 0; i < SpaceLayerCount; i++)
+  {
+    space_layers[i] = dumbdisplay.createGraphicalLayer(240, 135);
+    space_layers[i]->noBackgroundColor();
+  }
+#endif
+  bg_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  bg_layer->backgroundColor(TFT_BLACK);
     int x = 0;
     main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x, 0, 240, 135, IF_BACK2);
     x += 240;

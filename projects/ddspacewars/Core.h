@@ -21,7 +21,7 @@
 ButtonPressTracker btnATracker(BTN_A);
 ButtonPressTracker btnBTracker(BTN_B);
 
-#if defined(WITH_JOYSTICK)
+#if defined(HORIZONTAL)
 JoystickPressTracker horizontalTracker(HORIZONTAL, joystickReverseHoriDir, joystickAutoTune);
 JoystickPressTracker verticalTracker(VERTICAL, joystickReverseVertDir, joystickAutoTune);
 #endif
@@ -264,7 +264,7 @@ void handlePlay()
   bool frameDue = frameControl.checkDue();
   long frameNum = frameControl.getFrameNum();
 
-#if defined(WITH_JOYSTICK)
+#if defined(HORIZONTAL)
   int8_t horizontalPress = horizontalTracker.checkPressed(50);
   int8_t verticalPress = verticalTracker.checkPressed(50);
 
