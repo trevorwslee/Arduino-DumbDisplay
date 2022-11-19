@@ -2,8 +2,7 @@
 
 #if defined(ARDUINO_AVR_UNO)
 
-  #define DOWNLOAD_IMAGES
-  //#define SHOW_SPACE
+  //#define DOWNLOAD_IMAGES
   #define DEBUG_LED_PIN 13
   #define BTN_A 3
   #define BTN_B 2
@@ -44,7 +43,7 @@
 #define IF_BUUM "BUM"
 #define IF_EBULLET "EB"
 #define IF_EARTH(level) ("E-" + String(level))
-#define IF_SPACEWARS_IMGS "SW"
+#define IF_SPACEWARS_IMGS "spacewarsimgs"
 
 const int NOTE_A4 = 466;
 const int NOTE_B4 = 523;
@@ -69,7 +68,6 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 #include "Core.h"
 
-bool allReady = false;
 void setup(void)
 {
   pinMode(BTN_B, INPUT_PULLUP);
@@ -84,76 +82,107 @@ void setup(void)
   digitalWrite(DEBUG_LED_PIN, 0);
 #endif
 
-  // top_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  // top_layer->noBackgroundColor();
-  // Ebulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  // Ebulet_layer->noBackgroundColor();
-  // rocket_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  // rocket_layer->noBackgroundColor();
-  // bulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  // bulet_layer->noBackgroundColor();
-  main_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  main_layer->noBackgroundColor();
-// #if defined(SHOW_SPACE)
-//   for (int i = 0; i < SpaceLayerCount; i++)
+  // main_layer = dumbdisplay.createGraphicalLayer(240, 135);
+  // main_layer->noBackgroundColor();
+
+// #if defined(SAVE_IMAGES)
+//   dumbdisplay.writeComment("start caching ...");
+//   dumbdisplay.writeComment("... caching back2 ...");
+//   main_layer->cachePixelImage16(IF_BACK2 /*"back2.png"*/, back2, 240, 135, "", DD_COMPRESS_BA_0);
+//   if (true)
 //   {
-//     space_layers[i] = dumbdisplay.createGraphicalLayer(240, 135);
-//     space_layers[i]->noBackgroundColor();
+//     dumbdisplay.recordLayerCommands();
+//     main_layer->drawImageFile(IF_BACK2);
+//     main_layer->fillRect(0, 78, 120, 25, TFT_BLACK);
+//     dumbdisplay.playbackLayerCommands();
 //   }
+//   dumbdisplay.writeComment("... cachine sens ...");
+//   main_layer->cachePixelImage16(IF_SENS, sens, 72, 72, "0>a0", DD_COMPRESS_BA_0);
+//   dumbdisplay.writeComment("... cachine gameOver ...");
+//   main_layer->cachePixelImage16(IF_GAMEOVER, gameOver, 240, 135, "", DD_COMPRESS_BA_0);
+//   dumbdisplay.writeComment("... cachine brod1 ...");
+//   main_layer->cachePixelImage16(IF_BROD1, brod1, 49, 40, "0>a0", DD_COMPRESS_BA_0);
+//   dumbdisplay.writeComment("... cachine bulet ...");
+//   main_layer->cachePixelImage16(IF_BULET, bulet, 8, 8, "0>a0", DD_COMPRESS_BA_0);
+//   dumbdisplay.writeComment("... cachine rocket ...");
+//   main_layer->cachePixelImage16(IF_ROCKET, rocket, 24, 12, "0>a0", DD_COMPRESS_BA_0);
+//   dumbdisplay.writeComment("... cachine ex2 ...");
+//   main_layer->cachePixelImage16(IF_EX2, ex2, 12, 12, "0>a0", DD_COMPRESS_BA_0);
+//   dumbdisplay.writeComment("... cachine explosion ...");
+//   main_layer->cachePixelImage16(IF_EXPLOSION, explosion, 24, 24, "0>a0", DD_COMPRESS_BA_0);
+//   dumbdisplay.writeComment("... cachine buum ...");
+//   main_layer->cachePixelImage16(IF_BUUM, buum, 55, 55, "0>a0", DD_COMPRESS_BA_0);
+//   dumbdisplay.writeComment("... cachine ebullet ...");
+//   main_layer->cachePixelImage16(IF_EBULLET, ebullet, 7, 7, "0>a0", DD_COMPRESS_BA_0);
+//   for (int i = 0; i < LevelCount; i++)
+//   {
+//     int level = i + 1;
+//     dumbdisplay.writeComment("... caching earth-" + String(level - 1) + " ...");
+//     main_layer->cachePixelImage16(IF_EARTH(level), earth[level - 1], 55, 54, "0>a0", DD_COMPRESS_BA_0);
+//   }
+//   dumbdisplay.writeComment("... done caching");
+//   main_layer->saveCachedImageFiles(IF_SPACEWARS_IMGS);
 // #endif
-//   bg_layer = dumbdisplay.createGraphicalLayer(240, 135);
-//   bg_layer->backgroundColor(TFT_BLACK);
-
-  //resetScreen();
-
-#if defined(SAVE_IMAGES)
-  dumbdisplay.writeComment("start caching ...");
-  dumbdisplay.writeComment("... caching back2 ...");
-  main_layer->cachePixelImage16(IF_BACK2 /*"back2.png"*/, back2, 240, 135, "", DD_COMPRESS_BA_0);
-  if (true)
-  {
-    dumbdisplay.recordLayerCommands();
-    main_layer->drawImageFile(IF_BACK2);
-    main_layer->fillRect(0, 78, 120, 25, TFT_BLACK);
-    dumbdisplay.playbackLayerCommands();
-  }
-  dumbdisplay.writeComment("... cachine sens ...");
-  main_layer->cachePixelImage16(IF_SENS, sens, 72, 72, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine gameOver ...");
-  main_layer->cachePixelImage16(IF_GAMEOVER, gameOver, 240, 135, "", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine brod1 ...");
-  main_layer->cachePixelImage16(IF_BROD1, brod1, 49, 40, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine bulet ...");
-  main_layer->cachePixelImage16(IF_BULET, bulet, 8, 8, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine rocket ...");
-  main_layer->cachePixelImage16(IF_ROCKET, rocket, 24, 12, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine ex2 ...");
-  main_layer->cachePixelImage16(IF_EX2, ex2, 12, 12, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine explosion ...");
-  main_layer->cachePixelImage16(IF_EXPLOSION, explosion, 24, 24, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine buum ...");
-  main_layer->cachePixelImage16(IF_BUUM, buum, 55, 55, "0>a0", DD_COMPRESS_BA_0);
-  dumbdisplay.writeComment("... cachine ebullet ...");
-  main_layer->cachePixelImage16(IF_EBULLET, ebullet, 7, 7, "0>a0", DD_COMPRESS_BA_0);
-  for (int i = 0; i < LevelCount; i++)
-  {
-    int level = i + 1;
-    dumbdisplay.writeComment("... caching earth-" + String(level - 1) + " ...");
-    main_layer->cachePixelImage16(IF_EARTH(level), earth[level - 1], 55, 54, "0>a0", DD_COMPRESS_BA_0);
-  }
-  dumbdisplay.writeComment("... done caching");
-  main_layer->saveCachedImageFiles(IF_SPACEWARS_IMGS);
-#endif
-#if defined(DOWNLOAD_IMAGES)
-  dumbdisplay.writeComment("download images ...");
-  // download_tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/spacewarsimgs.png", IF_SPACEWARS_IMGS, false);
-  download_tunnel = dumbdisplay.createImageDownloadTunnel("https://${DDSS}/spacewarsimgs.png", IF_SPACEWARS_IMGS, false);
-  dumbdisplay.writeComment("... ...");
-#endif
+// #if defined(DOWNLOAD_IMAGES)
+//   dumbdisplay.writeComment("download images ...");
+//   // download_tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/spacewarsimgs.png", IF_SPACEWARS_IMGS, false);
+//   download_tunnel = dumbdisplay.createImageDownloadTunnel("https://${DDSS}/spacewarsimgs.png", IF_SPACEWARS_IMGS, false);
+//   dumbdisplay.writeComment("... ...");
+// #endif
 }
+int readyStage = 0;
 void loop()
 {
-  if (!allReady)
+  if (readyStage == 0) {
+    main_layer = dumbdisplay.createGraphicalLayer(240, 135);
+    main_layer->noBackgroundColor();
+#if defined(SAVE_IMAGES)
+    dumbdisplay.writeComment("start caching ...");
+    dumbdisplay.writeComment("... caching back2 ...");
+    main_layer->cachePixelImage16(IF_BACK2 /*"back2.png"*/, back2, 240, 135, "", DD_COMPRESS_BA_0);
+    if (true)
+    {
+      dumbdisplay.recordLayerCommands();
+      main_layer->drawImageFile(IF_BACK2);
+      main_layer->fillRect(0, 78, 120, 25, TFT_BLACK);
+      dumbdisplay.playbackLayerCommands();
+    }
+    dumbdisplay.writeComment("... cachine sens ...");
+    main_layer->cachePixelImage16(IF_SENS, sens, 72, 72, "0>a0", DD_COMPRESS_BA_0);
+    dumbdisplay.writeComment("... cachine gameOver ...");
+    main_layer->cachePixelImage16(IF_GAMEOVER, gameOver, 240, 135, "", DD_COMPRESS_BA_0);
+    dumbdisplay.writeComment("... cachine brod1 ...");
+    main_layer->cachePixelImage16(IF_BROD1, brod1, 49, 40, "0>a0", DD_COMPRESS_BA_0);
+    dumbdisplay.writeComment("... cachine bulet ...");
+    main_layer->cachePixelImage16(IF_BULET, bulet, 8, 8, "0>a0", DD_COMPRESS_BA_0);
+    dumbdisplay.writeComment("... cachine rocket ...");
+    main_layer->cachePixelImage16(IF_ROCKET, rocket, 24, 12, "0>a0", DD_COMPRESS_BA_0);
+    dumbdisplay.writeComment("... cachine ex2 ...");
+    main_layer->cachePixelImage16(IF_EX2, ex2, 12, 12, "0>a0", DD_COMPRESS_BA_0);
+    dumbdisplay.writeComment("... cachine explosion ...");
+    main_layer->cachePixelImage16(IF_EXPLOSION, explosion, 24, 24, "0>a0", DD_COMPRESS_BA_0);
+    dumbdisplay.writeComment("... cachine buum ...");
+    main_layer->cachePixelImage16(IF_BUUM, buum, 55, 55, "0>a0", DD_COMPRESS_BA_0);
+    dumbdisplay.writeComment("... cachine ebullet ...");
+    main_layer->cachePixelImage16(IF_EBULLET, ebullet, 7, 7, "0>a0", DD_COMPRESS_BA_0);
+    for (int i = 0; i < LevelCount; i++)
+    {
+      int level = i + 1;
+      dumbdisplay.writeComment("... caching earth-" + String(level - 1) + " ...");
+      main_layer->cachePixelImage16(IF_EARTH(level), earth[level - 1], 55, 54, "0>a0", DD_COMPRESS_BA_0);
+    }
+    dumbdisplay.writeComment("... done caching");
+    main_layer->saveCachedImageFiles(IF_SPACEWARS_IMGS);
+#endif
+#if defined(DOWNLOAD_IMAGES)
+    dumbdisplay.writeComment("download images ...");
+    // download_tunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/spacewarsimgs.png", IF_SPACEWARS_IMGS, false);
+    download_tunnel = dumbdisplay.createImageDownloadTunnel("https://${DDSS}/spacewarsimgs.png", IF_SPACEWARS_IMGS, false);
+    dumbdisplay.writeComment("... ...");
+#endif
+    readyStage = 1;
+  }
+  if (readyStage == 1)
   {
 #if defined(DOWNLOAD_IMAGES)
     int download_res = download_tunnel->checkResult();
@@ -178,8 +207,6 @@ void loop()
   rocket_layer->noBackgroundColor();
   bulet_layer = dumbdisplay.createGraphicalLayer(240, 135);
   bulet_layer->noBackgroundColor();
-  // main_layer = dumbdisplay.createGraphicalLayer(240, 135);
-  // main_layer->noBackgroundColor();
 #if defined(SHOW_SPACE)
   for (int i = 0; i < SpaceLayerCount; i++)
   {
@@ -218,7 +245,7 @@ void loop()
       int level = i + 1;
       main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x + i * 55, 0, 55, 54, IF_EARTH(level));
     }
-    allReady = true;
+    readyStage = 2;
   }
 
   if (fase == 0)
