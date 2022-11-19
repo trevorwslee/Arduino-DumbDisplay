@@ -1,7 +1,7 @@
 {
     "name": "DumbDisplay Arduino Library",
     "version": "0.9.4",
-    "description": "A library for connecting to Android DumbDisplay app (>= v0.9.0), for various virtual gadget realizations. By using DumbDisplay, you should be able to more quickly design/prototype your Arduino experiment, and defer connecting real gadgets until later stage of your experiment.",
+    "description": "A library for connecting to Android DumbDisplay app (>= v0.9.4), for various virtual gadget realizations. By using DumbDisplay, you should be able to more quickly design/prototype your Arduino experiment, and defer connecting real gadgets until later stage of your experiment.",
     "keywords": "Arduino, ESP, Display, Remote, DumbDisplay", 
     "license": "MIT",  
     "frameworks": ["arduino"],
