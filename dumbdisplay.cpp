@@ -16,7 +16,14 @@
 
 #define MORE_KEEP_ALIVE
 
+#define SUPPORT_ENCODE_OPER
+
+// #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+//   #define PGM_READ_BYTERS
+// #endif
+
 #define TO_BOOL(val) (val ? "1" : "0")
+#define TO_EDIAN() String(DDCheckEndian())
 
 
 //#define DD_DEBUG_HS
@@ -54,7 +61,8 @@
 #define YIELD_AFTER_HANDLE_FEEDBACK true
 
 //#define DD_SID "Arduino-c1"
-#define DD_SID "Arduino-c2"
+//#define DD_SID "Arduino-c2"
+#define DD_SID "Arduino-c3"
 
 
 #include "_dd_commands.h"
@@ -582,17 +590,34 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
     _IO->print(layerId/*.c_str()*/);
     _IO->print(".");
   }
+#ifdef SUPPORT_ENCODE_OPER
+  if (_DDCompatibility >= 3 && layerId != "" && command[0] == '#') {
+    char encoded[3];
+    encoded[0] = 14 + ((command[1] > '9') ? ((command[1] - 'a') + 10) : (command[1] - '0'));
+    encoded[1] = 14 + ((command[2] > '9') ? ((command[2] - 'a') + 10) : (command[2] - '0'));
+    encoded[2] = 0;
+    _IO->print(encoded);
+  } else { 
+    _IO->print(command);
+    if (pParam1 != NULL) {
+      _IO->print(":");
+    }
+  }   
+#else
   _IO->print(command);
-#ifdef DD_DEBUG_SEND_COMMAND          
+  #ifdef DD_DEBUG_SEND_COMMAND          
   Serial.print(" ...");
-#endif        
+  #endif        
   if (pParam1 != NULL) {
-#ifdef DD_DEBUG_SEND_COMMAND          
-  Serial.print(" [1|");
-  Serial.print(*pParam1);
-  Serial.print(" |]");
-#endif        
+  #ifdef DD_DEBUG_SEND_COMMAND          
+    Serial.print(" [1|");
+    Serial.print(*pParam1);
+    Serial.print(" |]");
+  #endif        
     _IO->print(":");
+  }
+#endif
+  if (pParam1 != NULL) {
     _IO->print(*pParam1/*pParam1->c_str()*/);
     if (pParam2 != NULL) {
       _IO->print(",");
@@ -695,12 +720,130 @@ void __SendSpecialCommand(const char* specialType, const String& specialId, cons
     yield();
   }
 }
-void __SendByteArrayPortion(const uint8_t *bytes, int byteCount) {
+// int __CountZeroCompressedBytes(const uint8_t *bytes, int byteCount, bool outputAsWell) {
+//   int compressedByteCount = 0;
+//   uint8_t zeroCount = 0;
+//   for (int i = 0; i < byteCount; i++) {
+//     bool isLast = i == (byteCount - 1);
+//     uint8_t b = bytes[i];
+//     bool isZero = b == 0;
+//     if (isZero) {
+//       zeroCount++;
+//     }
+//     if (!isZero || zeroCount == 120 || isLast) {
+//       if (zeroCount > 0) {
+//         compressedByteCount += 2;
+//         if (outputAsWell) {
+//           _IO->write(0);
+//           _IO->write(zeroCount);
+//         }
+//         zeroCount = 0;
+//       }
+//       if (!isZero) {
+//         compressedByteCount += 1;
+//         if (outputAsWell) {
+//           _IO->write(b);
+//         }
+//       }
+//     }
+//   }
+//   return compressedByteCount;
+// }
+int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBytes, bool readFromProgramSpace) {
+  int compressedByteCount = 0;
+  uint8_t zeroCount = 0;
+  for (int i = 0; i < byteCount; i++) {
+    bool isLast = i == (byteCount - 1);
+    uint8_t b;
+    if (readFromProgramSpace) {
+      b = pgm_read_byte(bytes + i);
+    } else {
+      b = bytes[i];
+    }
+    bool isZero = b == 0;
+    if (isZero) {
+      zeroCount++;
+    }
+    if (!isZero || zeroCount == 120 || isLast) {
+      if (zeroCount > 0) {
+        if (toBytes != NULL) {
+          if (readFromProgramSpace) {
+            _IO->write(0);
+            _IO->write(zeroCount);
+            compressedByteCount += 2;
+          } else {
+            toBytes[compressedByteCount++] = 0;
+            toBytes[compressedByteCount++] = zeroCount;
+          }
+        } else {
+          compressedByteCount += 2;
+        }
+        zeroCount = 0;
+      }
+      if (!isZero) {
+        if (toBytes != NULL) {
+          if (readFromProgramSpace) {
+            _IO->write(b);
+            compressedByteCount += 1;
+          } else {
+            toBytes[compressedByteCount++] = b;
+          }
+        } else {
+          compressedByteCount += 1;
+        }
+      }
+    }
+  }
+  return compressedByteCount;
+}
+void __SendByteArrayPortion(const uint8_t *bytes, int byteCount, char compressMethod) {
+  bool readFromProgramSpace = false;
+  if (compressMethod == DD_PROGRAM_SPACE_COMPRESS_BA_0) {
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+    readFromProgramSpace = true;
+#endif
+    compressMethod = DD_COMPRESS_BA_0;
+  }
+  if (_DDCompatibility < 3) {
+    compressMethod = 0;
+  }
+  int compressedByteCount = -1;
+  if (compressMethod == DD_COMPRESS_BA_0) {
+    //compressedByteCount = __CountZeroCompressedBytes(bytes, byteCount, false);
+    compressedByteCount = __FillZeroCompressedBytes(bytes, byteCount, NULL, readFromProgramSpace);
+    if (compressedByteCount > byteCount) {
+      compressMethod = 0;
+      compressedByteCount = -1;
+    }
+  }
   _IO->print("|bytes|>");
   _IO->print(String(byteCount));
+  if (compressedByteCount != -1) {
+    _IO->print("@0>");
+    _IO->print(String(compressedByteCount));
+  }
   _IO->print(":");
   if (true) {
-    _IO->write(bytes, byteCount);
+    if (compressedByteCount != -1) {
+      //__CountZeroCompressedBytes(bytes, byteCount, true);
+      if (readFromProgramSpace) {
+        uint8_t dummy;
+        __FillZeroCompressedBytes(bytes, byteCount, &dummy, true);
+      } else {
+        uint8_t *compressedBytes = new uint8_t[compressedByteCount];
+        __FillZeroCompressedBytes(bytes, byteCount, compressedBytes, false);
+        _IO->write(compressedBytes, compressedByteCount);
+        delete compressedBytes;
+      }
+    } else {
+      if (readFromProgramSpace) {
+        for (int i = 0; i < byteCount; i++) {
+          _IO->write(pgm_read_byte(bytes[i]));
+        }
+      } else {
+        _IO->write(bytes, byteCount);
+      }
+    }
   } else {
     for (int i = 0; i < byteCount; i++) {
       uint8_t b = bytes[i];
@@ -1005,8 +1148,8 @@ inline void _sendSpecialCommand(const char* specialType, const String& specialId
   _SendSpecialCommand(specialType, specialId, specialCommand, specialData);
 }
 #endif
-void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount) {
-  __SendByteArrayPortion(bytes, byteCount);
+void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount, char compressMethod = 0) {
+  __SendByteArrayPortion(bytes, byteCount, compressMethod);
   _sendCommand0("", C_KAL);  // send a "keep alive" command to make sure and new-line is sent
 }
 
@@ -1525,23 +1668,38 @@ void GraphicalDDLayer::polygon(int side, int vertexCount) {
 void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
   _sendCommand2(layerId, inside ? C_cpolyin : C_cpoly, String(radius), String(vertexCount));
 }
-void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h) {
-  _sendCommand3(layerId, C_loadimagefile, imageFileName, String(w), String(h));
+void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h, const String& asImageFileName) {
+  _sendCommand4(layerId, C_loadimagefile, imageFileName, String(w), String(h), asImageFileName);
 }
-void GraphicalDDLayer::cacheImage(const String& imageName, const uint8_t *bytes, int byteCount) {
+void GraphicalDDLayer::loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName) {
+  _sendCommand6(layerId, C_loadimagefilecropped, imageFileName, String(x), String(y), String(w), String(h), asImageFileName);
+}
+void GraphicalDDLayer::cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressMethod) {
   _sendCommand2("", C_CACHEIMG, layerId, imageName);
-  _sendByteArrayAfterCommand(bytes, byteCount);
+  _sendByteArrayAfterCommand(bytes, byteCount, compressMethod);
 }
-void GraphicalDDLayer::cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color) {
+void GraphicalDDLayer::cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color, char compressMethod) {
   int byteCount = width * height / 8; 
   _sendCommand5("", C_CACHEPIXIMG, layerId, imageName, String(width), String(height), color);
-  _sendByteArrayAfterCommand(bytes, byteCount);
+  _sendByteArrayAfterCommand(bytes, byteCount, compressMethod);
+}
+void GraphicalDDLayer::cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options, char compressMethod) {
+  int byteCount = 2 * width * height; 
+  _sendCommand6("", C_CACHEPIXIMG16, layerId, imageName, String(width), String(height), TO_EDIAN(), options);
+  _sendByteArrayAfterCommand((uint8_t*) data, byteCount, compressMethod);
+}
+void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
+  _sendCommand2("", "SAVECACHEDIMGS", layerId, stitchAsImageName);
 }
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
 }
 void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h) {
-  _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+  if (w == 0 && h == 0) {
+    _sendCommand3(layerId, C_drawimagefile, imageFileName, String(x), String(y));
+  } else {
+    _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+  }
 }
 void GraphicalDDLayer::drawImageFileFit(const String& imageFileName, int x, int y, int w, int h, const String& align) {
   _sendCommand6(layerId, C_drawimagefilefit, imageFileName, String(x), String(y), String(w), String(h), align);
@@ -2183,10 +2341,18 @@ void DumbDisplay::saveImage(const String& imageName, const uint8_t *bytes, int b
   _sendCommand1("", C_SAVEIMG, imageName);
   _sendByteArrayAfterCommand(bytes, byteCount);
 }
-void DumbDisplay::savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color) {
+void DumbDisplay::savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color, char compressMethod) {
   int byteCount = width * height / 8; 
   _sendCommand4("", C_SAVEPIXIMG, imageName, String(width), String(height), color);
-  _sendByteArrayAfterCommand(bytes, byteCount);
+  _sendByteArrayAfterCommand(bytes, byteCount, compressMethod);
+}
+void DumbDisplay::savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options, char compressMethod) {
+  int byteCount = 2 * width * height; 
+  _sendCommand5("", C_SAVEPIXIMG16, imageName, String(width), String(height), TO_EDIAN(), options);
+  _sendByteArrayAfterCommand((uint8_t*) data, byteCount, compressMethod);
+}
+void DumbDisplay::stitchImages(const String& imageNames, const String& asImageName) {
+  _sendCommand2("", "STITCHIMGS", imageNames, asImageName);
 }
 void DumbDisplay::debugOnly(int i) {
   _sendCommand2("", "DEBUGONLY", String(i), TO_C_INT(i));
@@ -2230,10 +2396,14 @@ JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, cons
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
-SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName) {
+SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, imageName, endPoint, true, 1);
+  String params = imageName;
+  if (!redownload) {
+    params = params + ",NRDL";
+  }
+  SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, params, endPoint, true, 1);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }

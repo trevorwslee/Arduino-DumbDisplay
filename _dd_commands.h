@@ -8,6 +8,9 @@
 #define C_CACHEIMG         "#07"
 #define C_SAVEPIXIMG       "#08"
 #define C_CACHEPIXIMG      "#09"
+#define C_SAVEPIXIMG16     "#0a"
+#define C_CACHEPIXIMG16    "#0b"
+// will reserver #fn if after 0f
 
 #define C_border           "#10"
 #define C_padding          "#11" 
@@ -95,12 +98,13 @@
 #define C_drawimagefile    "#98"
 #define C_drawimagefilefit "#99"
 
-#define C_goto             "#a0"
-#define C_zoomto           "#a1"
-#define C_zoom             "#a2"
+#define C_goto                 "#a0"
+#define C_zoomto               "#a1"
+#define C_zoom                 "#a2"
 //#define C_println          "#a3"
-#define C_showdigit        "#a4"
-#define C_setrot           "#a5"
+#define C_showdigit            "#a4"
+#define C_setrot               "#a5"
+#define C_loadimagefilecropped "#a6"
 
 
 #define C_fd               "fd"

@@ -55,6 +55,8 @@
 
 #define DD_AP_SPACER(w, h) (String("<") + String(w) + "x" + String(h) + String(">")) 
 
+#define DD_PROGRAM_SPACE_COMPRESS_BA_0 '!'
+#define DD_COMPRESS_BA_0 '0'
 
 #define DD_TUNNEL_DEF_BUFFER_SIZE 3
 
@@ -454,7 +456,9 @@ class GraphicalDDLayer: public DDLayer {
     void write(const String& text, bool draw = false);
     /* load image file to cache */
     /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
-    void loadImageFile(const String& imageFileName, int w = 0, int h = 0);
+    /* - asImageFileNmae: better provide a different name for the scaled cached */
+    void loadImageFile(const String& imageFileName, int w = 0, int h = 0, const String& asImageFileName = "");
+    void loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName = "");
     void unloadImageFile(const String& imageFileName);
     /* draw image file in cache (if not already loaded to cache, load it) */
     /* - x / y: position of the left-top corner */
@@ -465,8 +469,10 @@ class GraphicalDDLayer: public DDLayer {
     /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered */
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /* as if the image is saved then loaded */
-    void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount);
-    void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "");
+    void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
+    void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
+    void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
+    void saveCachedImageFiles(const String& stitchAsImageName = "");
 };
 
 
@@ -807,7 +813,7 @@ class DumbDisplay {
     /* you will get reuslt as JSON: {"result":"ok"} or {"result":"failed"} */
     /* for simplicity, use SimpleToolDDTunnel.checkResult() to check result */
     /* MUST use deleteTunnel() to delete the "download tunnel" after use */
-    SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName);
+    SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload = true);
     /* reconnectTo with commands like */
     /* . now */
     /* . now-millis */
@@ -852,7 +858,10 @@ class DumbDisplay {
     void writeComment(const String& comment);
     void tone(uint32_t freq, uint32_t duration);
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
-    void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "");
+    void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressMethod = 0);
+    void savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
+    /* - imageNames: '+' delimited */
+    void stitchImages(const String& imageNames, const String& asImageName);
     void debugOnly(int i);
     /* pin a layer @ some position of an imaginary grid of units */
     /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  

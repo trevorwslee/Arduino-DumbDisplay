@@ -3,6 +3,17 @@
 #include <string.h>
 #include <math.h>
 
+char* StrRev(char* str) {
+    int size = strlen(str);
+    int count = size / 2;
+    for (int i = 0; i < count; i++) {
+        char tmp = str[i];
+        str[i] = str[size - i - 1];
+        str[size - i - 1] = tmp;
+    }
+    return str;
+}
+
 char CaculatorDisplayBuffer[30];
 void CaculatorIntToString(int32_t intPart, char* buffer) {
     if (intPart == 0) {
@@ -25,7 +36,8 @@ void CaculatorIntToString(int32_t intPart, char* buffer) {
         buffer[i++] = '-';
     }
     buffer[i] = 0;
-    strrev(buffer);
+    StrRev(buffer);
+    //strrev(buffer);
 } 
 int CaculatorFormatForDisplayGetLen(double num, int8_t max_width, char* buffer = CaculatorDisplayBuffer) {
     if (true) {

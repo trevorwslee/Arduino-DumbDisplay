@@ -3,7 +3,7 @@
 
 #if !(defined DD_4_PICO_TX && defined DD_4_PICO_RX)
 
-#error DD_4_PICO_TX and DD_4_PICO_RX need be defined in order to use DumbDisplay for ESP32
+#error DD_4_PICO_TX and DD_4_PICO_RX need be defined in order to use DumbDisplay for PICO
 #error e.g. #define DD_4_PICO_TX 8
 #error e.g. #define DD_4_PICO_RX 9
 
