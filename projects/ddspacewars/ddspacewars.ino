@@ -1,4 +1,10 @@
 
+// *** 
+// * adapted from: TTGO T Display (ESP32) - Space Shooter game- free code
+// * -- https://www.youtube.com/watch?v=KZMkGDyGjxQ&t=310s
+// *** 
+
+
 
 #if defined(ARDUINO_AVR_UNO)
   // *** config for Arduino UNO, with Joystick Shield
