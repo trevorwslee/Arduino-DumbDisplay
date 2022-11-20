@@ -2,9 +2,7 @@
 
 [DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
-You may want to watch the video [**Introducing DumbDisplay -- the little helper for Arduino experiments**](https://www.youtube.com/watch?v=QZkhO6jTf0U) for a brief introduction
-
-Please notice that the above mentioned video is just one of the several on [using DumbDisplay](https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV) to aid my own Arduino experiments. 
+You may want to watch the video [**Introducing DumbDisplay -- the little helper for Arduino experiments**](https://www.youtube.com/watch?v=QZkhO6jTf0U) for a brief introduction.
 
 
 ## Enjoy
@@ -64,15 +62,15 @@ Note that with the "layer feedback" mechanism, user interaction (like clicking o
 
 ## Arduino IDE
 
-The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show; install it.
+The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show; install it. As reference, you may want to see my post [Blink Test with Virtual Display, DumbDisplay](https://create.arduino.cc/projecthub/trevorwslee/blink-test-with-virtual-display-dumbdisplay-5c8350?ref=user&ref_id=2044336&offset=9)  
 
 Alternative, you can choose to use the more "fluid" manual approach. The basic steps are
 1) download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
 2) to install, use Arduino IDE menu option **Sktech** | **Include Library** | **Add .ZIP library...** and choose the ZIP you just downloaded
 
-For demonstration on installing DumbDisplay Arduino Library, you may want to watch the video **Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)** -- https://www.youtube.com/watch?v=nN7nXRy7NMg
+For demonstration on installing DumbDisplay Arduino Library, you may want to watch the video [**Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)**](https://www.youtube.com/watch?v=nN7nXRy7NMg)
 
-(To upgrade DumbDisplay Arduino Library, you will need to delete the old one first. You may refer to the video **Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge** -- https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s)
+(To upgrade DumbDisplay Arduino Library, you will need to delete the old one first. You may refer to the video [**Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge**](https://www.youtube.com/watch?v=0UhRmXXBQi8&t=24s))
 
 
 ## PlatformIO
@@ -86,7 +84,7 @@ lib_deps =
 ```
 
 
-For demonstration on installing DumbDisplay Arduino Library for PlatformIO project, you may want to watch the video **Arduino UNO Programming with PlatformIO and DumbDisplay** -- https://www.youtube.com/watch?v=PkeFa2ih4EY 
+For demonstration on installing DumbDisplay Arduino Library for PlatformIO project, you may want to watch the video [**Arduino UNO Programming with PlatformIO and DumbDisplay**](https://www.youtube.com/watch?v=PkeFa2ih4EY) 
 
 
 
@@ -95,7 +93,7 @@ For demonstration on installing DumbDisplay Arduino Library for PlatformIO proje
 
 # DumbDisplay Android App
 
-Obviously, you will need to install an app on your Android phone. Indeed, for Arduino DumbDisplay to work, you will need to install the free DumbDisplay app from Android Play Store -- https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
+Obviously, you will need to install an app on your Android phone. Indeed, for Arduino DumbDisplay to work, you will need to install the free [DumbDisplay Arduino app from Android Play Store](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay)
 
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth by HC-05 / HC-06; even HC-08)
@@ -125,7 +123,7 @@ You have several options for connecting to DumbDisplay Android app.
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - you should not be using Serial for other purposes
   - the default baud rate is 115200;  a lower baud rate, say 9600, may work better for some cases
-* Via `SoftwareSerial` (connected to Bluetooth module like HC-06) -- https://www.arduino.cc/en/Reference/softwareSerial
+* Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) (connected to Bluetooth module like HC-06)
   ```
     #include "ssdumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
@@ -180,7 +178,7 @@ You have several options for connecting to DumbDisplay Android app.
     - "ESP32BLE" is name used by `BLE`
   - **you should not be using ESP32's BLE for other purposes**
   - **be warned that `DDBLESerialIO` is slow**; if possible choose `DDBluetoothSerialIO` over `DDBLESerialIO` 
-* Via WIFI as a `WiFiServer` (for ESP01/ESP8266/ESP32/PicoW) -- https://www.arduino.cc/en/Reference/WiFi  
+* Via WIFI as a [`WiFiServer`](https://www.arduino.cc/en/Reference/WiFi) (for ESP01/ESP8266/ESP32/PicoW)  
   ```
     #define DD_4_ESP8266
     #include "wifidumbdisplay.h"
@@ -1070,7 +1068,7 @@ The DumbDisplay method `pinLayer` accepts 5 arguments. The first argument is the
 
 As a matter of fact, the "auto pin" mechanism can be used in conjunction with the manual pinning mechanism. The method to used is `pinAutoPinLayers`.
 
-To get a feel, you may want to refer to the video *Raspberry Pi Pico playing song melody tones, with DumbDisplay control and keyboard input* -- https://www.youtube.com/watch?v=l-HrsJXIwBY 
+To get a feel, you may want to refer to the video [**Raspberry Pi Pico playing song melody tones, with DumbDisplay control and keyboard input**](https://www.youtube.com/watch?v=l-HrsJXIwBY) 
 
 |  | |
 |--|--|
@@ -1187,7 +1185,7 @@ Like "lprpt50", "rpt50" enables "auto repeat" option. The difference is that "rp
 
 As a reference, you may want to refer to the servo project -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/servo/servo.ino 
 
-For a brief explanation of the sketch, you may want to watch the video **ESP8266 Servo Arduino experiment, subsequently, with simple DumbDisplay UI** -- https://www.youtube.com/watch?v=pgfL_qwj8cQ
+For a brief explanation of the sketch, you may want to watch the video [**ESP8266 Servo Arduino experiment, subsequently, with simple DumbDisplay UI**](https://www.youtube.com/watch?v=pgfL_qwj8cQ)
 
 
 | ESP8266 with Servo | DumbDisplay |
@@ -1214,7 +1212,7 @@ void setup() {
 }
 ```
 
-For reference, you may want to refer to the example as shown by the video **ESP32 Deep Sleep Experiment using Arduino with DumbDisplay** -- https://www.youtube.com/watch?v=a61hRLIaqy8 
+For reference, you may want to refer to the example as shown by the video [**ESP32 Deep Sleep Experiment using Arduino with DumbDisplay**](https://www.youtube.com/watch?v=a61hRLIaqy8) 
 
 
 ## Using "Tunnel" to Download Images from the Web
@@ -1274,7 +1272,7 @@ DumbDisplay Arduino Library provides a mechanism to save pictures captured, like
 
 For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/esp32camddtest/esp32camddtest.ino 
 
-You may also want to watch the YouTube Video ESP32-CAM Experiment -- Capture and Stream Pictures to Mobile Phone -- https://www.youtube.com/watch?v=D0tinZi5l5s for a brief description of the experiment.
+You may also want to watch the YouTube Video ESP32-CAM Experiment -- [**Capture and Stream Pictures to Mobile Phone**](https://www.youtube.com/watch?v=D0tinZi5l5s) -- for a brief description of the experiment.
 
 
 ## Caching Single-bit Bitmap to Phone
@@ -1390,7 +1388,7 @@ Notes:
 ![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)
 
 
-You may want to watch the video **Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge** -- https://www.youtube.com/watch?v=0UhRmXXBQi8
+You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge**](https://www.youtube.com/watch?v=0UhRmXXBQi8)
 
 
 
