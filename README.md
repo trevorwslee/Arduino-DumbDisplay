@@ -30,6 +30,8 @@ Please notice that the above mentioned video is just one of the several on using
   * [Using "Tunnel" to Download Images from the Web](#using-tunnel-to-download-images-from-the-web)
   * [Save Pictures to Phone Captured with ESP32 Cam](#save-pictures-to-phone-captured-with-esp32-cam)
   * [Caching Single-bit Bitmap to Phone](#caching-single-bit-bitmap-to-phone)
+  * [Caching 16-bit Colored Bitmap to Phone](#caching-16-bit-colored-bitmap-to-phone)
+  * [Save Images](#save-images)
 * [Reference](#reference)
 * [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
 * [Thank You!](#thank-you)
@@ -1259,6 +1261,7 @@ pLayer->drawImageFileFit("downloaded.png");
 For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/webimage/webimage.ino 
 
 
+
 ## Save Pictures to Phone Captured with ESP32 Cam
 
 DumbDisplay Arduino Library provides a mechanism to save pictures captured, like with ESP32 Cam, to you Android phone's internal storage, like
@@ -1316,7 +1319,34 @@ Notice how the previously mentioned display image file command is used here.
 |For a complete example, and much more than just displaying bitmap image, please refer to my adaption of the "Pocket Computer" Arduino Nano project I found in YouTube -- [Arduino Pocket Computer featuring calculator, stopwatch, calendar, game and phone book](https://www.youtube.com/watch?v=NTaq6f7NV5U) by Volos Projects|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpocketcomputer.png)|
 
 
- 
+
+## Caching 16-bit Colored Bitmap to Phone
+
+Not only can you cache single-bit bitmap to your phone, you can cache 16-bit (5-6-5) colored bitmap to your phone, like
+```
+  void setup() {
+    ...
+    display->cachePixelImage16("phone.png", phoneBitmap, 24, 24);
+    ...
+  }
+```
+
+In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by
+my post [Adaptation of "Space Wars" Game with DumbDisplay](https://create.arduino.cc/projecthub/trevorwslee/adaptation-of-space-wars-game-with-dumbdisplay-a09c42?ref=user&ref_id=2044336&offset=0).
+
+
+## Save Images
+
+Even better, you may want to saved the images to DumbDisplay app image storage, for the use of your sketch. As hinted by the post, the steps can be like
+* use your phone's Chrome browser to open the image page
+* long press the image to bring up the available options
+* select to share the image with DumbDisplay app
+
+Notes:
+* not only from Chrome, you can share and save images from any app that can share images that it sees
+* images saved to DumbDisplay app's image storage will always be PNG; hence when asked for image name, you don't need the ".png" extension
+
+![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddsaveimages.gif)
 
 
 # Library Code Header as Reference
