@@ -2,9 +2,9 @@
 
 [DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
-You may want to watch the video **Introducing DumbDisplay -- the little helper for Arduino experiments** for a brief introduction -- https://www.youtube.com/watch?v=QZkhO6jTf0U
+You may want to watch the video [**Introducing DumbDisplay -- the little helper for Arduino experiments**](https://www.youtube.com/watch?v=QZkhO6jTf0U) for a brief introduction
 
-Please notice that the above mentioned video is just one of the several on using DumbDisplay to aid my own Arduino experiments -- https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV 
+Please notice that the above mentioned video is just one of the several on [using DumbDisplay](https://www.youtube.com/watch?v=l-HrsJXIwBY&list=PL-VHNmqKQqiARqvxzN75V3sUF_wn1ysgV) to aid my own Arduino experiments. 
 
 
 ## Enjoy
@@ -1314,7 +1314,7 @@ Under the hook, the pixel image is actually converted to, say in this case, PNG 
 Notice how the previously mentioned display image file command is used here.
 
 
-| sample code |  |
+| |  |
 |--|--|
 |For a complete example, and much more than just displaying bitmap image, please refer to my adaption of the "Pocket Computer" Arduino Nano project I found in YouTube -- [Arduino Pocket Computer featuring calculator, stopwatch, calendar, game and phone book](https://www.youtube.com/watch?v=NTaq6f7NV5U) by Volos Projects|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpocketcomputer.png)|
 
@@ -1339,24 +1339,24 @@ The cached 16-bit pixel image is displayed to graphical layer as needed, like
   ...
 ```
 
-In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by
-my post [Adaptation of "Space Wars" Game with DumbDisplay](https://create.arduino.cc/projecthub/trevorwslee/adaptation-of-space-wars-game-with-dumbdisplay-a09c42?ref=user&ref_id=2044336&offset=0).
+| | |
+|--|--|
+|In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by my post [Adaptation of "Space Wars" Game with DumbDisplay](https://create.arduino.cc/projecthub/trevorwslee/adaptation-of-space-wars-game-with-dumbdisplay-a09c42?ref=user&ref_id=2044336&offset=0).|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddspacewars.gif)|
 
-![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddspacewars.gif)
 
 
 ## Save Images
 
 Even better, you may want to saved the images to DumbDisplay app image storage, for the use of your sketch. As hinted by the post, the steps can be like
-* use your phone's Chrome browser to open the image page
-* long press the image to bring up the available options
-* select to share the image with DumbDisplay app
+| | |
+|--|--|
+|1) use your phone's Chrome browser to open the image page; 2) long press the image to bring up the available options; 3) select to share the image with DumbDisplay app|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddsaveimages.gif)|
 
 Notes:
 * not only from Chrome, you can share and save images from any app that can share images that it sees
 * images saved to DumbDisplay app's image storage will always be PNG; hence when asked for image name, you don't need the ".png" extension
 
-![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddsaveimages.gif)
+
 
 
 # Library Code Header as Reference
