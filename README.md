@@ -1305,7 +1305,7 @@ const unsigned char phoneBitmap [] PROGMEM = {
   }
 ```
 Under the hook, the pixel image is actually converted to, say in this case, PNG format.
-* The cached pixel is displayed to graphical layer as needed, like
+* The cached pixel image is displayed to graphical layer as needed, like
 ```
   ...
   display->drawImageFile("phone.png", 0, 0); 
@@ -1324,11 +1324,19 @@ Notice how the previously mentioned display image file command is used here.
 
 Not only can you cache single-bit bitmap to your phone, you can cache 16-bit (5-6-5) colored bitmap to your phone, like
 ```
+  const uint16_t rocket[] PROGMEM = { ... };
+  ...
   void setup() {
     ...
-    display->cachePixelImage16("phone.png", phoneBitmap, 24, 24);
+    display->cachePixelImage16("rocket.png", rocket, 24, 12);
     ...
   }
+```
+The cached 16-bit pixel image is displayed to graphical layer as needed, like
+```
+  ...
+  display->drawImageFile("rocket.png", 0, 0); 
+  ...
 ```
 
 In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by
