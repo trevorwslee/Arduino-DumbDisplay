@@ -1342,6 +1342,8 @@ The cached 16-bit pixel image is displayed to graphical layer as needed, like
 In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by
 my post [Adaptation of "Space Wars" Game with DumbDisplay](https://create.arduino.cc/projecthub/trevorwslee/adaptation-of-space-wars-game-with-dumbdisplay-a09c42?ref=user&ref_id=2044336&offset=0).
 
+![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddspacewars.gif)
+
 
 ## Save Images
 
