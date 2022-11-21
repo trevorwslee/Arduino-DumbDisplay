@@ -7,22 +7,15 @@ DumbDisplay dumbdisplay(new DDBluetoothSerialIO("LILIGO", true, 115200));
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
 #endif
 
-const char Keys[4][4] = {
-    {'1', '2', '3', 'A'},
-    {'4', '5', '6', 'B'},
-    {'7', '8', '9', 'C'},
-    {'*', '0', '#', 'D'}};
+const char Keys[4][3] = {
+    {'1', '2', '3'},
+    {'4', '5', '6'},
+    {'7', '8', '9'},
+    {'*', '0', '#'}};
 
-LcdDDLayer *CreateKeyLayer(int r, int c)
-{
-    String key = String(Keys[r][c]);
-    LcdDDLayer *keyLayer = dumbdisplay.createLcdLayer(1, 1, 24, "DL:Roboto Mono");
-    keyLayer->writeLine(key);
-    keyLayer->customData = key;
-    return keyLayer;
-}
+LcdDDLayer *CreateKeyLayer(int r, int c);
 
-LcdDDLayer *keyLayers[4][4];
+LcdDDLayer *keyLayers[4][3];
 
 void setup()
 {
@@ -34,7 +27,7 @@ void setup()
             autoPin += "+";
         }
         autoPin += "H(";
-        for (int c = 0; c < 4; c++)
+        for (int c = 0; c < 3; c++)
         {
             LcdDDLayer *keyLayer = CreateKeyLayer(r, c);
             keyLayers[r][c] = keyLayer;
@@ -47,11 +40,33 @@ void setup()
         autoPin += ")";
     }
     autoPin += ")";
-    // dumbdisplay.writeComment(autoPin);
 
     dumbdisplay.configAutoPin(autoPin);
 }
 
 void loop()
 {
+    DDYield(); // need to call this so that DumbDisplay lib can check "feedback"
+}
+
+void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &feedback)
+{
+    if (type == CLICK)
+    {
+        char key = pLayer->customData.charAt(0);
+        dumbdisplay.writeComment("key [" + String(key) + "]");
+    }
+}
+
+LcdDDLayer *CreateKeyLayer(int r, int c)
+{
+    String key = String(Keys[r][c]);
+    LcdDDLayer *keyLayer = dumbdisplay.createLcdLayer(1, 1, 32, "DL:Share Tech Mono");
+    keyLayer->pixelColor("navy");
+    keyLayer->border(5, "darkgray", "raised");
+    keyLayer->padding(1);
+    keyLayer->writeLine(key);
+    keyLayer->setFeedbackHandler(FeedbackHandler, "fl");
+    keyLayer->customData = key;
+    return keyLayer;
 }

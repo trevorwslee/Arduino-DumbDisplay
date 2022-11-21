@@ -244,6 +244,7 @@ DDInputOutput* volatile _IO = NULL;
 IOProxy* volatile _ConnectedIOProxy = NULL;
 volatile bool _ConnectedFromSerial = false; 
 
+volatile bool _EnableDoubleClick = false;
 #ifdef DEBUG_WITH_LED
 volatile int _DebugLedPin = -1;
 #endif
@@ -423,6 +424,9 @@ void _Connect() {
         //ioProxy.print(">init>:Arduino-c1\n");
         ioProxy.print(">init>:");
         ioProxy.print(DD_SID);
+        if (_EnableDoubleClick) {
+          ioProxy.print(",dblclk=1");
+        }
         ioProxy.print("\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
@@ -2164,8 +2168,9 @@ void JsonDDTunnelMultiplexer::reconnect() {
 //   }
 //   _IO = pIO;
 // }
-void DumbDisplay::initialize(DDInputOutput* pIO) {
+void DumbDisplay::initialize(DDInputOutput* pIO, boolean enableDoubleClick) {
   _IO = pIO;
+  _EnableDoubleClick = enableDoubleClick;
 }
 void DumbDisplay::connect() {
   _Connect();
