@@ -105,7 +105,7 @@ void loop() {
     basicMain();
     displaySizeMain();
     otherMain();
-    if (true) {
+    if (false) {
         double num;
         const char* formatted;
         num = 12345678; formatted = CaculatorFormatForDisplay(num, 10); Serial.println(formatted);

@@ -154,14 +154,16 @@ class PrimitiveCalculator {
                         }
                     }
                 }
-                if (_IsOper(what)) {
+                if (what == '%') {
+                    _setNum(_Calc(_getNum(), '/', 100));
+                    return true;
+                } else if (_IsOper(what)) {
                     this->lhs.oper = what;
                     this->lhs.num = _getNum();
                     _setNum(0);
                     this->entering = 0;
                     return true;
-                }
-                else if (what == '=') {
+                } else if (what == '=') {
                     double res = _getNum();
                     if (this->prev_lhs.isValid()) {
                         res = _Calc(this->prev_lhs, res);

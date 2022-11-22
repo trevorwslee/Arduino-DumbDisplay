@@ -15,12 +15,12 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 #include "BasicCalculator.h"
 
-const int DisplayWidth = 12;
-const char Keys[4][4] = {
-    {'7', '8', '9', '/'},
-    {'4', '5', '6', '*'},
-    {'1', '2', '3', '-'},
-    {'0', '.', '=', '+'}};
+const int DisplayWidth = 10;
+const char Keys[4][5] = {
+    {'7', '8', '9', '%', 'C'},
+    {'4', '5', '6', '*', '/'},
+    {'1', '2', '3', '+', '-'},
+    {'0', '.', '=', '(', ')'}};
 
 
 LcdDDLayer *CreateDisplayLayer();
@@ -29,7 +29,7 @@ LcdDDLayer *CreateKeyLayer(int r, int c);
 LcdDDLayer *displayLayer;
 LcdDDLayer *keyLayers[4][4];
 
-PrimitiveCalculator calculator(DisplayWidth);
+BasicCalculator calculator(DisplayWidth);
 
 void setup()
 {
