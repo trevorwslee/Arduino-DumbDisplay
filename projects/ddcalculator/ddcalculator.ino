@@ -1,7 +1,7 @@
 
 #if defined(ESP32)
 #include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("LILIGO", true, 115200));
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO("LILYGO", true, 115200));
 #else
 #include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
@@ -25,19 +25,16 @@ const char Keys[RowCount][ColCount] = {
     {'0', '.', '=', '+'}};
 
 void UpdateCaculatorDisplay();
-SevenSegmentRowDDLayer *CreateSevenSegDisplayLayer();
-LcdDDLayer *CreateDisplayLayer();
+SevenSegmentRowDDLayer *CreateDisplayLayer();
 LcdDDLayer *CreateKeyLayer(int r, int c);
 
-SevenSegmentRowDDLayer *sevenSegLayer;
-LcdDDLayer *displayLayer;
+SevenSegmentRowDDLayer *displayLayer;
 LcdDDLayer *keyLayers[RowCount][5];
 
 BasicCalculator calculator(DisplayWidth);
 
 void setup()
 {
-  sevenSegLayer = CreateSevenSegDisplayLayer();
   displayLayer = CreateDisplayLayer();
   for (int r = 0; r < RowCount; r++)
   {
@@ -49,16 +46,14 @@ void setup()
   }
   UpdateCaculatorDisplay();
   dumbdisplay.configAutoPin(
-    DD_AP_VERT_3(
-      sevenSegLayer->getLayerId(),
-      displayLayer->getLayerId(), 
-      DD_AP_VERT_5(
-        DD_AP_HORI_4(keyLayers[0][0]->getLayerId(), keyLayers[0][1]->getLayerId(), keyLayers[0][2]->getLayerId(), keyLayers[0][3]->getLayerId()),
-        DD_AP_HORI_4(keyLayers[1][0]->getLayerId(), keyLayers[1][1]->getLayerId(), keyLayers[1][2]->getLayerId(), keyLayers[1][3]->getLayerId()),
-        DD_AP_HORI_4(keyLayers[2][0]->getLayerId(), keyLayers[2][1]->getLayerId(), keyLayers[2][2]->getLayerId(), keyLayers[2][3]->getLayerId()),
-        DD_AP_HORI_4(keyLayers[3][0]->getLayerId(), keyLayers[3][1]->getLayerId(), keyLayers[3][2]->getLayerId(), keyLayers[3][3]->getLayerId()),
-        DD_AP_HORI_4(keyLayers[4][0]->getLayerId(), keyLayers[4][1]->getLayerId(), keyLayers[4][2]->getLayerId(), keyLayers[4][3]->getLayerId()))
-      ));
+      DD_AP_VERT_2(
+          displayLayer->getLayerId(),
+          DD_AP_VERT_5(
+              DD_AP_HORI_4(keyLayers[0][0]->getLayerId(), keyLayers[0][1]->getLayerId(), keyLayers[0][2]->getLayerId(), keyLayers[0][3]->getLayerId()),
+              DD_AP_HORI_4(keyLayers[1][0]->getLayerId(), keyLayers[1][1]->getLayerId(), keyLayers[1][2]->getLayerId(), keyLayers[1][3]->getLayerId()),
+              DD_AP_HORI_4(keyLayers[2][0]->getLayerId(), keyLayers[2][1]->getLayerId(), keyLayers[2][2]->getLayerId(), keyLayers[2][3]->getLayerId()),
+              DD_AP_HORI_4(keyLayers[3][0]->getLayerId(), keyLayers[3][1]->getLayerId(), keyLayers[3][2]->getLayerId(), keyLayers[3][3]->getLayerId()),
+              DD_AP_HORI_4(keyLayers[4][0]->getLayerId(), keyLayers[4][1]->getLayerId(), keyLayers[4][2]->getLayerId(), keyLayers[4][3]->getLayerId()))));
 }
 
 void loop()
@@ -68,14 +63,20 @@ void loop()
 
 void UpdateCaculatorDisplay()
 {
-  if (calculator.isGrouing()) {
-    sevenSegLayer->backgroundColor("beige");
-  } else {
-    sevenSegLayer->backgroundColor("azure");
+  if (calculator.isGrouing())
+  {
+    displayLayer->backgroundColor("cyan");
   }
-  const char* formatted = calculator.getFormatted();
-  sevenSegLayer->showFormatted(formatted, true, DisplayWidth - strlen(formatted));
-  displayLayer->writeLine(calculator.getFormattedEx(), 0, "R");
+  else
+  {
+    displayLayer->backgroundColor("azure");
+  }
+  const char *formatted = calculator.getFormatted();
+  displayLayer->showFormatted(formatted, true, DisplayWidth - strlen(formatted));
+  if (true)
+  {
+    dumbdisplay.writeComment(calculator.getFormattedEx());
+  }
 }
 
 void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &feedback)
@@ -122,24 +123,14 @@ void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &fee
   }
 }
 
-SevenSegmentRowDDLayer *CreateSevenSegDisplayLayer() {
-  SevenSegmentRowDDLayer *displayLayer = dumbdisplay.create7SegmentRowLayer(DisplayWidth);// .createLcdLayer(DisplayWidth, 1, 28, "sans-serif");
-  //displayLayer->backgroundColor("azure");
+SevenSegmentRowDDLayer *CreateDisplayLayer()
+{
+  SevenSegmentRowDDLayer *displayLayer = dumbdisplay.create7SegmentRowLayer(DisplayWidth); // .createLcdLayer(DisplayWidth, 1, 28, "sans-serif");
+  // displayLayer->backgroundColor("azure");
   displayLayer->segmentColor("darkblue");
-  //displayLayer->pixelColor("black");
+  // displayLayer->pixelColor("black");
   displayLayer->border(50, "grey", "raised");
   displayLayer->padding(50);
-  displayLayer->setFeedbackHandler(FeedbackHandler);
-  return displayLayer;
-}
-
-LcdDDLayer *CreateDisplayLayer()
-{
-  LcdDDLayer *displayLayer = dumbdisplay.createLcdLayer(DisplayWidth, 1, 28, "sans-serif");
-  displayLayer->backgroundColor("azure");
-  displayLayer->pixelColor("black");
-  displayLayer->border(5, "grey", "raised");
-  displayLayer->padding(5);
   displayLayer->setFeedbackHandler(FeedbackHandler);
   return displayLayer;
 }
@@ -147,15 +138,24 @@ LcdDDLayer *CreateKeyLayer(int r, int c)
 {
   const char key = Keys[r][c];
   String dispKey;
-  if (key == '*') {
+  if (key == '*')
+  {
     dispKey = "×";
-  } else if (key == '/') {
+  }
+  else if (key == '/')
+  {
     dispKey = "÷";
-  } else if (key == '+') {
+  }
+  else if (key == '+')
+  {
     dispKey = "+";
-  } else if (key == '-') {
+  }
+  else if (key == '-')
+  {
     dispKey = "−";
-  } else {
+  }
+  else
+  {
     dispKey = key;
   }
   LcdDDLayer *keyLayer = dumbdisplay.createLcdLayer(1, 1, 32, "sans-serif-black");
