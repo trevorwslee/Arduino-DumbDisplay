@@ -110,11 +110,14 @@ class PrimitiveCalculator {
             return this->entering == 'E';
         }   
         const char* getFormatted(char* buffer = CaculatorDisplayBuffer) {
-            if (isInError()) {
-                return "error";
-            } else {
-                return CaculatorFormatForDisplay(getNum(), DISP_WIDTH, buffer);
+            if (!isInError()) {
+                double num = getNum();
+                if (!isnan(num) && !isinf(num)) {
+                    return CaculatorFormatForDisplay(num, DISP_WIDTH, buffer);
+                }
             }
+            this->entering = 'E';
+            return "Error";
         }
         void reset() {
             // this->entering = 0;
@@ -124,13 +127,20 @@ class PrimitiveCalculator {
             //this->prev_lhs.reset();
         }
         bool push(char what) {
+            // if (true) {
+            //     double num = _getNum();
+            //     if (num == NAN) {
+            //         this->entering = 'E';
+            //         return false;
+            //     }
+            // }
             bool ok = _push(what);
-            if (ok/* && this->entering == 0*/) {
-                double num = _getNum();
-                if (num == NAN || num == -NAN || num == INFINITY || num == -INFINITY) {
-                    this->entering = 'E';
-                }
-            }
+            // if (ok) {
+            //     double num = _getNum();
+            //     if (num == NAN) {
+            //         this->entering = 'E';
+            //     }
+            // }
             return ok;
         }
         bool _push(char what) {
@@ -255,7 +265,11 @@ class PrimitiveCalculator {
             } else {
                 res = this->numPart;
             }
-            return this->negate ? -res : res;
+            double num = this->negate ? -res : res;
+            // if (isnan(num) || isinf(num)) {
+            //     num = NAN;
+            // }
+            return num;
         }
         void _setNum(double num) {
             this->numPart = num;
@@ -322,7 +336,13 @@ class BasicCalculator {
         inline bool isInError() {
             return this->curr->calc.isInError();
         }
+        inline bool isGrouing() {
+            return this->curr->prev != NULL;
+        }
         inline const char* getFormatted(char* buffer = CaculatorDisplayBuffer) {
+            return this->curr->calc.getFormatted(buffer + 1);
+        }
+        const char* getFormattedEx(char* buffer = CaculatorDisplayBuffer) {
             const char* formatted = this->curr->calc.getFormatted(buffer + 1);
             if (this->curr->prev == NULL) {
                 return formatted;
@@ -339,7 +359,11 @@ class BasicCalculator {
         //     }
         // }
         void reset() {
-            return this->curr->calc.reset();
+            if (this->curr->prev != NULL) {
+                delete this->curr->prev;
+                this->curr->prev = NULL;
+            }
+            this->curr->calc.reset();
         }
         bool push(char what) {
             if (what == '(') {

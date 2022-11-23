@@ -40,23 +40,20 @@ void CaculatorIntToString(int32_t intPart, char* buffer) {
     //strrev(buffer);
 } 
 int CaculatorFormatForDisplayGetLen(double num, int8_t max_width, char* buffer = CaculatorDisplayBuffer) {
-    if (true) {
-        int8_t count = max_width;
-        if (count > 4) {  // 4 will work for Arduino UNO
-            count = 4;
-        }
-        int32_t intPart = (int32_t) num;
-        num = abs(num - intPart);
-        int32_t fracPart = (int32_t) (0.5 + pow(10, count) * num);
-        char intBuffer[10];
-        char fracBuffer[10];
-        CaculatorIntToString(intPart, intBuffer);
-        CaculatorIntToString(fracPart, fracBuffer);
-        sprintf(buffer, "%s.%s", intBuffer, fracBuffer);
-        //sprintf(buffer, "%d.%d", intPart, fracPart);  // will have decimal point
-    } else {    
-        sprintf(buffer, "%f", num);  // will have decimal point
-    }
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+    // if sprintf doesn't work, enable it
+    int32_t intPart = (int32_t) num;
+    num = abs(num - intPart);
+    int32_t fracPart = 100000 + (int32_t) (0.5 + 10000 * num);  // 4 decimal places
+    char intBuffer[10];
+    char fracBuffer[10];
+    CaculatorIntToString(intPart, intBuffer);
+    CaculatorIntToString(fracPart, fracBuffer);
+    sprintf(buffer, "%s.%s", intBuffer, fracBuffer + 1);
+    //sprintf(buffer, "%d.%d", intPart, fracPart);  // will have decimal point
+#else        
+    sprintf(buffer, "%f", num);  // will have decimal point
+#endif
     int len = strlen(buffer);
     while (len > 1) {
         if (buffer[len - 1] != '0') {
@@ -109,8 +106,16 @@ class PrimitiveCalculator {
             }
             return _getNum();
         }
-        inline bool isInError() {
-            return this->entering == 'E';
+        bool isInError() {
+            if (this->entering == 'E') {
+                return true;
+            } else {
+                double num = _getNum();
+                if (isnan(num)) {
+                    return true;
+                }
+            }
+            return false;
         }   
         const char* getFormatted(char* buffer = CaculatorDisplayBuffer) {
             if (isInError()) {
@@ -127,13 +132,20 @@ class PrimitiveCalculator {
             //this->prev_lhs.reset();
         }
         bool push(char what) {
+            // if (true) {
+            //     double num = _getNum();
+            //     if (num == NAN) {
+            //         this->entering = 'E';
+            //         return false;
+            //     }
+            // }
             bool ok = _push(what);
-            if (ok/* && this->entering == 0*/) {
-                double num = _getNum();
-                if (num == NAN || num == -NAN || num == INFINITY || num == -INFINITY) {
-                    this->entering = 'E';
-                }
-            }
+            // if (ok) {
+            //     double num = _getNum();
+            //     if (num == NAN) {
+            //         this->entering = 'E';
+            //     }
+            // }
             return ok;
         }
         bool _push(char what) {
@@ -258,7 +270,11 @@ class PrimitiveCalculator {
             } else {
                 res = this->numPart;
             }
-            return this->negate ? -res : res;
+            double num = this->negate ? -res : res;
+            if (isnan(num) || isinf(num)) {
+                num = NAN;
+            }
+            return num;
         }
         void _setNum(double num) {
             this->numPart = num;
@@ -326,7 +342,13 @@ class BasicCalculator {
             return this->curr->calc.isInError();
         }
         inline const char* getFormatted(char* buffer = CaculatorDisplayBuffer) {
-            return this->curr->calc.getFormatted(buffer);
+            const char* formatted = this->curr->calc.getFormatted(buffer + 1);
+            if (this->curr->prev == NULL) {
+                return formatted;
+            } else {
+                buffer[0] = '(';
+                return buffer;
+            }
         }
         // const char* getFormatted() {
         //     if (isInError()) {
