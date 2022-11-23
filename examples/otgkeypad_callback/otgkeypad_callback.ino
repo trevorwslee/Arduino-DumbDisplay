@@ -30,8 +30,6 @@ LcdDDLayer *keyLayers[4][3];
 
 // to be defined later in the sketch
 LcdDDLayer *CreateKeyLayer(int r, int c);
-// to be defined later in the sketch
-char CheckKeyPressed();
 
 
 void setup()
@@ -55,9 +53,16 @@ void setup()
 
 void loop()
 {
-  char keyPressed = CheckKeyPressed();
-  if (keyPressed != 0) {
-    dumbdisplay.writeComment("key [" + String(keyPressed) + "]");
+  DDYield(); // need to call this so that DumbDisplay lib can check for "feedback"
+}
+
+// "feedback" handler
+void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &feedback)
+{
+  if (type == CLICK)
+  {
+    char key = pLayer->customData.charAt(0);
+    dumbdisplay.writeComment("key [" + String(key) + "]");
   }
 }
 
@@ -70,27 +75,7 @@ LcdDDLayer *CreateKeyLayer(int r, int c)
   keyLayer->border(5, "darkgray", "raised");
   keyLayer->padding(1);
   keyLayer->writeLine(key);
-  keyLayer->enableFeedback("fl");
+  keyLayer->setFeedbackHandler(FeedbackHandler, "fl");  // set the "feedback" handler
   keyLayer->customData = key;  // set the key to the "custom data" of the layer
   return keyLayer;
 }
-
-// check if any key is pressed; return the key pressed, or 0 if none
-char CheckKeyPressed()
-{
-  // loop through the key LCD layers and check if any one has "feedback" (i.e. pressed)
-  for (int r = 0; r < 4; r++)
-  {
-    for (int c = 0; c < 3; c++)
-    {
-      LcdDDLayer* keyLayer = keyLayers[r][c];
-      DDFeedback* feedback = keyLayer->getFeedback();
-      if (feedback != NULL) {
-        char keyPressed = keyLayer.charAt(0);
-        return keyPressed;
-      }
-    }
-  }
-
-}
-
