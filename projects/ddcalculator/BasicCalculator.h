@@ -323,7 +323,13 @@ class BasicCalculator {
             return this->curr->calc.isInError();
         }
         inline const char* getFormatted(char* buffer = CaculatorDisplayBuffer) {
-            return this->curr->calc.getFormatted(buffer);
+            const char* formatted = this->curr->calc.getFormatted(buffer + 1);
+            if (this->curr->prev == NULL) {
+                return formatted;
+            } else {
+                buffer[0] = '(';
+                return buffer;
+            }
         }
         // const char* getFormatted() {
         //     if (isInError()) {

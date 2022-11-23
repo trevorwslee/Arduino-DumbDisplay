@@ -15,9 +15,10 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 #include "BasicCalculator.h"
 
 const int DisplayWidth = 10;
-const int RowCount = 4;
+const int RowCount = 5;
 const int ColCount = 4;
 const char Keys[RowCount][ColCount] = {
+    {'%', '(', ')', 'C'},
     {'7', '8', '9', '/'},
     {'4', '5', '6', '*'},
     {'1', '2', '3', '-'},
@@ -29,7 +30,7 @@ LcdDDLayer *CreateKeyLayer(int r, int c);
 LcdDDLayer *displayLayer;
 LcdDDLayer *keyLayers[RowCount][5];
 
-PrimitiveCalculator calculator(DisplayWidth);
+BasicCalculator calculator(DisplayWidth);
 
 void setup()
 {
@@ -45,12 +46,13 @@ void setup()
   dumbdisplay.configAutoPin(
     DD_AP_VERT_2(
       displayLayer->getLayerId(), 
-      DD_AP_VERT_4(
+      DD_AP_VERT_5(
         DD_AP_HORI_4(keyLayers[0][0]->getLayerId(), keyLayers[0][1]->getLayerId(), keyLayers[0][2]->getLayerId(), keyLayers[0][3]->getLayerId()),
         DD_AP_HORI_4(keyLayers[1][0]->getLayerId(), keyLayers[1][1]->getLayerId(), keyLayers[1][2]->getLayerId(), keyLayers[1][3]->getLayerId()),
         DD_AP_HORI_4(keyLayers[2][0]->getLayerId(), keyLayers[2][1]->getLayerId(), keyLayers[2][2]->getLayerId(), keyLayers[2][3]->getLayerId()),
-        DD_AP_HORI_4(keyLayers[3][0]->getLayerId(), keyLayers[3][1]->getLayerId(), keyLayers[3][2]->getLayerId(), keyLayers[3][3]->getLayerId()))
-    ));
+        DD_AP_HORI_4(keyLayers[3][0]->getLayerId(), keyLayers[3][1]->getLayerId(), keyLayers[3][2]->getLayerId(), keyLayers[3][3]->getLayerId()),
+        DD_AP_HORI_4(keyLayers[4][0]->getLayerId(), keyLayers[4][1]->getLayerId(), keyLayers[4][2]->getLayerId(), keyLayers[4][3]->getLayerId()))
+      ));
 }
 
 void loop()
@@ -69,8 +71,8 @@ void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &fee
   {
     if (type == LONGPRESS)
     {
-      calculator.reset();
       displayLayer->flash();
+      calculator.reset();
       dumbdisplay.tone(TONE_CLEAR, 300);
       UpdateCaculatorDisplay(displayLayer);
     }
@@ -80,7 +82,12 @@ void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &fee
     if (type == CLICK)
     {
       char key = pLayer->customData.charAt(0);
-      if (calculator.push(key))
+      if (key == 'C')
+      {
+        calculator.reset();
+        dumbdisplay.tone(TONE_CLEAR, 300);
+      }
+      else if (calculator.push(key))
       {
         dumbdisplay.tone(TONE_YES, 100);
         if (key == '=')
@@ -92,9 +99,11 @@ void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &fee
       {
         dumbdisplay.tone(TONE_NO, 200);
       }
-      double num = calculator.getNum();
-      const char* formatted = calculator.getFormatted();
-      dumbdisplay.writeComment(String(num) + " ==> " + formatted);
+      // if (true) {
+      //   double num = calculator.getNum();
+      //   const char* formatted = calculator.getFormatted();
+      //   dumbdisplay.writeComment(String(num) + " ==> " + formatted);
+      // }
       UpdateCaculatorDisplay(displayLayer);
     }
   }
