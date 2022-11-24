@@ -26,7 +26,7 @@
 
 
 #include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
+DumbDisplay dumbdisplay(new DDInputOutput(115200), true);
 
 
 
@@ -358,6 +358,8 @@ void setup() {
 #if defined (SS_PIN)
   rfidControl.init();
 #endif
+
+  dumbdisplay.connect();
 
   dumbdisplay.recordLayerSetupCommands();
 
