@@ -26,7 +26,7 @@
 
 
 #include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200), true);
+DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 
 
@@ -359,8 +359,6 @@ void setup() {
   rfidControl.init();
 #endif
 
-  dumbdisplay.connect();
-
   dumbdisplay.recordLayerSetupCommands();
 
   // create a LCD layer for display some info about the picture shown
@@ -459,6 +457,8 @@ void loop() {
             if (key == '#') {
               // if changing combo and key pressed is '#', use the new combo
               copyCombos(newCombo, lockCombo);
+              resetCombo(enteringCombo);
+              resetCombo(newCombo);
               onNew();
 #if defined(STORE_IN_EEPROM)
               eepromStorage.writeCombo(lockCombo);

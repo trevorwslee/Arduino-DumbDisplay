@@ -1,10 +1,10 @@
 
 #if defined(ESP32)
 #include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("LILYGO", true, 115200));
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO("LILYGO", true, 115200), false);
 #else
 #include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
+DumbDisplay dumbdisplay(new DDInputOutput(115200), false);
 #endif
 
 #define TONE_YES 1000
