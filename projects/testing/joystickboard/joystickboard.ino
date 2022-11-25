@@ -2,92 +2,25 @@
 // * joystick press better if min / max detected (by moving the joystick)
 // ***
 
-#include <limits.h>
+//#include <limits.h>
 
-#if defined(ARDUINO_AVR_NANO)
-#define VRX A2
-#define VRY A1
-#define SW A0
-#elif defined(ESP8266)
-#define BUTTONS_ONLY
-#define UP D7
-#define DOWN D6
-#define LEFT D5
-#define RIGHT D4
-#define SW D1
-#endif
+// #if defined(ARDUINO_AVR_NANO)
+// #define VRX A2
+// #define VRY A1
+// #define SW A0
+// #elif defined(ESP8266)
+// #define UP D7
+// #define DOWN D6
+// #define LEFT D5
+// #define RIGHT D4
+// #define SW D1
+// #endif
 
-const int JoystickPressThreshold = 100;
+
+
+// const int JoystickPressThreshold = 100;
 const long JoystickPressAutoRepeatMillis = 200; // 0 means no auto repeat
 
-struct JoystickPress
-{
-  int pressedX; // -1, 0 or 1
-  int pressedY; // -1, 0 or 1
-};
-
-class JoystickInterface
-{
-protected:
-  JoystickInterface() {}
-
-public:
-  const JoystickPress *checkJoystickPress(int repeat = 0)
-  {
-    int xPressed = _checkXPressed(repeat);
-    int yPressed = _checkYPressed(repeat);
-    if (xPressed != 0 || yPressed != 0)
-    {
-      long nowMillis = millis();
-      long diffMillis = nowMillis - this->lastJoystickPressMillis;
-      if (diffMillis > 50)
-      {
-        bool pressedA = _checkPressedBypass('A');
-        bool pressedB = _checkPressedBypass('B');
-        bool pressedC = _checkPressedBypass('C');
-        bool pressedD = _checkPressedBypass('D');
-        if (pressedB)
-        {
-          lastCheckJoystickPress.pressedX = 1;
-        }
-        else if (pressedD)
-        {
-          lastCheckJoystickPress.pressedX = -1;
-        }
-        if (pressedA)
-        {
-          lastCheckJoystickPress.pressedY = -1;
-        }
-        else if (pressedC)
-        {
-          lastCheckJoystickPress.pressedY = -1;
-        }
-        return &lastCheckJoystickPress;
-      }
-    }
-    else
-    {
-      return NULL;
-    }
-  }
-  /**
-   * @param button can be 'A' to 'E'
-   */
-  bool checkButtonPressed(char button, int repeat = 0)
-  {
-    return _checkPressed(button, repeat);
-  }
-
-protected:
-  virtual int _checkXPressed(int repeat);
-  virtual int _checkYPressed(int repeat);
-  virtual bool _checkPressed(char button, int repeat);
-  virtual bool _checkPressedBypass(char button);
-
-private:
-  JoystickPress lastCheckJoystickPress;
-  long lastJoystickPressMillis;
-};
 
 class ButtonPressTracker
 {
@@ -101,11 +34,13 @@ public:
   }
   bool checkPressed(int repeat = 0)
   {
-    return setPressed(digitalRead(this->pin) == 0, repeat);
+    int reading = digitalRead(this->pin);
+    return setPressed(reading == 0, repeat);
   }
   bool checkPressedBypass()
   {
-    setPressed(digitalRead(this->pin) == 0);
+    int reading = digitalRead(this->pin);
+    setPressed(reading == 0);
     return pressed;
   }
 
@@ -355,7 +290,86 @@ private:
   int autoRepeatDir;
 };
 
-class JoystickJoystick : JoystickInterface
+
+struct JoystickPress
+{
+  int pressedX; // -1, 0 or 1
+  int pressedY; // -1, 0 or 1
+};
+
+class JoystickInterface
+{
+protected:
+  JoystickInterface() {}
+
+public:
+  const JoystickPress *checkJoystickPress(int repeat = 0)
+  {
+    int xPressed = _checkPressedX(repeat);
+    int yPressed = _checkPressedY(repeat);
+    if (xPressed != 0 || yPressed != 0)
+    {
+      long nowMillis = millis();
+      long diffMillis = nowMillis - this->lastJoystickPressMillis;
+      if (diffMillis > 50)
+      {
+        lastCheckJoystickPress.pressedX = 0;
+        lastCheckJoystickPress.pressedY = 0;
+        bool pressedA = _checkPressedBypass('A');
+        bool pressedB = _checkPressedBypass('B');
+        bool pressedC = _checkPressedBypass('C');
+        bool pressedD = _checkPressedBypass('D');
+        if (pressedB)
+        {
+//Serial.println("B");          
+          lastCheckJoystickPress.pressedX = 1;
+        }
+        else if (pressedD)
+        {
+//Serial.println("D");          
+          lastCheckJoystickPress.pressedX = -1;
+        }
+        if (pressedA)
+        {
+//Serial.println("A");          
+          lastCheckJoystickPress.pressedY = -1;
+        }
+        else if (pressedC)
+        {
+//Serial.println("C");          
+          lastCheckJoystickPress.pressedY = 1;
+        }
+        lastJoystickPressMillis = nowMillis;
+        return &lastCheckJoystickPress;
+      }
+    }
+    return NULL;
+  }
+  bool checkSWPressed(int repeat = 0)
+  {
+    return checkButtonPressed('E');
+  }
+  /**
+   * @param button can be 'A' to 'E'
+   */
+  bool checkButtonPressed(char button, int repeat = 0)
+  {
+    return _checkPressed(button, repeat);
+  }
+
+protected:
+  virtual int _checkPressedX(int repeat);
+  virtual int _checkPressedY(int repeat);
+  virtual bool _checkPressed(char button, int repeat);
+  virtual bool _checkPressedBypass(char button);
+
+private:
+  JoystickPress lastCheckJoystickPress;
+  long lastJoystickPressMillis;
+};
+
+
+class JoystickJoystick : public JoystickInterface
 {
 public:
   JoystickJoystick(JoystickPressTracker *xTracker, JoystickPressTracker *yTracker, ButtonPressTracker *swTracker) : JoystickInterface()
@@ -366,7 +380,15 @@ public:
   }
 
 protected:
-  bool _checkPressed(char button, int repeat)
+  virtual int _checkPressedX(int repeat)
+  {
+    return xTracker != NULL ? xTracker->checkPressed(repeat) : 0;
+  }
+  virtual int _checkPressedY(int repeat)
+  {
+    return yTracker != NULL ? yTracker->checkPressed(repeat) : 0;
+  }
+  virtual bool _checkPressed(char button, int repeat)
   {
     if (button == 'A')
     {
@@ -393,7 +415,7 @@ protected:
       return false;
     }
   }
-  bool _checkPressedBypass(char button)
+  virtual bool _checkPressedBypass(char button)
   {
     if (button == 'A')
     {
@@ -427,9 +449,195 @@ private:
   ButtonPressTracker *swTracker;
 };
 
+class ButtonJoystick : public JoystickInterface
+{
+public:
+  ButtonJoystick(ButtonPressTracker *leftTracker, ButtonPressTracker *rightTracker, ButtonPressTracker *upTracker, ButtonPressTracker *downTracker, ButtonPressTracker *midTracker) : JoystickInterface()
+  {
+    this->leftTracker = leftTracker;
+    this->rightTracker = rightTracker;
+    this->upTracker = upTracker;
+    this->downTracker = downTracker;
+    this->midTracker = midTracker;
+  }
+
+protected:
+  virtual int _checkPressedX(int repeat)
+  {
+//Serial.print("?");
+    bool pressedB = _checkPressed('B', repeat);
+    bool pressedD = _checkPressed('D', repeat);
+    if (pressedB)
+    {
+//Serial.println("*B");
+      return -1;
+    }
+    else if (pressedD)
+    {
+//Serial.println("*D");
+      return 1;
+    }
+    else
+    {
+      return 0;
+    }
+  }
+  virtual int _checkPressedY(int repeat)
+  {
+    bool pressedA = _checkPressed('A', repeat);
+    bool pressedC = _checkPressed('C', repeat);
+    if (pressedA)
+    {
+//Serial.println("*A");
+      return -1;
+    }
+    else if (pressedC)
+    {
+//Serial.println("*C");
+     return 1;
+    }
+    else
+    {
+      return 0;
+    }
+  }
+  virtual bool _checkPressed(char button, int repeat)
+  {
+    if (button == 'A')
+    {
+      return upTracker != NULL && upTracker->checkPressed(repeat);
+    }
+    else if (button == 'B')
+    {
+      return rightTracker != NULL && rightTracker->checkPressed(repeat);
+    }
+    else if (button == 'C')
+    {
+      return downTracker != NULL && downTracker->checkPressed(repeat);
+    }
+    else if (button == 'D')
+    {
+      return leftTracker != NULL && leftTracker->checkPressed(repeat);
+    }
+    else if (button == 'E')
+    {
+      return midTracker != NULL && midTracker->checkPressed(repeat);
+    }
+    else
+    {
+      return false;
+    }
+  }
+  virtual bool _checkPressedBypass(char button)
+  {
+    if (button == 'A')
+    {
+      return upTracker != NULL && upTracker->checkPressedBypass();
+    }
+    else if (button == 'B')
+    {
+      return rightTracker != NULL && rightTracker->checkPressedBypass();
+    }
+    else if (button == 'C')
+    {
+      return downTracker != NULL && downTracker->checkPressedBypass();
+    }
+    else if (button == 'D')
+    {
+      return leftTracker != NULL && leftTracker->checkPressedBypass();
+    }
+    else if (button == 'E')
+    {
+      return midTracker != NULL && midTracker->checkPressedBypass();
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+private:
+  ButtonPressTracker *leftTracker;
+  ButtonPressTracker *rightTracker;
+  ButtonPressTracker *upTracker;
+  ButtonPressTracker *downTracker;
+  ButtonPressTracker *midTracker;
+};
+
+const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
+{
+  if (swPressed)
+  {
+    return "#";
+  }
+  int xPressed = joystickPress != NULL ? joystickPress->pressedX : 0;
+  int yPressed = joystickPress != NULL ? joystickPress->pressedY : 0;
+  if (xPressed == 0 && yPressed != 0)
+  {
+    return yPressed == -1 ? "↑" : "↓";
+  }
+  if (xPressed != 0 && yPressed == 0)
+  {
+    return xPressed == -1 ? "←" : "→";
+  }
+  if (xPressed != 0 && yPressed != 0)
+  {
+    if (xPressed == -1)
+    {
+      return yPressed == -1 ? "↖" : "↙";
+    }
+    else
+    {
+      return yPressed == -1 ? "↗" : "↘";
+    }
+  }
+  return NULL;
+}
+
+
+ButtonPressTracker* SetupNewButtonPressTracker(uint8_t pin) {
+    pinMode(pin, INPUT_PULLUP);
+    return new ButtonPressTracker(pin);
+}
+
+
+#if defined(ESP8266)
+ButtonPressTracker *upTracker = SetupNewButtonPressTracker(D7);
+ButtonPressTracker *downTracker = SetupNewButtonPressTracker(D6);
+ButtonPressTracker *leftTracker = SetupNewButtonPressTracker(D5);
+ButtonPressTracker *rightTracker = SetupNewButtonPressTracker(D4);
+ButtonPressTracker *midTracker = SetupNewButtonPressTracker(D3);
+ButtonJoystick *joystick = new ButtonJoystick(leftTracker, rightTracker, upTracker, downTracker, midTracker);
+const int JoystickCount = 1;
+JoystickInterface *Joysticks[JoystickCount] = {joystick};
+#endif
+
 void setup()
 {
+  Serial.begin(115200);
 }
 void loop()
 {
+  const JoystickPress *joystickPresses[JoystickCount];
+  bool swPresses[JoystickCount];
+  bool show = false;
+  for (int i = 0; i < JoystickCount; i++)
+  {
+    joystickPresses[i] = Joysticks[i]->checkJoystickPress(JoystickPressAutoRepeatMillis);
+    swPresses[i] = Joysticks[i]->checkSWPressed();
+    show |= joystickPresses[i] != NULL || swPresses[i];
+  }
+  if (show)
+  {
+    for (int i = 0; i < JoystickCount; i++)
+    {
+      const JoystickPress *joystickPress = joystickPresses[i];
+      bool swPressed = swPresses[i];
+      const char *representation = ToRepresentation(joystickPress, swPressed);
+      Serial.print("[");
+      Serial.print(representation);
+      Serial.print("]");
+    }
+    Serial.println();
+  }
 }

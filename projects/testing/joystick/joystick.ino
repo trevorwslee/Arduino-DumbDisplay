@@ -19,12 +19,12 @@
 #define DOWN  D6
 #define LEFT  D5
 #define RIGHT D4
-#define SW    D1
+#define SW    D3
 #endif
 
 const int XYPressThreshold = 100;
 bool trackedXYPressed2D = true;
-const long XYPressAutoRepeatMillis = 200; // 0 means no auto repeat
+const long XYPressAutoRepeatMillis = 0; // 0 means no auto repeat
 
 class ButtonPressTracker
 {
