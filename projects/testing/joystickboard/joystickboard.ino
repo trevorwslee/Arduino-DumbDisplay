@@ -1,3 +1,94 @@
+// ***
+// * joystick press better if min / max detected (by moving the joystick)
+// ***
+
+#include <limits.h>
+
+#if defined(ARDUINO_AVR_NANO)
+#define VRX A2
+#define VRY A1
+#define SW A0
+#elif defined(ESP8266)
+#define BUTTONS_ONLY
+#define UP D7
+#define DOWN D6
+#define LEFT D5
+#define RIGHT D4
+#define SW D1
+#endif
+
+const int JoystickPressThreshold = 100;
+const long JoystickPressAutoRepeatMillis = 200; // 0 means no auto repeat
+
+struct JoystickPress
+{
+  int pressedX; // -1, 0 or 1
+  int pressedY; // -1, 0 or 1
+};
+
+class JoystickInterface
+{
+protected:
+  JoystickInterface() {}
+
+public:
+  const JoystickPress *checkJoystickPress(int repeat = 0)
+  {
+    int xPressed = _checkXPressed(repeat);
+    int yPressed = _checkYPressed(repeat);
+    if (xPressed != 0 || yPressed != 0)
+    {
+      long nowMillis = millis();
+      long diffMillis = nowMillis - this->lastJoystickPressMillis;
+      if (diffMillis > 50)
+      {
+        bool pressedA = _checkPressedBypass('A');
+        bool pressedB = _checkPressedBypass('B');
+        bool pressedC = _checkPressedBypass('C');
+        bool pressedD = _checkPressedBypass('D');
+        if (pressedB)
+        {
+          lastCheckJoystickPress.pressedX = 1;
+        }
+        else if (pressedD)
+        {
+          lastCheckJoystickPress.pressedX = -1;
+        }
+        if (pressedA)
+        {
+          lastCheckJoystickPress.pressedY = -1;
+        }
+        else if (pressedC)
+        {
+          lastCheckJoystickPress.pressedY = -1;
+        }
+        return &lastCheckJoystickPress;
+      }
+    }
+    else
+    {
+      return NULL;
+    }
+  }
+  /**
+   * @param button can be 'A' to 'E'
+   */
+  bool checkButtonPressed(char button, int repeat = 0)
+  {
+    return _checkPressed(button, repeat);
+  }
+
+protected:
+  virtual int _checkXPressed(int repeat);
+  virtual int _checkYPressed(int repeat);
+  virtual bool _checkPressed(char button, int repeat);
+  virtual bool _checkPressedBypass(char button);
+
+private:
+  JoystickPress lastCheckJoystickPress;
+  long lastJoystickPressMillis;
+};
+
 class ButtonPressTracker
 {
 public:
@@ -69,6 +160,7 @@ private:
   long blackOutMillis;
   long nextRepeatMillis;
 };
+
 class JoystickPressTracker
 {
 public:
@@ -78,7 +170,7 @@ public:
     this->autoThreshold = -1;
     resetMinMax(minReading, maxReading, true);
   }
-  JoystickPressTracker(uint8_t pin, bool reverseDir, bool autoTune) 
+  JoystickPressTracker(uint8_t pin, bool reverseDir, bool autoTune)
   {
     int autoThreshold = autoTune ? 200 : -1;
     this->pin = pin;
@@ -91,29 +183,27 @@ public:
   }
 
 public:
-  // void setMinMax(int minReading, int maxReading)
-  // {
-  //   resetMinMax(minReading, maxReading, false);
-  // }
-
-public:
   int8_t checkPressed(int repeat = 0)
   {
     int reading = analogRead(this->pin);
-    if (this->autoThreshold != -1) {
-      if (reading < this->autoMin) {
+    if (this->autoThreshold != -1)
+    {
+      if (reading < this->autoMin)
+      {
         this->autoMin = reading;
       }
-      if (reading > this->autoMax) {
+      if (reading > this->autoMax)
+      {
         this->autoMax = reading;
       }
-      if ((this->autoMax - this->autoMin) >= 800) {
+      if ((this->autoMax - this->autoMin) >= 800)
+      {
         resetMinMax(this->autoMin + this->autoThreshold, this->autoMax - this->autoThreshold, false);
       }
     }
     return setReading(reading, repeat);
   }
-  int readPressedBypass()
+  int checkPressedBypass()
   {
     int reading = analogRead(this->pin);
     setReading(reading);
@@ -224,7 +314,8 @@ private:
   {
     if (forceReset || this->minReading != minReading || this->maxReading != maxReading)
     {
-      if (forceReset) { 
+      if (forceReset)
+      {
         if (maxReading < minReading)
         {
           int temp = maxReading;
@@ -263,43 +354,82 @@ private:
   long nextRepeatMillis;
   int autoRepeatDir;
 };
-class Joystick2DTracker
+
+class JoystickJoystick : JoystickInterface
 {
 public:
-  Joystick2DTracker(JoystickPressTracker &xTracker, JoystickPressTracker &yTracker) : xTracker(xTracker), yTracker(yTracker)
+  JoystickJoystick(JoystickPressTracker *xTracker, JoystickPressTracker *yTracker, ButtonPressTracker *swTracker) : JoystickInterface()
   {
-    this->lastPressedMillis = 0;
+    this->xTracker = xTracker;
+    this->yTracker = yTracker;
+    this->swTracker = swTracker;
   }
 
-public:
-  bool checkPressed(int repeat = 0)
+protected:
+  bool _checkPressed(char button, int repeat)
   {
-    int xPressed = xTracker.checkPressed(repeat);
-    int yPressed = yTracker.checkPressed(repeat);
-    if (xPressed != 0 || yPressed != 0)
+    if (button == 'A')
     {
-      long nowMillis = millis();
-      long diffMillis = nowMillis - this->lastPressedMillis;
-      if (diffMillis > 50)
-      {
-        this->checkResultXPressed = xTracker.readPressedBypass();
-        this->checkResultYPressed = yTracker.readPressedBypass();
-        this->lastPressedMillis = nowMillis;
-        return true;
-      }
+      return yTracker != NULL && (yTracker->checkPressed(repeat) == -1);
+    }
+    else if (button == 'B')
+    {
+      return xTracker != NULL && (xTracker->checkPressed(repeat) == 1);
+    }
+    else if (button == 'C')
+    {
+      return yTracker != NULL && (yTracker->checkPressed(repeat) == -1);
+    }
+    else if (button == 'D')
+    {
+      return xTracker != NULL && (xTracker->checkPressed(repeat) == 1);
+    }
+    else if (button == 'E')
+    {
+      return swTracker != NULL && swTracker->checkPressed(repeat);
     }
     else
     {
-      return 0;
+      return false;
+    }
+  }
+  bool _checkPressedBypass(char button)
+  {
+    if (button == 'A')
+    {
+      return yTracker != NULL && (yTracker->checkPressedBypass() == -1);
+    }
+    else if (button == 'B')
+    {
+      return xTracker != NULL && (xTracker->checkPressedBypass() == 1);
+    }
+    else if (button == 'C')
+    {
+      return yTracker != NULL && (yTracker->checkPressedBypass() == -1);
+    }
+    else if (button == 'D')
+    {
+      return xTracker != NULL && (xTracker->checkPressedBypass() == 1);
+    }
+    else if (button == 'E')
+    {
+      return swTracker != NULL && swTracker->checkPressedBypass();
+    }
+    else
+    {
+      return false;
     }
   }
 
 private:
-  JoystickPressTracker &xTracker;
-  JoystickPressTracker &yTracker;
-
-public:
-  int checkResultXPressed;
-  int checkResultYPressed;
-  long lastPressedMillis;
+  JoystickPressTracker *xTracker;
+  JoystickPressTracker *yTracker;
+  ButtonPressTracker *swTracker;
 };
+
+void setup()
+{
+}
+void loop()
+{
+}

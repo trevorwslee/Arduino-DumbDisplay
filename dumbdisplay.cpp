@@ -845,8 +845,11 @@ void __SendByteArrayPortion(const uint8_t *bytes, int byteCount, char compressMe
     } else {
       if (readFromProgramSpace) {
         for (int i = 0; i < byteCount; i++) {
-          //_IO->write(pgm_read_byte(bytes[i]));
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+          _IO->write(pgm_read_byte(bytes[i]));
+#else          
           _IO->write(bytes[i]);
+#endif          
         }
       } else {
         _IO->write(bytes, byteCount);
