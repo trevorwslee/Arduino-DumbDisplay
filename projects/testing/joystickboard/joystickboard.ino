@@ -25,9 +25,9 @@ struct JoystickPress
   int yPressed; // -1, 0 or 1
 };
 
-struct JoystickPressCode : JoystickPress
+struct JoystickPressCode
 {
-  bool swPressed;
+  bool pressed[5];
 };
 
 class JoystickInterface
@@ -115,25 +115,26 @@ public:
 public:
   bool checkJoystickPressCode(JoystickPressCode &joystickPressCode, int repeat = 0)
   {
-    joystickPressCode.xPressed = 0;
-    joystickPressCode.yPressed = 0;
-    joystickPressCode.swPressed = false;
-    const JoystickPress *joystickPress = checkJoystickPress(repeat);
-    bool swPressed = checkSWPressed(repeat);
-    if (joystickPress != NULL || swPressed)
-    {
-      if (joystickPress != NULL)
-      {
-        joystickPressCode.xPressed = joystickPress->xPressed;
-        joystickPressCode.yPressed = joystickPress->yPressed;
-      }
-      joystickPressCode.swPressed = swPressed;
-      return true;
-    }
-    else
-    {
-      return false;
-    }
+    return false;
+    // joystickPressCode.xPressed = 0;
+    // joystickPressCode.yPressed = 0;
+    // joystickPressCode.swPressed = false;
+    // const JoystickPress *joystickPress = checkJoystickPress(repeat);
+    // bool swPressed = checkSWPressed(repeat);
+    // if (joystickPress != NULL || swPressed)
+    // {
+    //   if (joystickPress != NULL)
+    //   {
+    //     joystickPressCode.xPressed = joystickPress->xPressed;
+    //     joystickPressCode.yPressed = joystickPress->yPressed;
+    //   }
+    //   joystickPressCode.swPressed = swPressed;
+    //   return true;
+    // }
+    // else
+    // {
+    //   return false;
+    // }
   }
 
 protected:
@@ -239,20 +240,20 @@ public:
   }
 
 public:
-  void decode(JoystickPressCode *joystickPressCode)
-  {
-    if (joystickPressCode != NULL)
-    {
-      this->joystickPressCode.xPressed = joystickPressCode->xPressed;
-      this->joystickPressCode.yPressed = joystickPressCode->yPressed;
-      this->joystickPressCode.swPressed = joystickPressCode->swPressed;
-      this->joystickPressCodeValid = true;
-    }
-    else
-    {
-      this->joystickPressCodeValid = false;
-    }
-  }
+  // void decode(JoystickPressCode *joystickPressCode)
+  // {
+  //   if (joystickPressCode != NULL)
+  //   {
+  //     this->joystickPressCode.xPressed = joystickPressCode->xPressed;
+  //     this->joystickPressCode.yPressed = joystickPressCode->yPressed;
+  //     this->joystickPressCode.swPressed = joystickPressCode->swPressed;
+  //     this->joystickPressCodeValid = true;
+  //   }
+  //   else
+  //   {
+  //     this->joystickPressCodeValid = false;
+  //   }
+  // }
 
 private:
   JoystickPressCode joystickPressCode;
@@ -727,6 +728,14 @@ const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
   }
   return ".";
 }
+// const char *ToRepresentationFromCode(JoystickPressCode* joystickPressCode) {
+//   if (joystickPressCode != NULL) {
+//     return ToRepresentation(joystickPressCode, joystickPressCode->swPressed);
+//   } else {
+//     return ".";
+//   }
+// }
+
 
 JoystickPressTracker *SetupNewJoystickPressTracker(uint8_t pin, bool reverseDir, int autoTuneThreshold = JoystickPressTracker::DefAutoTuneThreshold)
 {
