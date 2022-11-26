@@ -19,7 +19,7 @@
 
 
 // const int JoystickPressThreshold = 100;
-const long JoystickPressAutoRepeatMillis = 200; // 0 means no auto repeat
+const long JoystickPressAutoRepeatMillis = 0; // 0 means no auto repeat
 
 
 class ButtonPressTracker
@@ -107,7 +107,8 @@ public:
   }
   JoystickPressTracker(uint8_t pin, bool reverseDir, bool autoTune)
   {
-    int autoThreshold = autoTune ? 200 : -1;
+    //int autoThreshold = autoTune ? 200 : -1;
+    int autoThreshold = autoTune ? 10 : -1;
     this->pin = pin;
     this->autoThreshold = autoThreshold;
     this->autoMin = 10000;
@@ -142,8 +143,12 @@ public:
   {
     int reading = analogRead(this->pin);
     setReading(reading);
-    return readingToPressedDir(reading);
-  }
+    int pressed = readingToPressedDir(reading);
+//  Serial.print(reading);      
+// Serial.print(">>");
+// Serial.println(pressed);
+    return pressed;
+ }
   int readBypass()
   {
     int reading = analogRead(this->pin);
@@ -216,6 +221,9 @@ private:
           this->nextRepeatMillis = 0;
           this->autoRepeatDir = 0;
         }
+// Serial.print(reading);      
+// Serial.print("=>");
+// Serial.println(oriPressedDir);
         return oriPressedDir;
       }
     }
@@ -270,6 +278,10 @@ private:
       this->needReset = false;
       this->nextRepeatMillis = 0;
       this->autoRepeatDir = 0;
+// Serial.print(this->minReading);      
+// Serial.print("-");      
+// Serial.println(this->maxReading);  
+//delay(100);    
     }
   }
 
@@ -300,7 +312,9 @@ struct JoystickPress
 class JoystickInterface
 {
 protected:
-  JoystickInterface() {}
+  JoystickInterface() {
+    lastJoystickPressMillis = 0;
+  }
 
 public:
   const JoystickPress *checkJoystickPress(int repeat = 0)
@@ -309,8 +323,13 @@ public:
     int yPressed = _checkPressedY(repeat);
     if (xPressed != 0 || yPressed != 0)
     {
+// Serial.print(xPressed);
+// Serial.print("/");
+// Serial.println(yPressed);
       long nowMillis = millis();
       long diffMillis = nowMillis - this->lastJoystickPressMillis;
+// Serial.println(diffMillis);
+// delay(200);
       if (diffMillis > 50)
       {
         lastCheckJoystickPress.pressedX = 0;
@@ -419,6 +438,8 @@ protected:
   {
     if (button == 'A')
     {
+// Serial.println(yTracker->checkPressedBypass());
+// delay(200);
       return yTracker != NULL && (yTracker->checkPressedBypass() == -1);
     }
     else if (button == 'B')
@@ -427,11 +448,11 @@ protected:
     }
     else if (button == 'C')
     {
-      return yTracker != NULL && (yTracker->checkPressedBypass() == -1);
+      return yTracker != NULL && (yTracker->checkPressedBypass() == 1);
     }
     else if (button == 'D')
     {
-      return xTracker != NULL && (xTracker->checkPressedBypass() == 1);
+      return xTracker != NULL && (xTracker->checkPressedBypass() == -1);
     }
     else if (button == 'E')
     {
@@ -452,7 +473,7 @@ private:
 class ButtonJoystick : public JoystickInterface
 {
 public:
-  ButtonJoystick(ButtonPressTracker *leftTracker, ButtonPressTracker *rightTracker, ButtonPressTracker *upTracker, ButtonPressTracker *downTracker, ButtonPressTracker *midTracker) : JoystickInterface()
+  ButtonJoystick(ButtonPressTracker *upTracker, ButtonPressTracker *rightTracker, ButtonPressTracker *downTracker, ButtonPressTracker *leftTracker, ButtonPressTracker *midTracker) : JoystickInterface()
   {
     this->leftTracker = leftTracker;
     this->rightTracker = rightTracker;
@@ -591,25 +612,53 @@ const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
       return yPressed == -1 ? "↗" : "↘";
     }
   }
-  return NULL;
+  return ".";
 }
 
 
+JoystickPressTracker* SetupNewJoystickPressTracker(uint8_t pin, bool reverseDir, bool autoTune = true) {
+    pinMode(pin, INPUT);
+    return new JoystickPressTracker(pin, reverseDir, autoTune);
+}
 ButtonPressTracker* SetupNewButtonPressTracker(uint8_t pin) {
     pinMode(pin, INPUT_PULLUP);
     return new ButtonPressTracker(pin);
 }
 
 
-#if defined(ESP8266)
-ButtonPressTracker *upTracker = SetupNewButtonPressTracker(D7);
-ButtonPressTracker *downTracker = SetupNewButtonPressTracker(D6);
-ButtonPressTracker *leftTracker = SetupNewButtonPressTracker(D5);
-ButtonPressTracker *rightTracker = SetupNewButtonPressTracker(D4);
-ButtonPressTracker *midTracker = SetupNewButtonPressTracker(D3);
-ButtonJoystick *joystick = new ButtonJoystick(leftTracker, rightTracker, upTracker, downTracker, midTracker);
-const int JoystickCount = 1;
-JoystickInterface *Joysticks[JoystickCount] = {joystick};
+#if defined(ARDUINO_AVR_UNO)
+  JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(A0, false);
+  JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(A1, true);
+  ButtonPressTracker *swTracker = SetupNewButtonPressTracker(8);
+  JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
+  const int JoystickCount = 1;
+  JoystickInterface *Joysticks[JoystickCount] = {joystick};
+#elif defined(PICO_SDK_VERSION_MAJOR)
+  JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(26, true);
+  JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(27, true);
+  ButtonPressTracker *swTracker = SetupNewButtonPressTracker(16);
+  JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
+  const int JoystickCount = 1;
+  JoystickInterface *Joysticks[JoystickCount] = {joystick};
+#elif defined(ESP32)
+  JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(14, false);
+  JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(12, false);
+  ButtonPressTracker *swTracker = SetupNewButtonPressTracker(13);
+  JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
+  const int JoystickCount = 1;
+  JoystickInterface *Joysticks[JoystickCount] = {joystick};
+#elif defined(ESP8266)
+  ButtonPressTracker *upTracker = SetupNewButtonPressTracker(D7);
+  ButtonPressTracker *downTracker = SetupNewButtonPressTracker(D6);
+  ButtonPressTracker *leftTracker = SetupNewButtonPressTracker(D5);
+  ButtonPressTracker *rightTracker = SetupNewButtonPressTracker(D4);
+  ButtonPressTracker *midTracker = SetupNewButtonPressTracker(D3);
+  ButtonPressTracker *setTracker = SetupNewButtonPressTracker(D2);
+  ButtonPressTracker *rstTracker = SetupNewButtonPressTracker(D1);
+  ButtonJoystick *joystick1 = new ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, midTracker);
+  ButtonJoystick *joystick2 = new ButtonJoystick(NULL, rstTracker, NULL, setTracker, NULL);
+  const int JoystickCount = 2;
+  JoystickInterface *Joysticks[JoystickCount] = {joystick1,joystick2};
 #endif
 
 void setup()
@@ -640,4 +689,5 @@ void loop()
     }
     Serial.println();
   }
+  //delay(200);
 }

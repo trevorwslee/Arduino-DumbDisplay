@@ -5,7 +5,11 @@
 #include <limits.h>
 
 
-#if defined(ARDUINO_AVR_NANO)
+#if defined(ARDUINO_AVR_UNO)
+#define VRX  A0
+#define VRY  A1
+#define SW   8
+#elif defined(ARDUINO_AVR_NANO)
 #define VRX  A2
 #define VRY  A1
 #define SW   A0
@@ -13,6 +17,10 @@
 #define VRX 26
 #define VRY 27
 #define SW  16
+#elif defined(ESP32)
+#define VRX  12
+#define VRY  14
+#define SW   13
 #elif defined(ESP8266)
 #define BUTTONS_ONLY 
 #define UP    D7
