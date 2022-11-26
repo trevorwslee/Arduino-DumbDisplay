@@ -1,4 +1,4 @@
-const long JoystickPressAutoRepeatMillis = 0; // 0 means no auto repeat
+const long JoystickPressAutoRepeatMillis = 200; // 0 means no auto repeat
 
 
 struct JoystickPress
@@ -9,7 +9,9 @@ struct JoystickPress
 
 struct JoystickPressCode
 {
-  bool pressed[5];
+  int xPressed;
+  int yPressed;
+  bool swPressed;
 };
 
 class JoystickInterface
@@ -18,11 +20,12 @@ public:
   static const long BlackOutMillis = 50;
 
 protected:
-  JoystickInterface()
+  JoystickInterface(bool buttonsOnly)
   {
-    lastCheckJoystickPress.xPressed = 0;
-    lastCheckJoystickPress.yPressed = 0;
-    lastJoystickPressMillis = 0;
+    this->buttonsOnly = buttonsOnly;
+    this->lastCheckJoystickPress.xPressed = 0;
+    this->lastCheckJoystickPress.yPressed = 0;
+    this->lastJoystickPressMillis = 0;
   }
 
 public:
@@ -75,29 +78,35 @@ public:
   }
   inline bool checkSWPressed(int repeat = 0)
   {
-    return checkPressed('E', repeat);
+    return _checkPressed('E', repeat);
+  }
+  inline bool forButtonsOnly() {
+    return this->buttonsOnly;
   }
   inline bool checkAPressed(int repeat)
   {
-    return checkPressed('A', repeat);
+    return _checkPressed('A', repeat);
   }
   inline bool checkBPressed(int repeat)
   {
-    return checkPressed('B', repeat);
+    return _checkPressed('B', repeat);
   }
   inline bool checkCPressed(int repeat)
   {
-    return checkPressed('C', repeat);
+    return _checkPressed('C', repeat);
   }
   inline bool checkDPressed(int repeat)
   {
-    return checkPressed('D', repeat);
+    return _checkPressed('D', repeat);
   }
 
 public:
   bool checkJoystickPressCode(JoystickPressCode &joystickPressCode, int repeat = 0)
   {
-    return false;
+    joystickPressCode.xPressed = _checkPressedX(repeat, true);
+    joystickPressCode.yPressed = _checkPressedY(repeat, true);
+    joystickPressCode.swPressed = _checkPressed('E', repeat);
+    return joystickPressCode.xPressed != 0 && joystickPressCode.yPressed != 0 && joystickPressCode.swPressed;
     // joystickPressCode.xPressed = 0;
     // joystickPressCode.yPressed = 0;
     // joystickPressCode.swPressed = false;
@@ -123,18 +132,21 @@ protected:
   /**
    * @param button can be 'A' to 'E'
    */
-  inline bool checkPressed(char button, int repeat)
+  inline bool _checkPressed(char button, int repeat)
   {
-    return _checkPressed(button, repeat);
+    return _checkPressed(button, repeat, false);
+  }
+  inline bool _checkPressedBypass(char button) {
+    return _checkPressed(button, 0, true);
   }
 
 protected:
   virtual int _checkPressedX(int repeat, bool raw);
   virtual int _checkPressedY(int repeat, bool raw);
-  virtual bool _checkPressed(char button, int repeat);
-  virtual bool _checkPressedBypass(char button);
+  virtual bool _checkPressed(char button, int repeat, bool bypass);
 
 private:
+  bool buttonsOnly;
   JoystickPress lastCheckJoystickPress;
   long lastJoystickPressMillis;
 };
@@ -160,6 +172,26 @@ public:
     setPressed(reading == 0);
     return pressed;
   }
+  inline bool checkPressed(int repeat, bool bypass) {
+    if (bypass) {
+      return checkPressedBypass();
+    } else {
+      return checkPressed(repeat);
+    }
+  }
+//   inline bool debug_checkPressed(int repeat, bool bypass, char button) {
+//     if (bypass) {
+// //Serial.println("BYPASS");
+//       return checkPressedBypass();
+//     } else {
+// // Serial.print(button);
+// // Serial.print(">");      
+// // Serial.println(repeat);
+//       return checkPressed(repeat);
+//     }
+//     //delay(50);
+//   }
+
 
 private:
   bool setPressed(bool pressed, int repeat = 0)
@@ -213,34 +245,6 @@ private:
   long nextRepeatMillis;
 };
 
-class DecodedJoystick : public JoystickInterface
-{
-public:
-  DecodedJoystick() : JoystickInterface()
-  {
-    joystickPressCodeValid = false;
-  }
-
-public:
-  // void decode(JoystickPressCode *joystickPressCode)
-  // {
-  //   if (joystickPressCode != NULL)
-  //   {
-  //     this->joystickPressCode.xPressed = joystickPressCode->xPressed;
-  //     this->joystickPressCode.yPressed = joystickPressCode->yPressed;
-  //     this->joystickPressCode.swPressed = joystickPressCode->swPressed;
-  //     this->joystickPressCodeValid = true;
-  //   }
-  //   else
-  //   {
-  //     this->joystickPressCodeValid = false;
-  //   }
-  // }
-
-private:
-  JoystickPressCode joystickPressCode;
-  bool joystickPressCodeValid;
-};
 
 class JoystickPressTracker
 {
@@ -302,6 +306,19 @@ public:
     // Serial.print(">>");
     // Serial.println(pressed);
     return pressed;
+  }
+  int8_t checkPressed(int repeat, bool bypass) {
+    if (bypass) {
+      return checkPressedBypass();
+    } else {
+      return checkPressed(repeat);
+    }
+  }
+  inline int one() {
+    return this->reverseDir ? -1 : 1;
+  }
+  inline int minusOne() {
+    return this->reverseDir ? 1 : -1;
   }
   int readBypass()
   {
@@ -375,6 +392,8 @@ private:
           this->nextRepeatMillis = 0;
           this->autoRepeatDir = 0;
         }
+        // Serial.print(repeat);
+        // Serial.print(":");
         // Serial.print(reading);
         // Serial.print("=>");
         // Serial.println(oriPressedDir);
@@ -459,7 +478,7 @@ private:
 class JoystickJoystick : public JoystickInterface
 {
 public:
-  JoystickJoystick(JoystickPressTracker *xTracker, JoystickPressTracker *yTracker, ButtonPressTracker *swTracker) : JoystickInterface()
+  JoystickJoystick(JoystickPressTracker *xTracker, JoystickPressTracker *yTracker, ButtonPressTracker *swTracker) : JoystickInterface(false)
   {
     this->xTracker = xTracker;
     this->yTracker = yTracker;
@@ -469,68 +488,75 @@ public:
 protected:
   virtual int _checkPressedX(int repeat, bool raw)
   {
-    return xTracker != NULL ? xTracker->checkPressed(repeat) : 0;
+    int pressed = xTracker != NULL ? xTracker->checkPressed(repeat) : 0;
+    // if (pressed != 0) {
+    //   Serial.print("%X=");
+    //   Serial.println(pressed);
+    // }
+    return pressed;
   }
   virtual int _checkPressedY(int repeat, bool raw)
   {
     return yTracker != NULL ? yTracker->checkPressed(repeat) : 0;
   }
-  virtual bool _checkPressed(char button, int repeat)
+  virtual bool _checkPressed(char button, int repeat, bool bypass)
   {
     if (button == 'A')
     {
-      return yTracker != NULL && (yTracker->checkPressed(repeat) == -1);
+      return yTracker != NULL && (yTracker->checkPressed(repeat, bypass) == -1);
     }
     else if (button == 'B')
     {
-      return xTracker != NULL && (xTracker->checkPressed(repeat) == 1);
+      return xTracker != NULL && (xTracker->checkPressed(repeat, bypass) == 1);
     }
     else if (button == 'C')
     {
-      return yTracker != NULL && (yTracker->checkPressed(repeat) == -1);
+      return yTracker != NULL && (yTracker->checkPressed(repeat, bypass) == 1);
     }
     else if (button == 'D')
     {
-      return xTracker != NULL && (xTracker->checkPressed(repeat) == 1);
+      return xTracker != NULL && (xTracker->checkPressed(repeat, bypass) == -1);
     }
     else if (button == 'E')
     {
-      return swTracker != NULL && swTracker->checkPressed(repeat);
+      bool pressed = swTracker != NULL && swTracker->checkPressed(repeat, bypass);
+if (pressed && repeat != 0 && !bypass) { Serial.print(repeat); Serial.println(" <SW>"); }
+      return pressed;
     }
     else
     {
       return false;
     }
   }
-  virtual bool _checkPressedBypass(char button)
-  {
-    if (button == 'A')
-    {
-      // Serial.println(yTracker->checkPressedBypass());
-      // delay(200);
-      return yTracker != NULL && (yTracker->checkPressedBypass() == -1);
-    }
-    else if (button == 'B')
-    {
-      return xTracker != NULL && (xTracker->checkPressedBypass() == 1);
-    }
-    else if (button == 'C')
-    {
-      return yTracker != NULL && (yTracker->checkPressedBypass() == 1);
-    }
-    else if (button == 'D')
-    {
-      return xTracker != NULL && (xTracker->checkPressedBypass() == -1);
-    }
-    else if (button == 'E')
-    {
-      return swTracker != NULL && swTracker->checkPressedBypass();
-    }
-    else
-    {
-      return false;
-    }
-  }
+  // virtual bool _checkPressedBypass(char button)
+  // {
+  //   if (button == 'A')
+  //   {
+  //     // Serial.println(yTracker->checkPressedBypass());
+  //     // delay(200);
+  //     return yTracker != NULL && (yTracker->checkPressedBypass() == -1);
+  //   }
+  //   else if (button == 'B')
+  //   {
+  //     return xTracker != NULL && (xTracker->checkPressedBypass() == 1);
+  //   }
+  //   else if (button == 'C')
+  //   {
+  //     return yTracker != NULL && (yTracker->checkPressedBypass() == 1);
+  //   }
+  //   else if (button == 'D')
+  //   {
+  //     return xTracker != NULL && (xTracker->checkPressedBypass() == -1);
+  //   }
+  //   else if (button == 'E')
+  //   {
+  //     return swTracker != NULL && swTracker->checkPressedBypass();
+  //   }
+  //   else
+  //   {
+  //     return false;
+  //   }
+  // }
 
 private:
   JoystickPressTracker *xTracker;
@@ -541,25 +567,24 @@ private:
 class ButtonJoystickBasic : public JoystickInterface
 {
 protected:
-  ButtonJoystickBasic(bool buttonsOnly) : JoystickInterface()
+  ButtonJoystickBasic(bool buttonsOnly) : JoystickInterface(buttonsOnly)
   {
-    this->buttonsOnly = buttonsOnly;
   }
 
 protected:
   virtual int _checkPressedX(int repeat, bool raw)
   {
-    // Serial.print("?");
+//if (!raw) { Serial.print(repeat); Serial.println(); delay(100); }
     bool pressedB = _checkPressed('B', repeat);
     bool pressedD = _checkPressed('D', repeat);
     if (pressedB)
     {
-      // Serial.println("*B");
+//Serial.println("*B");
       return raw && pressedD ? 2 : -1;
     }
     else if (pressedD)
     {
-      // Serial.println("*D");
+//Serial.println("*D");
       return 1;
     }
     else
@@ -573,7 +598,7 @@ protected:
     bool pressedC = _checkPressed('C', repeat);
     if (pressedA)
     {
-      // Serial.println("*A");
+//Serial.println("*A");
       return raw && pressedC ? 2 : -1;
     }
     else if (pressedC)
@@ -641,9 +666,38 @@ protected:
   //   }
   // }
 
-private:
-  bool buttonsOnly;
 };
+
+
+class DecodedJoystick : public JoystickInterface
+{
+public:
+  DecodedJoystick(bool buttonsOnly) : JoystickInterface(buttonsOnly)
+  {
+    joystickPressCodeValid = false;
+  }
+
+public:
+  // void decode(JoystickPressCode *joystickPressCode)
+  // {
+  //   if (joystickPressCode != NULL)
+  //   {
+  //     this->joystickPressCode.xPressed = joystickPressCode->xPressed;
+  //     this->joystickPressCode.yPressed = joystickPressCode->yPressed;
+  //     this->joystickPressCode.swPressed = joystickPressCode->swPressed;
+  //     this->joystickPressCodeValid = true;
+  //   }
+  //   else
+  //   {
+  //     this->joystickPressCodeValid = false;
+  //   }
+  // }
+
+private:
+  JoystickPressCode joystickPressCode;
+  bool joystickPressCodeValid;
+};
+
 
 
 class ButtonJoystick : public ButtonJoystickBasic
@@ -704,60 +758,64 @@ protected:
   //     return 0;
   //   }
   // }
-  virtual bool _checkPressed(char button, int repeat)
+  virtual bool _checkPressed(char button, int repeat, bool bypass)
   {
     if (button == 'A')
     {
-      return upTracker != NULL && upTracker->checkPressed(repeat);
+      bool pressed = upTracker != NULL && upTracker->checkPressed(repeat, bypass);
+if (pressed && repeat != 0 && !bypass) { Serial.print(repeat); Serial.println(" <A>"); }
+      return pressed;
     }
     else if (button == 'B')
     {
-      return rightTracker != NULL && rightTracker->checkPressed(repeat);
+      return rightTracker != NULL && rightTracker->checkPressed(repeat, bypass);
     }
     else if (button == 'C')
     {
-      return downTracker != NULL && downTracker->checkPressed(repeat);
+      return downTracker != NULL && downTracker->checkPressed(repeat, bypass);
     }
     else if (button == 'D')
     {
-      return leftTracker != NULL && leftTracker->checkPressed(repeat);
+      return leftTracker != NULL && leftTracker->checkPressed(repeat, bypass);
     }
     else if (button == 'E')
     {
-      return midTracker != NULL && midTracker->checkPressed(repeat);
+      bool pressed =  midTracker != NULL && midTracker->checkPressed(repeat, bypass);
+if (pressed && !bypass) { Serial.print(repeat); Serial.println(" <E>"); }
+      return pressed;
     }
     else
     {
       return false;
     }
   }
-  virtual bool _checkPressedBypass(char button)
-  {
-    if (button == 'A')
-    {
-      return upTracker != NULL && upTracker->checkPressedBypass();
-    }
-    else if (button == 'B')
-    {
-      return rightTracker != NULL && rightTracker->checkPressedBypass();
-    }
-    else if (button == 'C')
-    {
-      return downTracker != NULL && downTracker->checkPressedBypass();
-    }
-    else if (button == 'D')
-    {
-      return leftTracker != NULL && leftTracker->checkPressedBypass();
-    }
-    else if (button == 'E')
-    {
-      return midTracker != NULL && midTracker->checkPressedBypass();
-    }
-    else
-    {
-      return false;
-    }
-  }
+  // virtual bool _checkPressedBypass(char button)
+  // {
+  //   if (button == 'A')
+  //   {
+  //     return upTracker != NULL && upTracker->checkPressedBypass();
+  //   }
+  //   else if (button == 'B')
+  //   {
+  //     return rightTracker != NULL && rightTracker->checkPressedBypass();
+  //   }
+  //   else if (button == 'C')
+  //   {
+  //     return downTracker != NULL && downTracker->checkPressedBypass();
+  //   }
+  //   else if (button == 'D')
+  //   {
+  //     return leftTracker != NULL && leftTracker->checkPressedBypass();
+  //   }
+  //   else if (button == 'E')
+  //   {
+  //     return midTracker != NULL && midTracker->checkPressedBypass();
+  //   }
+  //   else
+  //   {
+  //     return false;
+  //   }
+  // }
 
 private:
   ButtonPressTracker *leftTracker;
@@ -900,7 +958,7 @@ void loop()
   for (int i = 0; i < JoystickCount; i++)
   {
     joystickPresses[i] = Joysticks[i]->checkJoystickPress(JoystickPressAutoRepeatMillis);
-    swPresses[i] = Joysticks[i]->checkSWPressed();
+    swPresses[i] = Joysticks[i]->checkSWPressed(JoystickPressAutoRepeatMillis);
     show |= joystickPresses[i] != NULL || swPresses[i];
   }
   if (show)
