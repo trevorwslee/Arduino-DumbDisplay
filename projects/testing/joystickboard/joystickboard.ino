@@ -25,12 +25,10 @@ struct JoystickPress
   int yPressed; // -1, 0 or 1
 };
 
-struct JoystickPressCode : JoystickPress {
+struct JoystickPressCode : JoystickPress
+{
   bool swPressed;
- 
 };
-
-
 
 class JoystickInterface
 {
@@ -93,37 +91,60 @@ public:
     }
     return NULL;
   }
-  bool checkSWPressed(int repeat = 0)
+  inline bool checkSWPressed(int repeat = 0)
   {
-    return checkButtonPressed('E');
+    return checkButtonPressed('E', repeat);
   }
-  /**
-   * @param button can be 'A' to 'E'
-   */
-  bool checkButtonPressed(char button, int repeat = 0)
+  inline bool checkAPressed(int repeat)
   {
-    return _checkPressed(button, repeat);
+    return checkButtonPressed('A', repeat);
+  }
+  inline bool checkBPressed(int repeat)
+  {
+    return checkButtonPressed('B', repeat);
+  }
+  inline bool checkCPressed(int repeat)
+  {
+    return checkButtonPressed('C', repeat);
+  }
+  inline bool checkDPressed(int repeat)
+  {
+    return checkButtonPressed('D', repeat);
   }
 
 public:
-  bool checkJoystickPressCode(JoystickPressCode& joystickPressCode, int repeat = 0) {
+  bool checkJoystickPressCode(JoystickPressCode &joystickPressCode, int repeat = 0)
+  {
     joystickPressCode.xPressed = 0;
     joystickPressCode.yPressed = 0;
     joystickPressCode.swPressed = false;
-    const JoystickPress* joystickPress = checkJoystickPress(repeat);
+    const JoystickPress *joystickPress = checkJoystickPress(repeat);
     bool swPressed = checkSWPressed(repeat);
-    if (joystickPress != NULL || swPressed) {
-      if (joystickPress != NULL) {
+    if (joystickPress != NULL || swPressed)
+    {
+      if (joystickPress != NULL)
+      {
         joystickPressCode.xPressed = joystickPress->xPressed;
         joystickPressCode.yPressed = joystickPress->yPressed;
       }
       joystickPressCode.swPressed = swPressed;
       return true;
-    } else {
+    }
+    else
+    {
       return false;
     }
   }
- 
+
+protected:
+  /**
+   * @param button can be 'A' to 'E'
+   */
+  inline bool checkButtonPressed(char button, int repeat)
+  {
+    return _checkPressed(button, repeat);
+  }
+
 protected:
   virtual int _checkPressedX(int repeat);
   virtual int _checkPressedY(int repeat);
@@ -209,25 +230,33 @@ private:
   long nextRepeatMillis;
 };
 
-class DecodedJoystick: public JoystickInterface {
+class DecodedJoystick : public JoystickInterface
+{
 public:
-  DecodedJoystick() : JoystickInterface() {
+  DecodedJoystick() : JoystickInterface()
+  {
     joystickPressCodeValid = false;
   }
+
 public:
-  void decode(JoystickPressCode* joystickPressCode) {
-    if (joystickPressCode != NULL) {
+  void decode(JoystickPressCode *joystickPressCode)
+  {
+    if (joystickPressCode != NULL)
+    {
       this->joystickPressCode.xPressed = joystickPressCode->xPressed;
       this->joystickPressCode.yPressed = joystickPressCode->yPressed;
       this->joystickPressCode.swPressed = joystickPressCode->swPressed;
       this->joystickPressCodeValid = true;
-    } else {
+    }
+    else
+    {
       this->joystickPressCodeValid = false;
     }
-  }  
+  }
+
 private:
   JoystickPressCode joystickPressCode;
-  bool joystickPressCodeValid;  
+  bool joystickPressCodeValid;
 };
 
 class JoystickPressTracker
@@ -654,19 +683,19 @@ public:
   ButtonsOnly(ButtonPressTracker *aTracker, ButtonPressTracker *bTracker, ButtonPressTracker *cTracker, ButtonPressTracker *dTracker) : ButtonJoystick(aTracker, bTracker, cTracker, dTracker, NULL, true)
   {
   }
-public:
-  inline bool checkButtonAPressed(int repeat) {
-    return checkButtonPressed('A', repeat);
-  }  
-  inline bool checkButtonBPressed(int repeat) {
-    return checkButtonPressed('B', repeat);
-  }  
-  inline bool checkButtonCPressed(int repeat) {
-    return checkButtonPressed('C', repeat);
-  }  
-  inline bool checkButtonDPressed(int repeat) {
-    return checkButtonPressed('D', repeat);
-  }  
+  // public:
+  //   inline bool checkButtonAPressed(int repeat) {
+  //     return checkButtonPressed('A', repeat);
+  //   }
+  //   inline bool checkButtonBPressed(int repeat) {
+  //     return checkButtonPressed('B', repeat);
+  //   }
+  //   inline bool checkButtonCPressed(int repeat) {
+  //     return checkButtonPressed('C', repeat);
+  //   }
+  //   inline bool checkButtonDPressed(int repeat) {
+  //     return checkButtonPressed('D', repeat);
+  //   }
 };
 
 const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
