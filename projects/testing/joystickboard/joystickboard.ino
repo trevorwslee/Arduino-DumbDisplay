@@ -1,23 +1,5 @@
-// ***
-// * joystick press better if min / max detected (by moving the joystick)
-// ***
-
-//#include <limits.h>
-
-// #if defined(ARDUINO_AVR_NANO)
-// #define VRX A2
-// #define VRY A1
-// #define SW A0
-// #elif defined(ESP8266)
-// #define UP D7
-// #define DOWN D6
-// #define LEFT D5
-// #define RIGHT D4
-// #define SW D1
-// #endif
-
-// const int JoystickPressThreshold = 100;
 const long JoystickPressAutoRepeatMillis = 0; // 0 means no auto repeat
+
 
 struct JoystickPress
 {
@@ -46,8 +28,8 @@ protected:
 public:
   const JoystickPress *checkJoystickPress(int repeat = 0)
   {
-    int xPressed = _checkPressedX(repeat);
-    int yPressed = _checkPressedY(repeat);
+    int xPressed = _checkPressedX(repeat, false);
+    int yPressed = _checkPressedY(repeat, false);
     if (xPressed != 0 || yPressed != 0)
     {
       // Serial.print(xPressed);
@@ -93,23 +75,23 @@ public:
   }
   inline bool checkSWPressed(int repeat = 0)
   {
-    return checkButtonPressed('E', repeat);
+    return checkPressed('E', repeat);
   }
   inline bool checkAPressed(int repeat)
   {
-    return checkButtonPressed('A', repeat);
+    return checkPressed('A', repeat);
   }
   inline bool checkBPressed(int repeat)
   {
-    return checkButtonPressed('B', repeat);
+    return checkPressed('B', repeat);
   }
   inline bool checkCPressed(int repeat)
   {
-    return checkButtonPressed('C', repeat);
+    return checkPressed('C', repeat);
   }
   inline bool checkDPressed(int repeat)
   {
-    return checkButtonPressed('D', repeat);
+    return checkPressed('D', repeat);
   }
 
 public:
@@ -141,14 +123,14 @@ protected:
   /**
    * @param button can be 'A' to 'E'
    */
-  inline bool checkButtonPressed(char button, int repeat)
+  inline bool checkPressed(char button, int repeat)
   {
     return _checkPressed(button, repeat);
   }
 
 protected:
-  virtual int _checkPressedX(int repeat);
-  virtual int _checkPressedY(int repeat);
+  virtual int _checkPressedX(int repeat, bool raw);
+  virtual int _checkPressedY(int repeat, bool raw);
   virtual bool _checkPressed(char button, int repeat);
   virtual bool _checkPressedBypass(char button);
 
@@ -485,11 +467,11 @@ public:
   }
 
 protected:
-  virtual int _checkPressedX(int repeat)
+  virtual int _checkPressedX(int repeat, bool raw)
   {
     return xTracker != NULL ? xTracker->checkPressed(repeat) : 0;
   }
-  virtual int _checkPressedY(int repeat)
+  virtual int _checkPressedY(int repeat, bool raw)
   {
     return yTracker != NULL ? yTracker->checkPressed(repeat) : 0;
   }
@@ -556,26 +538,16 @@ private:
   ButtonPressTracker *swTracker;
 };
 
-class ButtonJoystick : public JoystickInterface
+class ButtonJoystickBasic : public JoystickInterface
 {
-public:
-  ButtonJoystick(ButtonPressTracker *upTracker, ButtonPressTracker *rightTracker, ButtonPressTracker *downTracker, ButtonPressTracker *leftTracker, ButtonPressTracker *midTracker) : ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, midTracker, false)
-  {
-  }
-
 protected:
-  ButtonJoystick(ButtonPressTracker *upTracker, ButtonPressTracker *rightTracker, ButtonPressTracker *downTracker, ButtonPressTracker *leftTracker, ButtonPressTracker *midTracker, bool buttonsOnly) : JoystickInterface()
+  ButtonJoystickBasic(bool buttonsOnly) : JoystickInterface()
   {
-    this->leftTracker = leftTracker;
-    this->rightTracker = rightTracker;
-    this->upTracker = upTracker;
-    this->downTracker = downTracker;
-    this->midTracker = midTracker;
     this->buttonsOnly = buttonsOnly;
   }
 
 protected:
-  virtual int _checkPressedX(int repeat)
+  virtual int _checkPressedX(int repeat, bool raw)
   {
     // Serial.print("?");
     bool pressedB = _checkPressed('B', repeat);
@@ -583,7 +555,7 @@ protected:
     if (pressedB)
     {
       // Serial.println("*B");
-      return -1;
+      return raw && pressedD ? 2 : -1;
     }
     else if (pressedD)
     {
@@ -595,14 +567,14 @@ protected:
       return 0;
     }
   }
-  virtual int _checkPressedY(int repeat)
+  virtual int _checkPressedY(int repeat, bool raw)
   {
     bool pressedA = _checkPressed('A', repeat);
     bool pressedC = _checkPressed('C', repeat);
     if (pressedA)
     {
       // Serial.println("*A");
-      return -1;
+      return raw && pressedC ? 2 : -1;
     }
     else if (pressedC)
     {
@@ -614,6 +586,124 @@ protected:
       return 0;
     }
   }
+  // virtual bool _checkPressed(char button, int repeat)
+  // {
+  //   if (button == 'A')
+  //   {
+  //     return upTracker != NULL && upTracker->checkPressed(repeat);
+  //   }
+  //   else if (button == 'B')
+  //   {
+  //     return rightTracker != NULL && rightTracker->checkPressed(repeat);
+  //   }
+  //   else if (button == 'C')
+  //   {
+  //     return downTracker != NULL && downTracker->checkPressed(repeat);
+  //   }
+  //   else if (button == 'D')
+  //   {
+  //     return leftTracker != NULL && leftTracker->checkPressed(repeat);
+  //   }
+  //   else if (button == 'E')
+  //   {
+  //     return midTracker != NULL && midTracker->checkPressed(repeat);
+  //   }
+  //   else
+  //   {
+  //     return false;
+  //   }
+  // }
+  // virtual bool _checkPressedBypass(char button)
+  // {
+  //   if (button == 'A')
+  //   {
+  //     return upTracker != NULL && upTracker->checkPressedBypass();
+  //   }
+  //   else if (button == 'B')
+  //   {
+  //     return rightTracker != NULL && rightTracker->checkPressedBypass();
+  //   }
+  //   else if (button == 'C')
+  //   {
+  //     return downTracker != NULL && downTracker->checkPressedBypass();
+  //   }
+  //   else if (button == 'D')
+  //   {
+  //     return leftTracker != NULL && leftTracker->checkPressedBypass();
+  //   }
+  //   else if (button == 'E')
+  //   {
+  //     return midTracker != NULL && midTracker->checkPressedBypass();
+  //   }
+  //   else
+  //   {
+  //     return false;
+  //   }
+  // }
+
+private:
+  bool buttonsOnly;
+};
+
+
+class ButtonJoystick : public ButtonJoystickBasic
+{
+public:
+  ButtonJoystick(ButtonPressTracker *upTracker, ButtonPressTracker *rightTracker, ButtonPressTracker *downTracker, ButtonPressTracker *leftTracker, ButtonPressTracker *midTracker) : ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, midTracker, false)
+  {
+  }
+
+protected:
+  ButtonJoystick(ButtonPressTracker *upTracker, ButtonPressTracker *rightTracker, ButtonPressTracker *downTracker, ButtonPressTracker *leftTracker, ButtonPressTracker *midTracker, bool buttonsOnly) : ButtonJoystickBasic(buttonsOnly)
+  {
+    this->leftTracker = leftTracker;
+    this->rightTracker = rightTracker;
+    this->upTracker = upTracker;
+    this->downTracker = downTracker;
+    this->midTracker = midTracker;
+    //this->buttonsOnly = buttonsOnly;
+  }
+
+protected:
+  // virtual int _checkPressedX(int repeat, bool raw)
+  // {
+  //   // Serial.print("?");
+  //   bool pressedB = _checkPressed('B', repeat);
+  //   bool pressedD = _checkPressed('D', repeat);
+  //   if (pressedB)
+  //   {
+  //     // Serial.println("*B");
+  //     return raw && pressedD ? 2 : -1;
+  //   }
+  //   else if (pressedD)
+  //   {
+  //     // Serial.println("*D");
+  //     return 1;
+  //   }
+  //   else
+  //   {
+  //     return 0;
+  //   }
+  // }
+  // virtual int _checkPressedY(int repeat, bool raw)
+  // {
+  //   bool pressedA = _checkPressed('A', repeat);
+  //   bool pressedC = _checkPressed('C', repeat);
+  //   if (pressedA)
+  //   {
+  //     // Serial.println("*A");
+  //     return raw && pressedC ? 2 : -1;
+  //   }
+  //   else if (pressedC)
+  //   {
+  //     // Serial.println("*C");
+  //     return 1;
+  //   }
+  //   else
+  //   {
+  //     return 0;
+  //   }
+  // }
   virtual bool _checkPressed(char button, int repeat)
   {
     if (button == 'A')
@@ -675,7 +765,7 @@ private:
   ButtonPressTracker *upTracker;
   ButtonPressTracker *downTracker;
   ButtonPressTracker *midTracker;
-  bool buttonsOnly;
+  //bool buttonsOnly;
 };
 
 class ButtonsOnly : public ButtonJoystick
