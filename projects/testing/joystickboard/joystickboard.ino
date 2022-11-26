@@ -21,9 +21,16 @@ const long JoystickPressAutoRepeatMillis = 0; // 0 means no auto repeat
 
 struct JoystickPress
 {
-  int pressedX; // -1, 0 or 1
-  int pressedY; // -1, 0 or 1
+  int xPressed; // -1, 0 or 1
+  int yPressed; // -1, 0 or 1
 };
+
+struct JoystickPressCode : JoystickPress {
+  bool swPressed;
+ 
+};
+
+
 
 class JoystickInterface
 {
@@ -33,8 +40,8 @@ public:
 protected:
   JoystickInterface()
   {
-    lastCheckJoystickPress.pressedX = 0;
-    lastCheckJoystickPress.pressedY = 0;
+    lastCheckJoystickPress.xPressed = 0;
+    lastCheckJoystickPress.yPressed = 0;
     lastJoystickPressMillis = 0;
   }
 
@@ -54,8 +61,8 @@ public:
       // delay(200);
       if (diffMillis >= BlackOutMillis /*50*/)
       {
-        lastCheckJoystickPress.pressedX = 0;
-        lastCheckJoystickPress.pressedY = 0;
+        lastCheckJoystickPress.xPressed = 0;
+        lastCheckJoystickPress.yPressed = 0;
         bool pressedA = _checkPressedBypass('A');
         bool pressedB = _checkPressedBypass('B');
         bool pressedC = _checkPressedBypass('C');
@@ -63,22 +70,22 @@ public:
         if (pressedB)
         {
           // Serial.println("B");
-          lastCheckJoystickPress.pressedX = 1;
+          lastCheckJoystickPress.xPressed = 1;
         }
         else if (pressedD)
         {
           // Serial.println("D");
-          lastCheckJoystickPress.pressedX = -1;
+          lastCheckJoystickPress.xPressed = -1;
         }
         if (pressedA)
         {
           // Serial.println("A");
-          lastCheckJoystickPress.pressedY = -1;
+          lastCheckJoystickPress.yPressed = -1;
         }
         else if (pressedC)
         {
           // Serial.println("C");
-          lastCheckJoystickPress.pressedY = 1;
+          lastCheckJoystickPress.yPressed = 1;
         }
         lastJoystickPressMillis = nowMillis;
         return &lastCheckJoystickPress;
@@ -98,6 +105,25 @@ public:
     return _checkPressed(button, repeat);
   }
 
+public:
+  bool checkJoystickPressCode(JoystickPressCode& joystickPressCode, int repeat = 0) {
+    joystickPressCode.xPressed = 0;
+    joystickPressCode.yPressed = 0;
+    joystickPressCode.swPressed = false;
+    const JoystickPress* joystickPress = checkJoystickPress(repeat);
+    bool swPressed = checkSWPressed(repeat);
+    if (joystickPress != NULL || swPressed) {
+      if (joystickPress != NULL) {
+        joystickPressCode.xPressed = joystickPress->xPressed;
+        joystickPressCode.yPressed = joystickPress->yPressed;
+      }
+      joystickPressCode.swPressed = swPressed;
+      return true;
+    } else {
+      return false;
+    }
+  }
+ 
 protected:
   virtual int _checkPressedX(int repeat);
   virtual int _checkPressedY(int repeat);
@@ -181,6 +207,27 @@ private:
   bool pressed;
   long blackOutMillis;
   long nextRepeatMillis;
+};
+
+class DecodedJoystick: public JoystickInterface {
+public:
+  DecodedJoystick() : JoystickInterface() {
+    joystickPressCodeValid = false;
+  }
+public:
+  void decode(JoystickPressCode* joystickPressCode) {
+    if (joystickPressCode != NULL) {
+      this->joystickPressCode.xPressed = joystickPressCode->xPressed;
+      this->joystickPressCode.yPressed = joystickPressCode->yPressed;
+      this->joystickPressCode.swPressed = joystickPressCode->swPressed;
+      this->joystickPressCodeValid = true;
+    } else {
+      this->joystickPressCodeValid = false;
+    }
+  }  
+private:
+  JoystickPressCode joystickPressCode;
+  bool joystickPressCodeValid;  
 };
 
 class JoystickPressTracker
@@ -628,8 +675,8 @@ const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
   {
     return "#";
   }
-  int xPressed = joystickPress != NULL ? joystickPress->pressedX : 0;
-  int yPressed = joystickPress != NULL ? joystickPress->pressedY : 0;
+  int xPressed = joystickPress != NULL ? joystickPress->xPressed : 0;
+  int yPressed = joystickPress != NULL ? joystickPress->yPressed : 0;
   if (xPressed == 0 && yPressed != 0)
   {
     return yPressed == -1 ? "↑" : "↓";
@@ -675,6 +722,18 @@ JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker)
 ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
 const int JoystickCount = 2;
 JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
+#elif defined(ARDUINO_AVR_NANO)
+JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(A3, false);
+JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(A2, false);
+ButtonPressTracker *swTracker = SetupNewButtonPressTracker(A1);
+JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
+ButtonPressTracker *cTracker = SetupNewButtonPressTracker(5);
+ButtonPressTracker *bTracker = SetupNewButtonPressTracker(6);
+ButtonPressTracker *dTracker = SetupNewButtonPressTracker(7);
+ButtonPressTracker *aTracker = SetupNewButtonPressTracker(8);
+ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
+const int JoystickCount = 2;
+JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
 #elif defined(PICO_SDK_VERSION_MAJOR)
 JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(26, true);
 JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(27, true);
@@ -687,13 +746,6 @@ JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker)
 ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker;
 const int JoystickCount = 2;
 JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
-#elif defined(ESP32)
-JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(14, false);
-JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(12, false);
-ButtonPressTracker *swTracker = SetupNewButtonPressTracker(13);
-JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
-const int JoystickCount = 1;
-JoystickInterface *Joysticks[JoystickCount] = {joystick};
 #elif defined(ESP8266)
 ButtonPressTracker *upTracker = SetupNewButtonPressTracker(D7);
 ButtonPressTracker *downTracker = SetupNewButtonPressTracker(D6);
