@@ -169,7 +169,10 @@ public:
   bool checkPressedBypass()
   {
     int reading = digitalRead(this->pin);
-    setPressed(reading == 0);
+    if (true) {
+    } else {
+      setPressed(reading == 0);
+    }
     return pressed;
   }
   inline bool checkPressed(int repeat, bool bypass) {
@@ -300,7 +303,10 @@ public:
   int checkPressedBypass()
   {
     int reading = analogRead(this->pin);
-    setReading(reading);
+    if (true) {
+    } else {
+      setReading(reading);
+    }
     int pressed = readingToPressedDir(reading);
     //  Serial.print(reading);
     // Serial.print(">>");
@@ -376,6 +382,8 @@ private:
     }
     if (!this->needReset && this->pressedMillis != 0 && (this->pressedDir == oriPressedDir))
     {
+// Serial.println(reading);    
+// delay(100);
       long diffMillis = nowMillis - this->pressedMillis;
       if (diffMillis >= JoystickInterface::BlackOutMillis)
       {
@@ -488,11 +496,13 @@ public:
 protected:
   virtual int _checkPressedX(int repeat, bool raw)
   {
+    // Serial.println(repeat);
+    // delay(100);
     int pressed = xTracker != NULL ? xTracker->checkPressed(repeat) : 0;
-    // if (pressed != 0) {
-    //   Serial.print("%X=");
-    //   Serial.println(pressed);
-    // }
+    if (pressed != 0) {
+      // Serial.print("%X=");
+      // Serial.println(pressed);
+    }
     return pressed;
   }
   virtual int _checkPressedY(int repeat, bool raw)
@@ -763,7 +773,7 @@ protected:
     if (button == 'A')
     {
       bool pressed = upTracker != NULL && upTracker->checkPressed(repeat, bypass);
-if (pressed && repeat != 0 && !bypass) { Serial.print(repeat); Serial.println(" <A>"); }
+//if (pressed && repeat != 0 && !bypass) { Serial.print(repeat); Serial.println(" <A>"); }
       return pressed;
     }
     else if (button == 'B')
@@ -781,7 +791,7 @@ if (pressed && repeat != 0 && !bypass) { Serial.print(repeat); Serial.println(" 
     else if (button == 'E')
     {
       bool pressed =  midTracker != NULL && midTracker->checkPressed(repeat, bypass);
-if (pressed && !bypass) { Serial.print(repeat); Serial.println(" <E>"); }
+//if (pressed && !bypass) { Serial.print(repeat); Serial.println(" <E>"); }
       return pressed;
     }
     else
