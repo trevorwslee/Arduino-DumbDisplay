@@ -1408,7 +1408,13 @@ MIT
 
 # Change History
 
-. v0.9.4
+v0.9.4-r1
+  - enhanced "feedback"
+  - can be a "share target" for saving images to storage
+  - bug fix
+
+
+v0.9.4
   - enhanced graphical layers
   - bug fixes
 

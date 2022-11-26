@@ -886,13 +886,21 @@ const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
   }
   return ".";
 }
-// const char *ToRepresentationFromCode(JoystickPressCode* joystickPressCode) {
-//   if (joystickPressCode != NULL) {
-//     return ToRepresentation(joystickPressCode, joystickPressCode->swPressed);
-//   } else {
-//     return ".";
-//   }
-// }
+const char *ToRepresentationFromCode(JoystickPressCode* joystickPressCode) {
+  if (joystickPressCode != NULL) {
+    JoystickPress joystickPress;
+    int xPressedCode = joystickPressCode->xPressed;
+    int yPrexxedCode = joystickPressCode->yPressed;
+    if (xPressedCode == 2 || xPressedCode == 1) {
+      joystickPress.xPressed = 1;
+    } else if (xPressedCode == -1) {
+      joystickPress.xPressed = -1;
+    }
+    return ToRepresentation(&joystickPress, joystickPressCode->swPressed);
+  } else {
+    return ".";
+  }
+}
 
 
 JoystickPressTracker *SetupNewJoystickPressTracker(uint8_t pin, bool reverseDir, int autoTuneThreshold = JoystickPressTracker::DefAutoTuneThreshold)
