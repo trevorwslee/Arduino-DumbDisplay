@@ -939,7 +939,7 @@ ButtonPressTracker *dTracker = SetupNewButtonPressTracker(19);
 ButtonPressTracker *cTracker = SetupNewButtonPressTracker(20);
 ButtonPressTracker *bTracker = SetupNewButtonPressTracker(21);
 JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
-ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker;
+ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
 const int JoystickCount = 2;
 JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
 #elif defined(ESP8266)
