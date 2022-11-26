@@ -482,13 +482,19 @@ private:
 class ButtonJoystick : public JoystickInterface
 {
 public:
-  ButtonJoystick(ButtonPressTracker *upTracker, ButtonPressTracker *rightTracker, ButtonPressTracker *downTracker, ButtonPressTracker *leftTracker, ButtonPressTracker *midTracker) : JoystickInterface()
+  ButtonJoystick(ButtonPressTracker *upTracker, ButtonPressTracker *rightTracker, ButtonPressTracker *downTracker, ButtonPressTracker *leftTracker, ButtonPressTracker *midTracker) : ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, midTracker, false)
+  {
+  }
+
+protected:
+  ButtonJoystick(ButtonPressTracker *upTracker, ButtonPressTracker *rightTracker, ButtonPressTracker *downTracker, ButtonPressTracker *leftTracker, ButtonPressTracker *midTracker, bool buttonsOnly) : JoystickInterface()
   {
     this->leftTracker = leftTracker;
     this->rightTracker = rightTracker;
     this->upTracker = upTracker;
     this->downTracker = downTracker;
     this->midTracker = midTracker;
+    this->buttonsOnly = buttonsOnly;
   }
 
 protected:
@@ -592,6 +598,28 @@ private:
   ButtonPressTracker *upTracker;
   ButtonPressTracker *downTracker;
   ButtonPressTracker *midTracker;
+  bool buttonsOnly;
+};
+
+class ButtonsOnly : public ButtonJoystick
+{
+public:
+  ButtonsOnly(ButtonPressTracker *aTracker, ButtonPressTracker *bTracker, ButtonPressTracker *cTracker, ButtonPressTracker *dTracker) : ButtonJoystick(aTracker, bTracker, cTracker, dTracker, NULL, true)
+  {
+  }
+public:
+  inline bool checkButtonAPressed(int repeat) {
+    return checkButtonPressed('A', repeat);
+  }  
+  inline bool checkButtonBPressed(int repeat) {
+    return checkButtonPressed('B', repeat);
+  }  
+  inline bool checkButtonCPressed(int repeat) {
+    return checkButtonPressed('C', repeat);
+  }  
+  inline bool checkButtonDPressed(int repeat) {
+    return checkButtonPressed('D', repeat);
+  }  
 };
 
 const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
@@ -644,7 +672,7 @@ ButtonPressTracker *bTracker = SetupNewButtonPressTracker(3);
 ButtonPressTracker *cTracker = SetupNewButtonPressTracker(4);
 ButtonPressTracker *dTracker = SetupNewButtonPressTracker(5);
 JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
-ButtonJoystick *buttons = new ButtonJoystick(aTracker, bTracker, cTracker, dTracker, NULL);
+ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
 const int JoystickCount = 2;
 JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
 #elif defined(PICO_SDK_VERSION_MAJOR)
@@ -656,7 +684,7 @@ ButtonPressTracker *dTracker = SetupNewButtonPressTracker(19);
 ButtonPressTracker *cTracker = SetupNewButtonPressTracker(20);
 ButtonPressTracker *bTracker = SetupNewButtonPressTracker(21);
 JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
-ButtonJoystick *buttons = new ButtonJoystick(aTracker, bTracker, cTracker, dTracker, NULL);
+ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker;
 const int JoystickCount = 2;
 JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
 #elif defined(ESP32)
@@ -674,10 +702,10 @@ ButtonPressTracker *rightTracker = SetupNewButtonPressTracker(D4);
 ButtonPressTracker *midTracker = SetupNewButtonPressTracker(D3);
 ButtonPressTracker *setTracker = SetupNewButtonPressTracker(D2);
 ButtonPressTracker *rstTracker = SetupNewButtonPressTracker(D1);
-ButtonJoystick *joystick1 = new ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, midTracker);
-ButtonJoystick *joystick2 = new ButtonJoystick(NULL, rstTracker, NULL, setTracker, NULL);
+ButtonJoystick *joystick = new ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, midTracker);
+ButtonsOnly *buttons = new ButtonsOnly(setTracker, rstTracker, NULL, NULL);
 const int JoystickCount = 2;
-JoystickInterface *Joysticks[JoystickCount] = {joystick1, joystick2};
+JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
 #endif
 
 void setup()
