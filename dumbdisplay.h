@@ -758,13 +758,13 @@ typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 class DumbDisplay {
   public:
-    DumbDisplay(DDInputOutput* pIO) {
+    DumbDisplay(DDInputOutput* pIO, bool enableDoubleClick = true) {
 #ifndef DD_NO_SERIAL      
       if (pIO->isSerial() || pIO->isBackupBySerial()) {
         _The_DD_Serial = new DDSerial();
       }
 #endif      
-      initialize(pIO);
+      initialize(pIO, enableDoubleClick);
     }
     //DumbDisplay(DDInputOutput* pIO, DDSerialProxy* pDDSerialProxy);
     /* explicitly make connection -- blocking */
@@ -892,7 +892,7 @@ class DumbDisplay {
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine);
   private:
-    void initialize(DDInputOutput* pIO);
+    void initialize(DDInputOutput* pIO, bool enableDoubleClick);
     bool canLogToSerial();
 };
 

@@ -80,7 +80,7 @@ public:
   }
   JoystickPressTracker(uint8_t pin, bool reverseDir, bool autoTune) 
   {
-    int autoThreshold = autoTune ? 200 : -1;
+    int autoThreshold = autoTune ? 10 : -1;
     this->pin = pin;
     this->autoThreshold = autoThreshold;
     this->autoMin = 10000;
@@ -91,10 +91,10 @@ public:
   }
 
 public:
-  void setMinMax(int minReading, int maxReading)
-  {
-    resetMinMax(minReading, maxReading, false);
-  }
+  // void setMinMax(int minReading, int maxReading)
+  // {
+  //   resetMinMax(minReading, maxReading, false);
+  // }
 
 public:
   int8_t checkPressed(int repeat = 0)

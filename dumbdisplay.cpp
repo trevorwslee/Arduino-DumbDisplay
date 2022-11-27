@@ -113,6 +113,7 @@ class IOProxy {
 };
 
 
+volatile bool _EnableDoubleClick = false;
 volatile bool _Connected = false;
 volatile int _ConnectVersion = 0;
 
@@ -200,6 +201,9 @@ this->print("// NEED TO RECONNECT\n");
       this->print(DD_SID);
       this->print(":");
       this->print(this->reconnectRCId);
+      if (!_EnableDoubleClick) {
+        this->print(",dblclk=0");
+      }
       this->print("\n");
       this->reconnectKeepAliveMillis = this->lastKeepAliveMillis;
     } else if (this->reconnectKeepAliveMillis > 0) {
@@ -423,6 +427,9 @@ void _Connect() {
         //ioProxy.print(">init>:Arduino-c1\n");
         ioProxy.print(">init>:");
         ioProxy.print(DD_SID);
+        if (!_EnableDoubleClick) {
+          ioProxy.print(",dblclk=0");
+        }
         ioProxy.print("\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
@@ -838,7 +845,11 @@ void __SendByteArrayPortion(const uint8_t *bytes, int byteCount, char compressMe
     } else {
       if (readFromProgramSpace) {
         for (int i = 0; i < byteCount; i++) {
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
           _IO->write(pgm_read_byte(bytes[i]));
+#else          
+          _IO->write(bytes[i]);
+#endif          
         }
       } else {
         _IO->write(bytes, byteCount);
@@ -2164,8 +2175,9 @@ void JsonDDTunnelMultiplexer::reconnect() {
 //   }
 //   _IO = pIO;
 // }
-void DumbDisplay::initialize(DDInputOutput* pIO) {
+void DumbDisplay::initialize(DDInputOutput* pIO, boolean enableDoubleClick) {
   _IO = pIO;
+  _EnableDoubleClick = enableDoubleClick;
 }
 void DumbDisplay::connect() {
   _Connect();

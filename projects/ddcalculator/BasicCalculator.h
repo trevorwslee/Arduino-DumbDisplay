@@ -1,21 +1,59 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 
-char CaculatorDisplayBuffer[30];
-int CaculatorFormatForDisplayGetLen(float num, int max_width, char* buffer) {
-    if (true) {
-        int count = max_width;
-        if (count > 4) {  // 4 will work for Arduino UNO
-            count = 4;
-        }
-        int intPart = (int) num;
-        num = abs(num - intPart);
-        int fracPart = (int) (0.5 + pow(10, count) * num);
-        sprintf(buffer, "%d.%d", intPart, fracPart);  // will have decimal point
-    } else {    
-        sprintf(buffer, "%f", num);  // will have decimal point
+char* StrRev(char* str) {
+    int size = strlen(str);
+    int count = size / 2;
+    for (int i = 0; i < count; i++) {
+        char tmp = str[i];
+        str[i] = str[size - i - 1];
+        str[size - i - 1] = tmp;
     }
+    return str;
+}
+
+char CaculatorDisplayBuffer[30];
+void CaculatorIntToString(int32_t intPart, char* buffer) {
+    if (intPart == 0) {
+        buffer[0] = '0';
+        buffer[1] = 0;
+        return;
+    }
+    bool negate = false;
+    if (intPart < 0) {
+        intPart = -intPart;
+        negate = true;
+    }
+    int i = 0;
+    while (intPart > 0) {
+        int in = intPart % 10;
+        intPart = intPart / 10;
+        buffer[i++] = '0' + in;        
+    }
+    if (negate) {
+        buffer[i++] = '-';
+    }
+    buffer[i] = 0;
+    StrRev(buffer);
+    //strrev(buffer);
+} 
+int CaculatorFormatForDisplayGetLen(double num, int8_t max_width, char* buffer = CaculatorDisplayBuffer) {
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+    // if sprintf doesn't work, enable it
+    int32_t intPart = (int32_t) num;
+    num = abs(num - intPart);
+    int32_t fracPart = 100000 + (int32_t) (0.5 + 10000 * num);  // 4 decimal places
+    char intBuffer[10];
+    char fracBuffer[10];
+    CaculatorIntToString(intPart, intBuffer);
+    CaculatorIntToString(fracPart, fracBuffer);
+    sprintf(buffer, "%s.%s", intBuffer, fracBuffer + 1);
+    //sprintf(buffer, "%d.%d", intPart, fracPart);  // will have decimal point
+#else        
+    sprintf(buffer, "%f", num);  // will have decimal point
+#endif
     int len = strlen(buffer);
     while (len > 1) {
         if (buffer[len - 1] != '0') {
@@ -30,8 +68,8 @@ int CaculatorFormatForDisplayGetLen(float num, int max_width, char* buffer) {
     }
     return len;
 }
-const char* CaculatorFormatForDisplay(float num, int max_width, char* buffer) {
-    int len = CaculatorFormatForDisplayGetLen(num, max_width, buffer);
+const char* CaculatorFormatForDisplay(double num, int8_t max_width, char* buffer = CaculatorDisplayBuffer) {
+    int8_t len = CaculatorFormatForDisplayGetLen(num, max_width, buffer);
     return len <= max_width ? buffer : NULL;
 }
 
@@ -49,45 +87,60 @@ class PrimitiveCalcUnit {
             this->oper = 0;
         }
     public:
-        float num;
+        double num;
         char oper;
 };
 
 class PrimitiveCalculator {
     public:
-        PrimitiveCalculator(short DISP_WIDTH) {
+        PrimitiveCalculator(int8_t DISP_WIDTH) {
             this->DISP_WIDTH = DISP_WIDTH;
             reset();
         }
     public:
-        inline float getNum() {
+        double getNum() {
+            if (entering == 0) {
+                if (lhs.isValid()) {
+                    return lhs.num;
+                }
+            }
             return _getNum();
         }
         inline bool isInError() {
             return this->entering == 'E';
         }   
         const char* getFormatted(char* buffer = CaculatorDisplayBuffer) {
-            if (isInError()) {
-                return "error";
-            } else {
-                return CaculatorFormatForDisplay(getNum(), DISP_WIDTH, buffer);
+            if (!isInError()) {
+                double num = getNum();
+                if (!isnan(num) && !isinf(num)) {
+                    return CaculatorFormatForDisplay(num, DISP_WIDTH, buffer);
+                }
             }
+            this->entering = 'E';
+            return "Error";
         }
         void reset() {
             // this->entering = 0;
             // _setNum(0);
             _restart(0);
-            this->lhs.reset();
-            this->prev_lhs.reset();
+            //this->lhs.reset();
+            //this->prev_lhs.reset();
         }
         bool push(char what) {
+            // if (true) {
+            //     double num = _getNum();
+            //     if (num == NAN) {
+            //         this->entering = 'E';
+            //         return false;
+            //     }
+            // }
             bool ok = _push(what);
-            if (ok && this->entering == 0) {
-                float num = _getNum();
-                if (num == NAN || num == -NAN || num == INFINITY || num == -INFINITY) {
-                    this->entering = 'E';
-                }
-            }
+            // if (ok) {
+            //     double num = _getNum();
+            //     if (num == NAN) {
+            //         this->entering = 'E';
+            //     }
+            // }
             return ok;
         }
         bool _push(char what) {
@@ -98,7 +151,8 @@ class PrimitiveCalculator {
                 if (this->lhs.isValid()) {
                     if (_IsOperOrEq(what)) {
                         if (this->lhs.oper == '*' || this->lhs.oper == '/') {
-                            _restart(_Calc(this->lhs.num, this->lhs.oper, _getNum()));
+                            _setNum(_Calc(this->lhs.num, this->lhs.oper, _getNum()));
+                            //_restart(_Calc(this->lhs.num, this->lhs.oper, _getNum()));
                         } else if (this->lhs.oper == '+' || this->lhs.oper == '-') {
                             if (this->prev_lhs.isValid()) {
                               this->lhs.num = _Calc(this->prev_lhs, this->lhs.num);
@@ -107,27 +161,24 @@ class PrimitiveCalculator {
                         }
                     }
                 }
-                if (_IsOper(what)) {
+                if (what == '%') {
+                    _setNum(_Calc(_getNum(), '/', 100));
+                    return true;
+                } else if (_IsOper(what)) {
                     this->lhs.oper = what;
                     this->lhs.num = _getNum();
                     _setNum(0);
                     this->entering = 0;
                     return true;
-                }
-                else if (what == '=') {
-                    float res = _getNum();
+                } else if (what == '=') {
+                    double res = _getNum();
                     if (this->prev_lhs.isValid()) {
                         res = _Calc(this->prev_lhs, res);
                     } 
-                    _restart(res);
+                    _restart(res, '='/*'!'*/);
                     return true;
                 }
             }
-            // char ori_entering = this->entering;
-            // short ori_intPartWidth = this->intPartWidth;
-            // float ori_numPart = this->numPart;
-            // short ori_fracPart = this->fracPart;
-            // short ori_fracPartSize = this->fracPartSize;
             if (entering == 0 && what == '-') {
                 this->negate = true;
                 return true;
@@ -145,34 +196,20 @@ class PrimitiveCalculator {
             if (displayLen + 1 > this->DISP_WIDTH) {
                 return false;
             }
-            short digit = what - '0';
-            if (entering == 'F') {
-                fracPart = 10 * fracPart + digit;
-                fracPartSize += 1;
+            int32_t digit = what - '0';
+            if (this->entering == 'F') {
+                this->fracPart = 10 * fracPart + digit;
+                this->fracPartSize += 1;
             } else {
                 if (entering == '!') {
                     return false;
                 }
-                // if (digit != 0 || numPart > 0.9) {
-                //     intPartWidth += 1;
-                // }
-                numPart = 10 * numPart + digit;
-                entering = 'I';
+                if (entering == '=') {
+                    this->numPart = 0;
+                }
+                this->numPart = 10 * this->numPart + (double) digit;
+                this->entering = 'I';
             }
-            // short width;
-            // if (fracPartSize > 0) {
-            //     width = (intPartWidth == 0 ? 1 : intPartWidth) + 1 + fracPartSize; 
-            // } else {
-            //     width = intPartWidth;
-            // }
-            // if (width > DISP_WIDTH) {
-            //     this->entering = ori_entering;
-            //     this->intPartWidth = ori_intPartWidth;
-            //     this->numPart = ori_numPart;
-            //     this->fracPart = ori_fracPart;
-            //     this->fracPartSize = ori_fracPartSize;
-            //     return false;
-            // }
             return true;
         }
         // assume 0 terminated
@@ -191,15 +228,15 @@ class PrimitiveCalculator {
         bool isEntering() {
             return entering != 0;
         }
-        void _push(float num) {
+        void _push(double num) {
             _setNum(num);
             this->entering = '!';
         }
     private:
-        static float _Calc(PrimitiveCalcUnit lhs, float num) {
+        static double _Calc(PrimitiveCalcUnit lhs, double num) {
             return _Calc(lhs.num, lhs.oper, num);
         }
-        static float _Calc(float left_num, char oper, float right_num) {
+        static double _Calc(double left_num, char oper, double right_num) {
             if (oper == '+') {
                 return left_num + right_num;
             } else if (oper == '-') {
@@ -217,45 +254,51 @@ class PrimitiveCalculator {
         static bool _IsOper(char what) {
             return what == '+' || what == '-' || what == '*' || what == '/';
         }    
-        float _getNum() {
-            float res;
+        double _getNum() {
+            double res;
             if (this->fracPartSize > 0) {
-                float demominator = 10;
-                for (short i = 1; i < this->fracPartSize; i++) {
+                double demominator = 10;
+                for (int8_t i = 1; i < this->fracPartSize; i++) {
                     demominator *= 10;
                 }
-                res = this->numPart + (this->fracPart / demominator);
+                res = this->numPart + ((double) this->fracPart / demominator);
             } else {
                 res = this->numPart;
             }
-            return this->negate ? -res : res;
+            double num = this->negate ? -res : res;
+            // if (isnan(num) || isinf(num)) {
+            //     num = NAN;
+            // }
+            return num;
         }
-        void _setNum(float num) {
+        void _setNum(double num) {
             this->numPart = num;
             this->fracPart = 0;
             this->fracPartSize = 0;
         }
-        void _restart(float num) {
+        void _restart(double num, char entering = 0) {
             _setNum(num);
-            this->entering = 0;
+            this->entering = entering;
             this->negate = false;
+            this->lhs.reset();
+            this->prev_lhs.reset();
             //this->intPartWidth = 0;  // doesn't count the init 0
         }
     private:
-        short DISP_WIDTH;
+        int8_t DISP_WIDTH;
         char entering;  // 0; 'I', 'F', '!', 'E'
         //short intPartWidth;
         bool negate;
-        float numPart;
-        short fracPart;
-        short fracPartSize;
+        double numPart;
+        int32_t fracPart;
+        int8_t fracPartSize;
         PrimitiveCalcUnit prev_lhs;
         PrimitiveCalcUnit lhs;
 };
 
 class BasicCalcUnit {
     public:  
-        BasicCalcUnit(short DISP_WIDTH, BasicCalcUnit* prev): calc(DISP_WIDTH)  {
+        BasicCalcUnit(int8_t DISP_WIDTH, BasicCalcUnit* prev): calc(DISP_WIDTH)  {
             //reset();
             this->prev = prev;
         }
@@ -279,7 +322,7 @@ class BasicCalcUnit {
 
 class BasicCalculator {
     public:
-        BasicCalculator(short DISP_WIDTH) {
+        BasicCalculator(int8_t DISP_WIDTH) {
             this->DISP_WIDTH = DISP_WIDTH;
             this->curr = new BasicCalcUnit(DISP_WIDTH, NULL);
         }
@@ -287,14 +330,26 @@ class BasicCalculator {
             delete this->curr;
         }
     public:
-        inline float getNum() {
+        inline double getNum() {
             return this->curr->calc.getNum();
         }    
         inline bool isInError() {
             return this->curr->calc.isInError();
         }
+        inline bool isGrouing() {
+            return this->curr->prev != NULL;
+        }
         inline const char* getFormatted(char* buffer = CaculatorDisplayBuffer) {
-            return this->curr->calc.getFormatted(buffer);
+            return this->curr->calc.getFormatted(buffer + 1);
+        }
+        const char* getFormattedEx(char* buffer = CaculatorDisplayBuffer) {
+            const char* formatted = this->curr->calc.getFormatted(buffer + 1);
+            if (this->curr->prev == NULL) {
+                return formatted;
+            } else {
+                buffer[0] = '(';
+                return buffer;
+            }
         }
         // const char* getFormatted() {
         //     if (isInError()) {
@@ -304,7 +359,11 @@ class BasicCalculator {
         //     }
         // }
         void reset() {
-            return this->curr->calc.reset();
+            if (this->curr->prev != NULL) {
+                delete this->curr->prev;
+                this->curr->prev = NULL;
+            }
+            this->curr->calc.reset();
         }
         bool push(char what) {
             if (what == '(') {
@@ -316,7 +375,7 @@ class BasicCalculator {
             } else if (what == ')') {
                 if (this->curr->prev != NULL) {
                     if (this->curr->calc.push('=')) {
-                        float num = this->curr->calc.getNum(); 
+                        double num = this->curr->calc.getNum(); 
                         this->curr = this->curr->prev;
                         this->curr->calc._push(num);
                         return true;
@@ -342,7 +401,7 @@ class BasicCalculator {
         }
 
     private:
-        short DISP_WIDTH;
+        int8_t DISP_WIDTH;
         BasicCalcUnit* curr;
 };
 
