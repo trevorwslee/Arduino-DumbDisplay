@@ -39,10 +39,10 @@ DDConnectVersionTracker cvTracker;
 
 
 const char Keys[4][4] = {
-  { '1', '2', '3', 'A'},
+  { '1', '2', '3', 'A' },
   { '4', '5', '6', 'B' },
   { '7', '8', '9', 'C' },
-  { '*', '0', '#', 'D'}
+  { '*', '0', '#', 'D' }
 };
 void setupForReadingRow(int r) {
     digitalWrite(PIN_R0, r != 0);
