@@ -1,13 +1,10 @@
-#include <stdio.h>
-
-
-#define PIN_R0 8
-#define PIN_R1 7
-#define PIN_R2 6
-#define PIN_R3 5
-#define PIN_C0 4
-#define PIN_C1 3 
-#define PIN_C2 2
+#define PIN_R1 8
+#define PIN_R2 7
+#define PIN_R3 6
+#define PIN_R4 5
+#define PIN_C1 4
+#define PIN_C2 3 
+#define PIN_C3 2
 
 #define SS_PIN 10
 #define RST_PIN 9
@@ -45,15 +42,15 @@ const char Keys[4][4] = {
   { '*', '0', '#', 'D' }
 };
 void setupForReadingRow(int r) {
-    digitalWrite(PIN_R0, r != 0);
-    digitalWrite(PIN_R1, r != 1);
-    digitalWrite(PIN_R2, r != 2);
-    digitalWrite(PIN_R3, r != 3);
+    digitalWrite(PIN_R1, r != 0);
+    digitalWrite(PIN_R2, r != 1);
+    digitalWrite(PIN_R3, r != 2);
+    digitalWrite(PIN_R4, r != 3);
 }
 int readColumnOfKeyPress() {
-  int c0 = digitalRead(PIN_C0);
-  int c1 = digitalRead(PIN_C1);
-  int c2 = digitalRead(PIN_C2);
+  int c0 = digitalRead(PIN_C1);
+  int c1 = digitalRead(PIN_C2);
+  int c2 = digitalRead(PIN_C3);
 #if defined(PIN_C3)  
   int c3 = digitalRead(PIN_C3);
 #else
@@ -340,13 +337,13 @@ void onNew() {
 
 
 void setup() {
-  pinMode(PIN_R0, OUTPUT);
   pinMode(PIN_R1, OUTPUT);
   pinMode(PIN_R2, OUTPUT);
   pinMode(PIN_R3, OUTPUT);
-  pinMode(PIN_C0, INPUT_PULLUP);
+  pinMode(PIN_R4, OUTPUT);
   pinMode(PIN_C1, INPUT_PULLUP);
   pinMode(PIN_C2, INPUT_PULLUP);
+  pinMode(PIN_C3, INPUT_PULLUP);
 #if defined(PIN_C3)  
   pinMode(PIN_C3, INPUT_PULLUP);
 #endif
