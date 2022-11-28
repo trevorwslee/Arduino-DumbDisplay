@@ -1,4 +1,9 @@
+
+
+// part of DumbDisplay Arduino library
 #include "ddjoystick.h"
+
+
 
 const long JoystickPressAutoRepeatMillis = 200; // 0 means no auto repeat
 
@@ -33,21 +38,26 @@ const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
   }
   return ".";
 }
-// const char *ToRepresentationFromCode(JoystickPressCode* joystickPressCode) {
-//   if (joystickPressCode != NULL) {
-//     JoystickPress joystickPress;
-//     int xPressedCode = joystickPressCode->xPressed;
-//     int yPrexxedCode = joystickPressCode->yPressed;
-//     if (xPressedCode == 2 || xPressedCode == 1) {
-//       joystickPress.xPressed = 1;
-//     } else if (xPressedCode == -1) {
-//       joystickPress.xPressed = -1;
-//     }
-//     return ToRepresentation(&joystickPress, joystickPressCode->swPressed);
-//   } else {
-//     return ".";
-//   }
-// }
+const char *ToRepresentationFromCode(JoystickPressCode* joystickPressCode) {
+  if (joystickPressCode != NULL) {
+    JoystickPress joystickPress;
+    int xPressedCode = joystickPressCode->xPressed;
+    int yPressedCode = joystickPressCode->yPressed;
+    if (xPressedCode == 2 || xPressedCode == 1) {
+      joystickPress.xPressed = 1;
+    } else if (xPressedCode == -1) {
+      joystickPress.xPressed = -1;
+    }
+    if (yPressedCode == 2 || yPressedCode == 1) {
+      joystickPress.yPressed = 1;
+    } else if (yPressedCode == -1) {
+      joystickPress.yPressed = -1;
+    }
+    return ToRepresentation(&joystickPress, joystickPressCode->swPressed);
+  } else {
+    return ".";
+  }
+}
 
 
 JoystickPressTracker *SetupNewJoystickPressTracker(uint8_t pin, bool reverseDir, int autoTuneThreshold = JoystickPressTracker::DefAutoTuneThreshold)
@@ -111,6 +121,54 @@ const int JoystickCount = 2;
 JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
 #endif
 
+
+// template<int MAX_DEPTH = 5>
+// class DDAutoPinConfigBuilder {
+//   public:
+//     DDAutoPinConfigBuilder(char dir) {
+//       depth = -1;
+//       for (int i = 0; i < MAX_DEPTH; i++) {
+//         started[i] = false;
+//       }
+//       beginGroup(dir);
+//     }
+//   public:
+//     void beginGroup(char dir) {
+//       if (depth >= 0 && started[depth]) {
+//         config += "+";
+//       }
+//       depth += 1;
+//       started[depth] = false;
+//       config += String(dir) + "(";
+//     }  
+//     void endGroup() {
+//       config += ")";
+//       depth -= 1;
+//     }
+//     void addLayer(DDLayer* layer) {
+//       addConfig(layer->getLayerId());
+//     }
+//     void addBuilder(DDAutoPinConfigBuilder& builder) {
+//       addConfig(builder.build());
+//     }
+//     void addConfig(const String& conf) {
+//       if (started[depth]) {
+//         config += "+";
+//       }
+//       config += conf;
+//       started[depth] = true;
+//     }
+//     const String& build() {
+//       endGroup();
+//       return config;
+//     }  
+//   private:
+//     int depth;
+//     bool started[MAX_DEPTH];
+//     String config;
+// };
+
+
 void setup()
 {
   Serial.begin(115200);
@@ -128,16 +186,14 @@ void loop()
   }
   if (show)
   {
+    String showWhat;
     for (int i = 0; i < JoystickCount; i++)
     {
       const JoystickPress *joystickPress = joystickPresses[i];
       bool swPressed = swPresses[i];
       const char *representation = ToRepresentation(joystickPress, swPressed);
-      Serial.print("[");
-      Serial.print(representation);
-      Serial.print("]");
+      showWhat += String("[") + representation + "]";
     }
-    Serial.println();
+    Serial.println(showWhat);
   }
-  // delay(200);
 }
