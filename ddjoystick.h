@@ -10,6 +10,15 @@ struct JoystickPress
   int yPressed; // -1, 0 or 1
 };
 
+struct ABCDPressed
+{
+  bool aPressed;
+  bool bPressed;
+  bool dPressed;
+  bool cPressed;
+};
+
+
 struct JoystickPressCode
 {
   int xPressed;
@@ -26,9 +35,13 @@ protected:
   JoystickInterface(bool buttonsOnly)
   {
     this->buttonsOnly = buttonsOnly;
-    this->lastCheckJoystickPress.xPressed = 0;
-    this->lastCheckJoystickPress.yPressed = 0;
-    this->lastJoystickPressMillis = 0;
+    // this->lastCheckJoystickPress.xPressed = 0;
+    // this->lastCheckJoystickPress.yPressed = 0;
+    this->lastCheckMillis = 0;
+    // this->lastCheckABCDPressed.aPressed = false;
+    // this->lastCheckABCDPressed.bPressed = false;
+    // this->lastCheckABCDPressed.dPressed = false;
+    // this->lastCheckABCDPressed.cPressed = false;
   }
 
 public:
@@ -42,17 +55,17 @@ public:
       // Serial.print("/");
       // Serial.println(yPressed);
       long nowMillis = millis();
-      long diffMillis = nowMillis - this->lastJoystickPressMillis;
+      long diffMillis = nowMillis - this->lastCheckMillis;
       // Serial.println(diffMillis);
       // delay(200);
-      if (diffMillis >= BlackOutMillis /*50*/)
+      if (diffMillis >= BlackOutMillis)
       {
         lastCheckJoystickPress.xPressed = 0;
         lastCheckJoystickPress.yPressed = 0;
-        bool pressedA = _checkPressedBypass('A');
-        bool pressedB = _checkPressedBypass('B');
-        bool pressedC = _checkPressedBypass('C');
-        bool pressedD = _checkPressedBypass('D');
+        bool pressedA = _checkPressedBypass('A') || yPressed == -1;
+        bool pressedB = _checkPressedBypass('B') || xPressed == 1;
+        bool pressedC = _checkPressedBypass('C') || yPressed == 1;
+        bool pressedD = _checkPressedBypass('D') || xPressed == -1;
         if (pressedB)
         {
           // Serial.println("B");
@@ -73,7 +86,7 @@ public:
           // Serial.println("C");
           lastCheckJoystickPress.yPressed = 1;
         }
-        lastJoystickPressMillis = nowMillis;
+        lastCheckMillis = nowMillis;
         return &lastCheckJoystickPress;
       }
     }
@@ -85,6 +98,29 @@ public:
   }
   inline bool forButtonsOnly() {
     return this->buttonsOnly;
+  }
+  const ABCDPressed *checkABCDPressed(int repeat = 0)
+  {
+    int aPressed = _checkPressed('A', repeat);
+    int bPressed = _checkPressed('B', repeat);
+    int cPressed = _checkPressed('C', repeat);
+    int dPressed = _checkPressed('D', repeat);
+    if (aPressed || bPressed || cPressed || dPressed)
+    {
+      long nowMillis = millis();
+      long diffMillis = nowMillis - this->lastCheckMillis;
+      if (diffMillis >= BlackOutMillis)
+      {
+        //delay(200);  // delay a bit
+        this->lastCheckABCDPressed.aPressed = _checkPressedBypass('A') || aPressed;
+        this->lastCheckABCDPressed.bPressed = _checkPressedBypass('B') || bPressed;
+        this->lastCheckABCDPressed.cPressed = _checkPressedBypass('C') || cPressed;
+        this->lastCheckABCDPressed.dPressed = _checkPressedBypass('D') || dPressed;
+        lastCheckMillis = nowMillis;
+        return &lastCheckABCDPressed;
+      }
+    }
+    return NULL;
   }
   inline bool checkAPressed(int repeat = 0)
   {
@@ -151,7 +187,8 @@ protected:
 private:
   bool buttonsOnly;
   JoystickPress lastCheckJoystickPress;
-  long lastJoystickPressMillis;
+  ABCDPressed lastCheckABCDPressed;
+  long lastCheckMillis;
 };
 
 class ButtonPressTracker

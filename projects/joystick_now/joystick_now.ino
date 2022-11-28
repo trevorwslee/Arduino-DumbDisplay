@@ -59,24 +59,29 @@ const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
 //   }
 // }
 
+char RepresentationBuffer[5];
 const char *WorkoutPessed(JoystickInterface* joystick, int repeat = 0)
 {
   if (joystick->forButtonsOnly()) {
-    bool aPressed = joystick->checkAPressed(repeat);
-    bool bPressed = joystick->checkBPressed(repeat);
-    bool cPressed = joystick->checkCPressed(repeat);
-    bool dPressed = joystick->checkDPressed(repeat);
-    if (aPressed) {
-      return "A";
-    }
-    if (bPressed) {
-      return "B";
-    }
-    if (cPressed) {
-      return "C";
-    }
-    if (dPressed) {
-      return "D";
+    const ABCDPressed* pressed = joystick->checkABCDPressed(repeat);
+    if (pressed != NULL) {
+      int i = 0;
+      if (pressed->aPressed) {
+        RepresentationBuffer[i++] = 'A';
+      } 
+      if (pressed->bPressed) {
+        RepresentationBuffer[i++] = 'B';
+      } 
+      if (pressed->cPressed) {
+        RepresentationBuffer[i++] = 'C';
+      } 
+      if (pressed->dPressed) {
+        RepresentationBuffer[i++] = 'D';
+      } 
+      if (i > 0) {
+        RepresentationBuffer[i] = 0;
+        return RepresentationBuffer;
+      }
     }
   } else {
     const JoystickPress* joystickPress = joystick->checkJoystickPress(repeat);
