@@ -36,29 +36,59 @@ const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
       return yPressed == -1 ? "↗" : "↘";
     }
   }
-  return ".";
+  return NULL;
 }
-const char *ToRepresentationFromCode(JoystickPressCode* joystickPressCode) {
-  if (joystickPressCode != NULL) {
-    JoystickPress joystickPress;
-    int xPressedCode = joystickPressCode->xPressed;
-    int yPressedCode = joystickPressCode->yPressed;
-    if (xPressedCode == 2 || xPressedCode == 1) {
-      joystickPress.xPressed = 1;
-    } else if (xPressedCode == -1) {
-      joystickPress.xPressed = -1;
-    }
-    if (yPressedCode == 2 || yPressedCode == 1) {
-      joystickPress.yPressed = 1;
-    } else if (yPressedCode == -1) {
-      joystickPress.yPressed = -1;
-    }
-    return ToRepresentation(&joystickPress, joystickPressCode->swPressed);
-  } else {
-    return ".";
-  }
-}
+// const char *ToRepresentationFromCode(JoystickPressCode* joystickPressCode) {
+//   if (joystickPressCode != NULL) {
+//     JoystickPress joystickPress;
+//     int xPressedCode = joystickPressCode->xPressed;
+//     int yPressedCode = joystickPressCode->yPressed;
+//     if (xPressedCode == 2 || xPressedCode == 1) {
+//       joystickPress.xPressed = 1;
+//     } else if (xPressedCode == -1) {
+//       joystickPress.xPressed = -1;
+//     }
+//     if (yPressedCode == 2 || yPressedCode == 1) {
+//       joystickPress.yPressed = 1;
+//     } else if (yPressedCode == -1) {
+//       joystickPress.yPressed = -1;
+//     }
+//     return ToRepresentation(&joystickPress, joystickPressCode->swPressed);
+//   } else {
+//     return ".";
+//   }
+// }
 
+char RepresentationBuffer[5];
+const char *WorkoutPessed(JoystickInterface* joystick, int repeat = 0)
+{
+  if (joystick->forButtonsOnly()) {
+    int i = 0;
+    if (joystick->checkAPressed(repeat)) {
+      RepresentationBuffer[i++] = 'A';
+    } 
+    if (joystick->checkBPressed(repeat)) {
+      RepresentationBuffer[i++] = 'B';
+    } 
+    if (joystick->checkCPressed(repeat)) {
+      RepresentationBuffer[i++] = 'C';
+    } 
+    if (joystick->checkDPressed(repeat)) {
+      RepresentationBuffer[i++] = 'D';
+    } 
+    if (i > 0) {
+      RepresentationBuffer[i] = 0;
+      return RepresentationBuffer;
+    }
+  } else {
+    const JoystickPress* joystickPress = joystick->checkJoystickPress(repeat);
+    bool swPressed = joystick->checkSWPressed(repeat);
+    if (joystickPress != NULL || swPressed) {
+      return ToRepresentation(joystickPress, swPressed);
+    }
+  }
+  return NULL;
+}
 
 JoystickPressTracker *SetupNewJoystickPressTracker(uint8_t pin, bool reverseDir, int autoTuneThreshold = JoystickPressTracker::DefAutoTuneThreshold)
 {
@@ -122,52 +152,6 @@ JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
 #endif
 
 
-// template<int MAX_DEPTH = 5>
-// class DDAutoPinConfigBuilder {
-//   public:
-//     DDAutoPinConfigBuilder(char dir) {
-//       depth = -1;
-//       for (int i = 0; i < MAX_DEPTH; i++) {
-//         started[i] = false;
-//       }
-//       beginGroup(dir);
-//     }
-//   public:
-//     void beginGroup(char dir) {
-//       if (depth >= 0 && started[depth]) {
-//         config += "+";
-//       }
-//       depth += 1;
-//       started[depth] = false;
-//       config += String(dir) + "(";
-//     }  
-//     void endGroup() {
-//       config += ")";
-//       depth -= 1;
-//     }
-//     void addLayer(DDLayer* layer) {
-//       addConfig(layer->getLayerId());
-//     }
-//     void addBuilder(DDAutoPinConfigBuilder& builder) {
-//       addConfig(builder.build());
-//     }
-//     void addConfig(const String& conf) {
-//       if (started[depth]) {
-//         config += "+";
-//       }
-//       config += conf;
-//       started[depth] = true;
-//     }
-//     const String& build() {
-//       endGroup();
-//       return config;
-//     }  
-//   private:
-//     int depth;
-//     bool started[MAX_DEPTH];
-//     String config;
-// };
-
 
 void setup()
 {
@@ -175,23 +159,22 @@ void setup()
 }
 void loop()
 {
-  const JoystickPress *joystickPresses[JoystickCount];
-  bool swPresses[JoystickCount];
+  const char* representations[JoystickCount];
   bool show = false;
   for (int i = 0; i < JoystickCount; i++)
   {
-    joystickPresses[i] = Joysticks[i]->checkJoystickPress(JoystickPressAutoRepeatMillis);
-    swPresses[i] = Joysticks[i]->checkSWPressed(JoystickPressAutoRepeatMillis);
-    show |= joystickPresses[i] != NULL || swPresses[i];
+    representations[i] = WorkoutPessed(Joysticks[i], JoystickPressAutoRepeatMillis);
+    if (representations[i] != NULL) {
+      show = true;
+    }
   }
-  if (show)
-  {
+  if (show) {
     String showWhat;
-    for (int i = 0; i < JoystickCount; i++)
-    {
-      const JoystickPress *joystickPress = joystickPresses[i];
-      bool swPressed = swPresses[i];
-      const char *representation = ToRepresentation(joystickPress, swPressed);
+    for (int i = 0; i < JoystickCount; i++) {
+      const char* representation = representations[i];
+      if (representation == NULL) {
+        representation = ".";
+      }
       showWhat += String("[") + representation + "]";
     }
     Serial.println(showWhat);

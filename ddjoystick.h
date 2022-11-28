@@ -86,19 +86,19 @@ public:
   inline bool forButtonsOnly() {
     return this->buttonsOnly;
   }
-  inline bool checkAPressed(int repeat)
+  inline bool checkAPressed(int repeat = 0)
   {
     return _checkPressed('A', repeat);
   }
-  inline bool checkBPressed(int repeat)
+  inline bool checkBPressed(int repeat = 0)
   {
     return _checkPressed('B', repeat);
   }
-  inline bool checkCPressed(int repeat)
+  inline bool checkCPressed(int repeat = 0)
   {
     return _checkPressed('C', repeat);
   }
-  inline bool checkDPressed(int repeat)
+  inline bool checkDPressed(int repeat = 0)
   {
     return _checkPressed('D', repeat);
   }
