@@ -533,7 +533,7 @@ protected:
     else if (button == 'E')
     {
       bool pressed = swTracker != NULL && swTracker->checkPressed(repeat, bypass);
-if (pressed && repeat != 0 && !bypass) { Serial.print(repeat); Serial.println(" <SW>"); }
+//if (pressed && repeat != 0 && !bypass) { Serial.print(repeat); Serial.println(" <SW>"); }
       return pressed;
     }
     else
