@@ -724,28 +724,91 @@ class DecodedJoystick : public JoystickInterface
 public:
   DecodedJoystick(bool buttonsOnly) : JoystickInterface(buttonsOnly)
   {
-    joystickPressCodeValid = false;
+    aValid = false;
+    bValid = false;
+    cValid = false;
+    dValid = false;
+    eValid = false;
   }
 
 public:
-  // void decode(JoystickPressCode *joystickPressCode)
-  // {
-  //   if (joystickPressCode != NULL)
-  //   {
-  //     this->joystickPressCode.xPressed = joystickPressCode->xPressed;
-  //     this->joystickPressCode.yPressed = joystickPressCode->yPressed;
-  //     this->joystickPressCode.swPressed = joystickPressCode->swPressed;
-  //     this->joystickPressCodeValid = true;
-  //   }
-  //   else
-  //   {
-  //     this->joystickPressCodeValid = false;
-  //   }
-  // }
+  void decode(JoystickPressCode *joystickPressCode)
+  {
+    if (joystickPressCode != NULL)
+    {
+      this->joystickPressCode.xPressed = joystickPressCode->xPressed;
+      this->joystickPressCode.yPressed = joystickPressCode->yPressed;
+      this->joystickPressCode.swPressed = joystickPressCode->swPressed;
+      this->aValid = true;
+      this->bValid = true;
+      this->cValid = true;
+      this->dValid = true;
+      this->eValid = true;
+    }
+    else
+    {
+      this->aValid = false;
+      this->bValid = false;
+      this->cValid = false;
+      this->dValid = false;
+      this->eValid = false;
+    }
+  }
+
+protected:
+  virtual bool _checkPressed(char button, int repeat, bool bypass)
+  {
+    bool res = false;
+    if (button == 'A')
+    {
+      if (aValid || bypass)
+      {
+        res = joystickPressCode.yPressed == -1 || joystickPressCode.yPressed == 2;
+        aValid = false;
+      }
+    }
+    else if (button == 'B')
+    {
+      if (bValid || bypass)
+      {
+        res = joystickPressCode.xPressed == 1 || joystickPressCode.xPressed == 2;
+        bValid = false;
+      }
+    }
+    else if (button == 'C')
+    {
+      if (cValid || bypass)
+      {
+        res = joystickPressCode.yPressed == 1 || joystickPressCode.yPressed == 2;
+        cValid = false;
+      }
+    }
+    else if (button == 'D')
+    {
+      if (dValid || bypass)
+      {
+        res = joystickPressCode.xPressed == -1 || joystickPressCode.xPressed == 2;
+        dValid = false;
+      }
+    }
+    else if (button == 'E')
+    {
+      if (eValid || bypass)
+      {
+        res = joystickPressCode.swPressed;
+        eValid = false;
+      }
+    }
+    return res;
+  }
 
 private:
   JoystickPressCode joystickPressCode;
-  bool joystickPressCodeValid;
+  bool aValid;
+  bool bValid;
+  bool cValid;
+  bool dValid;
+  bool eValid;
 };
 
 

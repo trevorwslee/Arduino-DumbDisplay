@@ -1,13 +1,133 @@
 
 
-// part of DumbDisplay Arduino library
+#define ESP_NOW_SERVER_FOR_MAC {0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15}
+//#define ESP_NOW_CLIENT
+
+
+// ddjoystick.h is include in DumbDisplay Arduino library
 #include "ddjoystick.h"
 
 
 
+#if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
+#include <ESP8266WiFi.h>
+#include <espnow.h>
+struct ESPNowJoystickData {
+  JoystickInterface joystick1;
+  JoystickInterface joystick2;
+};
+#endif
+
+
+#if defined(ESP_NOW_SERVER_FOR_MAC)
+uint8_t ClientMACAddress[] = ESP_NOW_SERVER_FOR_MAC;
+// volatile bool esp_now_sending = false;
+// void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
+// {
+//   esp_now_sending = false;  
+// }
+#endif
+
+#if defined(ESP_NOW_CLIENT)
+void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len)
+{
+  ESPNowJoystickData joystickData;
+  memcpy(&joystickData, incomingData, len);
+  Serial.println("* received data");
+}
+#endif
+
+
+
+JoystickPressTracker *SetupNewJoystickPressTracker(uint8_t pin, bool reverseDir, int autoTuneThreshold = JoystickPressTracker::DefAutoTuneThreshold)
+{
+  pinMode(pin, INPUT);
+  return new JoystickPressTracker(pin, reverseDir, autoTuneThreshold);
+}
+ButtonPressTracker *SetupNewButtonPressTracker(uint8_t pin)
+{
+  pinMode(pin, INPUT_PULLUP);
+  return new ButtonPressTracker(pin);
+}
+
+
+#if defined(ARDUINO_AVR_UNO)
+JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(A0, false);
+JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(A1, true);
+ButtonPressTracker *swTracker = SetupNewButtonPressTracker(8);
+ButtonPressTracker *aTracker = SetupNewButtonPressTracker(2);
+ButtonPressTracker *bTracker = SetupNewButtonPressTracker(3);
+ButtonPressTracker *cTracker = SetupNewButtonPressTracker(4);
+ButtonPressTracker *dTracker = SetupNewButtonPressTracker(5);
+JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
+ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
+JoystickInterface *Joystick1 = joystick;
+JoystickInterface *Joystick2 = buttons;
+#elif defined(ARDUINO_AVR_NANO)
+JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(A3, false);
+JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(A2, false);
+ButtonPressTracker *swTracker = SetupNewButtonPressTracker(A1);
+JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
+ButtonPressTracker *cTracker = SetupNewButtonPressTracker(5);
+ButtonPressTracker *bTracker = SetupNewButtonPressTracker(6);
+ButtonPressTracker *dTracker = SetupNewButtonPressTracker(7);
+ButtonPressTracker *aTracker = SetupNewButtonPressTracker(8);
+ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
+JoystickInterface *Joystick1 = joystick;
+JoystickInterface *Joystick2 = buttons;
+#elif defined(PICO_SDK_VERSION_MAJOR)
+JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(26, true);
+JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(27, true);
+ButtonPressTracker *swTracker = SetupNewButtonPressTracker(16);
+ButtonPressTracker *aTracker = SetupNewButtonPressTracker(18);
+ButtonPressTracker *dTracker = SetupNewButtonPressTracker(19);
+ButtonPressTracker *cTracker = SetupNewButtonPressTracker(20);
+ButtonPressTracker *bTracker = SetupNewButtonPressTracker(21);
+JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
+ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
+JoystickInterface *Joystick1 = joystick;
+JoystickInterface *Joystick2 = buttons;
+#elif defined(ESP8266)
+ButtonPressTracker *upTracker = SetupNewButtonPressTracker(D7);
+ButtonPressTracker *downTracker = SetupNewButtonPressTracker(D6);
+ButtonPressTracker *leftTracker = SetupNewButtonPressTracker(D5);
+ButtonPressTracker *rightTracker = SetupNewButtonPressTracker(D4);
+ButtonPressTracker *midTracker = SetupNewButtonPressTracker(D3);
+ButtonPressTracker *setTracker = SetupNewButtonPressTracker(D2);
+ButtonPressTracker *rstTracker = SetupNewButtonPressTracker(D1);
+ButtonJoystick *joystick = new ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, midTracker);
+ButtonsOnly *buttons = new ButtonsOnly(setTracker, rstTracker, NULL, NULL);
+JoystickInterface *Joystick1 = joystick;
+JoystickInterface *Joystick2 = buttons;
+#elif defined(ESP_NOW_CLIENT)
+#endif
+
+
+
+bool espNowGood = true;
+
+void setup()
+{
+  Serial.begin(115200);
+#if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
+  espNowGood = esp_now_init() == 0;
+  if (espNowGood) {
+ #if defined(ESP_NOW_SERVER_FOR_MAC)
+    esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
+    //esp_now_register_send_cb(OnDataSent);
+    espNowGood = esp_now_add_peer(ClientMACAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0) == 0;
+ #else
+    esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
+    esp_now_register_recv_cb(OnDataRecv);
+ #endif
+  }
+#endif
+
+}
+
+
+
 const long JoystickPressAutoRepeatMillis = 200; // 0 means no auto repeat
-
-
 
 const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
 {
@@ -38,29 +158,9 @@ const char *ToRepresentation(const JoystickPress *joystickPress, bool swPressed)
   }
   return NULL;
 }
-// const char *ToRepresentationFromCode(JoystickPressCode* joystickPressCode) {
-//   if (joystickPressCode != NULL) {
-//     JoystickPress joystickPress;
-//     int xPressedCode = joystickPressCode->xPressed;
-//     int yPressedCode = joystickPressCode->yPressed;
-//     if (xPressedCode == 2 || xPressedCode == 1) {
-//       joystickPress.xPressed = 1;
-//     } else if (xPressedCode == -1) {
-//       joystickPress.xPressed = -1;
-//     }
-//     if (yPressedCode == 2 || yPressedCode == 1) {
-//       joystickPress.yPressed = 1;
-//     } else if (yPressedCode == -1) {
-//       joystickPress.yPressed = -1;
-//     }
-//     return ToRepresentation(&joystickPress, joystickPressCode->swPressed);
-//   } else {
-//     return ".";
-//   }
-// }
 
 char RepresentationBuffer[5];
-const char *WorkoutPessed(JoystickInterface* joystick, int repeat = 0)
+const char *CheckRepresentation(JoystickInterface* joystick, int repeat)
 {
   if (joystick->forButtonsOnly()) {
     const ABCDPressed* pressed = joystick->checkABCDPressed(repeat);
@@ -92,94 +192,51 @@ const char *WorkoutPessed(JoystickInterface* joystick, int repeat = 0)
   }
   return NULL;
 }
-
-JoystickPressTracker *SetupNewJoystickPressTracker(uint8_t pin, bool reverseDir, int autoTuneThreshold = JoystickPressTracker::DefAutoTuneThreshold)
-{
-  pinMode(pin, INPUT);
-  return new JoystickPressTracker(pin, reverseDir, autoTuneThreshold);
+bool CheckRepresentation(JoystickInterface* joystick, int repeat, String& buffer) {
+#if defined(ESP_NOW_SERVER_FOR_MAC)  
+  const char *representation;
+  bool pressed = true;
+  JoystickPressCode joystickPressCode;
+  if (joystick->checkJoystickPressCode(joystickPressCode, repeat)) {
+    buffer = String("x:") + String(joystickPressCode.xPressed) +
+      String("/y:") + String(joystickPressCode.yPressed) +
+      String("/sw:") + String(joystickPressCode.swPressed);
+    representation = buffer.c_str();
+  } else {
+    representation = ".";
+    pressed = false;
+  }
+#else
+  bool pressed = true;
+  const char *representation = CheckRepresentation(joystick, repeat);
+  if (representation == NULL) {
+    representation = ".";
+    pressed = false;
+  }
+#endif  
+  buffer = String("[") + representation + "]";
+  return pressed;
 }
-ButtonPressTracker *SetupNewButtonPressTracker(uint8_t pin)
-{
-  pinMode(pin, INPUT_PULLUP);
-  return new ButtonPressTracker(pin);
-}
-
-#if defined(ARDUINO_AVR_UNO)
-JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(A0, false);
-JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(A1, true);
-ButtonPressTracker *swTracker = SetupNewButtonPressTracker(8);
-ButtonPressTracker *aTracker = SetupNewButtonPressTracker(2);
-ButtonPressTracker *bTracker = SetupNewButtonPressTracker(3);
-ButtonPressTracker *cTracker = SetupNewButtonPressTracker(4);
-ButtonPressTracker *dTracker = SetupNewButtonPressTracker(5);
-JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
-ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
-const int JoystickCount = 2;
-JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
-#elif defined(ARDUINO_AVR_NANO)
-JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(A3, false);
-JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(A2, false);
-ButtonPressTracker *swTracker = SetupNewButtonPressTracker(A1);
-JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
-ButtonPressTracker *cTracker = SetupNewButtonPressTracker(5);
-ButtonPressTracker *bTracker = SetupNewButtonPressTracker(6);
-ButtonPressTracker *dTracker = SetupNewButtonPressTracker(7);
-ButtonPressTracker *aTracker = SetupNewButtonPressTracker(8);
-ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
-const int JoystickCount = 2;
-JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
-#elif defined(PICO_SDK_VERSION_MAJOR)
-JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(26, true);
-JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(27, true);
-ButtonPressTracker *swTracker = SetupNewButtonPressTracker(16);
-ButtonPressTracker *aTracker = SetupNewButtonPressTracker(18);
-ButtonPressTracker *dTracker = SetupNewButtonPressTracker(19);
-ButtonPressTracker *cTracker = SetupNewButtonPressTracker(20);
-ButtonPressTracker *bTracker = SetupNewButtonPressTracker(21);
-JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
-ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
-const int JoystickCount = 2;
-JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
-#elif defined(ESP8266)
-ButtonPressTracker *upTracker = SetupNewButtonPressTracker(D7);
-ButtonPressTracker *downTracker = SetupNewButtonPressTracker(D6);
-ButtonPressTracker *leftTracker = SetupNewButtonPressTracker(D5);
-ButtonPressTracker *rightTracker = SetupNewButtonPressTracker(D4);
-ButtonPressTracker *midTracker = SetupNewButtonPressTracker(D3);
-ButtonPressTracker *setTracker = SetupNewButtonPressTracker(D2);
-ButtonPressTracker *rstTracker = SetupNewButtonPressTracker(D1);
-ButtonJoystick *joystick = new ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, midTracker);
-ButtonsOnly *buttons = new ButtonsOnly(setTracker, rstTracker, NULL, NULL);
-const int JoystickCount = 2;
-JoystickInterface *Joysticks[JoystickCount] = {joystick, buttons};
-#endif
 
 
 
-void setup()
-{
-  Serial.begin(115200);
-}
+
 void loop()
 {
-  const char* representations[JoystickCount];
-  bool show = false;
-  for (int i = 0; i < JoystickCount; i++)
-  {
-    representations[i] = WorkoutPessed(Joysticks[i], JoystickPressAutoRepeatMillis);
-    if (representations[i] != NULL) {
-      show = true;
-    }
+#if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
+  if (!espNowGood) {
+    Serial.println("XXX ESP Now not properly initialized!");
+    delay(1000);
+    return;
   }
-  if (show) {
-    String showWhat;
-    for (int i = 0; i < JoystickCount; i++) {
-      const char* representation = representations[i];
-      if (representation == NULL) {
-        representation = ".";
-      }
-      showWhat += String("[") + representation + "]";
-    }
-    Serial.println(showWhat);
+#endif
+
+  // if client, and not received the 1st packet, show mac
+
+  String representation1;
+  String representation2;
+  if (CheckRepresentation(Joystick1, JoystickPressAutoRepeatMillis, representation1) ||
+      CheckRepresentation(Joystick2, JoystickPressAutoRepeatMillis, representation2)) {
+    Serial.println(representation1 + representation2);
   }
 }
