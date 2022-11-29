@@ -732,27 +732,16 @@ public:
   }
 
 public:
-  void decode(JoystickPressCode *joystickPressCode)
+  void decode(JoystickPressCode &joystickPressCode)
   {
-    if (joystickPressCode != NULL)
-    {
-      this->joystickPressCode.xPressed = joystickPressCode->xPressed;
-      this->joystickPressCode.yPressed = joystickPressCode->yPressed;
-      this->joystickPressCode.swPressed = joystickPressCode->swPressed;
-      this->aValid = true;
-      this->bValid = true;
-      this->cValid = true;
-      this->dValid = true;
-      this->eValid = true;
-    }
-    else
-    {
-      this->aValid = false;
-      this->bValid = false;
-      this->cValid = false;
-      this->dValid = false;
-      this->eValid = false;
-    }
+    this->joystickPressCode.xPressed = joystickPressCode.xPressed;
+    this->joystickPressCode.yPressed = joystickPressCode.yPressed;
+    this->joystickPressCode.swPressed = joystickPressCode.swPressed;
+    this->aValid = true;
+    this->bValid = true;
+    this->cValid = true;
+    this->dValid = true;
+    this->eValid = true;
   }
 
 protected:

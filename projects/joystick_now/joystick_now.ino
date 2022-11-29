@@ -1,7 +1,7 @@
 
 
-#define ESP_NOW_SERVER_FOR_MAC {0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15}
-//#define ESP_NOW_CLIENT
+//#define ESP_NOW_SERVER_FOR_MAC 0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
+#define ESP_NOW_CLIENT
 
 
 // ddjoystick.h is include in DumbDisplay Arduino library
@@ -13,27 +13,24 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 struct ESPNowJoystickData {
-  JoystickInterface joystick1;
-  JoystickInterface joystick2;
+  JoystickPressCode joystickPressCode1;
+  JoystickPressCode joystickPressCode2;
 };
 #endif
 
 
 #if defined(ESP_NOW_SERVER_FOR_MAC)
-uint8_t ClientMACAddress[] = ESP_NOW_SERVER_FOR_MAC;
-// volatile bool esp_now_sending = false;
-// void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
-// {
-//   esp_now_sending = false;  
-// }
+uint8_t ClientMACAddress[] = { ESP_NOW_SERVER_FOR_MAC };
 #endif
 
 #if defined(ESP_NOW_CLIENT)
-void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len)
+ESPNowJoystickData receivedJoystickData;
+volatile bool receivedJoystickDataValid = false;
+volatile long lastReceivedJoystickDataMillis = 0;
+void OnReceivedData(uint8_t * mac, uint8_t *incomingData, uint8_t len)
 {
-  ESPNowJoystickData joystickData;
-  memcpy(&joystickData, incomingData, len);
-  Serial.println("* received data");
+  memcpy(&receivedJoystickData, incomingData, len);
+  receivedJoystickDataValid = true;
 }
 #endif
 
@@ -51,7 +48,22 @@ ButtonPressTracker *SetupNewButtonPressTracker(uint8_t pin)
 }
 
 
-#if defined(ARDUINO_AVR_UNO)
+#if defined(ESP_NOW_CLIENT)
+DecodedJoystick *Joystick1 = new DecodedJoystick(true);
+DecodedJoystick *Joystick2 = new DecodedJoystick(false);
+#elif defined(ESP8266)
+ButtonPressTracker *upTracker = SetupNewButtonPressTracker(D7);
+ButtonPressTracker *downTracker = SetupNewButtonPressTracker(D6);
+ButtonPressTracker *leftTracker = SetupNewButtonPressTracker(D5);
+ButtonPressTracker *rightTracker = SetupNewButtonPressTracker(D4);
+ButtonPressTracker *midTracker = SetupNewButtonPressTracker(D3);
+ButtonPressTracker *setTracker = SetupNewButtonPressTracker(D2);
+ButtonPressTracker *rstTracker = SetupNewButtonPressTracker(D1);
+ButtonJoystick *joystick = new ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, midTracker);
+ButtonsOnly *buttons = new ButtonsOnly(setTracker, rstTracker, NULL, NULL);
+JoystickInterface *Joystick1 = joystick;
+JoystickInterface *Joystick2 = buttons;
+#elif defined(ARDUINO_AVR_UNO)
 JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(A0, false);
 JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(A1, true);
 ButtonPressTracker *swTracker = SetupNewButtonPressTracker(8);
@@ -87,38 +99,25 @@ JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker)
 ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
 JoystickInterface *Joystick1 = joystick;
 JoystickInterface *Joystick2 = buttons;
-#elif defined(ESP8266)
-ButtonPressTracker *upTracker = SetupNewButtonPressTracker(D7);
-ButtonPressTracker *downTracker = SetupNewButtonPressTracker(D6);
-ButtonPressTracker *leftTracker = SetupNewButtonPressTracker(D5);
-ButtonPressTracker *rightTracker = SetupNewButtonPressTracker(D4);
-ButtonPressTracker *midTracker = SetupNewButtonPressTracker(D3);
-ButtonPressTracker *setTracker = SetupNewButtonPressTracker(D2);
-ButtonPressTracker *rstTracker = SetupNewButtonPressTracker(D1);
-ButtonJoystick *joystick = new ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, midTracker);
-ButtonsOnly *buttons = new ButtonsOnly(setTracker, rstTracker, NULL, NULL);
-JoystickInterface *Joystick1 = joystick;
-JoystickInterface *Joystick2 = buttons;
-#elif defined(ESP_NOW_CLIENT)
 #endif
 
 
 
-bool espNowGood = true;
+int espNowStatus = 0;
 
 void setup()
 {
   Serial.begin(115200);
 #if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
-  espNowGood = esp_now_init() == 0;
-  if (espNowGood) {
+  espNowStatus = esp_now_init();
+  if (espNowStatus == 0) {
  #if defined(ESP_NOW_SERVER_FOR_MAC)
     esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
     //esp_now_register_send_cb(OnDataSent);
     espNowGood = esp_now_add_peer(ClientMACAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0) == 0;
  #else
     esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
-    esp_now_register_recv_cb(OnDataRecv);
+    esp_now_register_recv_cb(OnReceivedData);
  #endif
   }
 #endif
@@ -220,18 +219,39 @@ bool CheckRepresentation(JoystickInterface* joystick, int repeat, String& buffer
 
 
 
+long lastActivityMillis = 0;
 
 void loop()
 {
 #if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
-  if (!espNowGood) {
-    Serial.println("XXX ESP Now not properly initialized!");
-    delay(1000);
+  if (espNowStatus != 0) {
+    Serial.println("ESP Now not properly initialized!");
+    Serial.print("status is ");
+    Serial.println(espNowStatus);
+    delay(2000);
     return;
   }
 #endif
 
-  // if client, and not received the 1st packet, show mac
+  long nowMillis = millis();
+
+#if defined(ESP_NOW_CLIENT)
+  if (lastReceivedJoystickDataMillis == 0) {
+    if ((nowMillis - lastActivityMillis) >= 2000) {
+      Serial.print("IDLE: my MAC is ");
+      Serial.println(WiFi.macAddress());
+      lastActivityMillis = nowMillis;
+    }
+    return;
+  }
+  if (!receivedJoystickDataValid) {
+    return;  
+  }
+  Joystick1->decode(receivedJoystickData.joystickPressCode1);
+  Joystick2->decode(receivedJoystickData.joystickPressCode2);
+  receivedJoystickDataValid = false;
+  lastActivityMillis = nowMillis;
+#endif
 
   String representation1;
   String representation2;
