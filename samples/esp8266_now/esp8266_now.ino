@@ -1,6 +1,6 @@
 
-//#define ESP_NOW_SERVER_FOR_MAC { 0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15 }
-#define ESP_NOW_CLIENT
+//#define ESP_NOW_CLIENT
+#define ESP_NOW_SERVER_FOR_MAC { 0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15 }
 
 
 #include <ESP8266WiFi.h>
@@ -35,26 +35,11 @@ void OnSentData(uint8_t *mac_addr, uint8_t sendStatus)
 
 #if defined(ESP_NOW_CLIENT)
 ESPNowPacket LastReceivedPacket;
-long LastReceivedPacketMillis = 0;
-bool LastReceivedPacketValid = false;
+volatile bool LastReceivedPacketValid = false;
 void OnReceivedData(uint8_t *mac, uint8_t *incomingData, uint8_t len)
 {
-  // //memcpy(&myData, incomingData, sizeof(myData));
-  // struct_message myData;
-  // memcpy(&myData, incomingData, len);
-  // Serial.print("Bytes received: ");
-  // Serial.println(len);
-  // Serial.print("Char: ");
-  // Serial.println(myData.a);
-  // Serial.print("Int: ");
-  // Serial.println(myData.b);
-  // Serial.print("Float: ");
-  // Serial.println(myData.c);
-  // Serial.print("String: ");
-  // Serial.println(myData.d);
-  // Serial.print("Bool: ");
-  // Serial.println(myData.e);
-  // Serial.println();
+  memcpy(&LastReceivedPacket, incomingData, len);
+  LastReceivedPacketValid = true;
 }
 #endif
 
@@ -87,7 +72,16 @@ void setup()
   Serial.println("OK!");
 }
 
+
+#if defined(ESP_NOW_SERVER_FOR_MAC)
+const long MaxIdleMillis = 2000;
+#endif
+#if defined(ESP_NOW_CLIENT)
+const long MaxIdleMillis = 3000;
+#endif
+
 unsigned long lastActivityMillis = 0;
+
 
 void loop()
 {
@@ -114,7 +108,7 @@ void loop()
     }
 #endif
 
-  if ((nowMillis - lastActivityMillis) >= 2000)
+  if ((nowMillis - lastActivityMillis) >= MaxIdleMillis)
   {
 #if defined(ESP_NOW_SERVER_FOR_MAC)
     ESPNowPacket packet;
