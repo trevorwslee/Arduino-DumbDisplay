@@ -14,8 +14,8 @@ struct ABCDPressed
 {
   bool aPressed;
   bool bPressed;
-  bool dPressed;
   bool cPressed;
+  bool dPressed;
 };
 
 
@@ -96,7 +96,7 @@ public:
   {
     return _checkPressed('E', repeat);
   }
-  inline bool forButtonsOnly() {
+  inline bool forButtonsOnly() const {
     return this->buttonsOnly;
   }
   const ABCDPressed *checkABCDPressed(int repeat = 0)
@@ -145,7 +145,7 @@ public:
     joystickPressCode.xPressed = _checkPressedX(repeat, true);
     joystickPressCode.yPressed = _checkPressedY(repeat, true);
     joystickPressCode.swPressed = _checkPressed('E', repeat);
-    return joystickPressCode.xPressed != 0 && joystickPressCode.yPressed != 0 && joystickPressCode.swPressed;
+    return joystickPressCode.xPressed != 0 || joystickPressCode.yPressed != 0 || joystickPressCode.swPressed;
     // joystickPressCode.xPressed = 0;
     // joystickPressCode.yPressed = 0;
     // joystickPressCode.swPressed = false;
@@ -630,12 +630,12 @@ protected:
     if (pressedB)
     {
 //Serial.println("*B");
-      return raw && pressedD ? 2 : -1;
+      return raw && pressedD ? 2 : 1;
     }
     else if (pressedD)
     {
 //Serial.println("*D");
-      return 1;
+      return -1;
     }
     else
     {
@@ -719,10 +719,10 @@ protected:
 };
 
 
-class DecodedJoystick : public JoystickInterface
+class DecodedJoystick : public ButtonJoystickBasic
 {
 public:
-  DecodedJoystick(bool buttonsOnly) : JoystickInterface(buttonsOnly)
+  DecodedJoystick(bool buttonsOnly) : ButtonJoystickBasic(buttonsOnly)
   {
     aValid = false;
     bValid = false;

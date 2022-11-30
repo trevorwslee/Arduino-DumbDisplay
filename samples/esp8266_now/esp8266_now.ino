@@ -18,7 +18,7 @@ struct ESPNowPacket
 
 // if acting as SERVER, define a variable for storing CLIENT's MAC
 #if defined(ESP_NOW_SERVER_FOR_MAC)
-uint8_t ClientMACAddress[] = {ESP_NOW_SERVER_FOR_MAC};
+uint8_t ClientMACAddress[] = { ESP_NOW_SERVER_FOR_MAC };
 #endif
 
 // if acting as SERVER, also define a callback function to be called after sending a packet
@@ -67,7 +67,7 @@ void setup()
 #if defined(ESP_NOW_SERVER_FOR_MAC)
     esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
     esp_now_register_send_cb(OnSentData);
-    esp_now_add_peer(ClientMACAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0); // 1 is the channel
+    esp_now_add_peer(ClientMACAddress, ESP_NOW_ROLE_SLAVE, 0, NULL, 0); // 0 is the channel
 #endif
 
     // if acting as CLIENT, set ESP role to slave, and set "received data" callback

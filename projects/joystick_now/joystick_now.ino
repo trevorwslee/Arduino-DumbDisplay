@@ -21,6 +21,9 @@ struct ESPNowJoystickData {
 
 #if defined(ESP_NOW_SERVER_FOR_MAC)
 uint8_t ClientMACAddress[] = { ESP_NOW_SERVER_FOR_MAC };
+void OnSentData(uint8_t *mac_addr, uint8_t sendStatus)
+{
+}
 #endif
 
 #if defined(ESP_NOW_CLIENT)
@@ -29,8 +32,11 @@ volatile bool receivedJoystickDataValid = false;
 volatile long lastReceivedJoystickDataMillis = 0;
 void OnReceivedData(uint8_t * mac, uint8_t *incomingData, uint8_t len)
 {
-  memcpy(&receivedJoystickData, incomingData, len);
-  receivedJoystickDataValid = true;
+  if (!receivedJoystickDataValid) {
+    memcpy(&receivedJoystickData, incomingData, len);
+    receivedJoystickDataValid = true;
+    lastReceivedJoystickDataMillis = millis();
+  }
 }
 #endif
 
@@ -49,8 +55,8 @@ ButtonPressTracker *SetupNewButtonPressTracker(uint8_t pin)
 
 
 #if defined(ESP_NOW_CLIENT)
-DecodedJoystick *Joystick1 = new DecodedJoystick(true);
-DecodedJoystick *Joystick2 = new DecodedJoystick(false);
+DecodedJoystick *Joystick1 = new DecodedJoystick(false);
+DecodedJoystick *Joystick2 = new DecodedJoystick(true);
 #elif defined(ESP8266)
 ButtonPressTracker *upTracker = SetupNewButtonPressTracker(D7);
 ButtonPressTracker *downTracker = SetupNewButtonPressTracker(D6);
@@ -109,12 +115,13 @@ void setup()
 {
   Serial.begin(115200);
 #if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
+  WiFi.mode(WIFI_STA);
   espNowStatus = esp_now_init();
   if (espNowStatus == 0) {
  #if defined(ESP_NOW_SERVER_FOR_MAC)
     esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
-    //esp_now_register_send_cb(OnDataSent);
-    espNowGood = esp_now_add_peer(ClientMACAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0) == 0;
+    esp_now_register_send_cb(OnSentData);
+    esp_now_add_peer(ClientMACAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
  #else
     esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
     esp_now_register_recv_cb(OnReceivedData);
@@ -192,30 +199,33 @@ const char *CheckRepresentation(JoystickInterface* joystick, int repeat)
   return NULL;
 }
 bool CheckRepresentation(JoystickInterface* joystick, int repeat, String& buffer) {
-#if defined(ESP_NOW_SERVER_FOR_MAC)  
-  const char *representation;
-  bool pressed = true;
-  JoystickPressCode joystickPressCode;
-  if (joystick->checkJoystickPressCode(joystickPressCode, repeat)) {
-    buffer = String("x:") + String(joystickPressCode.xPressed) +
-      String("/y:") + String(joystickPressCode.yPressed) +
-      String("/sw:") + String(joystickPressCode.swPressed);
-    representation = buffer.c_str();
-  } else {
-    representation = ".";
-    pressed = false;
-  }
-#else
   bool pressed = true;
   const char *representation = CheckRepresentation(joystick, repeat);
   if (representation == NULL) {
     representation = ".";
     pressed = false;
   }
-#endif  
   buffer = String("[") + representation + "]";
   return pressed;
 }
+#if defined(ESP_NOW_SERVER_FOR_MAC)  
+bool CheckJoystickPressCode(JoystickInterface* joystick, JoystickPressCode &joystickPressCode, int repeat, String& representationBuffer) {
+  const char *representation;
+  bool pressed;
+  if (joystick->checkJoystickPressCode(joystickPressCode, repeat)) {
+    representationBuffer = String("x:") + String(joystickPressCode.xPressed) +
+      String("/y:") + String(joystickPressCode.yPressed) +
+      String("/sw:") + String(joystickPressCode.swPressed);
+    representation = representationBuffer.c_str();
+    pressed = true;
+  } else {
+    representation = ".";
+    pressed = false;
+  }
+  representationBuffer = String("[") + representation + "]";
+  return pressed;
+}
+#endif  
 
 
 
@@ -233,9 +243,8 @@ void loop()
   }
 #endif
 
-  long nowMillis = millis();
-
 #if defined(ESP_NOW_CLIENT)
+  long nowMillis = millis();
   if (lastReceivedJoystickDataMillis == 0) {
     if ((nowMillis - lastActivityMillis) >= 2000) {
       Serial.print("IDLE: my MAC is ");
@@ -255,8 +264,25 @@ void loop()
 
   String representation1;
   String representation2;
-  if (CheckRepresentation(Joystick1, JoystickPressAutoRepeatMillis, representation1) ||
-      CheckRepresentation(Joystick2, JoystickPressAutoRepeatMillis, representation2)) {
+
+#if defined(ESP_NOW_SERVER_FOR_MAC)
+  JoystickPressCode joystickPressCode1;
+  JoystickPressCode joystickPressCode2;
+  bool checkJoystick1 = CheckJoystickPressCode(Joystick1, joystickPressCode1, JoystickPressAutoRepeatMillis, representation1);
+  bool checkJoystick2 = CheckJoystickPressCode(Joystick2, joystickPressCode2, JoystickPressAutoRepeatMillis, representation2);
+  if (checkJoystick1 || checkJoystick2) {
+    ESPNowJoystickData joystickData;
+    memcpy(&joystickData.joystickPressCode1, &joystickPressCode1, sizeof(joystickPressCode1));
+    memcpy(&joystickData.joystickPressCode2, &joystickPressCode2, sizeof(joystickPressCode2));
+    // joystickData.joystickPressCode1 = joystickPressCode1;
+    // joystickData.joystickPressCode2 = joystickPressCode2;
+    esp_now_send(ClientMACAddress, (uint8_t *) &joystickData, sizeof(joystickData));
+  }
+#else
+  bool checkJoystick1 = CheckRepresentation(Joystick1, JoystickPressAutoRepeatMillis, representation1);
+  bool checkJoystick2 = CheckRepresentation(Joystick2, JoystickPressAutoRepeatMillis, representation2);
+#endif
+  if (checkJoystick1 || checkJoystick2) {
     Serial.println(representation1 + representation2);
   }
 }
