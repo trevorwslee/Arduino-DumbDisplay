@@ -8,7 +8,20 @@
 #include "ddjoystick.h"
 
 
-#if defined(ARDUINO_AVR_UNO)
+#if defined(ESP8266)
+  #define DOWNLOAD_IMAGES
+  #define SHOW_SPACE
+  ButtonPressTracker *upTracker = SetupNewButtonPressTracker(D7);
+  ButtonPressTracker *downTracker = SetupNewButtonPressTracker(D6);
+  ButtonPressTracker *leftTracker = SetupNewButtonPressTracker(D5);
+  ButtonPressTracker *rightTracker = SetupNewButtonPressTracker(D4);
+  ButtonPressTracker *midTracker = SetupNewButtonPressTracker(D3);
+  ButtonPressTracker *setTracker = SetupNewButtonPressTracker(D2);
+  ButtonPressTracker *rstTracker = SetupNewButtonPressTracker(D1);
+  ButtonsOnly *buttons = new ButtonsOnly(rstTracker, setTracker, NULL, NULL);
+  ButtonJoystick *joystick = new ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, midTracker);
+
+#elif defined(ARDUINO_AVR_UNO)
   // *** config for Arduino UNO, with Joystick Shield
 
   //#define DOWNLOAD_IMAGES
@@ -17,7 +30,7 @@
                                                new ButtonPressTracker(2),
                                                NULL, NULL);
   JoystickInterface* joystick = new JoystickJoystick(new JoystickPressTracker(A0, false),
-                                                     new JoystickPressTracker(A1, false),
+                                                     new JoystickPressTracker(A1, true),
                                                      NULL);
  
 #elif defined(PICO_SDK_VERSION_MAJOR)
@@ -31,7 +44,7 @@
                                                SetupNewButtonPressTracker(18),
                                                NULL, NULL);
   JoystickInterface* joystick = new JoystickJoystick(SetupNewJoystickPressTracker(26, true),
-                                                     SetupNewJoystickPressTracker(27, false),
+                                                     SetupNewJoystickPressTracker(27, true),
                                                      NULL);
  
 #else

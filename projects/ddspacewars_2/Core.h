@@ -285,10 +285,10 @@ void handlePlay()
   int x = xy.getX();
   int y = xy.getY();
 
-  if (verticalPress == -1 && y < 94) // Move down
+  if (verticalPress == 1 && y < 94) // Move down
     y = y + sped;
 
-  if (verticalPress == 1 && y > 18) // Move up
+  if (verticalPress == -1 && y > 18) // Move up
     y = y - sped;
 
   if (horizontalPress == 1 && x < 125) // Move right
