@@ -24,9 +24,11 @@ ButtonPressTracker btnBTracker(BTN_B);
 #if defined(HORIZONTAL)
 // JoystickPressTracker horizontalTracker(HORIZONTAL, joystickReverseHoriDir);
 // JoystickPressTracker verticalTracker(VERTICAL, joystickReverseVertDir);
-JoystickPressTracker xTracker(HORIZONTAL, joystickReverseHoriDir);
-JoystickPressTracker yTracker(VERTICAL, joystickReverseVertDir);
-JoystickJoystick joystick(&xTracker, &yTracker, NULL);
+// JoystickPressTracker xTracker(HORIZONTAL, joystickReverseHoriDir);
+// JoystickPressTracker yTracker(VERTICAL, joystickReverseVertDir);
+JoystickInterface* joystick = new JoystickJoystick(new JoystickPressTracker(HORIZONTAL, joystickReverseHoriDir),
+                                                   new JoystickPressTracker(VERTICAL, joystickReverseVertDir),
+                                                   NULL);
 #endif
 
 
@@ -268,7 +270,7 @@ void handlePlay()
   long frameNum = frameControl.getFrameNum();
 
 #if defined(HORIZONTAL)
-  const JoystickPress* joystickPress = joystick.checkJoystickPress(50);
+  const JoystickPress* joystickPress = joystick->checkJoystickPress(50);
   int horizontalPress = 0;
   int verticalPress = 0;
   if (joystickPress != NULL) {
