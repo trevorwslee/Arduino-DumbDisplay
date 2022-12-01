@@ -13,18 +13,12 @@
 
   //#define DOWNLOAD_IMAGES
   #define DEBUG_LED_PIN 13
-  #define BTN_A 3
-  #define BTN_B 2
-  #define HORIZONTAL A0
-  #define VERTICAL A1
-  // const bool joystickReverseHoriDir = false;
-  // const bool joystickReverseVertDir = false;
-  JoystickInterface* buttons = new ButtonsOnly(new ButtonPressTracker(BTN_A),
-                                               new ButtonPressTracker(BTN_B),
+  JoystickInterface* buttons = new ButtonsOnly(new ButtonPressTracker(3),
+                                               new ButtonPressTracker(2),
                                                NULL, NULL);
-  JoystickInterface* joystick = new JoystickJoystick(new JoystickPressTracker(HORIZONTAL, joystickReverseHoriDir),
-                                                    new JoystickPressTracker(VERTICAL, joystickReverseVertDir),
-                                                    NULL);
+  JoystickInterface* joystick = new JoystickJoystick(new JoystickPressTracker(A0, false),
+                                                     new JoystickPressTracker(A1, false),
+                                                     NULL);
  
 #elif defined(PICO_SDK_VERSION_MAJOR)
   // *** config for Raspberry Pi Pico, with Joystick and buttons
@@ -33,13 +27,11 @@
   #define DOWNLOAD_IMAGES
   #define SHOW_SPACE
   #define DEBUG_LED_PIN 1
-  const bool joystickReverseHoriDir = true;
-  const bool joystickReverseVertDir = false;
   JoystickInterface* buttons = new ButtonsOnly(SetupNewButtonPressTracker(21),
                                                SetupNewButtonPressTracker(18),
                                                NULL, NULL);
-  JoystickInterface* joystick = new JoystickJoystick(SetupNewJoystickPressTracker(26, joystickReverseHoriDir),
-                                                     SetupNewJoystickPressTracker(27, joystickReverseVertDir),
+  JoystickInterface* joystick = new JoystickJoystick(SetupNewJoystickPressTracker(26, true),
+                                                     SetupNewJoystickPressTracker(27, false),
                                                      NULL);
  
 #else

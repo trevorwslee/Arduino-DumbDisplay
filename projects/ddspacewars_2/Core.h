@@ -272,7 +272,6 @@ void handlePlay()
   bool frameDue = frameControl.checkDue();
   long frameNum = frameControl.getFrameNum();
 
-#if defined(HORIZONTAL)
   const JoystickPress* joystickPress = joystick->checkJoystickPress(50);
   int horizontalPress = 0;
   int verticalPress = 0;
@@ -299,7 +298,6 @@ void handlePlay()
     x = x - sped;
 
   xy.moveTo(x, y);
-#endif
 
   // const ABCDPressed* abcdPressed = buttons->checkABCDPressed();
   // bool aPressed = false;
