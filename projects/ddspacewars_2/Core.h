@@ -18,8 +18,11 @@
 #include "ddjoystick.h"
 #include "Misc.h"
 
-ButtonPressTracker btnATracker(BTN_A);
-ButtonPressTracker btnBTracker(BTN_B);
+//ButtonPressTracker btnATracker(BTN_A);
+//ButtonPressTracker btnBTracker(BTN_B);
+JoystickInterface* buttons = new ButtonsOnly(new ButtonPressTracker(BTN_A),
+                                             new ButtonPressTracker(BTN_B),
+                                             NULL, NULL);
 
 #if defined(HORIZONTAL)
 // JoystickPressTracker horizontalTracker(HORIZONTAL, joystickReverseHoriDir);
@@ -206,7 +209,9 @@ void newLevel()
   main_layer->drawImageFile(IF_SENS, 170, 61);
   delay(2600);
 
-  while (!btnATracker.checkPressed())
+  // while (!btnATracker.checkPressed())
+  //   ;
+  while (!buttons->checkAPressed())
     ;
 
   resetScreen();
@@ -222,7 +227,9 @@ void handleRestart()
   restart();
   resetScreen();
   main_layer->drawImageFile(IF_BACK2);
-  while (!btnATracker.checkPressed())
+  // while (!btnATracker.checkPressed())
+  //   ;
+  while (!buttons->checkAPressed())
     ;
   resetScreen();
   main_layer->setCursor(0, 0);
@@ -240,7 +247,9 @@ void handleRestart()
   main_layer->drawImageFile(IF_EARTH(level), 170, 5);
   main_layer->drawImageFile(IF_SENS, 170, 61);
 
-  while (!btnATracker.checkPressed())
+  // while (!btnATracker.checkPressed())
+  //   ;
+  while (!buttons->checkAPressed())
     ;
 
   resetScreen();
@@ -298,13 +307,23 @@ void handlePlay()
   xy.moveTo(x, y);
 #endif
 
-  if (btnATracker.checkPressed())
+  // const ABCDPressed* abcdPressed = buttons->checkABCDPressed();
+  // bool aPressed = false;
+  // bool bPressed = false;
+  // if (abcdPressed != NULL) {
+  //   aPressed = abcdPressed->aPressed;
+  //   bPressed = abcdPressed->bPressed;
+  // }
+  bool aPressed = buttons->checkAPressed();
+  bool bPressed = buttons->checkBPressed();
+
+  if (aPressed/*btnATracker.checkPressed()*/)
   {
     buletXY[counter].moveTo(xy.getX() + 34, xy.getY() + 15);
     counter = counter + 1;
   }
 
-  if (btnBTracker.checkPressed() && rockets > 0)
+  if (bPressed/*btnBTracker.checkPressed()*/ && rockets > 0)
   {
     rockets--;
     rocketXY[rcounter].moveTo(xy.getX() + 34, xy.getY() + 14);
@@ -524,7 +543,9 @@ void handleGameOver()
   main_layer->print("Score : " + String(brojac));
   main_layer->setCursor(24, 69);
   main_layer->print("Level : " + String(level));
-  while (!btnATracker.checkPressed())
+  // while (!btnATracker.checkPressed())
+  //   ;
+  while (!buttons->checkAPressed())
     ;
 
   fase = 0;
