@@ -950,4 +950,16 @@ public:
 };
 
 
+JoystickPressTracker *SetupNewJoystickPressTracker(uint8_t pin, bool reverseDir, int autoTuneThreshold = JoystickPressTracker::DefAutoTuneThreshold)
+{
+  pinMode(pin, INPUT);
+  return new JoystickPressTracker(pin, reverseDir, autoTuneThreshold);
+}
+ButtonPressTracker *SetupNewButtonPressTracker(uint8_t pin)
+{
+  pinMode(pin, INPUT_PULLUP);
+  return new ButtonPressTracker(pin);
+}
+
+
 #endif

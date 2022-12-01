@@ -17,9 +17,14 @@
   #define BTN_B 2
   #define HORIZONTAL A0
   #define VERTICAL A1
-  const bool joystickReverseHoriDir = false;
-  const bool joystickReverseVertDir = false;
-  //const bool joystickAutoTune = true;
+  // const bool joystickReverseHoriDir = false;
+  // const bool joystickReverseVertDir = false;
+  JoystickInterface* buttons = new ButtonsOnly(new ButtonPressTracker(BTN_A),
+                                               new ButtonPressTracker(BTN_B),
+                                               NULL, NULL);
+  JoystickInterface* joystick = new JoystickJoystick(new JoystickPressTracker(HORIZONTAL, joystickReverseHoriDir),
+                                                    new JoystickPressTracker(VERTICAL, joystickReverseVertDir),
+                                                    NULL);
  
 #elif defined(PICO_SDK_VERSION_MAJOR)
   // *** config for Raspberry Pi Pico, with Joystick and buttons
@@ -28,19 +33,21 @@
   #define DOWNLOAD_IMAGES
   #define SHOW_SPACE
   #define DEBUG_LED_PIN 1
-  #define BTN_A 21
-  #define BTN_B 18
-  #define HORIZONTAL 26
-  #define VERTICAL 27
   const bool joystickReverseHoriDir = true;
   const bool joystickReverseVertDir = false;
-  //const bool joystickAutoTune = true;
+  JoystickInterface* buttons = new ButtonsOnly(SetupNewButtonPressTracker(21),
+                                               SetupNewButtonPressTracker(18),
+                                               NULL, NULL);
+  JoystickInterface* joystick = new JoystickJoystick(SetupNewJoystickPressTracker(26, joystickReverseHoriDir),
+                                                     SetupNewJoystickPressTracker(27, joystickReverseVertDir),
+                                                     NULL);
  
 #else
 
 #error not configured for board yet
 
 #endif
+
 
 
 #define SHOW_LIVES
@@ -83,12 +90,12 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 void setup(void)
 {
-  pinMode(BTN_B, INPUT_PULLUP);
-  pinMode(BTN_A, INPUT_PULLUP);
-#if defined(HORIZONTAL)
-  pinMode(HORIZONTAL, INPUT);
-  pinMode(VERTICAL, INPUT);
-#endif
+  // pinMode(BTN_B, INPUT_PULLUP);
+  // pinMode(BTN_A, INPUT_PULLUP);
+// #if defined(HORIZONTAL)
+//   pinMode(HORIZONTAL, INPUT);
+//   pinMode(VERTICAL, INPUT);
+// #endif
 
 #if defined(DEBUG_LED_PIN)
   pinMode(DEBUG_LED_PIN, OUTPUT);

@@ -15,24 +15,18 @@
 #include "gameOver.h"
 #endif
 
-#include "ddjoystick.h"
+//#include "ddjoystick.h"
 #include "Misc.h"
 
-//ButtonPressTracker btnATracker(BTN_A);
-//ButtonPressTracker btnBTracker(BTN_B);
-JoystickInterface* buttons = new ButtonsOnly(new ButtonPressTracker(BTN_A),
-                                             new ButtonPressTracker(BTN_B),
-                                             NULL, NULL);
+// // JoystickInterface* buttons = new ButtonsOnly(new ButtonPressTracker(BTN_A),
+// //                                              new ButtonPressTracker(BTN_B),
+// //                                              NULL, NULL);
 
-#if defined(HORIZONTAL)
-// JoystickPressTracker horizontalTracker(HORIZONTAL, joystickReverseHoriDir);
-// JoystickPressTracker verticalTracker(VERTICAL, joystickReverseVertDir);
-// JoystickPressTracker xTracker(HORIZONTAL, joystickReverseHoriDir);
-// JoystickPressTracker yTracker(VERTICAL, joystickReverseVertDir);
-JoystickInterface* joystick = new JoystickJoystick(new JoystickPressTracker(HORIZONTAL, joystickReverseHoriDir),
-                                                   new JoystickPressTracker(VERTICAL, joystickReverseVertDir),
-                                                   NULL);
-#endif
+// #if defined(HORIZONTAL)
+// // JoystickInterface* joystick = new JoystickJoystick(new JoystickPressTracker(HORIZONTAL, joystickReverseHoriDir),
+// //                                                    new JoystickPressTracker(VERTICAL, joystickReverseVertDir),
+// //                                                    NULL);
+// #endif
 
 
 const int LevelCount = 6;
