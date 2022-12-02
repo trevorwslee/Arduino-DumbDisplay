@@ -587,7 +587,6 @@ void handleGameOver()
 }
 
 
-int readyStage = 0;
 void gameLoop()
 {
   if (readyStage == 0) {
@@ -638,6 +637,7 @@ void gameLoop()
     dumbdisplay.writeComment("... ...");
 #endif
     readyStage = 1;
+    return;
   }
   if (readyStage == 1)
   {
@@ -702,7 +702,9 @@ void gameLoop()
       int level = i + 1;
       main_layer->loadImageFileCropped(IF_SPACEWARS_IMGS, x + i * 55, 0, 55, 54, IF_EARTH(level));
     }
+    main_layer->drawImageFile(IF_BACK2);
     readyStage = 2;
+    return;
   }
 
   if (fase == 0)

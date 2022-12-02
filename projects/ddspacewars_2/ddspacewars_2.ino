@@ -6,7 +6,7 @@
 
 
 //#define ESP_NOW_SERVER_FOR_MAC 0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
-//#define ESP_NOW_CLIENT
+#define ESP_NOW_CLIENT
 
 
 #include "ddjoystick.h"
@@ -14,8 +14,10 @@
 
 #if defined(ESP_NOW_CLIENT)
 
-  joystick = new DecodedJoystick(false);
-  buttons = new DecodedJoystick(true);
+  #define DOWNLOAD_IMAGES
+  #define SHOW_SPACE
+  JoystickInterface* joystick = new DecodedJoystick(false);
+  JoystickInterface* buttons = new DecodedJoystick(true);
   
 #elif defined(ESP8266)
   
@@ -28,8 +30,8 @@
   //ButtonPressTracker *midTracker = SetupNewButtonPressTracker(D3);
   ButtonPressTracker *setTracker = SetupNewButtonPressTracker(D2);
   ButtonPressTracker *rstTracker = SetupNewButtonPressTracker(D1);
-  ButtonJoystick *joystick = new ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, NULL);
-  ButtonsOnly *buttons = new ButtonsOnly(rstTracker, setTracker, NULL, NULL);
+  JoystickInterface *joystick = new ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, NULL);
+  JoystickInterface *buttons = new ButtonsOnly(rstTracker, setTracker, NULL, NULL);
 
 #elif defined(ARDUINO_AVR_UNO)
   // *** config for Arduino UNO, with Joystick Shield
@@ -106,9 +108,6 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 
 
-
-#include "Core.h"
-
 #if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
 #include <ESP8266WiFi.h>
 #include <espnow.h>
@@ -132,11 +131,11 @@ volatile bool receivedJoystickDataValid = false;
 volatile long lastReceivedJoystickDataMillis = 0;
 void OnReceivedData(uint8_t * mac, uint8_t *incomingData, uint8_t len)
 {
-  // if (!receivedJoystickDataValid) {
-  //   memcpy(&receivedJoystickData, incomingData, len);
-  //   receivedJoystickDataValid = true;
-  //   lastReceivedJoystickDataMillis = millis();
-  // }
+  if (!receivedJoystickDataValid) {
+    memcpy(&receivedJoystickData, incomingData, len);
+    receivedJoystickDataValid = true;
+    lastReceivedJoystickDataMillis = millis();
+  }
 }
 #endif
 
@@ -144,6 +143,11 @@ void OnReceivedData(uint8_t * mac, uint8_t *incomingData, uint8_t len)
 
 
 int espNowStatus = 0;
+long lastActivityMillis = 0;
+int readyStage = 0;
+
+#include "Core.h"
+
 
 
 void setup(void)
@@ -303,17 +307,36 @@ void setup(void)
 //   }
 // }
 
-
 void loop() {
-// #if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
-//   if (espNowStatus != 0) {
-//     Serial.println("ESP Now not properly initialized!");
-//     Serial.print("status is ");
-//     Serial.println(espNowStatus);
-//     delay(2000);
-//     return;
-//   }
-// #endif
+#if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
+  if (espNowStatus != 0) {
+    Serial.println("ESP Now not properly initialized!");
+    Serial.print("status is ");
+    Serial.println(espNowStatus);
+    delay(2000);
+    return;
+  }
+#endif
+
+#if defined(ESP_NOW_CLIENT)
+  if (readyStage == 2) {
+    long nowMillis = millis();
+    if (lastReceivedJoystickDataMillis == 0) {
+      if ((nowMillis - lastActivityMillis) >= 2000) {
+        dumbdisplay.writeComment(String("My MAC is ") + WiFi.macAddress());
+        lastActivityMillis = nowMillis;
+      }
+      return;
+    }
+    if (!receivedJoystickDataValid) {
+      return;  
+    }
+    // Joystick1->decode(receivedJoystickData.joystickPressCode1);
+    // Joystick2->decode(receivedJoystickData.joystickPressCode2);
+    // receivedJoystickDataValid = false;
+    // lastActivityMillis = nowMillis;
+  }
+#endif
 
   gameLoop();
 }
