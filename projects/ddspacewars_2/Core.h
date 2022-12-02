@@ -245,7 +245,7 @@ void newLevel()
   // while (!btnATracker.checkPressed())
   //   ;
   while (!buttons->checkAPressed()) {
-    yield();
+    OnIdle();
   }
 
   resetScreen();
@@ -264,7 +264,7 @@ void handleRestart()
   // while (!btnATracker.checkPressed())
   //   ;
   while (!buttons->checkAPressed()) {
-    yield();
+    OnIdle();
   }
   resetScreen();
   main_layer->setCursor(0, 0);
@@ -285,7 +285,7 @@ void handleRestart()
   // while (!btnATracker.checkPressed())
   //   ;
   while (!buttons->checkAPressed()) {
-    yield();
+    OnIdle();
   }
 
   resetScreen();
@@ -580,7 +580,7 @@ void handleGameOver()
   // while (!btnATracker.checkPressed())
   //   ;
   while (!buttons->checkAPressed()) {
-    yield();
+    OnIdle();
   }
 
   fase = 0;

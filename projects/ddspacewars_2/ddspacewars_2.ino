@@ -16,8 +16,8 @@
 
   #define DOWNLOAD_IMAGES
   #define SHOW_SPACE
-  JoystickInterface* joystick = new DecodedJoystick(false);
-  JoystickInterface* buttons = new DecodedJoystick(true);
+  DecodedJoystick* joystick = new DecodedJoystick(false);
+  DecodedJoystick* buttons = new DecodedJoystick(true);
   
 #elif defined(ESP8266)
   
@@ -103,17 +103,18 @@
 
 
 
+#if !defined(ESP_NOW_SERVER_FOR_MAC)
 #include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput(115200));
-
+#endif
 
 
 #if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 struct ESPNowJoystickData {
-  JoystickPressCode joystickPressCode1;
-  JoystickPressCode joystickPressCode2;
+  JoystickPressCode joystickPressCode;
+  JoystickPressCode buttonsPressCode;
 };
 #endif
 
@@ -122,6 +123,16 @@ struct ESPNowJoystickData {
 uint8_t ClientMACAddress[] = { ESP_NOW_SERVER_FOR_MAC };
 void OnSentData(uint8_t *mac_addr, uint8_t sendStatus)
 {
+  Serial.print("... sent ");
+  if (sendStatus == 0)
+  {
+    Serial.print("SUCCESSFUL");
+  }
+  else
+  {
+    Serial.print("FAILED");
+  }
+  Serial.println(" ...");
 }
 #endif
 
@@ -146,12 +157,44 @@ int espNowStatus = 0;
 long lastActivityMillis = 0;
 int readyStage = 0;
 
-#include "Core.h"
 
+void OnIdle()
+{
+  yield();
+#if defined(ESP_NOW_CLIENT)
+  if (readyStage == 2) {
+    long nowMillis = millis();
+    if (lastReceivedJoystickDataMillis == 0) {
+      if ((nowMillis - lastActivityMillis) >= 2000) {
+        dumbdisplay.writeComment(String("My MAC is ") + WiFi.macAddress());
+        lastActivityMillis = nowMillis;
+      }
+      return;
+    }
+    if (!receivedJoystickDataValid) {
+      return;  
+    }
+    joystick->decode(receivedJoystickData.joystickPressCode);
+    buttons->decode(receivedJoystickData.buttonsPressCode);
+    receivedJoystickDataValid = false;
+    lastActivityMillis = nowMillis;
+  }
+#endif
+}
+
+
+#if !defined(ESP_NOW_SERVER_FOR_MAC)
+#include "Core.h"
+#endif
 
 
 void setup(void)
 {
+
+#if defined(ESP_NOW_SERVER_FOR_MAC)
+  Serial.begin(115200);
+#endif
+
 
 #if defined(DEBUG_LED_PIN)
   pinMode(DEBUG_LED_PIN, OUTPUT);
@@ -308,35 +351,29 @@ void setup(void)
 // }
 
 void loop() {
-#if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
-  if (espNowStatus != 0) {
-    Serial.println("ESP Now not properly initialized!");
-    Serial.print("status is ");
-    Serial.println(espNowStatus);
-    delay(2000);
-    return;
+#if defined(ESP_NOW_SERVER_FOR_MAC)
+  JoystickPressCode joystickPressCode;
+  JoystickPressCode buttonsPressCode;
+  bool joystickPressed = joystick->checkJoystickPressCode(joystickPressCode, 50);
+  bool buttonsPressed = buttons->checkJoystickPressCode(buttonsPressCode);
+  if (joystickPressed || buttonsPressed) {
+    ESPNowJoystickData joystickData;
+    memcpy(&joystickData.joystickPressCode, &joystickPressCode, sizeof(joystickPressCode));
+    memcpy(&joystickData.buttonsPressCode, &buttonsPressCode, sizeof(buttonsPressCode));
+    // joystickData.joystickPressCode1 = joystickPressCode1;
+    // joystickData.joystickPressCode2 = joystickPressCode2;
+    esp_now_send(ClientMACAddress, (uint8_t *) &joystickData, sizeof(joystickData));
   }
+  return;
 #endif
 
 #if defined(ESP_NOW_CLIENT)
   if (readyStage == 2) {
-    long nowMillis = millis();
-    if (lastReceivedJoystickDataMillis == 0) {
-      if ((nowMillis - lastActivityMillis) >= 2000) {
-        dumbdisplay.writeComment(String("My MAC is ") + WiFi.macAddress());
-        lastActivityMillis = nowMillis;
-      }
-      return;
-    }
-    if (!receivedJoystickDataValid) {
-      return;  
-    }
-    // Joystick1->decode(receivedJoystickData.joystickPressCode1);
-    // Joystick2->decode(receivedJoystickData.joystickPressCode2);
-    // receivedJoystickDataValid = false;
-    // lastActivityMillis = nowMillis;
+    OnIdle();
   }
 #endif
 
+#if !defined(ESP_NOW_SERVER_FOR_MAC)
   gameLoop();
+#endif
 }

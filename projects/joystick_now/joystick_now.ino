@@ -208,24 +208,24 @@ bool CheckRepresentation(JoystickInterface* joystick, int repeat, String& buffer
   buffer = String("[") + representation + "]";
   return pressed;
 }
-#if defined(ESP_NOW_SERVER_FOR_MAC)  
-bool CheckJoystickPressCode(JoystickInterface* joystick, JoystickPressCode &joystickPressCode, int repeat, String& representationBuffer) {
-  const char *representation;
-  bool pressed;
-  if (joystick->checkJoystickPressCode(joystickPressCode, repeat)) {
-    representationBuffer = String("x:") + String(joystickPressCode.xPressed) +
-      String("/y:") + String(joystickPressCode.yPressed) +
-      String("/sw:") + String(joystickPressCode.swPressed);
-    representation = representationBuffer.c_str();
-    pressed = true;
-  } else {
-    representation = ".";
-    pressed = false;
-  }
-  representationBuffer = String("[") + representation + "]";
-  return pressed;
-}
-#endif  
+// #if defined(ESP_NOW_SERVER_FOR_MAC)  
+// bool CheckJoystickPressCode(JoystickInterface* joystick, JoystickPressCode &joystickPressCode, int repeat, String& representationBuffer) {
+//   const char *representation;
+//   bool pressed;
+//   if (joystick->checkJoystickPressCode(joystickPressCode, repeat)) {
+//     representationBuffer = String("x:") + String(joystickPressCode.xPressed) +
+//       String("/y:") + String(joystickPressCode.yPressed) +
+//       String("/sw:") + String(joystickPressCode.swPressed);
+//     representation = representationBuffer.c_str();
+//     pressed = true;
+//   } else {
+//     representation = ".";
+//     pressed = false;
+//   }
+//   representationBuffer = String("[") + representation + "]";
+//   return pressed;
+// }
+// #endif  
 
 
 
