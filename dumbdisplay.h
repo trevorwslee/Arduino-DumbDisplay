@@ -128,7 +128,7 @@ class DDLayer: public DDObject {
     void flash();
     /* normally used for "feedback" -- flash the area (x, y) where the layer is clicked */
     void flashArea(int x, int y);
-    const String& getLayerId() { return layerId; }
+    const String& getLayerId() const { return layerId; }
     /* set explicit (and more responsive) "feedback" handler (and enable feedback) */
     /* autoFeedbackMethod: */
     /* . "" -- no auto feedback */
@@ -153,8 +153,8 @@ class DDLayer: public DDObject {
     const DDFeedback* getFeedback();
     void debugOnly(int i);
   public:
-    DDFeedbackManager* getFeedbackManager() { return pFeedbackManager; }
-    DDFeedbackHandler getFeedbackHandler() { return feedbackHandler; }
+    DDFeedbackManager* getFeedbackManager() const { return pFeedbackManager; }
+    DDFeedbackHandler getFeedbackHandler() const { return feedbackHandler; }
   protected:
     DDLayer(int8_t layerId);
   public:
@@ -176,7 +176,7 @@ class MbImage {
     MbImage(int8_t imageId) {
       this->imageId = String(imageId);
     }
-    inline const String& getImageId() { return this->imageId; }  
+    inline const String& getImageId() const { return this->imageId; }  
   private:
     String imageId;
 };
@@ -585,7 +585,7 @@ class DDTunnel: public DDObject {
       this->params = params;
       reconnect();
     }
-    const String& getTunnelId() { return tunnelId; }
+    const String& getTunnelId() const { return tunnelId; }
   protected:
     //int _count();
     virtual bool _eof();
@@ -770,9 +770,9 @@ class DumbDisplay {
     /* explicitly make connection -- blocking */
     /* - implicitly called when configure or create a layer */
     void connect();
-    bool connected();
+    bool connected() const;
     /** note that when reconnect, the connect version will be bumped up */
-    int getConnectVersion();
+    int getConnectVersion() const;
     /* configure "pin frame" to be x-units by y-units (default 100x100) */
     void configPinFrame(int xUnitCount = 100, int yUnitCount = 100);
     /* configure "auto pinning of layers" with the layer spec provided */

@@ -17,7 +17,7 @@
  */
 
 #include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
+DumbDisplay dumbdisplay(new DDInputOutput(115200), false);
 
 const char Keys[4][3] = {
     {'1', '2', '3'},
@@ -84,13 +84,13 @@ char CheckKeyPressed()
     for (int c = 0; c < 3; c++)
     {
       LcdDDLayer* keyLayer = keyLayers[r][c];
-      DDFeedback* feedback = keyLayer->getFeedback();
+      const DDFeedback* feedback = keyLayer->getFeedback();
       if (feedback != NULL) {
-        char keyPressed = keyLayer.charAt(0);
+        char keyPressed = keyLayer->customData.charAt(0);
         return keyPressed;
       }
     }
   }
-
+  return 0;
 }
 

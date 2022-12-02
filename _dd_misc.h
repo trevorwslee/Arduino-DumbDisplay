@@ -59,6 +59,53 @@ class DDValueRecord {
 };
 
 
+template<int MAX_DEPTH = 5>
+class DDAutoPinConfigBuilder {
+  public:
+    DDAutoPinConfigBuilder(char dir) {
+      depth = -1;
+      for (int i = 0; i < MAX_DEPTH; i++) {
+        started[i] = false;
+      }
+      beginGroup(dir);
+    }
+  public:
+    void beginGroup(char dir) {
+      if (depth >= 0 && started[depth]) {
+        config += "+";
+      }
+      depth += 1;
+      started[depth] = false;
+      config += String(dir) + "(";
+    }  
+    void endGroup() {
+      config += ")";
+      depth -= 1;
+    }
+    void addLayer(DDLayer* layer) {
+      addConfig(layer->getLayerId());
+    }
+    void addBuilder(DDAutoPinConfigBuilder& builder) {
+      addConfig(builder.build());
+    }
+    void addConfig(const String& conf) {
+      if (started[depth]) {
+        config += "+";
+      }
+      config += conf;
+      started[depth] = true;
+    }
+    const String& build() {
+      endGroup();
+      return config;
+    }  
+  private:
+    int depth;
+    bool started[MAX_DEPTH];
+    String config;
+};
+
+
 class DDConnectVersionTracker {
   public:
     /* . version: pass in -1 so that it will be considered a version change even when fresh start */

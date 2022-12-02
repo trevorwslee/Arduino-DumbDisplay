@@ -2182,10 +2182,10 @@ void DumbDisplay::initialize(DDInputOutput* pIO, boolean enableDoubleClick) {
 void DumbDisplay::connect() {
   _Connect();
 }
-bool DumbDisplay::connected() {
+bool DumbDisplay::connected() const {
   return _Connected;
 }
-int DumbDisplay::getConnectVersion() {
+int DumbDisplay::getConnectVersion() const {
   return _ConnectVersion;
 }
 void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
