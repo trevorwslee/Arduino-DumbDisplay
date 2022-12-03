@@ -82,17 +82,9 @@ void OnSentData(uint8_t *mac_addr, uint8_t sendStatus)
 #endif
 
 #if defined(ESP_NOW_CLIENT)
-// ESPNowJoystickData receivedJoystickData;
-// volatile bool receivedJoystickDataValid = false;
 volatile long lastReceivedJoystickDataMillis = 0;
 void OnReceivedData(uint8_t *mac, uint8_t *incomingData, uint8_t len)
 {
-  // if (!receivedJoystickDataValid)
-  // {
-  //   memcpy(&receivedJoystickData, incomingData, len);
-  //   receivedJoystickDataValid = true;
-  //   lastReceivedJoystickDataMillis = millis();
-  // }
   ESPNowJoystickData joystickData;
   memcpy(&joystickData, incomingData, len);
   Joystick1->decode(joystickData.joystickPressCode1);
@@ -261,14 +253,7 @@ void loop()
     }
     return;
   }
-  // if (!receivedJoystickDataValid)
-  // {
-  //   return;
-  // }
-  // Joystick1->decode(receivedJoystickData.joystickPressCode1);
-  // Joystick2->decode(receivedJoystickData.joystickPressCode2);
-  // receivedJoystickDataValid = false;
-  // lastActivityMillis = nowMillis;
+  lastActivityMillis = nowMillis;
 #endif
 
   String representation1;
