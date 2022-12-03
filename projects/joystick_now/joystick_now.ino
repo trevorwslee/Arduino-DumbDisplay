@@ -1,7 +1,7 @@
 
 
 //#define ESP_NOW_SERVER_FOR_MAC 0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
-#define ESP_NOW_CLIENT
+//#define ESP_NOW_CLIENT
 
 
 // ddjoystick.h is include in DumbDisplay Arduino library
