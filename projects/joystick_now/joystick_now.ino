@@ -1,13 +1,10 @@
 
 
-#define ESP_NOW_SERVER_FOR_MAC 0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
+//#define ESP_NOW_SERVER_FOR_MAC 0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
 //#define ESP_NOW_CLIENT
-
 
 // ddjoystick.h is include in DumbDisplay Arduino library
 #include "ddjoystick.h"
-
-
 
 #if defined(ESP_NOW_CLIENT)
 DecodedJoystick *Joystick1 = new DecodedJoystick(false);
@@ -62,8 +59,6 @@ JoystickInterface *Joystick1 = joystick;
 JoystickInterface *Joystick2 = buttons;
 #endif
 
-
-
 #if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
 #include <ESP8266WiFi.h>
 #include <espnow.h>
@@ -90,9 +85,8 @@ void OnReceivedData(uint8_t *mac, uint8_t *incomingData, uint8_t len)
   Joystick1->decode(joystickData.joystickPressCode1);
   Joystick2->decode(joystickData.joystickPressCode2);
   lastReceivedJoystickDataMillis = millis();
- }
+}
 #endif
-
 
 const long JoystickPressAutoRepeatMillis = 200; // 0 means no auto repeat
 
@@ -109,7 +103,7 @@ void setup()
 #if defined(ESP_NOW_SERVER_FOR_MAC)
     esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
     esp_now_register_send_cb(OnSentData);
-    esp_now_add_peer(ClientMACAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
+    esp_now_add_peer(ClientMACAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0); // 1 is the channel
 #else
     esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
     esp_now_register_recv_cb(OnReceivedData);
@@ -269,8 +263,6 @@ void loop()
     ESPNowJoystickData joystickData;
     memcpy(&joystickData.joystickPressCode1, &joystickPressCode1, sizeof(joystickPressCode1));
     memcpy(&joystickData.joystickPressCode2, &joystickPressCode2, sizeof(joystickPressCode2));
-    // joystickData.joystickPressCode1 = joystickPressCode1;
-    // joystickData.joystickPressCode2 = joystickPressCode2;
     esp_now_send(ClientMACAddress, (uint8_t *)&joystickData, sizeof(joystickData));
   }
 #else
