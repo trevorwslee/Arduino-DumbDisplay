@@ -1699,6 +1699,9 @@ void GraphicalDDLayer::cachePixelImage16(const String& imageName, const uint16_t
   _sendCommand6("", C_CACHEPIXIMG16, layerId, imageName, String(width), String(height), TO_EDIAN(), options);
   _sendByteArrayAfterCommand((uint8_t*) data, byteCount, compressMethod);
 }
+void GraphicalDDLayer::saveCachedImageFile(const String& imageName) {
+  _sendCommand2("", "SAVECACHEDIMG", layerId, imageName);
+}
 void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
   _sendCommand2("", "SAVECACHEDIMGS", layerId, stitchAsImageName);
 }
@@ -2115,6 +2118,10 @@ bool GpsServiceDDTunnel::readLocation(DDLocation& location) {
 void ObjectDetetDemoServiceDDTunnel::reconnectForObjectDetect(const String& imageName) {
   reconnectTo("detect?imageName=" + imageName);
 }
+void ObjectDetetDemoServiceDDTunnel::reconnectForObjectDetectFrom(GraphicalDDLayer* pGraphicalLayer, const String& imageName) {
+  reconnectTo("detectfrom?layerId=" + pGraphicalLayer->getLayerId() + "?imageName=" + imageName);
+}
+
 
 bool ObjectDetetDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult) {
   String value;
