@@ -2112,6 +2112,27 @@ bool GpsServiceDDTunnel::readLocation(DDLocation& location) {
 
 }
 
+bool ObjectDetetDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult) {
+  String value;
+  if (!_readLine(value)) {
+    return false;
+  }
+  int sepIdx1 = value.indexOf('-');
+  int sepIdx2 = value.indexOf('-', sepIdx1 + 1);
+  int sepIdx3 = value.indexOf('-', sepIdx2 + 1);
+  int sepIdx4 = value.indexOf(':', sepIdx3 + 1);
+  if (sepIdx1 == -1 || sepIdx2 == -1 || sepIdx3 == -1 || sepIdx4 == -1) {
+      return false;
+  }
+  objectDetectResult.left = value.substring(0, sepIdx1).toInt();
+  objectDetectResult.top = value.substring(sepIdx1 + 1, sepIdx2).toInt();
+  objectDetectResult.right = value.substring(sepIdx2 + 1, sepIdx3).toInt();
+  objectDetectResult.bottom = value.substring(sepIdx3 + 1, sepIdx4).toInt();
+  objectDetectResult.label = value.substring(sepIdx4 + 1);
+  return true;
+}
+
+
 JsonDDTunnelMultiplexer::JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int8_t tunnelCount) {
   this->tunnelCount = tunnelCount;
   //this->tunnels = tunnels;
@@ -2431,6 +2452,18 @@ GpsServiceDDTunnel* DumbDisplay::createGpsServiceTunnel() {
   int tid = _AllocTid();
   String tunnelId = String(tid);
   GpsServiceDDTunnel* pTunnel = new GpsServiceDDTunnel("gpsservice", tid, "", "", false, 1);
+  _PostCreateTunnel(pTunnel);
+  return pTunnel;
+}
+
+ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel(int scaleToWidth, int scaleToHeight) {
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  String params;
+  if (scaleToWidth > 0 && scaleToHeight > 0) {
+    params = String(scaleToWidth) + "," + String(scaleToHeight);
+  }
+  ObjectDetetDemoServiceDDTunnel* pTunnel = new ObjectDetetDemoServiceDDTunnel("objectdetectdemo", tid, params, "", false, 1);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }

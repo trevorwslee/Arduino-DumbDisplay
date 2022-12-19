@@ -721,8 +721,6 @@ struct DDLocation {
   float latitude;
   float longitude;
 };
-
-
 class GpsServiceDDTunnel: public BasicDDTunnel {
   public:
     GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
@@ -733,6 +731,24 @@ class GpsServiceDDTunnel: public BasicDDTunnel {
     void reconnectForLocation(int repeat = -1);
     bool readLocation(DDLocation& location);  
 };
+
+
+struct DDObjectDetectDemoResult {
+  int left;
+  int top;
+  int right;
+  int bottom;
+  String label;
+};
+class ObjectDetetDemoServiceDDTunnel: public BasicDDTunnel {
+  public:
+    ObjectDetetDemoServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    }
+  public:
+    bool readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult);  
+};
+
 
 
 /** will not delete "tunnels" passed in */
@@ -819,6 +835,7 @@ class DumbDisplay {
     /* . now-millis */
     BasicDDTunnel* createDateTimeServiceTunnel();
     GpsServiceDDTunnel* createGpsServiceTunnel();
+    ObjectDetetDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0);
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
     /* set DD background color with common "color name" */
