@@ -13,16 +13,22 @@
 
 GraphicalDDLayer *graphical;
 SimpleToolDDTunnel *web_image_tunnel;
+ObjectDetetDemoServiceDDTunnel *object_detect_tunnnel;
 
 void setup() {
   // create a graphical layer for drawing the web image to
   graphical = dumbdisplay.createGraphicalLayer(640, 480);
-  graphical->border(10, "azure", "round");  
-  graphical->noBackgroundColor();
-  graphical->penColor("navy");
+  graphical->border(10, "blue", "round");  
+  graphical->padding(15);
+  graphical->backgroundColor("gray");
+  //graphical->penColor("navy");
 
   // create a tunnel for downloading web image ... initially, no URL yet ... downloaded.png is the name of the image to save
   web_image_tunnel = dumbdisplay.createImageDownloadTunnel("", "downloaded.png");
+
+
+  // create a tunnel for object detection demo via TensorFlow Lite running on phone side
+  object_detect_tunnnel = dumbdisplay.createObjectDetectDemoServiceTunnel();
 }
 
 const char* getDownloadImageURL() {
@@ -41,6 +47,7 @@ void loop() {
     String url = getDownloadImageURL();
     web_image_tunnel->reconnectTo(url);
 
+    bool detecting = false;
     while (true) {
       int result = web_image_tunnel->checkResult();
       if (result == 1) {
@@ -48,24 +55,38 @@ void loop() {
         graphical->clear();
         // draw the image
         graphical->drawImageFile("downloaded.png");
+        // detect objects in the image
+        object_detect_tunnnel->reconnectForObjectDetect("downloaded.png");
+        detecting = true;
       } else if (result == -1) {
         // failed to download the image
-        graphical->clear();
-        graphical->setCursor(10, 10);
-        graphical->println("XXX failed to download XXX");
+        dumbdisplay.writeComment("XXX failed to download XXX");
       }
       if (result != 0) {
         break;
       }
     }
-    graphical->backgroundColor("azure");  // set background color
+
+    graphical->backgroundColor("blue");   // set background color to blue, to indicate loaded
     graphical->enableFeedback("f");       // enable "auto feedback" 
-    while (true) {                     // loop and wait for layer clicked
+    while (true) {                        // loop and wait for object detection result, or grapical layer click for switching image
+      if (detecting) {
+        DDObjectDetectDemoResult objectDetectResult;
+        if (object_detect_tunnnel->readObjectDetectResult(objectDetectResult)) {
+          dumbdisplay.writeComment(objectDetectResult.label);
+          int x = objectDetectResult.left;
+          int y = objectDetectResult.top;
+          int w = objectDetectResult.right - objectDetectResult.left;
+          int h = objectDetectResult.bottom - objectDetectResult.top;
+          graphical->drawRect(x, y, w, h, "green");
+          graphical->drawStr(x, y, objectDetectResult.label, "yellow", "", 28);
+        }
+      }
       if (graphical->getFeedback() != NULL) {
         break;
       }
     }
-    graphical->noBackgroundColor();  // no background color 
-    graphical->disableFeedback();    // disable "feedback"
-    delay(500);
+    graphical->backgroundColor("gray");  // set background color to gray, to indicate loading 
+    graphical->disableFeedback();        // disable "feedback"
+    //delay(500);
 }

@@ -746,6 +746,7 @@ class ObjectDetetDemoServiceDDTunnel: public BasicDDTunnel {
         BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
   public:
+    void reconnectForObjectDetect(const String& imageName);
     bool readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult);  
 };
 

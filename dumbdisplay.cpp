@@ -2112,6 +2112,10 @@ bool GpsServiceDDTunnel::readLocation(DDLocation& location) {
 
 }
 
+void ObjectDetetDemoServiceDDTunnel::reconnectForObjectDetect(const String& imageName) {
+  reconnectTo("detect?imageName=" + imageName);
+}
+
 bool ObjectDetetDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult) {
   String value;
   if (!_readLine(value)) {
@@ -2463,7 +2467,7 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
   if (scaleToWidth > 0 && scaleToHeight > 0) {
     params = String(scaleToWidth) + "," + String(scaleToHeight);
   }
-  ObjectDetetDemoServiceDDTunnel* pTunnel = new ObjectDetetDemoServiceDDTunnel("objectdetectdemo", tid, params, "", false, 1);
+  ObjectDetetDemoServiceDDTunnel* pTunnel = new ObjectDetetDemoServiceDDTunnel("objectdetectdemo", tid, params, "", false, DD_TUNNEL_DEF_BUFFER_SIZE);
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
