@@ -30,6 +30,7 @@ const char* imageName = "esp32camobjdetect.jpg";
 
 
 GraphicalDDLayer* imageLayer;
+GraphicalDDLayer* objectLayer;
 bool cameraReady = false;
 
 
@@ -41,13 +42,19 @@ bool captureAndSaveImage(bool useFlash, bool cacheOnly);
 void setup() {
   Serial.begin(115200);
 
-  imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
-  imageLayer->backgroundColor("ivory");
-  imageLayer->padding(10);
-  imageLayer->border(20, "blue");
-  //imgLayer->enableFeedback("f");
+  objectLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
+  objectLayer->border(10, "blue");
+  objectLayer->padding(5);
+  objectLayer->noBackgroundColor();
 
+  imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
+  imageLayer->border(10, "blue");
+  imageLayer->padding(5);
+  imageLayer->backgroundColor("azure");
+
+ 
   imageLayer->drawImageFileFit("dumbdisplay.png");
+  objectLayer->fillRoundRect(10, 20, 100, 200, 5, "green");
 
   cameraReady = initialiseCamera(frameSize); 
   if (cameraReady) {
