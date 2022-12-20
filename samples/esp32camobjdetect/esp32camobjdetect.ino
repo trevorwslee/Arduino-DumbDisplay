@@ -31,8 +31,8 @@ const char* imageName = "esp32camobjdetect.jpg";
 
 GraphicalDDLayer* imageLayer;
 GraphicalDDLayer* objectLayer;
+ObjectDetetDemoServiceDDTunnel *objectTunnel;
 bool cameraReady = false;
-
 
 
 bool initialiseCamera(framesize_t frameSize);
@@ -52,9 +52,10 @@ void setup() {
   imageLayer->padding(5);
   imageLayer->backgroundColor("azure");
 
+  objectTunnel = dumbdisplay.createObjectDetectDemoServiceTunnel();
  
   imageLayer->drawImageFileFit("dumbdisplay.png");
-  objectLayer->fillRoundRect(10, 20, 100, 200, 5, "green");
+  //objectLayer->fillRoundRect(10, 20, 100, 200, 5, "green");
 
   cameraReady = initialiseCamera(frameSize); 
   if (cameraReady) {
@@ -64,6 +65,8 @@ void setup() {
   }
 }
 
+
+bool detecting = false;
 
 void loop() {
   bool flashOn = false;
@@ -77,6 +80,25 @@ void loop() {
           imageLayer->clear();
         }      
         imageLayer->drawImageFileFit(imageName);
+        if (objectTunnel->eof()) {
+          objectTunnel->reconnectForObjectDetectFrom(imageLayer, imageName);
+          detecting = true;
+        } else {
+          DDObjectDetectDemoResult objectDetectResult;
+          if (objectTunnel->readObjectDetectResult(objectDetectResult)) {
+            dumbdisplay.writeComment(objectDetectResult.label);
+            if (detecting) {
+              objectLayer->clear();
+            }
+            int x = objectDetectResult.left;
+            int y = objectDetectResult.top;
+            int w = objectDetectResult.right - objectDetectResult.left;
+            int h = objectDetectResult.bottom - objectDetectResult.top;
+            objectLayer->drawRect(x, y, w, h, "green");
+            objectLayer->drawStr(x, y, objectDetectResult.label, "yellow", "", 32);
+            detecting = false;
+          }
+        }
       } else {
         dumbdisplay.writeComment("Failed to capture image!");
         delay(1000);
@@ -92,7 +114,7 @@ void loop() {
 
 
 
-const bool serialDebug = 1;                            // show debug info. on serial port (1=enabled, disable if using pins 1 and 3 as gpio)
+const bool serialDebug = 1;                          // show debug info. on serial port (1=enabled, disable if using pins 1 and 3 as gpio)
 
 
 #define PIXFORMAT PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888

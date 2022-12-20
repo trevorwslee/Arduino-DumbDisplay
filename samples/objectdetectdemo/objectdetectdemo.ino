@@ -13,7 +13,7 @@
 
 GraphicalDDLayer *graphical;
 SimpleToolDDTunnel *web_image_tunnel;
-ObjectDetetDemoServiceDDTunnel *object_detect_tunnnel;
+ObjectDetetDemoServiceDDTunnel *object_detect_tunnel;
 
 void setup() {
   // create a graphical layer for drawing the web image to
@@ -28,7 +28,7 @@ void setup() {
 
 
   // create a tunnel for object detection demo via TensorFlow Lite running on phone side
-  object_detect_tunnnel = dumbdisplay.createObjectDetectDemoServiceTunnel();
+  object_detect_tunnel = dumbdisplay.createObjectDetectDemoServiceTunnel();
 }
 
 const char* getDownloadImageURL() {
@@ -56,7 +56,7 @@ void loop() {
         // draw the image
         graphical->drawImageFile("downloaded.png");
         // detect objects in the image
-        object_detect_tunnnel->reconnectForObjectDetect("downloaded.png");
+        object_detect_tunnel->reconnectForObjectDetect("downloaded.png");
         detecting = true;
       } else if (result == -1) {
         // failed to download the image
