@@ -21,25 +21,24 @@ void setup() {
   graphical->border(10, "blue", "round");  
   graphical->padding(15);
   graphical->backgroundColor("gray");
-  //graphical->penColor("navy");
+  graphical->penSize(2);
 
   // create a tunnel for downloading web image ... initially, no URL yet ... downloaded.png is the name of the image to save
   web_image_tunnel = dumbdisplay.createImageDownloadTunnel("", "downloaded.png");
-
 
   // create a tunnel for object detection demo via TensorFlow Lite running on phone side
   object_detect_tunnel = dumbdisplay.createObjectDetectDemoServiceTunnel();
 }
 
 const char* getDownloadImageURL() {
-    int idx = random(4);
+    int idx = random(5);
     switch(idx) {
-      case 0: return "https://placedog.net/640/480?r";
+      case 0: return "https://placekitten.com/640/480";
       case 1: return "https://source.unsplash.com/random/640x480";
       case 2: return "https://picsum.photos/640/480";
       case 3: return "https://loremflickr.com/640/480";
     }
-    return "https://placekitten.com/640/480";
+    return "https://placedog.net/640/480?r";
 }
 
 void loop() {
@@ -72,14 +71,14 @@ void loop() {
     while (true) {                        // loop and wait for object detection result, or grapical layer click for switching image
       if (detecting) {
         DDObjectDetectDemoResult objectDetectResult;
-        if (object_detect_tunnnel->readObjectDetectResult(objectDetectResult)) {
+        if (object_detect_tunnel->readObjectDetectResult(objectDetectResult)) {
           dumbdisplay.writeComment(objectDetectResult.label);
           int x = objectDetectResult.left;
           int y = objectDetectResult.top;
           int w = objectDetectResult.right - objectDetectResult.left;
           int h = objectDetectResult.bottom - objectDetectResult.top;
           graphical->drawRect(x, y, w, h, "green");
-          graphical->drawStr(x, y, objectDetectResult.label, "yellow", "", 28);
+          graphical->drawStr(x, y, objectDetectResult.label, "yellow", "", 32);
         }
       }
       if (graphical->getFeedback() != NULL) {
@@ -88,5 +87,4 @@ void loop() {
     }
     graphical->backgroundColor("gray");  // set background color to gray, to indicate loading 
     graphical->disableFeedback();        // disable "feedback"
-    //delay(500);
 }

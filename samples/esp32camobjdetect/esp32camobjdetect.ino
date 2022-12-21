@@ -42,20 +42,23 @@ bool captureAndSaveImage(bool useFlash, bool cacheOnly);
 void setup() {
   Serial.begin(115200);
 
+  // create the top layer for showing detected object rectangles
   objectLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
   objectLayer->border(10, "blue");
   objectLayer->padding(5);
   objectLayer->noBackgroundColor();
+  objectLayer->penSize(2);
 
+  // create the bottom layer for showing the ESP32 CAM capatured image
   imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
   imageLayer->border(10, "blue");
   imageLayer->padding(5);
   imageLayer->backgroundColor("azure");
 
+  // create a tunnel for object detection demo via TensorFlow Lite running on phone side
   objectTunnel = dumbdisplay.createObjectDetectDemoServiceTunnel();
  
   imageLayer->drawImageFileFit("dumbdisplay.png");
-  //objectLayer->fillRoundRect(10, 20, 100, 200, 5, "green");
 
   cameraReady = initialiseCamera(frameSize); 
   if (cameraReady) {
@@ -69,43 +72,28 @@ void setup() {
 bool detecting = false;
 
 void loop() {
-  bool flashOn = false;
-  bool streaming = true;
-  bool capture = false;//imageLayer->getFeedback() != NULL;
-  if (capture || (cameraReady && streaming)) {
-    if (cameraReady) {
-      if (captureAndSaveImage(flashOn, !capture && streaming)) {
-        if (!streaming) {
-          imageLayer->unloadImageFile(imageName);
-          imageLayer->clear();
-        }      
-        imageLayer->drawImageFileFit(imageName);
-        if (objectTunnel->eof()) {
-          objectTunnel->reconnectForObjectDetectFrom(imageLayer, imageName);
-          detecting = true;
-        } else {
-          DDObjectDetectDemoResult objectDetectResult;
-          if (objectTunnel->readObjectDetectResult(objectDetectResult)) {
-            dumbdisplay.writeComment(objectDetectResult.label);
-            if (detecting) {
-              objectLayer->clear();
-            }
-            int x = objectDetectResult.left;
-            int y = objectDetectResult.top;
-            int w = objectDetectResult.right - objectDetectResult.left;
-            int h = objectDetectResult.bottom - objectDetectResult.top;
-            objectLayer->drawRect(x, y, w, h, "green");
-            objectLayer->drawStr(x, y, objectDetectResult.label, "yellow", "", 32);
-            detecting = false;
-          }
-        }
+  if (cameraReady) {
+    if (captureAndSaveImage(false, true)) {
+      imageLayer->drawImageFileFit(imageName);
+      if (objectTunnel->eof()) {
+        objectTunnel->reconnectForObjectDetectFrom(imageLayer, imageName);
+        detecting = true;
       } else {
-        dumbdisplay.writeComment("Failed to capture image!");
-        delay(1000);
+        DDObjectDetectDemoResult objectDetectResult;
+        if (objectTunnel->readObjectDetectResult(objectDetectResult)) {
+          //dumbdisplay.writeComment(objectDetectResult.label);
+          if (detecting) {
+            objectLayer->clear();
+          }
+          int x = objectDetectResult.left;
+          int y = objectDetectResult.top;
+          int w = objectDetectResult.right - objectDetectResult.left;
+          int h = objectDetectResult.bottom - objectDetectResult.top;
+          objectLayer->drawRect(x, y, w, h, "green");
+          objectLayer->drawStr(x, y, objectDetectResult.label, "yellow", "", 32);
+          detecting = false;
+        }
       }
-    } else {
-      dumbdisplay.writeComment("Camera not ready!");
-      delay(1000);
     }
   }
 }
@@ -171,7 +159,7 @@ void setupFlashPWM();
 bool initialiseCamera(framesize_t frameSize) {
   esp_camera_deinit();     // disable camera
   delay(50);
-  setupFlashPWM();    // configure PWM for the illumination LED
+  setupFlashPWM();         // configure PWM for the illumination LED
 
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
