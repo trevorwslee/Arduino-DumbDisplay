@@ -90,7 +90,7 @@ void loop() {
           int w = objectDetectResult.right - objectDetectResult.left;
           int h = objectDetectResult.bottom - objectDetectResult.top;
           objectLayer->drawRect(x, y, w, h, "green");
-          objectLayer->drawStr(x, y, objectDetectResult.label, "yellow", "", 32);
+          objectLayer->drawStr(x, y, objectDetectResult.label, "yellow", "a70%darkgreen", 32);
           detecting = false;
         }
       }

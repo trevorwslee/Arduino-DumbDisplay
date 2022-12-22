@@ -20,7 +20,7 @@ void setup() {
   graphical = dumbdisplay.createGraphicalLayer(640, 480);
   graphical->border(10, "blue", "round");  
   graphical->padding(15);
-  graphical->backgroundColor("gray");
+  graphical->backgroundColor("white");
   graphical->penSize(2);
 
   // create a tunnel for downloading web image ... initially, no URL yet ... downloaded.png is the name of the image to save
@@ -46,17 +46,17 @@ void loop() {
     String url = getDownloadImageURL();
     web_image_tunnel->reconnectTo(url);
 
-    bool detecting = false;
+    //bool detecting = false;
     while (true) {
       int result = web_image_tunnel->checkResult();
       if (result == 1) {
         // web image downloaded and saved successfully
-        graphical->clear();
-        // draw the image
+        // graphical->clear();
+        // // draw the image
         graphical->drawImageFile("downloaded.png");
         // detect objects in the image
         object_detect_tunnel->reconnectForObjectDetect("downloaded.png");
-        detecting = true;
+        //detecting = true;
       } else if (result == -1) {
         // failed to download the image
         dumbdisplay.writeComment("XXX failed to download XXX");
@@ -67,9 +67,9 @@ void loop() {
     }
 
     graphical->backgroundColor("blue");   // set background color to blue, to indicate loaded
-    graphical->enableFeedback("f");       // enable "auto feedback" 
+    graphical->enableFeedback("f") ;      // enable "auto feedback" 
     while (true) {                        // loop and wait for object detection result, or grapical layer click for switching image
-      if (detecting) {
+      if (!object_detect_tunnel->eof()) {
         DDObjectDetectDemoResult objectDetectResult;
         if (object_detect_tunnel->readObjectDetectResult(objectDetectResult)) {
           dumbdisplay.writeComment(objectDetectResult.label);
@@ -78,13 +78,13 @@ void loop() {
           int w = objectDetectResult.right - objectDetectResult.left;
           int h = objectDetectResult.bottom - objectDetectResult.top;
           graphical->drawRect(x, y, w, h, "green");
-          graphical->drawStr(x, y, objectDetectResult.label, "yellow", "", 32);
+          graphical->drawStr(x, y, objectDetectResult.label, "yellow", "a70%darkgreen", 32);
         }
       }
       if (graphical->getFeedback() != NULL) {
         break;
       }
     }
-    graphical->backgroundColor("gray");  // set background color to gray, to indicate loading 
+    graphical->backgroundColor("white");  // set background color to white, to indicate loading 
     graphical->disableFeedback();        // disable "feedback"
 }
