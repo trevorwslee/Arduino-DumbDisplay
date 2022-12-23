@@ -31,7 +31,7 @@ const char* imageName = "esp32camobjdetect.jpg";
 
 GraphicalDDLayer* imageLayer;
 GraphicalDDLayer* objectLayer;
-ObjectDetetDemoServiceDDTunnel *objectTunnel;
+ObjectDetetDemoServiceDDTunnel* objectTunnel;
 bool cameraReady = false;
 
 
@@ -81,7 +81,6 @@ void loop() {
       } else {
         DDObjectDetectDemoResult objectDetectResult;
         if (objectTunnel->readObjectDetectResult(objectDetectResult)) {
-          //dumbdisplay.writeComment(objectDetectResult.label);
           if (detecting) {
             objectLayer->clear();
           }

@@ -1,10 +1,10 @@
 
 #include "Arduino.h"
 
-
 #if defined(ESP32) 
+  // ESP32 board ... additional use Bluetooth with name "BT32"
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("32"));
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200));
 #else
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput(115200));
@@ -31,6 +31,7 @@ void setup() {
 }
 
 const char* getDownloadImageURL() {
+  // randomly pick a image source URL from a list
     int idx = random(5);
     switch(idx) {
       case 0: return "https://placekitten.com/640/480";
@@ -46,17 +47,13 @@ void loop() {
     String url = getDownloadImageURL();
     web_image_tunnel->reconnectTo(url);
 
-    //bool detecting = false;
     while (true) {
       int result = web_image_tunnel->checkResult();
       if (result == 1) {
         // web image downloaded and saved successfully
-        // graphical->clear();
-        // // draw the image
         graphical->drawImageFile("downloaded.png");
         // detect objects in the image
         object_detect_tunnel->reconnectForObjectDetect("downloaded.png");
-        //detecting = true;
       } else if (result == -1) {
         // failed to download the image
         dumbdisplay.writeComment("XXX failed to download XXX");
@@ -66,13 +63,20 @@ void loop() {
       }
     }
 
-    graphical->backgroundColor("blue");   // set background color to blue, to indicate loaded
+    graphical->backgroundColor("gray");   // set background color to gray, to indicate loaded and detecting
     graphical->enableFeedback("f") ;      // enable "auto feedback" 
+    bool detected = false;
     while (true) {                        // loop and wait for object detection result, or grapical layer click for switching image
-      if (!object_detect_tunnel->eof()) {
+      if (object_detect_tunnel->eof()) {
+        if (!detected) {
+          dumbdisplay.writeComment("Click image to switch!");
+          graphical->backgroundColor("blue");   // set background color to blue, to indicate all done
+        }
+        detected = true;
+      } else {
         DDObjectDetectDemoResult objectDetectResult;
         if (object_detect_tunnel->readObjectDetectResult(objectDetectResult)) {
-          dumbdisplay.writeComment(objectDetectResult.label);
+          dumbdisplay.writeComment(String(". ") + objectDetectResult.label);
           int x = objectDetectResult.left;
           int y = objectDetectResult.top;
           int w = objectDetectResult.right - objectDetectResult.left;
@@ -86,5 +90,5 @@ void loop() {
       }
     }
     graphical->backgroundColor("white");  // set background color to white, to indicate loading 
-    graphical->disableFeedback();        // disable "feedback"
+    graphical->disableFeedback();         // disable "feedback"
 }
