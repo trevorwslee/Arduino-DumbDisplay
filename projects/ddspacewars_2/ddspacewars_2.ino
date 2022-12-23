@@ -5,7 +5,7 @@
 // *** 
 
 
-//#define ESP_NOW_SERVER_FOR_MAC 0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
+#define ESP_NOW_SERVER_FOR_MAC 0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
 //#define ESP_NOW_CLIENT
 
 
@@ -106,16 +106,9 @@ int readyStage = 0;
 
 
 #if defined(ESP_NOW_CLIENT)
-//ESPNowJoystickData receivedJoystickData;
-//volatile bool receivedJoystickDataValid = false;
 volatile long lastReceivedJoystickDataMillis = 0;
 void OnReceivedData(uint8_t * mac, uint8_t *incomingData, uint8_t len)
 {
-//   if (!receivedJoystickDataValid) {
-//     memcpy(&receivedJoystickData, incomingData, len);
-//     receivedJoystickDataValid = true;
-//     lastReceivedJoystickDataMillis = millis();
-//   }
   ESPNowJoystickData receivedJoystickData;
   memcpy(&receivedJoystickData, incomingData, len);
   joystick->decode(receivedJoystickData.joystickPressCode);
@@ -141,13 +134,7 @@ void OnIdle()
       }
       return;
     }
-    // if (!receivedJoystickDataValid) {
-    //   return;  
-    // }
-    // joystick->decode(receivedJoystickData.joystickPressCode);
-    // buttons->decode(receivedJoystickData.buttonsPressCode);
-    // receivedJoystickDataValid = false;
-    // lastActivityMillis = nowMillis;
+    lastActivityMillis = nowMillis;
   }
 #endif
 }
@@ -196,8 +183,6 @@ void loop() {
     ESPNowJoystickData joystickData;
     memcpy(&joystickData.joystickPressCode, &joystickPressCode, sizeof(joystickPressCode));
     memcpy(&joystickData.buttonsPressCode, &buttonsPressCode, sizeof(buttonsPressCode));
-    // joystickData.joystickPressCode1 = joystickPressCode1;
-    // joystickData.joystickPressCode2 = joystickPressCode2;
     esp_now_send(ClientMACAddress, (uint8_t *) &joystickData, sizeof(joystickData));
   }
   return;

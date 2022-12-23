@@ -1,10 +1,12 @@
+//#define WITH_KEYBOARD
 
-#if defined(ESP32)
-#include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("LILYGO", true, 115200), false);
+
+#if defined(ESP32) 
+  #include "esp32dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("32", true, 115200), false);
 #else
-#include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200), false);
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput(115200), false);
 #endif
 
 #define TONE_YES 1000
@@ -33,8 +35,25 @@ LcdDDLayer *keyLayers[RowCount][5];
 
 BasicCalculator calculator(DisplayWidth);
 
+
+#if defined(WITH_KEYBOARD)
+#include <Wire.h>
+void OnReceivedKey(int param);
+#endif
+
+
+
+
+
+
 void setup()
 {
+#if defined(WITH_KEYBOARD) 
+  Wire.begin(4);
+  Wire.onReceive(OnReceivedKey);
+#endif 
+
+
   displayLayer = CreateDisplayLayer();
   for (int r = 0; r < RowCount; r++)
   {
@@ -54,6 +73,7 @@ void setup()
               DD_AP_HORI_4(keyLayers[2][0]->getLayerId(), keyLayers[2][1]->getLayerId(), keyLayers[2][2]->getLayerId(), keyLayers[2][3]->getLayerId()),
               DD_AP_HORI_4(keyLayers[3][0]->getLayerId(), keyLayers[3][1]->getLayerId(), keyLayers[3][2]->getLayerId(), keyLayers[3][3]->getLayerId()),
               DD_AP_HORI_4(keyLayers[4][0]->getLayerId(), keyLayers[4][1]->getLayerId(), keyLayers[4][2]->getLayerId(), keyLayers[4][3]->getLayerId()))));
+
 }
 
 void loop()
@@ -96,6 +116,10 @@ void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &fee
     if (type == CLICK)
     {
       char key = pLayer->customData.charAt(0);
+      if (false) {
+        dumbdisplay.writeComment(String(key));
+        return;
+      }
       if (key == 'C')
       {
         calculator.reset();
@@ -132,6 +156,7 @@ SevenSegmentRowDDLayer *CreateDisplayLayer()
   displayLayer->border(50, "grey", "raised");
   displayLayer->padding(50);
   displayLayer->setFeedbackHandler(FeedbackHandler);
+  //displayLayer->enableFeedback("fl");
   return displayLayer;
 }
 LcdDDLayer *CreateKeyLayer(int r, int c)
@@ -156,7 +181,7 @@ LcdDDLayer *CreateKeyLayer(int r, int c)
   }
   else
   {
-    dispKey = key;
+    dispKey = String(key);
   }
   LcdDDLayer *keyLayer = dumbdisplay.createLcdLayer(1, 1, 32, "sans-serif-black");
   keyLayer->pixelColor("navy");
@@ -164,6 +189,16 @@ LcdDDLayer *CreateKeyLayer(int r, int c)
   keyLayer->padding(1);
   keyLayer->writeLine(dispKey);
   keyLayer->setFeedbackHandler(FeedbackHandler, "fl");
-  keyLayer->customData = key;
+  //keyLayer->enableFeedback("fl");
+  keyLayer->customData = String(key);
   return keyLayer;
 }
+
+#if defined(WITH_KEYBOARD)
+void OnReceivedKey(int param) {
+  char x = Wire.read();
+  dumbdisplay.writeComment(String(x));
+}
+#endif
+
+

@@ -1,8 +1,3 @@
-// for a desciption of the experiment, please watch the YouTube video 
-// -- ESP32-CAM Experiment -- Capture and Stream Pictures to Mobile Phone
-// -- https://youtu.be/D0tinZi5l5s
-
-
 
 #include <Arduino.h>
 #include "esp_camera.h" 
@@ -28,35 +23,16 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
 
 
 
-const int imageLayerWidth = 1024;
-const int imageLayerHeight = 768;
-const char* imageName = "esp32camdd_test.jpg";
+const framesize_t frameSize = FRAMESIZE_VGA;
+const int imageLayerWidth = 640;
+const int imageLayerHeight = 480;
+const char* imageName = "esp32camobjdetect.jpg";
 
 
-LcdDDLayer* flashLayer;
-LcdDDLayer* resolutionLayer;
-LcdDDLayer* captureModeLayer;
 GraphicalDDLayer* imageLayer;
-
-
-LcdDDLayer* createAndSetupButton(DumbDisplay& dumbdisplay, const char* bgColor = "blue") {
-  LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(11, 1);
-  buttonLayer->border(2, "gray", "round");
-  buttonLayer->padding(1);
-  buttonLayer->backgroundColor(bgColor);
-  buttonLayer->pixelColor("white");
-  buttonLayer->enableFeedback("f");
-  return buttonLayer;
-}
-
-GraphicalDDLayer * createAndSetupImageLayer(DumbDisplay& dumbdisplay) {
-  GraphicalDDLayer* imgLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
-  imgLayer->backgroundColor("ivory");
-  imgLayer->padding(10);
-  imgLayer->border(20, "blue");
-  imgLayer->enableFeedback("f");
-  return imgLayer;
-}
+GraphicalDDLayer* objectLayer;
+ObjectDetetDemoServiceDDTunnel* objectTunnel;
+bool cameraReady = false;
 
 
 bool initialiseCamera(framesize_t frameSize);
@@ -66,108 +42,57 @@ bool captureAndSaveImage(bool useFlash, bool cacheOnly);
 void setup() {
   Serial.begin(115200);
 
-  flashLayer = createAndSetupButton(dumbdisplay);
-  resolutionLayer = createAndSetupButton(dumbdisplay);
-  captureModeLayer = createAndSetupButton(dumbdisplay, "red");
+  // create the top layer for showing detected object rectangles
+  objectLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
+  objectLayer->border(10, "blue");
+  objectLayer->padding(5);
+  objectLayer->noBackgroundColor();
+  objectLayer->penSize(2);
 
-  imageLayer = createAndSetupImageLayer(dumbdisplay);
+  // create the bottom layer for showing the ESP32 CAM capatured image
+  imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
+  imageLayer->border(10, "blue");
+  imageLayer->padding(5);
+  imageLayer->backgroundColor("azure");
 
-  dumbdisplay.configAutoPin(DD_AP_VERT_2(
-    DD_AP_HORI_3(flashLayer->getLayerId(), resolutionLayer->getLayerId(), captureModeLayer->getLayerId()),
-    imageLayer->getLayerId()
-  ));
-
+  // create a tunnel for object detection demo via TensorFlow Lite running on phone side
+  objectTunnel = dumbdisplay.createObjectDetectDemoServiceTunnel();
+ 
   imageLayer->drawImageFileFit("dumbdisplay.png");
+
+  cameraReady = initialiseCamera(frameSize); 
+  if (cameraReady) {
+    dumbdisplay.writeComment("... initialized camera!");
+  } else {
+    dumbdisplay.writeComment("... failed to initialize camera!");
+  }
 }
 
 
-bool cameraReady = false;
-DDValueRecord<bool> flashOn(false, true);
-DDValueRecord<byte> imageSize(1, 0);
-DDValueRecord<bool> streaming(false, true);
-
+bool detecting = false;
 
 void loop() {
-  if (flashOn.record()) {
-    if (flashOn) {
-      flashLayer->writeCenteredLine("FLASH ON");
-    } else {
-      flashLayer->writeCenteredLine("FLASH OFF");
-    }  
-  }
-
-  if (streaming.record()) {
-    if (streaming) {
-      captureModeLayer->writeCenteredLine("STREAM");
-    } else {
-      captureModeLayer->writeCenteredLine("STILL");
-    }
-  }
-
-  if (imageSize.record()) {
-    framesize_t frameSize;
-    switch (imageSize) {
-      case 1:
-        frameSize = FRAMESIZE_VGA;
-        resolutionLayer->writeCenteredLine("640x480");
-        break;
-      case 2:
-        frameSize = FRAMESIZE_SVGA;
-        resolutionLayer->writeCenteredLine("800x600");
-        break;
-      case 3: 
-        frameSize = FRAMESIZE_XGA;
-        resolutionLayer->writeCenteredLine("1024x768");
-        break;
-      case 4:  
-        frameSize = FRAMESIZE_HD;
-        resolutionLayer->writeCenteredLine("1280x720");
-        break;
-      default:
-        frameSize = FRAMESIZE_QVGA;
-        resolutionLayer->writeCenteredLine("320x240");
-    }
-    dumbdisplay.writeComment("Initializing camera ...");
-    cameraReady = initialiseCamera(frameSize); 
-    if (cameraReady) {
-      dumbdisplay.writeComment("... initialized camera!");
-    } else {
-      dumbdisplay.writeComment("... failed to initialize camera!");
-    }
-  }
-
-  if (flashLayer->getFeedback()) {
-    flashOn = !flashOn;
-  }
-
-  if (resolutionLayer->getFeedback()) {
-    if (imageSize < 4) {
-      imageSize = imageSize + 1;
-    } else {
-      imageSize = 1;
-    }
-  }
-
-  if (captureModeLayer->getFeedback()) {
-    streaming = !streaming;
-  }
-
-  bool capture = imageLayer->getFeedback() != NULL;
-  if (capture || (cameraReady && streaming)) {
-    if (cameraReady) {
-      if (captureAndSaveImage(flashOn, !capture && streaming)) {
-        if (!streaming) {
-          imageLayer->unloadImageFile(imageName);
-          imageLayer->clear();
-        }      
-        imageLayer->drawImageFileFit(imageName);
+  if (cameraReady) {
+    if (captureAndSaveImage(false, true)) {
+      imageLayer->drawImageFileFit(imageName);
+      if (objectTunnel->eof()) {
+        objectTunnel->reconnectForObjectDetectFrom(imageLayer, imageName);
+        detecting = true;
       } else {
-        dumbdisplay.writeComment("Failed to capture image!");
-        delay(1000);
+        DDObjectDetectDemoResult objectDetectResult;
+        if (objectTunnel->readObjectDetectResult(objectDetectResult)) {
+          if (detecting) {
+            objectLayer->clear();
+          }
+          int x = objectDetectResult.left;
+          int y = objectDetectResult.top;
+          int w = objectDetectResult.right - objectDetectResult.left;
+          int h = objectDetectResult.bottom - objectDetectResult.top;
+          objectLayer->drawRect(x, y, w, h, "green");
+          objectLayer->drawStr(x, y, objectDetectResult.label, "yellow", "a70%darkgreen", 32);
+          detecting = false;
+        }
       }
-    } else {
-      dumbdisplay.writeComment("Camera not ready!");
-      delay(1000);
     }
   }
 }
@@ -175,7 +100,8 @@ void loop() {
 
 
 
-const bool serialDebug = 1;                            // show debug info. on serial port (1=enabled, disable if using pins 1 and 3 as gpio)
+
+const bool serialDebug = 1;                          // show debug info. on serial port (1=enabled, disable if using pins 1 and 3 as gpio)
 
 
 #define PIXFORMAT PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
@@ -232,7 +158,7 @@ void setupFlashPWM();
 bool initialiseCamera(framesize_t frameSize) {
   esp_camera_deinit();     // disable camera
   delay(50);
-  setupFlashPWM();    // configure PWM for the illumination LED
+  setupFlashPWM();         // configure PWM for the illumination LED
 
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
