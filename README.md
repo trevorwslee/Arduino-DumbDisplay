@@ -238,7 +238,7 @@ Notes:
 
 | 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. "Layer feedback" | 7. "Tunnel" for getting Quotes |
 |--|--|--|--|--|--|--|
-|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmb.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddbarmeter.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddautopin.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpinturtle.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddgraphical.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/dddoodle.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddquote.png)|
+|![](screenshots/ddmb.png)|![](screenshots/ddbarmeter.png)|![](screenshots/ddautopin.png)|![](screenshots/ddpinturtle.png)|![](screenshots/ddgraphical.png)|![](screenshots/dddoodle.png)|![](screenshots/ddquote.png)|
 
 
 ### Screenshot 1 -- *Micro:bit*
@@ -1023,7 +1023,7 @@ The only "device dependent view" layer is ```TomTomMapDDLayer```.
 
 |  | |
 |--|--|
-|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddnowhere.jpg)|For demonstration, the above "now/here" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. The complete "nowhere" sample is https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddnowhere/ddnowhere.ino|
+|![](screenshots/ddnowhere.jpg)|For demonstration, the above "now/here" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. The complete "nowhere" sample is https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddnowhere/ddnowhere.ino|
 
 
 ## Downloadable Font Support
@@ -1093,7 +1093,7 @@ To get a feel, you may want to refer to the video [**Raspberry Pi Pico playing s
 
 |  | |
 |--|--|
-|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/pico-speaker_connection.png)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddmelody.jpg)|
+|![](screenshots/pico-speaker_connection.png)|![](screenshots/ddmelody.jpg)|
 
 
 ## Record and Playback Commands
@@ -1110,7 +1110,7 @@ Instead of posting the sample sketch here, please find it with the link: https:/
 
 | Arduino UNO with Joystick shield | DumbDisplay |
 |--|--|
-|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick-arduino.jpg)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/joystick-dd.png)|
+|![](screenshots/joystick-arduino.jpg)|![](screenshots/joystick-dd.png)|
 
 
 If you are interested, you may want to watch the video **Arduino JoyStick Shield and DumbDisplay** -- https://www.youtube.com/watch?v=9GYrZWXHfUo
@@ -1211,7 +1211,7 @@ For a brief explanation of the sketch, you may want to watch the video [**ESP826
 
 | ESP8266 with Servo | DumbDisplay |
 |--|--|
-|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/esp8266-servo.jpg)|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/servo-dd.png)|
+|![](screenshots/esp8266-servo.jpg)|![](screenshots/servo-dd.png)|
 
 
 ## Idle Callback and ESP32 Deep Sleep
@@ -1335,7 +1335,7 @@ Notice how the previously mentioned display image file command is used here.
 
 | |  |
 |--|--|
-|For a complete example, and much more than just displaying bitmap image, please refer to my adaption of the "Pocket Computer" Arduino Nano project I found in YouTube -- [Arduino Pocket Computer featuring calculator, stopwatch, calendar, game and phone book](https://www.youtube.com/watch?v=NTaq6f7NV5U) by Volos Projects|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddpocketcomputer.png)|
+|For a complete example, and much more than just displaying bitmap image, please refer to my adaption of the "Pocket Computer" Arduino Nano project I found in YouTube -- [Arduino Pocket Computer featuring calculator, stopwatch, calendar, game and phone book](https://www.youtube.com/watch?v=NTaq6f7NV5U) by Volos Projects|![](screenshots/ddpocketcomputer.png)|
 
 
 
@@ -1360,7 +1360,7 @@ The cached 16-bit pixel image is displayed to graphical layer as needed, like
 
 | | |
 |--|--|
-|In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by my post [Adaptation of "Space Wars" Game with DumbDisplay](https://create.arduino.cc/projecthub/trevorwslee/adaptation-of-space-wars-game-with-dumbdisplay-a09c42?ref=user&ref_id=2044336&offset=0).|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddspacewars.gif)|
+|In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by my post [Adaptation of "Space Wars" Game with DumbDisplay](https://create.arduino.cc/projecthub/trevorwslee/adaptation-of-space-wars-game-with-dumbdisplay-a09c42?ref=user&ref_id=2044336&offset=0).|![](screenshots/ddspacewars.gif)|
 
 
 
@@ -1369,7 +1369,7 @@ The cached 16-bit pixel image is displayed to graphical layer as needed, like
 Even better, you may want to saved the images to DumbDisplay app image storage, for the use of your sketch. As hinted by the post, the steps can be like
 | | |
 |--|--|
-|1) use your phone's Chrome browser to open the image page; 2) long press the image to bring up the available options; 3) select to share the image with DumbDisplay app|![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddsaveimages.gif)|
+|1) use your phone's Chrome browser to open the image page; 2) long press the image to bring up the available options; 3) select to share the image with DumbDisplay app|![](screenshots/ddsaveimages.gif)|
 
 Notes:
 * not only from Chrome, you can share and save images from any app that can share images that it sees
@@ -1406,7 +1406,7 @@ Notes:
 * ***If DumbDisplay fails to make connection to DumbDisplay WIFI Bridge, check your descktop firewall settings; try switching desktop WIFI to use 2.4 GHz.***  
 
 
-![](https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/ddwifibridge.png)
+![](screenshots/ddwifibridge.png)
 
 
 You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge**](https://www.youtube.com/watch?v=0UhRmXXBQi8)
