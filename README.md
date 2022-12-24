@@ -940,7 +940,28 @@ The two service "tunnels" are:
       ...
     }  
   ```   
-  The complete "here" sample sketch: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddhere/ddhere.ino
+  The complete "here" sample sketch: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddhere/ddhere.ino.
+* TensorFlow Lite object detection demo service "tunnel"
+  ```
+    ObjectDetetDemoServiceDDTunnel *object_detect_tunnel = dumbdisplay.createObjectDetectDemoServiceTunnel();
+    ...
+    object_detect_tunnel->reconnectForObjectDetect("downloaded.png");
+    ...
+    DDObjectDetectDemoResult objectDetectResult;
+    if (object_detect_tunnel->readObjectDetectResult(objectDetectResult)) {
+      dumbdisplay.writeComment(String(". ") + objectDetectResult.label);
+      int x = objectDetectResult.left;
+      int y = objectDetectResult.top;
+      int w = objectDetectResult.right - objectDetectResult.left;
+      int h = objectDetectResult.bottom - objectDetectResult.top;
+      graphical->drawRect(x, y, w, h, "green");
+      graphical->drawStr(x, y, objectDetectResult.label, "yellow", "a70%darkgreen", 32);
+    }
+  ```
+|  | |
+|--|--|
+|For the complete demo, please refer to [Arduino AI Fun With TensorFlow Lite, Via DumbDisplay](https://www.instructables.com/Arduino-AI-Fun-With-TensorFlow-Lite-Via-DumbDispla/).|![](screenshots/esp32camobjectdetect.gif)|
+  
 
 
 ## "Device Dependent View" Layers

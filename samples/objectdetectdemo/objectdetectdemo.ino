@@ -31,15 +31,15 @@ void setup() {
 }
 
 const char* getDownloadImageURL() {
-  // randomly pick a image source URL from a list
-    int idx = random(5);
-    switch(idx) {
-      case 0: return "https://placekitten.com/640/480";
-      case 1: return "https://source.unsplash.com/random/640x480";
-      case 2: return "https://picsum.photos/640/480";
-      case 3: return "https://loremflickr.com/640/480";
-    }
-    return "https://placedog.net/640/480?r";
+  // randomly pick an image source URL from a list
+  int idx = random(5);
+  switch(idx) {
+    case 0: return "https://placekitten.com/640/480";
+    case 1: return "https://source.unsplash.com/random/640x480";
+    case 2: return "https://picsum.photos/640/480";
+    case 3: return "https://loremflickr.com/640/480";
+  }
+  return "https://placedog.net/640/480?r";
 }
 
 void loop() {
