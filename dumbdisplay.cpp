@@ -262,6 +262,7 @@ volatile bool _NoEncodeInt = false;
 #define IS_FLOAT_ZERO(f) ((((f)<0?-(f):(f)) - 0.0) < 0.001)
 #define IS_FLOAT_WHOLE(f) IS_FLOAT_ZERO((f) - (int) (f))
 
+#define DD_FLOAT_DP 3
 
 #ifdef DD_CONDENSE_COMMAND
 #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
@@ -269,12 +270,12 @@ volatile bool _NoEncodeInt = false;
 #else
 #define TO_C_INT(i) (DDIntEncoder(i).encoded())
 #endif
-#define TO_NUM(num) IS_FLOAT_WHOLE(num) ? String((int) num) : String(num) 
+#define TO_NUM(num) IS_FLOAT_WHOLE(num) ? String((int) num) : String(num, DD_FLOAT_DP) 
 #else
 #define TO_C_INT(i) String(i)
 #define TO_NUM(num) String(num) 
 #endif
-#define TO_C_NUM(num) IS_FLOAT_WHOLE(num) ? TO_C_INT((int) num) : String(num) 
+#define TO_C_NUM(num) IS_FLOAT_WHOLE(num) ? TO_C_INT((int) num) : String(num, DD_FLOAT_DP) 
 
 
 
