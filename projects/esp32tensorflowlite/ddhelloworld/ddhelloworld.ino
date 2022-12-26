@@ -40,7 +40,7 @@ tflite::AllOpsResolver resolver;
 // Create an area of memory to use for input, output, and intermediate arrays.
 // Finding the minimum value for your model may require some trial and error.
 const int tensor_arena_size = 2 * 1024;
-uint8_t tensor_arena[tensor_arena_size];
+uint8_t tensor_arena[tensor_arena_size];  
 
 
 // Build an interpreter to run the model with
@@ -61,7 +61,7 @@ const float start_in = -1.4;
 const float max_in = 7.6;
 
 const int width = 640;
-const int height = 480;
+const int height = 360;
 const float xScaleFactor = width / (max_in - start_in);
 const float yScaleFactor = height / 2;
 const int xOffset = -start_in * xScaleFactor;
@@ -70,34 +70,37 @@ const int yOffset = yScaleFactor;
 
 
 void setup() {
-  plotterLayer = dumbdisplay.createPlotterLayer(640, 480);
+  // create a plotter layer for plotting the inference result value
+  plotterLayer = dumbdisplay.createPlotterLayer(width, height);
 
+  // create a graphical layer for drawing out properly positioned and scaled inference value
   graphicalLayer = dumbdisplay.createGraphicalLayer(width, height);
   graphicalLayer->backgroundColor("ivory");
   graphicalLayer->drawLine(0, yOffset, width, yOffset, "blue");
   graphicalLayer->drawLine(xOffset, 0, xOffset, height, "blue");
 
-
+  // static the two layers, one on top of the other
   dumbdisplay.configAutoPin(DD_AP_VERT);
 
-  // Allocate memory from the tensor_arena for the model's tensors
+
+  // allocate memory from the tensor_arena for the model's tensors
   interpreter.AllocateTensors();
 
-  // Obtain a pointer to the model's input tensor
+  // obtain a pointer to the model's input tensor
   input = interpreter.input(0);
 }
 
 
 float in = start_in;
-int color = 0;
+int color = 0; // 0: "red"; 1: "green"
 
 void loop() {
   delay(250);
 
-  // Provide an input value
+  // provide an input value
   input->data.f[0] = in;
 
-  // Run the model on this input and check that it succeeds
+  // run the model on this input and check that it succeeds
   TfLiteStatus invoke_status = interpreter.Invoke();
   if (invoke_status != kTfLiteOk) {
     error_reporter->Report("Invoke failed\n");
@@ -105,18 +108,21 @@ void loop() {
 
   TfLiteTensor* output = interpreter.output(0);
 
-  // Obtain the output value from the tensor
+  // obtain the output value from the tensor
   float out = output->data.f[0];
-  //dumbdisplay.writeComment(String(". INFERENCE: ") + in + " -> " + out);
+
+  // plot the input and output value to plotter layer as x and y
   plotterLayer->set("x", in, "y", out);
 
+  // properly position and scale the in / out values, and draw it as a dot on the graphical layer
   int x = xOffset + in * xScaleFactor;
   int y = yOffset - out * yScaleFactor; 
-  //graphicalLayer->drawPixel(x, y, color == 0 ? "red" : "green");
-  graphicalLayer->fillCircle(x, y, 2, color == 0 ? "darkred" : "darkgreen");
+  graphicalLayer->fillCircle(x, y, 2, color == 0 ? "red" : "green");
 
+  // increment the in value, by some randomized amount
   float inc = (float) random(10) / 1000.0;
   in += 0.04 + inc;
+
   if (in > max_in) {
     in = start_in + (inc / 3.0);
     color = (color + 1) % 2;
