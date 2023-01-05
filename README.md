@@ -250,7 +250,9 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddmb/ddm
 ```
 #include "ssdumbdisplay.h"
 
-/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+// for connection
+// . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
+// . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
 DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 MbDDLayer *mb;
@@ -288,7 +290,9 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddbarmet
 ```
 #include "ssdumbdisplay.h"
 
-/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+// for connection
+// . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
+// . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
 DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 void setup() {
@@ -335,7 +339,9 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddautopi
 ```
 #include "ssdumbdisplay.h"
 
-/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+// for connection
+// . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
+// . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
 DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 LedGridDDLayer *rled;
@@ -424,8 +430,10 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddpintur
 ```
 #include "ssdumbdisplay.h"
 
-// assume HC-06 connected, to pin 2 and 3
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
+// for connection
+// . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
+// . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
+DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 TurtleDDLayer *turtle = NULL;
 int r = random(0, 255);
@@ -504,7 +512,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddgraphi
 ```
 #include "ssdumbdisplay.h"
 
-// assume HC-06 connected, to pin 2 and 3
+// assume HC-06 connected; 2 => TX of HC06; 3 => RX of HC06
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
 
 void setup() {
@@ -599,7 +607,9 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/dddoodle
 ```
 #include "ssdumbdisplay.h"
 
-/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
+// for connection
+// . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
+// . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
 DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 int dotSize = 5;
@@ -700,8 +710,10 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddquote/
 ```
 #include "dumbdisplay.h"
 
-/* for connection, please use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
-/* use a lower baud rate since Arduino Uno Serial buffer size is not very big                      */
+// for connection
+// . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
+// . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
+// use a lower baud rate since Arduino Uno Serial buffer size is not very big
 DumbDisplay dumbdisplay(new DDInputOutput(9600));
 
 GraphicalDDLayer *pLayer;

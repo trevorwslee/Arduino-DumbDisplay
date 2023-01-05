@@ -7,7 +7,7 @@
 #ifdef BLUETOOTH
 
 
-// assume HC-06 connected, to pin 2 and 3
+// assume HC-06 connected; 2 => TX of HC06; 3 => RX of HC06
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
 
 #else
