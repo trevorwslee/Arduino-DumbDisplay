@@ -82,6 +82,11 @@ void setup() {
   // static the two layers, one on top of the other
   dumbdisplay.configAutoPin(DD_AP_VERT);
 
+  // check version to make sure supported
+  if (model->version() != TFLITE_SCHEMA_VERSION) {
+    error_reporter->Report("Model provided is schema version %d not equal to supported version %d.\n",
+    model->version(), TFLITE_SCHEMA_VERSION);
+  }
 
   // allocate memory from the tensor_arena for the model's tensors
   interpreter.AllocateTensors();
