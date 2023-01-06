@@ -1700,6 +1700,11 @@ void GraphicalDDLayer::cachePixelImage16(const String& imageName, const uint16_t
   _sendCommand6("", C_CACHEPIXIMG16, layerId, imageName, String(width), String(height), TO_EDIAN(), options);
   _sendByteArrayAfterCommand((uint8_t*) data, byteCount, compressMethod);
 }
+void GraphicalDDLayer::cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options, char compressMethod) {
+  int byteCount = width * height; 
+  _sendCommand5("", C_CACHEPIXIMGGS, layerId, imageName, String(width), String(height), options);
+  _sendByteArrayAfterCommand(data, byteCount, compressMethod);
+}
 void GraphicalDDLayer::saveCachedImageFile(const String& imageName) {
   _sendCommand2("", "SAVECACHEDIMG", layerId, imageName);
 }
@@ -2395,6 +2400,11 @@ void DumbDisplay::savePixelImage16(const String& imageName, const uint16_t *data
   int byteCount = 2 * width * height; 
   _sendCommand5("", C_SAVEPIXIMG16, imageName, String(width), String(height), TO_EDIAN(), options);
   _sendByteArrayAfterCommand((uint8_t*) data, byteCount, compressMethod);
+}
+void DumbDisplay::savePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options, char compressMethod) {
+  int byteCount = width * height; 
+  _sendCommand4("", C_SAVEPIXIMGGS, imageName, String(width), String(height), options);
+  _sendByteArrayAfterCommand(data, byteCount, compressMethod);
 }
 void DumbDisplay::stitchImages(const String& imageNames, const String& asImageName) {
   _sendCommand2("", "STITCHIMGS", imageNames, asImageName);

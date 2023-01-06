@@ -472,6 +472,7 @@ class GraphicalDDLayer: public DDLayer {
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
     void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
+    void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     void saveCachedImageFile(const String& imageName);
     void saveCachedImageFiles(const String& stitchAsImageName = "");
 };
@@ -880,6 +881,7 @@ class DumbDisplay {
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
     void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressMethod = 0);
     void savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
+    void savePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /* - imageNames: '+' delimited */
     void stitchImages(const String& imageNames, const String& asImageName);
     void debugOnly(int i);
