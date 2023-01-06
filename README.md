@@ -62,7 +62,7 @@ Note that with the "layer feedback" mechanism, user interaction (like clicking o
 
 ## Arduino IDE
 
-The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show; install it. As reference, you may want to see my post [Blink Test with Virtual Display, DumbDisplay](https://create.arduino.cc/projecthub/trevorwslee/blink-test-with-virtual-display-dumbdisplay-5c8350?ref=user&ref_id=2044336&offset=9)  
+The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show; install it. As reference, you may want to see my post [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)  
 
 Alternative, you can choose to use the more "fluid" manual approach. The basic steps are
 1) download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
@@ -114,7 +114,7 @@ Notes:
 
 You have several options for connecting to DumbDisplay Android app.
 
-* Via Serial 
+* Via Serial -- via OTG; reference: [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
   ```
     #include "dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDInputOutput(115200));
@@ -123,7 +123,7 @@ You have several options for connecting to DumbDisplay Android app.
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - you should not be using Serial for other purposes
   - the default baud rate is 115200;  a lower baud rate, say 9600, may work better for some cases
-* Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) (connected to Bluetooth module like HC-06)
+* Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- connected to Bluetooth module like HC-06
   ```
     #include "ssdumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
@@ -133,7 +133,7 @@ You have several options for connecting to DumbDisplay Android app.
     - 2 and 3 are the pins used by SoftwareSerial
     - the default baud rate is 115200, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially true for HC-08, which connects via BLE. 
   - you should not be using that SoftwareSerial for other purposes
-* Via `Serial2` (for STM32, connected to Bluetooth module like HC-06) 
+* Via `Serial2` -- for STM32, connected to Bluetooth module like HC-06 
   ```
     #include "serial2dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSerial2IO(115200));
@@ -141,7 +141,7 @@ You have several options for connecting to DumbDisplay Android app.
   - need to include serial2dumbdisplay.h -- `#include <serial2dumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSerial2IO(115200))`
   - e.g. STM32F103: PA3 (RX2) ==> TX; PA2 (TX2) ==> RX
-* Via `Serial2` (for Raspberry Pi Pico, connected to Bluetooth module like HC-06) 
+* Via `Serial2` -- for Raspberry Pi Pico, connected to Bluetooth module like HC-06 
   ```
     #include <picodumbdisplay.h>
     DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
@@ -178,7 +178,7 @@ You have several options for connecting to DumbDisplay Android app.
     - "ESP32BLE" is name used by `BLE`
   - **you should not be using ESP32's BLE for other purposes**
   - **be warned that `DDBLESerialIO` is slow**; if possible choose `DDBluetoothSerialIO` over `DDBLESerialIO` 
-* Via WIFI as a [`WiFiServer`](https://www.arduino.cc/en/Reference/WiFi) (for ESP01/ESP8266/ESP32/PicoW)  
+* Via WIFI as a [`WiFiServer`](https://www.arduino.cc/en/Reference/WiFi) -- for ESP01/ESP8266/ESP32/PicoW  
   ```
     #define DD_4_ESP8266
     #include "wifidumbdisplay.h"
@@ -209,7 +209,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddblink/d
 ```
 #include "ssdumbdisplay.h"
 
-// assume HC-06 connected, to pin 2 and 3
+// assume HC-06 connected; 2 => TX of HC06; 3 => RX of HC06
 DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
 LedGridDDLayer *led;
 
