@@ -28,42 +28,20 @@ public:
     int len = strlen(format);
     char buffer[max(32, 2 * len)];  // assume 2 times format len is big enough
     sprintf(buffer, format, args);
-    //Serial.println(buffer);
     dumbdisplay.writeComment(buffer);
     return 0;
   }
 };
 
-
-// Set up logging
-//DDTFLErrorReporter error_reporter_impl;
-//tflite::ErrorReporter* error_reporter = &error_reporter_impl;
 tflite::ErrorReporter* error_reporter = new DDTFLErrorReporter();
 
-
-// Map the model into a usable data structure. This doesn't involve any
-// copying or parsing, it's a very lightweight operation.
 const tflite::Model* model = ::tflite::GetModel(g_person_detect_model_data);
 
-// // This pulls in all the operation implementations we need
-// tflite::AllOpsResolver resolver;
-
-// Create an area of memory to use for input, output, and intermediate arrays.
-// Finding the minimum value for your model may require some trial and error.
-//const int tensor_arena_size = 70 * 1024;
-//uint8_t tensor_arena[tensor_arena_size];  
 const int tensor_arena_size = 81 * 1024;
 uint8_t* tensor_arena;
 
-
 tflite::MicroInterpreter* interpreter = NULL;
 
-// // Build an interpreter to run the model with
-// tflite::MicroInterpreter interpreter(model, resolver, tensor_arena,
-//                                      tensor_arena_size, error_reporter);
-
-
-// Obtain a pointer to the model's input tensor
 TfLiteTensor* input;
 
 
@@ -101,11 +79,11 @@ constexpr int kNotAPersonIndex = 2;
 
 
 // ***** ????? *****
-const uint8_t* g_person_data = new uint8_t[96 * 96];
+const uint8_t* g_person_data = new uint8_t[kNumCols * kNumRows];
 
 
-const framesize_t FrameSize = FRAMESIZE_96X96;
-const pixformat_t PixelFormat = PIXFORMAT_GRAYSCALE;
+const framesize_t FrameSize = FRAMESIZE_96X96;        // should agree with kNumCols and kNumRows
+const pixformat_t PixelFormat = PIXFORMAT_GRAYSCALE;  // should be grayscale
 bool initialiseCamera();
 
 bool cameraReady;
@@ -130,26 +108,22 @@ void setup() {
 
 
   dumbdisplay.writeComment(String("Preparing TFLite model version ") + model->version() + " ...");
-  //Serial.println("%%%%%%%%%%");
 
-  //Serial.print("MODEL VERSION:");
-  //Serial.println(model->version());
   // check version to make sure supported
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     error_reporter->Report("Model provided is schema version %d not equal to supported version %d.",
     model->version(), TFLITE_SCHEMA_VERSION);
   }
 
+  // allocation memory for tensor_arena
   tensor_arena = (uint8_t *) heap_caps_malloc(tensor_arena_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
   if (tensor_arena == NULL) {
     error_reporter->Report("heap_caps_malloc() failed");
-    //interpreter = NULL;
     return;
   }
 
 
-  // Pull in only the operation implementations we need.
-  //static tflite::MicroMutableOpResolver<5> micro_op_resolver;
+  // pull in only the operation implementations needed
   tflite::MicroMutableOpResolver<5>* micro_op_resolver = new tflite::MicroMutableOpResolver<5>();
   micro_op_resolver->AddAveragePool2D();
   micro_op_resolver->AddConv2D();
@@ -158,16 +132,13 @@ void setup() {
   micro_op_resolver->AddSoftmax();
 
 
-  // Build an interpreter to run the model with.
-  // static tflite::MicroInterpreter static_interpreter(model, *micro_op_resolver, tensor_arena, tensor_arena_size, error_reporter);
-  // interpreter = &static_interpreter;
+  // build an interpreter to run the model with
   interpreter = new tflite::MicroInterpreter(model, *micro_op_resolver, tensor_arena, tensor_arena_size, error_reporter);
 
   // allocate memory from the tensor_arena for the model's tensors
   TfLiteStatus allocate_status = interpreter->AllocateTensors();
   if (allocate_status != kTfLiteOk) {
     error_reporter->Report("AllocateTensors() failed");
-    //interpreter = NULL;
     return;
   }
 
@@ -187,11 +158,6 @@ void setup() {
 }
 
 
-//float in = start_in;
-//int color = 0; // 0: "red"; 1: "green"
-
-//void RespondToDetection(uint8_t person_score, uint8_t no_person_score);
-
 void loop() {
 
   if (interpreter == NULL) {
@@ -202,17 +168,13 @@ void loop() {
 
   dumbdisplay.writeComment(String("start ... ") + input->bytes + " ...");
 
-  //Serial.print("start ... ");
-  //Serial.print(input->bytes);
-  //Serial.println("...");
-
-  // Copy an image with a person into the memory area used for the input.
+  // copy an image with a person into the memory area used for the input
   const uint8_t* person_data = g_person_data;
   for (int i = 0; i < input->bytes; ++i) {
       input->data.uint8[i] = person_data[i];
   }
 
-  // Run the model on this input and make sure it succeeds.
+  // run the model on this input and make sure it succeeds
   TfLiteStatus invoke_status = interpreter->Invoke();
   if (invoke_status != kTfLiteOk) {
       error_reporter->Report("Invoke failed");
@@ -220,61 +182,18 @@ void loop() {
 
   TfLiteTensor* output = interpreter->output(0);
 
-  // Process the inference results.
+  // process the inference results
   uint8_t person_score = output->data.uint8[kPersonIndex];
   uint8_t no_person_score = output->data.uint8[kNotAPersonIndex];
-  //RespondToDetection(person_score, no_person_score);
 
   dumbdisplay.writeComment(String("... person score: ") + person_score + " ...");
   dumbdisplay.writeComment(String("... NO person score: ") + no_person_score + " ...");
   dumbdisplay.writeComment("... done");
-
-  // Serial.print("... person score: ");
-  // Serial.print(person_score);
-  // Serial.println(" ...");
-  // Serial.print("... no person score: ");
-  // Serial.print(no_person_score);
-  // Serial.println(" ...");
-
-//  Serial.println("... done");
-  
+ 
   delay(2000);
-  //yield();
-
-
-  // delay(250);
-
-  // // provide an input value
-  // input->data.f[0] = in;
-
-  // // run the model on this input and check that it succeeds
-  // TfLiteStatus invoke_status = interpreter.Invoke();
-  // if (invoke_status != kTfLiteOk) {
-  //   error_reporter->Report("Invoke failed\n");
-  // }
-
-  // TfLiteTensor* output = interpreter.output(0);
-
-  // // obtain the output value from the tensor
-  // float out = output->data.f[0];
-
-  // // plot the input and output value to plotter layer as x and y
-  // plotterLayer->set("x", in, "y", out);
-
-  // // properly position and scale the in / out values, and draw it as a dot on the graphical layer
-  // int x = xOffset + in * xScaleFactor;
-  // int y = yOffset - out * yScaleFactor; 
-  // graphicalLayer->fillCircle(x, y, 2, color == 0 ? "red" : "green");
-
-  // // increment the in value, by some randomized amount
-  // float inc = (float) random(10) / 1000.0;
-  // in += 0.04 + inc;
-
-  // if (in > max_in) {
-  //   in = start_in + (inc / 3.0);
-  //   color = (color + 1) % 2;
-  // }
 }
+
+
 
 
 int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
@@ -319,11 +238,8 @@ void setupFlashPWM() {
 
 bool cameraImageSettings() {
 
-  //if (serialDebug) Serial.println("Applying camera settings");
-
   sensor_t *s = esp_camera_sensor_get();
   if (s == NULL) {
-    //if (serialDebug) Serial.println("Error: problem reading camera sensor settings");
     return 0;
   }
 
@@ -334,7 +250,7 @@ bool cameraImageSettings() {
   s->set_brightness(s, cameraImageBrightness);  // (-2 to 2) - set brightness
 
    return 1;
-}  // cameraImageSettings
+}
 
 
 bool initialiseCamera() {
@@ -372,14 +288,12 @@ bool initialiseCamera() {
   // check the esp32cam board has a psram chip installed (extra memory used for storing captured images)
   //    Note: if not using "AI thinker esp32 cam" in the Arduino IDE, SPIFFS must be enabled
   if (!psramFound()) {
-    //if (serialDebug) Serial.println("Warning: No PSRam found so defaulting to image size 'CIF'");
     error_reporter->Report("Warning: No PSRam found so defaulting to image size 'CIF'");
     config.frame_size = FRAMESIZE_CIF;
   }
 
   esp_err_t camerr = esp_camera_init(&config);  // initialise the camera
   if (camerr != ESP_OK) {
-    //if (serialDebug) Serial.printf("ERROR: Camera init failed with error 0x%x", camerr);
     error_reporter->Report("ERROR: Camera init failed with error 0x%x", camerr);
   }
 
