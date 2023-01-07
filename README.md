@@ -1448,17 +1448,9 @@ v0.9.5
   - bug fix
 
 
-v0.9.4-r2
-  - bug fix
-
-
-v0.9.4-r1
+v0.9.4
   - enhanced "feedback"
   - can be a "share target" for saving images to storage
-  - bug fix
-
-
-v0.9.4
   - enhanced graphical layers
   - bug fixes
 
