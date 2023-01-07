@@ -1,16 +1,16 @@
 #include <Arduino.h>
 
 #include "esp_camera.h" 
-
 #include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32"));
+
+
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32CAM"));
 
 
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
-
 
 // *****
 // * copied from TensorFlowLite_ESP32 library example person_detection
@@ -50,7 +50,7 @@ constexpr int kNumRows = 96;
 constexpr int kNumChannels = 1;
 
 
-constexpr int kCategoryCount = 3;
+//constexpr int kCategoryCount = 3;
 constexpr int kPersonIndex = 1;
 constexpr int kNotAPersonIndex = 2;
 
@@ -62,19 +62,9 @@ constexpr int kNotAPersonIndex = 2;
 
 
 
-//PlotterDDLayer* plotterLayer;
-//GraphicalDDLayer* graphicalLayer;
-
-
-// const float start_in = -1.4;
-// const float max_in = 7.6;
-
-// const int width = 640;
-// const int height = 360;
-// const float xScaleFactor = width / (max_in - start_in);
-// const float yScaleFactor = height / 2;
-// const int xOffset = -start_in * xScaleFactor;
-// const int yOffset = yScaleFactor;
+GraphicalDDLayer* detectingImageLayer;
+LcdDDLayer* lcdLayer;
+GraphicalDDLayer* personImageLayer;
 
 
 
@@ -88,23 +78,23 @@ bool initialiseCamera();
 
 bool cameraReady;
 
+
+
 void setup() {
-  dumbdisplay.connect();
+  detectingImageLayer = dumbdisplay.createGraphicalLayer(kNumCols, kNumRows);
+  detectingImageLayer->padding(5);
+  detectingImageLayer->border(3, "blue", "round");
+  detectingImageLayer->backgroundColor("blue");
 
-  //Serial.begin(115200);
+  lcdLayer = dumbdisplay.createLcdLayer(16, 4);
+  lcdLayer->padding(5);
 
-  // // create a plotter layer for plotting the inference result value
-  // plotterLayer = dumbdisplay.createPlotterLayer(width, height);
+  personImageLayer = dumbdisplay.createGraphicalLayer(kNumCols, kNumRows);
+  personImageLayer->padding(5);
+  personImageLayer->border(3, "red", "round");
+  personImageLayer->backgroundColor("red");
 
-  // // create a graphical layer for drawing out properly positioned and scaled inference value
-  // graphicalLayer = dumbdisplay.createGraphicalLayer(width, height);
-  // graphicalLayer->backgroundColor("ivory");
-  // graphicalLayer->drawLine(0, yOffset, width, yOffset, "blue");
-  // graphicalLayer->drawLine(xOffset, 0, xOffset, height, "blue");
-
-  // // static the two layers, one on top of the other
-  // dumbdisplay.configAutoPin(DD_AP_VERT);
-
+  dumbdisplay.configAutoPin(DD_AP_VERT);
 
 
   dumbdisplay.writeComment(String("Preparing TFLite model version ") + model->version() + " ...");
@@ -158,6 +148,13 @@ void setup() {
 }
 
 
+int detection_count = 0;
+float avg_taken_s = 0;
+
+uint8_t last_person_score = 0;
+uint8_t last_no_person_score = 0;
+
+
 void loop() {
 
   if (interpreter == NULL) {
@@ -165,6 +162,10 @@ void loop() {
     delay(2000);
     return;
   }
+
+  lcdLayer->writeCenteredLine(String(last_person_score) + "  vs  " + String(last_no_person_score), 0);
+  lcdLayer->writeLine(String("  COUNT : ") + detection_count, 2);
+  lcdLayer->writeLine(String("    AVG : ") + String(avg_taken_s) + "s", 3);
 
   dumbdisplay.writeComment(String("start ... ") + input->bytes + " ...");
 
@@ -174,21 +175,32 @@ void loop() {
       input->data.uint8[i] = person_data[i];
   }
 
+  long detect_start_millis = millis();
+
   // run the model on this input and make sure it succeeds
   TfLiteStatus invoke_status = interpreter->Invoke();
   if (invoke_status != kTfLiteOk) {
       error_reporter->Report("Invoke failed");
   }
 
-  TfLiteTensor* output = interpreter->output(0);
+  long detect_taken_millis = millis() - detect_start_millis;
+
 
   // process the inference results
+  TfLiteTensor* output = interpreter->output(0);
   uint8_t person_score = output->data.uint8[kPersonIndex];
   uint8_t no_person_score = output->data.uint8[kNotAPersonIndex];
 
   dumbdisplay.writeComment(String("... person score: ") + person_score + " ...");
   dumbdisplay.writeComment(String("... NO person score: ") + no_person_score + " ...");
   dumbdisplay.writeComment("... done");
+
+  last_person_score = person_score;
+  last_no_person_score = no_person_score;
+
+  float total_taken_s = detection_count * avg_taken_s + (detect_taken_millis / 1000.0);
+  detection_count += 1;
+  avg_taken_s = total_taken_s / detection_count;
  
   delay(2000);
 }
