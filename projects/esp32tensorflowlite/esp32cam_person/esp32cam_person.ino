@@ -61,6 +61,9 @@ constexpr int kNotAPersonIndex = 2;
 // };
 
 
+const char* imageName = "esp32cam_gs";
+const int imageWidth = kNumCols;
+const int imageHeight = kNumRows;
 
 GraphicalDDLayer* detectingImageLayer;
 LcdDDLayer* lcdLayer;
@@ -68,20 +71,22 @@ GraphicalDDLayer* personImageLayer;
 
 
 
-// ***** ????? *****
-const uint8_t* g_person_data = new uint8_t[kNumCols * kNumRows];
+// // ***** ????? *****
+// const uint8_t* g_person_data = new uint8_t[kNumCols * kNumRows];
 
 
 const framesize_t FrameSize = FRAMESIZE_96X96;        // should agree with kNumCols and kNumRows
 const pixformat_t PixelFormat = PIXFORMAT_GRAYSCALE;  // should be grayscale
 bool initialiseCamera();
+camera_fb_t* captureImage(bool useFlash);
+void releaseCapturedImage(camera_fb_t* fb);
 
 bool cameraReady;
 
 
 
 void setup() {
-  detectingImageLayer = dumbdisplay.createGraphicalLayer(kNumCols, kNumRows);
+  detectingImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);
   detectingImageLayer->padding(5);
   detectingImageLayer->border(3, "blue", "round");
   detectingImageLayer->backgroundColor("blue");
@@ -89,7 +94,7 @@ void setup() {
   lcdLayer = dumbdisplay.createLcdLayer(16, 4);
   lcdLayer->padding(5);
 
-  personImageLayer = dumbdisplay.createGraphicalLayer(kNumCols, kNumRows);
+  personImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);
   personImageLayer->padding(5);
   personImageLayer->border(3, "red", "round");
   personImageLayer->backgroundColor("red");
@@ -167,10 +172,19 @@ void loop() {
   lcdLayer->writeLine(String("  COUNT : ") + detection_count, 2);
   lcdLayer->writeLine(String("    AVG : ") + String(avg_taken_s) + "s", 3);
 
-  dumbdisplay.writeComment(String("start ... ") + input->bytes + " ...");
+  camera_fb_t* capturedImage = captureImage(false);
+  if (capturedImage == NULL) {
+    error_reporter->Report("Error: Camera capture failed");
+    return;
+  }
+
+  detectingImageLayer->cachePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
+  detectingImageLayer->drawImageFileFit(imageName);
+
+  dumbdisplay.writeComment("start ... ");
 
   // copy an image with a person into the memory area used for the input
-  const uint8_t* person_data = g_person_data;
+  const uint8_t* person_data = capturedImage->buf;
   for (int i = 0; i < input->bytes; ++i) {
       input->data.uint8[i] = person_data[i];
   }
@@ -194,6 +208,13 @@ void loop() {
   dumbdisplay.writeComment(String("... person score: ") + person_score + " ...");
   dumbdisplay.writeComment(String("... NO person score: ") + no_person_score + " ...");
   dumbdisplay.writeComment("... done");
+
+  if (person_score > no_person_score) {
+    dumbdisplay.savePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
+    personImageLayer->drawImageFileFit(imageName);
+  }
+
+  releaseCapturedImage(capturedImage);
 
   last_person_score = person_score;
   last_no_person_score = no_person_score;
@@ -313,3 +334,32 @@ bool initialiseCamera() {
 
   return (camerr == ESP_OK);                    // return boolean result of camera initialisation
 }
+
+
+camera_fb_t* captureImage(bool useFlash) {
+
+  if (useFlash) brightLed(255);            // change LED brightness (0 - 255)
+  camera_fb_t *fb = esp_camera_fb_get();   // capture image frame from camera
+  if (useFlash) brightLed(0);              // change LED brightness back to previous state
+  // if (fb == NULL) {
+  //   error_reporter->Report("Error: Camera capture failed");
+  //   return NULL;
+  // }
+  return fb;
+  // //dumbdisplay.writeComment("Image Size: " + String(fb->len));
+  // if (cacheOnly) {
+  //   imageLayer->cachePixelImageGS(imageName, fb->buf, imageWidth, imageHeight, "0>a0");
+  // } else {
+  //   dumbdisplay.writeComment("Saving image (" + String(fb->len) + ") ...");
+  //   dumbdisplay.savePixelImageGS(imageName, fb->buf, imageWidth, imageHeight);
+  //   dumbdisplay.writeComment("... saved image");
+  // }
+
+  // esp_camera_fb_return(fb);        // return frame so memory can be released
+
+  // return true;
+}
+void releaseCapturedImage(camera_fb_t* fb) {
+  esp_camera_fb_return(fb);        // return frame so memory can be released
+}
+
