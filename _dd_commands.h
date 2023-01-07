@@ -10,6 +10,8 @@
 #define C_CACHEPIXIMG      "#09"
 #define C_SAVEPIXIMG16     "#0a"
 #define C_CACHEPIXIMG16    "#0b"
+#define C_SAVEPIXIMGGS     "#0c"
+#define C_CACHEPIXIMGGS    "#0d"
 // will reserver #fn if after 0f
 
 #define C_border           "#10"
