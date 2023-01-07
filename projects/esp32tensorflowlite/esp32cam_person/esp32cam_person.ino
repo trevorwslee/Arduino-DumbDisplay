@@ -65,9 +65,9 @@ const char* imageName = "esp32cam_gs";
 const int imageWidth = kNumCols;
 const int imageHeight = kNumRows;
 
-GraphicalDDLayer* detectingImageLayer;
-LcdDDLayer* lcdLayer;
+GraphicalDDLayer* detectImageLayer;
 GraphicalDDLayer* personImageLayer;
+LcdDDLayer* statusLayer;
 
 
 
@@ -86,18 +86,20 @@ bool cameraReady;
 
 
 void setup() {
-  detectingImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);
-  detectingImageLayer->padding(5);
-  detectingImageLayer->border(3, "blue", "round");
-  detectingImageLayer->backgroundColor("blue");
+  detectImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);
+  detectImageLayer->padding(3);
+  detectImageLayer->border(3, "blue", "round");
+  detectImageLayer->backgroundColor("blue");
+  detectImageLayer->enableFeedback("fl");
 
-  lcdLayer = dumbdisplay.createLcdLayer(16, 4);
-  lcdLayer->padding(5);
+  statusLayer = dumbdisplay.createLcdLayer(16, 4);
+  statusLayer->padding(5);
 
   personImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);
-  personImageLayer->padding(5);
-  personImageLayer->border(3, "red", "round");
-  personImageLayer->backgroundColor("red");
+  personImageLayer->padding(3);
+  personImageLayer->border(3, "blue", "round");
+  personImageLayer->backgroundColor("blue");
+
 
   dumbdisplay.configAutoPin(DD_AP_VERT);
 
@@ -153,11 +155,11 @@ void setup() {
 }
 
 
-int detection_count = 0;
-float avg_taken_s = 0;
+// int detection_count = 0;
+// float avg_taken_s = 0;
 
-uint8_t last_person_score = 0;
-uint8_t last_no_person_score = 0;
+// uint8_t last_person_score = 0;
+// uint8_t last_no_person_score = 0;
 
 
 void loop() {
@@ -168,62 +170,65 @@ void loop() {
     return;
   }
 
-  lcdLayer->writeCenteredLine(String(last_person_score) + "  vs  " + String(last_no_person_score), 0);
-  lcdLayer->writeLine(String("  COUNT : ") + detection_count, 2);
-  lcdLayer->writeLine(String("    AVG : ") + String(avg_taken_s) + "s", 3);
-
   camera_fb_t* capturedImage = captureImage(false);
   if (capturedImage == NULL) {
     error_reporter->Report("Error: Camera capture failed");
     return;
   }
 
-  detectingImageLayer->cachePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
-  detectingImageLayer->drawImageFileFit(imageName);
+  detectImageLayer->cachePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
+  detectImageLayer->drawImageFileFit(imageName);
 
-  dumbdisplay.writeComment("start ... ");
+  if (detectImageLayer->getFeedback() != NULL) {
 
-  // copy an image with a person into the memory area used for the input
-  const uint8_t* person_data = capturedImage->buf;
-  for (int i = 0; i < input->bytes; ++i) {
-      input->data.uint8[i] = person_data[i];
-  }
+    statusLayer->clear();
+    statusLayer->writeCenteredLine(".. detecting ..", 1);
 
-  long detect_start_millis = millis();
+    dumbdisplay.writeComment("start ... ");
 
-  // run the model on this input and make sure it succeeds
-  TfLiteStatus invoke_status = interpreter->Invoke();
-  if (invoke_status != kTfLiteOk) {
-      error_reporter->Report("Invoke failed");
-  }
+    // copy an image with a person into the memory area used for the input
+    const uint8_t* person_data = capturedImage->buf;
+    for (int i = 0; i < input->bytes; ++i) {
+        input->data.uint8[i] = person_data[i];
+    }
 
-  long detect_taken_millis = millis() - detect_start_millis;
+    long detect_start_millis = millis();
+
+    // run the model on this input and make sure it succeeds
+    TfLiteStatus invoke_status = interpreter->Invoke();
+    if (invoke_status != kTfLiteOk) {
+        error_reporter->Report("Invoke failed");
+    }
+
+    long detect_taken_millis = millis() - detect_start_millis;
 
 
-  // process the inference results
-  TfLiteTensor* output = interpreter->output(0);
-  uint8_t person_score = output->data.uint8[kPersonIndex];
-  uint8_t no_person_score = output->data.uint8[kNotAPersonIndex];
+    // process the inference results
+    TfLiteTensor* output = interpreter->output(0);
+    uint8_t person_score = output->data.uint8[kPersonIndex];
+    uint8_t no_person_score = output->data.uint8[kNotAPersonIndex];
 
-  dumbdisplay.writeComment(String("... person score: ") + person_score + " ...");
-  dumbdisplay.writeComment(String("... NO person score: ") + no_person_score + " ...");
-  dumbdisplay.writeComment("... done");
+    dumbdisplay.writeComment(String("... person score: ") + person_score + " ...");
+    dumbdisplay.writeComment(String("... NO person score: ") + no_person_score + " ...");
+    dumbdisplay.writeComment("... done");
 
-  if (person_score > no_person_score) {
+    float detect_taken_s = detect_taken_millis / 1000.0;
+
+    statusLayer->clear();
+    if (person_score > no_person_score) {
+      personImageLayer->backgroundColor("green");
+      statusLayer->writeCenteredLine("Detected!", 0);
+    } else {
+      personImageLayer->backgroundColor("gray");
+      statusLayer->writeCenteredLine("NO person!", 0);
+    }
+    statusLayer->writeCenteredLine(String(person_score) + "  vs  " + String(no_person_score), 2);
+    statusLayer->writeCenteredLine(String("in ") + detect_taken_s + "s", 3);
     dumbdisplay.savePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
     personImageLayer->drawImageFileFit(imageName);
   }
 
   releaseCapturedImage(capturedImage);
-
-  last_person_score = person_score;
-  last_no_person_score = no_person_score;
-
-  float total_taken_s = detection_count * avg_taken_s + (detect_taken_millis / 1000.0);
-  detection_count += 1;
-  avg_taken_s = total_taken_s / detection_count;
- 
-  delay(2000);
 }
 
 
