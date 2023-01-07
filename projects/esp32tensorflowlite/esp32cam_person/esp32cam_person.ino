@@ -182,14 +182,17 @@ void loop() {
   if (detectImageLayer->getFeedback() != NULL) {
 
     statusLayer->clear();
+    statusLayer->pixelColor("red");
     statusLayer->writeCenteredLine(".. detecting ..", 1);
 
     dumbdisplay.writeComment("start ... ");
 
     // copy an image with a person into the memory area used for the input
     const uint8_t* person_data = capturedImage->buf;
-    for (int i = 0; i < input->bytes; ++i) {
-        input->data.uint8[i] = person_data[i];
+    for (int i = 0; i < /*kNumCols * kNumRows*/input->bytes; ++i) {
+      //input->data.uint8[i] = person_data[i];
+      //input->data.int8[i] = ((uint8_t *) ptr)[i] ^ 0x80;
+      input->data.int8[i] = person_data[i] ^ 0x80;  // signed int8_t quantized ==> input images must be converted from unisgned to signed format
     }
 
     long detect_start_millis = millis();
@@ -197,7 +200,7 @@ void loop() {
     // run the model on this input and make sure it succeeds
     TfLiteStatus invoke_status = interpreter->Invoke();
     if (invoke_status != kTfLiteOk) {
-        error_reporter->Report("Invoke failed");
+      error_reporter->Report("Invoke failed");
     }
 
     long detect_taken_millis = millis() - detect_start_millis;
@@ -205,25 +208,32 @@ void loop() {
 
     // process the inference results
     TfLiteTensor* output = interpreter->output(0);
-    uint8_t person_score = output->data.uint8[kPersonIndex];
-    uint8_t no_person_score = output->data.uint8[kNotAPersonIndex];
+    int8_t _person_score = output->data.int8[kPersonIndex];
+    int8_t _no_person_score = output->data.int8[kNotAPersonIndex];
+    float person_score = (_person_score - output->params.zero_point) * output->params.scale;
+    float no_person_score = (_no_person_score - output->params.zero_point) * output->params.scale;
 
-    dumbdisplay.writeComment(String("... person score: ") + person_score + " ...");
-    dumbdisplay.writeComment(String("... NO person score: ") + no_person_score + " ...");
+
+    dumbdisplay.writeComment(String("... person score: ") + String(person_score) + " ...");
+    dumbdisplay.writeComment(String("... NO person score: ") + String(no_person_score) + " ...");
     dumbdisplay.writeComment("... done");
 
     float detect_taken_s = detect_taken_millis / 1000.0;
 
     statusLayer->clear();
-    if (person_score > no_person_score) {
+    if (person_score > 0.6/*no_person_score*/) {  // person_score should be chance from 0 to 1
       personImageLayer->backgroundColor("green");
+      statusLayer->pixelColor("darkgreen");
       statusLayer->writeCenteredLine("Detected!", 0);
     } else {
       personImageLayer->backgroundColor("gray");
+      statusLayer->pixelColor("darkgray");
       statusLayer->writeCenteredLine("NO person!", 0);
     }
-    statusLayer->writeCenteredLine(String(person_score) + "  vs  " + String(no_person_score), 2);
-    statusLayer->writeCenteredLine(String("in ") + detect_taken_s + "s", 3);
+    // statusLayer->writeCenteredLine(String(person_score) + " vs " + String(no_person_score), 2);
+    // statusLayer->writeCenteredLine(String("in ") + detect_taken_s + "s", 3);
+    statusLayer->writeLine(String("  SCORE : ") + String((int8_t) (100 * person_score)) + "%", 2);
+    statusLayer->writeLine(String("  IN    : ") + detect_taken_s + "s", 3);
     dumbdisplay.savePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
     personImageLayer->drawImageFileFit(imageName);
   }
@@ -263,14 +273,14 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
 
 
 void brightLed(byte ledBrightness){
-   ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
+  ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
 }
 
 void setupFlashPWM() {
-    ledcSetup(ledChannel, ledFreq, ledRresolution);
-    ledcAttachPin(brightLED, ledChannel);
-    brightLed(32);
-    brightLed(0);
+  ledcSetup(ledChannel, ledFreq, ledRresolution);
+  ledcAttachPin(brightLED, ledChannel);
+  brightLed(32);
+  brightLed(0);
 }
 
 
@@ -287,7 +297,7 @@ bool cameraImageSettings() {
   s->set_awb_gain(s, 1);                        // Auto White Balance enable (0 or 1)
   s->set_brightness(s, cameraImageBrightness);  // (-2 to 2) - set brightness
 
-   return 1;
+  return 1;
 }
 
 
