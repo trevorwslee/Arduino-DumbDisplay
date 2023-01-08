@@ -1,16 +1,16 @@
 #include <Arduino.h>
 
 #include "esp_camera.h" 
-
 #include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32"));
+
+
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32CAM"));
 
 
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
-
 
 // *****
 // * copied from TensorFlowLite_ESP32 library example person_detection
@@ -28,128 +28,79 @@ public:
     int len = strlen(format);
     char buffer[max(32, 2 * len)];  // assume 2 times format len is big enough
     sprintf(buffer, format, args);
-    //Serial.println(buffer);
     dumbdisplay.writeComment(buffer);
     return 0;
   }
 };
 
-
-// Set up logging
-//DDTFLErrorReporter error_reporter_impl;
-//tflite::ErrorReporter* error_reporter = &error_reporter_impl;
 tflite::ErrorReporter* error_reporter = new DDTFLErrorReporter();
-
-
-// Map the model into a usable data structure. This doesn't involve any
-// copying or parsing, it's a very lightweight operation.
 const tflite::Model* model = ::tflite::GetModel(g_person_detect_model_data);
-
-// // This pulls in all the operation implementations we need
-// tflite::AllOpsResolver resolver;
-
-// Create an area of memory to use for input, output, and intermediate arrays.
-// Finding the minimum value for your model may require some trial and error.
-//const int tensor_arena_size = 70 * 1024;
-//uint8_t tensor_arena[tensor_arena_size];  
 const int tensor_arena_size = 81 * 1024;
 uint8_t* tensor_arena;
-
-
 tflite::MicroInterpreter* interpreter = NULL;
-
-// // Build an interpreter to run the model with
-// tflite::MicroInterpreter interpreter(model, resolver, tensor_arena,
-//                                      tensor_arena_size, error_reporter);
-
-
-// Obtain a pointer to the model's input tensor
 TfLiteTensor* input;
-
-
 constexpr int kNumCols = 96;
 constexpr int kNumRows = 96;
-constexpr int kNumChannels = 1;
-
-
-constexpr int kCategoryCount = 3;
 constexpr int kPersonIndex = 1;
 constexpr int kNotAPersonIndex = 2;
-
-// const char* kCategoryLabels[kCategoryCount] = {
-//     "unused",
-//     "person",
-//     "notperson",
-// };
+const float PersonScoreThreshold = 0.6;
 
 
-
-//PlotterDDLayer* plotterLayer;
-//GraphicalDDLayer* graphicalLayer;
-
-
-// const float start_in = -1.4;
-// const float max_in = 7.6;
-
-// const int width = 640;
-// const int height = 360;
-// const float xScaleFactor = width / (max_in - start_in);
-// const float yScaleFactor = height / 2;
-// const int xOffset = -start_in * xScaleFactor;
-// const int yOffset = yScaleFactor;
+const char* imageName = "esp32cam_gs";
+const int imageWidth = kNumCols;
+const int imageHeight = kNumRows;
+GraphicalDDLayer* detectImageLayer;
+GraphicalDDLayer* personImageLayer;
+LcdDDLayer* statusLayer;
 
 
-
-// ***** ????? *****
-const uint8_t* g_person_data = new uint8_t[96 * 96];
-
-
-const framesize_t FrameSize = FRAMESIZE_96X96;
-const pixformat_t PixelFormat = PIXFORMAT_GRAYSCALE;
+const framesize_t FrameSize = FRAMESIZE_96X96;        // should agree with kNumCols and kNumRows
+const pixformat_t PixelFormat = PIXFORMAT_GRAYSCALE;  // should be grayscale
 bool initialiseCamera();
-
+camera_fb_t* captureImage(bool useFlash);
+void releaseCapturedImage(camera_fb_t* fb);
 bool cameraReady;
 
+
 void setup() {
-  dumbdisplay.connect();
+  // create and setup [top] graphical layer for showing candidate image for person detection;
+  // clicking it will invoke person detection
+  detectImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);
+  detectImageLayer->padding(3);
+  detectImageLayer->border(3, "blue", "round");
+  detectImageLayer->backgroundColor("blue");
+  detectImageLayer->enableFeedback("fl");
 
-  //Serial.begin(115200);
+  // create and setup [middle] LCD layer for showing person detection status
+  statusLayer = dumbdisplay.createLcdLayer(16, 4);
+  statusLayer->padding(5);
 
-  // // create a plotter layer for plotting the inference result value
-  // plotterLayer = dumbdisplay.createPlotterLayer(width, height);
+  // create and setup [bottom] graphical layer for showing the image used for image detection
+  personImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);
+  personImageLayer->padding(3);
+  personImageLayer->border(3, "blue", "round");
+  personImageLayer->backgroundColor("blue");
 
-  // // create a graphical layer for drawing out properly positioned and scaled inference value
-  // graphicalLayer = dumbdisplay.createGraphicalLayer(width, height);
-  // graphicalLayer->backgroundColor("ivory");
-  // graphicalLayer->drawLine(0, yOffset, width, yOffset, "blue");
-  // graphicalLayer->drawLine(xOffset, 0, xOffset, height, "blue");
+  // auto pin the layers vertically
+  dumbdisplay.configAutoPin(DD_AP_VERT);
 
-  // // static the two layers, one on top of the other
-  // dumbdisplay.configAutoPin(DD_AP_VERT);
-
-
-
+  
   dumbdisplay.writeComment(String("Preparing TFLite model version ") + model->version() + " ...");
-  //Serial.println("%%%%%%%%%%");
 
-  //Serial.print("MODEL VERSION:");
-  //Serial.println(model->version());
   // check version to make sure supported
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     error_reporter->Report("Model provided is schema version %d not equal to supported version %d.",
     model->version(), TFLITE_SCHEMA_VERSION);
   }
 
+  // allocation memory for tensor_arena
   tensor_arena = (uint8_t *) heap_caps_malloc(tensor_arena_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
   if (tensor_arena == NULL) {
     error_reporter->Report("heap_caps_malloc() failed");
-    //interpreter = NULL;
     return;
   }
 
-
-  // Pull in only the operation implementations we need.
-  //static tflite::MicroMutableOpResolver<5> micro_op_resolver;
+  // pull in only the operation implementations needed
   tflite::MicroMutableOpResolver<5>* micro_op_resolver = new tflite::MicroMutableOpResolver<5>();
   micro_op_resolver->AddAveragePool2D();
   micro_op_resolver->AddConv2D();
@@ -157,17 +108,13 @@ void setup() {
   micro_op_resolver->AddReshape();
   micro_op_resolver->AddSoftmax();
 
-
-  // Build an interpreter to run the model with.
-  // static tflite::MicroInterpreter static_interpreter(model, *micro_op_resolver, tensor_arena, tensor_arena_size, error_reporter);
-  // interpreter = &static_interpreter;
+  // build an interpreter to run the model with
   interpreter = new tflite::MicroInterpreter(model, *micro_op_resolver, tensor_arena, tensor_arena_size, error_reporter);
 
   // allocate memory from the tensor_arena for the model's tensors
   TfLiteStatus allocate_status = interpreter->AllocateTensors();
   if (allocate_status != kTfLiteOk) {
     error_reporter->Report("AllocateTensors() failed");
-    //interpreter = NULL;
     return;
   }
 
@@ -187,94 +134,89 @@ void setup() {
 }
 
 
-//float in = start_in;
-//int color = 0; // 0: "red"; 1: "green"
-
-//void RespondToDetection(uint8_t person_score, uint8_t no_person_score);
-
 void loop() {
-
   if (interpreter == NULL) {
     error_reporter->Report("Not Initialized!");
     delay(2000);
     return;
   }
 
-  dumbdisplay.writeComment(String("start ... ") + input->bytes + " ...");
-
-  //Serial.print("start ... ");
-  //Serial.print(input->bytes);
-  //Serial.println("...");
-
-  // Copy an image with a person into the memory area used for the input.
-  const uint8_t* person_data = g_person_data;
-  for (int i = 0; i < input->bytes; ++i) {
-      input->data.uint8[i] = person_data[i];
+  // capture candidate image for person detection
+  camera_fb_t* capturedImage = captureImage(false);
+  if (capturedImage == NULL) {
+    error_reporter->Report("Error: Camera capture failed");
+    return;
   }
 
-  // Run the model on this input and make sure it succeeds.
-  TfLiteStatus invoke_status = interpreter->Invoke();
-  if (invoke_status != kTfLiteOk) {
+  detectImageLayer->cachePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);  // cache image for drawing
+  detectImageLayer->drawImageFileFit(imageName);
+
+  // check if detectImageLayer (top; candidate image) clicked
+  // if clicked, invoke person detection
+  if (detectImageLayer->getFeedback() != NULL) {
+    statusLayer->clear();
+    statusLayer->pixelColor("red");
+    statusLayer->writeCenteredLine(".. detecting ..", 1);
+
+    dumbdisplay.writeComment("start ... ");
+
+    // copy an image with a person into the memory area used for the input
+    const uint8_t* person_data = capturedImage->buf;
+    for (int i = 0; i < input->bytes; ++i) {
+      input->data.int8[i] = person_data[i] ^ 0x80;  // signed int8_t quantized ==> input images must be converted from unisgned to signed format
+    }
+
+    // run the model on this input and make sure it succeeds
+    long detect_start_millis = millis();
+    TfLiteStatus invoke_status = interpreter->Invoke();
+    if (invoke_status != kTfLiteOk) {
       error_reporter->Report("Invoke failed");
+    }
+    long detect_taken_millis = millis() - detect_start_millis;
+
+    // process the inference (person detection) results
+    TfLiteTensor* output = interpreter->output(0);
+    int8_t _person_score = output->data.int8[kPersonIndex];
+    int8_t _no_person_score = output->data.int8[kNotAPersonIndex];
+    float person_score = (_person_score - output->params.zero_point) * output->params.scale;  // person_score should be chance from 0 to 1
+    float no_person_score = (_no_person_score - output->params.zero_point) * output->params.scale;
+    bool detected_person = person_score > PersonScoreThreshold;
+
+    dumbdisplay.writeComment(String("... person score: ") + String(person_score) + " ...");
+    dumbdisplay.writeComment(String("... NO person score: ") + String(no_person_score) + " ...");
+    dumbdisplay.writeComment("... done");
+
+    personImageLayer->unloadImageFile(imageName);  // remove any previous caching
+    if (detected_person) {
+      // save image to phone
+      dumbdisplay.savePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
+      dumbdisplay.writeComment("detected ... save image to phone");
+    } else {
+      // only cache image for drawing
+      personImageLayer->cachePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
+    }
+    personImageLayer->drawImageFileFit(imageName);
+
+    statusLayer->clear();
+    if (detected_person) {
+      personImageLayer->backgroundColor("green");
+      statusLayer->pixelColor("darkgreen");
+      statusLayer->writeCenteredLine("Detected!", 0);
+    } else {
+      personImageLayer->backgroundColor("gray");
+      statusLayer->pixelColor("darkgray");
+      statusLayer->writeCenteredLine("NO person!", 0);
+    }
+    statusLayer->writeLine(String("  SCORE : ") + String((int8_t) (100 * person_score)) + "%", 2);
+    statusLayer->writeLine(String("  IN    : ") + String((float) detect_taken_millis / 1000.0) + "s", 3);
+
+    delay(1000);
   }
 
-  TfLiteTensor* output = interpreter->output(0);
-
-  // Process the inference results.
-  uint8_t person_score = output->data.uint8[kPersonIndex];
-  uint8_t no_person_score = output->data.uint8[kNotAPersonIndex];
-  //RespondToDetection(person_score, no_person_score);
-
-  dumbdisplay.writeComment(String("... person score: ") + person_score + " ...");
-  dumbdisplay.writeComment(String("... NO person score: ") + no_person_score + " ...");
-  dumbdisplay.writeComment("... done");
-
-  // Serial.print("... person score: ");
-  // Serial.print(person_score);
-  // Serial.println(" ...");
-  // Serial.print("... no person score: ");
-  // Serial.print(no_person_score);
-  // Serial.println(" ...");
-
-//  Serial.println("... done");
-  
-  delay(2000);
-  //yield();
-
-
-  // delay(250);
-
-  // // provide an input value
-  // input->data.f[0] = in;
-
-  // // run the model on this input and check that it succeeds
-  // TfLiteStatus invoke_status = interpreter.Invoke();
-  // if (invoke_status != kTfLiteOk) {
-  //   error_reporter->Report("Invoke failed\n");
-  // }
-
-  // TfLiteTensor* output = interpreter.output(0);
-
-  // // obtain the output value from the tensor
-  // float out = output->data.f[0];
-
-  // // plot the input and output value to plotter layer as x and y
-  // plotterLayer->set("x", in, "y", out);
-
-  // // properly position and scale the in / out values, and draw it as a dot on the graphical layer
-  // int x = xOffset + in * xScaleFactor;
-  // int y = yOffset - out * yScaleFactor; 
-  // graphicalLayer->fillCircle(x, y, 2, color == 0 ? "red" : "green");
-
-  // // increment the in value, by some randomized amount
-  // float inc = (float) random(10) / 1000.0;
-  // in += 0.04 + inc;
-
-  // if (in > max_in) {
-  //   in = start_in + (inc / 3.0);
-  //   color = (color + 1) % 2;
-  // }
+  releaseCapturedImage(capturedImage);
 }
+
+
 
 
 int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
@@ -306,24 +248,21 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
 
 
 void brightLed(byte ledBrightness){
-   ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
+  ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
 }
 
 void setupFlashPWM() {
-    ledcSetup(ledChannel, ledFreq, ledRresolution);
-    ledcAttachPin(brightLED, ledChannel);
-    brightLed(32);
-    brightLed(0);
+  ledcSetup(ledChannel, ledFreq, ledRresolution);
+  ledcAttachPin(brightLED, ledChannel);
+  brightLed(32);
+  brightLed(0);
 }
 
 
 bool cameraImageSettings() {
 
-  //if (serialDebug) Serial.println("Applying camera settings");
-
   sensor_t *s = esp_camera_sensor_get();
   if (s == NULL) {
-    //if (serialDebug) Serial.println("Error: problem reading camera sensor settings");
     return 0;
   }
 
@@ -333,8 +272,8 @@ bool cameraImageSettings() {
   s->set_awb_gain(s, 1);                        // Auto White Balance enable (0 or 1)
   s->set_brightness(s, cameraImageBrightness);  // (-2 to 2) - set brightness
 
-   return 1;
-}  // cameraImageSettings
+  return 1;
+}
 
 
 bool initialiseCamera() {
@@ -372,14 +311,12 @@ bool initialiseCamera() {
   // check the esp32cam board has a psram chip installed (extra memory used for storing captured images)
   //    Note: if not using "AI thinker esp32 cam" in the Arduino IDE, SPIFFS must be enabled
   if (!psramFound()) {
-    //if (serialDebug) Serial.println("Warning: No PSRam found so defaulting to image size 'CIF'");
     error_reporter->Report("Warning: No PSRam found so defaulting to image size 'CIF'");
     config.frame_size = FRAMESIZE_CIF;
   }
 
   esp_err_t camerr = esp_camera_init(&config);  // initialise the camera
   if (camerr != ESP_OK) {
-    //if (serialDebug) Serial.printf("ERROR: Camera init failed with error 0x%x", camerr);
     error_reporter->Report("ERROR: Camera init failed with error 0x%x", camerr);
   }
 
@@ -387,3 +324,17 @@ bool initialiseCamera() {
 
   return (camerr == ESP_OK);                    // return boolean result of camera initialisation
 }
+
+
+camera_fb_t* captureImage(bool useFlash) {
+
+  if (useFlash) brightLed(255);            // change LED brightness (0 - 255)
+  camera_fb_t *fb = esp_camera_fb_get();   // capture image frame from camera
+  if (useFlash) brightLed(0);              // change LED brightness back to previous state
+  return fb;
+}
+
+void releaseCapturedImage(camera_fb_t* fb) {
+  esp_camera_fb_return(fb);        // return frame so memory can be released
+}
+
