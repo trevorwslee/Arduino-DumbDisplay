@@ -34,45 +34,24 @@ public:
 };
 
 tflite::ErrorReporter* error_reporter = new DDTFLErrorReporter();
-
 const tflite::Model* model = ::tflite::GetModel(g_person_detect_model_data);
-
 const int tensor_arena_size = 81 * 1024;
 uint8_t* tensor_arena;
-
 tflite::MicroInterpreter* interpreter = NULL;
-
 TfLiteTensor* input;
-
-
 constexpr int kNumCols = 96;
 constexpr int kNumRows = 96;
-constexpr int kNumChannels = 1;
-
-
-//constexpr int kCategoryCount = 3;
 constexpr int kPersonIndex = 1;
 constexpr int kNotAPersonIndex = 2;
-
-// const char* kCategoryLabels[kCategoryCount] = {
-//     "unused",
-//     "person",
-//     "notperson",
-// };
+const float PersonScoreThreshold = 0.6;
 
 
 const char* imageName = "esp32cam_gs";
 const int imageWidth = kNumCols;
 const int imageHeight = kNumRows;
-
 GraphicalDDLayer* detectImageLayer;
 GraphicalDDLayer* personImageLayer;
 LcdDDLayer* statusLayer;
-
-
-
-// // ***** ????? *****
-// const uint8_t* g_person_data = new uint8_t[kNumCols * kNumRows];
 
 
 const framesize_t FrameSize = FRAMESIZE_96X96;        // should agree with kNumCols and kNumRows
@@ -80,30 +59,32 @@ const pixformat_t PixelFormat = PIXFORMAT_GRAYSCALE;  // should be grayscale
 bool initialiseCamera();
 camera_fb_t* captureImage(bool useFlash);
 void releaseCapturedImage(camera_fb_t* fb);
-
 bool cameraReady;
 
 
-
 void setup() {
+  // create and setup [top] graphical layer for showing candidate image for person detection;
+  // clicking it will invoke person detection
   detectImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);
   detectImageLayer->padding(3);
   detectImageLayer->border(3, "blue", "round");
   detectImageLayer->backgroundColor("blue");
   detectImageLayer->enableFeedback("fl");
 
+  // create and setup [middle] LCD layer for showing person detection status
   statusLayer = dumbdisplay.createLcdLayer(16, 4);
   statusLayer->padding(5);
 
+  // create and setup [bottom] graphical layer for showing the image used for image detection
   personImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);
   personImageLayer->padding(3);
   personImageLayer->border(3, "blue", "round");
   personImageLayer->backgroundColor("blue");
 
-
+  // auto pin the layers vertically
   dumbdisplay.configAutoPin(DD_AP_VERT);
 
-
+  
   dumbdisplay.writeComment(String("Preparing TFLite model version ") + model->version() + " ...");
 
   // check version to make sure supported
@@ -119,7 +100,6 @@ void setup() {
     return;
   }
 
-
   // pull in only the operation implementations needed
   tflite::MicroMutableOpResolver<5>* micro_op_resolver = new tflite::MicroMutableOpResolver<5>();
   micro_op_resolver->AddAveragePool2D();
@@ -127,7 +107,6 @@ void setup() {
   micro_op_resolver->AddDepthwiseConv2D();
   micro_op_resolver->AddReshape();
   micro_op_resolver->AddSoftmax();
-
 
   // build an interpreter to run the model with
   interpreter = new tflite::MicroInterpreter(model, *micro_op_resolver, tensor_arena, tensor_arena_size, error_reporter);
@@ -155,32 +134,26 @@ void setup() {
 }
 
 
-// int detection_count = 0;
-// float avg_taken_s = 0;
-
-// uint8_t last_person_score = 0;
-// uint8_t last_no_person_score = 0;
-
-
 void loop() {
-
   if (interpreter == NULL) {
     error_reporter->Report("Not Initialized!");
     delay(2000);
     return;
   }
 
+  // capture candidate image for person detection
   camera_fb_t* capturedImage = captureImage(false);
   if (capturedImage == NULL) {
     error_reporter->Report("Error: Camera capture failed");
     return;
   }
 
-  detectImageLayer->cachePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
+  detectImageLayer->cachePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);  // cache image for drawing
   detectImageLayer->drawImageFileFit(imageName);
 
+  // check if detectImageLayer (top; candidate image) clicked
+  // if clicked, invoke person detection
   if (detectImageLayer->getFeedback() != NULL) {
-
     statusLayer->clear();
     statusLayer->pixelColor("red");
     statusLayer->writeCenteredLine(".. detecting ..", 1);
@@ -189,39 +162,43 @@ void loop() {
 
     // copy an image with a person into the memory area used for the input
     const uint8_t* person_data = capturedImage->buf;
-    for (int i = 0; i < /*kNumCols * kNumRows*/input->bytes; ++i) {
-      //input->data.uint8[i] = person_data[i];
-      //input->data.int8[i] = ((uint8_t *) ptr)[i] ^ 0x80;
+    for (int i = 0; i < input->bytes; ++i) {
       input->data.int8[i] = person_data[i] ^ 0x80;  // signed int8_t quantized ==> input images must be converted from unisgned to signed format
     }
 
-    long detect_start_millis = millis();
-
     // run the model on this input and make sure it succeeds
+    long detect_start_millis = millis();
     TfLiteStatus invoke_status = interpreter->Invoke();
     if (invoke_status != kTfLiteOk) {
       error_reporter->Report("Invoke failed");
     }
-
     long detect_taken_millis = millis() - detect_start_millis;
 
-
-    // process the inference results
+    // process the inference (person detection) results
     TfLiteTensor* output = interpreter->output(0);
     int8_t _person_score = output->data.int8[kPersonIndex];
     int8_t _no_person_score = output->data.int8[kNotAPersonIndex];
-    float person_score = (_person_score - output->params.zero_point) * output->params.scale;
+    float person_score = (_person_score - output->params.zero_point) * output->params.scale;  // person_score should be chance from 0 to 1
     float no_person_score = (_no_person_score - output->params.zero_point) * output->params.scale;
-
+    bool detected_person = person_score > PersonScoreThreshold;
 
     dumbdisplay.writeComment(String("... person score: ") + String(person_score) + " ...");
     dumbdisplay.writeComment(String("... NO person score: ") + String(no_person_score) + " ...");
     dumbdisplay.writeComment("... done");
 
-    float detect_taken_s = detect_taken_millis / 1000.0;
+    personImageLayer->unloadImageFile(imageName);  // remove any previous caching
+    if (detected_person) {
+      // save image to phone
+      dumbdisplay.savePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
+      dumbdisplay.writeComment("detected ... save image to phone");
+    } else {
+      // only cache image for drawing
+      personImageLayer->cachePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
+    }
+    personImageLayer->drawImageFileFit(imageName);
 
     statusLayer->clear();
-    if (person_score > 0.6/*no_person_score*/) {  // person_score should be chance from 0 to 1
+    if (detected_person) {
       personImageLayer->backgroundColor("green");
       statusLayer->pixelColor("darkgreen");
       statusLayer->writeCenteredLine("Detected!", 0);
@@ -230,12 +207,10 @@ void loop() {
       statusLayer->pixelColor("darkgray");
       statusLayer->writeCenteredLine("NO person!", 0);
     }
-    // statusLayer->writeCenteredLine(String(person_score) + " vs " + String(no_person_score), 2);
-    // statusLayer->writeCenteredLine(String("in ") + detect_taken_s + "s", 3);
     statusLayer->writeLine(String("  SCORE : ") + String((int8_t) (100 * person_score)) + "%", 2);
-    statusLayer->writeLine(String("  IN    : ") + detect_taken_s + "s", 3);
-    dumbdisplay.savePixelImageGS(imageName, capturedImage->buf, imageWidth, imageHeight);
-    personImageLayer->drawImageFileFit(imageName);
+    statusLayer->writeLine(String("  IN    : ") + String((float) detect_taken_millis / 1000.0) + "s", 3);
+
+    delay(1000);
   }
 
   releaseCapturedImage(capturedImage);
@@ -356,24 +331,9 @@ camera_fb_t* captureImage(bool useFlash) {
   if (useFlash) brightLed(255);            // change LED brightness (0 - 255)
   camera_fb_t *fb = esp_camera_fb_get();   // capture image frame from camera
   if (useFlash) brightLed(0);              // change LED brightness back to previous state
-  // if (fb == NULL) {
-  //   error_reporter->Report("Error: Camera capture failed");
-  //   return NULL;
-  // }
   return fb;
-  // //dumbdisplay.writeComment("Image Size: " + String(fb->len));
-  // if (cacheOnly) {
-  //   imageLayer->cachePixelImageGS(imageName, fb->buf, imageWidth, imageHeight, "0>a0");
-  // } else {
-  //   dumbdisplay.writeComment("Saving image (" + String(fb->len) + ") ...");
-  //   dumbdisplay.savePixelImageGS(imageName, fb->buf, imageWidth, imageHeight);
-  //   dumbdisplay.writeComment("... saved image");
-  // }
-
-  // esp_camera_fb_return(fb);        // return frame so memory can be released
-
-  // return true;
 }
+
 void releaseCapturedImage(camera_fb_t* fb) {
   esp_camera_fb_return(fb);        // return frame so memory can be released
 }
