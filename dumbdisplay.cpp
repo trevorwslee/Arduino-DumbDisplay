@@ -2387,9 +2387,39 @@ void DumbDisplay::tone(uint32_t freq, uint32_t duration) {
   _Connect();
   _sendCommand2("", C_TONE, TO_C_INT(freq), TO_C_INT(duration));
 }
+void DumbDisplay::notone() {
+  _Connect();
+  _sendCommand0("", C_NOTONE);
+}
+void DumbDisplay::saveSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate) {
+  int byteCount = sampleCount;
+  _sendCommand3("", C_SAVESND, soundName, String(sampleRate), String(8));
+  _sendByteArrayAfterCommand(bytes, byteCount);
+}
+void DumbDisplay::saveSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate) {
+  int byteCount = 2 * sampleCount;
+  _sendCommand3("", C_SAVESND, soundName, String(sampleRate), String(16));
+  _sendByteArrayAfterCommand((uint8_t*) data, byteCount);
+}
+void DumbDisplay::cacheSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate) {
+  int byteCount = sampleCount;
+  _sendCommand3("", C_CACHESND, soundName, String(sampleRate), String(8));
+  _sendByteArrayAfterCommand(bytes, byteCount);
+}
+void DumbDisplay::cacheSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate) {
+  int byteCount = 2 * sampleCount;
+  _sendCommand3("", C_CACHESND, soundName, String(sampleRate), String(16));
+  _sendByteArrayAfterCommand((uint8_t*) data, byteCount);
+}
+void DumbDisplay::playSound(const String& soundName) {
+  _sendCommand1("", C_PLAYSND, soundName);
+}
+void DumbDisplay::stopSound() {
+  _sendCommand0("", C_STOPSND);
+}
 void DumbDisplay::saveImage(const String& imageName, const uint8_t *bytes, int byteCount) {
   _sendCommand1("", C_SAVEIMG, imageName);
-  _sendByteArrayAfterCommand(bytes, byteCount);
+  _sendByteArrayAfterCommand((uint8_t*) bytes, byteCount);
 }
 void DumbDisplay::savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color, char compressMethod) {
   int byteCount = width * height / 8; 
