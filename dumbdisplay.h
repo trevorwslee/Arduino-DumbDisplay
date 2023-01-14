@@ -571,6 +571,41 @@ class TerminalDDLayer: public DDLayer {
 };
 
 
+class DDTunnelEndpointBuilder {
+  public:
+    DDTunnelEndpointBuilder(const char* endPoint) {
+      this->endPoint = endPoint;
+      this->headers = "";
+      this->params = "";
+    }
+    void resetEndpoint(const char* endPoint) {
+      this->endPoint = endPoint;
+    }
+    void resetHeaders() {
+      this->headers = "";
+    }
+    void resetParams() {
+      this->params = "";
+    }
+    void addParam(const char* param) {
+      if (this->params == "") {
+        this->params = param;
+      } else {
+        this->params = this->params + "," + param;
+      }
+    }
+    void addHeader(const char* headerKey, const char* headerValue) {
+      if (this->headers == "") {
+        this->headers = String(headerKey) + ":" + headerValue;
+      } else {
+        this->headers = this->headers + "/" + headerKey + ":" + headerValue;
+      }
+    }
+  public:
+    String headers;
+    String params;
+    String endPoint;
+};
 
 class DDTunnel: public DDObject {
   public:
@@ -580,6 +615,14 @@ class DDTunnel: public DDObject {
     virtual void reconnect();
     void reconnectTo(const String& endPoint) {
       this->endPoint = endPoint;
+      this->headers = "";
+      this->params = "";
+      reconnect();
+    }
+    void reconnectToWithBuilder(const DDTunnelEndpointBuilder endpointBuilder) {
+      this->endPoint = endpointBuilder.endPoint;
+      this->headers = endpointBuilder.headers;
+      this->params = endpointBuilder.params;
       reconnect();
     }
     void reconnectToSetParams(const String& endPoint, const String& params) {
@@ -593,11 +636,13 @@ class DDTunnel: public DDObject {
     virtual bool _eof();
     //void _readLine(String &buffer);
     void _writeLine(const String& data);
+    void _writeSound(const String& soundName);
   public:
     virtual void handleInput(const String& data, bool final);
   protected:
     String type;
     String tunnelId;
+    String headers;
     String params;
     String endPoint;
     long connectMillis;
@@ -653,6 +698,7 @@ class BasicDDTunnel: public DDBufferedTunnel {
     inline bool readLine(String &buffer) { return _readLine(buffer); }
     /* write a line */
     inline void writeLine(const String& data) { _writeLine(data); }
+    inline void writeSound(const String& soundName) { _writeSound(soundName); }
   public:
     /* read a piece of JSON data */
     bool read(String& fieldId, String& fieldValue);

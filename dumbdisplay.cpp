@@ -1850,6 +1850,10 @@ void DDTunnel::reconnect() {
       data.concat(":");
       data.concat(params);
     }
+    if (headers.length() > 0) {
+      data.concat(":");
+      data.concat(headers);
+    }
     data.concat("@");
     data.concat(endPoint);
     _sendSpecialCommand("lt", tunnelId, "reconnect", data/*type + "@" + endPoint*/);
@@ -1896,6 +1900,9 @@ Serial.println("_EOF: DONE");
 void DDTunnel::_writeLine(const String& data) {
 //Serial.println("//--");
   _sendSpecialCommand("lt", tunnelId, NULL, data);
+}
+void DDTunnel::_writeSound(const String& soundName) {
+  _sendSpecialCommand("lt", tunnelId, "send_sound", soundName);
 }
 void DDTunnel::handleInput(const String& data, bool final) {
 //if (final) Serial.println("//final:" + data);
