@@ -2415,7 +2415,7 @@ void DumbDisplay::saveCachedSound(const String& soundName) {
   _sendCommand1("", "SAVECACHEDSND", soundName);
 }
 void DumbDisplay::saveCachedSoundAsCC(const String& soundName) {
-  _sendCommand2("", "SAVECACHEDSND", soundName, TO_BOOL(true));
+  _sendCommand2("", "SAVECACHEDSNDASCC", soundName, TO_EDIAN());
 }
 void DumbDisplay::playSound(const String& soundName) {
   _sendCommand1("", C_PLAYSND, soundName);
