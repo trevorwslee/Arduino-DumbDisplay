@@ -2411,6 +2411,12 @@ void DumbDisplay::cacheSound16(const String& soundName, const uint16_t *data, in
   _sendCommand3("", C_CACHESND, soundName, String(sampleRate), String(16));
   _sendByteArrayAfterCommand((uint8_t*) data, byteCount);
 }
+void DumbDisplay::saveCachedSound(const String& soundName) {
+  _sendCommand1("", "SAVECACHEDSND", soundName);
+}
+void DumbDisplay::saveCachedSoundAsCC(const String& soundName) {
+  _sendCommand2("", "SAVECACHEDSND", soundName, TO_BOOL(true));
+}
 void DumbDisplay::playSound(const String& soundName) {
   _sendCommand1("", C_PLAYSND, soundName);
 }

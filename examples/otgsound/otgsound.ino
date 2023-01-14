@@ -45,6 +45,7 @@ void setup() {
 
   // auto "pin" the two layers vertically, one above the other
   dumbdisplay.configAutoPin(DD_AP_VERT);
+
 }
 
 void loop() {
@@ -59,3 +60,5 @@ void loop() {
     dumbdisplay.playSound("voice_no.wav");
   }
 }
+
+

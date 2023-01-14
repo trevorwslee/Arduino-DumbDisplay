@@ -883,6 +883,8 @@ class DumbDisplay {
     void saveSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate);
     void cacheSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate);
     void cacheSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate);
+    void saveCachedSound(const String& soundName);
+    void saveCachedSoundAsCC(const String& soundName);
     void playSound(const String& soundName);
     void stopSound();
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
