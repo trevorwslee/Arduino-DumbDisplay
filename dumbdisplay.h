@@ -581,8 +581,12 @@ class DDTunnelEndpoint {
     void resetEndpoint(const String& endPoint) {
       this->endPoint = endPoint;
     }
-    void resetAttachmentId(const String& attachmentId) {
-      this->attachmentId = attachmentId;
+    void resetSoundAttachment(const String& soundName) {
+      if (soundName == "") {
+        this->attachmentId = "";
+      } else {
+        this->attachmentId = "sound:" + soundName;
+      }
     }
     void resetHeaders() {
       this->headers = "";
