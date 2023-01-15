@@ -62,43 +62,59 @@ class DDValueRecord {
 template<int MAX_DEPTH = 5>
 class DDAutoPinConfigBuilder {
   public:
+    // dir: 'H' / 'V'
     DDAutoPinConfigBuilder(char dir) {
-      depth = -1;
-      for (int i = 0; i < MAX_DEPTH; i++) {
-        started[i] = false;
-      }
-      beginGroup(dir);
+      //depth = -1;
+      // for (int i = 0; i < MAX_DEPTH; i++) {
+      //   started[i] = false;
+      // }
+//      beginGroup(dir);
+      config = String(dir) + "(";
+      depth = 0;
+      started[depth] = false;
     }
   public:
-    void beginGroup(char dir) {
-      if (depth >= 0 && started[depth]) {
-        config += "+";
-      }
+    // dir: 'H' / 'V'
+    DDAutoPinConfigBuilder& beginGroup(char dir) {
+      addConfig(String(dir) + "(");
       depth += 1;
       started[depth] = false;
-      config += String(dir) + "(";
+      return *this;
     }  
-    void endGroup() {
+    DDAutoPinConfigBuilder& endGroup() {
       config += ")";
       depth -= 1;
+      // if (depth >= 0) {
+      //     started[depth] = true;
+      // }
+      return *this;
     }
-    void addLayer(DDLayer* layer) {
+    DDAutoPinConfigBuilder& addLayer(DDLayer* layer) {
       addConfig(layer->getLayerId());
+      return *this;
     }
-    void addBuilder(DDAutoPinConfigBuilder& builder) {
-      addConfig(builder.build());
-    }
+    // DDAutoPinConfigBuilder& addBuilder(DDAutoPinConfigBuilder& builder) {
+    //   addConfig(builder.build());
+    //   return *this;
+    // }
+    const String& build() {
+      if (config.length() == 2) {
+        // just started
+        config += "*";
+      }
+//      endGroup();
+      config += ")";
+      return config;
+    }  
+  private:  
     void addConfig(const String& conf) {
       if (started[depth]) {
         config += "+";
+      } else {
+        started[depth] = true;
       }
       config += conf;
-      started[depth] = true;
     }
-    const String& build() {
-      endGroup();
-      return config;
-    }  
   private:
     int depth;
     bool started[MAX_DEPTH];

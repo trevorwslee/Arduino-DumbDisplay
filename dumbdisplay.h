@@ -621,16 +621,16 @@ class DDTunnel: public DDObject {
       this->endPoint = endPoint;
       reconnect();
     }
+    void reconnectToSetParams(const String& endPoint, const String& params) {
+      this->endPoint = endPoint;
+      this->params = params;
+      reconnect();
+    }
     void reconnectToWithBuilder(const DDTunnelEndpointBuilder endpointBuilder) {
       this->endPoint = endpointBuilder.endPoint;
       this->headers = endpointBuilder.headers;
       this->attachmentId = endpointBuilder.attachmentId;
       this->params = endpointBuilder.params;
-      reconnect();
-    }
-    void reconnectToSetParams(const String& endPoint, const String& params) {
-      this->endPoint = endPoint;
-      this->params = params;
       reconnect();
     }
     const String& getTunnelId() const { return tunnelId; }
