@@ -581,6 +581,9 @@ class DDTunnelEndpointBuilder {
     void resetEndpoint(const char* endPoint) {
       this->endPoint = endPoint;
     }
+    void resetAttachmentId(const char* attachmentId) {
+      this->attachmentId = attachmentId;
+    }
     void resetHeaders() {
       this->headers = "";
     }
@@ -598,13 +601,14 @@ class DDTunnelEndpointBuilder {
       if (this->headers == "") {
         this->headers = String(headerKey) + ":" + headerValue;
       } else {
-        this->headers = this->headers + "/" + headerKey + ":" + headerValue;
+        this->headers = this->headers + "|" + headerKey + ":" + headerValue;
       }
     }
   public:
-    String headers;
-    String params;
     String endPoint;
+    String headers;
+    String attachmentId;
+    String params;
 };
 
 class DDTunnel: public DDObject {
@@ -615,13 +619,12 @@ class DDTunnel: public DDObject {
     virtual void reconnect();
     void reconnectTo(const String& endPoint) {
       this->endPoint = endPoint;
-      this->headers = "";
-      this->params = "";
       reconnect();
     }
     void reconnectToWithBuilder(const DDTunnelEndpointBuilder endpointBuilder) {
       this->endPoint = endpointBuilder.endPoint;
       this->headers = endpointBuilder.headers;
+      this->attachmentId = endpointBuilder.attachmentId;
       this->params = endpointBuilder.params;
       reconnect();
     }
@@ -642,9 +645,10 @@ class DDTunnel: public DDObject {
   protected:
     String type;
     String tunnelId;
-    String headers;
-    String params;
     String endPoint;
+    String headers;
+    String attachmentId;
+    String params;
     long connectMillis;
     // int arraySize;
     // String* dataArray;
@@ -698,7 +702,7 @@ class BasicDDTunnel: public DDBufferedTunnel {
     inline bool readLine(String &buffer) { return _readLine(buffer); }
     /* write a line */
     inline void writeLine(const String& data) { _writeLine(data); }
-    inline void writeSound(const String& soundName) { _writeSound(soundName); }
+    //inline void writeSound(const String& soundName) { _writeSound(soundName); }
   public:
     /* read a piece of JSON data */
     bool read(String& fieldId, String& fieldValue);
@@ -927,10 +931,10 @@ class DumbDisplay {
     void notone();
     void playSound(const String& soundName);
     void stopSound();
-    void saveSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate);
-    void saveSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate);
-    void cacheSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate);
-    void cacheSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate);
+    void saveSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
+    void saveSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
+    void cacheSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
+    void cacheSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
     void saveCachedSound(const String& soundName);
     void saveCachedSoundAsCC(const String& soundName);
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);

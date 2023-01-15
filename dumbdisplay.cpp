@@ -62,7 +62,8 @@
 
 //#define DD_SID "Arduino-c1"
 //#define DD_SID "Arduino-c2"
-#define DD_SID "Arduino-c3"
+//#define DD_SID "Arduino-c3"
+#define DD_SID "Arduino-c4"
 
 
 #include "_dd_commands.h"
@@ -711,15 +712,17 @@ void __SendSpecialCommand(const char* specialType, const String& specialId, cons
   _IO->print("%%>");
   _IO->print(specialType);
   _IO->print(".");
-  _IO->print(specialId);
-  if (specialCommand != NULL) {
-    _IO->print(":");
-    _IO->print(specialCommand);
+  if (specialId != "") {
+    _IO->print(specialId);
+    if (specialCommand != NULL) {
+      _IO->print(":");
+      _IO->print(specialCommand);
+    }
+    _IO->print(">");
   }
-  _IO->print(">");
-  if (specialData != "") {
-    _IO->print(specialData);
-  }
+    if (specialData != "") {
+      _IO->print(specialData);
+    }
   _IO->print("\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
     _IO->flush();
@@ -1850,13 +1853,30 @@ void DDTunnel::reconnect() {
       data.concat(":");
       data.concat(params);
     }
-    if (headers.length() > 0) {
-      data.concat(":");
-      data.concat(headers);
-    }
     data.concat("@");
+    if (headers.length() > 0 || attachmentId.length() > 0) {
+      data.concat(headers);
+      data.concat("^");
+      data.concat(attachmentId);
+      data.concat("@");
+    }
     data.concat(endPoint);
-    _sendSpecialCommand("lt", tunnelId, "reconnect", data/*type + "@" + endPoint*/);
+    if (_DDCompatibility >= 4) {
+      int dataLen = data.length();
+      int i = 0;
+      while (i < dataLen) {
+        int len = dataLen - i;
+        if (len > 32) {
+          len = 32;
+        }
+        int j = i + len;
+        String partData = data.substring(i, j);
+        _sendSpecialCommand("ltbuf", "", NULL, partData);
+        i = j;
+      }
+      data = "";
+    }
+    _sendSpecialCommand("lt", tunnelId, "reconnect", data);
     connectMillis = millis();
   }
 }
@@ -2398,24 +2418,24 @@ void DumbDisplay::notone() {
   _Connect();
   _sendCommand0("", C_NOTONE);
 }
-void DumbDisplay::saveSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate) {
+void DumbDisplay::saveSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels) {
   int byteCount = sampleCount;
-  _sendCommand3("", C_SAVESND, soundName, String(sampleRate), String(8));
+  _sendCommand5("", C_SAVESND, soundName, String(sampleRate), String(8), String(numChannels), TO_EDIAN());
   _sendByteArrayAfterCommand(bytes, byteCount);
 }
-void DumbDisplay::saveSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate) {
+void DumbDisplay::saveSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels) {
   int byteCount = 2 * sampleCount;
-  _sendCommand3("", C_SAVESND, soundName, String(sampleRate), String(16));
+  _sendCommand5("", C_SAVESND, soundName, String(sampleRate), String(16), String(numChannels), TO_EDIAN());
   _sendByteArrayAfterCommand((uint8_t*) data, byteCount);
 }
-void DumbDisplay::cacheSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate) {
+void DumbDisplay::cacheSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels) {
   int byteCount = sampleCount;
-  _sendCommand3("", C_CACHESND, soundName, String(sampleRate), String(8));
+  _sendCommand5("", C_CACHESND, soundName, String(sampleRate), String(8), String(numChannels), TO_EDIAN());
   _sendByteArrayAfterCommand(bytes, byteCount);
 }
-void DumbDisplay::cacheSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate) {
+void DumbDisplay::cacheSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels) {
   int byteCount = 2 * sampleCount;
-  _sendCommand3("", C_CACHESND, soundName, String(sampleRate), String(16));
+  _sendCommand5("", C_CACHESND, soundName, String(sampleRate), String(16), String(numChannels), TO_EDIAN());
   _sendByteArrayAfterCommand((uint8_t*) data, byteCount);
 }
 void DumbDisplay::saveCachedSound(const String& soundName) {
