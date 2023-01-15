@@ -1856,7 +1856,7 @@ void DDTunnel::reconnect() {
     data.concat("@");
     if (headers.length() > 0 || attachmentId.length() > 0) {
       data.concat(headers);
-      data.concat("^");
+      data.concat("~");
       data.concat(attachmentId);
       data.concat("@");
     }

@@ -571,17 +571,17 @@ class TerminalDDLayer: public DDLayer {
 };
 
 
-class DDTunnelEndpointBuilder {
+class DDTunnelEndpoint {
   public:
-    DDTunnelEndpointBuilder(const char* endPoint) {
+    DDTunnelEndpoint(const String& endPoint) {
       this->endPoint = endPoint;
       this->headers = "";
       this->params = "";
     }
-    void resetEndpoint(const char* endPoint) {
+    void resetEndpoint(const String& endPoint) {
       this->endPoint = endPoint;
     }
-    void resetAttachmentId(const char* attachmentId) {
+    void resetAttachmentId(const String& attachmentId) {
       this->attachmentId = attachmentId;
     }
     void resetHeaders() {
@@ -590,14 +590,14 @@ class DDTunnelEndpointBuilder {
     void resetParams() {
       this->params = "";
     }
-    void addParam(const char* param) {
+    void addParam(const String& param) {
       if (this->params == "") {
         this->params = param;
       } else {
         this->params = this->params + "," + param;
       }
     }
-    void addHeader(const char* headerKey, const char* headerValue) {
+    void addHeader(const String& headerKey, const String& headerValue) {
       if (this->headers == "") {
         this->headers = String(headerKey) + ":" + headerValue;
       } else {
@@ -626,11 +626,11 @@ class DDTunnel: public DDObject {
       this->params = params;
       reconnect();
     }
-    void reconnectToWithBuilder(const DDTunnelEndpointBuilder endpointBuilder) {
-      this->endPoint = endpointBuilder.endPoint;
-      this->headers = endpointBuilder.headers;
-      this->attachmentId = endpointBuilder.attachmentId;
-      this->params = endpointBuilder.params;
+    void reconnectToEndpoint(const DDTunnelEndpoint endpoint) {
+      this->endPoint = endpoint.endPoint;
+      this->headers = endpoint.headers;
+      this->attachmentId = endpoint.attachmentId;
+      this->params = endpoint.params;
       reconnect();
     }
     const String& getTunnelId() const { return tunnelId; }

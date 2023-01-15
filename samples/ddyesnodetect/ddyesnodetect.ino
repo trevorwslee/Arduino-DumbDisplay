@@ -28,6 +28,11 @@ LcdDDLayer* detectNoLayer;
 // declears "status" lcd layer ... it will be created in setup block
 LcdDDLayer* statusLayer;
 
+// "tunnel" to send detect request api.wit.ai
+JsonDDTunnel* witTunnel;
+const char* witAuthorization = WIT_AUTHORIZATION;
+//DDTunnelEndpoint witEndpoint("https://api.wit.ai/speech?v=20230115");
+DDTunnelEndpoint witEndpoint("https://api.wit.ai/speech");
 
 void setup() {
   // create "YES" lcd layer, acting as a button
@@ -51,7 +56,7 @@ void setup() {
 
   // create detect "NO" lcd layer, acting as a button
   detectNoLayer = dumbdisplay.createLcdLayer(16, 3);
-  detectNoLayer->writeCenteredLine("No", 1);
+  detectNoLayer->writeCenteredLine("Detect No", 1);
   detectNoLayer->border(3, "red", "round");
   detectNoLayer->backgroundColor("yellow");
   detectNoLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
@@ -61,6 +66,10 @@ void setup() {
   statusLayer->pixelColor("darkblue");
   statusLayer->border(3, "blue");
   statusLayer->backgroundColor("white");
+
+  witTunnel = dumbdisplay.createJsonTunnel("", false);
+  witEndpoint.addHeader("Authorization", String("Bearer ") + witAuthorization);
+  witEndpoint.addHeader("Content-Type", "audio/wav");
 
   DDAutoPinConfigBuilder<1> autoPinBuilder('V');
   autoPinBuilder.
@@ -78,17 +87,26 @@ void setup() {
 
 void loop() {
 
-  const char* status = NULL;
+  const char* detectSound = NULL;
+  if (detectYesLayer->getFeedback()) {
+    detectSound = YesWavFileName;
+  }
 
-  // check if "YES" clicked
-  if (voiceYesLayer->getFeedback()) {
-    // if so, play the pre-installed "YES" WAV file
-    dumbdisplay.playSound(YesWavFileName);
-    status = "sounded YES";
-  } else if (voiceNoLayer->getFeedback()) {
-    // if so, play the pre-installed "NO" WAV file
-    dumbdisplay.playSound(NoWavFileName);
-    status = "sounded NO";
+  const char* status = NULL;
+  if (detectSound != NULL) {
+    witEndpoint.resetAttachmentId(String("sound:") + detectSound);
+    witTunnel->reconnectToEndpoint(witEndpoint);
+    status = "detecting";
+  } else {
+    if (voiceYesLayer->getFeedback()) {
+      // play the pre-installed "YES" WAV file
+      dumbdisplay.playSound(YesWavFileName);
+      status = "sounded YES";
+    } else if (voiceNoLayer->getFeedback()) {
+      // play the pre-installed "NO" WAV file
+      dumbdisplay.playSound(NoWavFileName);
+      status = "sounded NO";
+    }
   }
 
   if (status != NULL) {
