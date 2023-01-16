@@ -26,22 +26,22 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 
 // declare "YES" / "NO" lcd layers, acting as buttons ... they will be created in setup blick
-LcdDDLayer* voiceYesLayer;
-LcdDDLayer* voiceNoLayer;
+LcdDDLayer* yesLayer;
+LcdDDLayer* noLayer;
 
 
 void setup() {
   // create "YES" lcd layer, acting as a button
-  voiceYesLayer = dumbdisplay.createLcdLayer(16, 3);
-  voiceYesLayer->writeCenteredLine("YES", 1);
-  voiceYesLayer->border(3, "green", "round");
-  voiceYesLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
+  yesLayer = dumbdisplay.createLcdLayer(16, 3);
+  yesLayer->writeCenteredLine("YES", 1);
+  yesLayer->border(3, "green", "round");
+  yesLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create "NO" lcd layer, acting as a button
-  voiceNoLayer = dumbdisplay.createLcdLayer(16, 3);
-  voiceNoLayer->writeCenteredLine("NO", 1);
-  voiceNoLayer->border(3, "red", "round");
-  voiceNoLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
+  noLayer = dumbdisplay.createLcdLayer(16, 3);
+  noLayer->writeCenteredLine("NO", 1);
+  noLayer->border(3, "red", "round");
+  noLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // auto "pin" the two layers vertically, one above the other
   dumbdisplay.configAutoPin(DD_AP_VERT);
@@ -50,12 +50,12 @@ void setup() {
 
 void loop() {
   // check if "YES" clicked
-  if (voiceYesLayer->getFeedback()) {
+  if (yesLayer->getFeedback()) {
     // if so, play the pre-installed "YES" WAV file
     dumbdisplay.playSound("voice_yes.wav");
   }
 
-  if (voiceNoLayer->getFeedback()) {
+  if (noLayer->getFeedback()) {
     // if so, play the pre-installed "NO" WAV file
     dumbdisplay.playSound("voice_no.wav");
   }

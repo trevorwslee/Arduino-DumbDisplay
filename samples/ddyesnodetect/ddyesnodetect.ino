@@ -18,15 +18,18 @@ DumbDisplay dumbdisplay(new DDInputOutput(115200));
 const char* YesWavFileName = "voice_yes.wav";
 const char* NoWavFileName = "voice_no.wav";
 const char* WellWavFileName = "voice_well.wav";
+const char* BarkWavFileName = "sound_bark.wav";
 
 
 // declare "YES" / "NO" lcd layers, acting as buttons ... they will be created in setup block
-LcdDDLayer* voiceYesLayer;
-LcdDDLayer* voiceNoLayer;
-LcdDDLayer* voiceWellLayer;
+LcdDDLayer* yesLayer;
+LcdDDLayer* noLayer;
+LcdDDLayer* wellLayer;
+LcdDDLayer* barkLayer;
 LcdDDLayer* detectYesLayer;
 LcdDDLayer* detectNoLayer;
 LcdDDLayer* detectWellLayer;
+LcdDDLayer* detectBarkLayer;
 
 // declears "status" lcd layer ... it will be created in setup block
 LcdDDLayer* statusLayer;
@@ -38,46 +41,59 @@ DDTunnelEndpoint witEndpoint("https://api.wit.ai/speech");
 
 void setup() {
   // create "YES" lcd layer, acting as a button
-  voiceYesLayer = dumbdisplay.createLcdLayer(16, 3);
-  voiceYesLayer->writeCenteredLine("Yes", 1);
-  voiceYesLayer->border(3, "green", "round");
-  voiceYesLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
+  yesLayer = dumbdisplay.createLcdLayer(16, 3);
+  yesLayer->writeCenteredLine("YES", 1);
+  yesLayer->border(3, "green", "round");
+  yesLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create "NO" lcd layer, acting as a button
-  voiceNoLayer = dumbdisplay.createLcdLayer(16, 3);
-  voiceNoLayer->writeCenteredLine("No", 1);
-  voiceNoLayer->border(3, "green", "round");
-  voiceNoLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
+  noLayer = dumbdisplay.createLcdLayer(16, 3);
+  noLayer->writeCenteredLine("NO", 1);
+  noLayer->border(3, "green", "round");
+  noLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create "WELL" lcd layer, acting as a button
-  voiceWellLayer = dumbdisplay.createLcdLayer(16, 3);
-  voiceWellLayer->writeCenteredLine("Well", 1);
-  voiceWellLayer->border(3, "red", "round");
-  voiceWellLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
+  wellLayer = dumbdisplay.createLcdLayer(16, 3);
+  wellLayer->writeCenteredLine("WELL", 1);
+  wellLayer->border(3, "red", "round");
+  wellLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
+
+  // create "bark" lcd layer, acting as a button
+  barkLayer = dumbdisplay.createLcdLayer(16, 3);
+  barkLayer->writeCenteredLine("bark", 1);
+  barkLayer->border(3, "red", "round");
+  barkLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create detect "YES" lcd layer, acting as a button
   detectYesLayer = dumbdisplay.createLcdLayer(16, 3);
-  detectYesLayer->writeCenteredLine("Detect Yes", 1);
+  detectYesLayer->writeCenteredLine("Detect YES", 1);
   detectYesLayer->border(3, "green", "round");
   detectYesLayer->backgroundColor("yellow");
   detectYesLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create detect "NO" lcd layer, acting as a button
   detectNoLayer = dumbdisplay.createLcdLayer(16, 3);
-  detectNoLayer->writeCenteredLine("Detect No", 1);
+  detectNoLayer->writeCenteredLine("Detect NO", 1);
   detectNoLayer->border(3, "green", "round");
   detectNoLayer->backgroundColor("yellow");
   detectNoLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create detect "WELL" lcd layer, acting as a button
+  detectBarkLayer = dumbdisplay.createLcdLayer(16, 3);
+  detectBarkLayer->writeCenteredLine("Detect bark", 1);
+  detectBarkLayer->border(3, "red", "round");
+  detectBarkLayer->backgroundColor("yellow");
+  detectBarkLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
+
+  // create detect "bark" lcd layer, acting as a button
   detectWellLayer = dumbdisplay.createLcdLayer(16, 3);
-  detectWellLayer->writeCenteredLine("Detect Well", 1);
+  detectWellLayer->writeCenteredLine("Detect WELL", 1);
   detectWellLayer->border(3, "red", "round");
   detectWellLayer->backgroundColor("yellow");
   detectWellLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create "status" lcd layer
-  statusLayer = dumbdisplay.createLcdLayer(16, 1);
+  statusLayer = dumbdisplay.createLcdLayer(18, 1);
   statusLayer->pixelColor("darkblue");
   statusLayer->border(3, "blue");
   statusLayer->backgroundColor("white");
@@ -90,14 +106,20 @@ void setup() {
   DDAutoPinConfigBuilder<1> autoPinBuilder('V');
   autoPinBuilder.
     beginGroup('H').
-      addLayer(voiceYesLayer).
-      addLayer(voiceNoLayer).
-      addLayer(voiceWellLayer).
+      addLayer(yesLayer).
+      addLayer(noLayer).
+    endGroup().
+    beginGroup('H').
+      addLayer(wellLayer).
+      addLayer(barkLayer).
     endGroup().
     beginGroup('H').
       addLayer(detectYesLayer).
       addLayer(detectNoLayer).
+    endGroup().
+    beginGroup('H').
       addLayer(detectWellLayer).
+      addLayer(detectBarkLayer).
     endGroup().
     addLayer(statusLayer);
   dumbdisplay.configAutoPin(autoPinBuilder.build());
@@ -115,22 +137,42 @@ void loop() {
   } else if (detectWellLayer->getFeedback()) {
     // detect "WELL"
     detectSound = WellWavFileName;
+  } else if (detectBarkLayer->getFeedback()) {
+    // detect "bark"
+    detectSound = BarkWavFileName;
   }
   if (detectSound != NULL) {
     witEndpoint.resetSoundAttachment(detectSound);
     witTunnel->reconnectToEndpoint(witEndpoint);
     //statusLayer->clear();
-    statusLayer->writeCenteredLine("detecting");
+    statusLayer->writeCenteredLine("... detecting ...");
     String detected = "";
     while (!witTunnel->eof()) {
       String fieldId;
       String fieldValue;
       if (witTunnel->read(fieldId, fieldValue)) {
-        dumbdisplay.writeComment(fieldValue);
-        detected = fieldValue;
-        statusLayer->writeCenteredLine(String("detected") + " [" + detected + "]");
+        if (fieldValue != "") {
+          dumbdisplay.writeComment(fieldValue);
+          detected = fieldValue;
+          statusLayer->writeCenteredLine(String("... ") + " [" + detected + "] ...");
+        }
       }
     }
+    // if (detected == "") {
+    //   statusLayer->writeCenteredLine("Not YES/NO!");
+    //   dumbdisplay.tone(800, 100);
+    // } else {
+    //   statusLayer->writeCenteredLine(String("Dtected") + " " + detected + "!");
+    //   dumbdisplay.tone(2000, 100);
+    //   delay(200);
+    //   if (detected == "Yes") {
+    //     detectSound = YesWavFileName;
+    //   } else if (detected == "No") {
+    //     detectSound = NoWavFileName;
+    //   } else {
+    //     dumbdisplay.tone(1500, 100);
+    //   }
+    // }
     detectSound = NULL;
     if (detected == "Yes") {
       detectSound = YesWavFileName;
@@ -139,10 +181,10 @@ void loop() {
     }
   
     if (detectSound == NULL) {
-      statusLayer->writeCenteredLine("Not Yes/No!");
+      statusLayer->writeCenteredLine("Not YES/NO!");
       dumbdisplay.tone(800, 100);
     } else {
-      statusLayer->writeCenteredLine(String("detected") + " " + detected + "!");
+      statusLayer->writeCenteredLine(String("Detected") + " " + detected + "!");
       dumbdisplay.tone(2000, 100);
       delay(200);
       dumbdisplay.playSound(detectSound);
@@ -151,18 +193,22 @@ void loop() {
   }
 
   String status = "";
-  if (voiceYesLayer->getFeedback()) {
+  if (yesLayer->getFeedback()) {
     // play the pre-installed "YES" WAV file
     dumbdisplay.playSound(YesWavFileName);
     status = "sounded YES";
-  } else if (voiceNoLayer->getFeedback()) {
+  } else if (noLayer->getFeedback()) {
     // play the pre-installed "NO" WAV file
     dumbdisplay.playSound(NoWavFileName);
     status = "sounded NO";
-  } else if (voiceWellLayer->getFeedback()) {
+  } else if (wellLayer->getFeedback()) {
     // play the pre-installed "WELL" WAV file
     dumbdisplay.playSound(WellWavFileName);
-    status = "sounded WELL";
+    status = "sounded bark";
+  } else if (barkLayer->getFeedback()) {
+    // play the pre-installed "bark" WAV file
+    dumbdisplay.playSound(BarkWavFileName);
+    status = "sounded bark";
   }
   if (status != "") {
     //statusLayer->clear();

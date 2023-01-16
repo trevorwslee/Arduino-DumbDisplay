@@ -1443,6 +1443,7 @@ MIT
 
 v0.9.6
   - added sound support
+  - enhanced JSON "tunnel"
   - bug fix
 
 
