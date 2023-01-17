@@ -59,7 +59,7 @@ class DDValueRecord {
 };
 
 
-template<int MAX_DEPTH = 5>
+template<int MAX_DEPTH>
 class DDAutoPinConfigBuilder {
   public:
     // dir: 'H' / 'V'
@@ -82,7 +82,7 @@ class DDAutoPinConfigBuilder {
       return *this;
     }  
     DDAutoPinConfigBuilder& endGroup() {
-      config += ")";
+      config.concat(')');
       depth -= 1;
       // if (depth >= 0) {
       //     started[depth] = true;
@@ -100,24 +100,24 @@ class DDAutoPinConfigBuilder {
     const String& build() {
       if (config.length() == 2) {
         // just started
-        config = config + "*";
+        config.concat('*');
       }
 //      endGroup();
-      config += ")";
+      config.concat(')');
       return config;
     }  
   private:  
     void addConfig(const String& conf) {
       if (started[depth]) {
-        config = config + "+";
+        config.concat('+');
       } else {
         started[depth] = true;
       }
-      config = config + conf;
+      config.concat(conf);
     }
   private:
     int depth;
-    bool started[MAX_DEPTH];
+    bool started[MAX_DEPTH + 1];
     String config;
 };
 

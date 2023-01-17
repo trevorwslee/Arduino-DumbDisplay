@@ -23,9 +23,9 @@
 // #endif
 
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
-  #define TL_BUFFER_DATA_LEN 16
+  #define TL_BUFFER_DATA_LEN 24
 #else
-  #define TL_BUFFER_DATA_LEN 64
+  #define TL_BUFFER_DATA_LEN 128
 #endif
 
 
@@ -1169,6 +1169,24 @@ inline void _sendCommand8(const String& layerId, const char *command, const Stri
 inline void _sendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
   _SendSpecialCommand(specialType, specialId, specialCommand, specialData);
 }
+void _setLTBufferCommand(const String& data) {
+  if (true) {
+    int dataLen = data.length();
+    int i = 0;
+    while (i < dataLen) {
+      int len = dataLen - i;
+      if (len > TL_BUFFER_DATA_LEN) {
+        len = TL_BUFFER_DATA_LEN;
+      }
+      int j = i + len;
+      String partData = data.substring(i, j);
+      _sendSpecialCommand("ltbuf", "", NULL, partData);
+      i = j;
+    }
+  } else {
+    _sendSpecialCommand("ltbuf", "", NULL, data);
+  }
+}
 #endif
 void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount, char compressMethod = 0) {
   __SendByteArrayPortion(bytes, byteCount, compressMethod);
@@ -1854,36 +1872,53 @@ void DDTunnel::reconnect() {
     //for (int i = 0; i < arraySize; i++) {
       //dataArray[i] = "";
     //}
-    String data;
-    data.concat(type);
-    if (params.length() > 0) {
-      data.concat(":");
-      data.concat(params);
-    }
-    data.concat("@");
-    if (headers.length() > 0 || attachmentId.length() > 0) {
-      data.concat(headers);
-      data.concat("~");
-      data.concat(attachmentId);
-      data.concat("@");
-    }
-    data.concat(endPoint);
     if (_DDCompatibility >= 4) {
-      int dataLen = data.length();
-      int i = 0;
-      while (i < dataLen) {
-        int len = dataLen - i;
-        if (len > TL_BUFFER_DATA_LEN) {
-          len = TL_BUFFER_DATA_LEN;
-        }
-        int j = i + len;
-        String partData = data.substring(i, j);
-        _sendSpecialCommand("ltbuf", "", NULL, partData);
-        i = j;
+      _setLTBufferCommand(type);
+      if (params.length() > 0) {
+        _setLTBufferCommand(":");
+        _setLTBufferCommand(params);
       }
-      data = "";
+      _setLTBufferCommand("@");
+      if (headers.length() > 0 || attachmentId.length() > 0) {
+        _setLTBufferCommand(headers);
+        _setLTBufferCommand("~");
+        _setLTBufferCommand(attachmentId);
+        _setLTBufferCommand("@");
+      }
+      _setLTBufferCommand(endPoint);
+      _sendSpecialCommand("lt", tunnelId, "reconnect", "");
+    } else {
+      String data;
+      data.concat(type);
+      if (params.length() > 0) {
+        data.concat(":");
+        data.concat(params);
+      }
+      data.concat("@");
+      if (headers.length() > 0 || attachmentId.length() > 0) {
+        data.concat(headers);
+        data.concat("~");
+        data.concat(attachmentId);
+        data.concat("@");
+      }
+      data.concat(endPoint);
+      if (_DDCompatibility >= 4) {
+        int dataLen = data.length();
+        int i = 0;
+        while (i < dataLen) {
+          int len = dataLen - i;
+          if (len > TL_BUFFER_DATA_LEN) {
+            len = TL_BUFFER_DATA_LEN;
+          }
+          int j = i + len;
+          String partData = data.substring(i, j);
+          _sendSpecialCommand("ltbuf", "", NULL, partData);
+          i = j;
+        }
+        data = "";
+      }
+      _sendSpecialCommand("lt", tunnelId, "reconnect", data);
     }
-    _sendSpecialCommand("lt", tunnelId, "reconnect", data);
     connectMillis = millis();
   }
 }

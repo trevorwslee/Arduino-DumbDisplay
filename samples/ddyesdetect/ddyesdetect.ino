@@ -1,4 +1,5 @@
 
+
 #if defined(ESP32)
   #include "esp32dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32"));
@@ -17,19 +18,13 @@
 
 
 const char* YesWavFileName = "voice_yes.wav";
-const char* NoWavFileName = "voice_no.wav";
-const char* WellWavFileName = "voice_well.wav";
 const char* BarkWavFileName = "sound_bark.wav";
 
 
 // declare "YES" (etc) lcd layers, acting as buttons ... they will be created in setup block
 LcdDDLayer* yesLayer;
-LcdDDLayer* noLayer;
-LcdDDLayer* wellLayer;
 LcdDDLayer* barkLayer;
 LcdDDLayer* detectYesLayer;
-LcdDDLayer* detectNoLayer;
-LcdDDLayer* detectWellLayer;
 LcdDDLayer* detectBarkLayer;
 
 // declears "status" lcd layer ... it will be created in setup block
@@ -37,7 +32,7 @@ LcdDDLayer* statusLayer;
 
 // declare "tunnel" etc to send detect request to api.wit.ai ... please get "access token" from api.wit.ai
 JsonDDTunnel* witTunnel;
-const char* witAccessToken = WIT_ACCESS_TOKEN;
+const String witAccessToken = WIT_ACCESS_TOKEN;
 DDTunnelEndpoint witEndpoint("https://api.wit.ai/speech");
 
 void setup() {
@@ -46,18 +41,6 @@ void setup() {
   yesLayer->writeCenteredLine("YES", 1);
   yesLayer->border(3, "green", "round");
   yesLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
-
-  // create "NO" lcd layer, acting as a button
-  noLayer = dumbdisplay.createLcdLayer(16, 3);
-  noLayer->writeCenteredLine("NO", 1);
-  noLayer->border(3, "green", "round");
-  noLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
-
-  // create "WELL" lcd layer, acting as a button
-  wellLayer = dumbdisplay.createLcdLayer(16, 3);
-  wellLayer->writeCenteredLine("WELL", 1);
-  wellLayer->border(3, "red", "round");
-  wellLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create "bark" lcd layer, acting as a button
   barkLayer = dumbdisplay.createLcdLayer(16, 3);
@@ -71,20 +54,6 @@ void setup() {
   detectYesLayer->border(3, "green", "round");
   detectYesLayer->backgroundColor("yellow");
   detectYesLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
-
-  // create detect "NO" lcd layer, acting as a button
-  detectNoLayer = dumbdisplay.createLcdLayer(16, 3);
-  detectNoLayer->writeCenteredLine("Detect NO", 1);
-  detectNoLayer->border(3, "green", "round");
-  detectNoLayer->backgroundColor("yellow");
-  detectNoLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
-
-  // create detect "WELL" lcd layer, acting as a button
-  detectWellLayer = dumbdisplay.createLcdLayer(16, 3);
-  detectWellLayer->writeCenteredLine("Detect WELL", 1);
-  detectWellLayer->border(3, "red", "round");
-  detectWellLayer->backgroundColor("yellow");
-  detectWellLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create detect "bark" lcd layer, acting as a button
   detectBarkLayer = dumbdisplay.createLcdLayer(16, 3);
@@ -101,8 +70,9 @@ void setup() {
 
   // create / setup "tunnel" etc to send detect request
   witTunnel = dumbdisplay.createJsonTunnel("", false);
-  witEndpoint.addHeader("Authorization", String("Bearer ") + witAccessToken);
   witEndpoint.addHeader("Content-Type", "audio/wav");
+  //witEndpoint.addHeader("Authorization", String("Bearer ") + witAccessToken);
+  witEndpoint.addHeader("Authorization", String("Bearer ") + witAccessToken);
   witEndpoint.addParam("text");
 
   // auto pin the layers in the desired way
@@ -110,22 +80,20 @@ void setup() {
   autoPinBuilder.
     beginGroup('H').
       addLayer(yesLayer).
-      addLayer(noLayer).
-    endGroup().
-    beginGroup('H').
-      addLayer(wellLayer).
       addLayer(barkLayer).
     endGroup().
     beginGroup('H').
       addLayer(detectYesLayer).
-      addLayer(detectNoLayer).
-    endGroup().
-    beginGroup('H').
-      addLayer(detectWellLayer).
       addLayer(detectBarkLayer).
     endGroup().
     addLayer(statusLayer);
   dumbdisplay.configAutoPin(autoPinBuilder.build());
+
+  if (false) {
+    dumbdisplay.writeComment(witEndpoint.headers);
+    dumbdisplay.writeComment(witEndpoint.params);
+    dumbdisplay.writeComment("ready");
+  }
 }
 
 void loop() {
@@ -134,12 +102,6 @@ void loop() {
   if (detectYesLayer->getFeedback()) {
     // detect "YES"
     detectSound = YesWavFileName;
-  } else if (detectNoLayer->getFeedback()) {
-    // detect "NO"
-    detectSound = NoWavFileName;
-  } else if (detectWellLayer->getFeedback()) {
-    // detect "WELL"
-    detectSound = WellWavFileName;
   } else if (detectBarkLayer->getFeedback()) {
     // detect "bark"
     detectSound = BarkWavFileName;
@@ -163,8 +125,6 @@ void loop() {
     detectSound = NULL;
     if (detected == "Yes") {
       detectSound = YesWavFileName;
-    } else if (detected == "No") {
-      detectSound = NoWavFileName;
     }
   
     if (detectSound == NULL) {
@@ -184,14 +144,6 @@ void loop() {
     // play the pre-installed "YES" WAV file
     dumbdisplay.playSound(YesWavFileName);
     status = "sounded YES";
-  } else if (noLayer->getFeedback()) {
-    // play the pre-installed "NO" WAV file
-    dumbdisplay.playSound(NoWavFileName);
-    status = "sounded NO";
-  } else if (wellLayer->getFeedback()) {
-    // play the pre-installed "WELL" WAV file
-    dumbdisplay.playSound(WellWavFileName);
-    status = "sounded bark";
   } else if (barkLayer->getFeedback()) {
     // play the pre-installed "bark" WAV file
     dumbdisplay.playSound(BarkWavFileName);

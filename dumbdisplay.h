@@ -595,17 +595,33 @@ class DDTunnelEndpoint {
       this->params = "";
     }
     void addParam(const String& param) {
-      if (this->params == "") {
-        this->params = param;
+      if (true) {
+        if (this->params.length() > 0) {
+          this->params.concat(',');
+        }
+        this->params.concat(param);
       } else {
-        this->params = this->params + "," + param;
+        if (this->params == "") {
+          this->params = param;
+        } else {
+          this->params = this->params + "," + param;
+        }
       }
     }
     void addHeader(const String& headerKey, const String& headerValue) {
-      if (this->headers == "") {
-        this->headers = String(headerKey) + ":" + headerValue;
+      if (true) {
+        if (this->headers.length() > 0) {
+          this->headers.concat('|');
+        }
+        this->headers.concat(headerKey);
+        this->headers.concat(":");
+        this->headers.concat(headerValue);
       } else {
-        this->headers = this->headers + "|" + headerKey + ":" + headerValue;
+        if (this->headers == "") {
+          this->headers = String(headerKey) + ":" + headerValue;
+        } else {
+          this->headers = this->headers + "|" + headerKey + ":" + headerValue;
+        }
       }
     }
   public:
