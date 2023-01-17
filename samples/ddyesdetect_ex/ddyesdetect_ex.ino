@@ -6,7 +6,7 @@
 #if defined (ESP32)
 
 #include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32"));
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200));
 
 #else
 // create the DumbDisplay object; assuming USB connection with 115200 baud
@@ -21,7 +21,7 @@ const char* WellWavFileName = "voice_well.wav";
 const char* BarkWavFileName = "sound_bark.wav";
 
 
-// declare "YES" / "NO" lcd layers, acting as buttons ... they will be created in setup block
+// declare "YES" (etc) lcd layers, acting as buttons ... they will be created in setup block
 LcdDDLayer* yesLayer;
 LcdDDLayer* noLayer;
 LcdDDLayer* wellLayer;
@@ -34,9 +34,9 @@ LcdDDLayer* detectBarkLayer;
 // declears "status" lcd layer ... it will be created in setup block
 LcdDDLayer* statusLayer;
 
-// "tunnel" to send detect request api.wit.ai
+// declare "tunnel" etc to send detect request to api.wit.ai ... please get "access token" from api.wit.ai
 JsonDDTunnel* witTunnel;
-const char* witAuthorization = WIT_AUTHORIZATION;
+const char* witAccessToken = WIT_ACCESS_TOKEN;
 DDTunnelEndpoint witEndpoint("https://api.wit.ai/speech");
 
 void setup() {
@@ -98,11 +98,13 @@ void setup() {
   statusLayer->border(3, "blue");
   statusLayer->backgroundColor("white");
 
+  // create / setup "tunnel" etc to send detect request
   witTunnel = dumbdisplay.createJsonTunnel("", false);
-  witEndpoint.addHeader("Authorization", String("Bearer ") + witAuthorization);
+  witEndpoint.addHeader("Authorization", String("Bearer ") + witAccessToken);
   witEndpoint.addHeader("Content-Type", "audio/wav");
   witEndpoint.addParam("text");
 
+  // auto pin the layers in the desired way
   DDAutoPinConfigBuilder<1> autoPinBuilder('V');
   autoPinBuilder.
     beginGroup('H').
@@ -144,7 +146,6 @@ void loop() {
   if (detectSound != NULL) {
     witEndpoint.resetSoundAttachment(detectSound);
     witTunnel->reconnectToEndpoint(witEndpoint);
-    //statusLayer->clear();
     statusLayer->writeCenteredLine("... detecting ...");
     String detected = "";
     while (!witTunnel->eof()) {
@@ -158,21 +159,6 @@ void loop() {
         }
       }
     }
-    // if (detected == "") {
-    //   statusLayer->writeCenteredLine("Not YES/NO!");
-    //   dumbdisplay.tone(800, 100);
-    // } else {
-    //   statusLayer->writeCenteredLine(String("Dtected") + " " + detected + "!");
-    //   dumbdisplay.tone(2000, 100);
-    //   delay(200);
-    //   if (detected == "Yes") {
-    //     detectSound = YesWavFileName;
-    //   } else if (detected == "No") {
-    //     detectSound = NoWavFileName;
-    //   } else {
-    //     dumbdisplay.tone(1500, 100);
-    //   }
-    // }
     detectSound = NULL;
     if (detected == "Yes") {
       detectSound = YesWavFileName;
@@ -211,7 +197,6 @@ void loop() {
     status = "sounded bark";
   }
   if (status != "") {
-    //statusLayer->clear();
     statusLayer->writeCenteredLine(status);
   }
 }

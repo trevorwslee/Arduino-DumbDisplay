@@ -22,6 +22,13 @@
 //   #define PGM_READ_BYTERS
 // #endif
 
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+  #define TL_BUFFER_DATA_LEN 16
+#else
+  #define TL_BUFFER_DATA_LEN 64
+#endif
+
+
 #define TO_BOOL(val) (val ? "1" : "0")
 #define TO_EDIAN() String(DDCheckEndian())
 
@@ -1866,8 +1873,8 @@ void DDTunnel::reconnect() {
       int i = 0;
       while (i < dataLen) {
         int len = dataLen - i;
-        if (len > 32) {
-          len = 32;
+        if (len > TL_BUFFER_DATA_LEN) {
+          len = TL_BUFFER_DATA_LEN;
         }
         int j = i + len;
         String partData = data.substring(i, j);

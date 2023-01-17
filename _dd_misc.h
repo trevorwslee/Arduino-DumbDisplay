@@ -100,7 +100,7 @@ class DDAutoPinConfigBuilder {
     const String& build() {
       if (config.length() == 2) {
         // just started
-        config += "*";
+        config = config + "*";
       }
 //      endGroup();
       config += ")";
@@ -109,11 +109,11 @@ class DDAutoPinConfigBuilder {
   private:  
     void addConfig(const String& conf) {
       if (started[depth]) {
-        config += "+";
+        config = config + "+";
       } else {
         started[depth] = true;
       }
-      config += conf;
+      config = config + conf;
     }
   private:
     int depth;
