@@ -3,7 +3,7 @@
 
 #if defined(ESP32) 
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("32", true, 115200), false);
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200), false);
 #else
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput(115200), false);

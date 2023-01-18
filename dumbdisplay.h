@@ -571,6 +571,65 @@ class TerminalDDLayer: public DDLayer {
 };
 
 
+class DDTunnelEndpoint {
+  public:
+    DDTunnelEndpoint(const String& endPoint) {
+      this->endPoint = endPoint;
+      this->headers = "";
+      this->params = "";
+    }
+    void resetEndpoint(const String& endPoint) {
+      this->endPoint = endPoint;
+    }
+    void resetSoundAttachment(const String& soundName) {
+      if (soundName == "") {
+        this->attachmentId = "";
+      } else {
+        this->attachmentId = "sound:" + soundName;
+      }
+    }
+    void resetHeaders() {
+      this->headers = "";
+    }
+    void resetParams() {
+      this->params = "";
+    }
+    void addParam(const String& param) {
+      if (true) {
+        if (this->params.length() > 0) {
+          this->params.concat(',');
+        }
+        this->params.concat(param);
+      } else {
+        if (this->params == "") {
+          this->params = param;
+        } else {
+          this->params = this->params + "," + param;
+        }
+      }
+    }
+    void addHeader(const String& headerKey, const String& headerValue) {
+      if (true) {
+        if (this->headers.length() > 0) {
+          this->headers.concat('|');
+        }
+        this->headers.concat(headerKey);
+        this->headers.concat(":");
+        this->headers.concat(headerValue);
+      } else {
+        if (this->headers == "") {
+          this->headers = String(headerKey) + ":" + headerValue;
+        } else {
+          this->headers = this->headers + "|" + headerKey + ":" + headerValue;
+        }
+      }
+    }
+  public:
+    String endPoint;
+    String headers;
+    String attachmentId;
+    String params;
+};
 
 class DDTunnel: public DDObject {
   public:
@@ -587,19 +646,29 @@ class DDTunnel: public DDObject {
       this->params = params;
       reconnect();
     }
+    void reconnectToEndpoint(const DDTunnelEndpoint endpoint) {
+      this->endPoint = endpoint.endPoint;
+      this->headers = endpoint.headers;
+      this->attachmentId = endpoint.attachmentId;
+      this->params = endpoint.params;
+      reconnect();
+    }
     const String& getTunnelId() const { return tunnelId; }
   protected:
     //int _count();
     virtual bool _eof();
     //void _readLine(String &buffer);
     void _writeLine(const String& data);
+    void _writeSound(const String& soundName);
   public:
     virtual void handleInput(const String& data, bool final);
   protected:
     String type;
     String tunnelId;
-    String params;
     String endPoint;
+    String headers;
+    String attachmentId;
+    String params;
     long connectMillis;
     // int arraySize;
     // String* dataArray;
@@ -653,6 +722,7 @@ class BasicDDTunnel: public DDBufferedTunnel {
     inline bool readLine(String &buffer) { return _readLine(buffer); }
     /* write a line */
     inline void writeLine(const String& data) { _writeLine(data); }
+    //inline void writeSound(const String& soundName) { _writeSound(soundName); }
   public:
     /* read a piece of JSON data */
     bool read(String& fieldId, String& fieldValue);
@@ -878,6 +948,15 @@ class DumbDisplay {
     /* write out a comment to DD */
     void writeComment(const String& comment);
     void tone(uint32_t freq, uint32_t duration);
+    void notone();
+    void playSound(const String& soundName);
+    void stopSound();
+    void saveSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
+    void saveSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
+    void cacheSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
+    void cacheSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
+    void saveCachedSound(const String& soundName);
+    void saveCachedSoundAsCC(const String& soundName);
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
     void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressMethod = 0);
     void savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);

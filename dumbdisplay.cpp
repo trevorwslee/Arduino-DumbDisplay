@@ -22,6 +22,13 @@
 //   #define PGM_READ_BYTERS
 // #endif
 
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+  #define TL_BUFFER_DATA_LEN 24
+#else
+  #define TL_BUFFER_DATA_LEN 128
+#endif
+
+
 #define TO_BOOL(val) (val ? "1" : "0")
 #define TO_EDIAN() String(DDCheckEndian())
 
@@ -62,7 +69,8 @@
 
 //#define DD_SID "Arduino-c1"
 //#define DD_SID "Arduino-c2"
-#define DD_SID "Arduino-c3"
+//#define DD_SID "Arduino-c3"
+#define DD_SID "Arduino-c4"
 
 
 #include "_dd_commands.h"
@@ -711,15 +719,17 @@ void __SendSpecialCommand(const char* specialType, const String& specialId, cons
   _IO->print("%%>");
   _IO->print(specialType);
   _IO->print(".");
-  _IO->print(specialId);
-  if (specialCommand != NULL) {
-    _IO->print(":");
-    _IO->print(specialCommand);
+  if (specialId != "") {
+    _IO->print(specialId);
+    if (specialCommand != NULL) {
+      _IO->print(":");
+      _IO->print(specialCommand);
+    }
+    _IO->print(">");
   }
-  _IO->print(">");
-  if (specialData != "") {
-    _IO->print(specialData);
-  }
+    if (specialData != "") {
+      _IO->print(specialData);
+    }
   _IO->print("\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
     _IO->flush();
@@ -1158,6 +1168,24 @@ inline void _sendCommand8(const String& layerId, const char *command, const Stri
 #ifdef SUPPORT_TUNNEL
 inline void _sendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
   _SendSpecialCommand(specialType, specialId, specialCommand, specialData);
+}
+void _setLTBufferCommand(const String& data) {
+  if (true) {
+    int dataLen = data.length();
+    int i = 0;
+    while (i < dataLen) {
+      int len = dataLen - i;
+      if (len > TL_BUFFER_DATA_LEN) {
+        len = TL_BUFFER_DATA_LEN;
+      }
+      int j = i + len;
+      String partData = data.substring(i, j);
+      _sendSpecialCommand("ltbuf", "", NULL, partData);
+      i = j;
+    }
+  } else {
+    _sendSpecialCommand("ltbuf", "", NULL, data);
+  }
 }
 #endif
 void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount, char compressMethod = 0) {
@@ -1844,15 +1872,53 @@ void DDTunnel::reconnect() {
     //for (int i = 0; i < arraySize; i++) {
       //dataArray[i] = "";
     //}
-    String data;
-    data.concat(type);
-    if (params.length() > 0) {
-      data.concat(":");
-      data.concat(params);
+    if (_DDCompatibility >= 4) {
+      _setLTBufferCommand(type);
+      if (params.length() > 0) {
+        _setLTBufferCommand(":");
+        _setLTBufferCommand(params);
+      }
+      _setLTBufferCommand("@");
+      if (headers.length() > 0 || attachmentId.length() > 0) {
+        _setLTBufferCommand(headers);
+        _setLTBufferCommand("~");
+        _setLTBufferCommand(attachmentId);
+        _setLTBufferCommand("@");
+      }
+      _setLTBufferCommand(endPoint);
+      _sendSpecialCommand("lt", tunnelId, "reconnect", "");
+    } else {
+      String data;
+      data.concat(type);
+      if (params.length() > 0) {
+        data.concat(":");
+        data.concat(params);
+      }
+      data.concat("@");
+      if (headers.length() > 0 || attachmentId.length() > 0) {
+        data.concat(headers);
+        data.concat("~");
+        data.concat(attachmentId);
+        data.concat("@");
+      }
+      data.concat(endPoint);
+      if (_DDCompatibility >= 4) {
+        int dataLen = data.length();
+        int i = 0;
+        while (i < dataLen) {
+          int len = dataLen - i;
+          if (len > TL_BUFFER_DATA_LEN) {
+            len = TL_BUFFER_DATA_LEN;
+          }
+          int j = i + len;
+          String partData = data.substring(i, j);
+          _sendSpecialCommand("ltbuf", "", NULL, partData);
+          i = j;
+        }
+        data = "";
+      }
+      _sendSpecialCommand("lt", tunnelId, "reconnect", data);
     }
-    data.concat("@");
-    data.concat(endPoint);
-    _sendSpecialCommand("lt", tunnelId, "reconnect", data/*type + "@" + endPoint*/);
     connectMillis = millis();
   }
 }
@@ -1896,6 +1962,9 @@ Serial.println("_EOF: DONE");
 void DDTunnel::_writeLine(const String& data) {
 //Serial.println("//--");
   _sendSpecialCommand("lt", tunnelId, NULL, data);
+}
+void DDTunnel::_writeSound(const String& soundName) {
+  _sendSpecialCommand("lt", tunnelId, "send_sound", soundName);
 }
 void DDTunnel::handleInput(const String& data, bool final) {
 //if (final) Serial.println("//final:" + data);
@@ -2387,9 +2456,45 @@ void DumbDisplay::tone(uint32_t freq, uint32_t duration) {
   _Connect();
   _sendCommand2("", C_TONE, TO_C_INT(freq), TO_C_INT(duration));
 }
+void DumbDisplay::notone() {
+  _Connect();
+  _sendCommand0("", C_NOTONE);
+}
+void DumbDisplay::saveSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels) {
+  int byteCount = sampleCount;
+  _sendCommand5("", C_SAVESND, soundName, String(sampleRate), String(8), String(numChannels), TO_EDIAN());
+  _sendByteArrayAfterCommand(bytes, byteCount);
+}
+void DumbDisplay::saveSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels) {
+  int byteCount = 2 * sampleCount;
+  _sendCommand5("", C_SAVESND, soundName, String(sampleRate), String(16), String(numChannels), TO_EDIAN());
+  _sendByteArrayAfterCommand((uint8_t*) data, byteCount);
+}
+void DumbDisplay::cacheSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels) {
+  int byteCount = sampleCount;
+  _sendCommand5("", C_CACHESND, soundName, String(sampleRate), String(8), String(numChannels), TO_EDIAN());
+  _sendByteArrayAfterCommand(bytes, byteCount);
+}
+void DumbDisplay::cacheSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels) {
+  int byteCount = 2 * sampleCount;
+  _sendCommand5("", C_CACHESND, soundName, String(sampleRate), String(16), String(numChannels), TO_EDIAN());
+  _sendByteArrayAfterCommand((uint8_t*) data, byteCount);
+}
+void DumbDisplay::saveCachedSound(const String& soundName) {
+  _sendCommand1("", "SAVECACHEDSND", soundName);
+}
+void DumbDisplay::saveCachedSoundAsCC(const String& soundName) {
+  _sendCommand2("", "SAVECACHEDSNDASCC", soundName, TO_EDIAN());
+}
+void DumbDisplay::playSound(const String& soundName) {
+  _sendCommand1("", C_PLAYSND, soundName);
+}
+void DumbDisplay::stopSound() {
+  _sendCommand0("", C_STOPSND);
+}
 void DumbDisplay::saveImage(const String& imageName, const uint8_t *bytes, int byteCount) {
   _sendCommand1("", C_SAVEIMG, imageName);
-  _sendByteArrayAfterCommand(bytes, byteCount);
+  _sendByteArrayAfterCommand((uint8_t*) bytes, byteCount);
 }
 void DumbDisplay::savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color, char compressMethod) {
   int byteCount = width * height / 8; 

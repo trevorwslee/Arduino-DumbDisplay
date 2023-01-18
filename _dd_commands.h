@@ -12,7 +12,12 @@
 #define C_CACHEPIXIMG16    "#0b"
 #define C_SAVEPIXIMGGS     "#0c"
 #define C_CACHEPIXIMGGS    "#0d"
+#define C_NOTONE           "#0e"
 // will reserver #fn if after 0f
+#define C_PLAYSND          "#f0"
+#define C_STOPSND          "#f1"
+#define C_SAVESND          "#f2"
+#define C_CACHESND         "#f3"
 
 #define C_border           "#10"
 #define C_padding          "#11" 
