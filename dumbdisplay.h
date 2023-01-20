@@ -608,6 +608,9 @@ class DDTunnelEndpoint {
         }
       }
     }
+    void addNamedParam(const String& paramName, const String& paramValue) {
+      addParam(paramName + "=" + paramValue);
+    }
     void addHeader(const String& headerKey, const String& headerValue) {
       if (true) {
         if (this->headers.length() > 0) {
@@ -952,9 +955,15 @@ class DumbDisplay {
     void playSound(const String& soundName);
     void stopSound();
     void saveSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
+    int saveSoundChunked8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
     void saveSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
+    int saveSoundChunked16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
     void cacheSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
+    int cacheSoundChunked8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
+    void sendSoundChunk8(int chunkId, const uint8_t *bytes, int sampleCount, bool isFinal = false);
     void cacheSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
+    int cacheSoundChunked16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
+    void sendSoundChunk16(int chunkId, const uint16_t *data, int sampleCount, bool isFinal = false);
     void saveCachedSound(const String& soundName);
     void saveCachedSoundAsCC(const String& soundName);
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);

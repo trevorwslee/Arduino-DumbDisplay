@@ -5,6 +5,7 @@
   #include "esp32dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200));
 
+
 #else
 
   // for connection
