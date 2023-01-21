@@ -820,7 +820,7 @@ int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBy
   }
   return compressedByteCount;
 }
-void __SendByteArrayPortion(const char* bytesId, const uint8_t *bytes, int byteCount, char compressMethod) {
+void __SendByteArrayPortion(const char* bytesNature, const uint8_t *bytes, int byteCount, char compressMethod) {
   bool readFromProgramSpace = false;
   if (compressMethod == DD_PROGRAM_SPACE_COMPRESS_BA_0) {
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
@@ -841,8 +841,8 @@ void __SendByteArrayPortion(const char* bytesId, const uint8_t *bytes, int byteC
     }
   }
   _IO->print("|bytes|>");
-  if (_DDCompatibility >= 5 && bytesId != NULL) {
-    _IO->print(bytesId);
+  if (_DDCompatibility >= 5 && bytesNature != NULL) {
+    _IO->print(bytesNature);
     _IO->print("#");
   }
   _IO->print(String(byteCount));
@@ -1208,11 +1208,8 @@ void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount, char compre
 }
 void _sendByteArrayAfterCommandChunked(const String& bytesId, const uint8_t *bytes, int byteCount, bool isFinalChunk = false) {
   char compressMethod = 0;  // assume compressionMethod 0
-  // String strByteIds;
-  // if (bytesId == -1) {
-  //     bytesId = _AllocBytesId();
-  // }
-  __SendByteArrayPortion(bytesId.c_str(), bytes, byteCount, compressMethod);
+  String bytesNature = String(isFinalChunk ? "|" : ".") + ":" + bytesId;
+  __SendByteArrayPortion(bytesNature.c_str(), bytes, byteCount, compressMethod);
   _sendCommand0("", C_KAL);  // send a "keep alive" command to make sure and new-line is sent
 }
 
