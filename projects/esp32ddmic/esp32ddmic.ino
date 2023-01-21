@@ -28,10 +28,12 @@ const int SoundNumChannels = 1;
 
 
 // 8000 bytes per second, 1000 bytes = 125 ms
-const int BufferNumBytes = 1000;
+const int BufferNumBytes = 256;
 const int BufferLen = BufferNumBytes / 2;
 //#define bufferLen 64
 int16_t Buffer[BufferLen/*bufferLen*/];
+
+const int AmplifyFactor = 5;
 
 
 void i2s_install();
@@ -104,6 +106,18 @@ void loop() {
   if (result == ESP_OK) {
     if (started) {
       int16_t samplesRead = bytesIn / 2;  // 16 bit per sample
+      if (AmplifyFactor > 0) {
+        for (int i = 0; i < samplesRead; ++i) {
+          int32_t val = Buffer[i];
+          val = AmplifyFactor * val;
+          if (val > 32700) {
+            val = 32700;
+          } else if (val < -32700) {
+            val = -32700;
+          }
+          Buffer[i] = val;
+        }
+      }
       if (soundChunkId != -1) {
         if (SendToDD) {
           bool isFinalChunk = !started;
