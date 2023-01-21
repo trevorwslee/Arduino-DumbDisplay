@@ -1,18 +1,19 @@
 
 #if defined(ESP32)
+
+  // ESP32 Bluetooth with name BT32
   #include "esp32dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200));
-#elif defined(PICO_SDK_VERSION_MAJOR)
-  // assume Pico with Bluetooth
-  // GP8 => RX of HC-06; GP9 => TX of HC-06
-  #define DD_4_PICO_TX 8
-  #define DD_4_PICO_RX 9
-  #include "picodumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
+
+
 #else
-  // create the DumbDisplay object; assuming USB connection with 115200 baud
+
+  // for connection
+  // . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
+  // . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput(115200));
+
 #endif
 
 
