@@ -18,6 +18,7 @@
 #define C_STOPSND          "#f1"
 #define C_SAVESND          "#f2"
 #define C_CACHESND         "#f3"
+#define C_STREAMSND        "#f4"
 
 #define C_border           "#10"
 #define C_padding          "#11" 

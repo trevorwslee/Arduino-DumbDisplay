@@ -2493,6 +2493,12 @@ int DumbDisplay::saveSoundChunked8(const String& soundName, const uint8_t *bytes
   _sendByteArrayAfterCommandChunked(bytesId, bytes, byteCount);
   return bid;
 }
+int DumbDisplay::streamSound8(int sampleRate, int numChannels) {
+  int bid = _AllocBytesId();
+  String bytesId = String(bid);
+  _sendCommand5("", C_STREAMSND, String(sampleRate), String(8), String(numChannels), TO_EDIAN(), bytesId);
+  return bid;
+} 
 void DumbDisplay::saveSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels) {
   int byteCount = 2 * sampleCount;
   _sendCommand5("", C_SAVESND, soundName, String(sampleRate), String(16), String(numChannels), TO_EDIAN());
@@ -2535,6 +2541,13 @@ int DumbDisplay::cacheSoundChunked16(const String& soundName, const uint16_t *da
   int byteCount = 2 * sampleCount;
   _sendCommand6("", C_CACHESND, soundName, String(sampleRate), String(16), String(numChannels), TO_EDIAN(), bytesId);
   _sendByteArrayAfterCommandChunked(bytesId, (uint8_t*) data, byteCount);
+  return bid;
+}
+int DumbDisplay::streamSound16(int sampleRate, int numChannels) {
+  int bid = _AllocBytesId();
+  String bytesId = String(bid);
+  //int byteCount = 2 * sampleCount;
+  _sendCommand5("", C_STREAMSND, String(sampleRate), String(16), String(numChannels), TO_EDIAN(), bytesId);
   return bid;
 }
 void DumbDisplay::sendSoundChunk16(int chunkId, const uint16_t *data, int sampleCount, bool isFinal) {
