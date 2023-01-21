@@ -842,6 +842,8 @@ void __SendByteArrayPortion(const char* bytesNature, const uint8_t *bytes, int b
   }
   _IO->print("|bytes|>");
   if (_DDCompatibility >= 5 && bytesNature != NULL) {
+//Serial.print("*** BYTES NATURE: ");
+//Serial.println(bytesNature);    
     _IO->print(bytesNature);
     _IO->print("#");
   }
@@ -1208,7 +1210,7 @@ void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount, char compre
 }
 void _sendByteArrayAfterCommandChunked(const String& bytesId, const uint8_t *bytes, int byteCount, bool isFinalChunk = false) {
   char compressMethod = 0;  // assume compressionMethod 0
-  String bytesNature = String(isFinalChunk ? "|" : ".") + ":" + bytesId;
+  String bytesNature = String(isFinalChunk ? "|" : ".") + "&" + bytesId;
   __SendByteArrayPortion(bytesNature.c_str(), bytes, byteCount, compressMethod);
   _sendCommand0("", C_KAL);  // send a "keep alive" command to make sure and new-line is sent
 }
@@ -2525,10 +2527,10 @@ int DumbDisplay::cacheSoundChunked8(const String& soundName, const uint8_t *byte
   _sendByteArrayAfterCommandChunked(bytesId, bytes, byteCount);
   return bid;
 }
-void DumbDisplay::sendSoundChunk8(int chunkId, const uint8_t *bytes, int sampleCount, bool isFinal) {
+void DumbDisplay::sendSoundChunk8(int chunkId, const int8_t *bytes, int sampleCount, bool isFinal) {
   String bytesId = String(chunkId);
   int byteCount = sampleCount;
-  _sendByteArrayAfterCommandChunked(bytesId, bytes, byteCount, isFinal);
+  _sendByteArrayAfterCommandChunked(bytesId, (uint8_t*) bytes, byteCount, isFinal);
 }
 void DumbDisplay::cacheSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels) {
   int byteCount = 2 * sampleCount;
@@ -2550,7 +2552,7 @@ int DumbDisplay::streamSound16(int sampleRate, int numChannels) {
   _sendCommand5("", C_STREAMSND, String(sampleRate), String(16), String(numChannels), TO_EDIAN(), bytesId);
   return bid;
 }
-void DumbDisplay::sendSoundChunk16(int chunkId, const uint16_t *data, int sampleCount, bool isFinal) {
+void DumbDisplay::sendSoundChunk16(int chunkId, const int16_t *data, int sampleCount, bool isFinal) {
   String bytesId = String(chunkId);
   int byteCount = 2 * sampleCount;
   _sendByteArrayAfterCommandChunked(bytesId, (uint8_t*) data, byteCount, isFinal);

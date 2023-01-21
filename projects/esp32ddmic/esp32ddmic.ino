@@ -1,7 +1,8 @@
 // Include I2S driver
 #include <driver/i2s.h>
  
-
+const bool OutputToSerial = false;
+const bool SendToDD = true;
 
 // Connections to INMP441 I2S microphone
 #define I2S_WS 25
@@ -21,10 +22,16 @@ LcdDDLayer* startStopLayer;
 DDValueRecord<bool> startStopRecord(false, true);
 
 // DD sound setting that agree with I2S setup 
-const int SoundSampleRate = 44100;
+//const int SoundSampleRate = 44100;
+const int SoundSampleRate = 8000;
 const int SoundNumChannels = 1;
 
 
+// 8000 bytes per second, 1000 bytes = 125 ms
+const int BufferNumBytes = 1000;
+const int BufferLen = BufferNumBytes / 2;
+//#define bufferLen 64
+int16_t Buffer[BufferLen/*bufferLen*/];
 
 
 void i2s_install();
@@ -53,8 +60,8 @@ void setup() {
 }
 
 
-#define bufferLen 64
-int16_t sBuffer[bufferLen];
+//#define bufferLen 64
+//int16_t sBuffer[bufferLen];
  
 
 int soundChunkId = -1; 
@@ -73,34 +80,60 @@ void loop() {
   }
 
   if (started) {
-    // False print statements to "lock range" on serial plotter display
-    // Change rangelimit value to adjust "sensitivity"
-    int rangelimit = 3000;
-    Serial.print(rangelimit * -1);
-    Serial.print(" ");
-    Serial.print(rangelimit);
-    Serial.print(" ");
+    if (soundChunkId == -1) {
+      if (SendToDD) {
+        soundChunkId = dumbdisplay.streamSound16(SoundSampleRate, SoundNumChannels); // sound is 16 bits per sample
+        dumbdisplay.writeComment(String("started stream with chunk ik [") + soundChunkId + "]");
+      }
+    }
+    if (OutputToSerial) {
+      // False print statements to "lock range" on serial plotter display
+      // Change rangelimit value to adjust "sensitivity"
+      int rangelimit = 3000;
+      Serial.print(rangelimit * -1);
+      Serial.print(" ");
+      Serial.print(rangelimit);
+      Serial.print(" ");
+    }
   }
 
   // Get I2S data and place in data buffer
   size_t bytesIn = 0;
-  esp_err_t result = i2s_read(I2S_PORT, &sBuffer, bufferLen, &bytesIn, portMAX_DELAY);
+  esp_err_t result = i2s_read(I2S_PORT, &Buffer, BufferNumBytes/*bufferLen*/, &bytesIn, portMAX_DELAY);
  
   if (result == ESP_OK) {
     if (started) {
-      // Read I2S data buffer
-      int16_t samples_read = bytesIn / 8;
-      if (samples_read > 0) {
-        float mean = 0;
-        for (int16_t i = 0; i < samples_read; ++i) {
-          mean += (sBuffer[i]);
+      int16_t samplesRead = bytesIn / 2;  // 16 bit per sample
+      if (soundChunkId != -1) {
+        if (SendToDD) {
+          bool isFinalChunk = !started;
+          dumbdisplay.sendSoundChunk16(soundChunkId, Buffer, samplesRead, isFinalChunk);
+          if (isFinalChunk) {
+            soundChunkId = -1;
+          }
         }
-  
-        // Average the data reading
-        mean /= samples_read;
-  
-        // Print to serial plotter
-        Serial.println(mean);
+      }
+      if (OutputToSerial) {
+        // Read I2S data buffer
+        int16_t samples_read = bytesIn / 2;  // bytesIn / 8;
+        if (samples_read > 0) {
+          float mean = 0;
+          for (int16_t i = 0; i < samples_read; ++i) {
+            mean += (Buffer[i]);
+          }
+    
+          // Average the data reading
+          mean /= samples_read;
+    
+          // Print to serial plotter
+          if (true) {
+            Serial.print(samples_read);
+            Serial.print(" -- ");
+          }
+          Serial.println(mean);
+
+          //delay(50);
+        }
       }
     }
   }
@@ -114,13 +147,13 @@ void i2s_install() {
   // Set up I2S Processor configuration
   const i2s_config_t i2s_config = {
     .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
-    .sample_rate = 44100,
+    .sample_rate = SoundSampleRate/*44100*/,
     .bits_per_sample = i2s_bits_per_sample_t(16),
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = 0,
     .dma_buf_count = 8,
-    .dma_buf_len = bufferLen,
+    .dma_buf_len = BufferLen/*bufferLen*/,
     .use_apll = false
   };
  
