@@ -58,7 +58,7 @@ void setup() {
     startStopRecord = !startStopRecord;  
    }, "fl");  // set "feedback" handler lambda expression ... i.e. it can be clicked
 
- 
+
 }
 
 
@@ -106,7 +106,7 @@ void loop() {
   if (result == ESP_OK) {
     if (started) {
       int16_t samplesRead = bytesIn / 2;  // 16 bit per sample
-      if (AmplifyFactor > 0) {
+      if (AmplifyFactor > 1) {
         for (int i = 0; i < samplesRead; ++i) {
           int32_t val = Buffer[i];
           val = AmplifyFactor * val;
