@@ -120,6 +120,8 @@ class DDLayer: public DDObject {
     void visible(bool visible);
     /* set whether layer transparent */
     void transparent(bool transparent);
+    /* set disabled */
+    void disabled(bool disabled);
     /* set layer opacity percentage */
     void opacity(int opacity);
     /* set layer's alpha channel (0 - 255) */

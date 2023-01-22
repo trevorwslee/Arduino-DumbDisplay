@@ -1264,6 +1264,9 @@ void DDLayer::visible(bool visible) {
 void DDLayer::transparent(bool transparent) {
   _sendCommand1(layerId, C_transparent, TO_BOOL(transparent));
 }
+void DDLayer::disabled(bool disabled) {
+  _sendCommand1(layerId, C_disabled, TO_BOOL(disabled));
+}
 void DDLayer::opacity(int opacity) {
   _sendCommand1(layerId, C_opacity, String(opacity));
 }
