@@ -83,7 +83,7 @@ void loop() {
     if (soundChunkId == -1) {
       // if no allocated "chunk id" (i.e. sending sound not started), start sending sound, and get the assigned "shunk id"
       soundChunkId = dumbdisplay.streamSound16(SoundSampleRate, SoundNumChannels); // sound is 16 bits per sample
-      dumbdisplay.writeComment(String("started stream with chunk ik [") + soundChunkId + "]");
+      dumbdisplay.writeComment(String("started stream with chunk id [") + soundChunkId + "]");
     }
   }
 

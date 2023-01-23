@@ -1450,7 +1450,6 @@ v0.9.6
   - enhanced JSON "tunnel"
   - bug fix
 
-
 v0.9.5
   - can save/cache grayscale image
   - added TensorFlow Lite Object Detection Demo tunnel
