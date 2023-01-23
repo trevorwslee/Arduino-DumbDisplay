@@ -15,9 +15,12 @@
 DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
 
 
-LcdDDLayer* startLayer;
-LcdDDLayer* stopLayer;
-LedGridDDLayer* amplifyLayer;
+LcdDDLayer* micTabLayer;
+LcdDDLayer* recTabLayer;
+LcdDDLayer* playTabLayer;
+LcdDDLayer* startBtnLayer;
+LcdDDLayer* stopBtnLayer;
+LedGridDDLayer* amplifyMeterLayer;
 //DDValueRecord<bool> startStopRecord(false, true);
 
 
@@ -51,18 +54,31 @@ void setup() {
 
   Serial.println("... DONE SETUP MIC");
 
+  // create "MIC/REC/PLAY" lcd layers, as tab
+  micTabLayer = dumbdisplay.createLcdLayer(8, 1);
+  micTabLayer->writeCenteredLine("MIC");
+  micTabLayer->border(1, "gray");
+  micTabLayer->enableFeedback("f");
+  recTabLayer = dumbdisplay.createLcdLayer(8, 1);
+  recTabLayer->writeCenteredLine("REC");
+  recTabLayer->border(1, "gray");
+  recTabLayer->enableFeedback("f");
+  playTabLayer = dumbdisplay.createLcdLayer(8, 1);
+  playTabLayer->writeCenteredLine("PLAY");
+  playTabLayer->border(1, "gray");
+  playTabLayer->enableFeedback("f");
 
   // create "START/STOP" lcd layer, acting as a button
-  startLayer = dumbdisplay.createLcdLayer(16, 3);
-  startLayer->border(2, "green", "round");
-  startLayer->enableFeedback("fl");
-  stopLayer = dumbdisplay.createLcdLayer(16, 3);
-  stopLayer->border(2, "green", "round");
-  stopLayer->enableFeedback("fl");
+  startBtnLayer = dumbdisplay.createLcdLayer(12, 3);
+  startBtnLayer->border(2, "darkgreen", "round");
+  startBtnLayer->enableFeedback("fl");
+  stopBtnLayer = dumbdisplay.createLcdLayer(12, 3);
+  stopBtnLayer->border(2, "darkgreen", "round");
+  stopBtnLayer->enableFeedback("fl");
 
-  amplifyLayer = dumbdisplay.createLedGridLayer(MaxAmplifyFactor, 1, 1, 2);
-  amplifyLayer->border(0.2, "blue");
-  amplifyLayer->enableFeedback("fa:rpt50");
+  amplifyMeterLayer = dumbdisplay.createLedGridLayer(MaxAmplifyFactor, 1, 1, 2);
+  amplifyMeterLayer->border(0.2, "blue");
+  amplifyMeterLayer->enableFeedback("fa:rpt50");
     // turnSpeedLayer->border(0.2, "darkgray");
     // turnSpeedLayer->offColor("lightgray");
     // turnSpeedLayer->setFeedbackHandler(FeedbackHandler, "fa:rpt50");
@@ -75,40 +91,78 @@ void setup() {
   //   },
   //    "fl");
 
-  dumbdisplay.configAutoPin(DD_AP_VERT);
+  DDAutoPinConfigBuilder<1> builder('V');
+  builder
+    .beginGroup('H')
+      .addLayer(micTabLayer)
+      .addLayer(recTabLayer)
+      .addLayer(playTabLayer)
+    .endGroup()
+    .beginGroup('H')
+      .addLayer(startBtnLayer)
+      .addLayer(stopBtnLayer)
+    .endGroup()
+    .addLayer(amplifyMeterLayer);  
+  dumbdisplay.configAutoPin(builder.build());
 }
 
 
 
 bool initialized = false;
-int what = 2;  // 1: mic; 2: record; 3: play
+int what = 1;  // 1: mic; 2: record; 3: play
 bool started = false;
 int amplifyFactor = 10;
 int soundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
 
 void loop() {
 
+  bool updateTab = false;
   bool updateStartStop = false;
   bool updateAmplifyFactor = false;
   if (initialized) {
-    if (startLayer->getFeedback()) {
+    int oriWhat = what;
+    if (micTabLayer->getFeedback()) {
+      what = 1;
+    } else if (recTabLayer->getFeedback()) {
+      what = 2;
+    } else if (playTabLayer->getFeedback()) {
+      what = 3;
+    }
+    if (what != oriWhat) {
+      started = false;
+      updateTab = true;
+      updateStartStop = true;
+    }
+    if (startBtnLayer->getFeedback()) {
       started = true;
       updateStartStop = true;
-    } else if (stopLayer->getFeedback()) {
+    } else if (stopBtnLayer->getFeedback()) {
       started = false;
       updateStartStop = true;
     }
-    const DDFeedback* feedback = amplifyLayer->getFeedback();
+    const DDFeedback* feedback = amplifyMeterLayer->getFeedback();
     if (feedback != NULL) {
         amplifyFactor = feedback->x + 1;
         updateAmplifyFactor = true;
     }
   } else {
+    updateTab = true;
     updateStartStop = true;
     updateAmplifyFactor = true;
     initialized = true;
   }
 
+  if (updateTab) {
+    const char* micColor = what == 1 ? "blue" : "gray";
+    const char* recColor = what == 2 ? "blue" : "gray";
+    const char* playColor = what == 3 ? "blue" : "gray";
+    micTabLayer->border(1, micColor);
+    micTabLayer->pixelColor(micColor);
+    recTabLayer->border(1, recColor);
+    recTabLayer->pixelColor(recColor);
+    playTabLayer->border(1, playColor);
+    playTabLayer->pixelColor(playColor);
+  }
   if (updateStartStop) {
     const char* whatTitle;
     if (what == 1) {
@@ -118,18 +172,40 @@ void loop() {
     } else if (what == 3) {
       whatTitle = "PLAY";
     }
-    startLayer->writeCenteredLine(String("Start ") + whatTitle, 1);
-    stopLayer->writeCenteredLine(String("Stop ") + whatTitle, 1);
-    if (started) {
-      startLayer->disabled(true);
-      stopLayer->disabled(false);
+    startBtnLayer->writeCenteredLine(String("Start ") + whatTitle, 1);
+    stopBtnLayer->writeCenteredLine(String("Stop ") + whatTitle, 1);
+    if (what == 3) {
+      startBtnLayer->disabled(false);
+      stopBtnLayer->disabled(false);
+      amplifyMeterLayer->disabled(true);
     } else {
-      startLayer->disabled(false);
-      stopLayer->disabled(true);
+      if (started) {
+        startBtnLayer->disabled(true);
+        stopBtnLayer->disabled(false);
+      } else {
+        startBtnLayer->disabled(false);
+        stopBtnLayer->disabled(true);
+      }
+      micTabLayer->disabled(started);
+      recTabLayer->disabled(started);
+      playTabLayer->disabled(started);
+      amplifyMeterLayer->disabled(false);
     }
   }
   if (updateAmplifyFactor) {
-    amplifyLayer->horizontalBar(amplifyFactor);
+    amplifyMeterLayer->horizontalBar(amplifyFactor);
+  }
+
+  if (what == 3) {
+    if (updateStartStop) {
+      // i.e. click start or stop
+      if (started) {
+        dumbdisplay.playSound(SoundName);
+      } else {
+        dumbdisplay.stopSound();
+      }   
+    }
+    return;
   }
 
   // bool started = startStopRecord.get();  // get the start/stop value 
