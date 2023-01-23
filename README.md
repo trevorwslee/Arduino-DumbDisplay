@@ -1441,6 +1441,10 @@ MIT
 
 # Change History
 
+v0.9.6-r1
+  - enhanced sound support
+  - bug fix
+
 v0.9.6
   - added sound support
   - enhanced JSON "tunnel"
@@ -1452,18 +1456,15 @@ v0.9.5
   - added TensorFlow Lite Object Detection Demo tunnel
   - bug fix
 
-
 v0.9.4
   - enhanced "feedback"
   - can be a "share target" for saving images to storage
   - enhanced graphical layers
   - bug fixes
 
-
 v0.9.3
   - enhanced graphical layers
   - bug fixes
-
 
 v0.9.2
   - enhanced 7-segment layers
