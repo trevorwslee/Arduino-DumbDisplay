@@ -19,9 +19,8 @@ LcdDDLayer* startStopLayer;
 DDValueRecord<bool> startStopRecord(false, true);
 
 
-const int SoundSampleRate = 8000;
+const int SoundSampleRate = 8000;  // will be 16-bit per sample
 const int SoundNumChannels = 1;
-
 
 // 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 256 bytes = 16 ms per read
 const int BufferNumBytes = 256;
@@ -109,7 +108,7 @@ void loop() {
         }
       }
       if (soundChunkId != -1) {
-        // send sound
+        // send sound samples read
         bool isFinalChunk = !started;  // it is the final chink if justed turned to stop
         dumbdisplay.sendSoundChunk16(soundChunkId, Buffer, samplesRead, isFinalChunk);
         if (isFinalChunk) {
@@ -122,32 +121,28 @@ void loop() {
 
 
 
-// Define input buffer length
 void i2s_install() {
-  // Set up I2S Processor configuration
   const i2s_config_t i2s_config = {
     .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
-    .sample_rate = SoundSampleRate/*44100*/,
+    .sample_rate = SoundSampleRate,
     .bits_per_sample = i2s_bits_per_sample_t(16),
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = 0,
     .dma_buf_count = 8,
-    .dma_buf_len = BufferLen/*bufferLen*/,
+    .dma_buf_len = BufferLen,
     .use_apll = false
   };
- 
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
 }
  
 void i2s_setpin() {
-  // Set I2S pin configuration
   const i2s_pin_config_t pin_config = {
     .bck_io_num = I2S_SCK,
     .ws_io_num = I2S_WS,
     .data_out_num = -1,
     .data_in_num = I2S_SD
   };
- 
   i2s_set_pin(I2S_PORT, &pin_config);
 }
+
