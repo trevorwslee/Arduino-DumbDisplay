@@ -968,10 +968,10 @@ class DumbDisplay {
     void saveCachedSoundAsCC(const String& soundName);
     int streamSound8(int sampleRate, int numChannels = 1); 
     int streamSound16(int sampleRate, int numChannels = 1); 
-    int saveSoundChunked8(const String& soundName, const int8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
-    int saveSoundChunked16(const String& soundName, const int16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
-    int cacheSoundChunked8(const String& soundName, const int8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
-    int cacheSoundChunked16(const String& soundName, const int16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
+    int saveSoundChunked8(const String& soundName/*, const int8_t *bytes, int sampleCount*/, int sampleRate, int numChannels = 1);
+    int saveSoundChunked16(const String& soundName/*, const int16_t *data, int sampleCount*/, int sampleRate, int numChannels = 1);
+    int cacheSoundChunked8(const String& soundName/*, const int8_t *bytes, int sampleCount*/, int sampleRate, int numChannels = 1);
+    int cacheSoundChunked16(const String& soundName/*, const int16_t *data, int sampleCount*/, int sampleRate, int numChannels = 1);
     void sendSoundChunk8(int chunkId, const int8_t *bytes, int sampleCount, bool isFinal = false);
     void sendSoundChunk16(int chunkId, const int16_t *data, int sampleCount, bool isFinal = false);
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);

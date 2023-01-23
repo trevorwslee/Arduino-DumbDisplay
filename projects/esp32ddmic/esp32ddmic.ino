@@ -21,6 +21,8 @@ LedGridDDLayer* amplifyLayer;
 //DDValueRecord<bool> startStopRecord(false, true);
 
 
+const char* SoundName = "recorded_sound";
+
 const int SoundSampleRate = 8000;  // will be 16-bit per sample
 const int SoundNumChannels = 1;
 
@@ -30,7 +32,7 @@ const int BufferLen = BufferNumBytes / 2;
 int16_t Buffer[BufferLen];
 
 // sound sample (16 bits) amplification
-const int MaxAmplifyFactor = 10;
+const int MaxAmplifyFactor = 20;
 
 
 void i2s_install();
@@ -79,9 +81,9 @@ void setup() {
 
 
 bool initialized = false;
-int what = 1;  // 1: mic; 2: record; 3: play
+int what = 2;  // 1: mic; 2: record; 3: play
 bool started = false;
-int amplifyFactor = 5;
+int amplifyFactor = 10;
 int soundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
 
 void loop() {
@@ -104,6 +106,7 @@ void loop() {
   } else {
     updateStartStop = true;
     updateAmplifyFactor = true;
+    initialized = true;
   }
 
   if (updateStartStop) {
@@ -129,9 +132,6 @@ void loop() {
     amplifyLayer->horizontalBar(amplifyFactor);
   }
 
-
-  initialized = true;
-
   // bool started = startStopRecord.get();  // get the start/stop value 
   // if (startStopRecord.record()) {  // record and check if the start/stop value changed since it's last record of changed state
   //   const char* what;
@@ -147,9 +147,15 @@ void loop() {
 
   if (started) {
     if (soundChunkId == -1) {
-      // if no allocated "chunk id" (i.e. sending sound not started), start sending sound, and get the assigned "shunk id"
-      soundChunkId = dumbdisplay.streamSound16(SoundSampleRate, SoundNumChannels); // sound is 16 bits per sample
-      dumbdisplay.writeComment(String("started stream with chunk id [") + soundChunkId + "]");
+      // if no allocated "chunk id" (i.e. sending sound not started)
+      if (what == 1) {
+        // start sending sound, and get the assigned "shunk id"
+        soundChunkId = dumbdisplay.streamSound16(SoundSampleRate, SoundNumChannels); // sound is 16 bits per sample
+        dumbdisplay.writeComment(String("STARTED mic streaming with chunk id [") + soundChunkId + "]");
+      } else if (what == 2) {
+        soundChunkId = dumbdisplay.saveSoundChunked16(SoundName, SoundSampleRate, SoundNumChannels);
+        dumbdisplay.writeComment(String("STARTED record streaming with chunk id [") + soundChunkId + "]");
+      }
     }
   }
 
@@ -158,28 +164,27 @@ void loop() {
   esp_err_t result = i2s_read(I2S_PORT, &Buffer, BufferNumBytes, &bytesRead, portMAX_DELAY);
  
   if (result == ESP_OK) {
-    if (started) {
-      int16_t samplesRead = bytesRead / 2;  // 16 bit per sample
-      if (amplifyFactor > 1) {
-        // amplify the sound sample, by simply multiple it by some "amplify factor"
-        for (int i = 0; i < samplesRead; ++i) {
-          int32_t val = Buffer[i];
-          val = amplifyFactor * val;
-          if (val > 32700) {
-            val = 32700;
-          } else if (val < -32700) {
-            val = -32700;
-          }
-          Buffer[i] = val;
+    int16_t samplesRead = bytesRead / 2;  // 16 bit per sample
+    if (amplifyFactor > 1) {
+      // amplify the sound sample, by simply multiple it by some "amplify factor"
+      for (int i = 0; i < samplesRead; ++i) {
+        int32_t val = Buffer[i];
+        val = amplifyFactor * val;
+        if (val > 32700) {
+          val = 32700;
+        } else if (val < -32700) {
+          val = -32700;
         }
+        Buffer[i] = val;
       }
-      if (soundChunkId != -1) {
-        // send sound samples read
-        bool isFinalChunk = !started;  // it is the final chink if justed turned to stop
-        dumbdisplay.sendSoundChunk16(soundChunkId, Buffer, samplesRead, isFinalChunk);
-        if (isFinalChunk) {
-          soundChunkId = -1;
-        }
+    }
+    if (soundChunkId != -1) {
+      // send sound samples read
+      bool isFinalChunk = !started;  // it is the final chink if justed turned to stop
+      dumbdisplay.sendSoundChunk16(soundChunkId, Buffer, samplesRead, isFinalChunk);
+      if (isFinalChunk) {
+        dumbdisplay.writeComment(String("DONE streaming with chunk id [") + soundChunkId + "]");
+        soundChunkId = -1;
       }
     }
   }

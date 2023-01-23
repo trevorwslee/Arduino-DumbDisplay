@@ -2490,12 +2490,12 @@ void DumbDisplay::saveSound8(const String& soundName, const int8_t *bytes, int s
   _sendCommand5("", C_SAVESND, soundName, String(sampleRate), String(8), String(numChannels), TO_EDIAN());
   _sendByteArrayAfterCommand((uint8_t*) bytes, byteCount);
 }
-int DumbDisplay::saveSoundChunked8(const String& soundName, const int8_t *bytes, int sampleCount, int sampleRate, int numChannels) {
+int DumbDisplay::saveSoundChunked8(const String& soundName/*, const int8_t *bytes, int sampleCount*/, int sampleRate, int numChannels) {
   int bid = _AllocBytesId();
   String bytesId = String(bid);
-  int byteCount = sampleCount;
+  uint8_t noData[0];
   _sendCommand6("", C_SAVESND, soundName, String(sampleRate), String(8), String(numChannels), TO_EDIAN(), bytesId);
-  _sendByteArrayAfterCommandChunked(bytesId, (uint8_t*) bytes, byteCount);
+  _sendByteArrayAfterCommandChunked(bytesId, noData, 0);
   return bid;
 }
 int DumbDisplay::streamSound8(int sampleRate, int numChannels) {
@@ -2509,12 +2509,12 @@ void DumbDisplay::saveSound16(const String& soundName, const int16_t *data, int 
   _sendCommand5("", C_SAVESND, soundName, String(sampleRate), String(16), String(numChannels), TO_EDIAN());
   _sendByteArrayAfterCommand((uint8_t*) data, byteCount);
 }
-int DumbDisplay::saveSoundChunked16(const String& soundName, const int16_t *data, int sampleCount, int sampleRate, int numChannels) {
+int DumbDisplay::saveSoundChunked16(const String& soundName/*, const int16_t *data, int sampleCount*/, int sampleRate, int numChannels) {
   int bid = _AllocBytesId();
   String bytesId = String(bid);
-  int byteCount = 2 * sampleCount;
+  uint8_t noData[0];
   _sendCommand6("", C_SAVESND, soundName, String(sampleRate), String(16), String(numChannels), TO_EDIAN(), bytesId);
-  _sendByteArrayAfterCommandChunked(bytesId, (uint8_t*) data, byteCount);
+  _sendByteArrayAfterCommandChunked(bytesId, noData, 0);
   return bid;
 }
 void DumbDisplay::cacheSound8(const String& soundName, const int8_t *bytes, int sampleCount, int sampleRate, int numChannels) {
@@ -2522,12 +2522,12 @@ void DumbDisplay::cacheSound8(const String& soundName, const int8_t *bytes, int 
   _sendCommand5("", C_CACHESND, soundName, String(sampleRate), String(8), String(numChannels), TO_EDIAN());
   _sendByteArrayAfterCommand((uint8_t*) bytes, byteCount);
 }
-int DumbDisplay::cacheSoundChunked8(const String& soundName, const int8_t *bytes, int sampleCount, int sampleRate, int numChannels) {
+int DumbDisplay::cacheSoundChunked8(const String& soundName/*, const int8_t *bytes, int sampleCount*/, int sampleRate, int numChannels) {
   int bid = _AllocBytesId();
   String bytesId = String(bid);
-  int byteCount = sampleCount;
+  uint8_t noData[0];
   _sendCommand6("", C_CACHESND, soundName, String(sampleRate), String(8), String(numChannels), TO_EDIAN(), bytesId);
-  _sendByteArrayAfterCommandChunked(bytesId, (uint8_t*) bytes, byteCount);
+  _sendByteArrayAfterCommandChunked(bytesId, noData, 0);
   return bid;
 }
 void DumbDisplay::sendSoundChunk8(int chunkId, const int8_t *bytes, int sampleCount, bool isFinal) {
@@ -2540,12 +2540,12 @@ void DumbDisplay::cacheSound16(const String& soundName, const int16_t *data, int
   _sendCommand5("", C_CACHESND, soundName, String(sampleRate), String(16), String(numChannels), TO_EDIAN());
   _sendByteArrayAfterCommand((uint8_t*) data, byteCount);
 }
-int DumbDisplay::cacheSoundChunked16(const String& soundName, const int16_t *data, int sampleCount, int sampleRate, int numChannels) {
+int DumbDisplay::cacheSoundChunked16(const String& soundName/*, const int16_t *data, int sampleCount*/, int sampleRate, int numChannels) {
   int bid = _AllocBytesId();
   String bytesId = String(bid);
-  int byteCount = 2 * sampleCount;
+  uint8_t noData[0];
   _sendCommand6("", C_CACHESND, soundName, String(sampleRate), String(16), String(numChannels), TO_EDIAN(), bytesId);
-  _sendByteArrayAfterCommandChunked(bytesId, (uint8_t*) data, byteCount);
+  _sendByteArrayAfterCommandChunked(bytesId, noData, 0);
   return bid;
 }
 int DumbDisplay::streamSound16(int sampleRate, int numChannels) {
