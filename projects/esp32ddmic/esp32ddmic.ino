@@ -37,11 +37,20 @@ int16_t Buffer[BufferLen];
 
 // sound sample (16 bits) amplification
 const int MaxAmplifyFactor = 20;
+const int DefAmplifyFactor = 10;
 
 
 void i2s_install();
 void i2s_setpin();
  
+
+DDConnectVersionTracker cvTracker(-1);
+//bool initialized = false;
+int what = 1;  // 1: mic; 2: record; 3: play
+bool started = false;
+int amplifyFactor = DefAmplifyFactor;//10;
+int soundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
+
 void setup() {
 
   Serial.begin(115200);
@@ -54,6 +63,9 @@ void setup() {
   i2s_start(I2S_PORT);
 
   Serial.println("... DONE SETUP MIC");
+
+
+  dumbdisplay.recordLayerSetupCommands();
 
   plotterLayer = dumbdisplay.createPlotterLayer(1024, 256, SoundSampleRate / BufferLen);
 
@@ -103,22 +115,27 @@ void setup() {
     .endGroup()
     .addLayer(amplifyMeterLayer);  
   dumbdisplay.configAutoPin(builder.build());
+
+  dumbdisplay.playbackLayerSetupCommands("esp32ddmice");
+
+  dumbdisplay.setIdleCalback([](long idleForMillis) {
+    started = false;  // if idle, e.g. disconnected, stop whatever
+  });
+
 }
 
-
-
-bool initialized = false;
-int what = 1;  // 1: mic; 2: record; 3: play
-bool started = false;
-int amplifyFactor = 10;
-int soundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
 
 void loop() {
 
   bool updateTab = false;
   bool updateStartStop = false;
   bool updateAmplifyFactor = false;
-  if (initialized) {
+  if (cvTracker.checkChanged(dumbdisplay)) {
+    started = false;
+    updateTab = true;
+    updateStartStop = true;
+    updateAmplifyFactor = true;
+  } /*if (initialized) */{
     int oriWhat = what;
     if (micTabLayer->getFeedback()) {
       what = 1;
@@ -144,12 +161,12 @@ void loop() {
         amplifyFactor = feedback->x + 1;
         updateAmplifyFactor = true;
     }
-  } else {
+  }/* else {
     updateTab = true;
     updateStartStop = true;
     updateAmplifyFactor = true;
     initialized = true;
-  }
+  }*/
 
   if (updateTab) {
     const char* micColor = what == 1 ? "blue" : "gray";
@@ -207,7 +224,7 @@ void loop() {
     samplesRead = bytesRead / 2;  // 16 bit per sample
     if (samplesRead > 0) {
       // find the samples mean ... and amplify the sound sample, by simply multiple it by some "amplify factor"
-      float sum_val = 0;
+      float sumVal = 0;
       for (int i = 0; i < samplesRead; ++i) {
         int32_t val = Buffer[i];
         if (amplifyFactor > 1) {
@@ -219,10 +236,10 @@ void loop() {
           }
           Buffer[i] = val;
         }
-        sum_val += val;
+        sumVal += val;
       }
-      float mean_val = sum_val / samplesRead;
-      plotterLayer->set(mean_val);
+      float meanVal = sumVal / samplesRead;
+      plotterLayer->set(meanVal);
     }
   }
 
