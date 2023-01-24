@@ -277,7 +277,7 @@ void i2s_install() {
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = 0,
     .dma_buf_count = 8,
-    .dma_buf_len = BufferLen,
+    .dma_buf_len = 1024,//BufferLen,
     .use_apll = false
   };
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
