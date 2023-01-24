@@ -15,6 +15,7 @@
 DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
 
 
+PlotterDDLayer* plotterLayer;
 LcdDDLayer* micTabLayer;
 LcdDDLayer* recTabLayer;
 LcdDDLayer* playTabLayer;
@@ -54,6 +55,8 @@ void setup() {
 
   Serial.println("... DONE SETUP MIC");
 
+  plotterLayer = dumbdisplay.createPlotterLayer(1024, 256, SoundSampleRate / BufferLen);
+
   // create "MIC/REC/PLAY" lcd layers, as tab
   micTabLayer = dumbdisplay.createLcdLayer(8, 1);
   micTabLayer->writeCenteredLine("MIC");
@@ -70,29 +73,25 @@ void setup() {
 
   // create "START/STOP" lcd layer, acting as a button
   startBtnLayer = dumbdisplay.createLcdLayer(12, 3);
+  startBtnLayer->pixelColor("darkgreen");
   startBtnLayer->border(2, "darkgreen", "round");
+  startBtnLayer->margin(1);
   startBtnLayer->enableFeedback("fl");
   stopBtnLayer = dumbdisplay.createLcdLayer(12, 3);
+  stopBtnLayer->pixelColor("darkred");
   stopBtnLayer->border(2, "darkgreen", "round");
+  stopBtnLayer->margin(1);
   stopBtnLayer->enableFeedback("fl");
 
   amplifyMeterLayer = dumbdisplay.createLedGridLayer(MaxAmplifyFactor, 1, 1, 2);
+  amplifyMeterLayer->onColor("darkblue");
+  amplifyMeterLayer->offColor("lightgray");
   amplifyMeterLayer->border(0.2, "blue");
   amplifyMeterLayer->enableFeedback("fa:rpt50");
-    // turnSpeedLayer->border(0.2, "darkgray");
-    // turnSpeedLayer->offColor("lightgray");
-    // turnSpeedLayer->setFeedbackHandler(FeedbackHandler, "fa:rpt50");
-
-
-  // // set "feedback" handler lambda expression ... i.e. it can be clicked
-  // startStopLayer->setFeedbackHandler(
-  //   [](DDLayer* layer, DDFeedbackType type, const DDFeedback& feedback) {
-  //     startStopRecord = !startStopRecord;  // when clicked, toggle "start/stop record" 
-  //   },
-  //    "fl");
 
   DDAutoPinConfigBuilder<1> builder('V');
   builder
+    .addLayer(plotterLayer)
     .beginGroup('H')
       .addLayer(micTabLayer)
       .addLayer(recTabLayer)
@@ -154,13 +153,16 @@ void loop() {
 
   if (updateTab) {
     const char* micColor = what == 1 ? "blue" : "gray";
+    const char* micBoarderShape = what == 1 ? "flat" : "hair";
     const char* recColor = what == 2 ? "blue" : "gray";
+    const char* recBoarderShape = what == 2 ? "flat" : "hair";
     const char* playColor = what == 3 ? "blue" : "gray";
-    micTabLayer->border(1, micColor);
+    const char* playBoarderShape = what == 3 ? "flat" : "hair";
+    micTabLayer->border(1, micColor, micBoarderShape);
     micTabLayer->pixelColor(micColor);
-    recTabLayer->border(1, recColor);
+    recTabLayer->border(1, recColor, recBoarderShape);
     recTabLayer->pixelColor(recColor);
-    playTabLayer->border(1, playColor);
+    playTabLayer->border(1, playColor, playBoarderShape);
     playTabLayer->pixelColor(playColor);
   }
   if (updateStartStop) {
@@ -196,6 +198,34 @@ void loop() {
     amplifyMeterLayer->horizontalBar(amplifyFactor);
   }
 
+  // read I2S data and place in data buffer
+  size_t bytesRead = 0;
+  esp_err_t result = i2s_read(I2S_PORT, &Buffer, BufferNumBytes, &bytesRead, portMAX_DELAY);
+ 
+  int16_t samplesRead = 0;
+  if (result == ESP_OK) {
+    samplesRead = bytesRead / 2;  // 16 bit per sample
+    if (samplesRead > 0) {
+      // find the samples mean ... and amplify the sound sample, by simply multiple it by some "amplify factor"
+      float sum_val = 0;
+      for (int i = 0; i < samplesRead; ++i) {
+        int32_t val = Buffer[i];
+        if (amplifyFactor > 1) {
+          val = amplifyFactor * val;
+          if (val > 32700) {
+            val = 32700;
+          } else if (val < -32700) {
+            val = -32700;
+          }
+          Buffer[i] = val;
+        }
+        sum_val += val;
+      }
+      float mean_val = sum_val / samplesRead;
+      plotterLayer->set(mean_val);
+    }
+  }
+
   if (what == 3) {
     if (updateStartStop) {
       // i.e. click start or stop
@@ -208,22 +238,9 @@ void loop() {
     return;
   }
 
-  // bool started = startStopRecord.get();  // get the start/stop value 
-  // if (startStopRecord.record()) {  // record and check if the start/stop value changed since it's last record of changed state
-  //   const char* what;
-  //   if (started) {
-  //     // changed to started
-  //     what = "STOP";
-  //   } else {
-  //     // changed to started
-  //     what = "START";
-  //   }
-  //   startStopLayer->writeCenteredLine(what, 1);
-  // }
-
   if (started) {
     if (soundChunkId == -1) {
-      // if no allocated "chunk id" (i.e. sending sound not started)
+      // while started ... if no allocated "chunk id" (i.e. not yet started sending sound)
       if (what == 1) {
         // start sending sound, and get the assigned "shunk id"
         soundChunkId = dumbdisplay.streamSound16(SoundSampleRate, SoundNumChannels); // sound is 16 bits per sample
@@ -235,25 +252,21 @@ void loop() {
     }
   }
 
-  // read I2S data and place in data buffer
-  size_t bytesRead = 0;
-  esp_err_t result = i2s_read(I2S_PORT, &Buffer, BufferNumBytes, &bytesRead, portMAX_DELAY);
- 
   if (result == ESP_OK) {
-    int16_t samplesRead = bytesRead / 2;  // 16 bit per sample
-    if (amplifyFactor > 1) {
-      // amplify the sound sample, by simply multiple it by some "amplify factor"
-      for (int i = 0; i < samplesRead; ++i) {
-        int32_t val = Buffer[i];
-        val = amplifyFactor * val;
-        if (val > 32700) {
-          val = 32700;
-        } else if (val < -32700) {
-          val = -32700;
-        }
-        Buffer[i] = val;
-      }
-    }
+    //int16_t samplesRead = bytesRead / 2;  // 16 bit per sample
+    // if (amplifyFactor > 1) {
+    //   // amplify the sound sample, by simply multiple it by some "amplify factor"
+    //   for (int i = 0; i < samplesRead; ++i) {
+    //     int32_t val = Buffer[i];
+    //     val = amplifyFactor * val;
+    //     if (val > 32700) {
+    //       val = 32700;
+    //     } else if (val < -32700) {
+    //       val = -32700;
+    //     }
+    //     Buffer[i] = val;
+    //   }
+    // }
     if (soundChunkId != -1) {
       // send sound samples read
       bool isFinalChunk = !started;  // it is the final chink if justed turned to stop
@@ -277,7 +290,7 @@ void i2s_install() {
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = 0,
     .dma_buf_count = 8,
-    .dma_buf_len = 1024,//BufferLen,
+    .dma_buf_len = 1024,
     .use_apll = false
   };
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
