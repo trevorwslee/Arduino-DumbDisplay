@@ -120,6 +120,8 @@ class DDLayer: public DDObject {
     void visible(bool visible);
     /* set whether layer transparent */
     void transparent(bool transparent);
+    /* set disabled */
+    void disabled(bool disabled);
     /* set layer opacity percentage */
     void opacity(int opacity);
     /* set layer's alpha channel (0 - 255) */
@@ -138,6 +140,10 @@ class DDLayer: public DDObject {
     /* . "fas" -- flash the area (as a spot) where the layer is clicked */
     /* . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary) */
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
+    // /* autoFeedbackMethod -- see setFeedbackHandler() */
+    // inline void setAutoFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "f") {
+    //   setFeedbackHandler(handler, autoFeedbackMethod);
+    // }
     /* rely on getFeedback() being called */ 
     /* autoFeedbackMethod: */
     /* . "" -- no auto feedback */
@@ -954,18 +960,20 @@ class DumbDisplay {
     void notone();
     void playSound(const String& soundName);
     void stopSound();
-    void saveSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
-    int saveSoundChunked8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
-    void saveSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
-    int saveSoundChunked16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
-    void cacheSound8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
-    int cacheSoundChunked8(const String& soundName, const uint8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
-    void sendSoundChunk8(int chunkId, const uint8_t *bytes, int sampleCount, bool isFinal = false);
-    void cacheSound16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
-    int cacheSoundChunked16(const String& soundName, const uint16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
-    void sendSoundChunk16(int chunkId, const uint16_t *data, int sampleCount, bool isFinal = false);
+    void saveSound8(const String& soundName, const int8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
+    void saveSound16(const String& soundName, const int16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
+    void cacheSound8(const String& soundName, const int8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
+    void cacheSound16(const String& soundName, const int16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
     void saveCachedSound(const String& soundName);
     void saveCachedSoundAsCC(const String& soundName);
+    int streamSound8(int sampleRate, int numChannels = 1); 
+    int streamSound16(int sampleRate, int numChannels = 1); 
+    int saveSoundChunked8(const String& soundName/*, const int8_t *bytes, int sampleCount*/, int sampleRate, int numChannels = 1);
+    int saveSoundChunked16(const String& soundName/*, const int16_t *data, int sampleCount*/, int sampleRate, int numChannels = 1);
+    int cacheSoundChunked8(const String& soundName/*, const int8_t *bytes, int sampleCount*/, int sampleRate, int numChannels = 1);
+    int cacheSoundChunked16(const String& soundName/*, const int16_t *data, int sampleCount*/, int sampleRate, int numChannels = 1);
+    void sendSoundChunk8(int chunkId, const int8_t *bytes, int sampleCount, bool isFinal = false);
+    void sendSoundChunk16(int chunkId, const int16_t *data, int sampleCount, bool isFinal = false);
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
     void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressMethod = 0);
     void savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);

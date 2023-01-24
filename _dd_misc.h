@@ -59,16 +59,11 @@ class DDValueRecord {
 };
 
 
-template<int MAX_DEPTH>
+template<int MAX_DEPTH> // MAX_DEPTH: depth of [nested] group
 class DDAutoPinConfigBuilder {
   public:
     // dir: 'H' / 'V'
     DDAutoPinConfigBuilder(char dir) {
-      //depth = -1;
-      // for (int i = 0; i < MAX_DEPTH; i++) {
-      //   started[i] = false;
-      // }
-//      beginGroup(dir);
       config = String(dir) + "(";
       depth = 0;
       started[depth] = false;
@@ -81,28 +76,35 @@ class DDAutoPinConfigBuilder {
       started[depth] = false;
       return *this;
     }  
+    // DDAutoPinConfigBuilder& beginPaddedGroup(int left, int top, int right, int bottom) {
+    //   addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
+    //   depth += 1;
+    //   started[depth] = false;
+    //   return *this;
+    // }  
     DDAutoPinConfigBuilder& endGroup() {
       config.concat(')');
       depth -= 1;
-      // if (depth >= 0) {
-      //     started[depth] = true;
-      // }
       return *this;
     }
     DDAutoPinConfigBuilder& addLayer(DDLayer* layer) {
       addConfig(layer->getLayerId());
       return *this;
     }
-    // DDAutoPinConfigBuilder& addBuilder(DDAutoPinConfigBuilder& builder) {
-    //   addConfig(builder.build());
-    //   return *this;
-    // }
+    DDAutoPinConfigBuilder& beginPaddedGroup(int left, int top, int right, int bottom) {
+      addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
+      depth += 1;
+      started[depth] = false;
+      return *this;
+    }  
+    DDAutoPinConfigBuilder& endPaddedGroup() {
+      return endGroup();
+    }
     const String& build() {
       if (config.length() == 2) {
         // just started
         config.concat('*');
       }
-//      endGroup();
       config.concat(')');
       return config;
     }  

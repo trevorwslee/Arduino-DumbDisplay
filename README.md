@@ -1441,17 +1441,19 @@ MIT
 
 # Change History
 
+v0.9.6-r1
+  - enhanced sound support
+  - bug fix
+
 v0.9.6
   - added sound support
   - enhanced JSON "tunnel"
   - bug fix
 
-
 v0.9.5
   - can save/cache grayscale image
   - added TensorFlow Lite Object Detection Demo tunnel
   - bug fix
-
 
 v0.9.4
   - enhanced "feedback"
@@ -1459,11 +1461,9 @@ v0.9.4
   - enhanced graphical layers
   - bug fixes
 
-
 v0.9.3
   - enhanced graphical layers
   - bug fixes
-
 
 v0.9.2
   - enhanced 7-segment layers
