@@ -22,7 +22,6 @@ LcdDDLayer* playTabLayer;
 LcdDDLayer* startBtnLayer;
 LcdDDLayer* stopBtnLayer;
 LedGridDDLayer* amplifyMeterLayer;
-//DDValueRecord<bool> startStopRecord(false, true);
 
 
 const char* SoundName = "recorded_sound";
@@ -45,7 +44,6 @@ void i2s_setpin();
  
 
 DDConnectVersionTracker cvTracker(-1);
-//bool initialized = false;
 int what = 1;  // 1: mic; 2: record; 3: play
 bool started = false;
 int amplifyFactor = DefAmplifyFactor;//10;
@@ -65,7 +63,7 @@ void setup() {
   Serial.println("... DONE SETUP MIC");
 
 
-  dumbdisplay.recordLayerSetupCommands();
+  dumbdisplay.recordLayerSetupCommands();  // start recording the layout commands
 
   plotterLayer = dumbdisplay.createPlotterLayer(1024, 256, SoundSampleRate / BufferLen);
 
@@ -116,8 +114,9 @@ void setup() {
     .addLayer(amplifyMeterLayer);  
   dumbdisplay.configAutoPin(builder.build());
 
-  dumbdisplay.playbackLayerSetupCommands("esp32ddmice");
+  dumbdisplay.playbackLayerSetupCommands("esp32ddmice");  // playback the stored layout commands, as well as persist the layout to phone, so that can reconnect
 
+  // set when idel handler ... here is a lambda expression
   dumbdisplay.setIdleCalback([](long idleForMillis) {
     started = false;  // if idle, e.g. disconnected, stop whatever
   });
@@ -131,11 +130,13 @@ void loop() {
   bool updateStartStop = false;
   bool updateAmplifyFactor = false;
   if (cvTracker.checkChanged(dumbdisplay)) {
+    // if here for the first time, or DD connection changed (e.g. reconnected), update every UI component
     started = false;
     updateTab = true;
     updateStartStop = true;
     updateAmplifyFactor = true;
-  } /*if (initialized) */{
+  } else {
+    // check if need to update any UI components
     int oriWhat = what;
     if (micTabLayer->getFeedback()) {
       what = 1;
@@ -161,12 +162,7 @@ void loop() {
         amplifyFactor = feedback->x + 1;
         updateAmplifyFactor = true;
     }
-  }/* else {
-    updateTab = true;
-    updateStartStop = true;
-    updateAmplifyFactor = true;
-    initialized = true;
-  }*/
+  }
 
   if (updateTab) {
     const char* micColor = what == 1 ? "blue" : "gray";
