@@ -62,14 +62,14 @@ class DDValueRecord {
 template<int MAX_DEPTH> // MAX_DEPTH: depth of [nested] group
 class DDAutoPinConfigBuilder {
   public:
-    // dir: 'H' / 'V'
+    // dir: 'H' / 'V' / 'S'
     DDAutoPinConfigBuilder(char dir) {
       config = String(dir) + "(";
       depth = 0;
       started[depth] = false;
     }
   public:
-    // dir: 'H' / 'V'
+    // dir: 'H' / 'V' / 'S'
     DDAutoPinConfigBuilder& beginGroup(char dir) {
       addConfig(String(dir) + "(");
       depth += 1;

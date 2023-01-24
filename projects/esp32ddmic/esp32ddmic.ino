@@ -21,6 +21,7 @@ LcdDDLayer* recTabLayer;
 LcdDDLayer* playTabLayer;
 LcdDDLayer* startBtnLayer;
 LcdDDLayer* stopBtnLayer;
+LcdDDLayer* amplifyLblLayer;
 LedGridDDLayer* amplifyMeterLayer;
 
 
@@ -48,6 +49,8 @@ int what = 1;  // 1: mic; 2: record; 3: play
 bool started = false;
 int amplifyFactor = DefAmplifyFactor;//10;
 int soundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
+long streamingMillis = 0;
+int streamingTotalSampleCount = 0;
 
 void setup() {
 
@@ -93,6 +96,10 @@ void setup() {
   stopBtnLayer->margin(1);
   stopBtnLayer->enableFeedback("fl");
 
+  amplifyLblLayer = dumbdisplay.createLcdLayer(12, 1);
+  amplifyLblLayer->pixelColor("darkred");
+  amplifyLblLayer->noBackgroundColor();
+
   amplifyMeterLayer = dumbdisplay.createLedGridLayer(MaxAmplifyFactor, 1, 1, 2);
   amplifyMeterLayer->onColor("darkblue");
   amplifyMeterLayer->offColor("lightgray");
@@ -111,7 +118,10 @@ void setup() {
       .addLayer(startBtnLayer)
       .addLayer(stopBtnLayer)
     .endGroup()
-    .addLayer(amplifyMeterLayer);  
+    .beginGroup('S')
+      .addLayer(amplifyLblLayer)  
+      .addLayer(amplifyMeterLayer)
+    .endGroup();  
   dumbdisplay.configAutoPin(builder.build());
 
   dumbdisplay.playbackLayerSetupCommands("esp32ddmice");  // playback the stored layout commands, as well as persist the layout to phone, so that can reconnect
@@ -209,6 +219,7 @@ void loop() {
   }
   if (updateAmplifyFactor) {
     amplifyMeterLayer->horizontalBar(amplifyFactor);
+    amplifyLblLayer->writeLine(String(amplifyFactor), 0, "R");
   }
 
   // read I2S data and place in data buffer
@@ -262,6 +273,8 @@ void loop() {
         soundChunkId = dumbdisplay.saveSoundChunked16(SoundName, SoundSampleRate, SoundNumChannels);
         dumbdisplay.writeComment(String("STARTED record streaming with chunk id [") + soundChunkId + "]");
       }
+      streamingMillis = millis();
+      streamingTotalSampleCount = 0;
     }
   }
 
@@ -284,8 +297,13 @@ void loop() {
       // send sound samples read
       bool isFinalChunk = !started;  // it is the final chink if justed turned to stop
       dumbdisplay.sendSoundChunk16(soundChunkId, Buffer, samplesRead, isFinalChunk);
+      streamingTotalSampleCount += samplesRead;
       if (isFinalChunk) {
         dumbdisplay.writeComment(String("DONE streaming with chunk id [") + soundChunkId + "]");
+        long forMillis = millis() - streamingMillis;
+        int totalSampleCount = streamingTotalSampleCount;
+        dumbdisplay.writeComment(String(". total streamed samples: ") + totalSampleCount + " in " + String(forMillis / 1000.0) + "s");
+        dumbdisplay.writeComment(String(". stream sample rate: ") + String(1000.0 * ((float) totalSampleCount / forMillis)));
         soundChunkId = -1;
       }
     }
