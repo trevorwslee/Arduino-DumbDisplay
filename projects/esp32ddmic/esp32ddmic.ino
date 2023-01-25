@@ -10,8 +10,6 @@
 #define I2S_PORT I2S_NUM_0
 
 
-
-
 #define USE_BLUETOOTH
 #if defined(USE_BLUETOOTH)
   // ESP32 Bluetooth with name  ESP32
@@ -35,7 +33,7 @@ LedGridDDLayer* amplifyMeterLayer;
 
 
 
-
+// name of recoreded WAV file; since only a single name; hence new one will always overwrite old one
 const char* SoundName = "recorded_sound";
 
 
@@ -60,13 +58,14 @@ void i2s_install();
 void i2s_setpin();
  
 
-DDConnectVersionTracker cvTracker(-1);
+DDConnectVersionTracker cvTracker(-1);  // it is for tracking [new] DD connection established 
 int what = 1;  // 1: mic; 2: record; 3: play
 bool started = false;
 int amplifyFactor = DefAmplifyFactor;//10;
 int soundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
 long streamingMillis = 0;
 int streamingTotalSampleCount = 0;
+
 
 void setup() {
 
@@ -112,29 +111,31 @@ void setup() {
   stopBtnLayer->margin(1);
   stopBtnLayer->enableFeedback("fl");
 
+  // create "amplify" label on top the the "amplify" meter layer (to be created next)
   amplifyLblLayer = dumbdisplay.createLcdLayer(12, 1);
   amplifyLblLayer->pixelColor("darkred");
   amplifyLblLayer->noBackgroundColor();
 
+  // create "amplify" meter layer
   amplifyMeterLayer = dumbdisplay.createLedGridLayer(MaxAmplifyFactor, 1, 1, 2);
   amplifyMeterLayer->onColor("darkblue");
   amplifyMeterLayer->offColor("lightgray");
   amplifyMeterLayer->border(0.2, "blue");
-  amplifyMeterLayer->enableFeedback("fa:rpt50");
+  amplifyMeterLayer->enableFeedback("fa:rpt50");  // rep50 means auto repeat every 50 milli-seconds
 
-  DDAutoPinConfigBuilder<1> builder('V');
+  DDAutoPinConfigBuilder<1> builder('V');  // vertical
   builder
     .addLayer(plotterLayer)
-    .beginGroup('H')
+    .beginGroup('H')  // horizontal
       .addLayer(micTabLayer)
       .addLayer(recTabLayer)
       .addLayer(playTabLayer)
     .endGroup()
-    .beginGroup('H')
+    .beginGroup('H')  // horizontal
       .addLayer(startBtnLayer)
       .addLayer(stopBtnLayer)
     .endGroup()
-    .beginGroup('S')
+    .beginGroup('S')  // stacked, one on top of another
       .addLayer(amplifyLblLayer)  
       .addLayer(amplifyMeterLayer)
     .endGroup();  
@@ -142,7 +143,7 @@ void setup() {
 
   dumbdisplay.playbackLayerSetupCommands("esp32ddmice");  // playback the stored layout commands, as well as persist the layout to phone, so that can reconnect
 
-  // set when idel handler ... here is a lambda expression
+  // set when DD idle handler ... here is a lambda expression
   dumbdisplay.setIdleCalback([](long idleForMillis) {
     started = false;  // if idle, e.g. disconnected, stop whatever
   });
@@ -242,7 +243,7 @@ void loop() {
   size_t bytesRead = 0;
   esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
  
-  int16_t samplesRead = 0;
+  int samplesRead = 0;
   if (result == ESP_OK) {
     samplesRead = bytesRead / 2;  // 16 bit per sample
     if (samplesRead > 0) {
@@ -295,20 +296,6 @@ void loop() {
   }
 
   if (result == ESP_OK) {
-    //int16_t samplesRead = bytesRead / 2;  // 16 bit per sample
-    // if (amplifyFactor > 1) {
-    //   // amplify the sound sample, by simply multiple it by some "amplify factor"
-    //   for (int i = 0; i < samplesRead; ++i) {
-    //     int32_t val = Buffer[i];
-    //     val = amplifyFactor * val;
-    //     if (val > 32700) {
-    //       val = 32700;
-    //     } else if (val < -32700) {
-    //       val = -32700;
-    //     }
-    //     Buffer[i] = val;
-    //   }
-    // }
     if (soundChunkId != -1) {
       // send sound samples read
       bool isFinalChunk = !started;  // it is the final chink if justed turned to stop
