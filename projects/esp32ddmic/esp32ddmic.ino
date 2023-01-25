@@ -1,3 +1,16 @@
+
+#define USE_BLUETOOTH
+#if defined(USE_BLUETOOTH)
+  // ESP32 Bluetooth with name  ESP32
+  #include "esp32dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
+#else
+  // ESP32 WiFi
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+#endif
+
+
 // I2S driver
 #include <driver/i2s.h>
  
@@ -10,10 +23,6 @@
 #define I2S_PORT I2S_NUM_0
 
 
-// ESP32 Bluetooth with name  ESP32
-#include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
-
 
 PlotterDDLayer* plotterLayer;
 LcdDDLayer* micTabLayer;
@@ -25,15 +34,22 @@ LcdDDLayer* amplifyLblLayer;
 LedGridDDLayer* amplifyMeterLayer;
 
 
+
+
 const char* SoundName = "recorded_sound";
+
+
+const int I2S_DMA_BUF_COUNT = 8;
+const int I2S_DMA_BUF_LEN = 1024;
 
 const int SoundSampleRate = 8000;  // will be 16-bit per sample
 const int SoundNumChannels = 1;
 
+
 // 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 256 bytes = 16 ms per read
-const int BufferNumBytes = 256;
-const int BufferLen = BufferNumBytes / 2;
-int16_t Buffer[BufferLen];
+const int StreamBufferNumBytes = 256;
+const int StreamBufferLen = StreamBufferNumBytes / 2;
+int16_t StreamBuffer[StreamBufferLen];
 
 // sound sample (16 bits) amplification
 const int MaxAmplifyFactor = 20;
@@ -68,7 +84,7 @@ void setup() {
 
   dumbdisplay.recordLayerSetupCommands();  // start recording the layout commands
 
-  plotterLayer = dumbdisplay.createPlotterLayer(1024, 256, SoundSampleRate / BufferLen);
+  plotterLayer = dumbdisplay.createPlotterLayer(1024, 256, SoundSampleRate / StreamBufferLen);
 
   // create "MIC/REC/PLAY" lcd layers, as tab
   micTabLayer = dumbdisplay.createLcdLayer(8, 1);
@@ -224,7 +240,7 @@ void loop() {
 
   // read I2S data and place in data buffer
   size_t bytesRead = 0;
-  esp_err_t result = i2s_read(I2S_PORT, &Buffer, BufferNumBytes, &bytesRead, portMAX_DELAY);
+  esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
  
   int16_t samplesRead = 0;
   if (result == ESP_OK) {
@@ -233,7 +249,7 @@ void loop() {
       // find the samples mean ... and amplify the sound sample, by simply multiple it by some "amplify factor"
       float sumVal = 0;
       for (int i = 0; i < samplesRead; ++i) {
-        int32_t val = Buffer[i];
+        int32_t val = StreamBuffer[i];
         if (amplifyFactor > 1) {
           val = amplifyFactor * val;
           if (val > 32700) {
@@ -241,7 +257,7 @@ void loop() {
           } else if (val < -32700) {
             val = -32700;
           }
-          Buffer[i] = val;
+          StreamBuffer[i] = val;
         }
         sumVal += val;
       }
@@ -296,7 +312,7 @@ void loop() {
     if (soundChunkId != -1) {
       // send sound samples read
       bool isFinalChunk = !started;  // it is the final chink if justed turned to stop
-      dumbdisplay.sendSoundChunk16(soundChunkId, Buffer, samplesRead, isFinalChunk);
+      dumbdisplay.sendSoundChunk16(soundChunkId, StreamBuffer, samplesRead, isFinalChunk);
       streamingTotalSampleCount += samplesRead;
       if (isFinalChunk) {
         dumbdisplay.writeComment(String("DONE streaming with chunk id [") + soundChunkId + "]");
@@ -320,8 +336,8 @@ void i2s_install() {
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = 0,
-    .dma_buf_count = 8,
-    .dma_buf_len = 1024,
+    .dma_buf_count = I2S_DMA_BUF_COUNT/*8*/,
+    .dma_buf_len = I2S_DMA_BUF_LEN/*1024*/,
     .use_apll = false
   };
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
