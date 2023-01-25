@@ -1,16 +1,3 @@
-
-#define USE_BLUETOOTH
-#if defined(USE_BLUETOOTH)
-  // ESP32 Bluetooth with name  ESP32
-  #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
-#else
-  // ESP32 WiFi
-  #include "wifidumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
-#endif
-
-
 // I2S driver
 #include <driver/i2s.h>
  
@@ -22,6 +9,19 @@
 // I2S processor
 #define I2S_PORT I2S_NUM_0
 
+
+
+
+#define USE_BLUETOOTH
+#if defined(USE_BLUETOOTH)
+  // ESP32 Bluetooth with name  ESP32
+  #include "esp32dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
+#else
+  // ESP32 WiFi
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+#endif
 
 
 PlotterDDLayer* plotterLayer;
