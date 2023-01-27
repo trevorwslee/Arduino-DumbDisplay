@@ -524,6 +524,8 @@ class PlotterDDLayer: public DDLayer {
     /* if key has no label, the key will be the label */
     void label(const String& key, const String& lab);
     inline void label(const String& lab) { label("", lab); }
+    // template<class... Args>
+    // void setEx(Args... keyOrValue);
     /* set value of certain key */
     /* note that key can be empty */
     void set(const String& key, float value);  
@@ -894,6 +896,7 @@ class DumbDisplay {
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
+    PlotterDDLayer* createFixedRatePlotterLayer(int width, int height, int pixelsPerScale = 5);
     /* . mapKey must be provide; plesae visit TomTom's website to get one of your own */
     /*   if pass in "" as mapKey, will use my testing one */
     TomTomMapDDLayer* createTomTomMapLayer(const String& mapKey, int width, int height);

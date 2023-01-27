@@ -283,10 +283,11 @@ void loop() {
     if (soundChunkId == -1) {
       // while started ... if no allocated "chunk id" (i.e. not yet started sending sound)
       if (what == 1) {
-        // start sending sound, and get the assigned "shunk id"
+        // start streaming sound, and get the assigned "chunk id"
         soundChunkId = dumbdisplay.streamSound16(SoundSampleRate, SoundNumChannels); // sound is 16 bits per sample
         dumbdisplay.writeComment(String("STARTED mic streaming with chunk id [") + soundChunkId + "]");
       } else if (what == 2) {
+        // started saving sound, and get the assigned "chunk id" 
         soundChunkId = dumbdisplay.saveSoundChunked16(SoundName, SoundSampleRate, SoundNumChannels);
         dumbdisplay.writeComment(String("STARTED record streaming with chunk id [") + soundChunkId + "]");
       }
