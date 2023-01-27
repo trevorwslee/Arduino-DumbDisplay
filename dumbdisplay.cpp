@@ -2386,6 +2386,14 @@ PlotterDDLayer* DumbDisplay::createPlotterLayer(int width, int height, int pixel
   _PostCreateLayer(pLayer);
   return pLayer;
 }
+PlotterDDLayer* DumbDisplay::createFixedRatePlotterLayer(int width, int height, int pixelsPerScale) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand4(layerId, "SU", String("fixedrateplotter"), String(width), String(height), String(pixelsPerScale));
+  PlotterDDLayer* pLayer = new PlotterDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
+}
 TomTomMapDDLayer* DumbDisplay::createTomTomMapLayer(const String& mapKey, int width, int height) {
   int lid = _AllocLid();
   String layerId = String(lid);
