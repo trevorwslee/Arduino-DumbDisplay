@@ -34,7 +34,7 @@ int16_t StreamBuffer[StreamBufferLen];
 const int MaxAmplifyFactor = 40;
 const int DefAmplifyFactor = 20;
 
-const int32_t SilentThreshold = 200;
+const int32_t SilentThreshold = 200;//200;
 const long StopCacheSilentMillis = 1000;
 const long MaxCacheVoiceMillis = 30000;
 
@@ -94,6 +94,7 @@ void setup() {
   statusLayer->pixelColor("darkblue");
   statusLayer->border(3, "blue");
   statusLayer->backgroundColor("white");
+  statusLayer->writeCenteredLine("not ready");
 
   // create / setup "tunnel" etc to send detect request
   witTunnel = dumbdisplay.createJsonTunnel("", false);
@@ -113,7 +114,7 @@ void setup() {
     .addLayer(statusLayer);
   dumbdisplay.configAutoPin(autoPinBuilder.build());
 
-  dumbdisplay.playbackLayerSetupCommands("esp32ddmice");  // playback the stored layout commands, as well as persist the layout to phone, so that can reconnect
+  dumbdisplay.playbackLayerSetupCommands("esp32ddvoicecommander");  // playback the stored layout commands, as well as persist the layout to phone, so that can reconnect
 
   // set when DD idle handler ... here is a lambda expression
   dumbdisplay.setIdleCalback([](long idleForMillis) {
@@ -132,6 +133,7 @@ void loop() {
   bool updateAmplifyFactor = false;
   if (cvTracker.checkChanged(dumbdisplay)) {
     micLayer->writeCenteredLine("MIC", 1);
+    statusLayer->clear();
     updateAmplifyFactor = true;
   }
 
@@ -215,7 +217,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
   int32_t silentThreshold = SilentThreshold/*200*/ * amplifyFactor;
   //dumbdisplay.writeComment("using mic");
   micLayer->writeCenteredLine("stop", 1);
-  statusLayer->writeCenteredLine("... listening ...");
+  statusLayer->writeCenteredLine("... hearing ...");
   long startMillis = -1;//millis();
   long totalSampleCount = 0;
   long lastHighMillis = -1;
@@ -257,7 +259,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
       if (startMillis == -1) {
         if (lastHighMillis != -1) {
           startMillis = millis();
-          statusLayer->writeCenteredLine("... hearing ...");
+          statusLayer->writeCenteredLine("... listening ...");
         }
       }
       if (startMillis != -1) {
