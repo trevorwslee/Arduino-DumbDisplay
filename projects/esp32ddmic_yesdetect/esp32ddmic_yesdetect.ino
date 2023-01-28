@@ -1,26 +1,52 @@
-
-#if defined(ESP32)
-
-  // ESP32 Bluetooth with name BT32
-  #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200));
+#define WITH_I2S_MIC
 
 
-#else
+// ESP32 Bluetooth with name BT32
+#include "esp32dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
 
-  // for connection
-  // . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
-  // . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
-  #include "dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
+#if defined(WITH_I2S_MIC)
+  // I2S driver
+  #include <driver/i2s.h>
+
+  // INMP441 I2S pin assignment
+  #define I2S_WS 25
+  #define I2S_SD 33
+  #define I2S_SCK 32
+ 
+  // I2S processor
+  #define I2S_PORT I2S_NUM_0
+
+  const int I2S_DMA_BUF_COUNT = 8;
+  const int I2S_DMA_BUF_LEN = 1024;
+
+  const int SoundSampleRate = 8000;  // will be 16-bit per sample
+  const int SoundNumChannels = 1;
+
+
+  // 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 256 bytes = 16 ms per read
+  const int StreamBufferNumBytes = 2048;//256;
+  const int StreamBufferLen = StreamBufferNumBytes / 2;
+  int16_t StreamBuffer[StreamBufferLen];
+
+  // sound sample (16 bits) amplification
+  //const int MaxAmplifyFactor = 20;
+  //const int DefAmplifyFactor = 10;
+  const int AmplifyFactor = 20;
+  //const int QuiteThreshold = 1000;
+
+  void i2s_install();
+  void i2s_setpin();
 #endif
+
 
 
 const char* YesWavFileName = "voice_yes.wav";
 const char* NoWavFileName = "voice_no.wav";
 const char* WellWavFileName = "voice_well.wav";
 const char* BarkWavFileName = "sound_bark.wav";
+const char* MicSound = "mic_sound";
 
 
 // declare "YES" (etc) lcd layers, acting as buttons ... they will be created in setup block
@@ -33,6 +59,10 @@ LcdDDLayer* detectNoLayer;
 LcdDDLayer* detectWellLayer;
 LcdDDLayer* detectBarkLayer;
 
+#if defined(WITH_I2S_MIC)
+  LcdDDLayer* micLayer;
+#endif
+
 // declears "status" lcd layer ... it will be created in setup block
 LcdDDLayer* statusLayer;
 
@@ -42,6 +72,14 @@ const char* witAccessToken = WIT_ACCESS_TOKEN;
 DDTunnelEndpoint witEndpoint("https://api.wit.ai/speech");
 
 void setup() {
+
+#if defined(WITH_I2S_MIC)
+  // set up I2S
+  i2s_install();
+  i2s_setpin();
+  i2s_start(I2S_PORT);
+#endif
+
   // create "YES" lcd layer, acting as a button
   yesLayer = dumbdisplay.createLcdLayer(16, 3);
   yesLayer->writeCenteredLine("YES", 1);
@@ -106,6 +144,14 @@ void setup() {
   witEndpoint.addHeader("Content-Type", "audio/wav");
   witEndpoint.addParam("text");
 
+#if defined(WITH_I2S_MIC)
+  micLayer = dumbdisplay.createLcdLayer(16, 3);
+  micLayer->writeCenteredLine("MIC", 1);
+  micLayer->border(3, "darkgreen", "round");
+  micLayer->backgroundColor("lightgreen");
+  micLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
+#endif
+
   // auto pin the layers in the desired way
   DDAutoPinConfigBuilder<1> autoPinBuilder('V');
   autoPinBuilder.
@@ -125,9 +171,16 @@ void setup() {
       addLayer(detectWellLayer).
       addLayer(detectBarkLayer).
     endGroup().
+#if defined(WITH_I2S_MIC)
+    addLayer(micLayer).
+#endif
     addLayer(statusLayer);
   dumbdisplay.configAutoPin(autoPinBuilder.build());
 }
+
+#if defined(WITH_I2S_MIC)
+  bool cacheMicSound();
+#endif
 
 void loop() {
 
@@ -144,7 +197,20 @@ void loop() {
   } else if (detectBarkLayer->getFeedback()) {
     // detect "bark"
     detectSound = BarkWavFileName;
+  } else {
+#if defined(WITH_I2S_MIC)
+    if (micLayer->getFeedback()) {
+      detectSound = MicSound;
+    }
+#endif
   }
+#if defined(WITH_I2S_MIC)
+  if (detectSound == MicSound) {
+    if (!cacheMicSound()) {
+      detectSound = NULL;
+    }
+  }
+#endif
   if (detectSound != NULL) {
     witEndpoint.resetSoundAttachment(detectSound);
     witTunnel->reconnectToEndpoint(witEndpoint);
@@ -203,4 +269,114 @@ void loop() {
   }
 }
 
+#if defined(WITH_I2S_MIC)
+  bool cacheMicSound() {
+    dumbdisplay.writeComment("using mic");
+    micLayer->writeCenteredLine("stop", 1);
+    statusLayer->writeCenteredLine("... listening ...");
+    long startMillis = -1;//millis();
+    long totalSampleCount = 0;
+    long lastHighMillis = -1;
+    int chunkId = dumbdisplay.cacheSoundChunked16(MicSound, SoundSampleRate, SoundNumChannels);
+    //bool ok = true;
+    while (true) {
+      if (micLayer->getFeedback()) {
+        break;
+      }
+      size_t bytesRead = 0;
+      esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
+      if (result != ESP_OK) {
+        startMillis = -1;  // signal something is wrong
+        break;
+      }
+      int samplesRead = bytesRead / 2;  // 16 bit per sample
+      if (samplesRead > 0) {
+        int32_t maxAbsVal = 0;
+        for (int i = 0; i < samplesRead; ++i) {
+          int32_t val = StreamBuffer[i];
+          val = AmplifyFactor * val;
+          if (val > 32700) {
+            val = 32700;
+          } else if (val < -32700) {
+            val = -32700;
+          }
+          StreamBuffer[i] = val;
+          int32_t absVal = abs(val);
+          if (absVal > maxAbsVal) {
+            maxAbsVal = absVal;
+          }
+        }
+        if (maxAbsVal >= (200 * AmplifyFactor)) {
+          //dumbdisplay.writeComment(String(maxAbsVal));
+          lastHighMillis = millis();
+        }
+        if (startMillis == -1) {
+          if (lastHighMillis != -1) {
+            startMillis = millis();
+            statusLayer->writeCenteredLine("... hearing ...");
+          }
+        }
+        if (startMillis != -1) {
+          totalSampleCount += samplesRead;
+          dumbdisplay.sendSoundChunk16(chunkId, StreamBuffer, samplesRead, false);
+        }
+      }
+      if (startMillis != -1) {
+        if (lastHighMillis != -1) {
+          if ((millis() - lastHighMillis) >= 1000) {
+            // if silent for more than a second, stop it
+            break;
+          }
+        }
+        if ((millis() - startMillis) >= 30000) {
+          // recording too long, force stop it
+          break;
+        }
+      }
+    }
+    dumbdisplay.sendSoundChunk16(chunkId, NULL, 0, true);
+    micLayer->writeCenteredLine("MIC", 1);
+    bool ok = startMillis != -1 && totalSampleCount > 0;
+    if (ok) {
+      float forHowLongS = (float) totalSampleCount / 8000;
+      statusLayer->writeCenteredLine("... got it ...");
+      dumbdisplay.playSound(MicSound);
+      delay(1000 * (1 + forHowLongS));
+    }
+    statusLayer->clear();
+    return ok;
+  }
+#endif
 
+
+
+
+#if defined(WITH_I2S_MIC)
+
+  void i2s_install() {
+    const i2s_config_t i2s_config = {
+      .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
+      .sample_rate = SoundSampleRate,
+      .bits_per_sample = i2s_bits_per_sample_t(16),
+      .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+      .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
+      .intr_alloc_flags = 0,
+      .dma_buf_count = I2S_DMA_BUF_COUNT/*8*/,
+      .dma_buf_len = I2S_DMA_BUF_LEN/*1024*/,
+      .use_apll = false
+    };
+    i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
+  }
+  
+  void i2s_setpin() {
+    const i2s_pin_config_t pin_config = {
+      .bck_io_num = I2S_SCK,
+      .ws_io_num = I2S_WS,
+      .data_out_num = -1,
+      .data_in_num = I2S_SD
+    };
+    i2s_set_pin(I2S_PORT, &pin_config);
+  }
+
+
+#endif
