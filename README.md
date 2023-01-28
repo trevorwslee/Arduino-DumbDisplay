@@ -30,6 +30,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   * [Caching Single-bit Bitmap to Phone](#caching-single-bit-bitmap-to-phone)
   * [Caching 16-bit Colored Bitmap to Phone](#caching-16-bit-colored-bitmap-to-phone)
   * [Save Images](#save-images)
+  * [Audio Supports](#audio-supports)
 * [Reference](#reference)
 * [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
 * [Thank You!](#thank-you)
@@ -1372,7 +1373,7 @@ The cached 16-bit pixel image is displayed to graphical layer as needed, like
 
 | | |
 |--|--|
-|In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by my post [Adaptation of "Space Wars" Game with DumbDisplay](https://create.arduino.cc/projecthub/trevorwslee/adaptation-of-space-wars-game-with-dumbdisplay-a09c42?ref=user&ref_id=2044336&offset=0).|![](screenshots/ddspacewars.gif)|
+|In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by my post [Adaptation of "Space Wars" Game with DumbDisplay](https://www.instructables.com/Adaptation-of-Space-Wars-Game-With-DumbDisplay/).|![](screenshots/ddspacewars.gif)|
 
 
 
@@ -1387,6 +1388,13 @@ Notes:
 * not only from Chrome, you can share and save images from any app that can share images that it sees
 * images saved to DumbDisplay app's image storage will always be PNG; hence when asked for image name, you don't need the ".png" extension
 
+
+
+## Audio Supports 
+
+| | |
+|--|--|
+|![](screenshots/esp32-mic.png)|DumbDisplay have certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports.|
 
 
 
