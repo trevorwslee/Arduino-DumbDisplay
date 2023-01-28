@@ -33,8 +33,11 @@ int16_t StreamBuffer[StreamBufferLen];
 // sound sample (16 bits) amplification
 const int MaxAmplifyFactor = 40;
 const int DefAmplifyFactor = 20;
-//const int AmplifyFactor = 20;
-//const int QuiteThreshold = 1000;
+
+const int32_t SilentThreshold = 200;
+const long StopCacheSilentMillis = 1000;
+const long MaxCacheVoiceMillis = 30000;
+
 
 void i2s_install();
 void i2s_setpin();
@@ -53,6 +56,12 @@ JsonDDTunnel* witTunnel;
 const char* witAccessToken = WIT_ACCESS_TOKEN;
 DDTunnelEndpoint witEndpoint("https://api.wit.ai/speech");
 
+
+DDConnectVersionTracker cvTracker(-1);  // it is for tracking [new] DD connection established 
+int amplifyFactor = DefAmplifyFactor;
+bool cachingVoice = false;
+
+
 void setup() {
 
   // set up I2S
@@ -61,8 +70,10 @@ void setup() {
   i2s_start(I2S_PORT);
 
 
+  dumbdisplay.recordLayerSetupCommands();  // start recording the layout commands
+
   micLayer = dumbdisplay.createLcdLayer(16, 3);
-  micLayer->writeCenteredLine("MIC", 1);
+  //micLayer->writeCenteredLine("MIC", 1);
   micLayer->border(3, "darkgreen", "round");
   micLayer->backgroundColor("lightgreen");
   micLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
@@ -73,7 +84,7 @@ void setup() {
   amplifyLblLayer->noBackgroundColor();
 
   // create "amplify" meter layer
-  amplifyMeterLayer = dumbdisplay.createLedGridLayer(MaxAmplifyFactor, 1, 1, 2);
+  amplifyMeterLayer = dumbdisplay.createLedGridLayer(MaxAmplifyFactor, 1, 1, 5);
   amplifyMeterLayer->onColor("darkblue");
   amplifyMeterLayer->offColor("lightgray");
   amplifyMeterLayer->border(0.2, "blue");
@@ -101,21 +112,44 @@ void setup() {
     .endGroup()  
     .addLayer(statusLayer);
   dumbdisplay.configAutoPin(autoPinBuilder.build());
+
+  dumbdisplay.playbackLayerSetupCommands("esp32ddmice");  // playback the stored layout commands, as well as persist the layout to phone, so that can reconnect
+
+  // set when DD idle handler ... here is a lambda expression
+  dumbdisplay.setIdleCalback([](long idleForMillis) {
+    cachingVoice = false;  // if idle, e.g. disconnected, stop whatever
+  });
+
 }
 
 
 bool cacheMicVoice(int amplifyFactor, bool playback);
 
 
-int amplifyFactor = DefAmplifyFactor;
-
 void loop() {
+
+
+  bool updateAmplifyFactor = false;
+  if (cvTracker.checkChanged(dumbdisplay)) {
+    micLayer->writeCenteredLine("MIC", 1);
+    updateAmplifyFactor = true;
+  }
+
+  const DDFeedback* feedback = amplifyMeterLayer->getFeedback();
+  if (feedback != NULL) {
+      amplifyFactor = feedback->x + 1;
+      updateAmplifyFactor = true;
+  }
+
+  if (updateAmplifyFactor) {
+    amplifyMeterLayer->horizontalBar(amplifyFactor);
+    amplifyLblLayer->writeLine(String(amplifyFactor), 0, "R");
+  }
 
   bool cachedMicVoice = false;
   if (micLayer->getFeedback()) {
     cachedMicVoice = cacheMicVoice(amplifyFactor, true);
   }
-
 
   if (cachedMicVoice) {
     witEndpoint.resetSoundAttachment(MicVoiceName);
@@ -127,9 +161,9 @@ void loop() {
       String fieldValue;
       if (witTunnel->read(fieldId, fieldValue)) {
         if (fieldValue != "") {
-          dumbdisplay.writeComment(fieldValue);
+          //dumbdisplay.writeComment(fieldValue);
           detected = fieldValue;
-          statusLayer->writeCenteredLine(String("... ") + " [" + detected + "] ...");
+          statusLayer->writeCenteredLine(String("[") + detected + "]");
         }
       }
     }
@@ -177,7 +211,8 @@ void loop() {
 }
 
 bool cacheMicVoice(int amplifyFactor, bool playback) {
-  int32_t silentThreshold = 200 * amplifyFactor;
+  cachingVoice = true;
+  int32_t silentThreshold = SilentThreshold/*200*/ * amplifyFactor;
   //dumbdisplay.writeComment("using mic");
   micLayer->writeCenteredLine("stop", 1);
   statusLayer->writeCenteredLine("... listening ...");
@@ -192,7 +227,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
     }
     size_t bytesRead = 0;
     esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
-    if (result != ESP_OK) {
+    if (result != ESP_OK || !cachingVoice) {
       startMillis = -1;  // signal something is wrong
       break;
     }
@@ -216,7 +251,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
         }
       }
       if (maxAbsVal >= silentThreshold/*(200 * AmplifyFactor)*/) {
-        dumbdisplay.writeComment(String(maxAbsVal));
+        //dumbdisplay.writeComment(String(maxAbsVal));
         lastHighMillis = millis();
       }
       if (startMillis == -1) {
@@ -232,12 +267,12 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
     }
     if (startMillis != -1) {
       if (lastHighMillis != -1) {
-        if ((millis() - lastHighMillis) >= 1000) {
-          // if silent for more than a second, stop it
+        if ((millis() - lastHighMillis) >= StopCacheSilentMillis/*1000*/) {
+          // if silent for a bit long, stop it
           break;
         }
       }
-      if ((millis() - startMillis) >= 30000) {
+      if ((millis() - startMillis) >= MaxCacheVoiceMillis/*30000*/) {
         // recording too long, force stop it
         break;
       }
@@ -253,6 +288,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
     delay(1000 * (1 + forHowLongS));
   }
   statusLayer->clear();
+  cachingVoice = false;
   return ok;
 }
 
