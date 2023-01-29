@@ -44,6 +44,7 @@ void i2s_setpin();
 
 
 const char* MicVoiceName = "mic_voice";
+const char* OkSoundName = "voice_ok.wav";
 
 
 LcdDDLayer* micLayer;
@@ -183,8 +184,11 @@ void loop() {
       dumbdisplay.writeComment("... detected:");
       dumbdisplay.writeComment(String(". ENTITY : ") + entity);
       dumbdisplay.writeComment(String(". TRAIT  : ") + trait);
+      dumbdisplay.playSound(OkSoundName);
     } else {
       dumbdisplay.writeComment("... nothing");
+      dumbdisplay.tone(1500, 200);
+      delay(200);
     }
     micLayer->writeCenteredLine("MIC", 1);
     statusLayer->clear();
@@ -235,7 +239,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
   cachingVoice = true;
   int32_t silentThreshold = SilentThreshold/*200*/ * amplifyFactor;
   //dumbdisplay.writeComment("using mic");
-  micLayer->writeCenteredLine("stop", 1);
+  micLayer->writeCenteredLine("done", 1);
   statusLayer->writeCenteredLine("... hearing ...");
   long startMillis = -1;//millis();
   long totalSampleCount = 0;
