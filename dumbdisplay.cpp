@@ -71,7 +71,8 @@
 //#define DD_SID "Arduino-c2"
 //#define DD_SID "Arduino-c3"
 //#define DD_SID "Arduino-c4"
-#define DD_SID "Arduino-c5"
+//#define DD_SID "Arduino-c5"
+#define DD_SID "Arduino-c6"
 
 
 #include "_dd_commands.h"
@@ -2116,25 +2117,30 @@ bool BasicDDTunnel::read(String& fieldId, String& fieldValue) {
   if (!_readLine(fieldValue)) {
     return false;
   }
-  int idx = fieldValue.indexOf(":");
-  if (idx != -1) {
-    fieldId = fieldValue.substring(0, idx);
-    fieldValue = fieldValue.substring(idx + 1);
+  if (_DDCompatibility >= 6) {
+    if (fieldValue.length() > 0) {
+      if (fieldValue.charAt(0) == '"') {
+        int idx = fieldValue.indexOf("\":");
+        if (idx != -1) {
+          fieldId = fieldValue.substring(1, idx);
+          fieldValue = fieldValue.substring(idx + 2);
+        }
+      } else {
+        int idx = fieldValue.indexOf(":");
+        if (idx != -1) {
+          fieldId = fieldValue.substring(0, idx);
+          fieldValue = fieldValue.substring(idx + 1);
+        }
+      }
+    }
+  } else {
+    int idx = fieldValue.indexOf(":");
+    if (idx != -1) {
+      fieldId = fieldValue.substring(0, idx);
+      fieldValue = fieldValue.substring(idx + 1);
+    }
   }
   return true;
-  // String buffer;
-  // if (!_readLine(buffer)) {
-  //   return false;
-  // }
-  // int idx = buffer.indexOf(":");
-  // if (idx != -1) {
-  //   fieldId = buffer.substring(0, idx);
-  //   fieldValue = buffer.substring(idx + 1);
-  // } else {
-  //   fieldId = "";
-  //   fieldValue = buffer;
-  // }
-  // return true;
 }
 // bool JsonDDTunnel::read(String& fieldId, String& fieldValue) {
 //   fieldId = "";

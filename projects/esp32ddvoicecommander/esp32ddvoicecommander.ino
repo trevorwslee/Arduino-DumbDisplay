@@ -53,7 +53,7 @@ LcdDDLayer* statusLayer;
 
 // declare "tunnel" etc to send detect request to api.wit.ai ... please get "access token" from api.wit.ai
 JsonDDTunnel* witTunnel;
-const char* witAccessToken = WIT_ACCESS_TOKEN;
+const char* witAccessToken = WIT_VC_ACCESS_TOKEN;
 DDTunnelEndpoint witEndpoint("https://api.wit.ai/speech");
 
 
@@ -101,6 +101,7 @@ void setup() {
   witEndpoint.addHeader("Authorization", String("Bearer ") + witAccessToken);
   witEndpoint.addHeader("Content-Type", "audio/wav");
   witEndpoint.addParam("text");
+  witEndpoint.addParam("value");
 
 
   // auto pin the layers in the desired way
@@ -156,19 +157,37 @@ void loop() {
   if (cachedMicVoice) {
     witEndpoint.resetSoundAttachment(MicVoiceName);
     witTunnel->reconnectToEndpoint(witEndpoint);
+    micLayer->writeCenteredLine("...", 1);
     statusLayer->writeCenteredLine("... detecting ...");
-    String detected = "";
+    dumbdisplay.writeComment("detecting ...");
+    //String detected = "";
+    String entity;
+    String trait;
     while (!witTunnel->eof()) {
       String fieldId;
       String fieldValue;
       if (witTunnel->read(fieldId, fieldValue)) {
-        if (fieldValue != "") {
-          //dumbdisplay.writeComment(fieldValue);
-          detected = fieldValue;
-          statusLayer->writeCenteredLine(String("[") + detected + "]");
+        //dumbdisplay.writeComment(String(". [") + fieldId + "]=" + fieldValue);
+        if (fieldId.startsWith("entities.") && fieldId.endsWith(".value")) {
+          //dumbdisplay.writeComment(String(". [") + fieldId + "]=" + fieldValue);
+          entity = fieldValue;
+        } else if (fieldId.startsWith("traits.") && fieldId.endsWith(".value")) {
+          //dumbdisplay.writeComment(String(". [") + fieldId + "]=" + fieldValue);
+          trait = fieldValue;
+        } else if (fieldId == "text") {
+          dumbdisplay.writeComment(String("   {") + fieldValue + "}");
         }
       }
     }
+    if (entity.length() > 0 && trait.length() > 0) {
+      dumbdisplay.writeComment("... detected:");
+      dumbdisplay.writeComment(String(". ENTITY : ") + entity);
+      dumbdisplay.writeComment(String(". TRAIT  : ") + trait);
+    } else {
+      dumbdisplay.writeComment("... nothing");
+    }
+    micLayer->writeCenteredLine("MIC", 1);
+    statusLayer->clear();
     // detectSound = NULL;
     // if (detected == "Yes") {
     //   detectSound = YesWavFileName;
@@ -260,7 +279,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
         if (lastHighMillis != -1) {
           startMillis = millis();
           statusLayer->writeCenteredLine("... listening ...");
-        }
+        } 
       }
       if (startMillis != -1) {
         totalSampleCount += samplesRead;
