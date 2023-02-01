@@ -1,4 +1,11 @@
 
+
+#define ENABLE_ESPNOW_REMOTE_COMMANDS
+#define LIGHT_ESP_NOW_MAC   0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
+#define DOOR_ESP_NOW_MAC    0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
+
+
+
 // I2S driver
 #include <driver/i2s.h>
 
@@ -12,7 +19,7 @@
 
 
 
-// ESP32 Bluetooth with name BT32
+// ESP32 Bluetooth with name ESP32
 #include "esp32dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
 
@@ -26,7 +33,7 @@ const int SoundNumChannels = 1;
 
 
 // 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 2048 bytes = 128 ms per read
-const int StreamBufferNumBytes = 2048;//256;
+const int StreamBufferNumBytes = 2048;
 const int StreamBufferLen = StreamBufferNumBytes / 2;
 int16_t StreamBuffer[StreamBufferLen];
 
@@ -34,13 +41,17 @@ int16_t StreamBuffer[StreamBufferLen];
 const int MaxAmplifyFactor = 40;
 const int DefAmplifyFactor = 20;
 
-const int32_t SilentThreshold = 200;//200;
+const int32_t SilentThreshold = 200;
 const long StopCacheSilentMillis = 1000;
 const long MaxCacheVoiceMillis = 30000;
 
 
 void i2s_install();
 void i2s_setpin();
+
+#if defined(ENABLE_ESPNOW_REMOTE_COMMANDS)
+  bool espnow_init();
+#endif
 
 
 const char* MicVoiceName = "mic_voice";
@@ -65,16 +76,25 @@ bool cachingVoice = false;
 
 void setup() {
 
-  // set up I2S
+  dumbdisplay.connect();  // explicitly connect ... so that can write comments
+
+  dumbdisplay.writeComment("set up I2S ...");
   i2s_install();
   i2s_setpin();
   i2s_start(I2S_PORT);
+  dumbdisplay.writeComment("... done set up I2S");
+
+
+#if defined(ENABLE_ESPNOW_REMOTE_COMMANDS)
+  dumbdisplay.writeComment("init ESP-NOW ...");
+  espnow_init();
+  dumbdisplay.writeComment("... done init ESP-NOW");
+#endif  
 
 
   dumbdisplay.recordLayerSetupCommands();  // start recording the layout commands
 
   micLayer = dumbdisplay.createLcdLayer(16, 3);
-  //micLayer->writeCenteredLine("MIC", 1);
   micLayer->border(3, "darkgreen", "round");
   micLayer->backgroundColor("lightgreen");
   micLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
@@ -91,6 +111,7 @@ void setup() {
   amplifyMeterLayer->border(0.2, "blue");
   amplifyMeterLayer->enableFeedback("fa:rpt50");  // rep50 means auto repeat every 50 milli-seconds
 
+  // create "status" layer
   statusLayer = dumbdisplay.createLcdLayer(18, 1);
   statusLayer->pixelColor("darkblue");
   statusLayer->border(3, "blue");
@@ -101,7 +122,7 @@ void setup() {
   witTunnel = dumbdisplay.createJsonTunnel("", false);
   witEndpoint.addHeader("Authorization", String("Bearer ") + witAccessToken);
   witEndpoint.addHeader("Content-Type", "audio/wav");
-  witEndpoint.addParam("text");
+  witEndpoint.addParam("text");  // "text" is not absolutely needed
   witEndpoint.addParam("value");
 
 
@@ -122,15 +143,14 @@ void setup() {
   dumbdisplay.setIdleCalback([](long idleForMillis) {
     cachingVoice = false;  // if idle, e.g. disconnected, stop whatever
   });
-
 }
 
 
 bool cacheMicVoice(int amplifyFactor, bool playback);
+bool sendCommand(const String& commandTarget, const String& commandAction);
 
 
 void loop() {
-
 
   bool updateAmplifyFactor = false;
   if (cvTracker.checkChanged(dumbdisplay)) {
@@ -152,16 +172,16 @@ void loop() {
 
   bool cachedMicVoice = false;
   if (micLayer->getFeedback()) {
-    cachedMicVoice = cacheMicVoice(amplifyFactor, true);
+    cachedMicVoice = cacheMicVoice(amplifyFactor, false);
   }
 
   if (cachedMicVoice) {
+    dumbdisplay.tone(2000, 100);
     witEndpoint.resetSoundAttachment(MicVoiceName);
     witTunnel->reconnectToEndpoint(witEndpoint);
     micLayer->writeCenteredLine("...", 1);
     statusLayer->writeCenteredLine("... detecting ...");
     dumbdisplay.writeComment("detecting ...");
-    //String detected = "";
     String entity;
     String trait;
     while (!witTunnel->eof()) {
@@ -170,10 +190,8 @@ void loop() {
       if (witTunnel->read(fieldId, fieldValue)) {
         //dumbdisplay.writeComment(String(". [") + fieldId + "]=" + fieldValue);
         if (fieldId.startsWith("entities.") && fieldId.endsWith(".value")) {
-          //dumbdisplay.writeComment(String(". [") + fieldId + "]=" + fieldValue);
           entity = fieldValue;
         } else if (fieldId.startsWith("traits.") && fieldId.endsWith(".value")) {
-          //dumbdisplay.writeComment(String(". [") + fieldId + "]=" + fieldValue);
           trait = fieldValue;
         } else if (fieldId == "text") {
           dumbdisplay.writeComment(String("   {") + fieldValue + "}");
@@ -185,67 +203,26 @@ void loop() {
       dumbdisplay.writeComment(String(". ENTITY : ") + entity);
       dumbdisplay.writeComment(String(". TRAIT  : ") + trait);
       dumbdisplay.playSound(OkSoundName);
+      // send the entity and trait got as commend
+      sendCommand(entity, trait);
     } else {
       dumbdisplay.writeComment("... nothing");
-      dumbdisplay.tone(1500, 200);
-      delay(200);
+      dumbdisplay.tone(1500, 100);
     }
     micLayer->writeCenteredLine("MIC", 1);
     statusLayer->clear();
-    // detectSound = NULL;
-    // if (detected == "Yes") {
-    //   detectSound = YesWavFileName;
-    // } else if (detected == "No") {
-    //   detectSound = NoWavFileName;
-    // }
-  
-  //   if (detectSound == NULL) {
-  //     statusLayer->writeCenteredLine("Not YES/NO!");
-  //     dumbdisplay.tone(800, 100);
-  //   } else {
-  //     statusLayer->writeCenteredLine(String("Detected") + " " + detected + "!");
-  //     dumbdisplay.tone(2000, 100);
-  //     delay(200);
-  //     dumbdisplay.playSound(detectSound);
-  //   }
-  //   return;
-  // }
-
-  // String status = "";
-  // if (yesLayer->getFeedback()) {
-  //   // play the pre-installed "YES" WAV file
-  //   dumbdisplay.playSound(YesWavFileName);
-  //   status = "sounded YES";
-  // } else if (noLayer->getFeedback()) {
-  //   // play the pre-installed "NO" WAV file
-  //   dumbdisplay.playSound(NoWavFileName);
-  //   status = "sounded NO";
-  // } else if (wellLayer->getFeedback()) {
-  //   // play the pre-installed "WELL" WAV file
-  //   dumbdisplay.playSound(WellWavFileName);
-  //   status = "sounded bark";
-  // } else if (barkLayer->getFeedback()) {
-  //   // play the pre-installed "bark" WAV file
-  //   dumbdisplay.playSound(BarkWavFileName);
-  //   status = "sounded bark";
-  // }
-  // if (status != "") {
-  //   statusLayer->writeCenteredLine(status);
-  // }
   }
 }
 
 bool cacheMicVoice(int amplifyFactor, bool playback) {
   cachingVoice = true;
-  int32_t silentThreshold = SilentThreshold/*200*/ * amplifyFactor;
-  //dumbdisplay.writeComment("using mic");
+  int32_t silentThreshold = SilentThreshold * amplifyFactor;
   micLayer->writeCenteredLine("done", 1);
   statusLayer->writeCenteredLine("... hearing ...");
-  long startMillis = -1;//millis();
+  long startMillis = -1;
   long totalSampleCount = 0;
   long lastHighMillis = -1;
   int chunkId = dumbdisplay.cacheSoundChunked16(MicVoiceName, SoundSampleRate, SoundNumChannels);
-  //bool ok = true;
   while (true) {
     if (micLayer->getFeedback()) {
       break;
@@ -253,7 +230,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
     size_t bytesRead = 0;
     esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
     if (result != ESP_OK || !cachingVoice) {
-      startMillis = -1;  // signal something is wrong
+      startMillis = -1;  // signal something is wrong .. cancel it
       break;
     }
     int samplesRead = bytesRead / 2;  // 16 bit per sample
@@ -275,8 +252,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
           maxAbsVal = absVal;
         }
       }
-      if (maxAbsVal >= silentThreshold/*(200 * AmplifyFactor)*/) {
-        //dumbdisplay.writeComment(String(maxAbsVal));
+      if (maxAbsVal >= silentThreshold) {
         lastHighMillis = millis();
       }
       if (startMillis == -1) {
@@ -292,13 +268,13 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
     }
     if (startMillis != -1) {
       if (lastHighMillis != -1) {
-        if ((millis() - lastHighMillis) >= StopCacheSilentMillis/*1000*/) {
-          // if silent for a bit long, stop it
+        if ((millis() - lastHighMillis) >= StopCacheSilentMillis) {
+          // if silent for some time, stop it
           break;
         }
       }
-      if ((millis() - startMillis) >= MaxCacheVoiceMillis/*30000*/) {
-        // recording too long, force stop it
+      if ((millis() - startMillis) >= MaxCacheVoiceMillis) {
+        // recording for too long, force stop it
         break;
       }
     }
@@ -327,8 +303,8 @@ void i2s_install() {
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = 0,
-    .dma_buf_count = I2S_DMA_BUF_COUNT/*8*/,
-    .dma_buf_len = I2S_DMA_BUF_LEN/*1024*/,
+    .dma_buf_count = I2S_DMA_BUF_COUNT,
+    .dma_buf_len = I2S_DMA_BUF_LEN,
     .use_apll = false
   };
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
@@ -342,5 +318,102 @@ void i2s_setpin() {
     .data_in_num = I2S_SD
   };
   i2s_set_pin(I2S_PORT, &pin_config);
+}
+
+
+
+
+#if defined(ENABLE_ESPNOW_REMOTE_COMMANDS)
+
+
+#include <esp_now.h>
+#include <WiFi.h>
+
+
+#if defined LIGHT_ESP_NOW_MAC  
+  uint8_t LightReceiverMACAddress[] = { LIGHT_ESP_NOW_MAC };
+  esp_now_peer_info_t LightPeerInfo;
+#endif
+#if defined DOOR_ESP_NOW_MAC  
+  uint8_t DoorReceiverMACAddress[] = { DOOR_ESP_NOW_MAC };
+  esp_now_peer_info_t DoorPeerInfo;
+#endif
+
+
+// define a structure as an ESP Now packet
+struct ESPNowCommandPacket {
+  char commandTarget[16];
+  char commandAction[16];
+};
+
+
+bool espnow_init() {
+  // Set device as a Wi-Fi Station
+  WiFi.mode(WIFI_STA);  // default is STA mode
+  
+  // Init ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    dumbdisplay.writeComment("Error initializing ESP-NOW");
+    return false;
+  }  
+
+  // Register "send callback" lambda expression
+  esp_now_register_send_cb([](const uint8_t *mac_addr, esp_now_send_status_t status) {
+    if (status == ESP_NOW_SEND_SUCCESS) {
+      dumbdisplay.writeComment("Successful sent ESP-NOW packet");
+    } else {
+      dumbdisplay.writeComment("Failed to send ESP-NOW packet");
+    }
+  });
+
+  // Register and Add peers        
+#if defined (LIGHT_ESP_NOW_MAC)  
+  memcpy(LightPeerInfo.peer_addr, LightReceiverMACAddress, 6);
+  LightPeerInfo.channel = 0;  
+  LightPeerInfo.encrypt = false;
+  if (esp_now_add_peer(&LightPeerInfo) != ESP_OK){
+    dumbdisplay.writeComment("Failed to add \"Light\" peer"); }
+#endif  
+#if defined (DOOR_ESP_NOW_MAC)  
+  memcpy(DoorPeerInfo.peer_addr, DoorReceiverMACAddress, 6);
+  DoorPeerInfo.channel = 0;  
+  DoorPeerInfo.encrypt = false;
+  if (esp_now_add_peer(&DoorPeerInfo) != ESP_OK){
+    dumbdisplay.writeComment("Failed to add \"Door\" peer");
+  }
+#endif  
+
+  return true;
+}
+
+#endif
+
+
+const uint8_t* getCommandReceiverMACAddress(const String& commandTraget, const String& commandAction) {
+#if defined LIGHT_ESP_NOW_MAC
+  if (commandAction == "on" || commandAction == "off") {
+    return LightReceiverMACAddress;
+  }  
+#endif
+#if defined (DOOR_ESP_NOW_MAC)  
+  if (commandAction == "lock" || commandAction == "unlock") {
+    return DoorReceiverMACAddress;
+  }  
+#endif
+  return NULL;
+}
+
+bool sendCommand(const String& commandTarget, const String& commandAction) {
+  dumbdisplay.writeComment(String("command [") + commandTarget + "] to [" + commandAction + "]");
+  const uint8_t* receiverMACAddress = getCommandReceiverMACAddress(commandTarget, commandAction);
+  if (receiverMACAddress == NULL) {
+    dumbdisplay.writeComment("no command receiver");
+    return false;
+  }
+  ESPNowCommandPacket packet;
+  strcpy(packet.commandTarget, commandTarget.c_str());
+  strcpy(packet.commandAction, commandAction.c_str());
+  esp_now_send(receiverMACAddress, (const uint8_t *) &packet, sizeof(packet));
+  return true;
 }
 
