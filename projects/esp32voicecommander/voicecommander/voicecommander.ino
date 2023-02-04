@@ -1,8 +1,8 @@
 
 
 #define ENABLE_ESPNOW_REMOTE_COMMANDS
-#define LIGHT_ESP_NOW_MAC   0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
-#define DOOR_ESP_NOW_MAC    0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
+#define LIGHT_ESP_NOW_MAC   0x94, 0xB5, 0x55, 0xC7, 0xCD, 0x60
+//#define DOOR_ESP_NOW_MAC    0x94, 0xB5, 0x55, 0xC7, 0xCD, 0x60
 
 
 
@@ -25,7 +25,7 @@ DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
 
 
 
-const int I2S_DMA_BUF_COUNT = 8;
+const int I2S_DMA_BUF_COUNT = 4;
 const int I2S_DMA_BUF_LEN = 1024;
 
 const int SoundSampleRate = 8000;  // will be 16-bit per sample
@@ -154,7 +154,7 @@ void loop() {
 
   bool updateAmplifyFactor = false;
   if (cvTracker.checkChanged(dumbdisplay)) {
-    micLayer->writeCenteredLine("MIC", 1);
+    micLayer->writeCenteredLine("Start", 1);
     statusLayer->clear();
     updateAmplifyFactor = true;
   }
@@ -170,54 +170,78 @@ void loop() {
     amplifyLblLayer->writeLine(String(amplifyFactor), 0, "R");
   }
 
-  bool cachedMicVoice = false;
   if (micLayer->getFeedback()) {
-    cachedMicVoice = cacheMicVoice(amplifyFactor, false);
-  }
+    amplifyMeterLayer->disabled(true);
 
-  if (cachedMicVoice) {
-    dumbdisplay.tone(2000, 100);
-    witEndpoint.resetSoundAttachment(MicVoiceName);
-    witTunnel->reconnectToEndpoint(witEndpoint);
-    micLayer->writeCenteredLine("...", 1);
-    statusLayer->writeCenteredLine("... detecting ...");
-    dumbdisplay.writeComment("detecting ...");
-    String entity;
-    String trait;
-    while (!witTunnel->eof()) {
-      String fieldId;
-      String fieldValue;
-      if (witTunnel->read(fieldId, fieldValue)) {
-        //dumbdisplay.writeComment(String(". [") + fieldId + "]=" + fieldValue);
-        if (fieldId.startsWith("entities.") && fieldId.endsWith(".value")) {
-          entity = fieldValue;
-        } else if (fieldId.startsWith("traits.") && fieldId.endsWith(".value")) {
-          trait = fieldValue;
-        } else if (fieldId == "text") {
-          dumbdisplay.writeComment(String("   {") + fieldValue + "}");
+    while (true) {
+      
+      micLayer->writeCenteredLine("Stop", 1);
+      
+      // get voice command
+      if (!cacheMicVoice(amplifyFactor, false)) {
+        break;
+      }
+
+      // got voice command ... call Wit.ai (via DD) to recognize it
+      dumbdisplay.tone(2000, 100);
+      witEndpoint.resetSoundAttachment(MicVoiceName);
+      witTunnel->reconnectToEndpoint(witEndpoint);
+      micLayer->disabled(true);
+      micLayer->writeCenteredLine("...", 1);
+      statusLayer->writeCenteredLine("... detecting ...");
+      dumbdisplay.writeComment("detecting ...");
+      
+
+      // gather Wit.ai result
+      String entity;
+      String trait;
+      while (!witTunnel->eof()) {
+        String fieldId;
+        String fieldValue;
+        if (witTunnel->read(fieldId, fieldValue)) {
+          // if (true) {
+          //   dumbdisplay.writeComment(String(". [") + fieldId + "]=" + fieldValue);
+          // }
+          if (fieldId.startsWith("entities.") && fieldId.endsWith(".value")) {
+            entity = fieldValue;
+          } else if (fieldId.startsWith("traits.") && fieldId.endsWith(".value")) {
+            trait = fieldValue;
+          } else if (fieldId == "text") {
+            dumbdisplay.writeComment(String("   {") + fieldValue + "}");
+          }
         }
       }
+
+      // intepret Wit.ai result
+      if (entity.length() > 0 && trait.length() > 0) {
+        // detected voice command ... send it out
+        statusLayer->writeCenteredLine("detected");
+        dumbdisplay.writeComment("... detected:");
+        dumbdisplay.writeComment(String(". ENTITY : ") + entity);
+        dumbdisplay.writeComment(String(". TRAIT  : ") + trait);
+        dumbdisplay.playSound(OkSoundName);
+        // send the entity and trait got as commend
+        sendCommand(entity, trait);
+      } else {
+        // voice command not detected
+        statusLayer->writeCenteredLine("nothing");
+        dumbdisplay.writeComment("... nothing");
+        dumbdisplay.tone(1500, 100);
+      }
+      delay(1000);  // delay a bit listening again (so that the ok / beep sound will not affect voice command recording)
+      statusLayer->clear();
+      micLayer->disabled(false);
     }
-    if (entity.length() > 0 && trait.length() > 0) {
-      dumbdisplay.writeComment("... detected:");
-      dumbdisplay.writeComment(String(". ENTITY : ") + entity);
-      dumbdisplay.writeComment(String(". TRAIT  : ") + trait);
-      dumbdisplay.playSound(OkSoundName);
-      // send the entity and trait got as commend
-      sendCommand(entity, trait);
-    } else {
-      dumbdisplay.writeComment("... nothing");
-      dumbdisplay.tone(1500, 100);
-    }
-    micLayer->writeCenteredLine("MIC", 1);
-    statusLayer->clear();
+
+    micLayer->writeCenteredLine("Start", 1);
+    amplifyMeterLayer->disabled(false);
   }
 }
 
 bool cacheMicVoice(int amplifyFactor, bool playback) {
   cachingVoice = true;
   int32_t silentThreshold = SilentThreshold * amplifyFactor;
-  micLayer->writeCenteredLine("done", 1);
+  //micLayer->writeCenteredLine("done", 1);
   statusLayer->writeCenteredLine("... hearing ...");
   long startMillis = -1;
   long totalSampleCount = 0;
@@ -225,12 +249,13 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
   int chunkId = dumbdisplay.cacheSoundChunked16(MicVoiceName, SoundSampleRate, SoundNumChannels);
   while (true) {
     if (micLayer->getFeedback()) {
+      startMillis = -1;  // cancel it
       break;
     }
     size_t bytesRead = 0;
     esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
     if (result != ESP_OK || !cachingVoice) {
-      startMillis = -1;  // signal something is wrong .. cancel it
+      startMillis = -1;  // cancel it
       break;
     }
     int samplesRead = bytesRead / 2;  // 16 bit per sample
@@ -280,8 +305,12 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
     }
   }
   dumbdisplay.sendSoundChunk16(chunkId, NULL, 0, true);
-  micLayer->writeCenteredLine("MIC", 1);
+  //micLayer->writeCenteredLine("MIC", 1);
   bool ok = startMillis != -1 && totalSampleCount > 0;
+  // if (ok) {
+  //   dumbdisplay.writeComment(String("recordedMillis=") + String(millis() - startMillis));
+  //   dumbdisplay.writeComment(String("totalSampleCount=") + String(totalSampleCount));
+  // }
   if (ok && playback) {
     float forHowLongS = (float) totalSampleCount / 8000;
     statusLayer->writeCenteredLine("... got it ...");
@@ -340,10 +369,10 @@ void i2s_setpin() {
 #endif
 
 
-// define a structure as an ESP Now packet
+// define a structure as ESP Now packet
 struct ESPNowCommandPacket {
-  char commandTarget[16];
-  char commandAction[16];
+  char commandTarget[32];
+  char commandAction[32];
 };
 
 
@@ -362,7 +391,9 @@ bool espnow_init() {
     if (status == ESP_NOW_SEND_SUCCESS) {
       dumbdisplay.writeComment("Successful sent ESP-NOW packet");
     } else {
-      dumbdisplay.writeComment("Failed to send ESP-NOW packet");
+      char mac_str[18];
+      sprintf(mac_str, "%02x:%02x:%02x:%02x:%02x:%02x", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+      dumbdisplay.writeComment(String("Failed to send ESP-NOW packet to ") + mac_str + " ... " + String(status));
     }
   });
 
@@ -371,14 +402,15 @@ bool espnow_init() {
   memcpy(LightPeerInfo.peer_addr, LightReceiverMACAddress, 6);
   LightPeerInfo.channel = 0;  
   LightPeerInfo.encrypt = false;
-  if (esp_now_add_peer(&LightPeerInfo) != ESP_OK){
-    dumbdisplay.writeComment("Failed to add \"Light\" peer"); }
+  if (esp_now_add_peer(&LightPeerInfo) != ESP_OK) {
+    dumbdisplay.writeComment("Failed to add \"Light\" peer");
+  }
 #endif  
 #if defined (DOOR_ESP_NOW_MAC)  
   memcpy(DoorPeerInfo.peer_addr, DoorReceiverMACAddress, 6);
   DoorPeerInfo.channel = 0;  
   DoorPeerInfo.encrypt = false;
-  if (esp_now_add_peer(&DoorPeerInfo) != ESP_OK){
+  if (esp_now_add_peer(&DoorPeerInfo) != ESP_OK) {
     dumbdisplay.writeComment("Failed to add \"Door\" peer");
   }
 #endif  
@@ -413,7 +445,10 @@ bool sendCommand(const String& commandTarget, const String& commandAction) {
   ESPNowCommandPacket packet;
   strcpy(packet.commandTarget, commandTarget.c_str());
   strcpy(packet.commandAction, commandAction.c_str());
-  esp_now_send(receiverMACAddress, (const uint8_t *) &packet, sizeof(packet));
+  if (esp_now_send(receiverMACAddress, (const uint8_t *) &packet, sizeof(packet)) != ESP_OK) {
+    dumbdisplay.writeComment("failed to send command");
+    return false;
+  }
   return true;
 }
 
