@@ -6,17 +6,17 @@
 
 
 
-// #if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
+#if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
 
-//   #include "wifidumbdisplay.h"
-//   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 
-// #else
+#else
 
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput());
 
-//#endif
+#endif
 
 
 // define a structure as ESP Now packet (the same as server)
@@ -28,16 +28,16 @@ struct ESPNowCommandPacket {
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   dumbdisplay.writeComment(String("received command (") + String(len) + ")");
-  // ESPNowCommandPacket packet;
-  // memcpy(&packet, incomingData, sizeof(packet));
-  // const char* commandTarget = packet.commandTarget;
-  // const char* commandAction = packet.commandAction;
-  // dumbdisplay.writeComment(String("received command [") + commandTarget + "] to [" + commandAction + "]");
+  ESPNowCommandPacket packet;
+  memcpy(&packet, incomingData, sizeof(packet));
+  const char* commandTarget = packet.commandTarget;
+  const char* commandAction = packet.commandAction;
+  dumbdisplay.writeComment(String("received command [") + commandTarget + "] to [" + commandAction + "]");
 }
 
 void setup() {
 
-// #if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
+// #if defined(DD_USING_WIFI)
 //   Serial.begin(115200);
 //   Serial.println(WiFi.macAddress());
 //   Serial.println(WiFi.macAddress());
@@ -49,8 +49,13 @@ void setup() {
   dumbdisplay.writeComment("initializing ...");
   dumbdisplay.writeComment(String("... ") + WiFi.macAddress() + " ...");
 
+#if defined(DD_USING_WIFI)
+  // Set device as a Wi-Fi Station and also a Access Point
+  WiFi.mode(WIFI_AP_STA);
+#else
   // Set device as a Wi-Fi Station
-  WiFi.mode(WIFI_STA);  // default is STA mode
+  WiFi.mode(WIFI_STA);
+#endif
 
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
@@ -67,7 +72,10 @@ void setup() {
 
 
 void loop() {
-  dumbdisplay.writeComment(String("My MAC is ") + WiFi.macAddress());
+#if defined(DD_USING_WIFI)
+  Serial.println(String("Client MAC is ") + WiFi.macAddress());
+#endif
+  dumbdisplay.writeComment(String("Client MAC is ") + WiFi.macAddress());
   DDDelay(2000);
 }
 

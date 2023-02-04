@@ -1,6 +1,9 @@
 
 
+// if no ESP-NOW clients, make sure the following line is commented out
 #define ENABLE_ESPNOW_REMOTE_COMMANDS
+
+// define ESP-NOW client ... if only a single ESP-NOW client, comment out the line that define DOOR_ESP_NOW_MAC
 #define LIGHT_ESP_NOW_MAC   0x94, 0xB5, 0x55, 0xC7, 0xCD, 0x60
 //#define DOOR_ESP_NOW_MAC    0x94, 0xB5, 0x55, 0xC7, 0xCD, 0x60
 
@@ -19,10 +22,8 @@
 
 
 
-// ESP32 Bluetooth with name ESP32
-#include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
-
+#include "wifidumbdisplay.h"
+DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 
 
 const int I2S_DMA_BUF_COUNT = 4;
@@ -31,6 +32,9 @@ const int I2S_DMA_BUF_LEN = 1024;
 const int SoundSampleRate = 8000;  // will be 16-bit per sample
 const int SoundNumChannels = 1;
 
+
+
+const bool ReplayVoiceAfterCache = false;
 
 // 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 2048 bytes = 128 ms per read
 const int StreamBufferNumBytes = 2048;
@@ -178,7 +182,7 @@ void loop() {
       micLayer->writeCenteredLine("Stop", 1);
       
       // get voice command
-      if (!cacheMicVoice(amplifyFactor, false)) {
+      if (!cacheMicVoice(amplifyFactor, ReplayVoiceAfterCache)) {
         break;
       }
 
@@ -299,7 +303,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
         }
       }
       if ((millis() - startMillis) >= MaxCacheVoiceMillis) {
-        // recording for too long, force stop it
+        // caching for too long, force stop it
         break;
       }
     }
@@ -377,8 +381,8 @@ struct ESPNowCommandPacket {
 
 
 bool espnow_init() {
-  // Set device as a Wi-Fi Station
-  WiFi.mode(WIFI_STA);  // default is STA mode
+  // Set device as a Wi-Fi Station and also a Access Point
+  WiFi.mode(WIFI_AP_STA);
   
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
@@ -422,21 +426,23 @@ bool espnow_init() {
 
 
 const uint8_t* getCommandReceiverMACAddress(const String& commandTraget, const String& commandAction) {
-#if defined LIGHT_ESP_NOW_MAC
   if (commandAction == "on" || commandAction == "off") {
     return LightReceiverMACAddress;
   }  
-#endif
-#if defined (DOOR_ESP_NOW_MAC)  
   if (commandAction == "lock" || commandAction == "unlock") {
+#if defined (DOOR_ESP_NOW_MAC)  
     return DoorReceiverMACAddress;
-  }  
+#else
+    return LightReceiverMACAddress;
 #endif
+  }  
   return NULL;
 }
 
 bool sendCommand(const String& commandTarget, const String& commandAction) {
   dumbdisplay.writeComment(String("command [") + commandTarget + "] to [" + commandAction + "]");
+
+#if defined(ENABLE_ESPNOW_REMOTE_COMMANDS)
   const uint8_t* receiverMACAddress = getCommandReceiverMACAddress(commandTarget, commandAction);
   if (receiverMACAddress == NULL) {
     dumbdisplay.writeComment("no command receiver");
@@ -449,6 +455,8 @@ bool sendCommand(const String& commandTarget, const String& commandAction) {
     dumbdisplay.writeComment("failed to send command");
     return false;
   }
+#endif  
+
   return true;
 }
 

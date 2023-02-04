@@ -10,6 +10,8 @@
 #endif
 
 
+#define DD_USING_WIFI
+
 
 //#define LOG_DDWIFI_STATUS
 
