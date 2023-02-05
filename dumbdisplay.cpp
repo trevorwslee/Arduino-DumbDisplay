@@ -2336,6 +2336,10 @@ void DumbDisplay::configAutoPin(const String& layoutSpec) {
   _Connect();
   _sendCommand1("", "CFGAP", layoutSpec);
 }
+void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
+  _Connect();
+  _sendCommand1("", "ADDRESTAP", remainingLayoutSpec);
+}
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
   int lid = _AllocLid();
   String layerId = String(lid);

@@ -19,6 +19,9 @@
 #endif
 
 
+GraphicalDDLayer* statusLayer;
+
+
 // define a structure as ESP Now packet (the same as server)
 struct ESPNowCommandPacket {
   char commandTarget[32];
@@ -26,23 +29,25 @@ struct ESPNowCommandPacket {
 };
 
 
+ESPNowCommandPacket ReceivedPacket;
+volatile bool receivedNewCommand = false;
+
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
-  dumbdisplay.writeComment(String("received command (") + String(len) + ")");
-  ESPNowCommandPacket packet;
-  memcpy(&packet, incomingData, sizeof(packet));
-  const char* commandTarget = packet.commandTarget;
-  const char* commandAction = packet.commandAction;
-  dumbdisplay.writeComment(String("received command [") + commandTarget + "] to [" + commandAction + "]");
+  //dumbdisplay.writeComment(String("received command (") + String(len) + ")");
+  if (!receivedNewCommand) {
+    memcpy(&ReceivedPacket, incomingData, sizeof(ReceivedPacket));
+    const char* commandTarget = ReceivedPacket.commandTarget;
+    const char* commandAction = ReceivedPacket.commandAction;
+    statusLayer->clear();
+    statusLayer->println(String("* Received command for [") + commandTarget + "] to [" + commandAction + "]");
+    receivedNewCommand = true;
+  } else {
+    statusLayer->println("* BUSY ... will ignore newly received command");
+
+  }
 }
 
 void setup() {
-
-// #if defined(DD_USING_WIFI)
-//   Serial.begin(115200);
-//   Serial.println(WiFi.macAddress());
-//   Serial.println(WiFi.macAddress());
-//   Serial.println(WiFi.macAddress());
-// #endif
 
   dumbdisplay.connect();
 
@@ -67,16 +72,89 @@ void setup() {
     dumbdisplay.writeComment("Error registering receive callback");
   }
 
+  statusLayer = dumbdisplay.createGraphicalLayer(300, 80);
+  statusLayer->border(5, "darkgreen", "round", 2);
+  //statusLayer->border(5, "darkgreen");
+  statusLayer->backgroundColor("lightgreen");
+  statusLayer->penColor("darkblue");
+  //statusLayer->setTextFont("DL::Roboto");
+
+  DDAutoPinConfigBuilder<1> builder('V');
+  builder.addLayer(statusLayer);
+  builder.addRemainingGroup('H');
+  dumbdisplay.configAutoPin(builder.build());
+
   dumbdisplay.writeComment("... initialized");
 }
 
+struct KnownCommandLayer {
+  String key;
+  DDLayer* layer;
+};
+
+KnownCommandLayer knownCommandLayers[4];  // maximum 4 layers
+int knownCommandLayerCount = 0;
+
+DDLayer* findCommandLayer(const String& commandTarget, const String& commandAction) {
+  String key = commandTarget + ":" + commandAction;
+  for (int i = 0; i < knownCommandLayerCount; i++) {
+    if (knownCommandLayers[i].key == key) {
+      return knownCommandLayers[i].layer;
+    }
+  }
+  DDLayer* layer = NULL;
+  if (commandTarget == "kitchen" || commandTarget == "living room") {
+    LcdDDLayer* lcdLayer = dumbdisplay.createLcdLayer(12, 3);
+    //lcdLayer->border(1, "black");
+    lcdLayer->writeCenteredLine(commandTarget, 1);
+    layer = lcdLayer;
+  } else if (commandTarget == "bedroom" || commandTarget == "balcony") {
+    GraphicalDDLayer* graphicallayer = dumbdisplay.createGraphicalLayer(200, 200);
+    //graphicallayer->border(5, "white");
+    graphicallayer->setTextSize(12);
+    graphicallayer->setTextColor("red");
+    graphicallayer->print(commandTarget);
+    layer = graphicallayer;
+  }
+  if (layer != NULL) {
+    knownCommandLayers[knownCommandLayerCount].key = key;
+    knownCommandLayers[knownCommandLayerCount].layer = layer;
+    knownCommandLayerCount += 1;
+  }
+  return layer;
+}
+
+bool handleCommand(const String& commandTarget, const String& commandAction) {
+  DDLayer* layer = findCommandLayer(commandTarget, commandAction);
+  if (layer != NULL) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+long lastShowIdleMillis = 0;
 
 void loop() {
+  if (receivedNewCommand) {
+    const char* commandTarget = ReceivedPacket.commandTarget;
+    const char* commandAction = ReceivedPacket.commandAction;
+    if (handleCommand(commandTarget, commandAction)) {
+      statusLayer->println(String("- Handled command for [") + commandTarget + "] to [" + commandAction + "]");
+    } else {
+      statusLayer->println(String("- Not handled command for [") + commandTarget + "] to [" + commandAction + "]");
+    }
+    receivedNewCommand = false;
+} else  {
+    long nowMillis = millis();
+    if ((nowMillis - lastShowIdleMillis) >= 5000) {
 #if defined(DD_USING_WIFI)
-  Serial.println(String("Client MAC is ") + WiFi.macAddress());
+      Serial.println(String("MAC is ") + WiFi.macAddress());
 #endif
-  dumbdisplay.writeComment(String("Client MAC is ") + WiFi.macAddress());
-  DDDelay(2000);
+      dumbdisplay.writeComment(String("Idle ... client MAC is ") + WiFi.macAddress());
+      lastShowIdleMillis = nowMillis;
+    }
+  }
 }
 
 
