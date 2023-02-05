@@ -34,16 +34,16 @@ const int SoundNumChannels = 1;
 
 
 
-const bool ReplayVoiceAfterCache = false;
+const bool ReplayVoiceAfterCache = true;
 
-// 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 2048 bytes = 128 ms per read
-const int StreamBufferNumBytes = 2048;
+// 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 4096 bytes = 256 ms per read
+const int StreamBufferNumBytes = 4096;;
 const int StreamBufferLen = StreamBufferNumBytes / 2;
 int16_t StreamBuffer[StreamBufferLen];
 
 // sound sample (16 bits) amplification
-const int MaxAmplifyFactor = 40;
-const int DefAmplifyFactor = 20;
+const int MaxAmplifyFactor = 30;
+const int DefAmplifyFactor = 10;
 
 const int32_t SilentThreshold = 200;
 const int VoiceMinOverSilentThresholdCount = 5;
@@ -233,7 +233,7 @@ void loop() {
         dumbdisplay.writeComment("... nothing");
         dumbdisplay.tone(1500, 100);
       }
-      delay(1000);  // delay a bit listening again (so that the ok / beep sound will not affect voice command recording)
+      delay(2000);  // delay a bit listening again (so that the ok / beep sound will not affect voice command recording)
       statusLayer->clear();
       micLayer->disabled(false);
     }
@@ -322,10 +322,11 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
   // }
   if (ok && playback) {
     float forHowLongS = (float) totalSampleCount / 8000;
-    statusLayer->writeCenteredLine("... got it ...");
+    statusLayer->writeCenteredLine("... replaying ...");
     dumbdisplay.playSound(MicVoiceName);
     delay(1000 * (1 + forHowLongS));
   }
+  statusLayer->writeCenteredLine("... got it ...");
   statusLayer->clear();
   cachingVoice = false;
   return ok;

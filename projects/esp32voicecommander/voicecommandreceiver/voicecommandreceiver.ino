@@ -104,23 +104,39 @@ void setup() {
 
 struct KnownCommandLayer {
   String commandTarget;
+  String commandType;  // onoff / lockunlock
   DDLayer* layer;
+  LedGridDDLayer* getOnOffLayer() {
+    if (commandType == "onoff") {
+      return (LedGridDDLayer*) layer;
+    } else {
+      return NULL;
+    }
+  }
+  GraphicalDDLayer* getLockUnlockLayer() {
+    if (commandType == "lockunlock") {
+      return (GraphicalDDLayer*) layer;
+    } else {
+      return NULL;
+    }
+  }
 };
 
 const int MaxKnownCommandLayers = 4;
-KnownCommandLayer knownCommandLayers[MaxKnownCommandLayers];
-int knownCommandLayerCount = 0;
+KnownCommandLayer KnownCommandLayers[MaxKnownCommandLayers];
+int KnownCommandLayerCount = 0;
 
-DDLayer* findCommandLayer(const String& commandTarget, const String& commandAction) {
+KnownCommandLayer* toKnownCommandLayer(const String& commandTarget, const String& commandAction) {
   //String key = commandTarget + ":" + commandAction;
-  for (int i = 0; i < knownCommandLayerCount; i++) {
-    if (knownCommandLayers[i].commandTarget == commandTarget) {
-      return knownCommandLayers[i].layer;
+  for (int i = 0; i < KnownCommandLayerCount; i++) {
+    if (KnownCommandLayers[i].commandTarget == commandTarget) {
+      return KnownCommandLayers + i;
     }
   }
-  if (knownCommandLayerCount >= MaxKnownCommandLayers) {
+  if (KnownCommandLayerCount >= MaxKnownCommandLayers) {
     return NULL;
   }
+  const char* commandType = NULL;
   DDLayer* layer = NULL;
   if ((commandTarget == "kitchen" || commandTarget == "living room") &&
       (commandAction == "on" || commandAction == "off")) {
@@ -133,6 +149,7 @@ DDLayer* findCommandLayer(const String& commandTarget, const String& commandActi
     ledLayer->onColor("darkgreen");
     ledLayer->offColor("lightgray");
     dumbdisplay.addRemainingAutoPinConfig(DD_AP_VERT_2(label->getLayerId(), ledLayer->getLayerId()));
+    commandType = "onoff";
     layer = ledLayer;
   } else if ((commandTarget == "bedroom" || commandTarget == "balcony") &&
              (commandAction == "lock" || commandAction == "unlock")) {
@@ -147,38 +164,50 @@ DDLayer* findCommandLayer(const String& commandTarget, const String& commandActi
     graphicallayer->setTextColor("red");
     //graphicallayer->print(commandTarget);
     dumbdisplay.addRemainingAutoPinConfig(DD_AP_VERT_2(label->getLayerId(), graphicallayer->getLayerId()));
+    commandType = "lockunlock";
     layer = graphicallayer;
   }
   if (layer != NULL) {
-    knownCommandLayers[knownCommandLayerCount].commandTarget = commandTarget;
-    knownCommandLayers[knownCommandLayerCount].layer = layer;
-    knownCommandLayerCount += 1;
+    KnownCommandLayers[KnownCommandLayerCount].commandTarget = commandTarget;
+    KnownCommandLayers[KnownCommandLayerCount].commandType = commandType;;
+    KnownCommandLayers[KnownCommandLayerCount].layer = layer;
+    KnownCommandLayerCount += 1;
+    return KnownCommandLayers + KnownCommandLayerCount - 1;
+  } else {
+    return NULL;
   }
-  return layer;
 }
 
 bool handleCommand(const String& commandTarget, const String& commandAction) {
-  DDLayer* layer = findCommandLayer(commandTarget, commandAction);
-  if (layer != NULL) {
+  KnownCommandLayer* knownCommandLayer = toKnownCommandLayer(commandTarget, commandAction);
+  if (knownCommandLayer != NULL) {
     if (commandAction == "on") {
-      LedGridDDLayer* ledLayer = (LedGridDDLayer*) layer;
-      ledLayer->turnOn();
-      return true;
+      LedGridDDLayer* ledLayer = knownCommandLayer->getOnOffLayer();
+      if (ledLayer != NULL) {
+        ledLayer->turnOn();
+        return true;
+      }
     }
     if (commandAction == "off") {
-      LedGridDDLayer* ledLayer = (LedGridDDLayer*) layer;
-      ledLayer->turnOff();
-      return true;
+      LedGridDDLayer* ledLayer = knownCommandLayer->getOnOffLayer();
+      if (ledLayer != NULL) {
+        ledLayer->turnOff();
+        return true;
+      }
     }
     if (commandAction == "lock") {
-      GraphicalDDLayer* graphicalLayer = (GraphicalDDLayer*) layer;
-      graphicalLayer->drawImageFileFit(LockImageFileName);
-      return true;
+      GraphicalDDLayer* graphicalLayer = knownCommandLayer->getLockUnlockLayer();
+      if (graphicalLayer != NULL) {
+        graphicalLayer->drawImageFileFit(LockImageFileName);
+        return true;
+      }
     }
     if (commandAction == "unlock") {
-      GraphicalDDLayer* graphicalLayer = (GraphicalDDLayer*) layer;
-      graphicalLayer->drawImageFileFit(UnlockImageFileName);
-      return true;
+      GraphicalDDLayer* graphicalLayer = knownCommandLayer->getLockUnlockLayer();
+      if (graphicalLayer != NULL) {
+        graphicalLayer->drawImageFileFit(UnlockImageFileName);
+        return true;
+      }
     }
   } 
   return false;
@@ -196,6 +225,7 @@ void loop() {
     } else {
       statusLayer->penColor("red");
       statusLayer->println(String("- Not handled command for [") + commandTarget + "] to [" + commandAction + "]");
+      dumbdisplay.tone(1000, 100);
     }
     receivedNewCommand = false;
 } else  {
