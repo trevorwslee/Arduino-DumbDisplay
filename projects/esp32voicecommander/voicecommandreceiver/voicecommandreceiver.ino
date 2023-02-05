@@ -19,7 +19,12 @@
 #endif
 
 
+const char* LockImageFileName = "lock-locked.png";
+const char* UnlockImageFileName = "lock-unlocked.png";
+
 GraphicalDDLayer* statusLayer;
+SimpleToolDDTunnel *lockedTunnel;
+SimpleToolDDTunnel *unlockedTunnel;
 
 
 // define a structure as ESP Now packet (the same as server)
@@ -39,6 +44,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     const char* commandTarget = ReceivedPacket.commandTarget;
     const char* commandAction = ReceivedPacket.commandAction;
     statusLayer->clear();
+    statusLayer->setCursor(0, 0);
+    statusLayer->penColor("black");
     statusLayer->println(String("* Received command for [") + commandTarget + "] to [" + commandAction + "]");
     receivedNewCommand = true;
   } else {
@@ -81,13 +88,16 @@ void setup() {
   //statusLayer->setTextFont("DL::Roboto");
 
   // pin to virtual print frame, which is by default 100x100
-  dumbdisplay.pinLayer(statusLayer, 0, 0, 100, 50);
-  dumbdisplay.pinAutoPinLayers(DD_AP_HORI, 0, 50, 100, 50);
+  dumbdisplay.pinLayer(statusLayer, 0, 0, 100, 35);
+  dumbdisplay.pinAutoPinLayers(DD_AP_HORI, 0, 35, 100, 65);
 
   // DDAutoPinConfigBuilder<1> builder('V');
   // builder.addLayer(statusLayer);
   // builder.addRemainingGroup('H');
   // dumbdisplay.configAutoPin(builder.build());
+
+  lockedTunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", LockImageFileName);
+  unlockedTunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", UnlockImageFileName);
 
   dumbdisplay.writeComment("... initialized");
 }
@@ -112,7 +122,8 @@ DDLayer* findCommandLayer(const String& commandTarget, const String& commandActi
     return NULL;
   }
   DDLayer* layer = NULL;
-  if (commandTarget == "kitchen" || commandTarget == "living room") {
+  if ((commandTarget == "kitchen" || commandTarget == "living room") &&
+      (commandAction == "on" || commandAction == "off")) {
     LcdDDLayer* label = dumbdisplay.createLcdLayer(12, 1);
     label->border(2, "green");
     label->backgroundColor("blue");
@@ -123,7 +134,8 @@ DDLayer* findCommandLayer(const String& commandTarget, const String& commandActi
     ledLayer->offColor("lightgray");
     dumbdisplay.addRemainingAutoPinConfig(DD_AP_VERT_2(label->getLayerId(), ledLayer->getLayerId()));
     layer = ledLayer;
-  } else if (commandTarget == "bedroom" || commandTarget == "balcony") {
+  } else if ((commandTarget == "bedroom" || commandTarget == "balcony") &&
+             (commandAction == "lock" || commandAction == "unlock")) {
     LcdDDLayer* label = dumbdisplay.createLcdLayer(12, 1);
     label->border(2, "green");
     label->backgroundColor("blue");
@@ -133,7 +145,7 @@ DDLayer* findCommandLayer(const String& commandTarget, const String& commandActi
     graphicallayer->backgroundColor("lightgray");
     graphicallayer->setTextSize(12);
     graphicallayer->setTextColor("red");
-    graphicallayer->print(commandTarget);
+    //graphicallayer->print(commandTarget);
     dumbdisplay.addRemainingAutoPinConfig(DD_AP_VERT_2(label->getLayerId(), graphicallayer->getLayerId()));
     layer = graphicallayer;
   }
@@ -148,10 +160,28 @@ DDLayer* findCommandLayer(const String& commandTarget, const String& commandActi
 bool handleCommand(const String& commandTarget, const String& commandAction) {
   DDLayer* layer = findCommandLayer(commandTarget, commandAction);
   if (layer != NULL) {
-    return true;
-  } else {
-    return false;
-  }
+    if (commandAction == "on") {
+      LedGridDDLayer* ledLayer = (LedGridDDLayer*) layer;
+      ledLayer->turnOn();
+      return true;
+    }
+    if (commandAction == "off") {
+      LedGridDDLayer* ledLayer = (LedGridDDLayer*) layer;
+      ledLayer->turnOff();
+      return true;
+    }
+    if (commandAction == "lock") {
+      GraphicalDDLayer* graphicalLayer = (GraphicalDDLayer*) layer;
+      graphicalLayer->drawImageFileFit(LockImageFileName);
+      return true;
+    }
+    if (commandAction == "unlock") {
+      GraphicalDDLayer* graphicalLayer = (GraphicalDDLayer*) layer;
+      graphicalLayer->drawImageFileFit(UnlockImageFileName);
+      return true;
+    }
+  } 
+  return false;
 }
 
 long lastShowIdleMillis = 0;
@@ -161,8 +191,10 @@ void loop() {
     const char* commandTarget = ReceivedPacket.commandTarget;
     const char* commandAction = ReceivedPacket.commandAction;
     if (handleCommand(commandTarget, commandAction)) {
+      statusLayer->penColor("darkgreen");
       statusLayer->println(String("- Handled command for [") + commandTarget + "] to [" + commandAction + "]");
     } else {
+      statusLayer->penColor("red");
       statusLayer->println(String("- Not handled command for [") + commandTarget + "] to [" + commandAction + "]");
     }
     receivedNewCommand = false;

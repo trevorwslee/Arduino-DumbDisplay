@@ -47,7 +47,7 @@ const int DefAmplifyFactor = 20;
 
 const int32_t SilentThreshold = 200;
 const int VoiceMinOverSilentThresholdCount = 5;
-const long StopCacheSilentMillis = 1000;
+const long StopCacheSilentMillis = 1500;
 const long MaxCacheVoiceMillis = 30000;
 
 
