@@ -46,6 +46,7 @@ const int MaxAmplifyFactor = 40;
 const int DefAmplifyFactor = 20;
 
 const int32_t SilentThreshold = 200;
+const int VoiceMinOverSilentThresholdCount = 5;
 const long StopCacheSilentMillis = 1000;
 const long MaxCacheVoiceMillis = 30000;
 
@@ -99,7 +100,7 @@ void setup() {
   dumbdisplay.recordLayerSetupCommands();  // start recording the layout commands
 
   micLayer = dumbdisplay.createLcdLayer(16, 3);
-  micLayer->border(3, "darkgreen", "round");
+  micLayer->border(2, "darkgreen", "round", 2);
   micLayer->backgroundColor("lightgreen");
   micLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
@@ -264,7 +265,8 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
     }
     int samplesRead = bytesRead / 2;  // 16 bit per sample
     if (samplesRead > 0) {
-      int32_t maxAbsVal = 0;
+      //int32_t maxAbsVal = 0;
+      int overThresholdCount = 0;
       for (int i = 0; i < samplesRead; ++i) {
         int32_t val = StreamBuffer[i];
         val = amplifyFactor * val;
@@ -277,11 +279,14 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
           StreamBuffer[i] = val;
         }
         int32_t absVal = abs(val);
-        if (absVal > maxAbsVal) {
-          maxAbsVal = absVal;
+        if (absVal > silentThreshold) {
+          overThresholdCount += 1;
         }
+        // if (absVal > maxAbsVal) {
+        //   maxAbsVal = absVal;
+        // }
       }
-      if (maxAbsVal >= silentThreshold) {
+      if (/*maxAbsVal >= silentThreshold*/overThresholdCount >= VoiceMinOverSilentThresholdCount) {
         lastHighMillis = millis();
       }
       if (startMillis == -1) {

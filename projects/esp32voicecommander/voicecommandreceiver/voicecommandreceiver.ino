@@ -73,51 +73,72 @@ void setup() {
   }
 
   statusLayer = dumbdisplay.createGraphicalLayer(300, 80);
-  statusLayer->border(5, "darkgreen", "round", 2);
+  statusLayer->margin(5);
+  statusLayer->border(5, "blue");
   //statusLayer->border(5, "darkgreen");
-  statusLayer->backgroundColor("lightgreen");
+  statusLayer->backgroundColor("white");
   statusLayer->penColor("darkblue");
   //statusLayer->setTextFont("DL::Roboto");
 
-  DDAutoPinConfigBuilder<1> builder('V');
-  builder.addLayer(statusLayer);
-  builder.addRemainingGroup('H');
-  dumbdisplay.configAutoPin(builder.build());
+  // pin to virtual print frame, which is by default 100x100
+  dumbdisplay.pinLayer(statusLayer, 0, 0, 100, 50);
+  dumbdisplay.pinAutoPinLayers(DD_AP_HORI, 0, 50, 100, 50);
+
+  // DDAutoPinConfigBuilder<1> builder('V');
+  // builder.addLayer(statusLayer);
+  // builder.addRemainingGroup('H');
+  // dumbdisplay.configAutoPin(builder.build());
 
   dumbdisplay.writeComment("... initialized");
 }
 
 struct KnownCommandLayer {
-  String key;
+  String commandTarget;
   DDLayer* layer;
 };
 
-KnownCommandLayer knownCommandLayers[4];  // maximum 4 layers
+const int MaxKnownCommandLayers = 4;
+KnownCommandLayer knownCommandLayers[MaxKnownCommandLayers];
 int knownCommandLayerCount = 0;
 
 DDLayer* findCommandLayer(const String& commandTarget, const String& commandAction) {
-  String key = commandTarget + ":" + commandAction;
+  //String key = commandTarget + ":" + commandAction;
   for (int i = 0; i < knownCommandLayerCount; i++) {
-    if (knownCommandLayers[i].key == key) {
+    if (knownCommandLayers[i].commandTarget == commandTarget) {
       return knownCommandLayers[i].layer;
     }
   }
+  if (knownCommandLayerCount >= MaxKnownCommandLayers) {
+    return NULL;
+  }
   DDLayer* layer = NULL;
   if (commandTarget == "kitchen" || commandTarget == "living room") {
-    LcdDDLayer* lcdLayer = dumbdisplay.createLcdLayer(12, 3);
-    //lcdLayer->border(1, "black");
-    lcdLayer->writeCenteredLine(commandTarget, 1);
-    layer = lcdLayer;
+    LcdDDLayer* label = dumbdisplay.createLcdLayer(12, 1);
+    label->border(2, "green");
+    label->backgroundColor("blue");
+    label->pixelColor("white");
+    label->writeCenteredLine(commandTarget);
+    LedGridDDLayer* ledLayer = dumbdisplay.createLedGridLayer();
+    ledLayer->onColor("darkgreen");
+    ledLayer->offColor("lightgray");
+    dumbdisplay.addRemainingAutoPinConfig(DD_AP_VERT_2(label->getLayerId(), ledLayer->getLayerId()));
+    layer = ledLayer;
   } else if (commandTarget == "bedroom" || commandTarget == "balcony") {
+    LcdDDLayer* label = dumbdisplay.createLcdLayer(12, 1);
+    label->border(2, "green");
+    label->backgroundColor("blue");
+    label->pixelColor("white");
+    label->writeCenteredLine(commandTarget);
     GraphicalDDLayer* graphicallayer = dumbdisplay.createGraphicalLayer(200, 200);
-    //graphicallayer->border(5, "white");
+    graphicallayer->backgroundColor("lightgray");
     graphicallayer->setTextSize(12);
     graphicallayer->setTextColor("red");
     graphicallayer->print(commandTarget);
+    dumbdisplay.addRemainingAutoPinConfig(DD_AP_VERT_2(label->getLayerId(), graphicallayer->getLayerId()));
     layer = graphicallayer;
   }
   if (layer != NULL) {
-    knownCommandLayers[knownCommandLayerCount].key = key;
+    knownCommandLayers[knownCommandLayerCount].commandTarget = commandTarget;
     knownCommandLayers[knownCommandLayerCount].layer = layer;
     knownCommandLayerCount += 1;
   }
