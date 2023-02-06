@@ -4,8 +4,9 @@
 #define ENABLE_ESPNOW_REMOTE_COMMANDS
 
 // define ESP-NOW client ... if only a single ESP-NOW client, comment out the line that define DOOR_ESP_NOW_MAC
-#define LIGHT_ESP_NOW_MAC   0x94, 0xB5, 0x55, 0xC7, 0xCD, 0x60
-//#define DOOR_ESP_NOW_MAC    0x94, 0xB5, 0x55, 0xC7, 0xCD, 0x60
+#define LIGHT_ESP_NOW_MAC     0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
+//#define LIGHT_ESP_NOW_MAC   0x94, 0xB5, 0x55, 0xC7, 0xCD, 0x60
+//#define DOOR_ESP_NOW_MAC    0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
 
 
 
@@ -34,15 +35,13 @@ const int SoundNumChannels = 1;
 
 
 
-const bool ReplayVoiceAfterCache = true;
-
 // 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 4096 bytes = 256 ms per read
 const int StreamBufferNumBytes = 4096;;
 const int StreamBufferLen = StreamBufferNumBytes / 2;
 int16_t StreamBuffer[StreamBufferLen];
 
 // sound sample (16 bits) amplification
-const int MaxAmplifyFactor = 30;
+const int MaxAmplifyFactor = 40;
 const int DefAmplifyFactor = 10;
 
 const int32_t SilentThreshold = 200;
@@ -64,6 +63,7 @@ const char* OkSoundName = "voice_ok.wav";
 
 
 LcdDDLayer* micLayer;
+LcdDDLayer* replayLayer;
 LcdDDLayer* amplifyLblLayer;
 LedGridDDLayer* amplifyMeterLayer;
 LcdDDLayer* statusLayer;
@@ -75,6 +75,7 @@ DDTunnelEndpoint witEndpoint("https://api.wit.ai/speech");
 
 
 DDConnectVersionTracker cvTracker(-1);  // it is for tracking [new] DD connection established 
+bool replayVoiceAfterCache = false;
 int amplifyFactor = DefAmplifyFactor;
 bool cachingVoice = false;
 
@@ -103,6 +104,10 @@ void setup() {
   micLayer->border(2, "darkgreen", "round", 2);
   micLayer->backgroundColor("lightgreen");
   micLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
+
+  replayLayer = dumbdisplay.createLcdLayer(10, 1);
+  //replayLayer->border(0.5, "blue");
+  replayLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create "amplify" label on top the the "amplify" meter layer (to be created next)
   amplifyLblLayer = dumbdisplay.createLcdLayer(12, 1);
@@ -135,10 +140,13 @@ void setup() {
   DDAutoPinConfigBuilder<1> autoPinBuilder('V');
   autoPinBuilder
     .addLayer(micLayer)
-    .beginGroup('S')  // stacked, one on top of another
-      .addLayer(amplifyLblLayer)  
-      .addLayer(amplifyMeterLayer)
-    .endGroup()  
+    .beginGroup('H')
+      .addLayer(replayLayer)
+      .beginGroup('S')  // stacked, one on top of another
+        .addLayer(amplifyLblLayer)  
+        .addLayer(amplifyMeterLayer)
+      .endGroup()
+    .endGroup()    
     .addLayer(statusLayer);
   dumbdisplay.configAutoPin(autoPinBuilder.build());
 
@@ -157,25 +165,44 @@ bool sendCommand(const String& commandTarget, const String& commandAction);
 
 void loop() {
 
-  bool updateAmplifyFactor = false;
+  bool updateReplayUI = false;
+  bool updateAmplifyFactorUI = false;
   if (cvTracker.checkChanged(dumbdisplay)) {
     micLayer->writeCenteredLine("Start", 1);
     statusLayer->clear();
-    updateAmplifyFactor = true;
+    updateReplayUI = true;
+    updateAmplifyFactorUI = true;
+  }
+
+  if (replayLayer->getFeedback()) {
+    replayVoiceAfterCache = !replayVoiceAfterCache;
+    updateReplayUI = true;
   }
 
   const DDFeedback* feedback = amplifyMeterLayer->getFeedback();
   if (feedback != NULL) {
       amplifyFactor = feedback->x + 1;
-      updateAmplifyFactor = true;
+      updateAmplifyFactorUI = true;
   }
 
-  if (updateAmplifyFactor) {
+  if (updateReplayUI) {
+    if (replayVoiceAfterCache) {
+        replayLayer->border(1, "darkred", "flat");
+        replayLayer->pixelColor("darkred");
+        replayLayer->writeCenteredLine("no replay");
+    } else {
+        replayLayer->border(1, "darkgray", "hair");
+        replayLayer->pixelColor("blue");
+        replayLayer->writeCenteredLine("replay");
+    }
+  }
+  if (updateAmplifyFactorUI) {
     amplifyMeterLayer->horizontalBar(amplifyFactor);
     amplifyLblLayer->writeLine(String(amplifyFactor), 0, "R");
   }
 
   if (micLayer->getFeedback()) {
+    replayLayer->disabled(true);
     amplifyMeterLayer->disabled(true);
 
     while (true) {
@@ -183,7 +210,7 @@ void loop() {
       micLayer->writeCenteredLine("Stop", 1);
       
       // get voice command
-      if (!cacheMicVoice(amplifyFactor, ReplayVoiceAfterCache)) {
+      if (!cacheMicVoice(amplifyFactor, replayVoiceAfterCache)) {
         break;
       }
 
@@ -239,6 +266,7 @@ void loop() {
     }
 
     micLayer->writeCenteredLine("Start", 1);
+    replayLayer->disabled(false);
     amplifyMeterLayer->disabled(false);
   }
 }
@@ -403,7 +431,7 @@ bool espnow_init() {
     } else {
       char mac_str[18];
       sprintf(mac_str, "%02x:%02x:%02x:%02x:%02x:%02x", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
-      dumbdisplay.writeComment(String("Failed to send ESP-NOW packet to ") + mac_str + " ... " + String(status));
+      dumbdisplay.writeComment(String("Failed to send ESP-NOW packet to ") + mac_str/* + " ... " + String(status)*/);
     }
   });
 
@@ -446,7 +474,7 @@ const uint8_t* getCommandReceiverMACAddress(const String& commandTraget, const S
 }
 
 bool sendCommand(const String& commandTarget, const String& commandAction) {
-  dumbdisplay.writeComment(String("command [") + commandTarget + "] to [" + commandAction + "]");
+  dumbdisplay.writeComment(String("command for [") + commandTarget + "] to [" + commandAction + "]");
 
 #if defined(ENABLE_ESPNOW_REMOTE_COMMANDS)
   const uint8_t* receiverMACAddress = getCommandReceiverMACAddress(commandTarget, commandAction);

@@ -1451,6 +1451,7 @@ MIT
 
 v0.9.6-r2
   - enhanced sound support
+  - enhanced "auto pin"
   - bug fix
 
 

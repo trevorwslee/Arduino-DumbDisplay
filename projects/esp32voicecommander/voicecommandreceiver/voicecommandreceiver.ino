@@ -1,11 +1,6 @@
 
 
 
-#include <esp_now.h>
-#include <WiFi.h>
-
-
-
 #if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
 
   #include "wifidumbdisplay.h"
@@ -17,6 +12,23 @@
   DumbDisplay dumbdisplay(new DDInputOutput());
 
 #endif
+
+
+#if defined(ESP32)
+
+  #include <WiFi.h>
+  #include <esp_now.h>
+
+#else
+
+  #include <ESP8266WiFi.h>
+  #include <espnow.h>
+  #define ESP_OK 0
+
+#endif
+
+
+
 
 
 const char* LockImageFileName = "lock-locked.png";
@@ -37,7 +49,11 @@ struct ESPNowCommandPacket {
 ESPNowCommandPacket ReceivedPacket;
 volatile bool receivedNewCommand = false;
 
+#if defined(ESP32)
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+#else
+void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
+#endif  
   //dumbdisplay.writeComment(String("received command (") + String(len) + ")");
   if (!receivedNewCommand) {
     memcpy(&ReceivedPacket, incomingData, sizeof(ReceivedPacket));
