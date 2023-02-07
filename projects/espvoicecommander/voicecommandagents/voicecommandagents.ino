@@ -72,7 +72,11 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
 
 void setup() {
 
-  dumbdisplay.connect();
+  Serial.println("*****");
+  Serial.println(String("* agent MAC is ") + WiFi.macAddress());
+  Serial.println("*****");
+
+  dumbdisplay.connect();  // explicitly connection, so that can write comments to DD
 
   dumbdisplay.writeComment("initializing ...");
   dumbdisplay.writeComment(String("... ") + WiFi.macAddress() + " ...");
@@ -248,7 +252,7 @@ void loop() {
     long nowMillis = millis();
     if ((nowMillis - lastShowIdleMillis) >= 5000) {
 #if defined(DD_USING_WIFI)
-      Serial.println(String("MAC is ") + WiFi.macAddress());
+      Serial.println(String("agent MAC is ") + WiFi.macAddress());
 #endif
       dumbdisplay.writeComment(String("Idle ... agent MAC is ") + WiFi.macAddress());
       lastShowIdleMillis = nowMillis;

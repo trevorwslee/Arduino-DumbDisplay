@@ -32,6 +32,9 @@ class DDWiFiServerIO: public DDInputOutput {
       this->password = passphrase;
       this->port = serverPort;
       this->logToSerial = logToSerial;
+      if (logToSerial) {
+        Serial.begin(serialBaud);
+      }
     }
     bool available() {
       return client.available() > 0;
@@ -53,8 +56,8 @@ class DDWiFiServerIO: public DDInputOutput {
     }
     bool preConnect(bool firstCall) {
       if (firstCall) {
-        if (logToSerial)
-          Serial.begin(serialBaud);
+        // if (logToSerial)
+        //   Serial.begin(serialBaud);
         WiFi.begin(ssid, password);
         connectionState = ' ';
         stateMillis = 0;

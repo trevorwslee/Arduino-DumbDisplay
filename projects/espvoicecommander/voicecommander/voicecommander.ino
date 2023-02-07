@@ -82,7 +82,7 @@ bool cachingVoice = false;
 
 void setup() {
 
-  dumbdisplay.connect();  // explicitly connect ... so that can write comments
+  dumbdisplay.connect();  // explicitly connect ... so that can write comments to DD
 
   dumbdisplay.writeComment("set up I2S ...");
   i2s_install();
