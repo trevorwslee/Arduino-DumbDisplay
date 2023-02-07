@@ -138,7 +138,7 @@ struct KnownCommandLayer {
   }
 };
 
-const int MaxKnownCommandLayers = 4;
+const int MaxKnownCommandLayers = 5;
 KnownCommandLayer KnownCommandLayers[MaxKnownCommandLayers];
 int KnownCommandLayerCount = 0;
 
@@ -154,7 +154,7 @@ KnownCommandLayer* toKnownCommandLayer(const String& commandTarget, const String
   }
   const char* commandType = NULL;
   DDLayer* layer = NULL;
-  if ((commandTarget == "kitchen" || commandTarget == "living room") &&
+  if ((commandTarget == "kitchen" || commandTarget == "living room" || commandTarget == "fan") &&
       (commandAction == "on" || commandAction == "off")) {
     LcdDDLayer* label = dumbdisplay.createLcdLayer(12, 1);
     label->border(2, "green");
@@ -250,7 +250,7 @@ void loop() {
 #if defined(DD_USING_WIFI)
       Serial.println(String("MAC is ") + WiFi.macAddress());
 #endif
-      dumbdisplay.writeComment(String("Idle ... client MAC is ") + WiFi.macAddress());
+      dumbdisplay.writeComment(String("Idle ... agent MAC is ") + WiFi.macAddress());
       lastShowIdleMillis = nowMillis;
     }
   }

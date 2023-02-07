@@ -4,9 +4,9 @@
 #define ENABLE_ESPNOW_REMOTE_COMMANDS
 
 // define ESP-NOW client ... if only a single ESP-NOW client, comment out the line that define DOOR_ESP_NOW_MAC
-#define LIGHT_ESP_NOW_MAC     0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
-//#define LIGHT_ESP_NOW_MAC   0x94, 0xB5, 0x55, 0xC7, 0xCD, 0x60
-//#define DOOR_ESP_NOW_MAC    0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
+#define LIGHT_ESP_NOW_MAC   0x94, 0xB5, 0x55, 0xC7, 0xCD, 0x60
+#define DOOR_ESP_NOW_MAC    0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
+#define FAN_ESP_NOW_MAC     0x84, 0xF3, 0xEB, 0xD8, 0x41, 0x53
 
 
 
@@ -405,6 +405,10 @@ void i2s_setpin() {
   uint8_t DoorReceiverMACAddress[] = { DOOR_ESP_NOW_MAC };
   esp_now_peer_info_t DoorPeerInfo;
 #endif
+#if defined FAN_ESP_NOW_MAC  
+  uint8_t FanReceiverMACAddress[] = { FAN_ESP_NOW_MAC };
+  esp_now_peer_info_t FanPeerInfo;
+#endif
 
 
 // define a structure as ESP Now packet
@@ -452,6 +456,14 @@ bool espnow_init() {
     dumbdisplay.writeComment("Failed to add \"Door\" peer");
   }
 #endif  
+#if defined (FAN_ESP_NOW_MAC)  
+  memcpy(FanPeerInfo.peer_addr, FanReceiverMACAddress, 6);
+  FanPeerInfo.channel = 0;  
+  FanPeerInfo.encrypt = false;
+  if (esp_now_add_peer(&FanPeerInfo) != ESP_OK) {
+    dumbdisplay.writeComment("Failed to add \"Fan\" peer");
+  }
+#endif  
 
   return true;
 }
@@ -460,15 +472,18 @@ bool espnow_init() {
 
 
 const uint8_t* getCommandReceiverMACAddress(const String& commandTraget, const String& commandAction) {
-  if (commandAction == "on" || commandAction == "off") {
-    return LightReceiverMACAddress;
-  }  
-  if (commandAction == "lock" || commandAction == "unlock") {
-#if defined (DOOR_ESP_NOW_MAC)  
-    return DoorReceiverMACAddress;
-#else
-    return LightReceiverMACAddress;
+#if defined (FAN_ESP_NOW_MAC)  
+  if (commandTraget == "fan" && (commandAction == "on" || commandAction == "off")) {
+    return FanReceiverMACAddress;
+  }
 #endif
+#if defined (DOOR_ESP_NOW_MAC)  
+  if (commandAction == "lock" || commandAction == "unlock") {
+    return DoorReceiverMACAddress;
+  }
+#endif
+  if (commandAction == "on" || commandAction == "off" || commandAction == "lock" || commandAction == "unlock") {
+    return LightReceiverMACAddress;
   }  
   return NULL;
 }
