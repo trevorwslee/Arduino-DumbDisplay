@@ -100,6 +100,11 @@ class DDAutoPinConfigBuilder {
     DDAutoPinConfigBuilder& endPaddedGroup() {
       return endGroup();
     }
+    // dir: 'H' / 'V' / 'S'
+    DDAutoPinConfigBuilder& addRemainingGroup(char dir) {
+      addConfig(String(dir) + "(*)");
+      return *this;
+    }
     const String& build() {
       if (config.length() == 2) {
         // just started

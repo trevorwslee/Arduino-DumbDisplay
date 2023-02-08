@@ -1449,6 +1449,12 @@ MIT
 
 # Change History
 
+v0.9.6-r2
+  - enhanced sound support
+  - enhanced "auto pin"
+  - bug fix
+
+
 v0.9.6-r1
   - enhanced sound support
   - bug fix

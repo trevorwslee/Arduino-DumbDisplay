@@ -883,6 +883,8 @@ class DumbDisplay {
     /* - where 0/1/2/3 are the layer ids  */
     /* - consider using the macros DD_AP_XXX */
     void configAutoPin(const String& layoutSpec);
+    /* experimental */
+    void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
     /* create a Microbit layer; 1st time will block waiting for connection */
     MbDDLayer* createMicrobitLayer(int width = 5, int height = 5);
     /* create a Turtle layer; 1st time will block waiting for connection */
