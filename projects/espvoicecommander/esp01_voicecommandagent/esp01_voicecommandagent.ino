@@ -7,6 +7,7 @@
 #define ESP_OK 0
 
 
+//#define LED_PIN 2
 #define FAN_PIN 0
 
 
@@ -26,9 +27,11 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
   Serial.println(String("* Received command for [") + commandTarget + "] to [" + commandAction + "]");
   if (commandTarget == "fan") {
     if (commandAction == "on") {
+      //digitalWrite(LED_PIN, 0);
       digitalWrite(FAN_PIN, 1);
       Serial.println("- turned on fan");
     } else if (commandAction == "off") {
+      //digitalWrite(LED_PIN, 1);
       digitalWrite(FAN_PIN, 0);
       Serial.println("- turned off fan");
     }
@@ -38,6 +41,7 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
 void setup() {
   Serial.begin(115200);
 
+  //pinMode(LED_PIN, OUTPUT);
   pinMode(FAN_PIN, OUTPUT);
 
   // Set device as a Wi-Fi Station
@@ -56,6 +60,8 @@ void setup() {
   } else {
     Serial.println("Error registering receive callback");
   }
+
+  //digitalWrite(LED_PIN, 1);
 }
 
 long lastShowIdleMillis = 0;
@@ -64,5 +70,5 @@ void loop() {
   if ((nowMillis - lastShowIdleMillis) >= 5000) {
     Serial.println(String("ESP01 agent MAC is ") + WiFi.macAddress());
     lastShowIdleMillis = nowMillis;
-  }
+ }
 }
