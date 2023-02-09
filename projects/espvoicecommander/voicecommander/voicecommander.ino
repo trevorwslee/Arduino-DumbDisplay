@@ -10,6 +10,11 @@
 
 
 
+// if want to support TensorFlow wake work detection, make sure the following line is not commented out
+#define SUPPORT_TF_WAKE_WORD
+
+
+
 // I2S driver
 #include <driver/i2s.h>
 
@@ -54,9 +59,11 @@ void i2s_install();
 void i2s_setpin();
 
 #if defined(ENABLE_ESPNOW_REMOTE_COMMANDS)
-  bool espnow_init();
+  bool initESPNow();
 #endif
-
+#if defined(SUPPORT_TF_WAKE_WORD)
+	size_t initTensorFlowLite();
+#endif
 
 const char* MicVoiceName = "mic_voice";
 const char* OkSoundName = "voice_ok.wav";
@@ -93,9 +100,15 @@ void setup() {
 
 #if defined(ENABLE_ESPNOW_REMOTE_COMMANDS)
   dumbdisplay.writeComment("init ESP-NOW ...");
-  espnow_init();
+  initESPNow();
   dumbdisplay.writeComment("... done init ESP-NOW");
 #endif  
+
+#if defined(SUPPORT_TF_WAKE_WORD)
+  dumbdisplay.writeComment("init TensorFlowLite ...");
+  size_t used_bytes = initTensorFlowLite();
+  dumbdisplay.writeComment(String("... done init TensorFlowLite ... used ") + String(used_bytes) + " bytes");
+#endif
 
 
   dumbdisplay.recordLayerSetupCommands();  // start recording the layout commands
@@ -390,6 +403,12 @@ void i2s_setpin() {
 
 
 
+
+// *****
+// * ENABLE_ESPNOW_REMOTE_COMMANDS
+// *****
+
+
 #if defined(ENABLE_ESPNOW_REMOTE_COMMANDS)
 
 
@@ -418,7 +437,7 @@ struct ESPNowCommandPacket {
 };
 
 
-bool espnow_init() {
+bool initESPNow() {
   // Set device as a Wi-Fi Station and also a Access Point
   WiFi.mode(WIFI_AP_STA);
   
@@ -471,6 +490,86 @@ bool espnow_init() {
 #endif
 
 
+
+// *****
+// * SUPPORT_TF_WAKE_WORD
+// ****
+
+#if defined(SUPPORT_TF_WAKE_WORD)
+
+#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
+#include "tensorflow/lite/micro/micro_error_reporter.h"
+#include "tensorflow/lite/micro/micro_interpreter.h"
+#include "tensorflow/lite/schema/schema_generated.h"
+
+
+// TF 'wake word' model source -- Build your own Alexa with the ESP32 and TensorFlow Lite -- https://www.youtube.com/watch?v=re-dSV_a0tM&t=48s
+// - model.cc -- https://github.com/atomic14/diy-alexa/blob/master/firmware/lib/neural_network/src/model.cc
+#include "model.cc"
+
+class DDTFLErrorReporter : public tflite::ErrorReporter {
+public:
+  virtual int Report(const char* format, va_list args) {
+    int len = strlen(format);
+    char buffer[max(32, 2 * len)];  // assume 2 times format len is big enough
+    sprintf(buffer, format, args);
+    dumbdisplay.writeComment(buffer);
+    return 0;
+  }
+};
+
+tflite::ErrorReporter* error_reporter = new DDTFLErrorReporter();
+const tflite::Model* model = ::tflite::GetModel(converted_model_tflite);
+uint8_t* tensor_arena;
+tflite::MicroInterpreter* interpreter = NULL;
+TfLiteTensor *input;
+TfLiteTensor *output;
+
+
+size_t initTensorFlowLite() {
+
+  // approximate working size of our model
+  int kArenaSize = 25000;
+
+  tensor_arena = (uint8_t *)malloc(kArenaSize);
+
+  // This pulls in the operators implementations we need
+  tflite::MicroMutableOpResolver<10>* micro_op_resolver = new tflite::MicroMutableOpResolver<10>();
+  micro_op_resolver->AddConv2D();
+  micro_op_resolver->AddMaxPool2D();
+  micro_op_resolver->AddFullyConnected();
+  micro_op_resolver->AddMul();
+  micro_op_resolver->AddAdd();
+  micro_op_resolver->AddLogistic();
+  micro_op_resolver->AddReshape();
+  micro_op_resolver->AddQuantize();
+  micro_op_resolver->AddDequantize();
+
+  // Build an interpreter to run the model with.
+  interpreter = new tflite::MicroInterpreter(model, *micro_op_resolver, tensor_arena, kArenaSize, error_reporter);
+
+  // Allocate memory from the tensor_arena for the model's tensors.
+  TfLiteStatus allocate_status = interpreter->AllocateTensors();
+  if (allocate_status != kTfLiteOk) {
+    error_reporter->Report("AllocateTensors() failed");
+    return 0;
+  }
+
+  size_t used_bytes = interpreter->arena_used_bytes();
+
+  // Obtain pointers to the model's input and output tensors.
+  input = interpreter->input(0);
+  output = interpreter->output(0);
+
+  return used_bytes;
+
+}
+
+
+#endif
+
+
+
 const uint8_t* getCommandReceiverMACAddress(const String& commandTraget, const String& commandAction) {
 #if defined (FAN_ESP_NOW_MAC)  
   if (commandTraget == "fan" && (commandAction == "on" || commandAction == "off")) {
@@ -508,4 +607,6 @@ bool sendCommand(const String& commandTarget, const String& commandAction) {
 
   return true;
 }
+
+
 
