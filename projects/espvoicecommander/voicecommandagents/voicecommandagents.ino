@@ -179,7 +179,7 @@ KnownCommandLayer* toKnownCommandLayer(const String& commandTarget, const String
     label->pixelColor("white");
     label->writeCenteredLine(commandTarget);
     GraphicalDDLayer* graphicallayer = dumbdisplay.createGraphicalLayer(200, 200);
-    graphicallayer->backgroundColor("lightgray");
+    graphicallayer->backgroundColor("white");
     graphicallayer->setTextSize(12);
     graphicallayer->setTextColor("red");
     //graphicallayer->print(commandTarget);
@@ -237,24 +237,27 @@ long lastShowIdleMillis = 0;
 
 void loop() {
   if (receivedNewCommand) {
+      lastShowIdleMillis = -1;  // prevent showing of MAC
     const char* commandTarget = ReceivedPacket.commandTarget;
     const char* commandAction = ReceivedPacket.commandAction;
-    if (handleCommand(commandTarget, commandAction)) {
+    bool handled = handleCommand(commandTarget, commandAction);
+    String status = String("handled command for [") + commandTarget + "] to [" + commandAction + "]";
+    if (handled) {
       statusLayer->penColor("darkgreen");
-      statusLayer->println(String("- Handled command for [") + commandTarget + "] to [" + commandAction + "]");
     } else {
       statusLayer->penColor("red");
-      statusLayer->println(String("- Not handled command for [") + commandTarget + "] to [" + commandAction + "]");
-      dumbdisplay.tone(1000, 100);
+      status = "not " + status;
     }
+    statusLayer->println(status);
+    dumbdisplay.writeComment(String("- ") + status);
     receivedNewCommand = false;
-} else  {
+} else if (lastShowIdleMillis != -1)  {
     long nowMillis = millis();
     if ((nowMillis - lastShowIdleMillis) >= 5000) {
 #if defined(DD_USING_WIFI)
       Serial.println(String("agent MAC is ") + WiFi.macAddress());
 #endif
-      dumbdisplay.writeComment(String("Idle ... agent MAC is ") + WiFi.macAddress());
+      dumbdisplay.writeComment(String("agent MAC is ") + WiFi.macAddress());
       lastShowIdleMillis = nowMillis;
     }
   }
