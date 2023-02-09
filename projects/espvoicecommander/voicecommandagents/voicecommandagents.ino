@@ -245,6 +245,7 @@ void loop() {
     if (handled) {
       statusLayer->penColor("darkgreen");
     } else {
+      dumbdisplay.tone(3000, 100);
       statusLayer->penColor("red");
       status = "not " + status;
     }
