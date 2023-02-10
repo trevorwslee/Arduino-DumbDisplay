@@ -31,13 +31,15 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 const int I2S_DMA_BUF_COUNT = 4;
 const int I2S_DMA_BUF_LEN = 1024;
 
-const int SoundSampleRate = 8000;  // will be 16-bit per sample
+//const int SoundSampleRate = 8000;  // will be 16-bit per sample
+//const int SoundSampleRate = 11025;  // will be 16-bit per sample
+const int SoundSampleRate = 16000;  // will be 16-bit per sample
 const int SoundNumChannels = 1;
 
 
 
-// 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 4096 bytes = 256 ms per read
-const int StreamBufferNumBytes = 4096;;
+// 16000 sample per second (32000 bytes per second; since 16 bits per sample) ==> 8192 bytes = 256 ms per read
+const int StreamBufferNumBytes = 8192;
 const int StreamBufferLen = StreamBufferNumBytes / 2;
 int16_t StreamBuffer[StreamBufferLen];
 
@@ -490,9 +492,12 @@ const uint8_t* getCommandReceiverMACAddress(const String& commandTraget, const S
     return DoorReceiverMACAddress;
   }
 #endif
+#if defined (LIGHT_ESP_NOW_MAC)
+  // handle all not handled  
   if (commandAction == "on" || commandAction == "off" || commandAction == "lock" || commandAction == "unlock") {
     return LightReceiverMACAddress;
   }  
+#endif
   return NULL;
 }
 
