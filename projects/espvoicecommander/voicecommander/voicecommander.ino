@@ -3,7 +3,7 @@
 // if no ESP-NOW clients, make sure the following line is commented out
 #define ENABLE_ESPNOW_REMOTE_COMMANDS
 
-// define ESP-NOW client ... if only a single ESP-NOW client, comment out the line that define DOOR_ESP_NOW_MAC
+// define ESP-NOW clients ... comment out what not used
 #define LIGHT_ESP_NOW_MAC   0x94, 0xB5, 0x55, 0xC7, 0xCD, 0x60
 #define DOOR_ESP_NOW_MAC    0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
 #define FAN_ESP_NOW_MAC     0x84, 0xF3, 0xEB, 0xD8, 0x41, 0x53
@@ -31,8 +31,6 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 const int I2S_DMA_BUF_COUNT = 4;
 const int I2S_DMA_BUF_LEN = 1024;
 
-//const int SoundSampleRate = 8000;  // will be 16-bit per sample
-//const int SoundSampleRate = 11025;  // will be 16-bit per sample
 const int SoundSampleRate = 16000;  // will be 16-bit per sample
 const int SoundNumChannels = 1;
 
@@ -241,7 +239,7 @@ void loop() {
           } else if (fieldId.startsWith("traits.") && fieldId.endsWith(".value")) {
             trait = fieldValue;
           } else if (fieldId == "text") {
-            dumbdisplay.writeComment(String("   {") + fieldValue + "}");
+            dumbdisplay.writeComment(String("   {") + fieldValue + "}");   // for display only
           }
         }
       }
@@ -276,7 +274,6 @@ void loop() {
 bool cacheMicVoice(int amplifyFactor, bool playback) {
   cachingVoice = true;
   int32_t silentThreshold = SilentThreshold * amplifyFactor;
-  //micLayer->writeCenteredLine("done", 1);
   statusLayer->writeCenteredLine("... hearing ...");
   long startMillis = -1;
   long totalSampleCount = 0;
@@ -295,7 +292,6 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
     }
     int samplesRead = bytesRead / 2;  // 16 bit per sample
     if (samplesRead > 0) {
-      //int32_t maxAbsVal = 0;
       int overThresholdCount = 0;
       for (int i = 0; i < samplesRead; ++i) {
         int32_t val = StreamBuffer[i];
@@ -312,11 +308,8 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
         if (absVal > silentThreshold) {
           overThresholdCount += 1;
         }
-        // if (absVal > maxAbsVal) {
-        //   maxAbsVal = absVal;
-        // }
       }
-      if (/*maxAbsVal >= silentThreshold*/overThresholdCount >= VoiceMinOverSilentThresholdCount) {
+      if (overThresholdCount >= VoiceMinOverSilentThresholdCount) {
         lastHighMillis = millis();
       }
       if (startMillis == -1) {
@@ -344,12 +337,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
     }
   }
   dumbdisplay.sendSoundChunk16(chunkId, NULL, 0, true);
-  //micLayer->writeCenteredLine("MIC", 1);
   bool ok = startMillis != -1 && totalSampleCount > 0;
-  // if (ok) {
-  //   dumbdisplay.writeComment(String("recordedMillis=") + String(millis() - startMillis));
-  //   dumbdisplay.writeComment(String("totalSampleCount=") + String(totalSampleCount));
-  // }
   if (ok && playback) {
     float forHowLongS = (float) totalSampleCount / 8000;
     statusLayer->writeCenteredLine("... replaying ...");
@@ -427,7 +415,7 @@ struct ESPNowCommandPacket {
 
 
 bool initESPNow() {
-  // Set device as a Wi-Fi Station and also a Access Point
+  // Set device as a Wi-Fi Station and also an Access Point
   WiFi.mode(WIFI_AP_STA);
   
   // Init ESP-NOW
