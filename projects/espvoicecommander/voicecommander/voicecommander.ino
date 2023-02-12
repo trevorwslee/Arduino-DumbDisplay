@@ -339,7 +339,7 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
   dumbdisplay.sendSoundChunk16(chunkId, NULL, 0, true);
   bool ok = startMillis != -1 && totalSampleCount > 0;
   if (ok && playback) {
-    float forHowLongS = (float) totalSampleCount / 8000;
+    float forHowLongS = (float) totalSampleCount / SoundSampleRate;
     statusLayer->writeCenteredLine("... replaying ...");
     dumbdisplay.playSound(MicVoiceName);
     delay(1000 * (1 + forHowLongS));
