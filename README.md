@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.6-r2)
+# DumbDisplay Arduino Library (v0.9.6-r3)
 
 [DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -1449,11 +1449,13 @@ MIT
 
 # Change History
 
+v0.9.6-r3
+  - bug fix
+
 v0.9.6-r2
   - enhanced sound support
   - enhanced "auto pin"
   - bug fix
-
 
 v0.9.6-r1
   - enhanced sound support

@@ -58,6 +58,33 @@ class DDValueRecord {
     T knownValue;
 };
 
+template <class T>
+class DDPendingValue {
+  public:
+    DDPendingValue() {
+      valueIsPending = false;
+    }
+    DDPendingValue(T value, bool valueIsPending): value(value) {
+      this->valueIsPending = valueIsPending;
+    }
+    inline operator T() { return value; } 
+    inline T get() { return value; }
+    inline void operator =(T value) { this->value = value; this->valueIsPending = true; }
+    inline void set(T value) { this->value = value; this->valueIsPending = true; }
+    /* return whether there is pending value; if so, acknowledge and make the value not pending */
+    bool acknowledge() {
+      if (valueIsPending) {
+        valueIsPending = false;
+        return true;
+      } else {
+        return false;
+      }
+    }
+  private:
+    T value;
+    bool valueIsPending;
+};
+
 
 template<int MAX_DEPTH> // MAX_DEPTH: depth of [nested] group
 class DDAutoPinConfigBuilder {
