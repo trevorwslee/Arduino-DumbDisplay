@@ -102,7 +102,7 @@ void EnableButtons() {
 const char* ImageFileName = "tempimage.png";
 
 bool isIdle = false;
-DDPendingValue<bool> englishOnly;
+DDPendingValue<bool> englishOnly(true);
 DDPendingValue<bool> requestNews;
 DDPendingValue<String> adhocText;
 
@@ -278,11 +278,12 @@ void loop() {
     }
 
     if ((millis() - checkMillis) > 2000) {
-        checkMillis = millis();
+        // check if synthesizer is idle
         synthesizer.write((byte) 0xFD);
         synthesizer.write((byte) 0x00);
         synthesizer.write((byte) 0x01);
         synthesizer.write((byte) 0x21);
+        checkMillis = millis();
     } else {
         if (synthesizer.available()) {
             int status = synthesizer.read();

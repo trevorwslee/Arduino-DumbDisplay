@@ -254,56 +254,56 @@ void DDDelay(unsigned long ms);
 void DDYield();
 
 
-class DDLayoutHelper {
-    public: 
-      DDLayoutHelper(): versionTracker(-1) {
-        this->layoutDoneBefore = false;
-      }
-      ~DDLayoutHelper() {
-        if (this->autoPinConfig != NULL) {
-          delete this->autoPinConfig;
-        }
-      }
-    public:
-      /* check whether layout done before; if not, please call startInitializeLayout() to begin layout */
-      bool checkNeedToInitializeLayout() {
-        DDYield();
-        return !layoutDoneBefore;
-      }  
-      /* check whether layers need be updated, say, 1) just initialzed; or 2) DD reconnected */
-      bool checkNeedToUpdateLayers(DumbDisplay& dumbdisplay) {
-        DDYield();
-        return versionTracker.checkChanged(dumbdisplay);
-      }
-      /* essentially dumbdisplay.recordLayerSetupCommands() */
-      /* MUST call finishInitializeLayout() when done */
-      void startInitializeLayout(DumbDisplay& dumbdisplay) {
-        this->layoutDoneBefore = true;
-        dumbdisplay.recordLayerSetupCommands();
-      }
-      /* layerSetupPersistId is use for calling dumbdisplay.playbackLayerSetupCommands() */
-      void finishInitializeLayout(DumbDisplay& dumbdisplay, String layerSetupPersistId) {
-        dumbdisplay.playbackLayerSetupCommands(layerSetupPersistId);
-      }
-      // dir: 'H' / 'V' / 'S'
-      DDAutoPinConfig& newAutoPinConfig(char dir, int nestedDepth = 3) {
-        if (autoPinConfig == NULL) {
-          autoPinConfig = new DDAutoPinConfig(dir, nestedDepth); 
-        }
-        return *autoPinConfig;
-      }
-      void configAutoPin(DumbDisplay dumbdisplay) {
-        if (autoPinConfig != NULL) {
-          dumbdisplay.configAutoPin(autoPinConfig->build());
-          delete autoPinConfig;
-          autoPinConfig = NULL;
-        }
-      }
-    private:
-      bool layoutDoneBefore;
-      DDConnectVersionTracker versionTracker;
-      DDAutoPinConfig* autoPinConfig;
-};
+// class DDLayoutHelper {
+//     public: 
+//       DDLayoutHelper(): versionTracker(-1) {
+//         this->layoutDoneBefore = false;
+//       }
+//       ~DDLayoutHelper() {
+//         if (this->autoPinConfig != NULL) {
+//           delete this->autoPinConfig;
+//         }
+//       }
+//     public:
+//       /* check whether layout done before; if not, please call startInitializeLayout() to begin layout */
+//       bool checkNeedToInitializeLayout() {
+//         DDYield();
+//         return !layoutDoneBefore;
+//       }  
+//       /* check whether layers need be updated, say, 1) just initialzed; or 2) DD reconnected */
+//       bool checkNeedToUpdateLayers(DumbDisplay& dumbdisplay) {
+//         DDYield();
+//         return versionTracker.checkChanged(dumbdisplay);
+//       }
+//       /* essentially dumbdisplay.recordLayerSetupCommands() */
+//       /* MUST call finishInitializeLayout() when done */
+//       void startInitializeLayout(DumbDisplay& dumbdisplay) {
+//         this->layoutDoneBefore = true;
+//         dumbdisplay.recordLayerSetupCommands();
+//       }
+//       /* layerSetupPersistId is use for calling dumbdisplay.playbackLayerSetupCommands() */
+//       void finishInitializeLayout(DumbDisplay& dumbdisplay, String layerSetupPersistId) {
+//         dumbdisplay.playbackLayerSetupCommands(layerSetupPersistId);
+//       }
+//       // dir: 'H' / 'V' / 'S'
+//       DDAutoPinConfig& newAutoPinConfig(char dir, int nestedDepth = 3) {
+//         if (autoPinConfig == NULL) {
+//           autoPinConfig = new DDAutoPinConfig(dir, nestedDepth); 
+//         }
+//         return *autoPinConfig;
+//       }
+//       void configAutoPin(DumbDisplay dumbdisplay) {
+//         if (autoPinConfig != NULL) {
+//           dumbdisplay.configAutoPin(autoPinConfig->build());
+//           delete autoPinConfig;
+//           autoPinConfig = NULL;
+//         }
+//       }
+//     private:
+//       bool layoutDoneBefore;
+//       DDConnectVersionTracker versionTracker;
+//       DDAutoPinConfig* autoPinConfig;
+// };
 
 
 
