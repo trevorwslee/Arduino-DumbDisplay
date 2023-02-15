@@ -137,8 +137,8 @@ void setup() {
 
 
   // auto pin the layers in the desired way
-  DDAutoPinConfigBuilder<1> autoPinBuilder('V');
-  autoPinBuilder
+  DDAutoPinConfig autoPinConfig('V');
+  autoPinConfig
     .addLayer(micLayer)
     .beginGroup('H')
       .addLayer(replayLayer)
@@ -148,7 +148,7 @@ void setup() {
       .endGroup()
     .endGroup()    
     .addLayer(statusLayer);
-  dumbdisplay.configAutoPin(autoPinBuilder.build());
+  dumbdisplay.configAutoPin(autoPinConfig.build());
 
   dumbdisplay.playbackLayerSetupCommands("esp32ddvoicecommander");  // playback the stored layout commands, as well as persist the layout to phone, so that can reconnect
 

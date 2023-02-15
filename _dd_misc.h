@@ -62,10 +62,10 @@ template <class T>
 class DDPendingValue {
   public:
     DDPendingValue() {
-      valueIsPending = false;
+      this->valueIsPending = false;
     }
-    DDPendingValue(T value, bool valueIsPending): value(value) {
-      this->valueIsPending = valueIsPending;
+    DDPendingValue(T value): value(value) {
+      this->valueIsPending = true;
     }
     inline operator T() { return value; } 
     inline T get() { return value; }
@@ -86,6 +86,7 @@ class DDPendingValue {
 };
 
 
+/* *** DEPRECATED ... please use DDAutoPinConfig *** */
 template<int MAX_DEPTH> // MAX_DEPTH: depth of [nested] group
 class DDAutoPinConfigBuilder {
   public:
@@ -156,6 +157,81 @@ class DDAutoPinConfigBuilder {
 };
 
 
+class DDAutoPinConfig {
+  public:
+    // dir: 'H' / 'V' / 'S'
+    DDAutoPinConfig(char dir, int nestedDepth = 3) {
+      
+      config = String(dir) + "(";
+      depth = 0;
+      started = new bool[nestedDepth + 1];
+      started[depth] = false;
+    }
+    ~DDAutoPinConfig() {
+      delete started;
+    }
+  public:
+    // dir: 'H' / 'V' / 'S'
+    DDAutoPinConfig& beginGroup(char dir) {
+      addConfig(String(dir) + "(");
+      depth += 1;
+      started[depth] = false;
+      return *this;
+    }  
+    // DDAutoPinConfigBuilder& beginPaddedGroup(int left, int top, int right, int bottom) {
+    //   addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
+    //   depth += 1;
+    //   started[depth] = false;
+    //   return *this;
+    // }  
+    DDAutoPinConfig& endGroup() {
+      config.concat(')');
+      depth -= 1;
+      return *this;
+    }
+    DDAutoPinConfig& addLayer(DDLayer* layer) {
+      addConfig(layer->getLayerId());
+      return *this;
+    }
+    DDAutoPinConfig& beginPaddedGroup(int left, int top, int right, int bottom) {
+      addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
+      depth += 1;
+      started[depth] = false;
+      return *this;
+    }  
+    DDAutoPinConfig& endPaddedGroup() {
+      return endGroup();
+    }
+    // dir: 'H' / 'V' / 'S'
+    DDAutoPinConfig& addRemainingGroup(char dir) {
+      addConfig(String(dir) + "(*)");
+      return *this;
+    }
+    const String& build() {
+      if (config.length() == 2) {
+        // just started
+        config.concat('*');
+      }
+      config.concat(')');
+      return config;
+    }  
+  private:  
+    void addConfig(const String& conf) {
+      if (started[depth]) {
+        config.concat('+');
+      } else {
+        started[depth] = true;
+      }
+      config.concat(conf);
+    }
+  private:
+    int depth;
+    bool *started;
+    String config;
+};
+
+
+
 class DDConnectVersionTracker {
   public:
     /* . version: pass in -1 so that it will be considered a version change even when fresh start */
@@ -171,9 +247,65 @@ class DDConnectVersionTracker {
     int version;  
 };
 
+
 /* the same usage as standard delay(), but it allows DD chances to handle feedback */
 void DDDelay(unsigned long ms);
 /* give DD a chance to handle feedback */
 void DDYield();
+
+
+class DDLayoutHelper {
+    public: 
+      DDLayoutHelper(): versionTracker(-1) {
+        this->layoutDoneBefore = false;
+      }
+      ~DDLayoutHelper() {
+        if (this->autoPinConfig != NULL) {
+          delete this->autoPinConfig;
+        }
+      }
+    public:
+      /* check whether layout done before; if not, please call startInitializeLayout() to begin layout */
+      bool checkNeedToInitializeLayout() {
+        DDYield();
+        return !layoutDoneBefore;
+      }  
+      /* check whether layers need be updated, say, 1) just initialzed; or 2) DD reconnected */
+      bool checkNeedToUpdateLayers(DumbDisplay& dumbdisplay) {
+        DDYield();
+        return versionTracker.checkChanged(dumbdisplay);
+      }
+      /* essentially dumbdisplay.recordLayerSetupCommands() */
+      /* MUST call finishInitializeLayout() when done */
+      void startInitializeLayout(DumbDisplay& dumbdisplay) {
+        this->layoutDoneBefore = true;
+        dumbdisplay.recordLayerSetupCommands();
+      }
+      /* layerSetupPersistId is use for calling dumbdisplay.playbackLayerSetupCommands() */
+      void finishInitializeLayout(DumbDisplay& dumbdisplay, String layerSetupPersistId) {
+        dumbdisplay.playbackLayerSetupCommands(layerSetupPersistId);
+      }
+      // dir: 'H' / 'V' / 'S'
+      DDAutoPinConfig& newAutoPinConfig(char dir, int nestedDepth = 3) {
+        if (autoPinConfig == NULL) {
+          autoPinConfig = new DDAutoPinConfig(dir, nestedDepth); 
+        }
+        return *autoPinConfig;
+      }
+      void configAutoPin(DumbDisplay dumbdisplay) {
+        if (autoPinConfig != NULL) {
+          dumbdisplay.configAutoPin(autoPinConfig->build());
+          delete autoPinConfig;
+          autoPinConfig = NULL;
+        }
+      }
+    private:
+      bool layoutDoneBefore;
+      DDConnectVersionTracker versionTracker;
+      DDAutoPinConfig* autoPinConfig;
+};
+
+
+
 
 #endif

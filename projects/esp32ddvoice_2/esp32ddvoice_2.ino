@@ -102,7 +102,7 @@ void EnableButtons() {
 const char* ImageFileName = "tempimage.png";
 
 bool isIdle = false;
-DDValueRecord<bool> englishOnly(true, false);
+DDPendingValue<bool> englishOnly;
 DDPendingValue<bool> requestNews;
 DDPendingValue<String> adhocText;
 
@@ -255,13 +255,11 @@ void HandleAdhocText(const String& text) {
 }
 
 
-
 long checkMillis = 0;
 
-
 void loop() {
-    // check if englishOnly "value record" changed value [since last check]
-    if (englishOnly.record()) {
+    // check if englishOnly has "pending value" [since last check]
+    if (englishOnly.acknowledge()) {
         if (englishOnly) {
             langsButton->writeCenteredLine("English");
         } else {
@@ -278,107 +276,6 @@ void loop() {
     if (requestNews.acknowledge()) {
         HandleGetAnotherNews();
     }
-
-    // // get "feedback" from the text layer
-    // // which is the text input to synthesize
-    // const DDFeedback* feedback = textLayer->getFeedback();
-    // if (feedback != NULL) {
-    //     // ResetDisplaying();
-    //     // if (feedback->text.length() > 0) {
-    //     //     textLayer->print(feedback->text);
-    //     //     if (isIdle) {
-    //     //         isIdle = false;
-    //     //         String text = "[v1][h0]" + feedback->text;
-    //     //         if (englishOnly) {
-    //     //             text = "[g2]" + text;
-    //     //         } else {
-    //     //             text = "[g1]" + text;
-    //     //         }
-    //     //         dumbdisplay.writeComment(text);
-    //     //         SynthesizeVoice(text);
-    //     //     } else {
-    //     //         dumbdisplay.writeComment("BUSY!");
-    //     //     }
-    //     // }
-    //     // EnableButtons();
-    // }
-
-    // // check if the "news button" clicked
-    // if (newsButton->getFeedback()) {
-    //     // ResetDisplaying();
-    //     // textLayer->print("... ");
-    //     // String category;
-    //     // switch (rand() % 5) {
-    //     //     case 0:
-    //     //         category = "health";
-    //     //         break;
-    //     //     case 1:
-    //     //         category = "science";
-    //     //         break;
-    //     //     case 2:
-    //     //         category = "sports";
-    //     //         break;
-    //     //     case 3:
-    //     //         category = "technology";
-    //     //         break;
-    //     //     default:
-    //     //         category = "business";
-    //     // }
-    //     // String country = "us";
-    //     // if (!englishOnly) {
-    //     //     if (rand() % 2 == 0) {
-    //     //         country = "hk";
-    //     //     }
-    //     // }
-    //     // String endpoint = NewsApiEndpoint + ("&pageSize=1&category=" + category) + ("&country=" + country);
-    //     // newsTunnel->reconnectTo(endpoint);
-    //     // String title = "";
-    //     // String imageUrl = "";
-    //     // while (!newsTunnel->eof()) {
-    //     //     if (newsTunnel->count() > 0) {
-    //     //         textLayer->print(".");
-    //     //         String fieldId;
-    //     //         String fieldValue;
-    //     //         newsTunnel->read(fieldId, fieldValue);
-    //     //         if (fieldId == "articles.0.title") {
-    //     //             title = fieldValue;
-    //     //         } else if (fieldId == "articles.0.urlToImage") {
-    //     //             imageUrl = fieldValue;
-    //     //         }
-    //     //     }
-    //     // }
-    //     // ResetDisplaying();
-    //     // if (title.length() > 0) {
-    //     //     textLayer->println(title);
-    //     //     isIdle = false;
-    //     //     String text = "[v1][h0]" + title;
-    //     //     if (englishOnly) {
-    //     //         text = "[g2]" + text;
-    //     //     } else {
-    //     //         text = "[g1]" + text;
-    //     //     }
-    //     //     SynthesizeVoice(text);
-    //     // }
-    //     // if (imageUrl.length() > 0) {
-    //     //     imageTunnel->reconnectTo(imageUrl);
-    //     //     while (true) {
-    //     //         int result = imageTunnel->checkResult();
-    //     //         if (result == 1) {
-    //     //             //imageLayer->unloadImageFile(ImageFileName);
-    //     //             imageLayer->drawImageFileFit(ImageFileName);
-    //     //         }
-    //     //         if (result != 0) {
-    //     //             break;
-    //     //         }
-    //     //     }
-    //     // }
-    //     // EnableButtons();
-    // }
-
-    // // check if the "language button" checked, if so, toggle the englishOnly "value record"
-    // if (langsButton->getFeedback()) {
-    //     englishOnly = !englishOnly;
-    // }
 
     if ((millis() - checkMillis) > 2000) {
         checkMillis = millis();
