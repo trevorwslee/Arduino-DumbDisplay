@@ -102,19 +102,12 @@ void setup() {
   statusLayer = dumbdisplay.createGraphicalLayer(300, 80);
   statusLayer->margin(5);
   statusLayer->border(5, "blue");
-  //statusLayer->border(5, "darkgreen");
   statusLayer->backgroundColor("white");
   statusLayer->penColor("darkblue");
-  //statusLayer->setTextFont("DL::Roboto");
-
+  
   // pin to virtual print frame, which is by default 100x100
   dumbdisplay.pinLayer(statusLayer, 0, 0, 100, 35);
   dumbdisplay.pinAutoPinLayers(DD_AP_HORI, 0, 35, 100, 65);
-
-  // DDAutoPinConfigBuilder<1> builder('V');
-  // builder.addLayer(statusLayer);
-  // builder.addRemainingGroup('H');
-  // dumbdisplay.configAutoPin(builder.build());
 
   lockedTunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", LockImageFileName);
   unlockedTunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", UnlockImageFileName);
@@ -147,7 +140,6 @@ KnownCommandLayer KnownCommandLayers[MaxKnownCommandLayers];
 int KnownCommandLayerCount = 0;
 
 KnownCommandLayer* toKnownCommandLayer(const String& commandTarget, const String& commandAction) {
-  //String key = commandTarget + ":" + commandAction;
   for (int i = 0; i < KnownCommandLayerCount; i++) {
     if (KnownCommandLayers[i].commandTarget == commandTarget) {
       return KnownCommandLayers + i;
@@ -179,10 +171,9 @@ KnownCommandLayer* toKnownCommandLayer(const String& commandTarget, const String
     label->pixelColor("white");
     label->writeCenteredLine(commandTarget);
     GraphicalDDLayer* graphicallayer = dumbdisplay.createGraphicalLayer(200, 200);
-    graphicallayer->backgroundColor("lightgray");
+    graphicallayer->backgroundColor("white");
     graphicallayer->setTextSize(12);
     graphicallayer->setTextColor("red");
-    //graphicallayer->print(commandTarget);
     dumbdisplay.addRemainingAutoPinConfig(DD_AP_VERT_2(label->getLayerId(), graphicallayer->getLayerId()));
     commandType = "lockunlock";
     layer = graphicallayer;
@@ -237,24 +228,28 @@ long lastShowIdleMillis = 0;
 
 void loop() {
   if (receivedNewCommand) {
+      lastShowIdleMillis = -1;  // prevent showing of MAC
     const char* commandTarget = ReceivedPacket.commandTarget;
     const char* commandAction = ReceivedPacket.commandAction;
-    if (handleCommand(commandTarget, commandAction)) {
+    bool handled = handleCommand(commandTarget, commandAction);
+    String status = String("handled command for [") + commandTarget + "] to [" + commandAction + "]";
+    if (handled) {
       statusLayer->penColor("darkgreen");
-      statusLayer->println(String("- Handled command for [") + commandTarget + "] to [" + commandAction + "]");
     } else {
+      dumbdisplay.tone(3000, 100);
       statusLayer->penColor("red");
-      statusLayer->println(String("- Not handled command for [") + commandTarget + "] to [" + commandAction + "]");
-      dumbdisplay.tone(1000, 100);
+      status = "not " + status;
     }
+    statusLayer->println(status);
+    dumbdisplay.writeComment(String("- ") + status);
     receivedNewCommand = false;
-} else  {
+} else if (lastShowIdleMillis != -1)  {
     long nowMillis = millis();
     if ((nowMillis - lastShowIdleMillis) >= 5000) {
 #if defined(DD_USING_WIFI)
       Serial.println(String("agent MAC is ") + WiFi.macAddress());
 #endif
-      dumbdisplay.writeComment(String("Idle ... agent MAC is ") + WiFi.macAddress());
+      dumbdisplay.writeComment(String("agent MAC is ") + WiFi.macAddress());
       lastShowIdleMillis = nowMillis;
     }
   }

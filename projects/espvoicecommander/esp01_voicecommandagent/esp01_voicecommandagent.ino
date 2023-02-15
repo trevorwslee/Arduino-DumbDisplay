@@ -38,6 +38,11 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
 void setup() {
   Serial.begin(115200);
 
+  Serial.println("*****");
+  Serial.println(String("* agent MAC is ") + WiFi.macAddress());
+  Serial.println("*****");
+
+
   pinMode(FAN_PIN, OUTPUT);
 
   // Set device as a Wi-Fi Station
@@ -64,5 +69,5 @@ void loop() {
   if ((nowMillis - lastShowIdleMillis) >= 5000) {
     Serial.println(String("ESP01 agent MAC is ") + WiFi.macAddress());
     lastShowIdleMillis = nowMillis;
-  }
+ }
 }

@@ -2448,11 +2448,11 @@ void DumbDisplay::recordLayerSetupCommands() {
   _Connect();
   _sendCommand0("", C_RECC);
 }
-void DumbDisplay::playbackLayerSetupCommands(const String& persist_id) {
-  _sendCommand2("", C_SAVEC, persist_id, TO_BOOL(true));
+void DumbDisplay::playbackLayerSetupCommands(const String& layerSetupPersistId) {
+  _sendCommand2("", C_SAVEC, layerSetupPersistId, TO_BOOL(true));
   _sendCommand0("", C_PLAYC);
 #ifdef SUPPORT_RECONNECT
-  _ConnectedIOProxy->setReconnectRCId(persist_id);
+  _ConnectedIOProxy->setReconnectRCId(layerSetupPersistId);
 #endif
 }
 void DumbDisplay::recordLayerCommands() {
