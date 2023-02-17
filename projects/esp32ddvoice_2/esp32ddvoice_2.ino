@@ -65,9 +65,9 @@ int StringToUnicode(const String& text, uint8_t* utf16Buffer) {
 
 
 void SynthesizeVoice(const String& text) {
-    int text_len = text.length();
+    int text_len = text.length();  // text_len is actually the number of chars used to store the text (in UTF8 format)
     uint8_t buffer[2 * text_len];
-    int len = StringToUnicode(text, buffer);
+    int len = StringToUnicode(text, buffer);  // convert text to UTF16 format
     int out_len = 2 + len;
     synthesizer.write((byte) 0xFD);                      // header
     synthesizer.write((byte) ((out_len & 0xFF00) > 8));  // data len: higher byte
@@ -214,9 +214,9 @@ void HandleGetAnotherNews() {
         isIdle = false;
         String text = "[v1][h0]" + title;  // [V1]: volume @ level 1; [h0]: synthesize so as to read out English (as opposed to spell out) 
         if (englishOnly) {
-            text = "[g2]" + text;          // [g2] select English ... for reading out things like number
+            text = "[g2]" + text;          // [g2]: select English ... for reading out things like number
         } else {
-            text = "[g1]" + text;          // [g1] select Chinese ... for reading out things like number
+            text = "[g1]" + text;          // [g1]: select Chinese ... for reading out things like number
         }
         SynthesizeVoice(text);
     }
