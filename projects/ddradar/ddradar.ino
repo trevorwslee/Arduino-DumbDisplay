@@ -1,3 +1,4 @@
+#include <Arduino.h>
 
 
 #define SERVO_PIN    11
@@ -7,14 +8,13 @@
 
 
 
-
-
 const int Width = 400;
 const int Height = Width / 2;
 const int W_half = Height;
 const int H = Height;
-const int MaxDist = W_half - 20;
-const float DistFactor = W_half / 50.0;
+const int BoundDist = 50;
+const int VisibleDist = 49;
+const float DistFactor = W_half / BoundDist;
 
 const int MaxAngle = 120;
 const int AngleIncrement = 1;
@@ -23,18 +23,15 @@ const int A_start = (180 - MaxAngle) / 2;
 
 
 
-bool CalcCoor(int ang, int dist, int& x, int& y) {
+void CalcCoor(int ang, int dist, int& x, int& y) {
   float dist_norm = DistFactor * dist;
-  if (dist_norm > MaxDist) {
-    return false;
-  }
   int ang_norm_i = 180 - (A_start + ang);
   float rad_i = ang_norm_i * 3.1416 / 180.0;
   float y_i = dist_norm * sin(rad_i);
   float x_i = dist_norm * cos(rad_i);
   x = W_half - x_i;
   y = H - y_i;
-  return true;
+  //return dist_norm;
 }
 
 
@@ -45,6 +42,16 @@ Servo servo;
 
 #include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput());
+
+GraphicalDDLayer* CreateGrahpicalLayer() {
+  GraphicalDDLayer* layer = dumbdisplay.createGraphicalLayer(Width, Height);
+  layer->border(5, "gray", "round");
+  layer->padding(5);
+  layer->penColor("green");
+  return layer;
+}
+
+
 
 
 template<int MAX_LAYER_COUNT>
@@ -65,11 +72,13 @@ class FadingLayers {
       nextUseLayerIdx = (nextUseLayerIdx + 1) % layerCount;
       for (int i = 0; i < this->layerCount; i++) {
         int lidx = (layerIdx + i) % layerCount;
+        DDLayer* layer = layers[lidx];
         if (i == 0) {
-          layers[lidx]->clear();
+          layer->opacity(100);
+          layer->clear();
         } else {
           int opacity = i * (100.0 / layerCount);
-          layers[lidx]->opacity(opacity);
+          layer->opacity(opacity);
         }
       }
       return layers[layerIdx];
@@ -82,9 +91,14 @@ class FadingLayers {
 
 
 
-const int GrahpicalLayerCount = 3;
-FadingLayers<GrahpicalLayerCount> graphicalLayers; 
+const int ObjectLayerCount = 3;
+FadingLayers<ObjectLayerCount> objectLayers; 
 
+const int BeamLayerCount = 5;
+FadingLayers<BeamLayerCount> beamLayers; 
+
+
+//GraphicalDDLayer* CreateGrahpicalLayer();
 
 
 int angle = 0;
@@ -97,22 +111,40 @@ void setup() {
   pinMode(US_ECHO_PIN, INPUT); // Sets the echoPin as an Input
 
 
-  for (int i = 0; i < GrahpicalLayerCount; i++) {
-    GraphicalDDLayer* graphicalLayer = dumbdisplay.createGraphicalLayer(Width, Height);
-    graphicalLayer->noBackgroundColor();
-    graphicalLayers.initAddLayer(graphicalLayer);
+  for (int i = 0; i < ObjectLayerCount; i++) {
+    GraphicalDDLayer* layer = CreateGrahpicalLayer();
+    layer->noBackgroundColor();
+    objectLayers.initAddLayer(layer);
   }
 
+  for (int i = 0; i < BeamLayerCount; i++) {
+    GraphicalDDLayer* layer = CreateGrahpicalLayer();
+    layer->noBackgroundColor();
+    beamLayers.initAddLayer(layer);
+  }
+
+  GraphicalDDLayer* layer = CreateGrahpicalLayer();
+  for (int i = 0; i <= MaxAngle; i++) {
+    int x;
+    int y;
+    CalcCoor(i, BoundDist, x, y);
+    layer->fillCircle(x, y, 2);
+    if (i == 0 || i == MaxAngle) {
+      layer->drawLine(x, y, W_half, H);
+    }
+  }
 
 }
 
 
 bool angleIncreasing = true;
-GraphicalDDLayer* graphicalLayer = NULL;
+GraphicalDDLayer* objectLayer = NULL;
 
 void loop() {
+
   servo.write(angle);
-  delay(15);  // give it some time
+  //delay(15);  // give it some time
+  delay(20);  // give it some time
 
   // read ultrasoncic sensor for detected object distance
   digitalWrite(US_TRIG_PIN, LOW);
@@ -126,20 +158,27 @@ void loop() {
   // . calculating the distance ... 0.034: sound travels 0.034 cm per second
   int distance = duration * 0.034 / 2;
 
-  //distance = 40;
-  int x;
-  int y;
-  int r = 3;
-
-  if (graphicalLayer == NULL) {
-    graphicalLayer = graphicalLayers.useLayer();
-  }
-  //GraphicalDDLayer* graphicalLayer = graphicalLayers.useLayer();
-  if (CalcCoor(angle, distance, x, y)) {
-    if (true) {
-      dumbdisplay.writeComment(String("Ang:") + angle + " Dist:" + distance + " X:" + x + " Y:" + y + " LID:" + graphicalLayer->getLayerId());
+  if (true) {
+    if (objectLayer == NULL) {
+      objectLayer = (GraphicalDDLayer*) objectLayers.useLayer();
     }
-    graphicalLayer->fillCircle(x, y, r);
+    if (distance <= VisibleDist) {
+      int x;
+      int y;
+      CalcCoor(angle, distance, x, y);
+      if (false) {
+        dumbdisplay.writeComment(String("Ang:") + angle + " Dist:" + distance + " X:" + x + " Y:" + y);
+      }
+      objectLayer->fillCircle(x, y, 3);
+    }
+  }
+
+  if (true) {
+    GraphicalDDLayer* beamLayer = (GraphicalDDLayer*) beamLayers.useLayer();
+    int x;
+    int y;
+    CalcCoor(angle, BoundDist, x, y);
+    beamLayer->drawLine(x, y, W_half, H);
   }
 
 
@@ -151,10 +190,11 @@ void loop() {
   if (angle > MaxAngle) {
     angle = MaxAngle;
     angleIncreasing = false;
-    graphicalLayer = NULL;
+    objectLayer = NULL;
   } if (angle < 0) {
     angle = 0;
     angleIncreasing = true;
-    graphicalLayer = NULL;
+    objectLayer = NULL;
   }
+
 }
