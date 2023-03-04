@@ -47,11 +47,16 @@ Servo servo;
 #include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput());
 
-GraphicalDDLayer* CreateGrahpicalLayer() {
+GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
   GraphicalDDLayer* layer = dumbdisplay.createGraphicalLayer(Width, Height);
   layer->border(5, "gray", "round");
   layer->padding(5);
   layer->penColor("green");
+  if (backgroundColor != NULL) {
+    layer->backgroundColor(backgroundColor);
+  } else {
+    layer->noBackgroundColor();
+  }
   return layer;
 }
 
@@ -117,31 +122,19 @@ void setup() {
 
   for (int i = 0; i < ObjectLayerCount; i++) {
     GraphicalDDLayer* layer = CreateGrahpicalLayer();
-    layer->noBackgroundColor();
+    //layer->noBackgroundColor();
     objectLayers.initAddLayer(layer);
   }
 
   for (int i = 0; i < BeamLayerCount; i++) {
     GraphicalDDLayer* layer = CreateGrahpicalLayer();
-    layer->noBackgroundColor();
+    //layer->noBackgroundColor();
     beamLayers.initAddLayer(layer);
   }
 
-  GraphicalDDLayer* layer = CreateGrahpicalLayer();
-  if (true) {
-    layer->backgroundColor("gray");
-    layer->fillArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "black");
-  } else {
-    for (int i = 0; i <= MaxAngle; i++) {
-      int x;
-      int y;
-      CalcCoor(i, BoundDist, x, y);
-      layer->fillCircle(x, y, 2);
-      if (i == 0 || i == MaxAngle) {
-        layer->drawLine(x, y, W_half, H);
-      }
-    }
-  }
+  GraphicalDDLayer* layer = CreateGrahpicalLayer("gray");
+  //layer->backgroundColor("gray");
+  layer->fillArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "black");
 }
 
 
@@ -158,8 +151,8 @@ int objectStartDistance = -1;
 void loop() {
 
   servo.write(angle);
-  //delay(15);  // give it some time
-  delay(30);  // give it some time
+  delay(15);  // give it some time
+  //delay(30);  // give it some time
 
   // read ultrasoncic sensor for detected object distance
   digitalWrite(US_TRIG_PIN, LOW);
@@ -173,27 +166,6 @@ void loop() {
   // . calculating the distance ... 0.034: sound travels 0.034 cm per second
   int distance = duration * 0.034 / 2;
 
-  if (objectLayer == NULL) {
-    objectLayer = (GraphicalDDLayer*) objectLayers.useLayer();
-  }
-
-  boolean terminateObject = false;
-  if (distance <= VisibleDist) {
-    int x;
-    int y;
-    CalcCoor(angle, distance, x, y);
-    if (false) {
-      dumbdisplay.writeComment(String("Ang:") + angle + " Dist:" + distance + " X:" + x + " Y:" + y);
-    }
-    objectLayer->fillCircle(x, y, ObjectDotRadius);
-    if (objectStartAngle == -1) {
-      objectStartAngle = angle;
-      objectStartDistance = distance;
-    }
-  } else {
-    terminateObject = true;
-  }
-
   if (true) {
     GraphicalDDLayer* beamLayer = (GraphicalDDLayer*) beamLayers.useLayer();
     int x;
@@ -202,21 +174,63 @@ void loop() {
     beamLayer->drawLine(x, y, W_half, H);
   }
 
-  if (angleIncreasing && angle == MaxAngle) {
-    terminateObject = true;
-  } else if (!angleIncreasing && angle == 0) {
-    terminateObject = true;
+  if (objectLayer == NULL) {
+    objectLayer = (GraphicalDDLayer*) objectLayers.useLayer();
   }
-  if (terminateObject) {
+
+
+  bool atBoundary = false;
+  if (angleIncreasing && angle == MaxAngle) {
+    atBoundary = true;
+  } else if (!angleIncreasing && angle == 0) {
+    atBoundary = true;
+  }
+
+  int objectEndAngle = -1;
+  int objectEndDistance = -1;
+  bool isNewObject = false;
+  if (distance <= VisibleDist) {
+    int x;
+    int y;
+    CalcCoor(angle, distance, x, y);
+    if (false) {
+      dumbdisplay.writeComment(String("Ang:") + angle + " Dist:" + distance + " X:" + x + " Y:" + y);
+    }
+    objectLayer->fillCircle(x, y, ObjectDotRadius);
     if (objectStartAngle != -1) {
-      int objectAngle = (prevAngle + objectStartAngle) / 2;
-      int objectDistance = (prevDistance + objectStartDistance) / 2;
+      if  (atBoundary) {
+        objectEndAngle = angle;
+        objectEndDistance = distance;
+      } else {
+        if (abs(distance - objectStartDistance) >= 10) {
+          objectEndAngle = prevAngle;
+          objectEndDistance = prevDistance;
+          isNewObject = true;
+        }
+      }
+    } else {
+      objectStartAngle = angle;
+      objectStartDistance = distance;
+    }
+  } else {
+    objectEndAngle = prevAngle;
+    objectEndDistance = prevDistance;
+  }
+
+  if (objectEndAngle != -1) {
+    if (objectStartAngle != -1) {
+      int objectAngle = (objectEndAngle + objectStartAngle) / 2;
+      int objectDistance = (objectEndDistance + objectStartDistance) / 2;
       int x;
       int y;
       CalcCoor(objectAngle, objectDistance, x, y);
       objectLayer->fillCircle(x, y, 3 * ObjectDotRadius, "red");
     }
     objectStartAngle = -1;
+    if (isNewObject) {
+      objectStartAngle = angle;
+      objectStartDistance = distance;
+    }
   }
 
 
