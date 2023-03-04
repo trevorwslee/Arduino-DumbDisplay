@@ -241,10 +241,6 @@ class TurtleDDLayer: public DDLayer {
     void goBy(int byX, int byY, bool withPen = true);
     /* set heading angle */
     void setHeading(int angle);
-    /* pen up */
-    void penUp();
-    /* pen down */
-    void penDown();
     /* set pen size */
     void penSize(int size);
     /* set pen color */
@@ -261,12 +257,20 @@ class TurtleDDLayer: public DDLayer {
     /* - fontName */
     /* - textSize: 0 means default */
     void setTextFont(const String& fontName = "", int textSize = 0);
+    /* pen up */
+    void penUp();
+    /* pen down */
+    void penDown();
+    void beginFill();
+    void endFill();
     /* draw a dot */
     void dot(int size, const String& color);
     /* draw circle; centered or not */
     void circle(int radius, bool centered = false);
     /* draw oval; centered or not */
     void oval(int width, int height, bool centered = false);
+    /* draw arc; centered or not */
+    void arc(int width, int height, int startAngle, int sweepAngle, bool centered = false);
     /* draw triangle (SAS) */
     void triangle(int side1, int angle, int side2);
     /* draw isosceles triangle; given size and angle */
@@ -419,6 +423,18 @@ class GraphicalDDLayer: public DDLayer {
     inline void fillRoundRect(int x, int y, int w, int h, int r, const String& color = "") {
       drawRoundRect(x, y, w, h, r, color, true);
     }
+    /* - empty color means text color */
+    void drawOval(int x, int y, int w, int h, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillOval(int x, int y, int w, int h, const String& color = "") {
+      drawOval(x, y, w, h, color, true);
+    }
+    /* - empty color means text color */
+    void drawArc(int x, int y, int w, int h, int startAngle, int sweepAngle, bool useCenter, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillArc(int x, int y, int w, int h, int startAngle, int sweepAngle, bool useCenter, const String& color = "") {
+      drawArc(x, y, w, h, startAngle, sweepAngle, useCenter, color, true);
+    }
     /* forward (relative to cursor) */
     void forward(int distance);
     /* left turn */
@@ -445,6 +461,8 @@ class GraphicalDDLayer: public DDLayer {
     void circle(int radius, bool centered = false);
     /* draw oval; centered or not */
     void oval(int width, int height, bool centered = false);
+    /* draw arc; centered or not */
+    void arc(int width, int height, int startAngle, int sweepAngle, bool centered = false);
     /* draw triangle (SAS) */
     void triangle(int side1, int angle, int side2);
     /* draw isosceles triangle; given size and angle */

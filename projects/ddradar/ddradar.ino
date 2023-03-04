@@ -12,14 +12,18 @@ const int Width = 400;
 const int Height = Width / 2;
 const int W_half = Height;
 const int H = Height;
-const int BoundDist = 50;
-const int VisibleDist = 49;
-const float DistFactor = W_half / BoundDist;
+const float DistFactor = W_half / 50;
+const int BoundDist = 49;
+const int VisibleDist = 48;
 
 const int MaxAngle = 120;
 const int AngleIncrement = 1;
 
 const int A_start = (180 - MaxAngle) / 2;
+
+
+const int ObjectDotRadius = 2;
+
 
 
 
@@ -91,10 +95,10 @@ class FadingLayers {
 
 
 
-const int ObjectLayerCount = 3;
+const int ObjectLayerCount = 2;
 FadingLayers<ObjectLayerCount> objectLayers; 
 
-const int BeamLayerCount = 5;
+const int BeamLayerCount = 4;
 FadingLayers<BeamLayerCount> beamLayers; 
 
 
@@ -124,53 +128,70 @@ void setup() {
   }
 
   GraphicalDDLayer* layer = CreateGrahpicalLayer();
-  for (int i = 0; i <= MaxAngle; i++) {
-    int x;
-    int y;
-    CalcCoor(i, BoundDist, x, y);
-    layer->fillCircle(x, y, 2);
-    if (i == 0 || i == MaxAngle) {
-      layer->drawLine(x, y, W_half, H);
+  if (true) {
+    layer->backgroundColor("gray");
+    layer->fillArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "black");
+  } else {
+    for (int i = 0; i <= MaxAngle; i++) {
+      int x;
+      int y;
+      CalcCoor(i, BoundDist, x, y);
+      layer->fillCircle(x, y, 2);
+      if (i == 0 || i == MaxAngle) {
+        layer->drawLine(x, y, W_half, H);
+      }
     }
   }
-
 }
 
 
 bool angleIncreasing = true;
 GraphicalDDLayer* objectLayer = NULL;
 
+
+int prevAngle = -1;
+int prevDistance = -1;
+
+int objectStartAngle = -1;
+int objectStartDistance = -1;
+
 void loop() {
 
   servo.write(angle);
   //delay(15);  // give it some time
-  delay(20);  // give it some time
+  delay(30);  // give it some time
 
   // read ultrasoncic sensor for detected object distance
   digitalWrite(US_TRIG_PIN, LOW);
   delayMicroseconds(2);
-  // . ses the trigPin on HIGH state for 10 micro seconds
+  // . set the trigPin on HIGH state for 10 micro seconds
   digitalWrite(US_TRIG_PIN, HIGH);
   delayMicroseconds(10);
   digitalWrite(US_TRIG_PIN, LOW);
-  // . reas the echoPin, returns the sound wave travel time in microseconds
+  // . read the echoPin, returns the sound wave travel time in microseconds
   long duration = pulseIn(US_ECHO_PIN, HIGH);
   // . calculating the distance ... 0.034: sound travels 0.034 cm per second
   int distance = duration * 0.034 / 2;
 
-  if (true) {
-    if (objectLayer == NULL) {
-      objectLayer = (GraphicalDDLayer*) objectLayers.useLayer();
+  if (objectLayer == NULL) {
+    objectLayer = (GraphicalDDLayer*) objectLayers.useLayer();
+  }
+
+  boolean terminateObject = false;
+  if (distance <= VisibleDist) {
+    int x;
+    int y;
+    CalcCoor(angle, distance, x, y);
+    if (false) {
+      dumbdisplay.writeComment(String("Ang:") + angle + " Dist:" + distance + " X:" + x + " Y:" + y);
     }
-    if (distance <= VisibleDist) {
-      int x;
-      int y;
-      CalcCoor(angle, distance, x, y);
-      if (false) {
-        dumbdisplay.writeComment(String("Ang:") + angle + " Dist:" + distance + " X:" + x + " Y:" + y);
-      }
-      objectLayer->fillCircle(x, y, 3);
+    objectLayer->fillCircle(x, y, ObjectDotRadius);
+    if (objectStartAngle == -1) {
+      objectStartAngle = angle;
+      objectStartDistance = distance;
     }
+  } else {
+    terminateObject = true;
   }
 
   if (true) {
@@ -181,6 +202,27 @@ void loop() {
     beamLayer->drawLine(x, y, W_half, H);
   }
 
+  if (angleIncreasing && angle == MaxAngle) {
+    terminateObject = true;
+  } else if (!angleIncreasing && angle == 0) {
+    terminateObject = true;
+  }
+  if (terminateObject) {
+    if (objectStartAngle != -1) {
+      int objectAngle = (prevAngle + objectStartAngle) / 2;
+      int objectDistance = (prevDistance + objectStartDistance) / 2;
+      int x;
+      int y;
+      CalcCoor(objectAngle, objectDistance, x, y);
+      objectLayer->fillCircle(x, y, 3 * ObjectDotRadius, "red");
+    }
+    objectStartAngle = -1;
+  }
+
+
+  prevAngle = angle;
+  prevDistance = distance;
+  
 
   if (angleIncreasing) {
     angle += AngleIncrement;

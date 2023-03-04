@@ -605,7 +605,7 @@ String* _ReadFeedback(String& buffer) {
 
 
 
-void __SendCommand(const String& layerId, const char* command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5, const String* pParam6, const String* pParam7, const String* pParam8) {
+void __SendCommand(const String& layerId, const char* command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5, const String* pParam6, const String* pParam7, const String* pParam8, const String* pParam9) {
 #ifdef DD_DEBUG_SEND_COMMAND          
   Serial.print("// *** sent");
 #endif        
@@ -663,6 +663,10 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
                 if (pParam8 != NULL) {
                   _IO->print(",");
                   _IO->print(*pParam8/*pParam8->c_str()*/);
+                  if (pParam9 != NULL) {
+                    _IO->print(",");
+                    _IO->print(*pParam9/*pParam9->c_str()*/);
+                  }
                 }
               }
             }
@@ -692,7 +696,7 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
 #endif        
 }  
 void _HandleFeedback();
-void _SendCommand(const String& layerId, const char* command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL) {
+void _SendCommand(const String& layerId, const char* command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL, const String* pParam9 = NULL) {
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
   _SendingCommand = true;
 
@@ -704,7 +708,7 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
 #endif   
 
   if (command != NULL) {
-    __SendCommand(layerId, command, pParam1, pParam2, pParam3, pParam4, pParam5, pParam6, pParam7, pParam8);
+    __SendCommand(layerId, command, pParam1, pParam2, pParam3, pParam4, pParam5, pParam6, pParam7, pParam8, pParam9);
   }
 
 #ifdef ENABLE_FEEDBACK
@@ -1182,6 +1186,9 @@ inline void _sendCommand7(const String& layerId, const char *command, const Stri
 inline void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
   _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
 }
+inline void _sendCommand9(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8, const String& param9) {
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8, &param9);
+}
 #ifdef SUPPORT_TUNNEL
 inline void _sendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
   _SendSpecialCommand(specialType, specialId, specialCommand, specialData);
@@ -1453,6 +1460,12 @@ void TurtleDDLayer::penUp() {
 void TurtleDDLayer::penDown() {
   _sendCommand0(layerId, "pd");
 }
+void TurtleDDLayer::beginFill() {
+  _sendCommand0(layerId, "begin_fill");
+}
+void TurtleDDLayer::endFill() {
+  _sendCommand0(layerId, "end_fill");
+}
 void TurtleDDLayer::penSize(int size) {
   _sendCommand1(layerId, C_pensize, String(size));
 }
@@ -1466,10 +1479,10 @@ void TurtleDDLayer::penColor(const String& color) {
 //   _sendCommand1(layerId, "fillcolor", HEX_COLOR(color));
 // }
 void TurtleDDLayer::fillColor(const String& color) {
-  _sendCommand1(layerId, "fillcolor", color);
+  _sendCommand1(layerId, C_fillcolor, color);
 }
 void TurtleDDLayer::noFillColor() {
-  _sendCommand0(layerId, "nofillcolor");
+  _sendCommand0(layerId, C_nofillcolor);
 }
 void TurtleDDLayer::penFilled(bool filled) {
   _sendCommand1(layerId, "pfilled", TO_BOOL(filled));
@@ -1488,6 +1501,9 @@ void TurtleDDLayer::circle(int radius, bool centered) {
 }
 void TurtleDDLayer::oval(int width, int height, bool centered) {
   _sendCommand2(layerId, centered ? C_coval : C_oval, String(width), String(height));
+}
+void TurtleDDLayer::arc(int width, int height, int startAngle, int sweepAngle, bool centered) {
+  _sendCommand4(layerId, centered ? C_carc : C_arc, String(width), String(height), String(startAngle), String(sweepAngle));
 }
 void TurtleDDLayer::rectangle(int width, int height, bool centered) {
   _sendCommand2(layerId, centered ? C_crect : C_rect, String(width), String(height));
@@ -1658,6 +1674,12 @@ void GraphicalDDLayer::drawLine(int x1, int y1, int x2, int y2, const String& co
 void GraphicalDDLayer::drawRect(int x, int y, int w, int h, const String& color, bool filled) {
   _sendCommand6(layerId, c_drawrect, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), color, TO_BOOL(filled));
 }
+void GraphicalDDLayer::drawOval(int x, int y, int w, int h, const String& color, bool filled) {
+  _sendCommand6(layerId, c_drawoval, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), color, TO_BOOL(filled));
+}
+void GraphicalDDLayer::drawArc(int x, int y, int w, int h, int startAngle, int sweepAngle, bool useCenter, const String& color, bool filled) {
+  _sendCommand9(layerId, c_drawarc, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), TO_C_INT(startAngle), TO_C_INT(sweepAngle), TO_BOOL(useCenter), color, TO_BOOL(filled));
+}
 // void GraphicalDDLayer::fillRect(int x, int y, int w, int h, const String& color) {
 //   _sendCommand6(layerId, "drawrect", String(x), String(y), String(w), String(h), color, TO_BOOL(true));
 // }
@@ -1718,6 +1740,9 @@ void GraphicalDDLayer::circle(int radius, bool centered) {
 }
 void GraphicalDDLayer::oval(int width, int height, bool centered) {
   _sendCommand2(layerId, centered ? C_coval : C_oval, String(width), String(height));
+}
+void GraphicalDDLayer::arc(int width, int height, int startAngle, int sweepAngle, bool centered) {
+  _sendCommand4(layerId, centered ? C_carc : C_arc, String(width), String(height), String(startAngle), String(sweepAngle));
 }
 void GraphicalDDLayer::rectangle(int width, int height, bool centered) {
   _sendCommand2(layerId, centered ? C_crect : C_rect, String(width), String(height));
