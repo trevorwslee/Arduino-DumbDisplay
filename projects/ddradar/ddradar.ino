@@ -12,9 +12,9 @@ const int Width = 400;
 const int Height = Width / 2;
 const int W_half = Height;
 const int H = Height;
-const float DistFactor = W_half / 50;
-const int BoundDist = 49;
-const int VisibleDist = 48;
+const int BoundDist = 50;
+const int VisibleDist = 49;
+const float DistFactor = W_half / BoundDist;
 
 const int MaxAngle = 120;
 const int AngleIncrement = 1;
@@ -43,14 +43,26 @@ void CalcCoor(int ang, int dist, int& x, int& y) {
 Servo servo;
 
 
+#define BLUETOOTH
 
-#include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput());
+#if defined(BLUETOOTH)
+
+  #include "ssdumbdisplay.h"
+  // assume HC-06 connected; 2 => TX of HC06; 3 => RX of HC06
+  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
+
+
+#else
+
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput());
+
+#endif
 
 GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
   GraphicalDDLayer* layer = dumbdisplay.createGraphicalLayer(Width, Height);
-  layer->border(5, "gray", "round");
-  layer->padding(5);
+  layer->border(5, "darkblue", "round");
+  layer->padding(3);
   layer->penColor("green");
   if (backgroundColor != NULL) {
     layer->backgroundColor(backgroundColor);
@@ -135,6 +147,7 @@ void setup() {
   GraphicalDDLayer* layer = CreateGrahpicalLayer("gray");
   //layer->backgroundColor("gray");
   layer->fillArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "black");
+  layer->drawArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "red");
 }
 
 
@@ -170,7 +183,7 @@ void loop() {
     GraphicalDDLayer* beamLayer = (GraphicalDDLayer*) beamLayers.useLayer();
     int x;
     int y;
-    CalcCoor(angle, BoundDist, x, y);
+    CalcCoor(angle, VisibleDist, x, y);
     beamLayer->drawLine(x, y, W_half, H);
   }
 
