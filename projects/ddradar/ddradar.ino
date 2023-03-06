@@ -35,7 +35,6 @@ void CalcCoor(int ang, int dist, int& x, int& y) {
   float x_i = dist_norm * cos(rad_i);
   x = W_half - x_i;
   y = H - y_i;
-  //return dist_norm;
 }
 
 
@@ -51,13 +50,13 @@ Servo servo;
   // assume HC-06 connected; 2 => TX of HC06; 3 => RX of HC06
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
 
-
 #else
 
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput());
 
 #endif
+
 
 GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
   GraphicalDDLayer* layer = dumbdisplay.createGraphicalLayer(Width, Height);
@@ -75,54 +74,24 @@ GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
 
 
 
-template<int MAX_LAYER_COUNT>
-class FadingLayers {
-  public:
-    FadingLayers() {
-      this->layerCount = 0;
-      this->nextUseLayerIdx = 0;
-    }
-    void initAddLayer(DDLayer* layer) {
-      if (layerCount < MAX_LAYER_COUNT) {
-        layers[layerCount++] = layer;
-      }
-    }
-  public:  
-    DDLayer* useLayer() {
-      int layerIdx = nextUseLayerIdx;
-      nextUseLayerIdx = (nextUseLayerIdx + 1) % layerCount;
-      for (int i = 0; i < this->layerCount; i++) {
-        int lidx = (layerIdx + i) % layerCount;
-        DDLayer* layer = layers[lidx];
-        if (i == 0) {
-          layer->opacity(100);
-          layer->clear();
-        } else {
-          int opacity = i * (100.0 / layerCount);
-          layer->opacity(opacity);
-        }
-      }
-      return layers[layerIdx];
-    }  
-  private:
-    DDLayer* layers[MAX_LAYER_COUNT];
-    int layerCount;
-    int nextUseLayerIdx;
-};
+DDLayoutHelper layoutHelper(dumbdisplay);
 
 
 
 const int ObjectLayerCount = 2;
-FadingLayers<ObjectLayerCount> objectLayers; 
+DDFadingLayers<ObjectLayerCount> objectLayers; 
 
 const int BeamLayerCount = 4;
-FadingLayers<BeamLayerCount> beamLayers; 
+DDFadingLayers<BeamLayerCount> beamLayers; 
 
 
-//GraphicalDDLayer* CreateGrahpicalLayer();
+
+GraphicalDDLayer* mainLayer;
 
 
 int angle = 0;
+bool isRunning = false;
+
 void setup() {
   servo.attach(SERVO_PIN);
   servo.write(angle);
@@ -131,24 +100,27 @@ void setup() {
   pinMode(US_TRIG_PIN, OUTPUT); // Sets the trigPin as an Output
   pinMode(US_ECHO_PIN, INPUT); // Sets the echoPin as an Input
 
-
+  layoutHelper.startInitializeLayout();
+    
   for (int i = 0; i < ObjectLayerCount; i++) {
     GraphicalDDLayer* layer = CreateGrahpicalLayer();
-    //layer->noBackgroundColor();
     objectLayers.initAddLayer(layer);
   }
 
   for (int i = 0; i < BeamLayerCount; i++) {
     GraphicalDDLayer* layer = CreateGrahpicalLayer();
-    //layer->noBackgroundColor();
     beamLayers.initAddLayer(layer);
   }
 
-  GraphicalDDLayer* layer = CreateGrahpicalLayer("gray");
-  //layer->backgroundColor("gray");
-  layer->fillArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "black");
-  layer->drawArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "red");
+  mainLayer = CreateGrahpicalLayer("gray");
+
+  layoutHelper.finishInitializeLayout("ddradar");
+
+  layoutHelper.setIdleCalback([](long idleForMillis) {
+    isRunning = false;  // if idle, e.g. disconnected, stop whatever
+  });
 }
+
 
 
 bool angleIncreasing = true;
@@ -163,9 +135,37 @@ int objectStartDistance = -1;
 
 void loop() {
 
+  // if (layoutHelper.checkNeedToInitializeLayout()) {
+  //   layoutHelper.startInitializeLayout(dumbdisplay);
+     
+  //   for (int i = 0; i < ObjectLayerCount; i++) {
+  //     GraphicalDDLayer* layer = CreateGrahpicalLayer();
+  //     objectLayers.initAddLayer(layer);
+  //   }
+
+  //   for (int i = 0; i < BeamLayerCount; i++) {
+  //     GraphicalDDLayer* layer = CreateGrahpicalLayer();
+  //     beamLayers.initAddLayer(layer);
+  //   }
+
+  //   mainLayer = CreateGrahpicalLayer("gray");
+
+  //   layoutHelper.finishInitializeLayout(dumbdisplay, "ddradar");
+  // }
+
+  if (layoutHelper.checkNeedToUpdateLayers()) {
+      mainLayer->fillArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "black");
+      mainLayer->drawArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "red");
+
+      isRunning = true;
+  }
+
+  if (!isRunning) {
+    return;
+  }
+
   servo.write(angle);
   delay(15);  // give it some time
-  //delay(30);  // give it some time
 
   // read ultrasoncic sensor for detected object distance
   digitalWrite(US_TRIG_PIN, LOW);
@@ -179,13 +179,11 @@ void loop() {
   // . calculating the distance ... 0.034: sound travels 0.034 cm per second
   int distance = duration * 0.034 / 2;
 
-  if (true) {
-    GraphicalDDLayer* beamLayer = (GraphicalDDLayer*) beamLayers.useLayer();
-    int x;
-    int y;
-    CalcCoor(angle, VisibleDist, x, y);
-    beamLayer->drawLine(x, y, W_half, H);
-  }
+  GraphicalDDLayer* beamLayer = (GraphicalDDLayer*) beamLayers.useLayer();
+  int x;
+  int y;
+  CalcCoor(angle, VisibleDist, x, y);
+  beamLayer->drawLine(x, y, W_half, H);
 
   if (objectLayer == NULL) {
     objectLayer = (GraphicalDDLayer*) objectLayers.useLayer();
@@ -203,8 +201,8 @@ void loop() {
   int objectEndDistance = -1;
   bool isNewObject = false;
   if (distance <= VisibleDist) {
-    int x;
-    int y;
+    // int x;
+    // int y;
     CalcCoor(angle, distance, x, y);
     if (false) {
       dumbdisplay.writeComment(String("Ang:") + angle + " Dist:" + distance + " X:" + x + " Y:" + y);
@@ -234,8 +232,8 @@ void loop() {
     if (objectStartAngle != -1) {
       int objectAngle = (objectEndAngle + objectStartAngle) / 2;
       int objectDistance = (objectEndDistance + objectStartDistance) / 2;
-      int x;
-      int y;
+      // int x;
+      // int y;
       CalcCoor(objectAngle, objectDistance, x, y);
       objectLayer->fillCircle(x, y, 3 * ObjectDotRadius, "red");
     }
