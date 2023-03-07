@@ -313,7 +313,7 @@ class DDLayoutHelper {
 template<int MAX_LAYER_COUNT>
 class DDFadingLayers {
   public:
-    FadingLayers() {
+    DDFadingLayers() {
       this->layerCount = 0;
       this->nextUseLayerIdx = 0;
     }

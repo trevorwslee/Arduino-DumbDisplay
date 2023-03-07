@@ -1394,7 +1394,7 @@ Notes:
 
 | | |
 |--|--|
-|![](screenshots/esp32-mic.png)|DumbDisplay have certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports.|
+|![](screenshots/esp32-mic.png)|DumbDisplay have certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports. Additionally, you may also be interested in a more extensive application -- [Demo of ESP-Now Voice Commander Fun With Wit.ai and DumbDisplay](https://www.youtube.com/watch?v=dhlLU7gmmbE)|
 
 
 
