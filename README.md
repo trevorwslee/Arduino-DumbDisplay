@@ -1382,7 +1382,7 @@ The cached 16-bit pixel image is displayed to graphical layer as needed, like
 Even better, you may want to saved the images to DumbDisplay app image storage, for the use of your sketch. As hinted by the post, the steps can be like
 | | |
 |--|--|
-|1) use your phone's Chrome browser to open the image page; 2) long press the image to bring up the available options; 3) select to share the image with DumbDisplay app|![](screenshots/ddsaveimages.gif)|
+|1) use your phone's Chrome browser to open the image page; <br>2) long press the image to bring up the available options; <br>3) select to share the image with DumbDisplay app|![](screenshots/ddsaveimages.gif)|
 
 Notes:
 * not only from Chrome, you can share and save images from any app that can share images that it sees

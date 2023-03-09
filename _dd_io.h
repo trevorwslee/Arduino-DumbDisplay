@@ -69,4 +69,77 @@ class DDInputOutput {
     bool setupForSerial;
 };
 
+// class DDIOBufferHelper {
+//   public:
+//     DDIOBufferHelper(DDInputOutput* io, int bufferSize = 256): io(io) {
+//       this->bufferSize = bufferSize;
+//       this->buffer = new uint8_t[bufferSize];
+//       this->bufferedCount = 0;
+//     }
+//     ~DDIOBufferHelper() {
+//       delete this->buffer;
+//     }
+//     void print(const String &s) {
+//       print(s.c_str());
+//     }
+//     void print(const char *p) {
+//       int len = strlen(p);
+//       write((uint8_t*) p, len);
+//       // const char *c = p;
+//       // while (true) {
+//       //   if (*c == 0) {
+//       //     break;
+//       //   }
+//       //   c++;
+//       // }
+//       // int count = c - p;
+//       // write((uint8_t*) p, count);
+//     }
+//     void write(uint8_t b) {
+//       write(&b, 1);
+//     }
+//     void write(const uint8_t *buf, size_t size) {
+//       if (true) {
+//         io->write(buf, size);
+//       } else {
+//         if ((bufferedCount + size) > bufferSize) {
+//           flush();
+//         }
+//         if (size > bufferSize) {
+//           flush();
+//           io->write(buf, size);
+//         } else {
+//           const uint8_t *s = buf;
+//           uint8_t *t = buffer + bufferedCount;
+//           bool flushAfterward = false;
+//           for (int i = 0; i < size; i++) {
+//             if (*s == '\n') {
+//               flushAfterward = true;
+//             }
+//             *t = *s;
+//             s++;
+//             t++; 
+//             bufferedCount++;
+//           }
+//           //memcpy(buffer + bufferedCount, buf, size);
+//           //bufferedCount += size;
+//           if (flushAfterward) {
+//             flush();
+//           }
+//         }
+//       }
+//     }    
+//     void flush() {
+//       if (bufferedCount > 0) {
+//         io->write(buffer, bufferedCount);
+//         bufferedCount = 0;
+//       }
+//     }
+//   private:
+//     DDInputOutput* io;
+//     int bufferSize;
+//     uint8_t* buffer;  
+//     int bufferedCount;
+// };
+
 #endif
