@@ -12,6 +12,7 @@
 #define DD_SERIAL_BAUD    DUMBDISPLAY_BAUD
 #define DD_WIFI_PORT      10201
 
+#define DD_DEF_SEND_BUFFER_SIZE 256
 
 #include "_dd_util.h"
 
@@ -710,7 +711,7 @@ class DDTunnel: public DDObject {
 
 class DDBufferedTunnel: public DDTunnel {
   public:
-    DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize);
+    DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, uint8_t bufferSize);
     virtual ~DDBufferedTunnel();
     virtual void release();
     virtual void reconnect();
@@ -739,7 +740,7 @@ class DDBufferedTunnel: public DDTunnel {
  */ 
 class BasicDDTunnel: public DDBufferedTunnel {
   public:
-    BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, uint8_t bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
     /* count buffer ready to be read */
     inline int count() { return _count(); }
@@ -824,7 +825,7 @@ struct DDLocation {
 };
 class GpsServiceDDTunnel: public BasicDDTunnel {
   public:
-    GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+    GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, uint8_t bufferSize):
         BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
   public:
@@ -877,13 +878,13 @@ typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 class DumbDisplay {
   public:
-    DumbDisplay(DDInputOutput* pIO, bool enableDoubleClick = true) {
+    DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE, bool enableDoubleClick = true) {
 #ifndef DD_NO_SERIAL      
       if (pIO->isSerial() || pIO->isBackupBySerial()) {
         _The_DD_Serial = new DDSerial();
       }
 #endif      
-      initialize(pIO, enableDoubleClick);
+      initialize(pIO, sendBufferSize, enableDoubleClick);
     }
     //DumbDisplay(DDInputOutput* pIO, DDSerialProxy* pDDSerialProxy);
     /* explicitly make connection -- blocking */
@@ -1033,7 +1034,7 @@ class DumbDisplay {
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine);
   private:
-    void initialize(DDInputOutput* pIO, bool enableDoubleClick);
+    void initialize(DDInputOutput* pIO, uint16_t sendBufferSize, bool enableDoubleClick);
     bool canLogToSerial();
 };
 

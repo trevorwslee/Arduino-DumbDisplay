@@ -1,12 +1,19 @@
 #include <Arduino.h>
 
 
+//#define UNO_BLUETOOTH
+//#define PICO_WIFI
+
+
+
 #define SERVO_PIN    11
 
 #define US_TRIG_PIN   9
 #define US_ECHO_PIN  10
 
 
+
+const char* CompiledAt = __DATE__ " " __TIME__;
 
 const int Width = 400;
 const int Height = Width / 2;
@@ -42,13 +49,16 @@ void CalcCoor(int ang, int dist, int& x, int& y) {
 Servo servo;
 
 
-#define BLUETOOTH
-
-#if defined(BLUETOOTH)
+#if defined(UNO_BLUETOOTH)
 
   #include "ssdumbdisplay.h"
   // assume HC-06 connected; 2 => TX of HC06; 3 => RX of HC06
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
+
+#elif defined(PICO_WIFI)
+
+  //#include "wifidumbdisplay.h"
+  //DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 
 #else
 
@@ -100,6 +110,7 @@ void setup() {
   pinMode(US_TRIG_PIN, OUTPUT); // Sets the trigPin as an Output
   pinMode(US_ECHO_PIN, INPUT); // Sets the echoPin as an Input
 
+  dumbdisplay.writeComment(String("Sketch compiled @ ") + CompiledAt);
   layoutHelper.startInitializeLayout();
     
   for (int i = 0; i < ObjectLayerCount; i++) {
