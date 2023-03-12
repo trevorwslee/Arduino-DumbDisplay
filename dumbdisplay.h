@@ -83,12 +83,16 @@ const int8_t DD_OBJECT_TYPE_TUNNEL = 1;
 // #define DD_OBJECT_TYPE_LAYER  0
 // #define DD_OBJECT_TYPE_TUNNEL 1
 
-class DDObject {
-  protected:
-    DDObject(int8_t objectType) {
-      this->objectType = objectType;
-    }
-  public:
+// class DDObject {
+//   protected:
+//     inline DDObject(int8_t objectType) {
+//       this->objectType = objectType;
+//     }
+//   public:
+//     int8_t objectType;
+//     String customData;
+// };
+struct DDObject {
     int8_t objectType;
     String customData;
 };
@@ -742,7 +746,8 @@ class DDBufferedTunnel: public DDTunnel {
  */ 
 class BasicDDTunnel: public DDBufferedTunnel {
   public:
-    BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize): 
+      DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
     /* count buffer ready to be read */
     inline int count() { return _count(); }
@@ -781,29 +786,14 @@ class BasicDDTunnel: public DDBufferedTunnel {
  *   `gender` = `Male`
  *   `age` = `32`
  */
-class JsonDDTunnel: public BasicDDTunnel {
-  public:
-    JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
-        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
-    }
-    // /* count buffer ready (pieces of JSON) to be read */
-    // inline int count() { return _count(); }
-    // /* reached EOF? */
-    // inline bool eof() { return _eof(); }
-    // /* read a piece of JSON data */
-    // bool read(String& fieldId, String& fieldValue);
-};
-// class JsonDDTunnel: public DDBufferedTunnel {
+typedef BasicDDTunnel JsonDDTunnel;
+// class JsonDDTunnel: public BasicDDTunnel {
 //   public:
-//     JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+//     JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+//       BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
 //     }
-//     /* count buffer ready (pieces of JSON) to be read */
-//     inline int count() { return _count(); }
-//     /* reached EOF? */
-//     inline bool eof() { return _eof(); }
-//     /* read a piece of JSON data */
-//     bool read(String& fieldId, String& fieldValue);
 // };
+
 
 class SimpleToolDDTunnel: public BasicDDTunnel {
   public:

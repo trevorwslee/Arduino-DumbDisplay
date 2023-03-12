@@ -329,7 +329,7 @@ volatile int _NextImgId = 0;
 volatile int _NextBytesId = 0;
 
 #ifdef SUPPORT_TUNNEL
-#define DD_LAYER_INC 5
+#define DD_LAYER_INC   2
 DDObject** _DDLayerArray = NULL;
 int _MaxDDLayerCount = 0;
 #else
@@ -630,14 +630,29 @@ int _AllocLid() {
 #ifdef SUPPORT_TUNNEL
   if (DD_LAYER_INC > 0) {
     if (lid >= _MaxDDLayerCount) {
-      _MaxDDLayerCount = lid + DD_LAYER_INC;
-      DDObject** oriLayerArray = _DDLayerArray;
-      DDObject** layerArray = (DDObject**) malloc(_MaxDDLayerCount * sizeof(DDObject*));
-      if (oriLayerArray != NULL) {
-        memcpy(layerArray, oriLayerArray, (_MaxDDLayerCount - DD_LAYER_INC) * sizeof(DDObject*));
-        free(oriLayerArray);
+      if (true) {
+        int oriLayerCount = _MaxDDLayerCount;
+        _MaxDDLayerCount = lid + DD_LAYER_INC;
+        DDObject** oriLayerArray = _DDLayerArray;
+        DDObject** layerArray = new DDObject*[_MaxDDLayerCount];
+        if (oriLayerArray != NULL) {
+          //memcpy(layerArray, oriLayerArray, (_MaxDDLayerCount - DD_LAYER_INC) * sizeof(DDObject*));
+          for (int i = 0; i < oriLayerCount; i++) {
+            layerArray[i] = oriLayerArray[i];
+          }
+          delete oriLayerArray;
+        }
+        _DDLayerArray = layerArray;
+      } else {
+        _MaxDDLayerCount = lid + DD_LAYER_INC;
+        DDObject** oriLayerArray = _DDLayerArray;
+        DDObject** layerArray = (DDObject**) malloc(_MaxDDLayerCount * sizeof(DDObject*));
+        if (oriLayerArray != NULL) {
+          memcpy(layerArray, oriLayerArray, (_MaxDDLayerCount - DD_LAYER_INC) * sizeof(DDObject*));
+          free(oriLayerArray);
+        }
+        _DDLayerArray = layerArray;
       }
-      _DDLayerArray = layerArray;
     }
   } else {
     DDObject** oriLayerArray = _DDLayerArray;
@@ -1357,7 +1372,8 @@ void DDFeedbackManager::pushFeedback(DDFeedbackType type, int16_t x, int16_t y, 
 }
 
 
-DDLayer::DDLayer(int8_t layerId): DDObject(DD_OBJECT_TYPE_LAYER) {
+DDLayer::DDLayer(int8_t layerId)/*: DDObject(DD_OBJECT_TYPE_LAYER)*/ {
+  this->objectType = DD_OBJECT_TYPE_LAYER;
   this->layerId = String(layerId);
   this->pFeedbackManager = NULL;
   this->feedbackHandler = NULL;
@@ -2001,7 +2017,8 @@ void TerminalDDLayer::println(const String& val) {
 
 #ifdef SUPPORT_TUNNEL
 DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow/*, int8_t bufferSize*/):
-  DDObject(DD_OBJECT_TYPE_TUNNEL), type(type), tunnelId(String(tunnelId)), params(params), endPoint(endPoint) {
+  /*DDObject(DD_OBJECT_TYPE_TUNNEL), */type(type), tunnelId(String(tunnelId)), params(params), endPoint(endPoint) {
+    this->objectType = DD_OBJECT_TYPE_TUNNEL;
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
   // this->nextArrayIdx = 0;
