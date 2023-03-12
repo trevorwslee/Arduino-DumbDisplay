@@ -23,9 +23,10 @@
 // #endif
 
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
-  #define TL_BUFFER_DATA_LEN 24
+#define TL_BUFFER_DATA_LEN 24
 #else
-  #define TL_BUFFER_DATA_LEN 128
+#define TL_BUFFER_DATA_LEN 128
+#define SUPPORT_USE_WOIO
 #endif
 
 
@@ -62,7 +63,6 @@
 //#define DEBUG_RECONNECT_WITH_COMMENT
 //#define RECONNECTED_RESET_KEEP_ALIVE
 
-#define SUPPORT_USE_WOIO
 
 // not flush seems to be a bit better for Serial (lost data)
 #define FLUSH_AFTER_SENT_COMMAND false
@@ -78,6 +78,83 @@
 
 
 #include "_dd_commands.h"
+
+
+#ifdef SUPPORT_USE_WOIO
+class DDWriteOnyIO: public DDInputOutput {
+  public:
+    DDWriteOnyIO(DDInputOutput* io, uint16_t bufferSize = 8/*256*/): io(io) {
+      this->bufferSize = bufferSize;
+      this->buffer = new uint8_t[bufferSize];
+      this->bufferedCount = 0;
+    }
+    ~DDWriteOnyIO() {
+      delete this->buffer;
+    }
+    void print(const String &s) {
+      print(s.c_str());
+    }
+    void print(const char *p) {
+      int len = strlen(p);
+      write((uint8_t*) p, len);
+      // const char *c = p;
+      // while (true) {
+      //   if (*c == 0) {
+      //     break;
+      //   }
+      //   c++;
+      // }
+      // int count = c - p;
+      // write((uint8_t*) p, count);
+    }
+    void write(uint8_t b) {
+      write(&b, 1);
+    }
+    void write(const uint8_t *buf, size_t size) {
+      if (false) {
+        io->write(buf, size);
+      } else {
+        if ((bufferedCount + size) > bufferSize) {
+          flush();
+        }
+        if (size > bufferSize) {
+          flush();
+          io->write(buf, size);
+        } else {
+          const uint8_t *s = buf;
+          uint8_t *t = buffer + bufferedCount;
+          bool flushAfterward = false;
+          for (int i = 0; i < size; i++) {
+            if (*s == '\n') {
+              flushAfterward = true;
+            }
+            *t = *s;
+            s++;
+            t++; 
+            bufferedCount++;
+          }
+          //memcpy(buffer + bufferedCount, buf, size);
+          //bufferedCount += size;
+          if (flushAfterward) {
+            flush();
+          }
+        }
+      }
+    }    
+    void flush() {
+      //Serial.println("--->");
+      if (bufferedCount > 0) {
+        io->write(buffer, bufferedCount);
+        bufferedCount = 0;
+      }
+    }
+  private:
+    DDInputOutput* io;
+    uint8_t bufferSize;
+    uint8_t* buffer;  
+    uint8_t bufferedCount;
+};
+#endif
 
 
 #define YIELD() delay(1)
@@ -125,7 +202,6 @@ class IOProxy {
 };
 
 
-volatile uint16_t _SendBufferSize = DD_DEF_SEND_BUFFER_SIZE;
 volatile bool _EnableDoubleClick = false;
 volatile bool _Connected = false;
 volatile int _ConnectVersion = 0;
@@ -253,26 +329,35 @@ volatile int _NextImgId = 0;
 volatile int _NextBytesId = 0;
 
 #ifdef SUPPORT_TUNNEL
+#define DD_LAYER_INC 5
 DDObject** _DDLayerArray = NULL;
+int _MaxDDLayerCount = 0;
 #else
 DDLayer** _DDLayerArray = NULL;
 #endif
 
 DDInputOutput* volatile _IO = NULL;
-DDInputOutput* volatile _WOIO = NULL;
 
-void _SetIO(DDInputOutput* io, uint16_t sendBufferSize) {
+#ifdef SUPPORT_USE_WOIO
+DDInputOutput* volatile _WOIO = NULL;
+volatile uint16_t _SendBufferSize = DD_DEF_SEND_BUFFER_SIZE;
+#else
+#define _WOIO _IO
+#endif
+
+
+inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize) {
   _IO = io;
 #ifdef SUPPORT_USE_WOIO  
+  _SendBufferSize = sendBufferSize;
   if (_WOIO != NULL) delete _WOIO;
   if (sendBufferSize > 0)
     _WOIO = new DDWriteOnyIO(io, sendBufferSize);
   else
     _WOIO = io;
-#else
-    _WOIO = io;
 #endif
 }
+
 
 
 IOProxy* volatile _ConnectedIOProxy = NULL;
@@ -371,8 +456,10 @@ void _Connect() {
   {
     if (!_IO->isSerial()) {
       Serial.println("**********");
+#ifdef SUPPORT_USE_WOIO
       Serial.print("* _SendBufferSize=");
       Serial.println(_SendBufferSize);
+#endif
       Serial.print("* _EnableDoubleClick=");
       Serial.println(_EnableDoubleClick ? "yes" : "no");
       Serial.println("**********");
@@ -541,13 +628,26 @@ int _AllocLid() {
   int lid = _NextLid++;
 #ifdef STORE_LAYERS  
 #ifdef SUPPORT_TUNNEL
-  DDObject** oriLayerArray = _DDLayerArray;
-  DDObject** layerArray = (DDObject**) malloc((lid + 1) * sizeof(DDObject*));
-  if (oriLayerArray != NULL) {
-    memcpy(layerArray, oriLayerArray, lid * sizeof(DDObject*));
-    free(oriLayerArray);
+  if (DD_LAYER_INC > 0) {
+    if (lid >= _MaxDDLayerCount) {
+      _MaxDDLayerCount = lid + DD_LAYER_INC;
+      DDObject** oriLayerArray = _DDLayerArray;
+      DDObject** layerArray = (DDObject**) malloc(_MaxDDLayerCount * sizeof(DDObject*));
+      if (oriLayerArray != NULL) {
+        memcpy(layerArray, oriLayerArray, (_MaxDDLayerCount - DD_LAYER_INC) * sizeof(DDObject*));
+        free(oriLayerArray);
+      }
+      _DDLayerArray = layerArray;
+    }
+  } else {
+    DDObject** oriLayerArray = _DDLayerArray;
+    DDObject** layerArray = (DDObject**) malloc((lid + 1) * sizeof(DDObject*));
+    if (oriLayerArray != NULL) {
+      memcpy(layerArray, oriLayerArray, lid * sizeof(DDObject*));
+      free(oriLayerArray);
+    }
+    _DDLayerArray = layerArray;
   }
-  _DDLayerArray = layerArray;
 #else  
   DDLayer** oriLayerArray = _DDLayerArray;
   DDLayer** layerArray = (DDLayer**) malloc((lid + 1) * sizeof(DDLayer*));
@@ -2030,7 +2130,7 @@ void DDTunnel::handleInput(const String& data, bool final) {
     this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
 }
-DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, uint8_t bufferSize):
+DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
   DDTunnel(type, tunnelId, params, endPoint, connectNow/*, bufferSize*/) {
   bufferSize = bufferSize + 1;  // need one more
   this->arraySize = bufferSize;
@@ -2335,16 +2435,7 @@ void JsonDDTunnelMultiplexer::reconnect() {
 void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize, boolean enableDoubleClick) {
   _SetIO(pIO, sendBufferSize);
   //_IO = pIO;
-  _SendBufferSize = sendBufferSize;
   _EnableDoubleClick = enableDoubleClick;
-  // if (!pIO->isSerial()) {
-  //   Serial.println("**********");
-  //   Serial.print("* sendBufferSize=");
-  //   Serial.println(sendBufferSize);
-  //   Serial.print("* enableDoubleClick=");
-  //   Serial.println(enableDoubleClick ? "yes" : "no");
-  //   Serial.println("**********");
-  // }
 }
 void DumbDisplay::connect() {
   _Connect();

@@ -19,8 +19,8 @@ DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32Cam"));
 #else
 
 #include "wifidumbdisplay.h"
-const char* ssid = <wifi SSID>;
-const char* password = <wifi password>;
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
 DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
 
 #endif

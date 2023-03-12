@@ -12,7 +12,9 @@
 #define DD_SERIAL_BAUD    DUMBDISPLAY_BAUD
 #define DD_WIFI_PORT      10201
 
+
 #define DD_DEF_SEND_BUFFER_SIZE 256
+
 
 #include "_dd_util.h"
 
@@ -711,7 +713,7 @@ class DDTunnel: public DDObject {
 
 class DDBufferedTunnel: public DDTunnel {
   public:
-    DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, uint8_t bufferSize);
+    DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize);
     virtual ~DDBufferedTunnel();
     virtual void release();
     virtual void reconnect();
@@ -740,7 +742,7 @@ class DDBufferedTunnel: public DDTunnel {
  */ 
 class BasicDDTunnel: public DDBufferedTunnel {
   public:
-    BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, uint8_t bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
     /* count buffer ready to be read */
     inline int count() { return _count(); }
@@ -825,7 +827,7 @@ struct DDLocation {
 };
 class GpsServiceDDTunnel: public BasicDDTunnel {
   public:
-    GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, uint8_t bufferSize):
+    GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
         BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
   public:
@@ -844,7 +846,7 @@ struct DDObjectDetectDemoResult {
 };
 class ObjectDetetDemoServiceDDTunnel: public BasicDDTunnel {
   public:
-    ObjectDetetDemoServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+    ObjectDetetDemoServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
         BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
   public:

@@ -3,10 +3,10 @@
 
 #if defined(ESP32) 
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200), false);
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200), DD_DEF_SEND_BUFFER_SIZE, false);
 #else
   #include "dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDInputOutput(115200), false);
+  DumbDisplay dumbdisplay(new DDInputOutput(115200), DD_DEF_SEND_BUFFER_SIZE, false);
 #endif
 
 #define TONE_YES 1000
