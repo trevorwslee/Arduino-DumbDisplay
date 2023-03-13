@@ -162,7 +162,8 @@ SevenSegmentRowDDLayer *CreateDisplayLayer()
 LcdDDLayer *CreateKeyLayer(int r, int c)
 {
   const char key = Keys[r][c];
-  String dispKey;
+  String dispKey = String(key);
+#if defined(__AVR__) || defined(ESP32)  
   if (key == '*')
   {
     dispKey = "×";
@@ -179,10 +180,7 @@ LcdDDLayer *CreateKeyLayer(int r, int c)
   {
     dispKey = "−";
   }
-  else
-  {
-    dispKey = String(key);
-  }
+#endif 
   LcdDDLayer *keyLayer = dumbdisplay.createLcdLayer(1, 1, 32, "sans-serif-black");
   keyLayer->pixelColor("navy");
   keyLayer->border(5, "grey", "raised");

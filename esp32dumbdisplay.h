@@ -57,6 +57,9 @@ class DDBluetoothSerialIO: public DDInputOutput {
         serialBT.flush();  // not the expected "flush"
       }
     }
+    bool canUseBuffer() {
+      return true;
+    }
   private:
     String btLocalName;
     BluetoothSerial serialBT;  

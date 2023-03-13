@@ -47,6 +47,9 @@ class DDPicoUart1IO: public DDInputOutput {
     }
     void flush() {
     }
+    bool canUseBuffer() {
+      return true;
+    }
   private:
     unsigned long baud;  
 };

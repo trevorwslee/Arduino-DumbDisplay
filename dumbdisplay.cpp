@@ -340,7 +340,7 @@ DDInputOutput* volatile _IO = NULL;
 
 #ifdef SUPPORT_USE_WOIO
 DDInputOutput* volatile _WOIO = NULL;
-volatile uint16_t _SendBufferSize = DD_DEF_SEND_BUFFER_SIZE;
+volatile uint16_t _SendBufferSize = 0;//DD_DEF_SEND_BUFFER_SIZE;
 #else
 #define _WOIO _IO
 #endif
@@ -349,12 +349,14 @@ volatile uint16_t _SendBufferSize = DD_DEF_SEND_BUFFER_SIZE;
 inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize) {
   _IO = io;
 #ifdef SUPPORT_USE_WOIO  
-  _SendBufferSize = sendBufferSize;
   if (_WOIO != NULL) delete _WOIO;
-  if (sendBufferSize > 0)
+  if (sendBufferSize > 0 && io->canUseBuffer()) {
+    _SendBufferSize = sendBufferSize;
     _WOIO = new DDWriteOnyIO(io, sendBufferSize);
-  else
+  } else {
+    _SendBufferSize = 0;
     _WOIO = io;
+  }
 #endif
 }
 

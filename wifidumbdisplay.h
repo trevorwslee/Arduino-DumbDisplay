@@ -78,6 +78,9 @@ class DDWiFiServerIO: public DDInputOutput {
 #endif      
       checkConnection();
     }
+    bool canUseBuffer() {
+      return true;
+    }
   private:
     bool _connectToNetwork() {
       WiFi.begin(ssid, password);

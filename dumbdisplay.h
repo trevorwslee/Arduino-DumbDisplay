@@ -13,7 +13,7 @@
 #define DD_WIFI_PORT      10201
 
 
-#define DD_DEF_SEND_BUFFER_SIZE 256
+#define DD_DEF_SEND_BUFFER_SIZE 128
 
 
 #include "_dd_util.h"
@@ -737,18 +737,7 @@ class DDBufferedTunnel: public DDTunnel {
     int8_t nextArrayIdx;
     int8_t validArrayIdx;
     //bool done;
-};
-
-
-/**
- * support basic "text based line oriented" socket communication ... e.g.
- * pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17")
- */ 
-class BasicDDTunnel: public DDBufferedTunnel {
-  public:
-    BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize): 
-      DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
-    }
+  /*BasicDDTunnel*/ public:
     /* count buffer ready to be read */
     inline int count() { return _count(); }
     /* reached EOF? */
@@ -760,10 +749,37 @@ class BasicDDTunnel: public DDBufferedTunnel {
     /* write a line */
     inline void writeLine(const String& data) { _writeLine(data); }
     //inline void writeSound(const String& soundName) { _writeSound(soundName); }
-  public:
+  /*BasicDDTunnel*/ public:
     /* read a piece of JSON data */
     bool read(String& fieldId, String& fieldValue);
 };
+
+
+/**
+ * support basic "text based line oriented" socket communication ... e.g.
+ * pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17")
+ */ 
+// class BasicDDTunnel: public DDBufferedTunnel {
+//   public:
+//     BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize): 
+//       DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+//     }
+//     /* count buffer ready to be read */
+//     inline int count() { return _count(); }
+//     /* reached EOF? */
+//     inline bool eof() { return _eof(); }
+//     /* read a line from buffer */
+//     String readLine();
+//     /* read a line from buffer, in to the buffer passed in */
+//     inline bool readLine(String &buffer) { return _readLine(buffer); }
+//     /* write a line */
+//     inline void writeLine(const String& data) { _writeLine(data); }
+//     //inline void writeSound(const String& soundName) { _writeSound(soundName); }
+//   public:
+//     /* read a piece of JSON data */
+//     bool read(String& fieldId, String& fieldValue);
+// };
+typedef DDBufferedTunnel BasicDDTunnel;
 
 /**
  * support simple REST GET api .. e.g.
