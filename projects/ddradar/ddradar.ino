@@ -2,14 +2,17 @@
 
 
 //#define UNO_BLUETOOTH
+#define PICO_BLUETOOTH
 //#define PICO_WIFI
 
 
 
 #define SERVO_PIN    11
 
-#define US_TRIG_PIN   9
-#define US_ECHO_PIN  10
+// #define US_TRIG_PIN   9
+// #define US_ECHO_PIN  10
+#define US_TRIG_PIN  12
+#define US_ECHO_PIN  13
 
 
 
@@ -54,6 +57,15 @@ Servo servo;
   #include "ssdumbdisplay.h"
   // assume HC-06 connected; 2 => TX of HC06; 3 => RX of HC06
   DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
+
+#elif defined(PICO_BLUETOOTH)
+
+  // GP8 => RX of HC06; GP9 => TX of HC06
+  #define DD_4_PICO_TX 8
+  #define DD_4_PICO_RX 9
+  #include "picodumbdisplay.h"
+  /* HC-06 connectivity */
+  DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
 
 #elif defined(PICO_WIFI)
 
@@ -166,12 +178,27 @@ void loop() {
 
   if (layoutHelper.checkNeedToUpdateLayers()) {
       mainLayer->fillArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "black");
-      mainLayer->drawArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "red");
+      //mainLayer->drawArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "red");
+      for (int i = 0; i < 4; i++) {
+        int x = i * Width / 8;
+        int y = i * Height / 4;
+        mainLayer->drawArc(x, y, Width - 2 * x, 2 * (Height - y), 180 + A_start, MaxAngle, true, "red");
+      }
+      for (int a = 0; a <= MaxAngle; a += 20) {
+        int x;
+        int y;
+        CalcCoor(a, BoundDist, x, y);
+        mainLayer->drawLine(W_half, H, x, y, "red");
+      }
 
       isRunning = true;
   }
 
   if (!isRunning) {
+    if (angle != 0) {
+      angle = 0;
+      servo.write(0);
+    }
     return;
   }
 
