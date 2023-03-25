@@ -38,6 +38,7 @@
 
 #define DD_AP_HORI "H(*)"
 #define DD_AP_VERT "V(*)"
+#define DD_AP_STACK "S(*)"
 #define DD_AP_HORI_2(id1, id2) ("H(" + id1 + "+" + id2 + ")")
 #define DD_AP_VERT_2(id1, id2) ("V(" + id1 + "+" + id2 + ")")
 #define DD_AP_STACK_2(id1, id2) ("S(" + id1 + "+" + id2 + ")")

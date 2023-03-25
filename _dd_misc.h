@@ -171,6 +171,9 @@ class DDAutoPinConfig {
       delete started;
     }
   public:
+    // DDAutoPinConfig& test() {
+    //   return *this;
+    // }
     // dir: 'H' / 'V' / 'S'
     DDAutoPinConfig& beginGroup(char dir) {
       addConfig(String(dir) + "(");
@@ -259,11 +262,11 @@ class DDLayoutHelper {
     DDLayoutHelper(DumbDisplay& dumbdisplay): dumbdisplay(dumbdisplay), versionTracker(-1) {}
     //   this->layoutDoneBefore = false;
     // }
-    ~DDLayoutHelper() {
-      if (this->autoPinConfig != NULL) {
-        delete this->autoPinConfig;
-      }
-    }
+    // ~DDLayoutHelper() {
+    //   if (this->autoPinConfig != NULL) {
+    //     delete this->autoPinConfig;
+    //   }
+    // }
   public:
     // /* check whether layout done before; if not, please call startInitializeLayout() to begin layout */
     // bool checkNeedToInitializeLayout() {
@@ -285,19 +288,30 @@ class DDLayoutHelper {
     void finishInitializeLayout(/*DumbDisplay& dumbdisplay, */String layerSetupPersistId) {
       dumbdisplay.playbackLayerSetupCommands(layerSetupPersistId);
     }
-    // dir: 'H' / 'V' / 'S'
-    DDAutoPinConfig& newAutoPinConfig(char dir, int nestedDepth = 3) {
-      if (autoPinConfig == NULL) {
-        autoPinConfig = new DDAutoPinConfig(dir, nestedDepth); 
-      }
-      return *autoPinConfig;
+    // // dir: 'H' / 'V' / 'S'
+    // DDAutoPinConfig& newAutoPinConfig(char dir, int nestedDepth = 3) {
+    //   if (autoPinConfig == NULL) {
+    //     autoPinConfig = new DDAutoPinConfig(dir, nestedDepth); 
+    //   }
+    //   return *autoPinConfig;
+    // }
+    // void configAutoPin(/*DumbDisplay dumbdisplay*/) {
+    //   if (autoPinConfig != NULL) {
+    //     dumbdisplay.configAutoPin(autoPinConfig->build());
+    //     delete autoPinConfig;
+    //     autoPinConfig = NULL;
+    //   }
+    // }
+    void configAutoPin(const String& layoutSpec) {
+      dumbdisplay.configAutoPin(layoutSpec);
     }
-    void configAutoPin(/*DumbDisplay dumbdisplay*/) {
-      if (autoPinConfig != NULL) {
-        dumbdisplay.configAutoPin(autoPinConfig->build());
-        delete autoPinConfig;
-        autoPinConfig = NULL;
-      }
+    void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
+      dumbdisplay.pinLayer(pLayer, uLeft, uTop, uWidth, uHeight, align);
+    }
+    // void test(DDAutoPinConfig& autopinConfig, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
+    // }
+    void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
+      dumbdisplay.pinAutoPinLayers(layoutSpec, uLeft, uTop, uWidth, uHeight, align);
     }
     void setIdleCalback(DDIdleCallback idleCallback) {
       dumbdisplay.setIdleCalback(idleCallback);
@@ -306,7 +320,7 @@ class DDLayoutHelper {
     //bool layoutDoneBefore;
     DumbDisplay& dumbdisplay;
     DDConnectVersionTracker versionTracker;
-    DDAutoPinConfig* autoPinConfig;
+    //DDAutoPinConfig* autoPinConfig;
 };
 
 

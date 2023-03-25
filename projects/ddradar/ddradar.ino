@@ -108,6 +108,7 @@ DDFadingLayers<BeamLayerCount> beamLayers;
 
 
 
+PlotterDDLayer* plotterLayer = NULL;
 GraphicalDDLayer* mainLayer;
 
 
@@ -137,6 +138,13 @@ void setup() {
 
   mainLayer = CreateGrahpicalLayer("gray");
 
+
+  plotterLayer = dumbdisplay.createPlotterLayer(300, 90);
+  plotterLayer->border(2, "blue");
+
+  layoutHelper.pinLayer(plotterLayer, 0, 0, 100, 30);
+  layoutHelper.pinAutoPinLayers(DD_AP_STACK, 0, 30, 100, 70);
+
   layoutHelper.finishInitializeLayout("ddradar");
 
   layoutHelper.setIdleCalback([](long idleForMillis) {
@@ -157,28 +165,8 @@ int objectStartAngle = -1;
 int objectStartDistance = -1;
 
 void loop() {
-
-  // if (layoutHelper.checkNeedToInitializeLayout()) {
-  //   layoutHelper.startInitializeLayout(dumbdisplay);
-     
-  //   for (int i = 0; i < ObjectLayerCount; i++) {
-  //     GraphicalDDLayer* layer = CreateGrahpicalLayer();
-  //     objectLayers.initAddLayer(layer);
-  //   }
-
-  //   for (int i = 0; i < BeamLayerCount; i++) {
-  //     GraphicalDDLayer* layer = CreateGrahpicalLayer();
-  //     beamLayers.initAddLayer(layer);
-  //   }
-
-  //   mainLayer = CreateGrahpicalLayer("gray");
-
-  //   layoutHelper.finishInitializeLayout(dumbdisplay, "ddradar");
-  // }
-
   if (layoutHelper.checkNeedToUpdateLayers()) {
       mainLayer->fillArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "black");
-      //mainLayer->drawArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "red");
       for (int i = 0; i < 4; i++) {
         int x = i * Width / 8;
         int y = i * Height / 4;
@@ -239,8 +227,7 @@ void loop() {
   int objectEndDistance = -1;
   bool isNewObject = false;
   if (distance <= VisibleDist) {
-    // int x;
-    // int y;
+    plotterLayer->set(distance);
     CalcCoor(angle, distance, x, y);
     if (false) {
       dumbdisplay.writeComment(String("Ang:") + angle + " Dist:" + distance + " X:" + x + " Y:" + y);
@@ -270,8 +257,6 @@ void loop() {
     if (objectStartAngle != -1) {
       int objectAngle = (objectEndAngle + objectStartAngle) / 2;
       int objectDistance = (objectEndDistance + objectStartDistance) / 2;
-      // int x;
-      // int y;
       CalcCoor(objectAngle, objectDistance, x, y);
       objectLayer->fillCircle(x, y, 3 * ObjectDotRadius, "red");
     }
@@ -301,5 +286,4 @@ void loop() {
     angleIncreasing = true;
     objectLayer = NULL;
   }
-
 }
