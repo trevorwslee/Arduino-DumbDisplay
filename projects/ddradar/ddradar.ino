@@ -139,11 +139,11 @@ void setup() {
   mainLayer = CreateGrahpicalLayer("gray");
 
 
-  plotterLayer = dumbdisplay.createPlotterLayer(300, 90);
+  plotterLayer = dumbdisplay.createPlotterLayer(400, 160);
   plotterLayer->border(2, "blue");
 
-  layoutHelper.pinLayer(plotterLayer, 0, 0, 100, 30);
-  layoutHelper.pinAutoPinLayers(DD_AP_STACK, 0, 30, 100, 70);
+  layoutHelper.pinLayer(plotterLayer, 0, 0, 100, 40);
+  layoutHelper.pinAutoPinLayers(DD_AP_STACK, 0, 40, 100, 60);
 
   layoutHelper.finishInitializeLayout("ddradar");
 
@@ -226,8 +226,8 @@ void loop() {
   int objectEndAngle = -1;
   int objectEndDistance = -1;
   bool isNewObject = false;
+  plotterLayer->set("Ang", angle, "Dist", distance > VisibleDist ? 0 : distance);
   if (distance <= VisibleDist) {
-    plotterLayer->set(distance);
     CalcCoor(angle, distance, x, y);
     if (false) {
       dumbdisplay.writeComment(String("Ang:") + angle + " Dist:" + distance + " X:" + x + " Y:" + y);
