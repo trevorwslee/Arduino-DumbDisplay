@@ -1,9 +1,7 @@
 #include <Arduino.h>
 
 
-//#define UNO_BLUETOOTH
 #define PICO_BLUETOOTH
-//#define PICO_WIFI
 
 
 
@@ -52,13 +50,7 @@ void CalcCoor(int ang, int dist, int& x, int& y) {
 Servo servo;
 
 
-#if defined(UNO_BLUETOOTH)
-
-  #include "ssdumbdisplay.h"
-  // assume HC-06 connected; 2 => TX of HC06; 3 => RX of HC06
-  DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true, 115200));
-
-#elif defined(PICO_BLUETOOTH)
+#if defined(PICO_BLUETOOTH)
 
   // GP8 => RX of HC06; GP9 => TX of HC06
   #define DD_4_PICO_TX 8
@@ -67,17 +59,13 @@ Servo servo;
   /* HC-06 connectivity */
   DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
 
-#elif defined(PICO_WIFI)
-
-  //#include "wifidumbdisplay.h"
-  //DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
-
 #else
 
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput());
 
 #endif
+
 
 
 GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
@@ -138,12 +126,18 @@ void setup() {
 
   mainLayer = CreateGrahpicalLayer("gray");
 
-
   plotterLayer = dumbdisplay.createPlotterLayer(400, 160);
   plotterLayer->border(2, "blue");
 
-  layoutHelper.pinLayer(plotterLayer, 0, 0, 100, 40);
-  layoutHelper.pinAutoPinLayers(DD_AP_STACK, 0, 40, 100, 60);
+  if (true) {
+    layoutHelper.configAutoPin(DDAutoPinConfig('V')
+      .addRemainingGroup('S')
+      .addLayer(plotterLayer)
+      .build());
+  } else {
+    layoutHelper.pinLayer(plotterLayer, 0, 0, 100, 40);
+    layoutHelper.pinAutoPinLayers(DD_AP_STACK, 0, 40, 100, 60);
+  }
 
   layoutHelper.finishInitializeLayout("ddradar");
 
