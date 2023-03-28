@@ -10,8 +10,8 @@
 
 
 
-#if defined(FOR_TTGO_CAMERA)
-#define BLUETOOTH "TTGOCAM"
+#if defined(FOR_LILYGO_TCAMERA)
+#define BLUETOOTH "LILYGOCAM"
 #else
 #define BLUETOOTH "ESP32Cam"
 #endif
@@ -194,7 +194,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
 
 //#define CAMERA_MODEL_AI_THINKER
 
-#if defined(FOR_TTGO_CAMERA)
+#if defined(FOR_LILYGO_TCAMERA)
 
 #define PWDN_GPIO_NUM     26
 #define RESET_GPIO_NUM    -1      // -1 = not used

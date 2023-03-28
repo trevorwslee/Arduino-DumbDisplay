@@ -455,17 +455,16 @@ void _Connect() {
       firstCall = false;
     }
   }
-  {
-    if (!_IO->isSerial()) {
-      Serial.println("**********");
+  if (!_IO->isSerial()) {
+    Serial.println("**********");
 #ifdef SUPPORT_USE_WOIO
-      Serial.print("* _SendBufferSize=");
-      Serial.println(_SendBufferSize);
+    Serial.print("* _SendBufferSize=");
+    Serial.println(_SendBufferSize);
 #endif
-      Serial.print("* _EnableDoubleClick=");
-      Serial.println(_EnableDoubleClick ? "yes" : "no");
-      Serial.println("**********");
-    }
+    Serial.print("* _EnableDoubleClick=");
+    Serial.println(_EnableDoubleClick ? "yes" : "no");
+    Serial.println("**********");
+    Serial.flush();
   }
   {
     long nextTime = 0;
