@@ -96,8 +96,9 @@ DDFadingLayers<BeamLayerCount> beamLayers;
 
 
 
-PlotterDDLayer* plotterLayer = NULL;
+PlotterDDLayer* plotterLayer;
 GraphicalDDLayer* mainLayer;
+LcdDDLayer* unDirectionalLayer;
 
 
 int angle = 0;
@@ -129,15 +130,14 @@ void setup() {
   plotterLayer = dumbdisplay.createPlotterLayer(400, 160);
   plotterLayer->border(2, "blue");
 
-  if (true) {
-    layoutHelper.configAutoPin(DDAutoPinConfig('V')
-      .addRemainingGroup('S')
-      .addLayer(plotterLayer)
-      .build());
-  } else {
-    layoutHelper.pinLayer(plotterLayer, 0, 0, 100, 40);
-    layoutHelper.pinAutoPinLayers(DD_AP_STACK, 0, 40, 100, 60);
-  }
+  unDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
+  unDirectionalLayer->enableFeedback("f");
+
+  layoutHelper.configAutoPin(DDAutoPinConfig('V')
+    .addRemainingGroup('S')
+    .addLayer(plotterLayer)
+    .addLayer(unDirectionalLayer)
+    .build());
 
   layoutHelper.finishInitializeLayout("ddradar");
 
@@ -148,6 +148,7 @@ void setup() {
 
 
 
+bool unDirectional = true;
 bool angleIncreasing = true;
 GraphicalDDLayer* objectLayer = NULL;
 
@@ -159,7 +160,14 @@ int objectStartAngle = -1;
 int objectStartDistance = -1;
 
 void loop() {
-  if (layoutHelper.checkNeedToUpdateLayers()) {
+  bool needToUpdateUI = layoutHelper.checkNeedToUpdateLayers(); 
+
+  if (unDirectionalLayer->getFeedback()) {
+    unDirectional = !unDirectional;
+    needToUpdateUI = true;
+  }
+
+  if (needToUpdateUI) {
       mainLayer->fillArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "black");
       for (int i = 0; i < 4; i++) {
         int x = i * Width / 8;
@@ -171,6 +179,16 @@ void loop() {
         int y;
         CalcCoor(a, BoundDist, x, y);
         mainLayer->drawLine(W_half, H, x, y, "red");
+      }
+
+      if (unDirectional) {
+        unDirectionalLayer->border(2, "darkgreen", "flat");
+        unDirectionalLayer->pixelColor("darkgreen");
+        unDirectionalLayer->writeLine("✅  Single Direction");
+      } else {
+        unDirectionalLayer->border(2, "darkblue", "hair");
+        unDirectionalLayer->pixelColor("grey");
+        unDirectionalLayer->writeLine("🟩  Single Direction");
       }
 
       isRunning = true;
@@ -185,7 +203,11 @@ void loop() {
   }
 
   servo.write(angle);
-  delay(15);  // give it some time
+  //delay(15);  // give it some time
+  delay(20);  // give it some time
+  if (angle == 0 || angle == MaxAngle) {
+    delay(200);
+  }
 
   // read ultrasoncic sensor for detected object distance
   digitalWrite(US_TRIG_PIN, LOW);
@@ -215,6 +237,12 @@ void loop() {
     atBoundary = true;
   } else if (!angleIncreasing && angle == 0) {
     atBoundary = true;
+  } else {
+    if (unDirectional) {
+      if (angle == 0 || angle == MaxAngle) {
+        objectStartAngle = -1;
+      }
+    }
   }
 
   int objectEndAngle = -1;
@@ -272,12 +300,21 @@ void loop() {
     angle -= AngleIncrement;
   }
   if (angle > MaxAngle) {
-    angle = MaxAngle;
-    angleIncreasing = false;
+    if (unDirectional) {
+      angle = 0;
+    } else {
+      angle = MaxAngle;
+      angleIncreasing = false;
+    }
     objectLayer = NULL;
-  } if (angle < 0) {
-    angle = 0;
-    angleIncreasing = true;
+  }
+  if (angle < 0) {
+    if (unDirectional) {
+      angle = MaxAngle;
+    } else {
+      angle = 0;
+      angleIncreasing = true;
+    }
     objectLayer = NULL;
   }
 }

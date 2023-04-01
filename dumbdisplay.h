@@ -340,6 +340,8 @@ class LedGridDDLayer: public DDLayer {
     void noOffColor();
 };
 
+// can consider using the following emojis for checkbox
+// ☒☐✅❎🟩✔️ ☑️⬛✔✖
 class LcdDDLayer: public DDLayer {
   public:
     LcdDDLayer(int8_t layerId): DDLayer(layerId) {
