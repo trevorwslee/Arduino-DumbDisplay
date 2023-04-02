@@ -1387,7 +1387,7 @@ Even better, you may want to saved the images to DumbDisplay app image storage, 
 Notes:
 * not only from Chrome, you can share and save images from any app that can share images that it sees
 * images saved to DumbDisplay app's image storage will always be PNG; hence when asked for image name, you don't need the ".png" extension
-
+* you can use a file manager to navigate to the image storage; hints: the path is something like `/<main-storage>/Android/data/nobody.trevorlee.dumbdisplay/files/Pictures/DumbDisplay/`
 
 
 ## Audio Supports 
