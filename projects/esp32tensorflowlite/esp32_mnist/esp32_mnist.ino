@@ -1,11 +1,21 @@
 #include <Arduino.h>
 
+
+//#define BLUETOOTH "ESP32BT"
+
+#if defined BLUETOOTH
+
 #include "esp32dumbdisplay.h"
 
-
-#define BLUETOOTH "ESP32"
-
 DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+
+#else
+
+#include "wifidumbdisplay.h"
+DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+
+
+#endif
 
 
 // #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
@@ -19,8 +29,7 @@ DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
 
 
 // *****
-// * make sure the variable is decleared like
-// * alignas(8) const unsigned char mnist_model_tflite[] = { ... }
+// * make see https://github.com/frogermcs/MNIST-TFLite
 // *****
 #include "mnist_model.h"
 
@@ -135,6 +144,8 @@ void setup() {
 }
 
 
+uint8_t Data[28 * 28];
+
 void loop() {
   if (interpreter == NULL) {
     error_reporter->Report("Not Initialized!");
@@ -142,9 +153,9 @@ void loop() {
     return;
   }
 
-  if (true) {
+  delay(2000);
+  if (false) {
     dumbdisplay.writeComment("... mnist ...");
-    delay(2000);
     return;
   }
 
@@ -161,19 +172,20 @@ void loop() {
   // check if detectImageLayer (top; candidate image) clicked
   // if clicked, invoke person detection
   // if (detectImageLayer->getFeedback() != NULL) {
-  //   statusLayer->clear();
+  //   statusLayer->clear();s
   //   statusLayer->pixelColor("red");
   //   statusLayer->writeCenteredLine(".. detecting ..", 1);
 
   //   dumbdisplay.writeComment("start ... ");
 
-  //   // copy an image with a person into the memory area used for the input
-  //   const uint8_t* person_data = capturedImage->buf;
-  //   for (int i = 0; i < input->bytes; ++i) {
-  //     input->data.int8[i] = person_data[i] ^ 0x80;  // signed int8_t quantized ==> input images must be converted from unisgned to signed format
-  //   }
+    // copy an image with a person into the memory area used for the input
+    for (int i = 0; i < (28 * 28); ++i) {
+      input->data.f[i] = ((float) Data[i]) / 255.0; 
+      //input->data.int8[i] = person_data[i] ^ 0x80;  // signed int8_t quantized ==> input images must be converted from unisgned to signed format
+    }
 
     // run the model on this input and make sure it succeeds
+    dumbdisplay.writeComment("<<<");
     long detect_start_millis = millis();
     TfLiteStatus invoke_status = interpreter->Invoke();
     if (invoke_status != kTfLiteOk) {
@@ -183,6 +195,12 @@ void loop() {
 
     // process the inference (person detection) results
     TfLiteTensor* output = interpreter->output(0);
+    for (int i = 0; i < 10; i++) {
+      float p = output->data.f[i];
+      dumbdisplay.writeComment(String(". ") + String(i) + ": " + String(p, 3));
+
+    }
+    dumbdisplay.writeComment(String(">>> in ") + detect_taken_millis + " ms");
     // int8_t _person_score = output->data.int8[kPersonIndex];
     // int8_t _no_person_score = output->data.int8[kNotAPersonIndex];
     // float person_score = (_person_score - output->params.zero_point) * output->params.scale;  // person_score should be chance from 0 to 1
