@@ -2447,7 +2447,7 @@ void JsonDDTunnelMultiplexer::reconnect() {
     }
   }
 }
-
+#endif
 
 
 void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize, boolean enableDoubleClick) {
@@ -2764,7 +2764,7 @@ void DumbDisplay::debugOnly(int i) {
   _sendByteArrayAfterCommand(bytes, i);
 }
 
-
+#ifdef SUPPORT_TUNNEL
 BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool connectNow, int8_t bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
@@ -2830,8 +2830,6 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
-
-
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   pTunnel->release();
   delete pTunnel;
