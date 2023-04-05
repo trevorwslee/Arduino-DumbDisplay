@@ -18,6 +18,7 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 #endif
 
 
+
 // #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 // #include "tensorflow/lite/micro/micro_error_reporter.h"
 // #include "tensorflow/lite/micro/micro_interpreter.h"
@@ -65,6 +66,8 @@ TfLiteTensor* input;
 // GraphicalDDLayer* personImageLayer;
 // LcdDDLayer* statusLayer;
 
+GraphicalDDLayer* drawLayer;
+
 
 // const framesize_t FrameSize = FRAMESIZE_96X96;        // should agree with kNumCols and kNumRows
 // const pixformat_t PixelFormat = PIXFORMAT_GRAYSCALE;  // should be grayscale
@@ -98,6 +101,10 @@ void setup() {
 
   // auto pin the layers vertically
   //dumbdisplay.configAutoPin(DD_AP_VERT);
+
+  drawLayer = dumbdisplay.createGraphicalLayer(28, 28);
+  drawLayer->border(2, "blue", "round", 1);
+  drawLayer->enableFeedback("fs:rpt50");
 
   
   dumbdisplay.writeComment(String("Preparing Mnist TFLite model version ") + model->version() + " ...");
@@ -153,11 +160,17 @@ void loop() {
     return;
   }
 
-  delay(2000);
-  if (false) {
-    dumbdisplay.writeComment("... mnist ...");
-    return;
+  const DDFeedback *feedback = drawLayer->getFeedback();
+  if (feedback != NULL) {
+    int x = feedback->x;
+    int y = feedback->y;
+    if (true) {
+      dumbdisplay.writeComment((feedback->repeated ? String("~") : String(" ")) + String(x) + "," + String(y));
+    }
+    drawLayer->drawPixel(x, y, DD_RGB_COLOR(255, 255, 255));
   }
+
+//  delay(2000);
 
   // capture candidate image for person detection
   // camera_fb_t* capturedImage = captureImage(false);
@@ -178,29 +191,33 @@ void loop() {
 
   //   dumbdisplay.writeComment("start ... ");
 
-    // copy an image with a person into the memory area used for the input
-    for (int i = 0; i < (28 * 28); ++i) {
-      input->data.f[i] = ((float) Data[i]) / 255.0; 
-      //input->data.int8[i] = person_data[i] ^ 0x80;  // signed int8_t quantized ==> input images must be converted from unisgned to signed format
-    }
+    // copy an image with a person into the memory area used for the 
+    
+    if (false) {
+      for (int i = 0; i < (28 * 28); ++i) {
+        input->data.f[i] = ((float) Data[i]) / 255.0; 
+        //input->data.int8[i] = person_data[i] ^ 0x80;  // signed int8_t quantized ==> input images must be converted from unisgned to signed format
+      }
 
-    // run the model on this input and make sure it succeeds
-    dumbdisplay.writeComment("<<<");
-    long detect_start_millis = millis();
-    TfLiteStatus invoke_status = interpreter->Invoke();
-    if (invoke_status != kTfLiteOk) {
-      error_reporter->Report("Invoke failed");
-    }
-    long detect_taken_millis = millis() - detect_start_millis;
+      // run the model on this input and make sure it succeeds
+      dumbdisplay.writeComment("<<<");
+      long detect_start_millis = millis();
+      TfLiteStatus invoke_status = interpreter->Invoke();
+      if (invoke_status != kTfLiteOk) {
+        error_reporter->Report("Invoke failed");
+      }
+      long detect_taken_millis = millis() - detect_start_millis;
 
-    // process the inference (person detection) results
-    TfLiteTensor* output = interpreter->output(0);
-    for (int i = 0; i < 10; i++) {
-      float p = output->data.f[i];
-      dumbdisplay.writeComment(String(". ") + String(i) + ": " + String(p, 3));
+      // process the inference (person detection) results
+      TfLiteTensor* output = interpreter->output(0);
+      for (int i = 0; i < 10; i++) {
+        float p = output->data.f[i];
+        dumbdisplay.writeComment(String(". ") + String(i) + ": " + String(p, 3));
 
+      }
+      dumbdisplay.writeComment(String(">>> in ") + detect_taken_millis + " ms");
     }
-    dumbdisplay.writeComment(String(">>> in ") + detect_taken_millis + " ms");
+    
     // int8_t _person_score = output->data.int8[kPersonIndex];
     // int8_t _no_person_score = output->data.int8[kNotAPersonIndex];
     // float person_score = (_person_score - output->params.zero_point) * output->params.scale;  // person_score should be chance from 0 to 1

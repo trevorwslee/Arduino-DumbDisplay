@@ -74,7 +74,8 @@
 //#define DD_SID "Arduino-c3"
 //#define DD_SID "Arduino-c4"
 //#define DD_SID "Arduino-c5"
-#define DD_SID "Arduino-c6"
+//#define DD_SID "Arduino-c6"
+#define DD_SID "Arduino-c7"  // see nobody.trevorlee.dumbdisplay.DDActivity#ddSourceCompatibility
 
 
 #include "_dd_commands.h"
@@ -1153,6 +1154,7 @@ Serial.println("LT++++" + data + " - final:" + String(final));
       DDFeedbackType type = CLICK;
       int16_t x = -1;
       int16_t y = -1;
+      bool repeated = false;
       char* pText = NULL;      
       char* token = strtok(buf, ".");
       if (token != NULL) {
@@ -1168,6 +1170,12 @@ Serial.println("LT++++" + data + " - final:" + String(final));
         }
 #endif       
         token = strtok(NULL, ",");
+        if (true) {
+          if (token[0] == '~') {
+            repeated = true;
+            token += 1;
+          }
+        }
       }
       if (token != NULL) {
         x = atoi(token);
@@ -1198,6 +1206,7 @@ Serial.println("LT++++" + data + " - final:" + String(final));
             DDFeedback feedback;
             feedback.x = x;
             feedback.y = y;
+            feedback.repeated = repeated;
             if (pText != NULL) {
               feedback.text = String(pText);
             }
@@ -1206,7 +1215,7 @@ Serial.println("LT++++" + data + " - final:" + String(final));
           } else {
             DDFeedbackManager *pFeedbackManager = pLayer->getFeedbackManager();
             if (pFeedbackManager != NULL) {
-              pFeedbackManager->pushFeedback(type, x, y, pText);
+              pFeedbackManager->pushFeedback(type, x, y, repeated, pText);
             }
           }
         }
@@ -1362,10 +1371,11 @@ const DDFeedback* DDFeedbackManager::getFeedback() {
   validArrayIdx = (validArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
   return pFeedback;
 }
-void DDFeedbackManager::pushFeedback(DDFeedbackType type, int16_t x, int16_t y, const char* pText) {
+void DDFeedbackManager::pushFeedback(DDFeedbackType type, int16_t x, int16_t y, bool repeated, const char* pText) {
   feedbackArray[nextArrayIdx].type = type;
   feedbackArray[nextArrayIdx].x = x;
   feedbackArray[nextArrayIdx].y = y;
+  feedbackArray[nextArrayIdx].repeated = repeated;
   feedbackArray[nextArrayIdx].text = pText != NULL ? pText : "";
   nextArrayIdx = (nextArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
   if (nextArrayIdx == validArrayIdx)
