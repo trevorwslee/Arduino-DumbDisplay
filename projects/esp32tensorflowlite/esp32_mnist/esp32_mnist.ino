@@ -104,7 +104,8 @@ void setup() {
 
   drawLayer = dumbdisplay.createGraphicalLayer(28, 28);
   drawLayer->border(2, "blue", "round", 1);
-  drawLayer->enableFeedback("fs:rpt50");
+  drawLayer->enableFeedback("fs:drag");
+  //drawLayer->enableFeedback("fs:rpt50");
 
   
   dumbdisplay.writeComment(String("Preparing Mnist TFLite model version ") + model->version() + " ...");
@@ -165,7 +166,7 @@ void loop() {
     int x = feedback->x;
     int y = feedback->y;
     if (true) {
-      dumbdisplay.writeComment((feedback->repeated ? String("~") : String(" ")) + String(x) + "," + String(y));
+      dumbdisplay.writeComment(String(x) + "," + String(y));
     }
     drawLayer->drawPixel(x, y, DD_RGB_COLOR(255, 255, 255));
   }
