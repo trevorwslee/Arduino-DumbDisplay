@@ -149,6 +149,12 @@ void setup() {
 
   dumbdisplay.writeComment("Done preparing Mnist TFLite model!");
 
+  dumbdisplay.setIdleCalback([](long idleForMillis) {
+#if defined(ESP32)    
+    ESP.restart();
+#endif    
+  });
+
 
   // cameraReady = initialiseCamera(); 
   // if (cameraReady) {
@@ -162,6 +168,8 @@ void setup() {
 
 void DrawPixel(int x, int y);
 bool DrawLine(int x1, int y1, int x2, int y2);
+
+const bool thickLines = true;
 
 int lastX = -1;
 int lastY = -1;
@@ -298,7 +306,7 @@ void loop() {
 
 
 void DrawPixel(int x, int y) {
-  if (false) {
+  if (thickLines) {
     String color2 = DD_RGB_COLOR(128, 128, 128);
     if (x > 0) {
       drawLayer->drawPixel(x - 1, y, color2);
@@ -326,12 +334,12 @@ bool DrawLine(int x1, int y1, int x2, int y2) {
   if (abs(deltX) > abs(deltY)) {
     steps = abs(deltX);
     if (steps == 0) return false;
-    incX = 1;
+    incX = deltX < 0 ? -1 : 1;
     incY = (float) deltY / steps;
   } else {
     steps = abs(deltY);
     if (steps == 0) return false;
-    incY = 1;
+    incY = deltY < 0 ? -1 : 1;
     incX = (float) deltX / steps;
   }
   float x = x1;
