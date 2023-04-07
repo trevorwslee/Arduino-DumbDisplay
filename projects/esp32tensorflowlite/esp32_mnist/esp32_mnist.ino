@@ -66,6 +66,7 @@ TfLiteTensor* input;
 // GraphicalDDLayer* personImageLayer;
 // LcdDDLayer* statusLayer;
 
+LcdDDLayer* clearBtn;
 GraphicalDDLayer* drawLayer;
 
 
@@ -102,10 +103,17 @@ void setup() {
   // auto pin the layers vertically
   //dumbdisplay.configAutoPin(DD_AP_VERT);
 
+  clearBtn = dumbdisplay.createLcdLayer(5, 1);   
+  clearBtn->backgroundColor("lightgray");
+  clearBtn->print("CLEAR");
+  clearBtn->border(2, "gray", "flat");
+  clearBtn->enableFeedback("fl");
+
   drawLayer = dumbdisplay.createGraphicalLayer(28, 28);
   drawLayer->border(2, "blue", "round", 1);
   drawLayer->enableFeedback("fs:drag");
-  //drawLayer->enableFeedback("fs:rpt50");
+
+  dumbdisplay.configAutoPin(DD_AP_VERT);
 
   
   dumbdisplay.writeComment(String("Preparing Mnist TFLite model version ") + model->version() + " ...");
@@ -152,6 +160,11 @@ void setup() {
 }
 
 
+void DrawPixel(int x, int y);
+void DrawLine(int x1, int y1, int x2, int y2);
+
+int lastX = -1;
+int lastY = -1;
 uint8_t Data[28 * 28];
 
 void loop() {
@@ -161,14 +174,34 @@ void loop() {
     return;
   }
 
+  if (clearBtn->getFeedback()) {
+    lastX = -1;
+    lastY = -1;
+    drawLayer->clear();
+
+  }
+
   const DDFeedback *feedback = drawLayer->getFeedback();
   if (feedback != NULL) {
     int x = feedback->x;
     int y = feedback->y;
     if (true) {
-      dumbdisplay.writeComment(String(x) + "," + String(y));
+      dumbdisplay.writeComment(String(". ") + String(x) + "," + String(y));
     }
-    drawLayer->drawPixel(x, y, DD_RGB_COLOR(255, 255, 255));
+    if (x == -1) {
+      lastX = -1;
+      lastY = -1;  
+    } else {
+      if (lastX == -1) {
+        DrawPixel(x, y);
+      } else {
+        if (lastX != x || lastY != y) {
+          DrawLine(lastX, lastY, x, y);
+        }
+      }
+      lastX = x;
+      lastY = y;
+    }
   }
 
 //  delay(2000);
@@ -260,3 +293,49 @@ void loop() {
 }
 
 
+
+void DrawPixel(int x, int y) {
+  if (false) {
+    String color2 = DD_RGB_COLOR(128, 128, 128);
+    if (x > 0) {
+      drawLayer->drawPixel(x - 1, y, color2);
+    }
+    if (x < 27) {
+      drawLayer->drawPixel(x + 1, y, color2);
+    }
+    if (y < 0) {
+      drawLayer->drawPixel(x, y - 1, color2);
+    }
+    if (y < 27) {
+      drawLayer->drawPixel(x, y + 1, color2);
+    }
+  }
+  String color = DD_RGB_COLOR(255, 255, 255);
+  drawLayer->drawPixel(x, y, color);
+}
+
+void DrawLine(int x1, int y1, int x2, int y2) {
+  int deltX = x2 - x1;
+  int deltY = y2 - y1;
+  int steps;
+  float incX;
+  float incY;
+  if (abs(deltX) > abs(deltY)) {
+    steps = abs(deltX);
+    if (steps == 0) return;
+    incX = 1;
+    incY = (float) deltY / steps;
+  } else {
+    steps = abs(deltY);
+    if (steps == 0) return;
+    incY = 1;
+    incX = (float) deltX / steps;
+  }
+  float x = x1;
+  float y = y1;
+  for (int i = 0; i < steps; i++) {
+    DrawPixel(round(x), round(y));
+    x += incX;
+    y += incY;
+  }
+}
