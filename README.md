@@ -1227,6 +1227,14 @@ For a brief explanation of the sketch, you may want to watch the video [**ESP826
 |![](screenshots/esp8266-servo.jpg)|![](screenshots/servo-dd.png)|
 
 
+As a matter of fact, there is a real click-drag "auto repeat" option. To enable such click-drag option, specify it like
+```
+pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag");
+```
+***But do note that such click-drag will always end with a "feedback" with x and y both -1.***
+
+
+
 ## Idle Callback and ESP32 Deep Sleep
 
 It is possible setup ESP32 to go to deep sleep when DumbDisplay library detects "idle", after, say, 15 seconds:
@@ -1452,8 +1460,9 @@ MIT
 
 v0.9.7
   - enhanced graphical layer
-  - enhanced send command speed a bit
+  - added dragging "auto repeat" option
   - bug fix
+
 
 v0.9.6-r3
   - bug fix

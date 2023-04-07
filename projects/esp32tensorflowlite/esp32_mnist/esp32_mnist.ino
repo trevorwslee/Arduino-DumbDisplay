@@ -106,7 +106,7 @@ void setup() {
   clearBtn = dumbdisplay.createLcdLayer(5, 1);   
   clearBtn->backgroundColor("lightgray");
   clearBtn->print("CLEAR");
-  clearBtn->border(2, "gray", "flat");
+  clearBtn->border(1, "gray", "flat");
   clearBtn->enableFeedback("fl");
 
   drawLayer = dumbdisplay.createGraphicalLayer(28, 28);
@@ -161,7 +161,7 @@ void setup() {
 
 
 void DrawPixel(int x, int y);
-void DrawLine(int x1, int y1, int x2, int y2);
+bool DrawLine(int x1, int y1, int x2, int y2);
 
 int lastX = -1;
 int lastY = -1;
@@ -192,15 +192,18 @@ void loop() {
       lastX = -1;
       lastY = -1;  
     } else {
+      bool update = true;
       if (lastX == -1) {
         DrawPixel(x, y);
       } else {
         if (lastX != x || lastY != y) {
-          DrawLine(lastX, lastY, x, y);
+          update = DrawLine(lastX, lastY, x, y);
         }
       }
-      lastX = x;
-      lastY = y;
+      if (update) {
+        lastX = x;
+        lastY = y;
+      }
     }
   }
 
@@ -314,7 +317,7 @@ void DrawPixel(int x, int y) {
   drawLayer->drawPixel(x, y, color);
 }
 
-void DrawLine(int x1, int y1, int x2, int y2) {
+bool DrawLine(int x1, int y1, int x2, int y2) {
   int deltX = x2 - x1;
   int deltY = y2 - y1;
   int steps;
@@ -322,12 +325,12 @@ void DrawLine(int x1, int y1, int x2, int y2) {
   float incY;
   if (abs(deltX) > abs(deltY)) {
     steps = abs(deltX);
-    if (steps == 0) return;
+    if (steps == 0) return false;
     incX = 1;
     incY = (float) deltY / steps;
   } else {
     steps = abs(deltY);
-    if (steps == 0) return;
+    if (steps == 0) return false;
     incY = 1;
     incX = (float) deltX / steps;
   }
@@ -338,4 +341,5 @@ void DrawLine(int x1, int y1, int x2, int y2) {
     x += incX;
     y += incY;
   }
+  return true;
 }
