@@ -29,10 +29,11 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 #include "tensorflow/lite/schema/schema_generated.h"
 
 
-// *****
-// * make see https://github.com/frogermcs/MNIST-TFLite
-// *****
-#include "mnist_model.h"
+// see: mnist_model.ipynb
+#include "mnist_model.cc"
+
+// // see: https://github.com/frogermcs/MNIST-TFLite
+// #include "mnist_model.h"
 
 
 class DDTFLErrorReporter : public tflite::ErrorReporter {
