@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.6-r3)
+# DumbDisplay Arduino Library (v0.9.7)
 
 [DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -1227,6 +1227,14 @@ For a brief explanation of the sketch, you may want to watch the video [**ESP826
 |![](screenshots/esp8266-servo.jpg)|![](screenshots/servo-dd.png)|
 
 
+As a matter of fact, there is a real click-drag "auto repeat" option. To enable such click-drag option, specify it like
+```
+pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag");
+```
+***But do note that such click-drag will always end with a "feedback" with x and y both -1.***
+
+
+
 ## Idle Callback and ESP32 Deep Sleep
 
 It is possible setup ESP32 to go to deep sleep when DumbDisplay library detects "idle", after, say, 15 seconds:
@@ -1382,19 +1390,19 @@ The cached 16-bit pixel image is displayed to graphical layer as needed, like
 Even better, you may want to saved the images to DumbDisplay app image storage, for the use of your sketch. As hinted by the post, the steps can be like
 | | |
 |--|--|
-|1) use your phone's Chrome browser to open the image page; 2) long press the image to bring up the available options; 3) select to share the image with DumbDisplay app|![](screenshots/ddsaveimages.gif)|
+|1) use your phone's Chrome browser to open the image page; <br>2) long press the image to bring up the available options; <br>3) select to share the image with DumbDisplay app|![](screenshots/ddsaveimages.gif)|
 
 Notes:
 * not only from Chrome, you can share and save images from any app that can share images that it sees
 * images saved to DumbDisplay app's image storage will always be PNG; hence when asked for image name, you don't need the ".png" extension
-
+* you can use a file manager to navigate to the image storage; hints: the path is something like `/<main-storage>/Android/data/nobody.trevorlee.dumbdisplay/files/Pictures/DumbDisplay/`
 
 
 ## Audio Supports 
 
 | | |
 |--|--|
-|![](screenshots/esp32-mic.png)|DumbDisplay have certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports.|
+|![](screenshots/esp32-mic.png)|DumbDisplay have certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports. Additionally, you may also be interested in a more extensive application -- [Demo of ESP-Now Voice Commander Fun With Wit.ai and DumbDisplay](https://www.youtube.com/watch?v=dhlLU7gmmbE)|
 
 
 
@@ -1448,6 +1456,13 @@ MIT
 
 
 # Change History
+
+
+v0.9.7
+  - enhanced graphical layer
+  - added dragging "auto repeat" option
+  - bug fix
+
 
 v0.9.6-r3
   - bug fix

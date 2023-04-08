@@ -35,6 +35,9 @@ class DDSerial2IO: public DDInputOutput {
     }
     void flush() {
     }
+    bool canUseBuffer() {
+      return true;
+    }
   private:
     unsigned long baud;  
 };

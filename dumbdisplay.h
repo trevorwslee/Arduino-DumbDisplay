@@ -13,6 +13,9 @@
 #define DD_WIFI_PORT      10201
 
 
+#define DD_DEF_SEND_BUFFER_SIZE 128
+
+
 #include "_dd_util.h"
 
 
@@ -35,6 +38,7 @@
 
 #define DD_AP_HORI "H(*)"
 #define DD_AP_VERT "V(*)"
+#define DD_AP_STACK "S(*)"
 #define DD_AP_HORI_2(id1, id2) ("H(" + id1 + "+" + id2 + ")")
 #define DD_AP_VERT_2(id1, id2) ("V(" + id1 + "+" + id2 + ")")
 #define DD_AP_STACK_2(id1, id2) ("S(" + id1 + "+" + id2 + ")")
@@ -80,12 +84,16 @@ const int8_t DD_OBJECT_TYPE_TUNNEL = 1;
 // #define DD_OBJECT_TYPE_LAYER  0
 // #define DD_OBJECT_TYPE_TUNNEL 1
 
-class DDObject {
-  protected:
-    DDObject(int8_t objectType) {
-      this->objectType = objectType;
-    }
-  public:
+// class DDObject {
+//   protected:
+//     inline DDObject(int8_t objectType) {
+//       this->objectType = objectType;
+//     }
+//   public:
+//     int8_t objectType;
+//     String customData;
+// };
+struct DDObject {
     int8_t objectType;
     String customData;
 };
@@ -241,10 +249,6 @@ class TurtleDDLayer: public DDLayer {
     void goBy(int byX, int byY, bool withPen = true);
     /* set heading angle */
     void setHeading(int angle);
-    /* pen up */
-    void penUp();
-    /* pen down */
-    void penDown();
     /* set pen size */
     void penSize(int size);
     /* set pen color */
@@ -261,12 +265,20 @@ class TurtleDDLayer: public DDLayer {
     /* - fontName */
     /* - textSize: 0 means default */
     void setTextFont(const String& fontName = "", int textSize = 0);
+    /* pen up */
+    void penUp();
+    /* pen down */
+    void penDown();
+    void beginFill();
+    void endFill();
     /* draw a dot */
     void dot(int size, const String& color);
     /* draw circle; centered or not */
     void circle(int radius, bool centered = false);
     /* draw oval; centered or not */
     void oval(int width, int height, bool centered = false);
+    /* draw arc; centered or not */
+    void arc(int width, int height, int startAngle, int sweepAngle, bool centered = false);
     /* draw triangle (SAS) */
     void triangle(int side1, int angle, int side2);
     /* draw isosceles triangle; given size and angle */
@@ -328,6 +340,8 @@ class LedGridDDLayer: public DDLayer {
     void noOffColor();
 };
 
+// can consider using the following emojis for checkbox
+// ☒☐✅❎🟩✔️ ☑️⬛✔✖
 class LcdDDLayer: public DDLayer {
   public:
     LcdDDLayer(int8_t layerId): DDLayer(layerId) {
@@ -419,6 +433,18 @@ class GraphicalDDLayer: public DDLayer {
     inline void fillRoundRect(int x, int y, int w, int h, int r, const String& color = "") {
       drawRoundRect(x, y, w, h, r, color, true);
     }
+    /* - empty color means text color */
+    void drawOval(int x, int y, int w, int h, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillOval(int x, int y, int w, int h, const String& color = "") {
+      drawOval(x, y, w, h, color, true);
+    }
+    /* - empty color means text color */
+    void drawArc(int x, int y, int w, int h, int startAngle, int sweepAngle, bool useCenter, const String& color = "", bool filled = false);
+    /* - empty color means text color */
+    inline void fillArc(int x, int y, int w, int h, int startAngle, int sweepAngle, bool useCenter, const String& color = "") {
+      drawArc(x, y, w, h, startAngle, sweepAngle, useCenter, color, true);
+    }
     /* forward (relative to cursor) */
     void forward(int distance);
     /* left turn */
@@ -445,6 +471,8 @@ class GraphicalDDLayer: public DDLayer {
     void circle(int radius, bool centered = false);
     /* draw oval; centered or not */
     void oval(int width, int height, bool centered = false);
+    /* draw arc; centered or not */
+    void arc(int width, int height, int startAngle, int sweepAngle, bool centered = false);
     /* draw triangle (SAS) */
     void triangle(int side1, int angle, int side2);
     /* draw isosceles triangle; given size and angle */
@@ -712,17 +740,7 @@ class DDBufferedTunnel: public DDTunnel {
     int8_t nextArrayIdx;
     int8_t validArrayIdx;
     //bool done;
-};
-
-
-/**
- * support basic "text based line oriented" socket communication ... e.g.
- * pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17")
- */ 
-class BasicDDTunnel: public DDBufferedTunnel {
-  public:
-    BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
-    }
+  /*BasicDDTunnel*/ public:
     /* count buffer ready to be read */
     inline int count() { return _count(); }
     /* reached EOF? */
@@ -734,10 +752,37 @@ class BasicDDTunnel: public DDBufferedTunnel {
     /* write a line */
     inline void writeLine(const String& data) { _writeLine(data); }
     //inline void writeSound(const String& soundName) { _writeSound(soundName); }
-  public:
+  /*BasicDDTunnel*/ public:
     /* read a piece of JSON data */
     bool read(String& fieldId, String& fieldValue);
 };
+
+
+/**
+ * support basic "text based line oriented" socket communication ... e.g.
+ * pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17")
+ */ 
+// class BasicDDTunnel: public DDBufferedTunnel {
+//   public:
+//     BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize): 
+//       DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+//     }
+//     /* count buffer ready to be read */
+//     inline int count() { return _count(); }
+//     /* reached EOF? */
+//     inline bool eof() { return _eof(); }
+//     /* read a line from buffer */
+//     String readLine();
+//     /* read a line from buffer, in to the buffer passed in */
+//     inline bool readLine(String &buffer) { return _readLine(buffer); }
+//     /* write a line */
+//     inline void writeLine(const String& data) { _writeLine(data); }
+//     //inline void writeSound(const String& soundName) { _writeSound(soundName); }
+//   public:
+//     /* read a piece of JSON data */
+//     bool read(String& fieldId, String& fieldValue);
+// };
+typedef DDBufferedTunnel BasicDDTunnel;
 
 /**
  * support simple REST GET api .. e.g.
@@ -760,29 +805,14 @@ class BasicDDTunnel: public DDBufferedTunnel {
  *   `gender` = `Male`
  *   `age` = `32`
  */
-class JsonDDTunnel: public BasicDDTunnel {
-  public:
-    JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
-        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
-    }
-    // /* count buffer ready (pieces of JSON) to be read */
-    // inline int count() { return _count(); }
-    // /* reached EOF? */
-    // inline bool eof() { return _eof(); }
-    // /* read a piece of JSON data */
-    // bool read(String& fieldId, String& fieldValue);
-};
-// class JsonDDTunnel: public DDBufferedTunnel {
+typedef BasicDDTunnel JsonDDTunnel;
+// class JsonDDTunnel: public BasicDDTunnel {
 //   public:
-//     JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize): DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+//     JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+//       BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
 //     }
-//     /* count buffer ready (pieces of JSON) to be read */
-//     inline int count() { return _count(); }
-//     /* reached EOF? */
-//     inline bool eof() { return _eof(); }
-//     /* read a piece of JSON data */
-//     bool read(String& fieldId, String& fieldValue);
 // };
+
 
 class SimpleToolDDTunnel: public BasicDDTunnel {
   public:
@@ -806,7 +836,7 @@ struct DDLocation {
 };
 class GpsServiceDDTunnel: public BasicDDTunnel {
   public:
-    GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+    GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
         BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
   public:
@@ -825,7 +855,7 @@ struct DDObjectDetectDemoResult {
 };
 class ObjectDetetDemoServiceDDTunnel: public BasicDDTunnel {
   public:
-    ObjectDetetDemoServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
+    ObjectDetetDemoServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
         BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
   public:
@@ -859,13 +889,13 @@ typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 class DumbDisplay {
   public:
-    DumbDisplay(DDInputOutput* pIO, bool enableDoubleClick = true) {
+    DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE, bool enableDoubleClick = true) {
 #ifndef DD_NO_SERIAL      
       if (pIO->isSerial() || pIO->isBackupBySerial()) {
         _The_DD_Serial = new DDSerial();
       }
 #endif      
-      initialize(pIO, enableDoubleClick);
+      initialize(pIO, sendBufferSize, enableDoubleClick);
     }
     //DumbDisplay(DDInputOutput* pIO, DDSerialProxy* pDDSerialProxy);
     /* explicitly make connection -- blocking */
@@ -1015,7 +1045,7 @@ class DumbDisplay {
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine);
   private:
-    void initialize(DDInputOutput* pIO, bool enableDoubleClick);
+    void initialize(DDInputOutput* pIO, uint16_t sendBufferSize, bool enableDoubleClick);
     bool canLogToSerial();
 };
 

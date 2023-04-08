@@ -2,23 +2,47 @@
 #include <driver/i2s.h>
  
 // INMP441 I2S pin assignment
-#define I2S_WS 25
-#define I2S_SD 33
+#if defined(FOR_LILYGO_TSIMCAM)
+
+#define I2S_WS  42
+#define I2S_SD   2
+#define I2S_SCK 41
+
+
+#else
+
+#define I2S_WS  25
+#define I2S_SD  33
 #define I2S_SCK 32
- 
+
+#endif
+
 // I2S processor
 #define I2S_PORT I2S_NUM_0
 
 
-#define USE_BLUETOOTH
-#if defined(USE_BLUETOOTH)
+
+#if defined(FOR_LILYGO_TSIMCAM)
+// only support wifi
+#else
+#define BLUETOOTH "ESP32"
+#endif
+
+
+
+#define BLUETOOTH
+#if defined(BLUETOOTH)
+
   // ESP32 Bluetooth with name  ESP32
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+
 #else
+
   // ESP32 WiFi
   #include "wifidumbdisplay.h"
   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+
 #endif
 
 

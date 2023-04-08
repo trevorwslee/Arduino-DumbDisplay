@@ -14,10 +14,19 @@
 // I2S driver
 #include <driver/i2s.h>
 
+
 // INMP441 I2S pin assignment
-#define I2S_WS 25
-#define I2S_SD 33
-#define I2S_SCK 32
+#if defined(FOR_LILYGO_TSIMCAM)
+  // for the mic built-in to LiLyGO TSimCam
+  #define I2S_WS  42
+  #define I2S_SD   2
+  #define I2S_SCK 41
+#else
+  #define I2S_WS  25
+  #define I2S_SD  33
+  #define I2S_SCK 32
+#endif
+
 
 // I2S processor
 #define I2S_PORT I2S_NUM_0

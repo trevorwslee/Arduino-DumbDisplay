@@ -3,10 +3,10 @@
 
 #if defined(ESP32) 
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200), false);
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200), DD_DEF_SEND_BUFFER_SIZE, false);
 #else
   #include "dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDInputOutput(115200), false);
+  DumbDisplay dumbdisplay(new DDInputOutput(115200), DD_DEF_SEND_BUFFER_SIZE, false);
 #endif
 
 #define TONE_YES 1000
@@ -162,7 +162,8 @@ SevenSegmentRowDDLayer *CreateDisplayLayer()
 LcdDDLayer *CreateKeyLayer(int r, int c)
 {
   const char key = Keys[r][c];
-  String dispKey;
+  String dispKey = String(key);
+#if defined(__AVR__) || defined(ESP32)  
   if (key == '*')
   {
     dispKey = "×";
@@ -179,10 +180,7 @@ LcdDDLayer *CreateKeyLayer(int r, int c)
   {
     dispKey = "−";
   }
-  else
-  {
-    dispKey = String(key);
-  }
+#endif 
   LcdDDLayer *keyLayer = dumbdisplay.createLcdLayer(1, 1, 32, "sans-serif-black");
   keyLayer->pixelColor("navy");
   keyLayer->border(5, "grey", "raised");

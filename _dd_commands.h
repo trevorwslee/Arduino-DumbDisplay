@@ -110,10 +110,13 @@
 #define C_goto                 "#a0"
 #define C_zoomto               "#a1"
 #define C_zoom                 "#a2"
-//#define C_println          "#a3"
 #define C_showdigit            "#a4"
 #define C_setrot               "#a5"
 #define C_loadimagefilecropped "#a6"
+#define C_carc                 "#a7"
+#define C_arc                  "#a8"
+#define c_drawoval             "#a9"
+#define c_drawarc              "#aa"
 
 
 #define C_fd               "fd"

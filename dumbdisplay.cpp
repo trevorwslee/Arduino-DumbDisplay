@@ -23,9 +23,10 @@
 // #endif
 
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
-  #define TL_BUFFER_DATA_LEN 24
+#define TL_BUFFER_DATA_LEN 24
 #else
-  #define TL_BUFFER_DATA_LEN 128
+#define TL_BUFFER_DATA_LEN 128
+#define SUPPORT_USE_WOIO
 #endif
 
 
@@ -62,20 +63,110 @@
 //#define DEBUG_RECONNECT_WITH_COMMENT
 //#define RECONNECTED_RESET_KEEP_ALIVE
 
+
 // not flush seems to be a bit better for Serial (lost data)
 #define FLUSH_AFTER_SENT_COMMAND false
 #define YIELD_AFTER_SEND_COMMAND false
 #define YIELD_AFTER_HANDLE_FEEDBACK true
 
-//#define DD_SID "Arduino-c1"
-//#define DD_SID "Arduino-c2"
-//#define DD_SID "Arduino-c3"
-//#define DD_SID "Arduino-c4"
-//#define DD_SID "Arduino-c5"
+// see nobody.trevorlee.dumbdisplay.DDActivity#ddSourceCompatibility
 #define DD_SID "Arduino-c6"
 
 
 #include "_dd_commands.h"
+
+
+#ifdef SUPPORT_USE_WOIO
+class DDWriteOnyIO: public DDInputOutput {
+  public:
+    DDWriteOnyIO(DDInputOutput* io, uint16_t bufferSize = 8/*256*/): io(io) {
+      this->bufferSize = bufferSize;
+      this->buffer = new uint8_t[bufferSize];
+      this->bufferedCount = 0;
+      this->keepBuffering = false;
+    }
+    ~DDWriteOnyIO() {
+      delete this->buffer;
+    }
+    void print(const String &s) {
+      print(s.c_str());
+    }
+    void print(const char *p) {
+      int len = strlen(p);
+      write((uint8_t*) p, len);
+      // const char *c = p;
+      // while (true) {
+      //   if (*c == 0) {
+      //     break;
+      //   }
+      //   c++;
+      // }
+      // int count = c - p;
+      // write((uint8_t*) p, count);
+    }
+    void write(uint8_t b) {
+      write(&b, 1);
+    }
+    void write(const uint8_t *buf, size_t size) {
+      if ((bufferedCount + size) > bufferSize) {
+        _flush();
+      }
+      if (size > bufferSize) {
+        _flush();
+        io->write(buf, size);
+      } else {
+        const uint8_t *s = buf;
+        uint8_t *t = buffer + bufferedCount;
+        bool flushAfterward = false;
+        for (int i = 0; i < size; i++) {
+          if (!this->keepBuffering) {
+            if (*s == '\n') {
+              flushAfterward = true;
+            }
+          }
+          *t = *s;
+          s++;
+          t++; 
+          bufferedCount++;
+        }
+        if (flushAfterward) {
+          _flush();
+        }
+      }
+    }    
+    inline void flush() {
+      if (this->keepBuffering) {
+        return;
+      }
+      _flush();
+    }
+public:
+    void setKeepBuffering(bool keep) {
+      this->keepBuffering = keep;
+    }    
+private:
+    void _flush() {
+      if (bufferedCount > 0) {
+        if (false) {
+          Serial.print(". flush ");
+          Serial.print(bufferedCount);
+          if (this->keepBuffering) {
+            Serial.print(" ... KEEP");
+          }
+          Serial.println();
+        }
+        io->write(buffer, bufferedCount);
+        bufferedCount = 0;
+      }
+    }
+  private:
+    DDInputOutput* io;
+    uint8_t bufferSize;
+    uint8_t* buffer;  
+    uint8_t bufferedCount;
+    bool keepBuffering;
+};
+#endif
 
 
 #define YIELD() delay(1)
@@ -250,12 +341,39 @@ volatile int _NextImgId = 0;
 volatile int _NextBytesId = 0;
 
 #ifdef SUPPORT_TUNNEL
+#define DD_LAYER_INC   2
 DDObject** _DDLayerArray = NULL;
+int _MaxDDLayerCount = 0;
 #else
 DDLayer** _DDLayerArray = NULL;
 #endif
 
 DDInputOutput* volatile _IO = NULL;
+
+#ifdef SUPPORT_USE_WOIO
+DDInputOutput* volatile _WOIO = NULL;
+volatile uint16_t _SendBufferSize = 0;//DD_DEF_SEND_BUFFER_SIZE;
+#else
+#define _WOIO _IO
+#endif
+
+
+inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize) {
+  _IO = io;
+#ifdef SUPPORT_USE_WOIO  
+  if (_WOIO != NULL) delete _WOIO;
+  if (sendBufferSize > 0 && io->canUseBuffer()) {
+    _SendBufferSize = sendBufferSize;
+    _WOIO = new DDWriteOnyIO(io, sendBufferSize);
+  } else {
+    _SendBufferSize = 0;
+    _WOIO = io;
+  }
+#endif
+}
+
+
+
 IOProxy* volatile _ConnectedIOProxy = NULL;
 volatile bool _ConnectedFromSerial = false; 
 
@@ -349,6 +467,17 @@ void _Connect() {
       firstCall = false;
     }
   }
+  if (!_IO->isSerial()) {
+    Serial.println("**********");
+#ifdef SUPPORT_USE_WOIO
+    Serial.print("* _SendBufferSize=");
+    Serial.println(_SendBufferSize);
+#endif
+    Serial.print("* _EnableDoubleClick=");
+    Serial.println(_EnableDoubleClick ? "yes" : "no");
+    Serial.println("**********");
+    Serial.flush();
+  }
   {
     long nextTime = 0;
     IOProxy ioProxy(_IO);
@@ -399,7 +528,8 @@ void _Connect() {
 #endif        
         if (data == "ddhello") {
           if (fromSerial) {
-            _IO = pSIO;
+            _SetIO(pSIO, DD_DEF_SEND_BUFFER_SIZE);
+            //_IO = pSIO;
             pSIO = NULL;
           }
           _ConnectedIOProxy = new IOProxy(_IO);
@@ -511,13 +641,41 @@ int _AllocLid() {
   int lid = _NextLid++;
 #ifdef STORE_LAYERS  
 #ifdef SUPPORT_TUNNEL
-  DDObject** oriLayerArray = _DDLayerArray;
-  DDObject** layerArray = (DDObject**) malloc((lid + 1) * sizeof(DDObject*));
-  if (oriLayerArray != NULL) {
-    memcpy(layerArray, oriLayerArray, lid * sizeof(DDObject*));
-    free(oriLayerArray);
+  if (DD_LAYER_INC > 0) {
+    if (lid >= _MaxDDLayerCount) {
+      if (true) {
+        int oriLayerCount = _MaxDDLayerCount;
+        _MaxDDLayerCount = lid + DD_LAYER_INC;
+        DDObject** oriLayerArray = _DDLayerArray;
+        DDObject** layerArray = new DDObject*[_MaxDDLayerCount];
+        if (oriLayerArray != NULL) {
+          //memcpy(layerArray, oriLayerArray, (_MaxDDLayerCount - DD_LAYER_INC) * sizeof(DDObject*));
+          for (int i = 0; i < oriLayerCount; i++) {
+            layerArray[i] = oriLayerArray[i];
+          }
+          delete oriLayerArray;
+        }
+        _DDLayerArray = layerArray;
+      } else {
+        _MaxDDLayerCount = lid + DD_LAYER_INC;
+        DDObject** oriLayerArray = _DDLayerArray;
+        DDObject** layerArray = (DDObject**) malloc(_MaxDDLayerCount * sizeof(DDObject*));
+        if (oriLayerArray != NULL) {
+          memcpy(layerArray, oriLayerArray, (_MaxDDLayerCount - DD_LAYER_INC) * sizeof(DDObject*));
+          free(oriLayerArray);
+        }
+        _DDLayerArray = layerArray;
+      }
+    }
+  } else {
+    DDObject** oriLayerArray = _DDLayerArray;
+    DDObject** layerArray = (DDObject**) malloc((lid + 1) * sizeof(DDObject*));
+    if (oriLayerArray != NULL) {
+      memcpy(layerArray, oriLayerArray, lid * sizeof(DDObject*));
+      free(oriLayerArray);
+    }
+    _DDLayerArray = layerArray;
   }
-  _DDLayerArray = layerArray;
 #else  
   DDLayer** oriLayerArray = _DDLayerArray;
   DDLayer** layerArray = (DDLayer**) malloc((lid + 1) * sizeof(DDLayer*));
@@ -605,13 +763,13 @@ String* _ReadFeedback(String& buffer) {
 
 
 
-void __SendCommand(const String& layerId, const char* command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5, const String* pParam6, const String* pParam7, const String* pParam8) {
+void __SendCommand(const String& layerId, const char* command, const String* pParam1, const String* pParam2, const String* pParam3, const String* pParam4, const String* pParam5, const String* pParam6, const String* pParam7, const String* pParam8, const String* pParam9) {
 #ifdef DD_DEBUG_SEND_COMMAND          
   Serial.print("// *** sent");
 #endif        
   if (layerId != "") {
-    _IO->print(layerId/*.c_str()*/);
-    _IO->print(".");
+    _WOIO->print(layerId/*.c_str()*/);
+    _WOIO->print(".");
   }
 #ifdef SUPPORT_ENCODE_OPER
   if (_DDCompatibility >= 3 && layerId != "" && command[0] == '#') {
@@ -619,15 +777,15 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
     encoded[0] = 14 + ((command[1] > '9') ? ((command[1] - 'a') + 10) : (command[1] - '0'));
     encoded[1] = 14 + ((command[2] > '9') ? ((command[2] - 'a') + 10) : (command[2] - '0'));
     encoded[2] = 0;
-    _IO->print(encoded);
+    _WOIO->print(encoded);
   } else { 
-    _IO->print(command);
+    _WOIO->print(command);
     if (pParam1 != NULL) {
-      _IO->print(":");
+      _WOIO->print(":");
     }
   }   
 #else
-  _IO->print(command);
+  _WOIO->print(command);
   #ifdef DD_DEBUG_SEND_COMMAND          
   Serial.print(" ...");
   #endif        
@@ -637,32 +795,36 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
     Serial.print(*pParam1);
     Serial.print(" |]");
   #endif        
-    _IO->print(":");
+    _WOIO->print(":");
   }
 #endif
   if (pParam1 != NULL) {
-    _IO->print(*pParam1/*pParam1->c_str()*/);
+    _WOIO->print(*pParam1/*pParam1->c_str()*/);
     if (pParam2 != NULL) {
-      _IO->print(",");
-      _IO->print(*pParam2/*pParam2->c_str()*/);
+      _WOIO->print(",");
+      _WOIO->print(*pParam2/*pParam2->c_str()*/);
       if (pParam3 != NULL) {
-        _IO->print(",");
-        _IO->print(*pParam3/*pParam3->c_str()*/);
+        _WOIO->print(",");
+        _WOIO->print(*pParam3/*pParam3->c_str()*/);
         if (pParam4 != NULL) {
-          _IO->print(",");
-          _IO->print(*pParam4/*pParam4->c_str()*/);
+          _WOIO->print(",");
+          _WOIO->print(*pParam4/*pParam4->c_str()*/);
           if (pParam5 != NULL) {
-            _IO->print(",");
-            _IO->print(*pParam5/*pParam5->c_str()*/);
+            _WOIO->print(",");
+            _WOIO->print(*pParam5/*pParam5->c_str()*/);
             if (pParam6 != NULL) {
-              _IO->print(",");
-              _IO->print(*pParam6/*pParam6->c_str()*/);
+              _WOIO->print(",");
+              _WOIO->print(*pParam6/*pParam6->c_str()*/);
               if (pParam7 != NULL) {
-                _IO->print(",");
-                _IO->print(*pParam7/*pParam7->c_str()*/);
+                _WOIO->print(",");
+                _WOIO->print(*pParam7/*pParam7->c_str()*/);
                 if (pParam8 != NULL) {
-                  _IO->print(",");
-                  _IO->print(*pParam8/*pParam8->c_str()*/);
+                  _WOIO->print(",");
+                  _WOIO->print(*pParam8/*pParam8->c_str()*/);
+                  if (pParam9 != NULL) {
+                    _WOIO->print(",");
+                    _WOIO->print(*pParam9/*pParam9->c_str()*/);
+                  }
                 }
               }
             }
@@ -674,9 +836,9 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
 #ifdef DD_DEBUG_SEND_COMMAND          
   Serial.print(" COMMAND ");
 #endif        
-  _IO->print("\n");
+  _WOIO->print("\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
-    _IO->flush();
+    _WOIO->flush();
   }
   if (YIELD_AFTER_SEND_COMMAND) {
     yield();
@@ -692,7 +854,7 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
 #endif        
 }  
 void _HandleFeedback();
-void _SendCommand(const String& layerId, const char* command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL) {
+void _SendCommand(const String& layerId, const char* command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL, const String* pParam9 = NULL) {
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
   _SendingCommand = true;
 
@@ -704,7 +866,7 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
 #endif   
 
   if (command != NULL) {
-    __SendCommand(layerId, command, pParam1, pParam2, pParam3, pParam4, pParam5, pParam6, pParam7, pParam8);
+    __SendCommand(layerId, command, pParam1, pParam2, pParam3, pParam4, pParam5, pParam6, pParam7, pParam8, pParam9);
   }
 
 #ifdef ENABLE_FEEDBACK
@@ -723,57 +885,28 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
 }
 void __SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
 //Serial.println("//&&" + specialData);
-  _IO->print("%%>");
-  _IO->print(specialType);
-  _IO->print(".");
+  _WOIO->print("%%>");
+  _WOIO->print(specialType);
+  _WOIO->print(".");
   if (specialId != "") {
-    _IO->print(specialId);
+    _WOIO->print(specialId);
     if (specialCommand != NULL) {
-      _IO->print(":");
-      _IO->print(specialCommand);
+      _WOIO->print(":");
+      _WOIO->print(specialCommand);
     }
-    _IO->print(">");
+    _WOIO->print(">");
   }
     if (specialData != "") {
-      _IO->print(specialData);
+      _WOIO->print(specialData);
     }
-  _IO->print("\n");
+  _WOIO->print("\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
-    _IO->flush();
+    _WOIO->flush();
   }
   if (YIELD_AFTER_SEND_COMMAND) {
     yield();
   }
 }
-// int __CountZeroCompressedBytes(const uint8_t *bytes, int byteCount, bool outputAsWell) {
-//   int compressedByteCount = 0;
-//   uint8_t zeroCount = 0;
-//   for (int i = 0; i < byteCount; i++) {
-//     bool isLast = i == (byteCount - 1);
-//     uint8_t b = bytes[i];
-//     bool isZero = b == 0;
-//     if (isZero) {
-//       zeroCount++;
-//     }
-//     if (!isZero || zeroCount == 120 || isLast) {
-//       if (zeroCount > 0) {
-//         compressedByteCount += 2;
-//         if (outputAsWell) {
-//           _IO->write(0);
-//           _IO->write(zeroCount);
-//         }
-//         zeroCount = 0;
-//       }
-//       if (!isZero) {
-//         compressedByteCount += 1;
-//         if (outputAsWell) {
-//           _IO->write(b);
-//         }
-//       }
-//     }
-//   }
-//   return compressedByteCount;
-// }
 int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBytes, bool readFromProgramSpace) {
   int compressedByteCount = 0;
   uint8_t zeroCount = 0;
@@ -1182,6 +1315,9 @@ inline void _sendCommand7(const String& layerId, const char *command, const Stri
 inline void _sendCommand8(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8) {
   _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8);
 }
+inline void _sendCommand9(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8, const String& param9) {
+  _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8, &param9);
+}
 #ifdef SUPPORT_TUNNEL
 inline void _sendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
   _SendSpecialCommand(specialType, specialId, specialCommand, specialData);
@@ -1249,7 +1385,8 @@ void DDFeedbackManager::pushFeedback(DDFeedbackType type, int16_t x, int16_t y, 
 }
 
 
-DDLayer::DDLayer(int8_t layerId): DDObject(DD_OBJECT_TYPE_LAYER) {
+DDLayer::DDLayer(int8_t layerId)/*: DDObject(DD_OBJECT_TYPE_LAYER)*/ {
+  this->objectType = DD_OBJECT_TYPE_LAYER;
   this->layerId = String(layerId);
   this->pFeedbackManager = NULL;
   this->feedbackHandler = NULL;
@@ -1453,6 +1590,12 @@ void TurtleDDLayer::penUp() {
 void TurtleDDLayer::penDown() {
   _sendCommand0(layerId, "pd");
 }
+void TurtleDDLayer::beginFill() {
+  _sendCommand0(layerId, "begin_fill");
+}
+void TurtleDDLayer::endFill() {
+  _sendCommand0(layerId, "end_fill");
+}
 void TurtleDDLayer::penSize(int size) {
   _sendCommand1(layerId, C_pensize, String(size));
 }
@@ -1466,10 +1609,10 @@ void TurtleDDLayer::penColor(const String& color) {
 //   _sendCommand1(layerId, "fillcolor", HEX_COLOR(color));
 // }
 void TurtleDDLayer::fillColor(const String& color) {
-  _sendCommand1(layerId, "fillcolor", color);
+  _sendCommand1(layerId, C_fillcolor, color);
 }
 void TurtleDDLayer::noFillColor() {
-  _sendCommand0(layerId, "nofillcolor");
+  _sendCommand0(layerId, C_nofillcolor);
 }
 void TurtleDDLayer::penFilled(bool filled) {
   _sendCommand1(layerId, "pfilled", TO_BOOL(filled));
@@ -1488,6 +1631,9 @@ void TurtleDDLayer::circle(int radius, bool centered) {
 }
 void TurtleDDLayer::oval(int width, int height, bool centered) {
   _sendCommand2(layerId, centered ? C_coval : C_oval, String(width), String(height));
+}
+void TurtleDDLayer::arc(int width, int height, int startAngle, int sweepAngle, bool centered) {
+  _sendCommand4(layerId, centered ? C_carc : C_arc, String(width), String(height), String(startAngle), String(sweepAngle));
 }
 void TurtleDDLayer::rectangle(int width, int height, bool centered) {
   _sendCommand2(layerId, centered ? C_crect : C_rect, String(width), String(height));
@@ -1658,6 +1804,12 @@ void GraphicalDDLayer::drawLine(int x1, int y1, int x2, int y2, const String& co
 void GraphicalDDLayer::drawRect(int x, int y, int w, int h, const String& color, bool filled) {
   _sendCommand6(layerId, c_drawrect, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), color, TO_BOOL(filled));
 }
+void GraphicalDDLayer::drawOval(int x, int y, int w, int h, const String& color, bool filled) {
+  _sendCommand6(layerId, c_drawoval, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), color, TO_BOOL(filled));
+}
+void GraphicalDDLayer::drawArc(int x, int y, int w, int h, int startAngle, int sweepAngle, bool useCenter, const String& color, bool filled) {
+  _sendCommand9(layerId, c_drawarc, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), TO_C_INT(startAngle), TO_C_INT(sweepAngle), TO_BOOL(useCenter), color, TO_BOOL(filled));
+}
 // void GraphicalDDLayer::fillRect(int x, int y, int w, int h, const String& color) {
 //   _sendCommand6(layerId, "drawrect", String(x), String(y), String(w), String(h), color, TO_BOOL(true));
 // }
@@ -1718,6 +1870,9 @@ void GraphicalDDLayer::circle(int radius, bool centered) {
 }
 void GraphicalDDLayer::oval(int width, int height, bool centered) {
   _sendCommand2(layerId, centered ? C_coval : C_oval, String(width), String(height));
+}
+void GraphicalDDLayer::arc(int width, int height, int startAngle, int sweepAngle, bool centered) {
+  _sendCommand4(layerId, centered ? C_carc : C_arc, String(width), String(height), String(startAngle), String(sweepAngle));
 }
 void GraphicalDDLayer::rectangle(int width, int height, bool centered) {
   _sendCommand2(layerId, centered ? C_crect : C_rect, String(width), String(height));
@@ -1875,7 +2030,8 @@ void TerminalDDLayer::println(const String& val) {
 
 #ifdef SUPPORT_TUNNEL
 DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow/*, int8_t bufferSize*/):
-  DDObject(DD_OBJECT_TYPE_TUNNEL), type(type), tunnelId(String(tunnelId)), params(params), endPoint(endPoint) {
+  /*DDObject(DD_OBJECT_TYPE_TUNNEL), */type(type), tunnelId(String(tunnelId)), params(params), endPoint(endPoint) {
+    this->objectType = DD_OBJECT_TYPE_TUNNEL;
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
   // this->nextArrayIdx = 0;
@@ -2303,18 +2459,12 @@ void JsonDDTunnelMultiplexer::reconnect() {
     }
   }
 }
+#endif
 
 
-
-// DumbDisplay::DumbDisplay(DDInputOutput* pIO, DDSerialProxy* pDDSerialProxy) {
-//   if (pIO->isSerial() || pIO->isBackupBySerial()) {
-//     //_The_DD_Serial = new DDSerial();
-//     _The_DD_Serial = pDDSerialProxy;
-//   }
-//   _IO = pIO;
-// }
-void DumbDisplay::initialize(DDInputOutput* pIO, boolean enableDoubleClick) {
-  _IO = pIO;
+void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize, boolean enableDoubleClick) {
+  _SetIO(pIO, sendBufferSize);
+  //_IO = pIO;
   _EnableDoubleClick = enableDoubleClick;
 }
 void DumbDisplay::connect() {
@@ -2447,8 +2597,18 @@ void DumbDisplay:: walkLayers(void (*walker)(DDLayer *)) {
 void DumbDisplay::recordLayerSetupCommands() {
   _Connect();
   _sendCommand0("", C_RECC);
+#ifdef SUPPORT_USE_WOIO
+  if (_SendBufferSize > 0) {
+    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(true);
+  }
+#endif
 }
 void DumbDisplay::playbackLayerSetupCommands(const String& layerSetupPersistId) {
+#ifdef SUPPORT_USE_WOIO
+  if (_SendBufferSize > 0) {
+    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(false);
+  }
+#endif
   _sendCommand2("", C_SAVEC, layerSetupPersistId, TO_BOOL(true));
   _sendCommand0("", C_PLAYC);
 #ifdef SUPPORT_RECONNECT
@@ -2458,12 +2618,22 @@ void DumbDisplay::playbackLayerSetupCommands(const String& layerSetupPersistId) 
 void DumbDisplay::recordLayerCommands() {
   _Connect();
   _sendCommand0("", C_RECC);
+#ifdef SUPPORT_USE_WOIO
+  if (_SendBufferSize > 0) {
+    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(true);
+  }
+#endif
+}
+void DumbDisplay::playbackLayerCommands() {
+#ifdef SUPPORT_USE_WOIO
+  if (_SendBufferSize > 0) {
+    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(false);
+  }
+#endif
+  _sendCommand0("", C_PLAYC);
 }
 void DumbDisplay::stopRecordLayerCommands() {
   _sendCommand0("", "STOPC");
-}
-void DumbDisplay::playbackLayerCommands() {
-  _sendCommand0("", C_PLAYC);
 }
 void DumbDisplay::saveLayerCommands(const String& id, bool persist) {
   _sendCommand2("", C_SAVEC, id, TO_BOOL(persist));
@@ -2626,7 +2796,7 @@ void DumbDisplay::debugOnly(int i) {
   _sendByteArrayAfterCommand(bytes, i);
 }
 
-
+#ifdef SUPPORT_TUNNEL
 BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool connectNow, int8_t bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
@@ -2692,8 +2862,6 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
   _PostCreateTunnel(pTunnel);
   return pTunnel;
 }
-
-
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   pTunnel->release();
   delete pTunnel;

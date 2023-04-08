@@ -1,7 +1,20 @@
 // for a desciption of the experiment
-// -- Arduino Speech Synthesizer Experiment with XFS5152CE
-// -- https://www.youtube.com/watch?v=3aVNp6xhqVM 
+// -- ESP32 Speech Synthesizer Experiment With XFS5152CE
+// -- https://www.instructables.com/ESP32-Speech-Synthesizer-Experiment-With-XFS5152CE/ 
 
+
+
+// ***
+// *** newsapi.org 
+// ***
+// *   reference: https://newsapi.org/docs/endpoints/top-headlines
+const String NewsApiEndpoint = String("https://newsapi.org/v2/top-headlines?apiKey=") + NEWSAPI_API_KEY;
+
+
+
+// *** assume ESP32 Bluetooth connectivity ***
+#include "esp32dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
 
 
 // ***
@@ -11,21 +24,11 @@
 #define synthesizer Serial2
 
 
-// ***
-// *** newsapi.org 
-// ***
-// *   reference: https://newsapi.org/docs/endpoints/top-headlines
-const String NewsApiEndpoint = String("https://newsapi.org/v2/top-headlines?apiKey=") + NEWS_API__API_KEY;
 
 
-
-#include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
-
-
-
-
-int UTF8ToUnicode(const char* utf8, uint8_t* utf16Buffer) {
+// convert Arduino Framework String (which is UTF8) to UTF16
+int StringToUnicode(const String& text, uint8_t* utf16Buffer) {
+    const char* utf8 = text.c_str();
     int idx = 0;
     int i = 0;
     while (true) {
@@ -62,16 +65,16 @@ int UTF8ToUnicode(const char* utf8, uint8_t* utf16Buffer) {
 
 
 void SynthesizeVoice(const String& text) {
-    synthesizer.write((byte) 0xFD);
-    int text_len = text.length();
+    int text_len = text.length();  // text_len is actually the number of chars used to store the text (in UTF8 format)
     uint8_t buffer[2 * text_len];
-    int len = UTF8ToUnicode(text.c_str(), buffer);
+    int len = StringToUnicode(text, buffer);  // convert text to UTF16 format
     int out_len = 2 + len;
-    synthesizer.write((byte) ((out_len & 0xFF00) > 8));
-    synthesizer.write((byte) (out_len & 0x00FF));
-    synthesizer.write((byte) 0x01);
-    synthesizer.write((byte) 0x03);
-    synthesizer.write(buffer, len);
+    synthesizer.write((byte) 0xFD);                      // header
+    synthesizer.write((byte) ((out_len & 0xFF00) > 8));  // data len: higher byte
+    synthesizer.write((byte) (out_len & 0x00FF));        // data len: lower byte
+    synthesizer.write((byte) 0x01);                      // command: synthesize
+    synthesizer.write((byte) 0x03);                      // data encoding: UTF16
+    synthesizer.write(buffer, len);                      // data (UTF16 text)
 }
 
 
@@ -107,7 +110,6 @@ DDPendingValue<bool> requestNews;
 DDPendingValue<String> adhocText;
 
 
-
 void FeedbackHandler(DDLayer* layer, DDFeedbackType type, const DDFeedback& feedback) {
     if (layer == langsButton) {
         englishOnly = !englishOnly;
@@ -120,7 +122,7 @@ void FeedbackHandler(DDLayer* layer, DDFeedbackType type, const DDFeedback& feed
 
 
 void setup() {
-    synthesizer.begin(115200);
+    synthesizer.begin(115200);  // XFS5152CE UART baud rate is 115200
 
     langsButton = dumbdisplay.createLcdLayer(12, 1);
     langsButton->backgroundColor("indigo");
@@ -143,7 +145,7 @@ void setup() {
     textLayer->setTextWrap(true);
     textLayer->setFeedbackHandler(FeedbackHandler, "f:keys");  // "feedback" is input text (with keyboard)
 
-    newsTunnel = dumbdisplay.createFilteredJsonTunnel("", "title,urlToImage");  
+    newsTunnel = dumbdisplay.createFilteredJsonTunnel("", "title,urlToImage");  // filter for "key" containing "title" or "urlToImage"
     imageTunnel = dumbdisplay.createImageDownloadTunnel("", ImageFileName);
 
     imageLayer = dumbdisplay.createGraphicalLayer(300, 150);
@@ -190,7 +192,7 @@ void HandleGetAnotherNews() {
         }
     }
     String endpoint = NewsApiEndpoint + ("&pageSize=1&category=" + category) + ("&country=" + country);
-    newsTunnel->reconnectTo(endpoint);
+    newsTunnel->reconnectTo(endpoint);  // download a piece of headline news
     String title = "";
     String imageUrl = "";
     while (!newsTunnel->eof()) {
@@ -210,20 +212,20 @@ void HandleGetAnotherNews() {
     if (title.length() > 0) {
         textLayer->println(title);
         isIdle = false;
-        String text = "[v1][h0]" + title;
+        String text = "[v1][h0]" + title;  // [V1]: volume @ level 1; [h0]: synthesize so as to read out English (as opposed to spell out) 
         if (englishOnly) {
-            text = "[g2]" + text;
+            text = "[g2]" + text;          // [g2]: select English ... for reading out things like number
         } else {
-            text = "[g1]" + text;
+            text = "[g1]" + text;          // [g1]: select Chinese ... for reading out things like number
         }
         SynthesizeVoice(text);
     }
     if (imageUrl.length() > 0) {
-        imageTunnel->reconnectTo(imageUrl);
+        imageTunnel->reconnectTo(imageUrl);  // download the image
         while (true) {
             int result = imageTunnel->checkResult();
             if (result == 1) {
-                imageLayer->drawImageFileFit(ImageFileName);
+                imageLayer->drawImageFileFit(ImageFileName); 
             }
             if (result != 0) {
                 break;

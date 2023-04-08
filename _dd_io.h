@@ -50,6 +50,9 @@ class DDInputOutput {
       }
       return true;
     }
+    virtual bool canUseBuffer() {
+      return false;
+    }
   public:  
     bool isSerial() {
       return !backupBySerial && setupForSerial;
@@ -68,5 +71,6 @@ class DDInputOutput {
     bool backupBySerial;
     bool setupForSerial;
 };
+
 
 #endif

@@ -4,7 +4,28 @@
 #include "esp32dumbdisplay.h"
 
 
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32CAM"));
+#if defined(FOR_LILYGO_TSIMCAM)
+// only support wifi
+#elif defined(FOR_LILYGO_TCAMERA)
+#define BLUETOOTH "LILYGOCAM"
+#else
+#define BLUETOOTH "ESP32CAM"
+#endif
+
+
+#ifdef BLUETOOTH
+
+#include "esp32dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+
+#else
+
+#include "wifidumbdisplay.h"
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
+DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
+
+#endif
 
 
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
@@ -226,7 +247,52 @@ const int ledFreq = 5000;                            // PWM settings
 const int ledChannel = 15;                           // camera uses timer1
 const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
 
-#define CAMERA_MODEL_AI_THINKER
+
+#if defined(FOR_LILYGO_TSIMCAM)
+
+
+#define PWDN_GPIO_NUM     -1
+#define RESET_GPIO_NUM    -1      // -1 = not used
+#define XCLK_GPIO_NUM     14
+#define SIOD_GPIO_NUM      4      // i2c sda
+#define SIOC_GPIO_NUM      5      // i2c scl
+#define Y9_GPIO_NUM       15
+#define Y8_GPIO_NUM       16
+#define Y7_GPIO_NUM       17
+#define Y6_GPIO_NUM       12
+#define Y5_GPIO_NUM       10
+#define Y4_GPIO_NUM        8
+#define Y3_GPIO_NUM        9
+#define Y2_GPIO_NUM       11
+#define VSYNC_GPIO_NUM     6      // vsync_pin
+#define HREF_GPIO_NUM      7      // href_pin
+#define PCLK_GPIO_NUM     13      // pixel_clock_pin
+
+
+#elif defined(FOR_LILYGO_TCAMERA)
+
+
+#define PWDN_GPIO_NUM     26
+#define RESET_GPIO_NUM    -1      // -1 = not used
+#define XCLK_GPIO_NUM     32
+#define SIOD_GPIO_NUM     13      // i2c sda
+#define SIOC_GPIO_NUM     12      // i2c scl
+#define Y9_GPIO_NUM       39
+#define Y8_GPIO_NUM       36
+#define Y7_GPIO_NUM       23
+#define Y6_GPIO_NUM       18
+#define Y5_GPIO_NUM       15
+#define Y4_GPIO_NUM        4
+#define Y3_GPIO_NUM       14
+#define Y2_GPIO_NUM        5
+#define VSYNC_GPIO_NUM    27      // vsync_pin
+#define HREF_GPIO_NUM     25      // href_pin
+#define PCLK_GPIO_NUM     19      // pixel_clock_pin
+
+
+#else
+
+
 #define PWDN_GPIO_NUM     32      // power to camera (on/off)
 #define RESET_GPIO_NUM    -1      // -1 = not used
 #define XCLK_GPIO_NUM      0
@@ -245,6 +311,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
 #define PCLK_GPIO_NUM     22      // pixel_clock_pin
 
 
+#endif
 
 
 void brightLed(byte ledBrightness){
