@@ -100,7 +100,7 @@ void _DrawPixel(int x, int y, uint8_t shade) {
 
 void DrawPixel(int x, int y) {
   if (thickerLineShade > 0) {
-    dumbdisplay.recordLayerCommands();
+    //dumbdisplay.recordLayerCommands();
     if (x > 0) {
       _DrawPixel(x - 1, y, thickerLineShade);
     }
@@ -115,9 +115,9 @@ void DrawPixel(int x, int y) {
     }
   }
   _DrawPixel(x, y, 255);
-  if (thickerLineShade > 0) {
-    dumbdisplay.playbackLayerCommands();
-  }
+  // if (thickerLineShade > 0) {
+  //   dumbdisplay.playbackLayerCommands();
+  // }
 }
 
 bool DrawLine(int x1, int y1, int x2, int y2) {
@@ -139,11 +139,13 @@ bool DrawLine(int x1, int y1, int x2, int y2) {
   }
   float x = x1;
   float y = y1;
+  dumbdisplay.recordLayerCommands();
   for (int i = 0; i < steps; i++) {
     DrawPixel(round(x), round(y));
     x += incX;
     y += incY;
   }
+  dumbdisplay.playbackLayerCommands();
   return true;
 }
 

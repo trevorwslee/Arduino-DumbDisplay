@@ -2,7 +2,7 @@
 #include "Arduino.h"
 
 #if defined(ESP32) 
-  // ESP32 board ... additional use Bluetooth with name "BT32"
+  // ESP32 board ... use Bluetooth with name "BT32"
   #include "esp32dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200));
 #else
