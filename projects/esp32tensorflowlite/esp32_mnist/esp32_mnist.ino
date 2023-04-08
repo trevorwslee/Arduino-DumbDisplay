@@ -1,7 +1,4 @@
-#include <Arduino.h>
-
-
-//#define BLUETOOTH "ESP32BT"
+#define BLUETOOTH "ESP32BT"
 
 #if defined BLUETOOTH
 
@@ -17,7 +14,7 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 
 #endif
 
-
+#include <TensorFlowLite_ESP32.h>
 
 // #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 // #include "tensorflow/lite/micro/micro_error_reporter.h"
@@ -30,10 +27,10 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 
 
 // see: mnist_model.ipynb
-#include "mnist_model.cc"
+#include "mnist_model.h"
 
 // // see: https://github.com/frogermcs/MNIST-TFLite
-// #include "mnist_model.h"
+// #include "frogermcs_mnist_model.h"
 
 
 class DDTFLErrorReporter : public tflite::ErrorReporter {
