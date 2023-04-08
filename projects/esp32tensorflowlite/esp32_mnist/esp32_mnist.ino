@@ -66,8 +66,11 @@ TfLiteTensor* input;
 // GraphicalDDLayer* personImageLayer;
 // LcdDDLayer* statusLayer;
 
-LcdDDLayer* clearBtn;
 GraphicalDDLayer* drawLayer;
+GraphicalDDLayer* copyLayer;
+LcdDDLayer* clearBtn;
+LcdDDLayer* influenceBtn;
+SevenSegmentRowDDLayer* resultLayer;
 
 
 // const framesize_t FrameSize = FRAMESIZE_96X96;        // should agree with kNumCols and kNumRows
@@ -76,6 +79,99 @@ GraphicalDDLayer* drawLayer;
 // camera_fb_t* captureImage(bool useFlash);
 // void releaseCapturedImage(camera_fb_t* fb);
 // bool cameraReady;
+
+const uint8_t thickerLineShade = 223;  // 0 to disable; 191 / 223 / 255
+const bool autoCenter = true;
+
+int lastX = -1;
+int lastY = -1;
+//uint8_t Data[28 * 28];
+uint8_t Pixels[28][28];
+
+
+
+void _DrawPixel(int x, int y, uint8_t shade) {
+  if (Pixels[x][y] < shade) {
+    String color = DD_RGB_COLOR(shade, shade, shade);
+    drawLayer->drawPixel(x, y, color);
+    Pixels[x][y] = shade;
+  }
+}
+
+void DrawPixel(int x, int y) {
+  if (thickerLineShade > 0) {
+    dumbdisplay.recordLayerCommands();
+    if (x > 0) {
+      _DrawPixel(x - 1, y, thickerLineShade);
+    }
+    if (x < 27) {
+      _DrawPixel(x + 1, y, thickerLineShade);
+    }
+    if (y > 0) {
+      _DrawPixel(x, y - 1, thickerLineShade);
+    }
+    if (y < 27) {
+      _DrawPixel(x, y + 1, thickerLineShade);
+    }
+  }
+  _DrawPixel(x, y, 255);
+  if (thickerLineShade > 0) {
+    dumbdisplay.playbackLayerCommands();
+  }
+}
+
+bool DrawLine(int x1, int y1, int x2, int y2) {
+  int deltX = x2 - x1;
+  int deltY = y2 - y1;
+  int steps;
+  float incX;
+  float incY;
+  if (abs(deltX) > abs(deltY)) {
+    steps = abs(deltX);
+    if (steps == 0) return false;
+    incX = deltX < 0 ? -1 : 1;
+    incY = (float) deltY / steps;
+  } else {
+    steps = abs(deltY);
+    if (steps == 0) return false;
+    incY = deltY < 0 ? -1 : 1;
+    incX = (float) deltX / steps;
+  }
+  float x = x1;
+  float y = y1;
+  for (int i = 0; i < steps; i++) {
+    DrawPixel(round(x), round(y));
+    x += incX;
+    y += incY;
+  }
+  return true;
+}
+
+
+void ResetPixels() {
+    lastX = -1;
+    lastY = -1;
+    drawLayer->clear();
+    for (int x = 0; x < 28; x++) {
+      for (int y = 0; y < 28; y++) {
+        Pixels[x][y] = 0;
+      }
+    }
+}
+
+void DrawPixels(GraphicalDDLayer* targetLayer) {
+    dumbdisplay.recordLayerCommands();
+    targetLayer->clear();
+    for (int x = 0; x < 28; x++) {
+      for (int y = 0; y < 28; y++) {
+        uint8_t shade = Pixels[x][y];
+        if (shade != 0) {
+          targetLayer->drawPixel(x, y, DD_RGB_COLOR(shade, shade, shade));
+        }
+      }
+    }
+    dumbdisplay.playbackLayerCommands();
+}
 
 
 void setup() {
@@ -103,17 +199,49 @@ void setup() {
   // auto pin the layers vertically
   //dumbdisplay.configAutoPin(DD_AP_VERT);
 
-  clearBtn = dumbdisplay.createLcdLayer(5, 1);   
-  clearBtn->backgroundColor("lightgray");
-  clearBtn->print("CLEAR");
-  clearBtn->border(1, "gray", "flat");
-  clearBtn->enableFeedback("fl");
 
   drawLayer = dumbdisplay.createGraphicalLayer(28, 28);
-  drawLayer->border(2, "blue", "round", 1);
+  drawLayer->border(2, "lightgray", "round", 1);
   drawLayer->enableFeedback("fs:drag");
 
-  dumbdisplay.configAutoPin(DD_AP_VERT);
+  copyLayer = dumbdisplay.createGraphicalLayer(28, 28);
+  copyLayer->border(2, "blue", "round", 1);
+
+  clearBtn = dumbdisplay.createLcdLayer(7, 1);   
+  clearBtn->backgroundColor("darkgreen");
+  clearBtn->pixelColor("lightgray");
+  clearBtn->writeCenteredLine("clear");
+  clearBtn->border(1, "green");
+  clearBtn->enableFeedback("fl");
+
+
+  influenceBtn = dumbdisplay.createLcdLayer(3, 3);
+  influenceBtn->backgroundColor("lightgray");
+  influenceBtn->writeCenteredLine(">>>", 1);
+  influenceBtn->border(1, "gray");
+  influenceBtn->enableFeedback("fl");
+
+  resultLayer = dumbdisplay.create7SegmentRowLayer();
+  resultLayer->border(10, "blue", "round", 5);
+  resultLayer->segmentColor("darkblue");
+  //resultLayer->showFormatted("_");
+
+
+
+
+  dumbdisplay.configAutoPin(
+    DDAutoPinConfig('V')
+      .addLayer(drawLayer)
+      .beginGroup('H')
+        .addLayer(copyLayer)
+        .beginGroup('V')
+          .addLayer(clearBtn)
+          .addLayer(influenceBtn)
+        .endGroup()
+        .addLayer(resultLayer)  
+      .endGroup()
+      .build()
+    );
 
   
   dumbdisplay.writeComment(String("Preparing Mnist TFLite model version ") + model->version() + " ...");
@@ -155,6 +283,7 @@ void setup() {
 #endif    
   });
 
+  ResetPixels();
 
   // cameraReady = initialiseCamera(); 
   // if (cameraReady) {
@@ -166,14 +295,8 @@ void setup() {
 }
 
 
-void DrawPixel(int x, int y);
-bool DrawLine(int x1, int y1, int x2, int y2);
-
-const bool thickLines = true;
-
-int lastX = -1;
-int lastY = -1;
-uint8_t Data[28 * 28];
+// void DrawPixel(int x, int y);
+// bool DrawLine(int x1, int y1, int x2, int y2);
 
 void loop() {
   if (interpreter == NULL) {
@@ -183,17 +306,14 @@ void loop() {
   }
 
   if (clearBtn->getFeedback()) {
-    lastX = -1;
-    lastY = -1;
-    drawLayer->clear();
-
+    ResetPixels();
   }
 
   const DDFeedback *feedback = drawLayer->getFeedback();
   if (feedback != NULL) {
     int x = feedback->x;
     int y = feedback->y;
-    if (true) {
+    if (false) {
       dumbdisplay.writeComment(String(". ") + String(x) + "," + String(y));
     }
     if (x == -1) {
@@ -214,6 +334,8 @@ void loop() {
       }
     }
   }
+
+  bool doInfluence = influenceBtn->getFeedback() != NULL;
 
 //  delay(2000);
 
@@ -238,11 +360,66 @@ void loop() {
 
     // copy an image with a person into the memory area used for the 
     
-    if (false) {
-      for (int i = 0; i < (28 * 28); ++i) {
-        input->data.f[i] = ((float) Data[i]) / 255.0; 
-        //input->data.int8[i] = person_data[i] ^ 0x80;  // signed int8_t quantized ==> input images must be converted from unisgned to signed format
+    if (doInfluence) {
+      drawLayer->disabled(true);
+      if (autoCenter) {
+        int minX = 27;
+        int maxX = 0;
+        int minY = 27;
+        int maxY = 0;
+        for (int x = 0; x < 28; x++) {
+          for (int y = 0; y < 28; y++) {
+            if (Pixels[x][y] != 0) {
+              if (x < minX) {
+                minX = x;
+              }
+              if (x > maxX) {
+                maxX = x;
+              }
+              if (y < minY) {
+                minY = y;
+              }
+              if (y > maxY) {
+                maxY = y;
+              }
+            } 
+          }
+        }
+        int xDelta = (((27 - maxX) + minX) / 2) - minX;
+        int yDelta = (((27 - maxY) + minY) / 2) - minY;
+        if (xDelta != 0 || yDelta != 0) {
+          if (true) {
+            dumbdisplay.writeComment(String("!!! shift ") + xDelta + "," + yDelta);
+          }
+          uint8_t newPixels[28][28];
+          for (int x = 0; x < 28; x++) {
+            for (int y = 0; y < 28; y++) {
+              int newX = x - xDelta;
+              int newY = y - yDelta;
+              uint8_t pixel = 0;
+              if (newX >= 0 && newX <= 27 && newY >= 0 && newY <= 27) {
+                pixel = Pixels[newX][newY];
+              }
+              newPixels[x][y] = pixel;
+            }
+          }
+          for (int x = 0; x < 28; x++) {
+            for (int y = 0; y < 28; y++) {
+              Pixels[x][y] = newPixels[x][y];
+            }
+          }
+        }
       }
+      int idx = 0;
+      for (int y = 0; y < 28; y++) {
+        for (int x = 0; x < 28; x++) {
+          input->data.f[idx++] = ((float) Pixels[x][y]) / 255.0; 
+        }
+      }
+      // for (int i = 0; i < (28 * 28); ++i) {
+      //   input->data.f[i] = ((float) Data[i]) / 255.0; 
+      //   //input->data.int8[i] = person_data[i] ^ 0x80;  // signed int8_t quantized ==> input images must be converted from unisgned to signed format
+      // }
 
       // run the model on this input and make sure it succeeds
       dumbdisplay.writeComment("<<<");
@@ -255,12 +432,31 @@ void loop() {
 
       // process the inference (person detection) results
       TfLiteTensor* output = interpreter->output(0);
-      for (int i = 0; i < 10; i++) {
-        float p = output->data.f[i];
-        dumbdisplay.writeComment(String(". ") + String(i) + ": " + String(p, 3));
+      if (true) {
+        for (int i = 0; i < 10; i++) {
+          float p = output->data.f[i];
+          dumbdisplay.writeComment(String(". ") + String(i) + ": " + String(p, 3));
 
+        }
+        dumbdisplay.writeComment(String(">>> in ") + detect_taken_millis + " ms");
       }
-      dumbdisplay.writeComment(String(">>> in ") + detect_taken_millis + " ms");
+      int best = -1;
+      float bestProp;
+      for (int i = 0; i < 10; i++) {
+        float prop = output->data.f[i];
+        if (i == 0) {
+          best = 0;
+          bestProp = prop; 
+        } else if (prop > bestProp) {
+          best = i;
+          bestProp = prop;
+        }
+      }
+      dumbdisplay.writeComment(String("*** [") + best + "] (" + bestProp + ") in " + detect_taken_millis + " ms");
+      resultLayer->showDigit(best);
+      DrawPixels(copyLayer);
+      ResetPixels();
+      drawLayer->disabled(false);
     }
     
     // int8_t _person_score = output->data.int8[kPersonIndex];
@@ -303,51 +499,3 @@ void loop() {
   //releaseCapturedImage(capturedImage);
 }
 
-
-
-void DrawPixel(int x, int y) {
-  if (thickLines) {
-    String color2 = DD_RGB_COLOR(128, 128, 128);
-    if (x > 0) {
-      drawLayer->drawPixel(x - 1, y, color2);
-    }
-    if (x < 27) {
-      drawLayer->drawPixel(x + 1, y, color2);
-    }
-    if (y < 0) {
-      drawLayer->drawPixel(x, y - 1, color2);
-    }
-    if (y < 27) {
-      drawLayer->drawPixel(x, y + 1, color2);
-    }
-  }
-  String color = DD_RGB_COLOR(255, 255, 255);
-  drawLayer->drawPixel(x, y, color);
-}
-
-bool DrawLine(int x1, int y1, int x2, int y2) {
-  int deltX = x2 - x1;
-  int deltY = y2 - y1;
-  int steps;
-  float incX;
-  float incY;
-  if (abs(deltX) > abs(deltY)) {
-    steps = abs(deltX);
-    if (steps == 0) return false;
-    incX = deltX < 0 ? -1 : 1;
-    incY = (float) deltY / steps;
-  } else {
-    steps = abs(deltY);
-    if (steps == 0) return false;
-    incY = deltY < 0 ? -1 : 1;
-    incX = (float) deltX / steps;
-  }
-  float x = x1;
-  float y = y1;
-  for (int i = 0; i < steps; i++) {
-    DrawPixel(round(x), round(y));
-    x += incX;
-    y += incY;
-  }
-  return true;
-}

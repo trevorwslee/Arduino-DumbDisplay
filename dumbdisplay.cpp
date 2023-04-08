@@ -83,6 +83,7 @@ class DDWriteOnyIO: public DDInputOutput {
       this->bufferSize = bufferSize;
       this->buffer = new uint8_t[bufferSize];
       this->bufferedCount = 0;
+      this->keepBuffering = false;
     }
     ~DDWriteOnyIO() {
       delete this->buffer;
@@ -107,39 +108,53 @@ class DDWriteOnyIO: public DDInputOutput {
       write(&b, 1);
     }
     void write(const uint8_t *buf, size_t size) {
-      if (false) {
+      if ((bufferedCount + size) > bufferSize) {
+        _flush();
+      }
+      if (size > bufferSize) {
+        _flush();
         io->write(buf, size);
       } else {
-        if ((bufferedCount + size) > bufferSize) {
-          flush();
-        }
-        if (size > bufferSize) {
-          flush();
-          io->write(buf, size);
-        } else {
-          const uint8_t *s = buf;
-          uint8_t *t = buffer + bufferedCount;
-          bool flushAfterward = false;
-          for (int i = 0; i < size; i++) {
+        const uint8_t *s = buf;
+        uint8_t *t = buffer + bufferedCount;
+        bool flushAfterward = false;
+        for (int i = 0; i < size; i++) {
+          if (!this->keepBuffering) {
             if (*s == '\n') {
               flushAfterward = true;
             }
-            *t = *s;
-            s++;
-            t++; 
-            bufferedCount++;
           }
-          //memcpy(buffer + bufferedCount, buf, size);
-          //bufferedCount += size;
-          if (flushAfterward) {
-            flush();
-          }
+          *t = *s;
+          s++;
+          t++; 
+          bufferedCount++;
+        }
+        if (flushAfterward) {
+          _flush();
         }
       }
     }    
-    void flush() {
-      //Serial.println("--->");
+    inline void flush() {
+      if (this->keepBuffering) {
+        return;
+      }
+      _flush();
+    }
+public:
+    void setKeepBuffering(bool keep) {
+      this->keepBuffering = keep;
+    }    
+private:
+    void _flush() {
       if (bufferedCount > 0) {
+        if (false) {
+          Serial.print(". flush ");
+          Serial.print(bufferedCount);
+          if (this->keepBuffering) {
+            Serial.print(" ... KEEP");
+          }
+          Serial.println();
+        }
         io->write(buffer, bufferedCount);
         bufferedCount = 0;
       }
@@ -149,6 +164,7 @@ class DDWriteOnyIO: public DDInputOutput {
     uint8_t bufferSize;
     uint8_t* buffer;  
     uint8_t bufferedCount;
+    bool keepBuffering;
 };
 #endif
 
@@ -2581,8 +2597,18 @@ void DumbDisplay:: walkLayers(void (*walker)(DDLayer *)) {
 void DumbDisplay::recordLayerSetupCommands() {
   _Connect();
   _sendCommand0("", C_RECC);
+#ifdef SUPPORT_USE_WOIO
+  if (_SendBufferSize > 0) {
+    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(true);
+  }
+#endif
 }
 void DumbDisplay::playbackLayerSetupCommands(const String& layerSetupPersistId) {
+#ifdef SUPPORT_USE_WOIO
+  if (_SendBufferSize > 0) {
+    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(false);
+  }
+#endif
   _sendCommand2("", C_SAVEC, layerSetupPersistId, TO_BOOL(true));
   _sendCommand0("", C_PLAYC);
 #ifdef SUPPORT_RECONNECT
@@ -2592,12 +2618,22 @@ void DumbDisplay::playbackLayerSetupCommands(const String& layerSetupPersistId) 
 void DumbDisplay::recordLayerCommands() {
   _Connect();
   _sendCommand0("", C_RECC);
+#ifdef SUPPORT_USE_WOIO
+  if (_SendBufferSize > 0) {
+    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(true);
+  }
+#endif
+}
+void DumbDisplay::playbackLayerCommands() {
+#ifdef SUPPORT_USE_WOIO
+  if (_SendBufferSize > 0) {
+    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(false);
+  }
+#endif
+  _sendCommand0("", C_PLAYC);
 }
 void DumbDisplay::stopRecordLayerCommands() {
   _sendCommand0("", "STOPC");
-}
-void DumbDisplay::playbackLayerCommands() {
-  _sendCommand0("", C_PLAYC);
 }
 void DumbDisplay::saveLayerCommands(const String& id, bool persist) {
   _sendCommand2("", C_SAVEC, id, TO_BOOL(persist));
