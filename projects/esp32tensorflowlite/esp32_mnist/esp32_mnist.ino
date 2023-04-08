@@ -69,6 +69,7 @@ TfLiteTensor* input;
 GraphicalDDLayer* drawLayer;
 GraphicalDDLayer* copyLayer;
 LcdDDLayer* clearBtn;
+LcdDDLayer* centerBtn;
 LcdDDLayer* influenceBtn;
 SevenSegmentRowDDLayer* resultLayer;
 
@@ -81,7 +82,8 @@ SevenSegmentRowDDLayer* resultLayer;
 // bool cameraReady;
 
 const uint8_t thickerLineShade = 223;  // 0 to disable; 191 / 223 / 255
-const bool autoCenter = true;
+
+bool autoCenter = false;
 
 int lastX = -1;
 int lastY = -1;
@@ -203,25 +205,29 @@ void setup() {
 
 
   drawLayer = dumbdisplay.createGraphicalLayer(28, 28);
-  drawLayer->border(2, "lightgray", "round", 1);
+  drawLayer->border(1, "lightgray", "round", 0.5);
   drawLayer->enableFeedback("fs:drag");
 
   copyLayer = dumbdisplay.createGraphicalLayer(28, 28);
   copyLayer->border(2, "blue", "round", 1);
 
   clearBtn = dumbdisplay.createLcdLayer(7, 1);   
-  clearBtn->backgroundColor("darkgreen");
-  clearBtn->pixelColor("lightgray");
+  clearBtn->backgroundColor("lightgreen");
+  clearBtn->pixelColor("darkblue");
   clearBtn->writeCenteredLine("clear");
-  clearBtn->border(1, "green");
-  clearBtn->enableFeedback("fl");
+  clearBtn->border(2, "darkgreen", "raised");
+  clearBtn->enableFeedback("f");
+
+  centerBtn = dumbdisplay.createLcdLayer(8, 1);
+  centerBtn->writeCenteredLine("center");
+  centerBtn->enableFeedback("fl");
 
 
   influenceBtn = dumbdisplay.createLcdLayer(3, 3);
-  influenceBtn->backgroundColor("lightgray");
+  influenceBtn->pixelColor("darkblue");
   influenceBtn->writeCenteredLine(">>>", 1);
-  influenceBtn->border(1, "gray");
-  influenceBtn->enableFeedback("fl");
+  influenceBtn->border(2, "gray", "raised");
+  influenceBtn->enableFeedback("f");
 
   resultLayer = dumbdisplay.create7SegmentRowLayer();
   resultLayer->border(10, "blue", "round", 5);
@@ -233,13 +239,14 @@ void setup() {
 
   dumbdisplay.configAutoPin(
     DDAutoPinConfig('V')
+      .beginGroup('H')
+        .addLayer(clearBtn)
+        .addLayer(centerBtn)
+      .endGroup()
       .addLayer(drawLayer)
       .beginGroup('H')
         .addLayer(copyLayer)
-        .beginGroup('V')
-          .addLayer(clearBtn)
-          .addLayer(influenceBtn)
-        .endGroup()
+        .addLayer(influenceBtn)
         .addLayer(resultLayer)  
       .endGroup()
       .build()
@@ -300,11 +307,28 @@ void setup() {
 // void DrawPixel(int x, int y);
 // bool DrawLine(int x1, int y1, int x2, int y2);
 
+bool started = false;
 void loop() {
   if (interpreter == NULL) {
     error_reporter->Report("Not Initialized!");
     delay(2000);
     return;
+  }
+
+  bool update_ui = centerBtn->getFeedback() != NULL;
+  if (!started) {
+    started = true;
+    update_ui = true;
+  }
+  if (update_ui) {
+    autoCenter = !autoCenter;
+    if (autoCenter) {
+      centerBtn->pixelColor("darkblue");
+      centerBtn->border(2, "gray", "flat");
+    } else {
+      centerBtn->pixelColor("gray");
+      centerBtn->border(2, "gray", "hair");
+    }
   }
 
   if (clearBtn->getFeedback()) {
