@@ -1,4 +1,3 @@
-#include <Arduino.h>
 
 #include "esp_camera.h" 
 #include "esp32dumbdisplay.h"
@@ -28,6 +27,7 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
 #endif
 
 
+#include <TensorFlowLite_ESP32.h>
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
@@ -40,7 +40,7 @@ DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
 // * . commented out the line
 // *   #include "person_detect_model_data.h" 
 // *****
-#include "person_detect_model_data.cc"
+#include "person_detect_model_data.h"
 
 
 class DDTFLErrorReporter : public tflite::ErrorReporter {
