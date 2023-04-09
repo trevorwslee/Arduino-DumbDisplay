@@ -119,6 +119,7 @@ void loop() {
         frameSize = FRAMESIZE_QVGA;
         resolutionLayer->writeCenteredLine("320x240");
     }
+    imageLayer->clear();
     dumbdisplay.writeComment("Initializing camera ...");
     cameraReady = initialiseCamera(frameSize); 
     if (cameraReady) {

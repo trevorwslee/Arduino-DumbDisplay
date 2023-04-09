@@ -244,12 +244,12 @@ void loop() {
     return;
   }
 
-  bool toogleCenter = centerBtn->getFeedback() != NULL;
+  bool toogleAutoCenter = centerBtn->getFeedback() != NULL;
   if (!started) {
     started = true;
-    toogleCenter = true;
+    toogleAutoCenter = true;
   }
-  if (toogleCenter) {
+  if (toogleAutoCenter) {
     autoCenter = !autoCenter;
     if (autoCenter) {
       centerBtn->pixelColor("darkblue");
