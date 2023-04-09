@@ -20,11 +20,9 @@
 #include "tensorflow/lite/schema/schema_generated.h"
 
 
-// see: mnist_model.ipynb
+// make sure signature is ... const unsigne char mnist_model_tflite[]
 #include "mnist_model.h"
-
-// // see: https://github.com/frogermcs/MNIST-TFLite
-// #include "frogermcs_mnist_model.h"
+//#include "frogermcs_mnist_model.h"
 
 
 class DDTFLErrorReporter : public tflite::ErrorReporter {
@@ -246,12 +244,12 @@ void loop() {
     return;
   }
 
-  bool toogleCenter = centerBtn->getFeedback() != NULL;
+  bool toogleAutoCenter = centerBtn->getFeedback() != NULL;
   if (!started) {
     started = true;
-    toogleCenter = true;
+    toogleAutoCenter = true;
   }
-  if (toogleCenter) {
+  if (toogleAutoCenter) {
     autoCenter = !autoCenter;
     if (autoCenter) {
       centerBtn->pixelColor("darkblue");

@@ -1,5 +1,15 @@
-#include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32"));
+// if want Bluetooth, uncomment the following line
+// #define BLUETOOTH "ESP32BT"
+#if defined(BLUETOOTH)
+  #include "esp32dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+#elif defined(WIFI_SSID)
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+#else
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput());
+#endif
 
 
 #include <TensorFlowLite_ESP32.h>

@@ -1,20 +1,27 @@
+// if want Bluetooth, uncomment the following line
+// #define BLUETOOTH "ESP32BT"
+#if defined(BLUETOOTH)
+  #include "esp32dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+#else
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+#endif
+
+
 // I2S driver
 #include <driver/i2s.h>
  
 // INMP441 I2S pin assignment
 #if defined(FOR_LILYGO_TSIMCAM)
-
-#define I2S_WS  42
-#define I2S_SD   2
-#define I2S_SCK 41
-
-
+  // for the mic built-in to LiLyGO TSimCam
+  #define I2S_WS  42
+  #define I2S_SD   2
+  #define I2S_SCK 41
 #else
-
-#define I2S_WS  25
-#define I2S_SD  33
-#define I2S_SCK 32
-
+  #define I2S_WS  25
+  #define I2S_SD  33
+  #define I2S_SCK 32
 #endif
 
 // I2S processor
@@ -22,28 +29,28 @@
 
 
 
-#if defined(FOR_LILYGO_TSIMCAM)
-// only support wifi
-#else
-#define BLUETOOTH "ESP32"
-#endif
+// #if defined(FOR_LILYGO_TSIMCAM)
+// // only support wifi
+// #else
+// #define BLUETOOTH "ESP32"
+// #endif
 
 
 
-#define BLUETOOTH
-#if defined(BLUETOOTH)
+// #define BLUETOOTH
+// #if defined(BLUETOOTH)
 
-  // ESP32 Bluetooth with name  ESP32
-  #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+//   // ESP32 Bluetooth with name  ESP32
+//   #include "esp32dumbdisplay.h"
+//   DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
 
-#else
+// #else
 
-  // ESP32 WiFi
-  #include "wifidumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+//   // ESP32 WiFi
+//   #include "wifidumbdisplay.h"
+//   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 
-#endif
+// #endif
 
 
 PlotterDDLayer* plotterLayer;
