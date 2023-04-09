@@ -1,13 +1,18 @@
 //#define WITH_KEYBOARD
 
 
-#if defined(ESP32) 
+#if defined(BLUETOOTH)
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200), DD_DEF_SEND_BUFFER_SIZE, false);
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true, 115200), DD_DEF_SEND_BUFFER_SIZE, false);
+#elif defined(WIFI_SSID)
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD), DD_DEF_SEND_BUFFER_SIZE, false);
 #else
   #include "dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDInputOutput(115200), DD_DEF_SEND_BUFFER_SIZE, false);
+  DumbDisplay dumbdisplay(new DDInputOutput(), DD_DEF_SEND_BUFFER_SIZE, false);
 #endif
+
+
 
 #define TONE_YES 1000
 #define TONE_NO 1500

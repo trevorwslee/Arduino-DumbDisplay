@@ -1,16 +1,15 @@
-#include <Arduino.h>
-
 #include "esp32dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32"));
 
 
+#include <TensorFlowLite_ESP32.h>
 #include "tensorflow/lite/micro/all_ops_resolver.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 
 
-#include "sine_model.cc"
+#include "sine_model.h"
 
 
 class DDTFLErrorReporter : public tflite::ErrorReporter {

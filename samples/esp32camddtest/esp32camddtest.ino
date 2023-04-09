@@ -5,35 +5,19 @@
 
 
 
-#include <Arduino.h>
+// if want Bluetooth, uncomment the following line
+// #define BLUETOOTH "ESP32BT"
+#if defined(BLUETOOTH)
+  #include "esp32dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+#else
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+#endif
+
+
+
 #include "esp_camera.h" 
-
-
-
-#if defined(FOR_LILYGO_TSIMCAM)
-// only support wifi
-#elif defined(FOR_LILYGO_TCAMERA)
-#define BLUETOOTH "LILYGOCAM"
-#else
-#define BLUETOOTH "ESP32Cam"
-#endif
-
-
-#ifdef BLUETOOTH
-
-#include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
-
-#else
-
-#include "wifidumbdisplay.h"
-const char* ssid = WIFI_SSID;
-const char* password = WIFI_PASSWORD;
-DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
-
-#endif
-
-
 
 
 const int imageLayerWidth = 1024;
