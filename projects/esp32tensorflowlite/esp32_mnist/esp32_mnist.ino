@@ -19,8 +19,10 @@
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 
-
-// make sure signature is ... const unsigne char mnist_model_tflite[]
+// *****
+// * make sure signature of the model is
+// *   const unsigne char mnist_model_tflite[] = ...
+// *****
 #include "mnist_model.h"
 //#include "frogermcs_mnist_model.h"
 
