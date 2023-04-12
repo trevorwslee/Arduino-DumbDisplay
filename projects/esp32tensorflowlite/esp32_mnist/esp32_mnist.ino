@@ -1,3 +1,4 @@
+
 // if want Bluetooth, uncomment the following line
 // #define BLUETOOTH "ESP32BT"
 #if defined(BLUETOOTH)
@@ -19,6 +20,7 @@
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 
+
 // *****
 // * make sure signature of the model is
 // *   const unsigne char mnist_model_tflite[] = ...
@@ -27,6 +29,7 @@
 //#include "frogermcs_mnist_model.h"
 
 
+// error reporter for TensorFlow Lite
 class DDTFLErrorReporter : public tflite::ErrorReporter {
 public:
   virtual int Report(const char* format, va_list args) {
@@ -41,7 +44,7 @@ public:
 
 tflite::ErrorReporter* error_reporter = new DDTFLErrorReporter();
 const tflite::Model* model = ::tflite::GetModel(mnist_model_tflite);
-const int tensor_arena_size = 81 * 1024;  // the same as used by esp32cam_person (person detection)
+const int tensor_arena_size = 81 * 1024;  // guess ... the same as used by esp32cam_person (person detection)
 uint8_t* tensor_arena;
 tflite::MicroInterpreter* interpreter = NULL;
 TfLiteTensor* input;
@@ -55,16 +58,18 @@ LcdDDLayer* influenceBtn;
 SevenSegmentRowDDLayer* resultLayer;
 
 
-const uint8_t thickerLineShade = 223;  // 0 to disable; 191 / 223 / 255
+const uint8_t thickerLineShade = 223;  // 0 to disable; other values can be 191 / 255
+
 
 bool autoCenter = false;
 
 int lastX = -1;
 int lastY = -1;
-uint8_t Pixels[28][28];
+uint8_t Pixels[28][28];  // pixels data
 
 
 
+// set draw the pixel and set the corresponding position of the pixels data
 void _RenderPixel(int x, int y, uint8_t shade) {
   if (Pixels[x][y] < shade) {
     String color = DD_RGB_COLOR(shade, shade, shade);
@@ -99,12 +104,12 @@ bool DrawLine(int x1, int y1, int x2, int y2) {
   float incY;
   if (abs(deltX) > abs(deltY)) {
     steps = abs(deltX);
-    if (steps == 0) return false;
+    if (steps == 0) return false;  // nothing to draw
     incX = deltX < 0 ? -1 : 1;
     incY = (float) deltY / steps;
   } else {
     steps = abs(deltY);
-    if (steps == 0) return false;
+    if (steps == 0) return false;  // nothing to draw
     incY = deltY < 0 ? -1 : 1;
     incX = (float) deltX / steps;
   }
@@ -121,6 +126,7 @@ bool DrawLine(int x1, int y1, int x2, int y2) {
 }
 
 
+// reset the pixels data
 void ResetPixels() {
     lastX = -1;
     lastY = -1;
@@ -132,6 +138,7 @@ void ResetPixels() {
     }
 }
 
+// draw the pixels data to the given layer
 void DrawPixelsTo(GraphicalDDLayer* targetLayer) {
     dumbdisplay.recordLayerCommands();
     targetLayer->clear();
@@ -148,9 +155,6 @@ void DrawPixelsTo(GraphicalDDLayer* targetLayer) {
 
 
 void setup() {
-  dumbdisplay.connect();
-  dumbdisplay.writeComment("*** MNIST ***");
-
   drawLayer = dumbdisplay.createGraphicalLayer(28, 28);
   drawLayer->border(1, "lightgray", "round", 0.5);
   drawLayer->enableFeedback("fs:drag");
@@ -229,9 +233,7 @@ void setup() {
   dumbdisplay.writeComment("Done preparing Mnist TFLite model!");
 
   dumbdisplay.setIdleCalback([](long idleForMillis) {
-#if defined(ESP32)    
     ESP.restart();  // restart ESP32 if idle (i.e. disconnected)
-#endif    
   });
 
   ResetPixels();
@@ -293,7 +295,6 @@ void loop() {
   }
 
   bool doInfluence = influenceBtn->getFeedback() != NULL;
-
   if (doInfluence) {
     drawLayer->disabled(true);
     if (autoCenter) {
@@ -350,10 +351,6 @@ void loop() {
         input->data.f[idx++] = ((float) Pixels[x][y]) / 255.0; 
       }
     }
-    // for (int i = 0; i < (28 * 28); ++i) {
-    //   input->data.f[i] = ((float) Data[i]) / 255.0; 
-    //   //input->data.int8[i] = person_data[i] ^ 0x80;  // signed int8_t quantized ==> input images must be converted from unisgned to signed format
-    // }
 
     // run the model on this input and make sure it succeeds
     dumbdisplay.writeComment("<<<");
@@ -374,6 +371,7 @@ void loop() {
       }
       dumbdisplay.writeComment(String(">>> in ") + detect_taken_millis + " ms");
     }
+
     int best = -1;
     float bestProp;
     for (int i = 0; i < 10; i++) {
@@ -387,6 +385,7 @@ void loop() {
       }
     }
     dumbdisplay.writeComment(String("*** [") + best + "] (" + bestProp + ") in " + detect_taken_millis + " ms");
+
     resultLayer->showDigit(best);
     DrawPixelsTo(copyLayer);
     ResetPixels();
