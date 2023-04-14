@@ -1040,7 +1040,11 @@ class DumbDisplay {
     /* set 'idle callback', which will be called in 2 situations: */
     /* 1. no connection response while connecting */
     /* 2. detected no 'keep alive' signal */
-    void setIdleCalback(DDIdleCallback idleCallback); 
+    void setIdleCallback(DDIdleCallback idleCallback); 
+    // deprecated
+    inline void setIdleCalback(DDIdleCallback idleCallback) {
+      setIdleCallback(idleCallback);
+    }
     void setConnectVersionChangedCalback(DDConnectVersionChangedCallback connectVersionChangedCallback); 
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine);

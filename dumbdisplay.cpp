@@ -2889,7 +2889,7 @@ void DumbDisplay::optionNoCompression(bool noCompression) {
   _NoEncodeInt = noCompression;
 }
 #endif
-void DumbDisplay::setIdleCalback(DDIdleCallback idleCallback) {
+void DumbDisplay::setIdleCallback(DDIdleCallback idleCallback) {
 #ifdef SUPPORT_IDLE_CALLBACK
   _IdleCallback = idleCallback;
 #endif
