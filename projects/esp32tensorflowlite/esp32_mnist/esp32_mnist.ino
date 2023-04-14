@@ -198,6 +198,12 @@ void setup() {
       .build()
     );
 
+
+  // set "idle callback restart ESP32 if idle (i.e. disconnected)
+  dumbdisplay.setIdleCalback([](long idleForMillis) {
+    ESP.restart(); 
+  });
+
   
   dumbdisplay.writeComment(String("Preparing Mnist TFLite model version ") + model->version() + " ...");
 
@@ -231,10 +237,6 @@ void setup() {
   input = interpreter->input(0);
 
   dumbdisplay.writeComment("Done preparing Mnist TFLite model!");
-
-  dumbdisplay.setIdleCalback([](long idleForMillis) {
-    ESP.restart();  // restart ESP32 if idle (i.e. disconnected)
-  });
 
   ResetPixels();
 }
@@ -345,6 +347,8 @@ void loop() {
         }
       }
     }
+
+    // set the pixels as the model's input
     int idx = 0;
     for (int y = 0; y < 28; y++) {
       for (int x = 0; x < 28; x++) {
