@@ -1,7 +1,19 @@
-#include <Arduino.h>
 
+#if defined(PICO_HC_BLUETOOTH)
 
-#define PICO_BLUETOOTH
+  // GP8 => RX of HC06; GP9 => TX of HC06
+  #define DD_4_PICO_TX 8
+  #define DD_4_PICO_RX 9
+  #include "picodumbdisplay.h"
+  /* HC-06 connectivity */
+  DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
+
+#else
+
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput());
+
+#endif
 
 
 
@@ -49,22 +61,6 @@ void CalcCoor(int ang, int dist, int& x, int& y) {
 #include <Servo.h>
 Servo servo;
 
-
-#if defined(PICO_BLUETOOTH)
-
-  // GP8 => RX of HC06; GP9 => TX of HC06
-  #define DD_4_PICO_TX 8
-  #define DD_4_PICO_RX 9
-  #include "picodumbdisplay.h"
-  /* HC-06 connectivity */
-  DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
-
-#else
-
-  #include "dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDInputOutput());
-
-#endif
 
 
 

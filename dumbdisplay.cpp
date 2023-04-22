@@ -2864,7 +2864,9 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
 }
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   pTunnel->release();
-  delete pTunnel;
+#ifndef ESP32  
+  delete pTunnel;  // problem with ESP32 ... for now, just don't delete
+#endif  
 }
 #endif
 
