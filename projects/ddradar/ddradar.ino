@@ -45,8 +45,6 @@ const int A_start = (180 - MaxAngle) / 2;
 const int ObjectDotRadius = 2;
 
 
-
-
 void CalcCoor(int ang, int dist, int& x, int& y) {
   float dist_norm = DistFactor * dist;
   int ang_norm_i = 180 - (A_start + ang);
@@ -60,8 +58,6 @@ void CalcCoor(int ang, int dist, int& x, int& y) {
 
 #include <Servo.h>
 Servo servo;
-
-
 
 
 GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
@@ -94,7 +90,8 @@ DDFadingLayers<BeamLayerCount> beamLayers;
 
 PlotterDDLayer* plotterLayer;
 GraphicalDDLayer* mainLayer;
-LcdDDLayer* unDirectionalLayer;
+LcdDDLayer* unidirectionalLayer;
+LcdDDLayer* bidirectionalLayer;
 
 
 int angle = 0;
@@ -126,13 +123,17 @@ void setup() {
   plotterLayer = dumbdisplay.createPlotterLayer(400, 160);
   plotterLayer->border(2, "blue");
 
-  unDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
-  unDirectionalLayer->enableFeedback("f");
+  unidirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
+  unidirectionalLayer->enableFeedback("f");
+
+  bidirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
+  bidirectionalLayer->enableFeedback("f");
 
   layoutHelper.configAutoPin(DDAutoPinConfig('V')
     .addRemainingGroup('S')
     .addLayer(plotterLayer)
-    .addLayer(unDirectionalLayer)
+    .addLayer(unidirectionalLayer)
+    .addLayer(bidirectionalLayer)
     .build());
 
   layoutHelper.finishInitializeLayout("ddradar");
@@ -144,7 +145,8 @@ void setup() {
 
 
 
-bool unDirectional = true;
+//bool unDirectional = true;
+short rotateType = 0;  //  0: undirecional; 1: bi-directional 
 bool angleIncreasing = true;
 GraphicalDDLayer* objectLayer = NULL;
 
@@ -158,8 +160,12 @@ int objectStartDistance = -1;
 void loop() {
   bool needToUpdateUI = layoutHelper.checkNeedToUpdateLayers(); 
 
-  if (unDirectionalLayer->getFeedback()) {
-    unDirectional = !unDirectional;
+  if (unidirectionalLayer->getFeedback()) {
+    rotateType = 0;
+    needToUpdateUI = true;
+  } 
+  if (bidirectionalLayer->getFeedback()) {
+    rotateType = 1;
     needToUpdateUI = true;
   }
 
@@ -177,14 +183,23 @@ void loop() {
         mainLayer->drawLine(W_half, H, x, y, "red");
       }
 
-      if (unDirectional) {
-        unDirectionalLayer->border(2, "darkgreen", "flat");
-        unDirectionalLayer->pixelColor("darkgreen");
-        unDirectionalLayer->writeLine("✅  Single Direction");
-      } else {
-        unDirectionalLayer->border(2, "darkblue", "hair");
-        unDirectionalLayer->pixelColor("grey");
-        unDirectionalLayer->writeLine("🟩  Single Direction");
+      if (rotateType != 0) {
+        unidirectionalLayer->border(2, "darkgreen", "hair");
+        unidirectionalLayer->pixelColor("darkgreen");
+        unidirectionalLayer->writeLine("   Single Direction");
+      } else if (rotateType != 1) {
+        bidirectionalLayer->border(2, "darkgreen", "hair");
+        bidirectionalLayer->pixelColor("darkgreen");
+        bidirectionalLayer->writeLine("   Bi-Directional");
+      }
+      if (rotateType == 0) {
+        unidirectionalLayer->border(2, "darkblue", "flat");
+        unidirectionalLayer->pixelColor("darkblue");
+        unidirectionalLayer->writeLine("✅  Single Direction");
+      } else if (rotateType == 1) {
+        bidirectionalLayer->border(2, "darkblue", "flat");
+        bidirectionalLayer->pixelColor("darkblue");
+        bidirectionalLayer->writeLine("✅  Bi-Directional");
       }
 
       isRunning = true;
@@ -234,7 +249,7 @@ void loop() {
   } else if (!angleIncreasing && angle == 0) {
     atBoundary = true;
   } else {
-    if (unDirectional) {
+    if (rotateType == 0) {
       if (angle == 0 || angle == MaxAngle) {
         objectStartAngle = -1;
       }
@@ -296,7 +311,7 @@ void loop() {
     angle -= AngleIncrement;
   }
   if (angle > MaxAngle) {
-    if (unDirectional) {
+    if (rotateType == 0) {
       angle = 0;
     } else {
       angle = MaxAngle;
@@ -305,7 +320,7 @@ void loop() {
     objectLayer = NULL;
   }
   if (angle < 0) {
-    if (unDirectional) {
+    if (rotateType == 0) {
       angle = MaxAngle;
     } else {
       angle = 0;
