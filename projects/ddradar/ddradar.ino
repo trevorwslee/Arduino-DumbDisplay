@@ -97,6 +97,8 @@ LcdDDLayer* uniDirectionalLayer;
 LcdDDLayer* biDirectionalLayer;
 LcdDDLayer* noDirectionalLayer;
 LcdDDLayer* ultraSonicLayer;
+LcdDDLayer* laserLayer;
+SevenSegmentRowDDLayer* distanceLayer;
 
 
 bool measureWithUS = true;
@@ -108,6 +110,7 @@ void setup() {
 #ifdef TOF
   TOF.begin(9600);
   TOF.print("s5-1#");  // set not to auto send distance readins
+  //TOF.print("s3-1#");
   measureWithUS = false;
 #endif  
 #ifdef US_TRIG_PIN
@@ -152,20 +155,29 @@ void setup() {
   noDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
   noDirectionalLayer->enableFeedback("f");
 
-#if defined(US_TRIG_PIN) && defined (TOF)    
-  ultraSonicLayer = dumbdisplay.createLcdLayer(20, 1);
+  ultraSonicLayer = dumbdisplay.createLcdLayer(16, 1);
   ultraSonicLayer->enableFeedback("f");
-#else
-  ultraSonicLayer = NULL;    
-#endif
+
+  laserLayer = dumbdisplay.createLcdLayer(16, 1);
+  laserLayer->enableFeedback("f");
+
+  distanceLayer = dumbdisplay.create7SegmentRowLayer(2);
+  distanceLayer->margin(5);
+  distanceLayer->border(10, "darkred", "round");
 
   layoutHelper.configAutoPin(DDAutoPinConfig('V')
     .addRemainingGroup('S')
     .addLayer(plotterLayer)
+    .beginGroup('H')
+      .beginGroup('V')    
+        .addLayer(ultraSonicLayer)
+        .addLayer(laserLayer)
+      .endGroup()
+      .addLayer(distanceLayer)
+    .endGroup()    
     .addLayer(uniDirectionalLayer)
     .addLayer(biDirectionalLayer)
     .addLayer(noDirectionalLayer)
-    .addLayer(ultraSonicLayer)
     .build());
 
   layoutHelper.finishInitializeLayout("ddradar");
@@ -180,7 +192,12 @@ void setup() {
   angle = MaxAngle / 2;
   rotateType = 2;
 #endif  
-
+#ifndef US_TRIG_PIN
+  ultraSonicLayer->disabled(true);
+#endif
+#ifndef TOF
+  laserLayer->disabled(true);
+#endif
 }
 
 
@@ -212,10 +229,16 @@ void loop() {
     rotateType = 2;
     needToUpdateUI = true;
   }
-  if (ultraSonicLayer != NULL && ultraSonicLayer->getFeedback()) {
-    measureWithUS = !measureWithUS;
+#if defined(US_TRIG_PIN) && defined (TOF)
+  if (ultraSonicLayer->getFeedback()) {
+    measureWithUS = true;
     needToUpdateUI = true;
   }
+  if (laserLayer->getFeedback()) {
+    measureWithUS = false;
+    needToUpdateUI = true;
+  }
+#endif
 
   if (needToUpdateUI) {
       mainLayer->fillArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "black");
@@ -244,7 +267,7 @@ void loop() {
       if (rotateType != 2) {
         noDirectionalLayer->border(2, "darkblue", "hair");
         noDirectionalLayer->pixelColor("darkgreen");
-        noDirectionalLayer->writeLine("   No Rotation");
+        noDirectionalLayer->writeLine("   No Sweeping");
       }
       if (rotateType == 0) {
         uniDirectionalLayer->border(2, "darkblue", "flat");
@@ -257,18 +280,22 @@ void loop() {
       } else if (rotateType == 2) {
         noDirectionalLayer->border(2, "darkblue", "flat");
         noDirectionalLayer->pixelColor("darkblue");
-        noDirectionalLayer->writeLine("✅  No Rotation");
+        noDirectionalLayer->writeLine("✅  No Sweeping");
       }
-      if (ultraSonicLayer != NULL) {
-        if (measureWithUS) {
-          ultraSonicLayer->border(2, "darkgreen", "flat");
-          ultraSonicLayer->pixelColor("darkblue");
-          ultraSonicLayer->writeLine("✅  Ultra Sonic");
-        } else {
-          ultraSonicLayer->border(2, "darkgreen", "hair");
-          ultraSonicLayer->pixelColor("darkgray");
-          ultraSonicLayer->writeLine("🟩  Ultra Sonic");
-        }
+      if (measureWithUS) {
+        ultraSonicLayer->border(2, "darkblue", "flat");
+        ultraSonicLayer->pixelColor("darkblue");
+        ultraSonicLayer->writeLine("✅  Ultra Sonic");
+        laserLayer->border(2, "darkblue", "hair");
+        laserLayer->pixelColor("darkgreen");
+        laserLayer->writeLine("   Laser");
+      } else {
+        ultraSonicLayer->border(2, "darkblue", "hair");
+        ultraSonicLayer->pixelColor("darkgreen");
+        ultraSonicLayer->writeLine("   Ultra Sonic");
+        laserLayer->border(2, "darkblue", "flat");
+        laserLayer->pixelColor("darkblue");
+        laserLayer->writeLine("✅  Laser");
       }
       isRunning = true;
   }
@@ -346,14 +373,16 @@ void loop() {
     }
   }
 #endif  
-
-  if (true) {
-    if (usDistance != -1 && tofDistance != -1) {
-      dumbdisplay.writeComment(String(". US: ") + usDistance + " / TOF: " + tofDistance);
-    }
+  if (false) {
+    dumbdisplay.writeComment(String(". US: ") + usDistance + " / TOF: " + tofDistance);
   }
 
   int distance = usDistance != -1 ? usDistance : tofDistance;
+  if (distance != -1 && distance <= 99) {
+    distanceLayer->showNumber(distance);
+  } else {
+    distanceLayer->showFormatted("--");
+  }
 
   GraphicalDDLayer* beamLayer = (GraphicalDDLayer*) beamLayers.useLayer();
   int x;
@@ -385,7 +414,11 @@ void loop() {
   int objectEndAngle = -1;
   int objectEndDistance = -1;
   bool isNewObject = false;
-  plotterLayer->set("Ang", angle, "Dist", distance > VisibleDist ? 0 : distance);
+  if (rotateType == 0 || rotateType == 1) {
+    plotterLayer->set("Ang", angle, "Dist", distance > VisibleDist ? 0 : distance);
+  } else {
+    plotterLayer->set("Dist", distance > VisibleDist ? 0 : distance);
+  }
   if (distance != -1 && distance <= VisibleDist) {
     CalcCoor(angle, distance, x, y);
     if (false) {
