@@ -78,8 +78,6 @@ GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
 
 DDLayoutHelper layoutHelper(dumbdisplay);
 
-
-
 const int ObjectLayerCount = 2;
 DDFadingLayers<ObjectLayerCount> objectLayers; 
 
@@ -87,11 +85,11 @@ const int BeamLayerCount = 4;
 DDFadingLayers<BeamLayerCount> beamLayers; 
 
 
-
-PlotterDDLayer* plotterLayer;
 GraphicalDDLayer* mainLayer;
-LcdDDLayer* unidirectionalLayer;
-LcdDDLayer* bidirectionalLayer;
+PlotterDDLayer* plotterLayer;
+LcdDDLayer* uniDirectionalLayer;
+LcdDDLayer* biDirectionalLayer;
+LcdDDLayer* noDirectionalLayer;
 
 
 int angle = 0;
@@ -123,17 +121,21 @@ void setup() {
   plotterLayer = dumbdisplay.createPlotterLayer(400, 160);
   plotterLayer->border(2, "blue");
 
-  unidirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
-  unidirectionalLayer->enableFeedback("f");
+  uniDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
+  uniDirectionalLayer->enableFeedback("f");
 
-  bidirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
-  bidirectionalLayer->enableFeedback("f");
+  biDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
+  biDirectionalLayer->enableFeedback("f");
+
+  noDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
+  noDirectionalLayer->enableFeedback("f");
 
   layoutHelper.configAutoPin(DDAutoPinConfig('V')
     .addRemainingGroup('S')
     .addLayer(plotterLayer)
-    .addLayer(unidirectionalLayer)
-    .addLayer(bidirectionalLayer)
+    .addLayer(uniDirectionalLayer)
+    .addLayer(biDirectionalLayer)
+    .addLayer(noDirectionalLayer)
     .build());
 
   layoutHelper.finishInitializeLayout("ddradar");
@@ -146,7 +148,7 @@ void setup() {
 
 
 //bool unDirectional = true;
-short rotateType = 0;  //  0: undirecional; 1: bi-directional 
+short rotateType = 0;  //  0: undirecional; 1: bi-directional; 2: fixed 
 bool angleIncreasing = true;
 GraphicalDDLayer* objectLayer = NULL;
 
@@ -160,12 +162,17 @@ int objectStartDistance = -1;
 void loop() {
   bool needToUpdateUI = layoutHelper.checkNeedToUpdateLayers(); 
 
-  if (unidirectionalLayer->getFeedback()) {
+  short oriRotateType = rotateType;
+  if (uniDirectionalLayer->getFeedback()) {
     rotateType = 0;
     needToUpdateUI = true;
   } 
-  if (bidirectionalLayer->getFeedback()) {
+  if (biDirectionalLayer->getFeedback()) {
     rotateType = 1;
+    needToUpdateUI = true;
+  }
+  if (noDirectionalLayer->getFeedback()) {
+    rotateType = 2;
     needToUpdateUI = true;
   }
 
@@ -184,22 +191,32 @@ void loop() {
       }
 
       if (rotateType != 0) {
-        unidirectionalLayer->border(2, "darkgreen", "hair");
-        unidirectionalLayer->pixelColor("darkgreen");
-        unidirectionalLayer->writeLine("   Single Direction");
-      } else if (rotateType != 1) {
-        bidirectionalLayer->border(2, "darkgreen", "hair");
-        bidirectionalLayer->pixelColor("darkgreen");
-        bidirectionalLayer->writeLine("   Bi-Directional");
+        uniDirectionalLayer->border(2, "darkgreen", "hair");
+        uniDirectionalLayer->pixelColor("darkgreen");
+        uniDirectionalLayer->writeLine("   Single Direction");
+      }
+      if (rotateType != 1) {
+        biDirectionalLayer->border(2, "darkgreen", "hair");
+        biDirectionalLayer->pixelColor("darkgreen");
+        biDirectionalLayer->writeLine("   Bi-Directional");
+      }
+      if (rotateType != 2) {
+        noDirectionalLayer->border(2, "darkgreen", "hair");
+        noDirectionalLayer->pixelColor("darkgreen");
+        noDirectionalLayer->writeLine("   Fixed Position");
       }
       if (rotateType == 0) {
-        unidirectionalLayer->border(2, "darkblue", "flat");
-        unidirectionalLayer->pixelColor("darkblue");
-        unidirectionalLayer->writeLine("✅  Single Direction");
+        uniDirectionalLayer->border(2, "darkblue", "flat");
+        uniDirectionalLayer->pixelColor("darkblue");
+        uniDirectionalLayer->writeLine("✅  Single Direction");
       } else if (rotateType == 1) {
-        bidirectionalLayer->border(2, "darkblue", "flat");
-        bidirectionalLayer->pixelColor("darkblue");
-        bidirectionalLayer->writeLine("✅  Bi-Directional");
+        biDirectionalLayer->border(2, "darkblue", "flat");
+        biDirectionalLayer->pixelColor("darkblue");
+        biDirectionalLayer->writeLine("✅  Bi-Directional");
+      } else if (rotateType == 2) {
+        noDirectionalLayer->border(2, "darkblue", "flat");
+        noDirectionalLayer->pixelColor("darkblue");
+        noDirectionalLayer->writeLine("✅  Fixed Position");
       }
 
       isRunning = true;
@@ -213,11 +230,29 @@ void loop() {
     return;
   }
 
-  servo.write(angle);
-  //delay(15);  // give it some time
-  delay(20);  // give it some time
-  if (angle == 0 || angle == MaxAngle) {
-    delay(200);
+  
+  bool setAngle = false;
+  if (rotateType == 0 || rotateType == 1) {
+    setAngle = true;
+  } else if (rotateType == 2 && oriRotateType != rotateType) {
+    angle = MaxAngle / 2;
+    setAngle = true;
+  }
+  if (oriRotateType != rotateType) {
+    if (oriRotateType == 2 || rotateType == 2) { 
+      objectLayers.clear();
+      beamLayers.clear();
+      plotterLayer->clear();
+    }
+  }
+
+  if (setAngle) {
+    servo.write(angle);
+    //delay(15);  // give it some time
+    delay(20);  // give it some time
+    if (angle == 0 || angle == MaxAngle) {
+      delay(200);
+    }
   }
 
   // read ultrasoncic sensor for detected object distance
@@ -300,32 +335,32 @@ void loop() {
     }
   }
 
-
   prevAngle = angle;
   prevDistance = distance;
-  
-
-  if (angleIncreasing) {
-    angle += AngleIncrement;
-  } else {
-    angle -= AngleIncrement;
-  }
-  if (angle > MaxAngle) {
-    if (rotateType == 0) {
-      angle = 0;
+ 
+  if (rotateType == 0 || rotateType == 1) {
+    if (angleIncreasing) {
+      angle += AngleIncrement;
     } else {
-      angle = MaxAngle;
-      angleIncreasing = false;
+      angle -= AngleIncrement;
     }
-    objectLayer = NULL;
-  }
-  if (angle < 0) {
-    if (rotateType == 0) {
-      angle = MaxAngle;
-    } else {
-      angle = 0;
-      angleIncreasing = true;
+    if (angle > MaxAngle) {
+      if (rotateType == 0) {
+        angle = 0;
+      } else {
+        angle = MaxAngle;
+        angleIncreasing = false;
+      }
+      objectLayer = NULL;
     }
-    objectLayer = NULL;
+    if (angle < 0) {
+      if (rotateType == 0) {
+        angle = MaxAngle;
+      } else {
+        angle = 0;
+        angleIncreasing = true;
+      }
+      objectLayer = NULL;
+    }
   }
 }

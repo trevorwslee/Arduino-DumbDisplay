@@ -344,6 +344,12 @@ class DDFadingLayers {
         layers[layerCount++] = layer;
       }
     }
+    void clear() {
+      for (int i = 0; i < layerCount; i++) {
+        layers[i]->clear();
+      }
+      nextUseLayerIdx = 0;
+    }
   public:  
     DDLayer* useLayer() {
       int layerIdx = nextUseLayerIdx;
