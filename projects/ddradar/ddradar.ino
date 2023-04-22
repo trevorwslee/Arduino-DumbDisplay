@@ -15,17 +15,17 @@
 
 #endif
 
+
+
+#define SERVO_PIN    10
+
+#define US_TRIG_PIN  14
+#define US_ECHO_PIN  15
+
 #ifdef PICO_TOF
   UART Serial3(12, 13, 0, 0);   // TX: 12; RX: 13
   #define TOF Serial3
 #endif
-
-
-
-//#define SERVO_PIN    10
-
-// #define US_TRIG_PIN  14
-// #define US_ECHO_PIN  15
 
 
 
@@ -62,7 +62,7 @@ void CalcCoor(int ang, int dist, int& x, int& y) {
 #ifdef SERVO_PIN
   #include <Servo.h> 
   Servo servo;
- #define SERVO servo;
+ #define SERVO servo
 #endif
 
 
@@ -96,9 +96,10 @@ PlotterDDLayer* plotterLayer;
 LcdDDLayer* uniDirectionalLayer;
 LcdDDLayer* biDirectionalLayer;
 LcdDDLayer* noDirectionalLayer;
+LcdDDLayer* ultraSonicLayer;
 
 
-short measureWith = 1;   //  0: ultrasonic; 1: TOF
+bool measureWithUS = true;
 short rotateType = 0;    //  0: undirecional; 1: bi-directional; 2: fixed 
 int angle = 0;
 bool isRunning = false;
@@ -107,8 +108,11 @@ void setup() {
 #ifdef TOF
   TOF.begin(9600);
   TOF.print("s5-1#");  // set not to auto send distance readins
-  measureWith = 1;
+  measureWithUS = false;
 #endif  
+#ifdef US_TRIG_PIN
+  measureWithUS = true;
+#endif
 
 #ifdef SERVO
   SERVO.attach(SERVO_PIN);
@@ -148,12 +152,20 @@ void setup() {
   noDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
   noDirectionalLayer->enableFeedback("f");
 
+#if defined(US_TRIG_PIN) && defined (TOF)    
+  ultraSonicLayer = dumbdisplay.createLcdLayer(20, 1);
+  ultraSonicLayer->enableFeedback("f");
+#else
+  ultraSonicLayer = NULL;    
+#endif
+
   layoutHelper.configAutoPin(DDAutoPinConfig('V')
     .addRemainingGroup('S')
     .addLayer(plotterLayer)
     .addLayer(uniDirectionalLayer)
     .addLayer(biDirectionalLayer)
     .addLayer(noDirectionalLayer)
+    .addLayer(ultraSonicLayer)
     .build());
 
   layoutHelper.finishInitializeLayout("ddradar");
@@ -186,6 +198,7 @@ int objectStartDistance = -1;
 void loop() {
   bool needToUpdateUI = layoutHelper.checkNeedToUpdateLayers(); 
 
+  bool oriMeasureWithUS = measureWithUS;
   short oriRotateType = rotateType;
   if (uniDirectionalLayer->getFeedback()) {
     rotateType = 0;
@@ -197,6 +210,10 @@ void loop() {
   }
   if (noDirectionalLayer->getFeedback()) {
     rotateType = 2;
+    needToUpdateUI = true;
+  }
+  if (ultraSonicLayer != NULL && ultraSonicLayer->getFeedback()) {
+    measureWithUS = !measureWithUS;
     needToUpdateUI = true;
   }
 
@@ -215,17 +232,17 @@ void loop() {
       }
 
       if (rotateType != 0) {
-        uniDirectionalLayer->border(2, "darkgreen", "hair");
+        uniDirectionalLayer->border(2, "darkblue", "hair");
         uniDirectionalLayer->pixelColor("darkgreen");
         uniDirectionalLayer->writeLine("   Single Direction");
       }
       if (rotateType != 1) {
-        biDirectionalLayer->border(2, "darkgreen", "hair");
+        biDirectionalLayer->border(2, "darkblue", "hair");
         biDirectionalLayer->pixelColor("darkgreen");
         biDirectionalLayer->writeLine("   Bi Directional");
       }
       if (rotateType != 2) {
-        noDirectionalLayer->border(2, "darkgreen", "hair");
+        noDirectionalLayer->border(2, "darkblue", "hair");
         noDirectionalLayer->pixelColor("darkgreen");
         noDirectionalLayer->writeLine("   No Rotation");
       }
@@ -242,7 +259,17 @@ void loop() {
         noDirectionalLayer->pixelColor("darkblue");
         noDirectionalLayer->writeLine("✅  No Rotation");
       }
-
+      if (ultraSonicLayer != NULL) {
+        if (measureWithUS) {
+          ultraSonicLayer->border(2, "darkgreen", "flat");
+          ultraSonicLayer->pixelColor("darkblue");
+          ultraSonicLayer->writeLine("✅  Ultra Sonic");
+        } else {
+          ultraSonicLayer->border(2, "darkgreen", "hair");
+          ultraSonicLayer->pixelColor("darkgray");
+          ultraSonicLayer->writeLine("🟩  Ultra Sonic");
+        }
+      }
       isRunning = true;
   }
 
@@ -260,13 +287,16 @@ void loop() {
     return;
   }
 
-  
+  bool clearAll = false;//oriMeasureWithUS != measureWithUS;
   if (oriRotateType != rotateType) {
     if (oriRotateType == 2 || rotateType == 2) { 
+      clearAll = true;
+    }
+  }
+  if (clearAll) {
       objectLayers.clear();
       beamLayers.clear();
       plotterLayer->clear();
-    }
   }
 
   if (rotateType == 0 || rotateType == 1) {
@@ -281,7 +311,7 @@ void loop() {
 
   int usDistance = -1;
 #ifdef US_TRIG_PIN
-  if (measureWith == 0) {
+  if (measureWithUS) {
     // read ultrasoncic sensor for detected object distance
     digitalWrite(US_TRIG_PIN, LOW);
     delayMicroseconds(2);
@@ -298,7 +328,7 @@ void loop() {
 
   int tofDistance = -1;
  #ifdef TOF
-  if (measureWith == 1) {
+  if (!measureWithUS) {
     TOF.print("r6#");  // send command to read distance once ... will get back something like L=18mm
     int count = 0;
     while (count++ < 5) {

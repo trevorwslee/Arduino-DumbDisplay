@@ -193,7 +193,9 @@ class DDAutoPinConfig {
       return *this;
     }
     DDAutoPinConfig& addLayer(DDLayer* layer) {
-      addConfig(layer->getLayerId());
+      if (layer != NULL) {
+        addConfig(layer->getLayerId());
+      }
       return *this;
     }
     DDAutoPinConfig& beginPaddedGroup(int left, int top, int right, int bottom) {
