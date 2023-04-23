@@ -6,12 +6,15 @@
 // * - if you do not have laster range finder (tof10120), command out TOF_TX_PIN and TOF_RX_PING
 
 #define SERVO_PIN    10
-#define US_TRIG_PIN  14
-#define US_ECHO_PIN  15
+#define US_TRIG_PIN   4
+#define US_ECHO_PIN   5
 #define TOF_TX_PIN   12
 #define TOF_RX_PIN   13
 
-#define SERVO_MAX_ANGLE     90
+// * by default, max servo angle is 90
+// * can set the max servo angle with the macro SERVO_MAX_ANGLE
+// * if need some simple adjustment, can set the macro SERVO_ADJUST_FACTOR ... the actual angle servo will go to is angle * adjust_factor
+//#define SERVO_MAX_ANGLE     90
 //#define SERVO_ADJUST_FACTOR 1.2
 
 
@@ -35,7 +38,6 @@
   // #include "wifidumbdisplay.h"
   // DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 
-
 #else
 
   #include "dumbdisplay.h"
@@ -46,9 +48,15 @@
 
 
 #ifdef SERVO_PIN
-  #include <Servo.h> 
-  Servo servo;
- #define SERVO servo
+  #ifdef ESP32
+    #include <ESP32_Servo.h> 
+    Servo servo;
+    #define SERVO servo
+  #else
+    #include <Servo.h> 
+    Servo servo;
+    #define SERVO servo
+  #endif
 #endif
 
 
@@ -69,7 +77,12 @@ const int BoundDist = 50;
 const int VisibleDist = 49;
 const float DistFactor = W_half / BoundDist;
 
-const int MaxAngle = min(180, max(60, SERVO_MAX_ANGLE));
+#ifdef SERVO_MAX_ANGLE
+  #define _MAX_ANGLE SERVO_MAX_ANGLE
+#else
+  #define _MAX_ANGLE 90
+#endif
+const int MaxAngle = min(180, max(60, _MAX_ANGLE));
 const int AngleIncrement = 1;
 
 const int A_start = (180 - MaxAngle) / 2;
@@ -150,7 +163,12 @@ void setup() {
 #endif
 
 #ifdef SERVO
-  SERVO.attach(SERVO_PIN);
+  #ifdef ESP32
+    //SERVO.attach(SERVO_PIN, 500, 2400);  // 500 / 2400 for SG90 
+    SERVO.attach(SERVO_PIN); 
+  #else
+    SERVO.attach(SERVO_PIN);
+  #endif
   ServoGoto(angle);
 #endif
 
