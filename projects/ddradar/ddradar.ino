@@ -1,5 +1,22 @@
 
-#ifdef PICO_HC_BLUETOOTH
+// * you do not need everything, but at least ultrasonic sensor or laser range finder (tof10120)
+// * assign pins and/or comment out below pin assignment macros as appropriate
+// * - if you do not have servo, comment out SERVO_PIN 
+// * - if you do not have ultrasonic sensor, comment out US_TRIG_PIN and US_ECHO_PIN
+// * - if you do not have laster range finder (tof10120), command out TOF_TX_PIN and TOF_RX_PING
+
+#define SERVO_PIN    10
+#define US_TRIG_PIN  14
+#define US_ECHO_PIN  15
+#define TOF_TX_PIN   12
+#define TOF_RX_PIN   13
+
+#define SERVO_MAX_ANGLE     90
+//#define SERVO_ADJUST_FACTOR 1.2
+
+
+
+#if defined(PICO_HC_BLUETOOTH)
 
   // GP8 => RX of HC06; GP9 => TX of HC06
   #define DD_4_PICO_TX 8
@@ -7,6 +24,17 @@
   #include "picodumbdisplay.h"
   /* HC-06 connectivity */
   DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
+
+#elif defined(BLUETOOTH)
+
+  // #include "esp32dumbdisplay.h"
+  // DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+
+#elif defined(WIFI_SSID)
+
+  // #include "wifidumbdisplay.h"
+  // DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+
 
 #else
 
@@ -17,13 +45,15 @@
 
 
 
-#define SERVO_PIN    10
+#ifdef SERVO_PIN
+  #include <Servo.h> 
+  Servo servo;
+ #define SERVO servo
+#endif
 
-#define US_TRIG_PIN  14
-#define US_ECHO_PIN  15
 
-#ifdef PICO_TOF
-  UART Serial3(12, 13, 0, 0);   // TX: 12; RX: 13
+#ifdef TOF_TX_PIN
+  UART Serial3(TOF_TX_PIN, TOF_RX_PIN, 0, 0);   // TX: 12; RX: 13
   #define TOF Serial3
 #endif
 
@@ -39,7 +69,7 @@ const int BoundDist = 50;
 const int VisibleDist = 49;
 const float DistFactor = W_half / BoundDist;
 
-const int MaxAngle = 120;
+const int MaxAngle = min(180, max(60, SERVO_MAX_ANGLE));
 const int AngleIncrement = 1;
 
 const int A_start = (180 - MaxAngle) / 2;
@@ -59,13 +89,6 @@ void CalcCoor(int ang, int dist, int& x, int& y) {
 }
 
 
-#ifdef SERVO_PIN
-  #include <Servo.h> 
-  Servo servo;
- #define SERVO servo
-#endif
-
-
 GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
   GraphicalDDLayer* layer = dumbdisplay.createGraphicalLayer(Width, Height);
   layer->border(5, "darkblue", "round");
@@ -77,6 +100,15 @@ GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
     layer->noBackgroundColor();
   }
   return layer;
+}
+
+void ServoGoto(int angle) {
+#ifdef SERVO_ADJUST_FACTOR
+  angle = (float) angle * SERVO_ADJUST_FACTOR;
+#endif  
+#ifdef SERVO
+  SERVO.write(angle);
+#endif
 }
 
 
@@ -119,7 +151,7 @@ void setup() {
 
 #ifdef SERVO
   SERVO.attach(SERVO_PIN);
-  SERVO.write(angle);
+  ServoGoto(angle);
 #endif
 
 
@@ -146,19 +178,19 @@ void setup() {
   plotterLayer = dumbdisplay.createPlotterLayer(400, 160);
   plotterLayer->border(2, "blue");
 
-  uniDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
+  uniDirectionalLayer = dumbdisplay.createLcdLayer(10, 1);
   uniDirectionalLayer->enableFeedback("f");
 
-  biDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
+  biDirectionalLayer = dumbdisplay.createLcdLayer(10, 1);
   biDirectionalLayer->enableFeedback("f");
 
   noDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
   noDirectionalLayer->enableFeedback("f");
 
-  ultraSonicLayer = dumbdisplay.createLcdLayer(16, 1);
+  ultraSonicLayer = dumbdisplay.createLcdLayer(15, 1);
   ultraSonicLayer->enableFeedback("f");
 
-  laserLayer = dumbdisplay.createLcdLayer(16, 1);
+  laserLayer = dumbdisplay.createLcdLayer(15, 1);
   laserLayer->enableFeedback("f");
 
   distanceLayer = dumbdisplay.create7SegmentRowLayer(2);
@@ -175,9 +207,13 @@ void setup() {
       .endGroup()
       .addLayer(distanceLayer)
     .endGroup()    
-    .addLayer(uniDirectionalLayer)
-    .addLayer(biDirectionalLayer)
     .addLayer(noDirectionalLayer)
+#ifdef SERVO    
+    .beginGroup('H')
+      .addLayer(uniDirectionalLayer)
+      .addLayer(biDirectionalLayer)
+    .endGroup()  
+#endif
     .build());
 
   layoutHelper.finishInitializeLayout("ddradar");
@@ -187,8 +223,8 @@ void setup() {
   });
 
 #ifndef SERVO
-  uniDirectionalLayer->disabled(true);
-  biDirectionalLayer->disabled(true);
+  //uniDirectionalLayer->disabled(true);
+  //biDirectionalLayer->disabled(true);
   angle = MaxAngle / 2;
   rotateType = 2;
 #endif  
@@ -217,28 +253,36 @@ void loop() {
 
   bool oriMeasureWithUS = measureWithUS;
   short oriRotateType = rotateType;
+
+#ifdef SERVO    
   if (uniDirectionalLayer->getFeedback()) {
     rotateType = 0;
-    needToUpdateUI = true;
+    //needToUpdateUI = true;
   } 
   if (biDirectionalLayer->getFeedback()) {
     rotateType = 1;
-    needToUpdateUI = true;
+    //needToUpdateUI = true;
   }
   if (noDirectionalLayer->getFeedback()) {
     rotateType = 2;
-    needToUpdateUI = true;
+    //needToUpdateUI = true;
   }
+#endif
+
 #if defined(US_TRIG_PIN) && defined (TOF)
   if (ultraSonicLayer->getFeedback()) {
     measureWithUS = true;
-    needToUpdateUI = true;
+    //needToUpdateUI = true;
   }
   if (laserLayer->getFeedback()) {
     measureWithUS = false;
-    needToUpdateUI = true;
+    //needToUpdateUI = true;
   }
 #endif
+
+  if (oriRotateType != rotateType || oriMeasureWithUS != measureWithUS) {
+    needToUpdateUI = true;
+  }
 
   if (needToUpdateUI) {
       mainLayer->fillArc(0, 0, Width, 2 * Height, 180 + A_start, MaxAngle, true, "black");
@@ -257,12 +301,12 @@ void loop() {
       if (rotateType != 0) {
         uniDirectionalLayer->border(2, "darkblue", "hair");
         uniDirectionalLayer->pixelColor("darkgreen");
-        uniDirectionalLayer->writeLine("   Single Direction");
+        uniDirectionalLayer->writeLine("   Single");
       }
       if (rotateType != 1) {
         biDirectionalLayer->border(2, "darkblue", "hair");
         biDirectionalLayer->pixelColor("darkgreen");
-        biDirectionalLayer->writeLine("   Bi Directional");
+        biDirectionalLayer->writeLine("   Both");
       }
       if (rotateType != 2) {
         noDirectionalLayer->border(2, "darkblue", "hair");
@@ -272,11 +316,11 @@ void loop() {
       if (rotateType == 0) {
         uniDirectionalLayer->border(2, "darkblue", "flat");
         uniDirectionalLayer->pixelColor("darkblue");
-        uniDirectionalLayer->writeLine("✅  Single Direction");
+        uniDirectionalLayer->writeLine("✅  Single");
       } else if (rotateType == 1) {
         biDirectionalLayer->border(2, "darkblue", "flat");
         biDirectionalLayer->pixelColor("darkblue");
-        biDirectionalLayer->writeLine("✅  Bi Directional");
+        biDirectionalLayer->writeLine("✅  Both");
       } else if (rotateType == 2) {
         noDirectionalLayer->border(2, "darkblue", "flat");
         noDirectionalLayer->pixelColor("darkblue");
@@ -308,27 +352,27 @@ void loop() {
     if (angle != newAngle) {
       angle = newAngle;
 #ifdef SERVO
-      SERVO.write(angle);
+      ServoGoto(angle);
 #endif
     }
     return;
   }
 
-  bool clearAll = false;//oriMeasureWithUS != measureWithUS;
   if (oriRotateType != rotateType) {
     if (oriRotateType == 2 || rotateType == 2) { 
-      clearAll = true;
-    }
-  }
-  if (clearAll) {
       objectLayers.clear();
       beamLayers.clear();
       plotterLayer->clear();
+    }
+    distanceLayer->clear();
+  }
+  if (oriMeasureWithUS != measureWithUS) {
+    distanceLayer->clear();
   }
 
   if (rotateType == 0 || rotateType == 1) {
 #ifdef SERVO
-    SERVO.write(angle);
+    ServoGoto(angle);
 #endif
     if (angle == 0 || angle == MaxAngle) {
       delay(200);
