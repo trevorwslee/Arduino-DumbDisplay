@@ -1231,7 +1231,7 @@ As a matter of fact, there is a real click-drag "auto repeat" option. To enable 
 ```
 pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag");
 ```
-***But do note that such click-drag will always end with a "feedback" with x and y both -1.***
+***But do note that such click-drag will always end with a "feedback" with x and y both -19999 (normally, check for negative value).***
 
 
 

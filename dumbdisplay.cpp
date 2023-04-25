@@ -70,7 +70,7 @@
 #define YIELD_AFTER_HANDLE_FEEDBACK true
 
 // see nobody.trevorlee.dumbdisplay.DDActivity#ddSourceCompatibility
-#define DD_SID "Arduino-c6"
+#define DD_SID "Arduino-c7"
 
 
 #include "_dd_commands.h"
