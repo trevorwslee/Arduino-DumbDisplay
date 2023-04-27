@@ -1226,12 +1226,14 @@ For a brief explanation of the sketch, you may want to watch the video [**ESP826
 |--|--|
 |![](screenshots/esp8266-servo.jpg)|![](screenshots/servo-dd.png)|
 
-
 As a matter of fact, there is more realistic dragging option. To enable such "drag" option, specify it like
 ```
 pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag");
 ```
-***But do note that such "drag" will always end with a "feedback" with both x and y -19999 (normally, just check for negative value).***
+***But do note that such "drag" will always end with a "feedback" with x and y both -19999 (normally, just check for negative value).***
+|||
+|--|--|
+|For a complete example, please refer to the sketch as shown in the YouTube -- [Building a DL model for the Mnist Dataset, to building an Arduino Sketch for ESP32S3 (also ESP32)](https://www.youtube.com/watch?v=cL1-5BKJu30) The drawing of the hand-written digit is basially triggered by "drag" "feedbacks" |![](screenshots/esp32_mnist.gif)|
 
 
 
