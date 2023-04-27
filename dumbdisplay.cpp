@@ -44,7 +44,7 @@
 //#define DEBUG_SHOW_FEEDBACK
 
 
-#define SUPPORT_LONG_PRESS_FEEDBACK
+//#define SUPPORT_LONG_PRESS_FEEDBACK
 
 #define SUPPORT_IDLE_CALLBACK
 #define SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
@@ -1172,13 +1172,13 @@ Serial.println("LT++++" + data + " - final:" + String(final));
         token = strtok(NULL, ":");
       }
       if (token != NULL) {
-#ifdef SUPPORT_LONG_PRESS_FEEDBACK        
         if (strcmp(token, "longpress") == 0) {
           type = LONGPRESS;
         } else if (strcmp(token, "doubleclick") == 0) {
           type = DOUBLECLICK;
+        } else if (strcmp(token, "drag") == 0) {
+          type = DRAG;
         }
-#endif       
         token = strtok(NULL, ",");
       }
       if (token != NULL) {
@@ -2475,6 +2475,9 @@ bool DumbDisplay::connected() const {
 }
 int DumbDisplay::getConnectVersion() const {
   return _ConnectVersion;
+}
+int DumbDisplay::getCompatibilityVersion() const {
+  return _DDCompatibility;
 }
 void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
   _Connect();

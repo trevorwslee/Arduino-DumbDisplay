@@ -904,6 +904,8 @@ class DumbDisplay {
     bool connected() const;
     /** note that when reconnect, the connect version will be bumped up */
     int getConnectVersion() const;
+    /** only meaningful after connection */
+    int getCompatibilityVersion() const;  
     /* configure "pin frame" to be x-units by y-units (default 100x100) */
     void configPinFrame(int xUnitCount = 100, int yUnitCount = 100);
     /* configure "auto pinning of layers" with the layer spec provided */

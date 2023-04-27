@@ -1227,11 +1227,11 @@ For a brief explanation of the sketch, you may want to watch the video [**ESP826
 |![](screenshots/esp8266-servo.jpg)|![](screenshots/servo-dd.png)|
 
 
-As a matter of fact, there is a real click-drag "auto repeat" option. To enable such click-drag option, specify it like
+As a matter of fact, there is more realistic dragging option. To enable such "drag" option, specify it like
 ```
 pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag");
 ```
-***But do note that such click-drag will always end with a "feedback" with x and y both -19999 (normally, check for negative value).***
+***But do note that such "drag" will always end with a "feedback" with both x and y -19999 (normally, just check for negative value).***
 
 
 

@@ -3,7 +3,7 @@
 
 #define DD_FEEDBACK_BUFFER_SIZE 4
 
-enum DDFeedbackType { CLICK, LONGPRESS, DOUBLECLICK };  // DOUBLECLICK needs special option for DumbDisplay
+enum DDFeedbackType { CLICK, LONGPRESS, DOUBLECLICK, DRAG };  // DOUBLECLICK needs special option for DumbDisplay
 
 
 struct DDFeedback {
