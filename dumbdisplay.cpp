@@ -1176,8 +1176,8 @@ Serial.println("LT++++" + data + " - final:" + String(final));
           type = LONGPRESS;
         } else if (strcmp(token, "doubleclick") == 0) {
           type = DOUBLECLICK;
-        } else if (strcmp(token, "drag") == 0) {
-          type = DRAG;
+        } else if (strcmp(token, "move") == 0) {
+          type = MOVE;
         }
         token = strtok(NULL, ",");
       }
