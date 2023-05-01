@@ -1,19 +1,18 @@
 
-#if defined(ESP32)
-
-  // ESP32 Bluetooth with name BT32
+// if want Bluetooth, uncomment the following line
+// #define BLUETOOTH "ESP32BT"
+#if defined(BLUETOOTH)
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200));
-
-
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+#elif defined(WIFI_SSID)
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 #else
-
-  // for connection
+  // for direct USB connecction to phone
   // . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
   // . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
   #include "dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDInputOutput(115200));
-
+  DumbDisplay dumbdisplay(new DDInputOutput());
 #endif
 
 

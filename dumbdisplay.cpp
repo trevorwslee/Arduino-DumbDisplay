@@ -2607,25 +2607,26 @@ void DumbDisplay::recordLayerSetupCommands() {
 #endif
 }
 void DumbDisplay::playbackLayerSetupCommands(const String& layerSetupPersistId) {
+  _sendCommand2("", C_SAVEC, layerSetupPersistId, TO_BOOL(true));
+  _sendCommand0("", C_PLAYC);
 #ifdef SUPPORT_USE_WOIO
   if (_SendBufferSize > 0) {
     ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(false);
+    ((DDWriteOnyIO*) _WOIO)->flush();
   }
 #endif
-  _sendCommand2("", C_SAVEC, layerSetupPersistId, TO_BOOL(true));
-  _sendCommand0("", C_PLAYC);
 #ifdef SUPPORT_RECONNECT
   _ConnectedIOProxy->setReconnectRCId(layerSetupPersistId);
 #endif
 }
 void DumbDisplay::recordLayerCommands() {
   _Connect();
-  _sendCommand0("", C_RECC);
 #ifdef SUPPORT_USE_WOIO
   if (_SendBufferSize > 0) {
     ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(true);
   }
 #endif
+  _sendCommand0("", C_RECC);
 }
 void DumbDisplay::playbackLayerCommands() {
 #ifdef SUPPORT_USE_WOIO
