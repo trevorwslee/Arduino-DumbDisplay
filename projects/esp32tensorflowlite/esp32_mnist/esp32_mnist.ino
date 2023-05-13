@@ -277,7 +277,7 @@ void loop() {
     if (false) {
       dumbdisplay.writeComment(String(". ") + String(x) + "," + String(y));
     }
-    if (x < 0) {
+    if (x == -1) {
       lastX = -1;
       lastY = -1;  
     } else {

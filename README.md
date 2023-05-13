@@ -43,7 +43,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 Instead of connecting real gadgets to your Arduino IDE compatible microcontroller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets remotely on your Android phone.
 
-By doing so you can defer buying / connecting real gadgets until later stage of your experiment. Also, you may be able to save a few microcontroller pins for other experiment needs.
+By doing so you can defer buying / connecting real gadgets until later stage of your experiment. Even, you may be able to save a few microcontroller pins for other experiment needs, if you so decided that your Android phone can be your display gadget (and more) with DumbDisplay app.
 
 A few types of layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
@@ -56,14 +56,14 @@ A few types of layers can be created:
 * Terminal "device dependent view" layer, for logging sketch traces
 * TomTom map "device dependent view" layer, for showing location (latitude/longitude)
 
-Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected micro-controller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism) for more on "layer feedback" mechanism.
+Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected microcontroller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism) for more on "layer feedback" mechanism.
 
 
 # Installation
 
 ## Arduino IDE
 
-The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show; install it. As reference, you may want to see my post [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)  
+The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show up; install it. As reference, you may want to see my post [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)  
 
 Alternative, you can choose to use the more "fluid" manual approach. The basic steps are
 1) download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
@@ -99,7 +99,7 @@ Obviously, you will need to install an app on your Android phone. Indeed, for Ar
 The app can accept connection via
 * SoftwareSerial (e.g. Bluetooth by HC-05 / HC-06; even HC-08)
 * BluetoothSerial (for ESP32)
-* Bluetooth LE (for ESP32 and ESP32C3)
+* Bluetooth LE (for ESP32, ESP32C3 and ESP32S3)
 * WIFI (e.g. ESP01, ESP8266, ESP32 and PicoW)
 * Serial (USB connected via OTG adapter)
 * Serial <-> WIFI via the simple included tool -- [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge)
@@ -158,22 +158,18 @@ You have several options for connecting to DumbDisplay Android app.
   ```
 * Via **ESP32** `BluetoothSerial`
   ```
-    #define DD_4_ESP32
     #include "esp32dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
   ```
-  - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
   - include esp32dumbdisplay.h -- `#include <esp32dumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"))`  
     - "ESP32" is name used by `BluetoothSerial`
   - **you should not be using BluetoothSerial for other purposes**
 * Via **ESP32** `BLE`
   ```
-    #define DD_4_ESP32
     #include "esp32bledumbdisplay.h"
     DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"));
   ```
-  - **MUST** define DD_4_ESP32 before `#include` -- `#define DD_4_ESP32`
   - include esp32bledumbdisplay.h -- `#include <esp32bledumbdisplay.h>`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"))`  
     - "ESP32BLE" is name used by `BLE`
@@ -181,7 +177,6 @@ You have several options for connecting to DumbDisplay Android app.
   - **be warned that `DDBLESerialIO` is slow**; if possible choose `DDBluetoothSerialIO` over `DDBLESerialIO` 
 * Via WIFI as a [`WiFiServer`](https://www.arduino.cc/en/Reference/WiFi) -- for ESP01/ESP8266/ESP32/PicoW  
   ```
-    #define DD_4_ESP8266
     #include "wifidumbdisplay.h"
     const char* ssid = "wifiname";
     const char* password = "wifipassword";
@@ -1228,9 +1223,15 @@ For a brief explanation of the sketch, you may want to watch the video [**ESP826
 
 As a matter of fact, there is more realistic dragging option. To enable such "drag" option, specify it like
 ```
-pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag");
+pGrahpicalLayer->setFeedbackHandler(FeedbackHandler, "fs:drag");
 ```
-***But do note that such "drag" will always end with a "feedback" with x and y both -19999 (normally, just check for negative value).***
+***Note that such "drag" will always end with a "feedback" with x and y both -1.***
+
+In case you want to specify the indicating "end" X/Y value, say as -9999, you can do so by using option like `"fs:drag-9999"`, like. 
+```
+pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag-9999");
+```
+
 |||
 |--|--|
 |For a complete example, please refer to the sketch as shown in the YouTube -- [Building a DL model for the Mnist Dataset, to building an Arduino Sketch for ESP32S3 (also ESP32)](https://www.youtube.com/watch?v=cL1-5BKJu30) The drawing of the hand-written digit is basially triggered by "drag" "feedbacks" |![](screenshots/esp32_mnist.gif)|
