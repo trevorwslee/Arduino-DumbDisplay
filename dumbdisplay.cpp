@@ -1977,7 +1977,7 @@ void JoystickDDLayer::setAutoRecenter(bool autoRecenter) {
   _sendCommand1(layerId, C_autorecenter, TO_BOOL(autoRecenter));
 }
 void JoystickDDLayer::moveToPos(int x, int y, bool sendFeedback) {
-  _sendCommand3(layerId, C_movetopos, String(x), String(y), TO_BOOL(sendFeedback));
+  _sendCommand3(layerId, C_movetopos, TO_C_INT(x), TO_C_INT(y), TO_BOOL(sendFeedback));
 }
 void JoystickDDLayer::moveToCenter(bool sendFeedback) {
   _sendCommand1(layerId, C_movetocenter, TO_BOOL(sendFeedback));

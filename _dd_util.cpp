@@ -1,7 +1,13 @@
 
 #include "Arduino.h"
 
+
+boolean _EncodeIntEnabled = true;
+
 char* _DDEncodeInt(int32_t i, char* buffer, int bufferLen) {
+  if (!_EncodeIntEnabled) {
+    return itoa(i, buffer, 10);
+  }
   bool isNeg;
   if (i < 0) {
     isNeg = true;

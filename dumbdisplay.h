@@ -1,11 +1,25 @@
+/*
+
+============================
+
+if want to disable int parameter encoding, define DD_DISABLE_ENCODE_INT before includeing dumbdisplay.h, like
+
+#define DD_DISABLE_ENCODE_INT
+
+=============================
+*/
+
+
+
 #ifndef dumbdisplay_h
 #define dumbdisplay_h
 
 
-#ifdef DD_4_ESP32
-#include <esp_spp_api.h>
-#include "HardwareSerial.h"
-#endif
+// what is it for???
+// #ifdef DD_4_ESP32
+// #include <esp_spp_api.h>
+// #include "HardwareSerial.h"
+// #endif
 
 
 #define DUMBDISPLAY_BAUD  115200
@@ -17,6 +31,7 @@
 
 
 #include "_dd_util.h"
+
 
 
 #define DD_CONDENSE_COMMAND
@@ -899,6 +914,9 @@ typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE/*, bool enableDoubleClick = true*/) {
+#ifdef DD_DISABLE_ENCODE_INT
+    _EncodeIntEnabled = false;
+#endif      
 #ifndef DD_NO_SERIAL      
       if (pIO->isSerial() || pIO->isBackupBySerial()) {
         _The_DD_Serial = new DDSerial();

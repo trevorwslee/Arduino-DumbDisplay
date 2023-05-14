@@ -1,3 +1,5 @@
+#define DD_DISABLE_ENCODE_INT
+
 
 // if want Bluetooth, uncomment the following line
 // #define BLUETOOTH "ESP32BT"
