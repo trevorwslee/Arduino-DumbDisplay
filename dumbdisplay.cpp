@@ -214,7 +214,7 @@ class IOProxy {
 };
 
 
-volatile bool _EnableDoubleClick = false;
+//volatile bool _EnableDoubleClick = false;
 volatile bool _Connected = false;
 volatile int _ConnectVersion = 0;
 
@@ -302,9 +302,9 @@ this->print("// NEED TO RECONNECT\n");
       this->print(DD_SID);
       this->print(":");
       this->print(this->reconnectRCId);
-      if (!_EnableDoubleClick) {
-        this->print(",dblclk=0");
-      }
+      // if (!_EnableDoubleClick) {
+      //   this->print(",dblclk=0");
+      // }
       this->print("\n");
       this->reconnectKeepAliveMillis = this->lastKeepAliveMillis;
     } else if (this->reconnectKeepAliveMillis > 0) {
@@ -473,8 +473,8 @@ void _Connect() {
     Serial.print("* _SendBufferSize=");
     Serial.println(_SendBufferSize);
 #endif
-    Serial.print("* _EnableDoubleClick=");
-    Serial.println(_EnableDoubleClick ? "yes" : "no");
+    //Serial.print("* _EnableDoubleClick=");
+    //Serial.println(_EnableDoubleClick ? "yes" : "no");
     Serial.println("**********");
     Serial.flush();
   }
@@ -569,9 +569,9 @@ void _Connect() {
         //ioProxy.print(">init>:Arduino-c1\n");
         ioProxy.print(">init>:");
         ioProxy.print(DD_SID);
-        if (!_EnableDoubleClick) {
-          ioProxy.print(",dblclk=0");
-        }
+        // if (!_EnableDoubleClick) {
+        //   ioProxy.print(",dblclk=0");
+        // }
         ioProxy.print("\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
@@ -2462,10 +2462,10 @@ void JsonDDTunnelMultiplexer::reconnect() {
 #endif
 
 
-void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize, boolean enableDoubleClick) {
+void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, boolean enableDoubleClick*/) {
   _SetIO(pIO, sendBufferSize);
   //_IO = pIO;
-  _EnableDoubleClick = enableDoubleClick;
+  //_EnableDoubleClick = enableDoubleClick;
 }
 void DumbDisplay::connect() {
   _Connect();
@@ -2492,6 +2492,15 @@ void DumbDisplay::configAutoPin(const String& layoutSpec) {
 void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
   _Connect();
   _sendCommand1("", "ADDRESTAP", remainingLayoutSpec);
+}
+// void DumbDisplay::setFeedbackSingleClickOnly(bool singleClickOnly) {
+//   _Connect();
+//   _sendCommand1("", "SETFBSCO", TO_BOOL(singleClickOnly));
+// }
+void DumbDisplay::enableFeedbackDoubleClick(bool enable) {
+  //_EnableDoubleClick = enable;
+  _Connect();
+  _sendCommand1("", "ENBFBDBLCLK", TO_BOOL(enable));
 }
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
   int lid = _AllocLid();

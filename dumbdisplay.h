@@ -889,13 +889,13 @@ typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 class DumbDisplay {
   public:
-    DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE, bool enableDoubleClick = true) {
+    DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE/*, bool enableDoubleClick = true*/) {
 #ifndef DD_NO_SERIAL      
       if (pIO->isSerial() || pIO->isBackupBySerial()) {
         _The_DD_Serial = new DDSerial();
       }
 #endif      
-      initialize(pIO, sendBufferSize, enableDoubleClick);
+      initialize(pIO, sendBufferSize/*, enableDoubleClick*/);
     }
     //DumbDisplay(DDInputOutput* pIO, DDSerialProxy* pDDSerialProxy);
     /* explicitly make connection -- blocking */
@@ -906,6 +906,9 @@ class DumbDisplay {
     int getConnectVersion() const;
     /** only meaningful after connection */
     int getCompatibilityVersion() const;  
+    /* by default, "double click feedback" is enabled; however, this makes "click feedback" detection less responsive*/
+    /* one remedy is to disable "double click feedback" */
+    void enableFeedbackDoubleClick(bool enable);
     /* configure "pin frame" to be x-units by y-units (default 100x100) */
     void configPinFrame(int xUnitCount = 100, int yUnitCount = 100);
     /* configure "auto pinning of layers" with the layer spec provided */
@@ -1051,7 +1054,7 @@ class DumbDisplay {
     /* log line to serial making sure not affecting DD */
     void logToSerial(const String& logLine);
   private:
-    void initialize(DDInputOutput* pIO, uint16_t sendBufferSize, bool enableDoubleClick);
+    void initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, bool enableDoubleClick*/);
     bool canLogToSerial();
 };
 

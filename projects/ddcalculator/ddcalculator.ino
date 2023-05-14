@@ -3,7 +3,7 @@
 
 #if defined(BLUETOOTH)
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true, 115200), DD_DEF_SEND_BUFFER_SIZE, false);
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true, 115200), DD_DEF_SEND_BUFFER_SIZE);
 #elif defined(WIFI_SSID)
   #include "wifidumbdisplay.h"
   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD), DD_DEF_SEND_BUFFER_SIZE, false);
@@ -58,6 +58,7 @@ void setup()
   Wire.onReceive(OnReceivedKey);
 #endif 
 
+ dumbdisplay.enableFeedbackDoubleClick(false);
 
   displayLayer = CreateDisplayLayer();
   for (int r = 0; r < RowCount; r++)
