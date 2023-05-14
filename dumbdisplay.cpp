@@ -1915,10 +1915,10 @@ void GraphicalDDLayer::cachePixelImageGS(const String& imageName, const uint8_t 
   _sendByteArrayAfterCommand(data, byteCount, compressMethod);
 }
 void GraphicalDDLayer::saveCachedImageFile(const String& imageName) {
-  _sendCommand2("", "SAVECACHEDIMG", layerId, imageName);
+  _sendCommand2("", C_SAVECACHEDIMG, layerId, imageName);
 }
 void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
-  _sendCommand2("", "SAVECACHEDIMGS", layerId, stitchAsImageName);
+  _sendCommand2("", C_SAVECACHEDIMGS, layerId, stitchAsImageName);
 }
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
@@ -1972,6 +1972,17 @@ void SevenSegmentRowDDLayer::showHexNumber(int number) {
 void SevenSegmentRowDDLayer::showFormatted(const String& formatted, bool completeReplace, int startIdx) {
   _sendCommand3(layerId, C_showformatted, formatted, TO_BOOL(completeReplace), String(startIdx));
 }
+
+void JoystickDDLayer::setAutoRecenter(bool autoRecenter) {
+  _sendCommand1(layerId, C_autorecenter, TO_BOOL(autoRecenter));
+}
+void JoystickDDLayer::moveToPos(int x, int y, bool sendFeedback) {
+  _sendCommand3(layerId, C_movetopos, String(x), String(y), TO_BOOL(sendFeedback));
+}
+void JoystickDDLayer::moveToCenter(bool sendFeedback) {
+  _sendCommand1(layerId, C_movetocenter, TO_BOOL(sendFeedback));
+}
+
 
 void PlotterDDLayer::label(const String& key, const String& lab) {
   _sendCommand2(layerId, C_label, key, lab);
@@ -2547,6 +2558,14 @@ SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   String layerId = String(lid);
   _sendCommand2(layerId, "SU", String("7segrow"), String(digitCount));
   SevenSegmentRowDDLayer* pLayer = new SevenSegmentRowDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
+}
+JoystickDDLayer* DumbDisplay::createJoystickLayer(const String& directions, int maxStickScale) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("joystick"), directions, String(maxStickScale));
+  JoystickDDLayer* pLayer = new JoystickDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
 }

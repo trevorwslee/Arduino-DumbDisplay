@@ -19,6 +19,8 @@
 #define C_SAVESND          "#f2"
 #define C_CACHESND         "#f3"
 #define C_STREAMSND        "#f4"
+#define C_SAVECACHEDIMG    "#f5"
+#define C_SAVECACHEDIMGS   "#f6"
 
 #define C_border           "#10"
 #define C_padding          "#11" 
@@ -117,6 +119,10 @@
 #define C_arc                  "#a8"
 #define c_drawoval             "#a9"
 #define c_drawarc              "#aa"
+
+#define C_autorecenter         "#ab"
+#define C_movetocenter         "#ac"
+#define C_movetopos            "#ad" 
 
 
 #define C_fd               "fd"

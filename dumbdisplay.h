@@ -544,6 +544,15 @@ class SevenSegmentRowDDLayer: public DDLayer {
     void showFormatted(const String& formatted, bool completeReplace = true, int startIdx = 0);
 };
 
+class JoystickDDLayer: public DDLayer {
+  public:
+    JoystickDDLayer(int8_t layerId): DDLayer(layerId) {
+    }
+    void setAutoRecenter(bool autoRecenter = true);
+    void moveToPos(int x, int y, bool sendFeedback = false);
+    void moveToCenter(bool sendFeedback = false);
+};
+
 class PlotterDDLayer: public DDLayer {
   public:
     PlotterDDLayer(int8_t layerId): DDLayer(layerId) {
@@ -933,6 +942,7 @@ class DumbDisplay {
     /* create a graphical [LCD] layer */
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
+    JoystickDDLayer* createJoystickLayer(const String& directions = "both", int maxStickScale = 255);
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     PlotterDDLayer* createFixedRatePlotterLayer(int width, int height, int pixelsPerScale = 5);
     /* . mapKey must be provide; plesae visit TomTom's website to get one of your own */
