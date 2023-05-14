@@ -35,18 +35,26 @@ if want to disable int parameter encoding, define DD_DISABLE_ENCODE_INT before i
 
 
 #define DD_CONDENSE_COMMAND
-//#define DD_CAN_TURN_OFF_CONDENSE_COMMAND  // comment out for code memory usage
+//#define DD_CAN_TURN_OFF_CONDENSE_COMMAND 
 
 
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
 
 
 #ifdef DD_CONDENSE_COMMAND
-#define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b)), 16))
-#define DD_INT_COLOR(color) ("+" + DDIntEncoder(color).encoded())
+  #define DD_INT_COLOR(color) ("+" + DDIntEncoder(color).encoded())
+  #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+    #define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
+  #else
+    #if defined(DD_DISABLE_ENCODE_INT)
+      #define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b)), 16))
+    #else  
+      #define DD_RGB_COLOR(r, g, b) ("+" + DDIntEncoder(0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b))).encoded())
+    #endif
+  #endif
 #else
-#define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
-#define DD_INT_COLOR(color) ("+" + String(color))
+  #define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
+  #define DD_INT_COLOR(color) ("+" + String(color))
 #endif
 
 
@@ -1065,12 +1073,12 @@ class DumbDisplay {
     void deleteLayer(DDLayer *pLayer);
     void walkLayers(void (*walker)(DDLayer *));
     void debugSetup(int debugLedPin);
-#ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
-    /* by default, some commands will have there numeric arguments encoded/compress */
-    /* in order to reduce the amount of data to send. */
-    /* you can disable this behavior by calling this method. */
-    void optionNoCompression(bool noCompression);   
-#endif
+// #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
+//     /* by default, some commands will have there numeric arguments encoded/compress */
+//     /* in order to reduce the amount of data to send. */
+//     /* you can disable this behavior by calling this method. */
+//     void optionNoCompression(bool noCompression);   
+// #endif
     /* set 'idle callback', which will be called in 2 situations: */
     /* 1. no connection response while connecting */
     /* 2. detected no 'keep alive' signal */

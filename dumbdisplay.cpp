@@ -383,9 +383,9 @@ volatile int _DebugLedPin = -1;
 #ifdef DEBUG_ECHO_FEEDBACK 
 volatile bool _DebugEnableEchoFeedback = false;
 #endif
-#ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
-volatile bool _NoEncodeInt = false;
-#endif
+// #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
+// volatile bool _NoEncodeInt = false;
+// #endif
 
 
 #define IS_FLOAT_ZERO(f) ((((f)<0?-(f):(f)) - 0.0) < 0.001)
@@ -394,15 +394,16 @@ volatile bool _NoEncodeInt = false;
 #define DD_FLOAT_DP 3
 
 #ifdef DD_CONDENSE_COMMAND
-#ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
-#define TO_C_INT(i) (_NoEncodeInt ? String(i) : DDIntEncoder(i).encoded())
+  #define TO_C_INT(i) (DDIntEncoder(i).encoded())
+// #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
+// #define TO_C_INT(i) (_NoEncodeInt ? String(i) : DDIntEncoder(i).encoded())
+// #else
+// #define TO_C_INT(i) (DDIntEncoder(i).encoded())
+// #endif
+  #define TO_NUM(num) IS_FLOAT_WHOLE(num) ? String((int) num) : String(num, DD_FLOAT_DP) 
 #else
-#define TO_C_INT(i) (DDIntEncoder(i).encoded())
-#endif
-#define TO_NUM(num) IS_FLOAT_WHOLE(num) ? String((int) num) : String(num, DD_FLOAT_DP) 
-#else
-#define TO_C_INT(i) String(i)
-#define TO_NUM(num) String(num) 
+  #define TO_C_INT(i) String(i)
+  #define TO_NUM(num) String(num) 
 #endif
 #define TO_C_NUM(num) IS_FLOAT_WHOLE(num) ? TO_C_INT((int) num) : String(num, DD_FLOAT_DP) 
 
@@ -2918,11 +2919,11 @@ void DumbDisplay::debugSetup(int debugLedPin/*, bool enableEchoFeedback*/) {
   _DebugEnableEchoFeedback = true;//enableEchoFeedback;
 #endif
 }
-#ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
-void DumbDisplay::optionNoCompression(bool noCompression) {
-  _NoEncodeInt = noCompression;
-}
-#endif
+// #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
+// void DumbDisplay::optionNoCompression(bool noCompression) {
+//   _NoEncodeInt = noCompression;
+// }
+//#endif
 void DumbDisplay::setIdleCallback(DDIdleCallback idleCallback) {
 #ifdef SUPPORT_IDLE_CALLBACK
   _IdleCallback = idleCallback;
