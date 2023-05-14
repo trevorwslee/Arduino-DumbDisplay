@@ -906,9 +906,10 @@ class DumbDisplay {
     int getConnectVersion() const;
     /** only meaningful after connection */
     int getCompatibilityVersion() const;  
-    /* by default, "double click feedback" is enabled; however, this makes "click feedback" detection less responsive*/
-    /* one remedy is to disable "double click feedback" */
-    void enableFeedbackDoubleClick(bool enable);
+    /* by default, "long press feedback" and "double click feedback" is enabled; however, this makes "click feedback" detection less responsive*/
+    /* one remedy is to set for "single click feedback" only */ 
+    void setFeedbackSingleClickOnly(bool singleClickOnly = true);
+    //void enableFeedbackDoubleClick(bool enable);
     /* configure "pin frame" to be x-units by y-units (default 100x100) */
     void configPinFrame(int xUnitCount = 100, int yUnitCount = 100);
     /* configure "auto pinning of layers" with the layer spec provided */

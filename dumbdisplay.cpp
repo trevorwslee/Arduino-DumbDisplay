@@ -2493,15 +2493,15 @@ void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
   _Connect();
   _sendCommand1("", "ADDRESTAP", remainingLayoutSpec);
 }
-// void DumbDisplay::setFeedbackSingleClickOnly(bool singleClickOnly) {
-//   _Connect();
-//   _sendCommand1("", "SETFBSCO", TO_BOOL(singleClickOnly));
-// }
-void DumbDisplay::enableFeedbackDoubleClick(bool enable) {
-  //_EnableDoubleClick = enable;
+void DumbDisplay::setFeedbackSingleClickOnly(bool singleClickOnly) {
   _Connect();
-  _sendCommand1("", "ENBFBDBLCLK", TO_BOOL(enable));
+  _sendCommand1("", "SETFBSCO", TO_BOOL(singleClickOnly));
 }
+// void DumbDisplay::enableFeedbackDoubleClick(bool enable) {
+//   //_EnableDoubleClick = enable;
+//   _Connect();
+//   _sendCommand1("", "ENBFBDBLCLK", TO_BOOL(enable));
+// }
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
   int lid = _AllocLid();
   String layerId = String(lid);

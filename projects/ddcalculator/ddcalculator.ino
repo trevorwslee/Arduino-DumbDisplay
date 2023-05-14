@@ -58,7 +58,8 @@ void setup()
   Wire.onReceive(OnReceivedKey);
 #endif 
 
- dumbdisplay.enableFeedbackDoubleClick(false);
+  //dumbdisplay.enableFeedbackDoubleClick(false);
+  dumbdisplay.setFeedbackSingleClickOnly();
 
   displayLayer = CreateDisplayLayer();
   for (int r = 0; r < RowCount; r++)
