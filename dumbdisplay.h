@@ -117,12 +117,16 @@ const int8_t DD_OBJECT_TYPE_TUNNEL = 1;
 //     int8_t objectType;
 //     String customData;
 // };
+
+/// Base class for DD objects.
 struct DDObject {
+    /// object type -- DD_OBJECT_TYPE_LAYER or DD_OBJECT_TYPE_TUNNEL
     int8_t objectType;
+    /// custom data
     String customData;
 };
 
-/// class for DDLayer
+/// Class for DDLayer
 class DDLayer: public DDObject {
   public:
     /// @param size size unit is pixel:
@@ -132,63 +136,69 @@ class DDLayer: public DDObject {
     /// @param shape can be "flat", "hair", "round", "raised" or "sunken"  
     /// @param extraSize simply add to size; however if shape is "round", it affects the "roundness"
     void border(float size, const String& color, const String& shape = "flat", float extraSize = 0);
+    /// set no border
     void noBorder();
-    /* size unit ... see border() */
+    /// set padding for all sides
+    /// @param size for size unit, see border()
     void padding(float size);
-    /* size unit ... see border() */
+    /// set padding for each side;
+    /// for unit, see border()
     void padding(float left, float top, float right, float bottom);
+    /// set no padding
     void noPadding();
-    /* size unit ... see border() */
+    /// set margin for all sides
+    /// @param size for size unit, see border()
     void margin(float size);
-    /* size unit ... see border() */
+    /// set margin for each side;
+    /// for unit, see border()
     void margin(float left, float top, float right, float bottom);
     void noMargin();
-    /* clear the layer */
+    /// clear the layer
     void clear();
-    /* set layer background color with common "color name" */
+    /// set layer background color
+    /// @param color e.g. DD_RGB_COLOR(...); color can be common "color name"
     void backgroundColor(const String& color);
-    /* set no layer background color */
+    /// set no layer background color
     void noBackgroundColor();
-    /* set whether layer visible (not visible means hidden) */
+    /// set whether layer visible (not visible means hidden)
     void visible(bool visible);
-    /* set whether layer transparent */
+    /// set whether layer transparent
     void transparent(bool transparent);
-    /* set disabled */
+    /// set layer disabled or not; if disabled, layer will not have "feedback", and its appearance will be like disabled 
     void disabled(bool disabled);
-    /* set layer opacity percentage */
+    /// set layer opacity percentage
+    /// @param opacity 0 - 100
     void opacity(int opacity);
-    /* set layer's alpha channel (0 - 255) */
+    /// set layer's alpha channel
+    /// @param alpha 0 - 255
     void alpha(int alpha);
-    /* normally used for "feedback" -- flash the default way (layer + border) */
+    /// normally used for "feedback" -- flash the default way (layer + border)
     void flash();
-    /* normally used for "feedback" -- flash the area (x, y) where the layer is clicked */
+    /// normally used for "feedback" -- flash the area (x, y) where the layer is clicked
     void flashArea(int x, int y);
     const String& getLayerId() const { return layerId; }
-    /* set explicit (and more responsive) "feedback" handler (and enable feedback) */
-    /* autoFeedbackMethod: */
-    /* . "" -- no auto feedback */
-    /* . "f" -- flash the default way (layer + border) */
-    /* . "fl" -- flash the layer */
-    /* . "fa" -- flash the area where the layer is clicked */
-    /* . "fas" -- flash the area (as a spot) where the layer is clicked */
-    /* . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary) */
+    /// set explicit (and more responsive) "feedback" handler (and enable feedback)
+    /// autoFeedbackMethod:
+    /// . "" -- no auto feedback
+    /// . "f" -- flash the default way (layer + border)
+    /// . "fl" -- flash the layer
+    /// . "fa" -- flash the area where the layer is clicked
+    /// . "fas" -- flash the area (as a spot) where the layer is clicked
+    /// . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
-    // /* autoFeedbackMethod -- see setFeedbackHandler() */
-    // inline void setAutoFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "f") {
-    //   setFeedbackHandler(handler, autoFeedbackMethod);
-    // }
-    /* rely on getFeedback() being called */ 
-    /* autoFeedbackMethod: */
-    /* . "" -- no auto feedback */
-    /* . "f" -- flash the default way (layer + border) */
-    /* . "fl" -- flash the layer */
-    /* . "fa" -- flash the area where the layer is clicked */
-    /* . "fas" -- flash the area (as a spot) where the layer is clicked */
-    /* . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary) */
+    /// rely on getFeedback() being called
+    /// autoFeedbackMethod:
+    /// . "" -- no auto feedback
+    /// . "f" -- flash the default way (layer + border)
+    /// . "fl" -- flash the layer
+    /// . "fa" -- flash the area where the layer is clicked
+    /// . "fas" -- flash the area (as a spot) where the layer is clicked
+    /// . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
     void enableFeedback(const String& autoFeedbackMethod = "");
-    /** disable "feedback" */
+    /// disable "feedback"
     void disableFeedback();
-    /** get "feedback" ... NULL if no pending "feedback" */
+    /// get "feedback"
+    /// @return NULL if no pending "feedback"
     const DDFeedback* getFeedback();
     void debugOnly(int i);
   public:
@@ -221,31 +231,32 @@ class MbImage {
 };
 
 
+/// Class for Microbit-like DD layer
 class MbDDLayer: public DDLayer {
   public:
     MbDDLayer(int8_t layerId): DDLayer(layerId) {
     }
-    /* show Microbit icon */
+    /// show Microbit icon
     void showIcon(MbIcon icon);
-    /* show Microbit arrow */
+    /// show Microbit arrow
     void showArrow(MbArrow arrow);
-    /* show number; scroll if more than a single digit; but you get to control timing by using delay() */
+    /// show number; scroll if more than a single digit; but you get to control timing by using delay()
     void showNumber(int num);
-    /* show string; scroll if more than a single character; but you get to control timing by using delay() */
+    /// show string; scroll if more than a single character; but you get to control timing by using delay()
     void showString(const String& str);
-    /* turn on LED @ (x, y) */
+    /// turn on LED @ (x, y)
     void plot(int x, int y);
-    /* turn off LED @ (x, y) */
+    /// turn off LED @ (x, y)
     void unplot(int x, int y);
-    /* toggle LED @ (x, y) on / off */
+    /// toggle LED @ (x, y) on / off
     void toggle(int x, int y);
-    /* turn LEDs on by "pattern" */
-    /* - '.': off */
-    /* - '#': on */
-    /* - '|': delimit a row */
-    /* - e.g. "#|.#|..#" -- 3 rows */
+    /// turn LEDs on by "pattern"
+    /// - '.': off
+    /// - '#': on
+    /// - '|': delimit a row
+    /// - e.g. "#|.#|..#" -- 3 rows
     void showLeds(const String& ledPattern);
-    /* set layer LED color with common "color name" */
+    /// set layer LED color with common "color name"
     void ledColor(const String& color);
     MbImage* createImage(const String& ledPattern);
     void releaseImage(MbImage *pImage);
@@ -254,69 +265,70 @@ class MbDDLayer: public DDLayer {
 };
 
 
+/// Class for Turtle-like DD layer
 class TurtleDDLayer: public DDLayer {
   public:
     TurtleDDLayer(int8_t layerId): DDLayer(layerId) {
     }
-    /* forward; with pen or not */
+    /// forward; with pen or not
     void forward(int distance, bool withPen = true);
-    /* backward; with pen or not */
+    /// backward; with pen or not
     void backward(int distance, bool withPen = true);
-    /* left turn */
+    /// left turn
     void leftTurn(int angle);
-    /* right turn */
+    /// right turn
     void rightTurn(int angle);
-    /* go home (0, 0); with pen or not */
+    /// go home (0, 0); with pen or not
     void home(bool withPen = true);
-    /* go to (x, y); with pen or not */
+    /// go to (x, y); with pen or not
     void goTo(int x, int y, bool withPen = true);
-    /* go by (byX, byY); with pen or not */
+    /// go by (byX, byY); with pen or not
     void goBy(int byX, int byY, bool withPen = true);
-    /* set heading angle */
+    /// set heading angle (degree)
     void setHeading(int angle);
-    /* set pen size */
+    /// set pen size
     void penSize(int size);
-    /* set pen color */
+    /// set pen color with common color name
     void penColor(const String& color);
-    /* set fill color */
+    /// set fill color with common color name
     void fillColor(const String& color);
-    /* set no fill color */
+    /// set no fill color
     void noFillColor();
-    /* set pen filled or not; if filled, shape drawn will be filled */
+    /// set pen filled or not; if filled, shape drawn will be filled
     void penFilled(bool filled);
-    /* set text size */
+    /// set text size
     void setTextSize(int size);
-    /* set font */
-    /* - fontName */
-    /* - textSize: 0 means default */
+    /// set font
+    /// - fontName
+    /// - textSize: 0 means default
     void setTextFont(const String& fontName = "", int textSize = 0);
-    /* pen up */
+    /// pen up
     void penUp();
-    /* pen down */
+    /// pen down
     void penDown();
     void beginFill();
     void endFill();
-    /* draw a dot */
+    /// draw a dot
     void dot(int size, const String& color);
-    /* draw circle; centered or not */
+    /// draw circle; centered or not
     void circle(int radius, bool centered = false);
-    /* draw oval; centered or not */
+    /// draw oval; centered or not
     void oval(int width, int height, bool centered = false);
-    /* draw arc; centered or not */
+    /// draw arc; centered or not
     void arc(int width, int height, int startAngle, int sweepAngle, bool centered = false);
-    /* draw triangle (SAS) */
+    /// draw triangle (SAS)
     void triangle(int side1, int angle, int side2);
-    /* draw isosceles triangle; given size and angle */
+    /// draw isosceles triangle; given size and angle
     void isoscelesTriangle(int side, int angle);
-    /* draw rectangle; centered or not */
+    /// draw rectangle; centered or not
     void rectangle(int width, int height, bool centered = false);
-    /* draw polygon given side and vertex count */
+    /// draw polygon given side and vertex count
     void polygon(int side, int vertexCount);
-    /* draw polygon enclosed in an imaginary centered circle */
-    /* - given circle radius and vertex count */
-    /* - whether inside the imaginary circle or outside of it */ 
+    /// draw polygon enclosed in an imaginary centered circle
+    /// - given circle radius and vertex count
+    /// - whether inside the imaginary circle or outside of it
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
-    /* write text; draw means draw the text (honor heading) */
+    /// write text; draw means draw the text (honor heading)
     void write(const String& text, bool draw = false);
 };
 
