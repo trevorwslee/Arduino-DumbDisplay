@@ -96,9 +96,10 @@ if want to disable int parameter encoding, define DD_DISABLE_ENCODE_INT before i
 class DDLayer;
 
 
-/* pLayer -- pointer to the DDLayer of which "feedback" received */
-/* type -- currently, only possible value if CLICK */
-/* x, y -- (x, y) is the "area" on the layer where was clicked */
+/// Type for "feedback" handler.
+/// @param pLayer pointer to the DDLayer from which "feedback" is for 
+/// @param type type of the "feedback" 
+/// @param feedback data concerning the "feedback"
 typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback);
 
 
@@ -121,14 +122,15 @@ struct DDObject {
     String customData;
 };
 
+/// class for DDLayer
 class DDLayer: public DDObject {
   public:
-    /* size unit is pixel: */
-    /* - LcdLayer; each character is composed of pixels */
-    /* - 7SegmentRowLayer; each 7-segment is composed of fixed 220 x 320 pixels */
-    /* - LedGridLayer; a LED is considered as a pixel */  
-    /* shape -- can be "flat", "hair", "round", "raised" or "sunken" */  
-    /* extraSize just added to size; however if shape is "round", it affects the "roundness" */
+    /// @param size size unit is pixel:
+    ///             - LcdLayer -- each character is composed of pixels
+    ///             - 7SegmentRowLayer -- each 7-segment is composed of fixed 220 x 320 pixels
+    ///             - LedGridLayer -- a LED is considered as a pixel  
+    /// @param shape can be "flat", "hair", "round", "raised" or "sunken"  
+    /// @param extraSize simply add to size; however if shape is "round", it affects the "roundness"
     void border(float size, const String& color, const String& shape = "flat", float extraSize = 0);
     void noBorder();
     /* size unit ... see border() */
@@ -954,47 +956,73 @@ class DumbDisplay {
     /* - where 0/1/2/3 are the layer ids  */
     /* - consider using the macros DD_AP_XXX */
     void configAutoPin(const String& layoutSpec);
-    /* experimental */
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
-    /* create a Microbit layer; 1st time will block waiting for connection */
+
+    /// Create a Microbit-like layer.
     MbDDLayer* createMicrobitLayer(int width = 5, int height = 5);
-    /* create a Turtle layer; 1st time will block waiting for connection */
+
+    /// Create a Turtle-like layer.
     TurtleDDLayer* createTurtleLayer(int width, int height);
-    /* create a LED-grid layer; given col count and row count */
-    /* - a LED can be formed by sub-LED-grid; given sub-col count and sub-row count */
+
+    /// Create a LED-grid layer.
     LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
-    /* create a LCD layer */
+
+    /// Create a LCD layer.
     LcdDDLayer* createLcdLayer(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
-    /* create a graphical [LCD] layer */
+
+    /// Create a graphical LCD layer.
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
+
+    /// Create a 7-segment layer. 
+    /// @param digitCount show how many digits; 1 by default
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
-    JoystickDDLayer* createJoystickLayer(const String& directions = "both", int maxStickScale = 255);
+
+    /// Create a joystick layer.
+    /// @param directions "lr": left-to-right; "tb": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
+    ///                   use "+" combines the above like "lr+tb" to mearn both directions; "" the same as "lr+tb" 
+    /// @param maxStickScale 
+    JoystickDDLayer* createJoystickLayer(const String& directions = "", int maxStickScale = 255);
+
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     PlotterDDLayer* createFixedRatePlotterLayer(int width, int height, int pixelsPerScale = 5);
-    /* . mapKey must be provide; plesae visit TomTom's website to get one of your own */
-    /*   if pass in "" as mapKey, will use my testing one */
+
+    /// Create a TomTom map layer.
+    /// @param mapKey should be provided; plesae visit TomTom's website to get one of your own
+    ///               if pass in "" as mapKey, will use my testing one
     TomTomMapDDLayer* createTomTomMapLayer(const String& mapKey, int width, int height);
+
     TerminalDDLayer* createTerminalLayer(int width, int height);
-    /* create a 'tunnel' to interface with Internet (similar to socket) */
-    /* note the 'tunnel' is ONLY supported with DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8 */
-    /* MUST delete the 'tunnel' after use, by calling deleteTunnel()  */
-    /* if not connect now, need to connect via reconnect() */
+
+    /// Create a "tunnel" for accessing the Web.
+    /// The 'tunnel' is ONLY supported with [DumbDisplayWifiBridge](https://www.youtube.com/watch?v=0UhRmXXBQi8).
+    /// @attention MUST delete the 'tunnel' after use, by calling deleteTunnel()
+    /// @note if not connect now, need to connect via reconnect()
     BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
-    /* if not connect now, need to connect via reconnect() */
+
+    /// Create a JSON 'tunnel'.
+    /// @note if not connect now, need to connect via reconnect()
     JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
-    /* if not connect now, need to connect via reconnect() */
-    /* - fieldNames: comma-delimited list of field names to accept; note that matching is 'case-insensitive containment match' */ 
+
+    /// Create a JSON 'tunnel' (filtered).
+    /// @note if not connect now, need to connect via reconnect()
+    /// @param fieldNames comma-delimited list of field names to accept; note that matching is 'case-insensitive containment match' 
     JsonDDTunnel* createFilteredJsonTunnel(const String& endPoint, const String& fileNames, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
-    /* download image from the web and save the downloaded image */
-    /* you will get reuslt as JSON: {"result":"ok"} or {"result":"failed"} */
-    /* for simplicity, use SimpleToolDDTunnel.checkResult() to check result */
-    /* MUST use deleteTunnel() to delete the "download tunnel" after use */
+
+    /// Create a "tunnel" to download image from the web and save the downloaded image to phone.
+    /// You will get reuslt as JSON: {"result":"ok"} or {"result":"failed"}.
+    /// For simplicity, use SimpleToolDDTunnel.checkResult() to check result.
+    /// @attention MUST use deleteTunnel() to delete the "download tunnel" after use
     SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload = true);
-    /* reconnectTo with commands like */
-    /* . now */
-    /* . now-millis */
+
+    /// Create a "service tunnel" for getting date-time info from phone.
+    /// Use reconnectTo() with commands like
+    /// . now
+    /// . now-millis
     BasicDDTunnel* createDateTimeServiceTunnel();
+
+    /// Create a "service tunnel" for getting GPS info from phone.
     GpsServiceDDTunnel* createGpsServiceTunnel();
+    
     ObjectDetetDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0);
     //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);

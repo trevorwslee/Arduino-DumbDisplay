@@ -6,10 +6,15 @@
 enum DDFeedbackType { CLICK, LONGPRESS, DOUBLECLICK, MOVE };  // DOUBLECLICK needs special option for DumbDisplay
 
 
+/// The struct for "feedback"
 struct DDFeedback {
+  /// type of the "feedback"
   DDFeedbackType type;
+  /// x of the "area" on the layer where was clicked
   int16_t x;
+  /// y of the "area" on the layer where was clicked
   int16_t y;
+  /// text input (if any)
   String text;
 };
 
