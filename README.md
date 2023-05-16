@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.7)
+# DumbDisplay Arduino Library (v0.9.7-r1)
 
 [DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -1409,9 +1409,9 @@ Notes:
 
 
 
-# Library Code Header as Reference
+# Reference
 
-For reference, please look into the declarations of the different related classes in the header files; mostly dumbdisplay.h -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/dumbdisplay.h
+For reference, you may want to resort to the headers of the different related classes. To better display the headers, [Doxygen](https://www.doxygen.nl/index.html) is used to generate the doc HTML autmoatically -- https://trevorwslee.github.io/ArduinoDumbDisplay/html
 
 
 
@@ -1460,6 +1460,10 @@ MIT
 
 # Change History
 
+v0.9.7-r1
+  - added JoystickDDLayer
+  - started to use Doxygen to generate doc HTML
+  - bug fix
 
 v0.9.7
   - enhanced graphical layer

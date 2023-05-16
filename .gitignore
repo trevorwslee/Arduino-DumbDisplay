@@ -8,5 +8,3 @@ projects/esp32tensorflowlite/esp32cam_person/person_detect_model_data.cc
 build
 my_notes.txt
 tools/DDWifiBridge/_SYNCAPP
-
-docs

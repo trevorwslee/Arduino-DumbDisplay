@@ -7,6 +7,7 @@ if want to disable int parameter encoding, define DD_DISABLE_ENCODE_INT before i
 #define DD_DISABLE_ENCODE_INT
 
 =============================
+
 */
 
 
@@ -15,7 +16,7 @@ if want to disable int parameter encoding, define DD_DISABLE_ENCODE_INT before i
 #define dumbdisplay_h
 
 
-// what is it for???
+// not used???
 // #ifdef DD_4_ESP32
 // #include <esp_spp_api.h>
 // #include "HardwareSerial.h"
@@ -35,7 +36,6 @@ if want to disable int parameter encoding, define DD_DISABLE_ENCODE_INT before i
 
 
 #define DD_CONDENSE_COMMAND
-//#define DD_CAN_TURN_OFF_CONDENSE_COMMAND 
 
 
 #define DD_HEX_COLOR(color) ("#" + String(color, 16))
@@ -105,18 +105,7 @@ typedef void (*DDFeedbackHandler)(DDLayer* pLayer, DDFeedbackType type, const DD
 
 const int8_t DD_OBJECT_TYPE_LAYER  = 0;
 const int8_t DD_OBJECT_TYPE_TUNNEL = 1;
-// #define DD_OBJECT_TYPE_LAYER  0
-// #define DD_OBJECT_TYPE_TUNNEL 1
 
-// class DDObject {
-//   protected:
-//     inline DDObject(int8_t objectType) {
-//       this->objectType = objectType;
-//     }
-//   public:
-//     int8_t objectType;
-//     String customData;
-// };
 
 /// Base class for DD objects.
 struct DDObject {
@@ -126,9 +115,11 @@ struct DDObject {
     String customData;
 };
 
+
 /// Class for DDLayer
 class DDLayer: public DDObject {
   public:
+    /// set border for each size
     /// @param size size unit is pixel:
     ///             - LcdLayer -- each character is composed of pixels
     ///             - 7SegmentRowLayer -- each 7-segment is composed of fixed 220 x 320 pixels
@@ -152,11 +143,12 @@ class DDLayer: public DDObject {
     /// set margin for each side;
     /// for unit, see border()
     void margin(float left, float top, float right, float bottom);
+    /// set no margin
     void noMargin();
     /// clear the layer
     void clear();
     /// set layer background color
-    /// @param color e.g. DD_RGB_COLOR(...); color can be common "color name"
+    /// @param color DD_RGB_COLOR(...); color can be common "color name"
     void backgroundColor(const String& color);
     /// set no layer background color
     void noBackgroundColor();
@@ -179,21 +171,21 @@ class DDLayer: public DDObject {
     const String& getLayerId() const { return layerId; }
     /// set explicit (and more responsive) "feedback" handler (and enable feedback)
     /// autoFeedbackMethod:
-    /// . "" -- no auto feedback
-    /// . "f" -- flash the default way (layer + border)
-    /// . "fl" -- flash the layer
-    /// . "fa" -- flash the area where the layer is clicked
-    /// . "fas" -- flash the area (as a spot) where the layer is clicked
-    /// . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
+    /// - "" -- no auto feedback
+    /// - "f" -- flash the default way (layer + border)
+    /// - "fl" -- flash the layer
+    /// - "fa" -- flash the area where the layer is clicked
+    /// - "fas" -- flash the area (as a spot) where the layer is clicked
+    /// - "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     /// rely on getFeedback() being called
     /// autoFeedbackMethod:
-    /// . "" -- no auto feedback
-    /// . "f" -- flash the default way (layer + border)
-    /// . "fl" -- flash the layer
-    /// . "fa" -- flash the area where the layer is clicked
-    /// . "fas" -- flash the area (as a spot) where the layer is clicked
-    /// . "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
+    /// - "" -- no auto feedback
+    /// - "f" -- flash the default way (layer + border)
+    /// - "fl" -- flash the layer
+    /// - "fa" -- flash the area where the layer is clicked
+    /// - "fas" -- flash the area (as a spot) where the layer is clicked
+    /// - "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
     void enableFeedback(const String& autoFeedbackMethod = "");
     /// disable "feedback"
     void disableFeedback();
@@ -202,7 +194,9 @@ class DDLayer: public DDObject {
     const DDFeedback* getFeedback();
     void debugOnly(int i);
   public:
+    /// @attention used internally
     DDFeedbackManager* getFeedbackManager() const { return pFeedbackManager; }
+    /// @attention used internally
     DDFeedbackHandler getFeedbackHandler() const { return feedbackHandler; }
   protected:
     DDLayer(int8_t layerId);
@@ -213,6 +207,7 @@ class DDLayer: public DDObject {
     DDFeedbackManager *pFeedbackManager;
     DDFeedbackHandler feedbackHandler;
 };
+
 
 enum MbArrow { North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest };
 enum MbIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, Surprised,
@@ -234,6 +229,7 @@ class MbImage {
 /// Class for Microbit-like DD layer
 class MbDDLayer: public DDLayer {
   public:
+    /// @attention constructed via DumbDisplay object
     MbDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /// show Microbit icon
@@ -268,6 +264,7 @@ class MbDDLayer: public DDLayer {
 /// Class for Turtle-like DD layer
 class TurtleDDLayer: public DDLayer {
   public:
+    /// @attention constructed via DumbDisplay object
     TurtleDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /// forward; with pen or not
@@ -299,8 +296,7 @@ class TurtleDDLayer: public DDLayer {
     /// set text size
     void setTextSize(int size);
     /// set font
-    /// - fontName
-    /// - textSize: 0 means default
+    /// @param textSize: 0 means default
     void setTextFont(const String& fontName = "", int textSize = 0);
     /// pen up
     void penUp();
@@ -333,227 +329,280 @@ class TurtleDDLayer: public DDLayer {
 };
 
 
+/// Class for LED grid layer
 class LedGridDDLayer: public DDLayer {
   public:
+    /// @attention constructed via DumbDisplay object
     LedGridDDLayer(int8_t layerId): DDLayer(layerId) {
     }
-    /* turn on LED @ (x, y) */
+    /// turn on LED @ (x, y)
     void turnOn(int x = 0, int y = 0);
-    /* turn off LED @ (x, y) */
+    /// turn off LED @ (x, y)
     void turnOff(int x = 0, int y = 0);
-    /* toggle LED @ (x, y) */
+    /// toggle LED @ (x, y)
     void toggle(int x = 0, int y = 0);
-    /* turn on LED @ (x, y) */
-    /* - onColor: LED on color; empty string means what already set */
+    /// turn on LED @ (x, y)
+    /// @param onColor LED on color (common color name); empty string means what already set
     void turnOnEx(int x = 0, int y = 0, const String& onColor = "");
-    /* turn on/off LEDs based on bits */
-    /* - bits: least significant bit maps to right-most LED */
-    /* - y: row */
+    /// turn on/off LEDs based on bits
+    /// @param bits least significant bit maps to right-most LED
+    /// @param y row
     void bitwise(unsigned long bits, int y = 0);
-    /* turn on/off two rows of LEDs by bits */
-    /* - y: starting row */
+    /// turn on/off two rows of LEDs by bits
+    /// @param y starting row
     void bitwise2(unsigned long bits_0, unsigned long bits_1, int y = 0);
+    /// turn on/off three rows of LEDs by bits
+    /// @param y starting row
     void bitwise3(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, int y = 0);
+    /// turn on/off four rows of LEDs by bits
+    /// @param y starting row
     void bitwise4(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, unsigned long bits_3, int y = 0);
-    /* turn on LEDs to form a horizontal "bar" */
+    /// turn on LEDs to form a horizontal "bar"
+    /// @param rightToLeft true means right to left
     void horizontalBar(int count, bool rightToLeft = false);
-    /* turn on LEDs to form a vertical "bar" */ 
+    /// turn on LEDs to form a vertical "bar" 
+    /// @param bottomToTop true means bottom to top
     void verticalBar(int count, bool bottomToTop = true);
-    /* turn on LEDs to form a horizontal "bar" */
-    /* - count: can be negative (if it makes sense) */
-    /* - startX: normally 0 */
-    /* - color: LED on color; empty string means what already set */
+    /// turn on LEDs to form a horizontal "bar"
+    /// @param count can be negative (if it makes sense)
+    /// @param startX normally 0
+    /// @param color LED on color; DD_RGB_COLOR(...) or common color name; empty string means what already set
     void horizontalBarEx(int count, int startX = 0, const String& color = "");
-    /* turn on LEDs to form a vertical "bar" */
-    /* - count: can be negative (if it makes sense) */
-    /* - startY: normally 0 */
-    /* - color: LED on color; empty string means what already set */
+    /// turn on LEDs to form a vertical "bar"
+    /// @param count can be negative (if it makes sense)
+    /// @param startY normally 0
+    /// @param color LED on color; DD_RGB_COLOR(...) or common color name; empty string means what already set
     void verticalBarEx(int count, int startY = 0, const String& color = "");
-    /* set LED on color */ 
+    /// set LED on color
+    /// @param color DD_RGB_COLOR(...) or common color name
     void onColor(const String& color);
-    /* set LED off color */ 
+    /// set LED off color
+    /// @param color DD_RGB_COLOR(...) or common color name
     void offColor(const String& color);
-    /* set no LED off color */ 
+    /// set no LED off color 
     void noOffColor();
 };
 
-// can consider using the following emojis for checkbox
-// ☒☐✅❎🟩✔️ ☑️⬛✔✖
+/// Class for LCD layer
+/// @note with "feedback" enabled, can be used as a button
+/// @note with "feedback" enabled, can be used as checkbox; consider using these emojis for checkbox --
+/// ☒☐✅❎🟩✔️ ☑️⬛✔✖
 class LcdDDLayer: public DDLayer {
   public:
+    /// @attention constructed via DumbDisplay object
     LcdDDLayer(int8_t layerId): DDLayer(layerId) {
     }
+    /// print text, moving cursor
     void print(const String& text);
+    /// move cursor to home
     void home();
+    /// set cursor position
+    /// @param x horizontal position
+    /// @param y vertical position
     void setCursor(int x, int y);
+    /// show cursor
     void cursor();
+    /// hide cursor
     void noCursor();
+    /// enable auto-scroll
     void autoscroll();
+    /// disable auto-scroll
     void noAutoscroll();
     void display();
     void noDisplay();
     void scrollDisplayLeft();
     void scrollDisplayRight();
-    /* write text as a line, with alignment 'L', 'C', or 'R' */
+    /// write text as a line
+    /// @param align 'L', 'C', or 'R'
     void writeLine(const String& text, int y = 0, const String& align = "L");
-    /* write text as a line, with align "centered" */
+    /// write text as a line, with align "centered"
     void writeCenteredLine(const String& text, int y = 0);
-    /* set pixel color */
+    /// set pixel color
+    /// @param color DD_RGB_COLOR(...) or common color name
     void pixelColor(const String &color);
-    /* set "background" (off) pixel color */
+    /// set "background" (off) pixel color
+    /// @param color DD_RGB_COLOR(...) or common color name
     void bgPixelColor(const String &color);
-    /* set no "background" (off) pixel color */
+    /// set no "background" (off) pixel color
     void noBgPixelColor();
 };
 
+/// Class for graphical LCD layer
 class GraphicalDDLayer: public DDLayer {
   public:
+    /// @attention constructed via DumbDisplay object
     GraphicalDDLayer(int8_t layerId): DDLayer(layerId) {
     }
+    /// rotate the screen
     void setRotation(int8_t rotationType);
-    /* set cursor */
+    /// set cursor to position
     void setCursor(int x, int y);
-    /* move cursor by ... */
+    /// move cursor by some amount
     void moveCursorBy(int byX, int byY);
-    /* set text color and text background color */
-    /* . empty background color means no background color */
+    /// set text color and text background color
+    /// @param color DD_RGB_COLOR(...) or common color name
+    /// @param bgColor empty background color means no background color
     void setTextColor(const String& color, const String& bgColor = "");
-    /* set text size */
+    /// set text size
     void setTextSize(int size);
-    /* set font */
-    /* - fontName */
-    /* - textSize: 0 means default */
+    /// set font
+    /// @param fontName empty means default
+    /// @param textSize 0 means default
     void setTextFont(const String& fontName = "", int textSize = 0);
-    /* set whether "print" will auto wrap or not */
+    /// set whether "print" will auto wrap or not
     void setTextWrap(bool wrapOn);
-    /* fill screen with color */
+    /// fill screen with color
+    /// @param color DD_RGB_COLOR(...) or common color name
     void fillScreen(const String& color);
+    /// print text
     void print(const String& text);
+    /// print text with line feed
     void println(const String& text = "");
-    /* draw char */
-    /* - empty color means text color */
-    /* - empty background color means no background color */
-    /* - size: 0 means default */
+    /// draw char
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
+    /// @param backgroundColor DD_RGB_COLOR(...) or common color name; empty background color means no background color
+    /// @param size 0 means default
     void drawChar(int x, int y, char c, const String& color = "", const String& bgColor = "", int size = 0);
-    /* draw string */
-    /* - empty color means text color */
-    /* . empty background color means no background color */
-    /* - size: 0 means default */
+    /// draw string
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
+    /// @param backgroundColor DD_RGB_COLOR(...) or common color name; empty background color means no background color
+    /// @param size 0 means default
     void drawStr(int x, int y, const String& string, const String& color = "", const String& bgColor = "", int size = 0);
-    /* draw a pixel */
-    /* - empty color means text color */
+    /// draw a pixel
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     void drawPixel(int x, int y, const String& color = "");
-    /* draw a line */
-    /* - empty color means text color */
+    /// draw a line
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     void drawLine(int x1, int y1, int x2, int y2, const String& color = "");
-    /* - empty color means text color */
+    /// draw a circle
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     void drawCircle(int x, int y, int r, const String& color = "", bool filled = false);
-    /* - empty color means text color */
+    // draw filled circle
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     inline void fillCircle(int x, int y, int r, const String& color = "") {
       drawCircle(x, y, r, color, true);
     }
-    /* - empty color means text color */
+    /// draw a triangle
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color = "", bool filled = false);
-    /* - empty color means text color */
+    /// draw filled triangle
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     inline void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color = "") {
       drawTriangle(x1, y1, x2, y2, x3, y3, color, true);
     }
-    /* - empty color means text color */
+    /// draw a rectangle
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     void drawRect(int x, int y, int w, int h, const String& color = "", bool filled = false);
-    /* - empty color means text color */
+    /// draw filled rectangle
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     inline void fillRect(int x, int y, int w, int h, const String& color = "") {
       drawRect(x, y, w, h, color, true);
     }
-    /* - empty color means text color */
+    /// draw a rounded rectangle
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     void drawRoundRect(int x, int y, int w, int h, int r, const String& color = "", bool filled = false);
-    /* - empty color means text color */
+    /// draw filled rounded rectangle
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     inline void fillRoundRect(int x, int y, int w, int h, int r, const String& color = "") {
       drawRoundRect(x, y, w, h, r, color, true);
     }
-    /* - empty color means text color */
+    /// draw an ellipse (oval)
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     void drawOval(int x, int y, int w, int h, const String& color = "", bool filled = false);
-    /* - empty color means text color */
+    /// draw filled ellipse (oval)
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     inline void fillOval(int x, int y, int w, int h, const String& color = "") {
       drawOval(x, y, w, h, color, true);
     }
-    /* - empty color means text color */
+    /// draw an arc
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     void drawArc(int x, int y, int w, int h, int startAngle, int sweepAngle, bool useCenter, const String& color = "", bool filled = false);
-    /* - empty color means text color */
+    /// draw filled arc
+    /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     inline void fillArc(int x, int y, int w, int h, int startAngle, int sweepAngle, bool useCenter, const String& color = "") {
       drawArc(x, y, w, h, startAngle, sweepAngle, useCenter, color, true);
     }
-    /* forward (relative to cursor) */
+    /// move forward (relative to cursor)
     void forward(int distance);
-    /* left turn */
+    /// turn left
     void leftTurn(int angle);
-    /* right turn */
+    /// turn right
     void rightTurn(int angle);
-    // /* go to (x, y); with pen or not */
-    // void goTo(int x, int y, bool withPen = true);
-    /* set heading angle */
+    /// set heading angle (degree)
     void setHeading(int angle);
-    // /* pen up */
-    // void penUp();
-    // /* pen down */
-    // void penDown();
-    /* set pen size */
+    /// set pen size
     void penSize(int size);
-    /* set pen color (i.e. text color) */
+    /// set pen color (i.e. text color)
+    /// @param color DD_RGB_COLOR(...) or common color nam
     void penColor(const String& color);
-    /* set fill color (for shape) */
+    /// set fill color (for shape)
+    /// @param color DD_RGB_COLOR(...) or common color nam
     void fillColor(const String& color);
-    /* set no fill color (for shape) */
+    /// set no fill color (for shape)
     void noFillColor();
-    /* draw circle; centered or not */
+    /// draw a circle; centered or not
     void circle(int radius, bool centered = false);
-    /* draw oval; centered or not */
+    /// draw an oval; centered or not
     void oval(int width, int height, bool centered = false);
-    /* draw arc; centered or not */
+    /// draw arc; centered or not
     void arc(int width, int height, int startAngle, int sweepAngle, bool centered = false);
-    /* draw triangle (SAS) */
+    /// draw triangle (SAS)
     void triangle(int side1, int angle, int side2);
-    /* draw isosceles triangle; given size and angle */
+    /// draw isosceles triangle; given size and angle
     void isoscelesTriangle(int side, int angle);
-    /* draw rectangle; centered or not */
+    /// draw rectangle; centered or not
     void rectangle(int width, int height, bool centered = false);
-    /* draw polygon given side and vertex count */
+    /// draw polygon given side and vertex count
     void polygon(int side, int vertexCount);
-    /* draw polygon enclosed in an imaginary centered circle */
-    /* - given circle radius and vertex count */
-    /* - whether inside the imaginary circle or outside of it */ 
+    /// draw polygon "enclosed" in an imaginary centered circle
+    /// @param radius circle radius
+    /// @param vertexCount number of vertices
+    /// @param inside whether inside the imaginary circle or outside of it
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
-    /* write text; will not auto wrap */
-    /* - draw means draw the text (honor heading direction) */
+    /// write text; will not auto wrap
+    /// @param draw means draw the text (in the heading direction)
     void write(const String& text, bool draw = false);
-    /* load image file to cache */
-    /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
-    /* - asImageFileNmae: better provide a different name for the scaled cached */
+    /// load image file to cache
+    /// - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
+    /// - asImageFileNmae: better provide a different name for the scaled cached
     void loadImageFile(const String& imageFileName, int w = 0, int h = 0, const String& asImageFileName = "");
+    /// load image file to cache cropped
+    /// @see loadImageFile()
     void loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName = "");
+    /// unload image file from cache
     void unloadImageFile(const String& imageFileName);
-    /* draw image file in cache (if not already loaded to cache, load it) */
-    /* - x / y: position of the left-top corner */
-    /* - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio */ 
+    /// draw image file in cache (if not already loaded to cache, load it) 
+    /// - x / y: position of the left-top corne
+    /// - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
     void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0);
-    /* draw image file in cache (if not already loaded to cache, load it) */
-    /* - x / y / w / h: aread to draw the image; 0 means the default value */ 
-    /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered */
+    /// draw image file in cache (if not already loaded to cache, load it)
+    /// - x / y / w / h: aread to draw the image; 0 means the default value
+    /// - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
-    /* as if the image is saved then loaded */
+    /// cache image; not saved
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
+    /// cache "8-bit pixel" image; not saved
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
+    /// cache "16-bit pixel" image; not saved
     void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
+    /// cache greyscale image; as if image saved and loaded
     void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
+    /// saved cached image
+    /// @param imageName cachedImageName
     void saveCachedImageFile(const String& imageName);
+    /// saved cached image
+    /// @param stitchAsImageName if not empty, will stitch all cached images to one image file of the given name
     void saveCachedImageFiles(const String& stitchAsImageName = "");
 };
 
 
+/// Class for 7-segment row layer
 class SevenSegmentRowDDLayer: public DDLayer {
   public:
+    /// @attention constructed via DumbDisplay object
     SevenSegmentRowDDLayer(int8_t layerId): DDLayer(layerId) {
     }
-    /* set segment color */
+    /// set segment color
     void segmentColor(const String& color);
     /* reset segment off color; note that this will clear all digits */
     void resetSegmentOffColor(const String& color);
@@ -581,17 +630,27 @@ class SevenSegmentRowDDLayer: public DDLayer {
     void showFormatted(const String& formatted, bool completeReplace = true, int startIdx = 0);
 };
 
+
+/// Class for virtual joystick layer
 class JoystickDDLayer: public DDLayer {
   public:
     JoystickDDLayer(int8_t layerId): DDLayer(layerId) {
     }
+    /// set auto recenter of not; if auto recenter, after user releases the joystick, it will move back to center
     void setAutoRecenter(bool autoRecenter = true);
+    /// move joystick position (if joystick is single directional, will only move in the movable direction)
+    /// @param x x to move to
+    /// @param x y to move to
+    /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
     void moveToPos(int x, int y, bool sendFeedback = false);
+    /// move joystick to the center
+    /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
     void moveToCenter(bool sendFeedback = false);
 };
 
 class PlotterDDLayer: public DDLayer {
   public:
+    /// @attention constructed via DumbDisplay object
     PlotterDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /* set label of value with certain key */
@@ -610,11 +669,10 @@ class PlotterDDLayer: public DDLayer {
     void set(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3, const String& key4, float value4);  
 };
 
-/**
- * a 'device dependent view' layer, which means that it is solely rendered by the Android view that it hosts 
- */
+/// Class for TomTom map "device dependent view" layer, which means that it is solely rendered by the Android view that it hosts 
 class TomTomMapDDLayer: public DDLayer {
   public:
+    /// @attention constructed via DumbDisplay object
     TomTomMapDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     void goTo(float latitude, float longitude, const String& label = "");
@@ -622,9 +680,8 @@ class TomTomMapDDLayer: public DDLayer {
     void zoom(float zoomLevel);
 };
 
-/**
- * a 'device dependent view' layer, which act as a terminal, for logging etc 
- */
+
+/// Class for a terminal-like "device dependent view" layer, for logging etc 
 class TerminalDDLayer: public DDLayer {
   public:
     TerminalDDLayer(int8_t layerId): DDLayer(layerId) {
@@ -653,6 +710,7 @@ class TerminalDDLayer: public DDLayer {
 };
 
 
+// Helper class for constructing "tunnel" endpoint, if the endpoint is not a simple URL
 class DDTunnelEndpoint {
   public:
     DDTunnelEndpoint(const String& endPoint) {
@@ -660,9 +718,12 @@ class DDTunnelEndpoint {
       this->headers = "";
       this->params = "";
     }
+    /// reset the endpoint
     void resetEndpoint(const String& endPoint) {
       this->endPoint = endPoint;
     }
+    /// reset the sound (saved or cached) to be attached with the request
+    /// @param soundName name of the sound to be attached (saved or cached), empty means no sound attachment
     void resetSoundAttachment(const String& soundName) {
       if (soundName == "") {
         this->attachmentId = "";
@@ -670,12 +731,15 @@ class DDTunnelEndpoint {
         this->attachmentId = "sound:" + soundName;
       }
     }
+    /// reset headers
     void resetHeaders() {
       this->headers = "";
     }
+    /// reset params (to the endpoint query string)
     void resetParams() {
       this->params = "";
     }
+    /// add param (to the endpoint query string)
     void addParam(const String& param) {
       if (true) {
         if (this->params.length() > 0) {
@@ -690,9 +754,11 @@ class DDTunnelEndpoint {
         }
       }
     }
+    /// add named param (to the endpoint query string)
     void addNamedParam(const String& paramName, const String& paramValue) {
       addParam(paramName + "=" + paramValue);
     }
+    /// add header to the request
     void addHeader(const String& headerKey, const String& headerValue) {
       if (true) {
         if (this->headers.length() > 0) {
@@ -716,10 +782,13 @@ class DDTunnelEndpoint {
     String params;
 };
 
+
+/// Base class for DD "tunnel"
 class DDTunnel: public DDObject {
-  public:
+  protected:
     DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow/*, int8_t bufferSize*/);
     virtual ~DDTunnel();
+  public:
     virtual void release();
     virtual void reconnect();
     void reconnectTo(const String& endPoint) {
@@ -764,8 +833,10 @@ class DDTunnel: public DDObject {
 };
 
 
+/// Class for DD "tunnel", with buffering support
 class DDBufferedTunnel: public DDTunnel {
   public:
+    /// @attention constructed via DumbDisplay object
     DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize);
     virtual ~DDBufferedTunnel();
     virtual void release();
@@ -777,6 +848,7 @@ class DDBufferedTunnel: public DDTunnel {
     bool _readLine(String &buffer);
     //void _writeLine(const String& data);
   public:
+    /// @attention for internal use only
     virtual void handleInput(const String& data, bool final);
   private:
     // String endPoint;
@@ -786,112 +858,91 @@ class DDBufferedTunnel: public DDTunnel {
     int8_t nextArrayIdx;
     int8_t validArrayIdx;
     //bool done;
-  /*BasicDDTunnel*/ public:
-    /* count buffer ready to be read */
+  public:
+    /// count buffer ready to be read
     inline int count() { return _count(); }
-    /* reached EOF? */
+    /// reached EOF?
     inline bool eof() { return _eof(); }
-    /* read a line from buffer */
+    /// read a line from buffer
     String readLine();
-    /* read a line from buffer, in to the buffer passed in */
+    /// read a line from buffer, in to the buffer passed in
     inline bool readLine(String &buffer) { return _readLine(buffer); }
-    /* write a line */
+    /// write a line
     inline void writeLine(const String& data) { _writeLine(data); }
-    //inline void writeSound(const String& soundName) { _writeSound(soundName); }
-  /*BasicDDTunnel*/ public:
-    /* read a piece of JSON data */
+    /// read a piece of JSON data
     bool read(String& fieldId, String& fieldValue);
 };
 
 
-/**
- * support basic "text based line oriented" socket communication ... e.g.
- * pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17")
- */ 
-// class BasicDDTunnel: public DDBufferedTunnel {
-//   public:
-//     BasicDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize): 
-//       DDBufferedTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
-//     }
-//     /* count buffer ready to be read */
-//     inline int count() { return _count(); }
-//     /* reached EOF? */
-//     inline bool eof() { return _eof(); }
-//     /* read a line from buffer */
-//     String readLine();
-//     /* read a line from buffer, in to the buffer passed in */
-//     inline bool readLine(String &buffer) { return _readLine(buffer); }
-//     /* write a line */
-//     inline void writeLine(const String& data) { _writeLine(data); }
-//     //inline void writeSound(const String& soundName) { _writeSound(soundName); }
-//   public:
-//     /* read a piece of JSON data */
-//     bool read(String& fieldId, String& fieldValue);
-// };
+/// support basic "text based line oriented" socket communication ... e.g.
+/// ```
+/// pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17")
+/// ```
 typedef DDBufferedTunnel BasicDDTunnel;
 
-/**
- * support simple REST GET api .. e.g.
- * pTunnel = dumbdisplay.createJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong") 
- * . read() will read JSON one piece at a time ... e.g.
- *   { 
- *     "full_name": "Bruce Lee",
- *     "name":
- *     {
- *       "first": "Bruce",
- *       "last": "Lee"
- *     },
- *     "gender":"Male",
- *     "age":32
- *   }
- *   ==>
- *   `full_name` = `Bruce Lee`
- *   `name.first` = `Bruce`
- *   `name.last` = `Lee`
- *   `gender` = `Male`
- *   `age` = `32`
- */
+
+/// support simple REST GET api .. e.g.
+/// ```
+///  pTunnel = dumbdisplay.createJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong") 
+/// ```
+/// . read() will read JSON one piece at a time ... e.g.
+/// ```
+///  { 
+///    "full_name": "Bruce Lee",
+///    "name":
+///    {
+///      "first": "Bruce",
+///      "last": "Lee"
+///    },
+///    "gender":"Male",
+///    "age":32
+///  }
+/// ```
+///   ==>
+///   - `full_name` = `Bruce Lee`
+///   - `name.first` = `Bruce`
+///   -  `name.last` = `Lee`
+///   -  `gender` = `Male`
+///   -  `age` = `32`
+///
 typedef BasicDDTunnel JsonDDTunnel;
-// class JsonDDTunnel: public BasicDDTunnel {
-//   public:
-//     JsonDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
-//       BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
-//     }
-// };
 
-
+/// Class for basic tool "tunnel"
 class SimpleToolDDTunnel: public BasicDDTunnel {
   public:
+    /// @attention constructed via DumbDisplay object
     SimpleToolDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
         BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
       this->result = 0;
     }
   public:
     virtual void reconnect();
-    /* 0: not done */
-    /* 1: done */
-    /* -1: failed */
+    /// @return 0: not done; 1: done; -1: failed
     int checkResult(); 
   private:
     int result; 
 };
 
+/// Output struct of GpsServiceDDTunnel
 struct DDLocation {
   float latitude;
   float longitude;
 };
+/// Class for GPS service "tunnel"
 class GpsServiceDDTunnel: public BasicDDTunnel {
   public:
+    /// @attention constructed via DumbDisplay object
     GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
         BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
   public:
-    /* - repeat: how often (seconds) data will be sent back; -1 means no repeat */ 
+    /// @param repeat  how often (seconds) data will be sent back; -1 means no repeat
     void reconnectForLocation(int repeat = -1);
     bool readLocation(DDLocation& location);  
 };
 
 
+/// Output struct of ObjectDetetDemoServiceDDTunnel
 struct DDObjectDetectDemoResult {
   int left;
   int top;
@@ -899,8 +950,10 @@ struct DDObjectDetectDemoResult {
   int bottom;
   String label;
 };
+/// Class for "object detection demo" service "tunnel"
 class ObjectDetetDemoServiceDDTunnel: public BasicDDTunnel {
   public:
+    /// @attention constructed via DumbDisplay object
     ObjectDetetDemoServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
         BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
     }
@@ -912,14 +965,16 @@ class ObjectDetetDemoServiceDDTunnel: public BasicDDTunnel {
 
 
 
-/** will not delete "tunnels" passed in */
+/// Class for "tunnel" multiplexer
+/// @attention will not delete "tunnels" passed in
 class JsonDDTunnelMultiplexer {
   public:
+    /// @attention constructed via DumbDisplay object
     JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int8_t tunnelCount);
     ~JsonDDTunnelMultiplexer();
     int count();
     bool eof();
-    /** return the index of the tunnel the field read from; -1 if non ready to read */
+    /// @return the index of the tunnel the field read from; -1 if non ready to read
     int read(String& fieldId, String& fieldValue);
     void release();
     void reconnect();
@@ -933,6 +988,7 @@ typedef void (*DDIdleCallback)(long idleForMillis);
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 
+/// Class for DumbDisplay. Everything starts from here.
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE/*, bool enableDoubleClick = true*/) {
@@ -946,189 +1002,194 @@ class DumbDisplay {
 #endif      
       initialize(pIO, sendBufferSize/*, enableDoubleClick*/);
     }
-    //DumbDisplay(DDInputOutput* pIO, DDSerialProxy* pDDSerialProxy);
-    /* explicitly make connection -- blocking */
-    /* - implicitly called when configure or create a layer */
+    /// explicitly make connection (blocking);
+    /// implicitly called when configure or create a layer
     void connect();
+    /// @return connected or not
     bool connected() const;
-    /** note that when reconnect, the connect version will be bumped up */
+    /// @return the version of the connection, which when reconnected will be bumped up
     int getConnectVersion() const;
-    /** only meaningful after connection */
+    /// @return compatibility version
+    /// @note only meaningful after connection
     int getCompatibilityVersion() const;  
-    /* by default, "long press feedback" and "double click feedback" is enabled; however, this makes "click feedback" detection less responsive*/
-    /* one remedy is to set for "single click feedback" only */ 
+    /// by default, "long press feedback" and "double click feedback" is enabled; however, this makes "click feedback" detection less responsive;
+    /// one remedy is to set for "single click feedback" only
     void setFeedbackSingleClickOnly(bool singleClickOnly = true);
-    //void enableFeedbackDoubleClick(bool enable);
-    /* configure "pin frame" to be x-units by y-units (default 100x100) */
-    void configPinFrame(int xUnitCount = 100, int yUnitCount = 100);
-    /* configure "auto pinning of layers" with the layer spec provided */
-    /* - horizontal: H(*) */
-    /* - vertical: V(*) */
-    /* - or nested, like H(0+V(1+2)+3)*/
-    /* - where 0/1/2/3 are the layer ids  */
-    /* - consider using the macros DD_AP_XXX */
+    /// configure "auto pinning of layers" with the layer spec provided
+    /// - horizontal: H(*)
+    /// - vertical: V(*)
+    /// - or nested, like H(0+V(1+2)+3);  where 0/1/2/3 are the layer ids
+    /// - consider using the macros DD_AP_XXX
     void configAutoPin(const String& layoutSpec);
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
-
-    /// Create a Microbit-like layer.
+    /// configure "pin frame" to be x-units by y-units (default 100x100)
+    /// @see pinLayer()
+    void configPinFrame(int xUnitCount = 100, int yUnitCount = 100);
+    /// pin a layer @ some position of an imaginary grid of "pin grame"
+    /// - the imaginary grid size can be configured when calling connect() -- default is 100x100  
+    /// - the input align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align
+    void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
+    /// pin "auto pin" layers @ some position, like pinLayer()
+    /// @param layoutSpec the "auto pin" layout specification to pin; see configAutoPin() for how spec is constructed
+    /// @param align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
+    void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
+    /// create a Microbit-like layer
     MbDDLayer* createMicrobitLayer(int width = 5, int height = 5);
-
-    /// Create a Turtle-like layer.
+    /// create a Turtle-like layer
     TurtleDDLayer* createTurtleLayer(int width, int height);
-
-    /// Create a LED-grid layer.
+    /// create a LED-grid layer
     LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
-
-    /// Create a LCD layer.
+    /// create a LCD layer
     LcdDDLayer* createLcdLayer(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
-
-    /// Create a graphical LCD layer.
+    /// create a graphical LCD layer
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
-
-    /// Create a 7-segment layer. 
+    /// create a 7-segment layer 
     /// @param digitCount show how many digits; 1 by default
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
-
-    /// Create a joystick layer.
+    /// create a joystick layer
     /// @param directions "lr": left-to-right; "tb": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
     ///                   use "+" combines the above like "lr+tb" to mearn both directions; "" the same as "lr+tb" 
     /// @param maxStickScale 
     JoystickDDLayer* createJoystickLayer(const String& directions = "", int maxStickScale = 255);
-
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     PlotterDDLayer* createFixedRatePlotterLayer(int width, int height, int pixelsPerScale = 5);
-
-    /// Create a TomTom map layer.
+    /// create a TomTom map layer
     /// @param mapKey should be provided; plesae visit TomTom's website to get one of your own
     ///               if pass in "" as mapKey, will use my testing one
     TomTomMapDDLayer* createTomTomMapLayer(const String& mapKey, int width, int height);
 
     TerminalDDLayer* createTerminalLayer(int width, int height);
-
-    /// Create a "tunnel" for accessing the Web.
-    /// The 'tunnel' is ONLY supported with [DumbDisplayWifiBridge](https://www.youtube.com/watch?v=0UhRmXXBQi8).
+    /// create a "tunnel" for accessing the Web;
+    /// the 'tunnel' is ONLY supported with [DumbDisplayWifiBridge](https://www.youtube.com/watch?v=0UhRmXXBQi8)
     /// @attention MUST delete the 'tunnel' after use, by calling deleteTunnel()
     /// @note if not connect now, need to connect via reconnect()
     BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
-
-    /// Create a JSON 'tunnel'.
+    /// create a JSON 'tunnel'
     /// @note if not connect now, need to connect via reconnect()
     JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
-
-    /// Create a JSON 'tunnel' (filtered).
+    /// create a JSON 'tunnel' (filtered for wanted fields)
     /// @note if not connect now, need to connect via reconnect()
     /// @param fieldNames comma-delimited list of field names to accept; note that matching is 'case-insensitive containment match' 
     JsonDDTunnel* createFilteredJsonTunnel(const String& endPoint, const String& fileNames, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
-
-    /// Create a "tunnel" to download image from the web and save the downloaded image to phone.
-    /// You will get reuslt as JSON: {"result":"ok"} or {"result":"failed"}.
-    /// For simplicity, use SimpleToolDDTunnel.checkResult() to check result.
-    /// @attention MUST use deleteTunnel() to delete the "download tunnel" after use
+    /// create a "tunnel" to download image from the web and save the downloaded image to phone;
+    /// you will get reuslt as JSON: ```{"result":"ok"}``` or ```{"result":"failed"}```
+    /// for simplicity, use SimpleToolDDTunnel.checkResult() to check result
     SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload = true);
-
-    /// Create a "service tunnel" for getting date-time info from phone.
-    /// Use reconnectTo() with commands like
-    /// . now
-    /// . now-millis
+    /// create a "service tunnel" for getting date-time info from phone;
+    /// use reconnectTo() with commands like
+    /// - now
+    /// - now-millis
     BasicDDTunnel* createDateTimeServiceTunnel();
-
-    /// Create a "service tunnel" for getting GPS info from phone.
+    /// create a "service tunnel" for getting GPS info from phone
     GpsServiceDDTunnel* createGpsServiceTunnel();
-    
     ObjectDetetDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0);
-    //void reconnectTunnel(DDTunnel *pTunnel, const String& endPoint);
     void deleteTunnel(DDTunnel *pTunnel);
-    /* set DD background color with common "color name" */
+    /// set DD background color with common "color name" or DD_RGB_COLOR(...)
     void backgroundColor(const String& color);
-    /* basically, functions the same as recordLayerCommands() */
+    /// basically, functions the same as recordLayerCommands()
     void recordLayerSetupCommands();
-    /* basically, functions the same as playbackLayerCommands() */
-    /* additionally: */
-    /* 1. save and persiste the layer commands */
-    /* 2. enable DumbDisplay reconnect feature -- */ 
-    /*    tells the layer setup commands to use when DumbDisplay reconnects */ 
+    /// basically, functions the same as playbackLayerCommands().
+    /// additionally: */
+    /// - save and persiste the layer commands
+    /// - enable DumbDisplay reconnect feature -- tells the layer setup commands to use when DumbDisplay reconnects
     void playbackLayerSetupCommands(const String& persist_id);
-    /* start recording layer commands (of any layers) */
-    /* and sort of freeze the display, until playback */
+    /// start recording layer commands (of any layers);
+    /// and sort of freeze the display, until playback
     void recordLayerCommands();
-    /* playback recorded commands (unfreeze the display) */
+    /// playback recorded commands (unfreeze the display)
     void playbackLayerCommands();
-    /* stop recording commands (and forget what have recorded) */
+    /// stop recording commands (and forget what have recorded)
     void stopRecordLayerCommands();
-    /* save the recorded commands (and continue recording) */
-    /* - id: identifier of the recorded commands, overwriting and previous one; */
-    /*       if not recording, will delete previous recorded commands */
-    /* - persist: store it to your phone or not */
+    /// save the recorded commands (and continue recording)
+    /// @param id identifier of the recorded commands, overwriting and previous one;
+    ///           if not recording, will delete previous recorded commands
+    /// @param persist store it to your phone or not
     void saveLayerCommands(const String& id, bool persist = false);
-    /* load saved commands (as if recording those commands) */
-    /* - recording started or not, will add the commands to the buffer */
-    /* - afterward, will keep recording */
-    /* - use playbackLayerCommands() to playback loaded commands */
-    /* - if not recording commands, this basically remove saved commands */
+    /// load saved commands (as if recording those commands)
+    /// - recording started or not, will add the commands to the buffer
+    /// - afterward, will keep recording
+    /// - use playbackLayerCommands() to playback loaded commands
+    /// - if not recording commands, this basically remove saved commands
     void loadLayerCommands(const String& id);
-    /* capture and save display as image */
-    /* IMPORTANT: old file with the same name will be  replaced */
-    /* - imageFileName: name of image file; if it ends with ".png", saved image format will be PNG; other, saved image format will be JPEG */
-    /* - width / height: size of the display on which to render the layers */ 
+    /// capture and save display as image
+    /// @param imageFileName: name of image file; if it ends with ".png", saved image format will be PNG; other, saved image format will be JPEG */
+    /// @param width width of the display on which to render the layers
+    /// @param height height of the display on which to render the layers
+    /// @attention old file with the same name will be  replaced
     void capture(const String& imageFileName, int width, int height);
-    /* write out a comment to DD */
+    /// write out a comment to DD app
     void writeComment(const String& comment);
+    /// make DD app sound a tone
     void tone(uint32_t freq, uint32_t duration);
     void notone();
+    /// make DD app play the sound of the given sound file
     void playSound(const String& soundName);
     void stopSound();
+    /// save 8-bit sound with the given sound samples
     void saveSound8(const String& soundName, const int8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
+    /// save 16-bit sound with the given sound samples
     void saveSound16(const String& soundName, const int16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
+    /// cache 8-bit sound with the given sound samples
     void cacheSound8(const String& soundName, const int8_t *bytes, int sampleCount, int sampleRate, int numChannels = 1);
+    /// cache 16-bit sound with the given sound samples
     void cacheSound16(const String& soundName, const int16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
+    /// save the cached sound
     void saveCachedSound(const String& soundName);
-    void saveCachedSoundAsCC(const String& soundName);
+    /// save the cached sound as C .h file
+    /// @warn this is experimental
+    void saveCachedSoundAsH(const String& soundName);
+    /// stream sound 8-bit sample (for playing sound)
     int streamSound8(int sampleRate, int numChannels = 1); 
+    /// stream sound 16-bit sample (for playing sound)
     int streamSound16(int sampleRate, int numChannels = 1); 
+    /// initiate saving of 8-bit sound sound chunked;
+    /// use sendSoiundChunk8() to send sound data 
     int saveSoundChunked8(const String& soundName/*, const int8_t *bytes, int sampleCount*/, int sampleRate, int numChannels = 1);
+    /// initiate saving of 16-bit sound sound chunked;
+    /// use sendSoiundChunk16() to send sound data 
     int saveSoundChunked16(const String& soundName/*, const int16_t *data, int sampleCount*/, int sampleRate, int numChannels = 1);
+    /// initiate caching of 8-bit sound sound chunked;
+    /// use sendSoiundChunk8() to send sound data 
     int cacheSoundChunked8(const String& soundName/*, const int8_t *bytes, int sampleCount*/, int sampleRate, int numChannels = 1);
+    /// initiate caching of 16-bit sound sound chunked;
+    /// use sendSoiundChunk16() to send sound data 
     int cacheSoundChunked16(const String& soundName/*, const int16_t *data, int sampleCount*/, int sampleRate, int numChannels = 1);
+    /// send 8-bit sound data chunk for saving/caching after calling saveSoundChunked8() or cacheSoundChunked8()
     void sendSoundChunk8(int chunkId, const int8_t *bytes, int sampleCount, bool isFinal = false);
+    /// send 16-bit sound data chunk for saving/caching after calling saveSoundChunked16() or cacheSoundChunked16()
     void sendSoundChunk16(int chunkId, const int16_t *data, int sampleCount, bool isFinal = false);
+    /// svae image with the given image data
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
+    // save 8-bit "pixel" image with the given image data
     void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressMethod = 0);
+    // save 16-bit "pixel" image with the given image data
     void savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
+    // save greyscale "pixel" image with the given image data
     void savePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
-    /* - imageNames: '+' delimited */
+    /// stitch images together
+    /// @param imageNames '+' delimited
+    /// @param asImageName name for the stitched image
     void stitchImages(const String& imageNames, const String& asImageName);
     void debugOnly(int i);
-    /* pin a layer @ some position of an imaginary grid of units */
-    /* - the imaginary grid size can be configured when calling connect() -- default is 100x100 */  
-    /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
-    void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
-    /* - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
-    void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
-    /**
-     * recorder the layer
-     * - how: can be "T" for top; or "B" for bottom;
-     *        "U" for up; or "D" for down
-     */
+    /// reorder the layer (by moving one layer in the z-order plane)
+    /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
     void reorderLayer(DDLayer *pLayer, const String& how);
     void deleteLayer(DDLayer *pLayer);
+    /// loop through all the existing layers calling the function passed in
     void walkLayers(void (*walker)(DDLayer *));
     void debugSetup(int debugLedPin);
-// #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
-//     /* by default, some commands will have there numeric arguments encoded/compress */
-//     /* in order to reduce the amount of data to send. */
-//     /* you can disable this behavior by calling this method. */
-//     void optionNoCompression(bool noCompression);   
-// #endif
-    /* set 'idle callback', which will be called in 2 situations: */
-    /* 1. no connection response while connecting */
-    /* 2. detected no 'keep alive' signal */
+    /// set 'idle callback', which will be called in 2 situations:
+    /// - no connection response while connecting
+    /// - detected no 'keep alive' signal
     void setIdleCallback(DDIdleCallback idleCallback); 
-    // deprecated
+    /// @attention use setIdleCallback() instead
+    /// @deprecated
     inline void setIdleCalback(DDIdleCallback idleCallback) {
       setIdleCallback(idleCallback);
     }
+    // set callback when version changed (e.g. reconnected after disconnect)
     void setConnectVersionChangedCalback(DDConnectVersionChangedCallback connectVersionChangedCallback); 
-    /* log line to serial making sure not affecting DD */
+    /// log line to serial; if it is not safe to output to Serial, will write comment with writeComment() instead
     void logToSerial(const String& logLine);
   private:
     void initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, bool enableDoubleClick*/);

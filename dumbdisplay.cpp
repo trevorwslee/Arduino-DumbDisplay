@@ -2784,8 +2784,8 @@ void DumbDisplay::sendSoundChunk16(int chunkId, const int16_t *data, int sampleC
 void DumbDisplay::saveCachedSound(const String& soundName) {
   _sendCommand1("", "SAVECACHEDSND", soundName);
 }
-void DumbDisplay::saveCachedSoundAsCC(const String& soundName) {
-  _sendCommand2("", "SAVECACHEDSNDASCC", soundName, TO_EDIAN());
+void DumbDisplay::saveCachedSoundAsH(const String& soundName) {
+  _sendCommand2("", "SAVECACHEDSNDASH", soundName, TO_EDIAN());
 }
 void DumbDisplay::playSound(const String& soundName) {
   _sendCommand1("", C_PLAYSND, soundName);
