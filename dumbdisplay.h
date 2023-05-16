@@ -785,7 +785,8 @@ class DDTunnelEndpoint {
 
 /// Base class for DD "tunnel"
 class DDTunnel: public DDObject {
-  protected:
+  public:
+    /// for internal use only
     DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow/*, int8_t bufferSize*/);
     virtual ~DDTunnel();
   public:
