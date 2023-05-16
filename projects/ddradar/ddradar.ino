@@ -138,10 +138,18 @@ DDFadingLayers<BeamLayerCount> beamLayers;
 
 GraphicalDDLayer* mainLayer;
 PlotterDDLayer* plotterLayer;
+
+#ifdef SERVO    
 LcdDDLayer* uniDirectionalLayer;
 LcdDDLayer* biDirectionalLayer;
+#endif
+
 LcdDDLayer* noDirectionalLayer;
+
+#ifdef SERVO    
 JoystickDDLayer* angleSliderLayer;
+#endif
+
 LcdDDLayer* ultraSonicLayer;
 LcdDDLayer* laserLayer;
 SevenSegmentRowDDLayer* distanceLayer;
@@ -171,7 +179,6 @@ void setup() {
     SERVO.attach(SERVO_PIN);
   #endif
   ServoGoto(angle);
-  angleSliderLayer->moveToPos(angle, 0);
 #endif
 
 
@@ -198,16 +205,21 @@ void setup() {
   plotterLayer = dumbdisplay.createPlotterLayer(400, 160);
   plotterLayer->border(2, "blue");
 
+#ifdef SERVO    
   uniDirectionalLayer = dumbdisplay.createLcdLayer(10, 1);
   uniDirectionalLayer->enableFeedback("f");
 
   biDirectionalLayer = dumbdisplay.createLcdLayer(10, 1);
   biDirectionalLayer->enableFeedback("f");
+#endif
 
   noDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
   noDirectionalLayer->enableFeedback("f");
 
-  angleSliderLayer = dumbdisplay.createJoystickLayer("lr", MaxAngle);
+#ifdef SERVO    
+  angleSliderLayer = dumbdisplay.createJoystickLayer("rl", MaxAngle);
+  angleSliderLayer->border(3, "black");
+#endif
 
   ultraSonicLayer = dumbdisplay.createLcdLayer(15, 1);
   ultraSonicLayer->enableFeedback("f");
@@ -229,8 +241,10 @@ void setup() {
       .endGroup()
       .addLayer(distanceLayer)
     .endGroup()    
-    .addLayer(noDirectionalLayer)
+#ifdef SERVO    
     .addLayer(angleSliderLayer)
+#endif
+    .addLayer(noDirectionalLayer)
 #ifdef SERVO    
     .beginGroup('H')
       .addLayer(uniDirectionalLayer)
@@ -335,7 +349,9 @@ void loop() {
         noDirectionalLayer->border(2, "darkblue", "hair");
         noDirectionalLayer->pixelColor("darkgreen");
         noDirectionalLayer->writeLine("   No Sweeping");
+#ifdef SERVO    
         angleSliderLayer->disabled(true);
+#endif
       }
       if (rotateType == 0) {
         uniDirectionalLayer->border(2, "darkblue", "flat");
@@ -349,7 +365,9 @@ void loop() {
         noDirectionalLayer->border(2, "darkblue", "flat");
         noDirectionalLayer->pixelColor("darkblue");
         noDirectionalLayer->writeLine("✅  No Sweeping");
+#ifdef SERVO    
         angleSliderLayer->disabled(false);
+#endif
       }
       if (measureWithUS) {
         ultraSonicLayer->border(2, "darkblue", "flat");
@@ -399,10 +417,19 @@ void loop() {
   if (rotateType == 0 || rotateType == 1) {
 #ifdef SERVO
     ServoGoto(angle);
+    angleSliderLayer->moveToPos(angle, 0);
 #endif
     if (angle == 0 || angle == MaxAngle) {
       delay(200);
     }
+  } else {
+#ifdef SERVO
+    const DDFeedback* feedback = angleSliderLayer->getFeedback();
+    if (feedback != NULL) {
+      angle = feedback->x;
+      ServoGoto(angle);
+    }
+#endif
   }
   delay(20);  // delay a bit for each reading
 

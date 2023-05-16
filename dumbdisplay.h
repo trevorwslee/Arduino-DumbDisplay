@@ -203,6 +203,8 @@ class DDLayer: public DDObject {
   public:
     ~DDLayer();
   protected:
+    void _enableFeedback();
+  protected:
     String layerId;  
     DDFeedbackManager *pFeedbackManager;
     DDFeedbackHandler feedbackHandler;
@@ -635,6 +637,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
 class JoystickDDLayer: public DDLayer {
   public:
     JoystickDDLayer(int8_t layerId): DDLayer(layerId) {
+      _enableFeedback();
     }
     /// set auto recenter of not; if auto recenter, after user releases the joystick, it will move back to center
     void setAutoRecenter(bool autoRecenter = true);

@@ -1471,12 +1471,18 @@ void DDLayer::flashArea(int x, int y) {
 // void DDLayer::writeComment(const String& comment) {
 //   _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
 // }
-void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
-  _sendCommand2(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod);
-  feedbackHandler = NULL;
+void DDLayer::_enableFeedback() {
   if (pFeedbackManager != NULL)
     delete pFeedbackManager;
   pFeedbackManager = new DDFeedbackManager(FEEDBACK_BUFFER_SIZE + 1);  // need 1 more slot
+}
+void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
+  _sendCommand2(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod);
+  feedbackHandler = NULL;
+  _enableFeedback();
+  // if (pFeedbackManager != NULL)
+  //   delete pFeedbackManager;
+  // pFeedbackManager = new DDFeedbackManager(FEEDBACK_BUFFER_SIZE + 1);  // need 1 more slot
 }
 void DDLayer::disableFeedback() {
   _sendCommand1(layerId, C_feedback, TO_BOOL(false));
