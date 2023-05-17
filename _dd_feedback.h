@@ -18,6 +18,7 @@ struct DDFeedback {
   String text;
 };
 
+/// Class for internal use to track "feedback"
 class DDFeedbackManager {
   public: 
     DDFeedbackManager(int8_t bufferSize);

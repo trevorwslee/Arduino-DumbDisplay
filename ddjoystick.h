@@ -4,12 +4,14 @@
 #define ddjoystick_h
 
 
+/// struct used for JoystickInterface
 struct JoystickPress
 {
   int xPressed; // -1, 0 or 1
   int yPressed; // -1, 0 or 1
 };
 
+/// struct used for JoystickInterface
 struct ABCDPressed
 {
   bool aPressed;
@@ -19,6 +21,7 @@ struct ABCDPressed
 };
 
 
+/// struct used for JoystickInterface
 struct JoystickPressCode
 {
   int xPressed;
@@ -26,6 +29,7 @@ struct JoystickPressCode
   bool swPressed;
 };
 
+/// Helper class for joystick input tracking.
 class JoystickInterface
 {
 public:

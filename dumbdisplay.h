@@ -116,7 +116,7 @@ struct DDObject {
 };
 
 
-/// Class for DDLayer
+/// Class for DDLayer; created with various layer creation methods of DumbDispaly
 class DDLayer: public DDObject {
   public:
     /// set border for each size
@@ -228,10 +228,10 @@ class MbImage {
 };
 
 
-/// Class for Microbit-like DD layer
+/// Class for Microbit-like DD layer; created with DumbDisplay::createMicrobitLayer()
 class MbDDLayer: public DDLayer {
   public:
-    /// @attention constructed via DumbDisplay object
+    /// for internal use only
     MbDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /// show Microbit icon
@@ -263,10 +263,10 @@ class MbDDLayer: public DDLayer {
 };
 
 
-/// Class for Turtle-like DD layer
+/// Class for Turtle-like DD layer; created with DumbDisplay::createTurtleLayer()
 class TurtleDDLayer: public DDLayer {
   public:
-    /// @attention constructed via DumbDisplay object
+    /// for internal use only
     TurtleDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /// forward; with pen or not
@@ -331,10 +331,10 @@ class TurtleDDLayer: public DDLayer {
 };
 
 
-/// Class for LED grid layer
+/// Class for LED grid layer; created with DumbDisplay::createLedGridLayer()
 class LedGridDDLayer: public DDLayer {
   public:
-    /// @attention constructed via DumbDisplay object
+    /// for internal use only
     LedGridDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /// turn on LED @ (x, y)
@@ -385,13 +385,13 @@ class LedGridDDLayer: public DDLayer {
     void noOffColor();
 };
 
-/// Class for LCD layer
+/// Class for LCD layer; created with DumbDisplay::createLcdLayer()
 /// @note with "feedback" enabled, can be used as a button
 /// @note with "feedback" enabled, can be used as checkbox; consider using these emojis for checkbox --
 /// ☒☐✅❎🟩✔️ ☑️⬛✔✖
 class LcdDDLayer: public DDLayer {
   public:
-    /// @attention constructed via DumbDisplay object
+    /// for internal use only
     LcdDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /// print text, moving cursor
@@ -429,10 +429,10 @@ class LcdDDLayer: public DDLayer {
     void noBgPixelColor();
 };
 
-/// Class for graphical LCD layer
+/// Class for graphical LCD layer; created with DumbDisplay::createGraphicalLayer()
 class GraphicalDDLayer: public DDLayer {
   public:
-    /// @attention constructed via DumbDisplay object
+    /// for internal use only
     GraphicalDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /// rotate the screen
@@ -598,10 +598,10 @@ class GraphicalDDLayer: public DDLayer {
 };
 
 
-/// Class for 7-segment row layer
+/// Class for 7-segment row layer; created with DumbDisplay::create7SegmentRowLayer()
 class SevenSegmentRowDDLayer: public DDLayer {
   public:
-    /// @attention constructed via DumbDisplay object
+    /// for internal use only
     SevenSegmentRowDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /// set segment color
@@ -633,9 +633,10 @@ class SevenSegmentRowDDLayer: public DDLayer {
 };
 
 
-/// Class for virtual joystick layer
+/// Class for virtual joystick layer; created with DumbDisplay::createJoystickLayer()
 class JoystickDDLayer: public DDLayer {
   public:
+    /// for internal use only  
     JoystickDDLayer(int8_t layerId): DDLayer(layerId) {
       _enableFeedback();
     }
@@ -651,9 +652,10 @@ class JoystickDDLayer: public DDLayer {
     void moveToCenter(bool sendFeedback = false);
 };
 
+/// Class for plotter layer; created with DumbDisplay::createPlotterLayer() or DumbDisplay::createFixedRatePlotterLayer()
 class PlotterDDLayer: public DDLayer {
   public:
-    /// @attention constructed via DumbDisplay object
+    /// for internal use only
     PlotterDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /* set label of value with certain key */
@@ -673,9 +675,10 @@ class PlotterDDLayer: public DDLayer {
 };
 
 /// Class for TomTom map "device dependent view" layer, which means that it is solely rendered by the Android view that it hosts 
+/// created with DumbDisplay::createTomTomMapLayer()
 class TomTomMapDDLayer: public DDLayer {
   public:
-    /// @attention constructed via DumbDisplay object
+    /// for internal use only
     TomTomMapDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     void goTo(float latitude, float longitude, const String& label = "");
@@ -684,9 +687,10 @@ class TomTomMapDDLayer: public DDLayer {
 };
 
 
-/// Class for a terminal-like "device dependent view" layer, for logging etc 
+/// Class for a terminal-like "device dependent view" layer, for logging etc; created with DumbDisplay::createTerminalLayer()
 class TerminalDDLayer: public DDLayer {
   public:
+    /// for internal use only
     TerminalDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     void print(const String& val);
@@ -837,10 +841,10 @@ class DDTunnel: public DDObject {
 };
 
 
-/// Class for DD "tunnel", with buffering support
+/// Class for DD "tunnel", with buffering support; created with DumbDisplay::createBasicTunnel()
 class DDBufferedTunnel: public DDTunnel {
   public:
-    /// @attention constructed via DumbDisplay object
+    /// for internal use only
     DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize);
     virtual ~DDBufferedTunnel();
     virtual void release();
@@ -992,7 +996,7 @@ typedef void (*DDIdleCallback)(long idleForMillis);
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 
-/// Class for DumbDisplay. Everything starts from here.
+/// Class for DumbDisplay. Everything starts here.
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE/*, bool enableDoubleClick = true*/) {
@@ -1007,7 +1011,7 @@ class DumbDisplay {
       initialize(pIO, sendBufferSize/*, enableDoubleClick*/);
     }
     /// explicitly make connection (blocking);
-    /// implicitly called when configure or create a layer
+    /// implicitly called in situations like create a layer
     void connect();
     /// @return connected or not
     bool connected() const;
@@ -1025,6 +1029,8 @@ class DumbDisplay {
     /// - or nested, like H(0+V(1+2)+3);  where 0/1/2/3 are the layer ids
     /// - consider using the macros DD_AP_XXX
     void configAutoPin(const String& layoutSpec);
+    /// add the "auto pin" config for layers not included in "auto pin" set by configAutoPin()
+    /// @param remainingLayoutSpec 
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
     /// configure "pin frame" to be x-units by y-units (default 100x100)
     /// @see pinLayer()
@@ -1055,29 +1061,30 @@ class DumbDisplay {
     ///                   use "+" combines the above like "lr+tb" to mearn both directions; "" the same as "lr+tb" 
     /// @param maxStickScale 
     JoystickDDLayer* createJoystickLayer(const String& directions = "", int maxStickScale = 255);
+    /// create a plotter layer
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
+    /// create a fixed-rate plotter layer
+    /// i.e. it will assume fixe-rate of PlotterDDLayer::set()
     PlotterDDLayer* createFixedRatePlotterLayer(int width, int height, int pixelsPerScale = 5);
     /// create a TomTom map layer
     /// @param mapKey should be provided; plesae visit TomTom's website to get one of your own
     ///               if pass in "" as mapKey, will use my testing one
     TomTomMapDDLayer* createTomTomMapLayer(const String& mapKey, int width, int height);
-
+    /// create a terminal layer
     TerminalDDLayer* createTerminalLayer(int width, int height);
-    /// create a "tunnel" for accessing the Web;
-    /// the 'tunnel' is ONLY supported with [DumbDisplayWifiBridge](https://www.youtube.com/watch?v=0UhRmXXBQi8)
-    /// @attention MUST delete the 'tunnel' after use, by calling deleteTunnel()
+    /// create a "tunnel" for accessing the Web
     /// @note if not connect now, need to connect via reconnect()
     BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
-    /// create a JSON 'tunnel'
+    /// create a JSON 'tunnel' for thing like making RESTful calls
     /// @note if not connect now, need to connect via reconnect()
     JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
-    /// create a JSON 'tunnel' (filtered for wanted fields)
+    /// create a JSON 'tunnel' for thing like making RESTful calls; with result filtered
     /// @note if not connect now, need to connect via reconnect()
-    /// @param fieldNames comma-delimited list of field names to accept; note that matching is 'case-insensitive containment match' 
+    /// @param fieldNames comma-delimited list of field names to accept; note that matching is "case-insensitive containment match" 
     JsonDDTunnel* createFilteredJsonTunnel(const String& endPoint, const String& fileNames, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
-    /// create a "tunnel" to download image from the web and save the downloaded image to phone;
-    /// you will get reuslt as JSON: ```{"result":"ok"}``` or ```{"result":"failed"}```
-    /// for simplicity, use SimpleToolDDTunnel.checkResult() to check result
+    /// create a "tunnel" to download image from the web, and save the downloaded image to phone;
+    /// you will get result in JSON format: ```{"result":"ok"}``` or ```{"result":"failed"}```
+    /// for simplicity, use SimpleToolDDTunnel.checkResult() to check the result
     SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload = true);
     /// create a "service tunnel" for getting date-time info from phone;
     /// use reconnectTo() with commands like
@@ -1086,7 +1093,9 @@ class DumbDisplay {
     BasicDDTunnel* createDateTimeServiceTunnel();
     /// create a "service tunnel" for getting GPS info from phone
     GpsServiceDDTunnel* createGpsServiceTunnel();
+    /// create a "service tunnel" for getting object detection info from phone; model used is the demo model `mobilenetv1.tflite`
     ObjectDetetDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0);
+    /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
     /// set DD background color with common "color name" or DD_RGB_COLOR(...)
     void backgroundColor(const String& color);
@@ -1139,7 +1148,7 @@ class DumbDisplay {
     void cacheSound16(const String& soundName, const int16_t *data, int sampleCount, int sampleRate, int numChannels = 1);
     /// save the cached sound
     void saveCachedSound(const String& soundName);
-    /// save the cached sound as C .h file
+    /// save the cached sound as C header file (.h)
     /// @warn this is experimental
     void saveCachedSoundAsH(const String& soundName);
     /// stream sound 8-bit sample (for playing sound)
@@ -1178,9 +1187,11 @@ class DumbDisplay {
     /// reorder the layer (by moving one layer in the z-order plane)
     /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
     void reorderLayer(DDLayer *pLayer, const String& how);
+    /// if layer is no longer used; delete it to release resources
     void deleteLayer(DDLayer *pLayer);
     /// loop through all the existing layers calling the function passed in
     void walkLayers(void (*walker)(DDLayer *));
+    /// set the pin to flash when DD is sending data, for debugging purpose
     void debugSetup(int debugLedPin);
     /// set 'idle callback', which will be called in 2 situations:
     /// - no connection response while connecting
@@ -1191,7 +1202,7 @@ class DumbDisplay {
     inline void setIdleCalback(DDIdleCallback idleCallback) {
       setIdleCallback(idleCallback);
     }
-    // set callback when version changed (e.g. reconnected after disconnect)
+    /// set callback when version changed (e.g. reconnected after disconnect)
     void setConnectVersionChangedCalback(DDConnectVersionChangedCallback connectVersionChangedCallback); 
     /// log line to serial; if it is not safe to output to Serial, will write comment with writeComment() instead
     void logToSerial(const String& logLine);

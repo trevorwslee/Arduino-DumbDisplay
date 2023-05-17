@@ -8,6 +8,7 @@ void DDDebugOnly(int32_t i);
 extern boolean _EncodeIntEnabled;
 char* _DDEncodeInt(int32_t i, char* buffer, int bufferLen);
 
+/// Class for internal use to encoding `int` parameters
 class DDIntEncoder {
   public:
     DDIntEncoder(int32_t i): str(_DDEncodeInt(i, buffer, 20)) {

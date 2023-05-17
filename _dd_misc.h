@@ -2,27 +2,24 @@
 #define _dd_misc_h
 
 
-//#define LITTLE_ENDIAN 0
-//#define BIG_ENDIAN    1
 
-// return
-// . 0 -- LITTLE_ENDIAN
-// . 1 -- BIG_ENDIAN
+/// check whether system is LITTLE_ENDIAN or BIG_ENDIAN
+/// @return 0 if LITTLE_ENDIAN; 1 if BIG_ENDIAN
 inline int DDCheckEndian() {
     int i = 1;
     const char* p = (const char*) &i;
     if (p[0] == 1)
-        return 0;//LITTLE_ENDIAN;
+        return 0;  // LITTLE_ENDIAN;
     else
-        return 1;//BIG_ENDIAN;
+        return 1;  // BIG_ENDIAN;
 }
 
 
-template <class T>
-class DDValueStore {
+/// Helper class for keeping value
+template <class T> class DDValueStore {
   public:
     DDValueStore(T value): storedValue(value) {}
-    /* return true only if some value different set */
+    /// @return true only if some value different set
     bool set(T value) {
       bool same = storedValue == value;
       storedValue = value;
@@ -34,20 +31,20 @@ class DDValueStore {
 };
 
 
-template <class T>
-class DDValueRecord {
+/// Helper class for keeping changed value, until recorded (i.e. record() is called) to make the value known
+template <class T> class DDValueRecord {
   public:
-    /* initial value and known value will be set to the same */
+    /// initial value and known value will be set to the same
     DDValueRecord(T value): value(value), knownValue(value) {}
-    /* can set initial known value to be different from value */
+    /// can set initial known value to be different from value
     DDValueRecord(T value, T knownValue): value(value), knownValue(knownValue) {}
     inline operator T() { return value; } 
     inline T get() { return value; }
     inline void operator =(T value) { this->value = value; }
     inline void set(T value) { this->value = value; }
     inline T getRecorded() { return knownValue; }
-    /* make value set previously known; i.e. set known value to be the same as value */
-    /* return whether known value as different from value */ 
+    /// make value set previously known; i.e. set known value to be the same as value
+    /// @return whether known value as different from value
     bool record() {
       bool same = value == knownValue;
       knownValue = value;
@@ -58,8 +55,8 @@ class DDValueRecord {
     T knownValue;
 };
 
-template <class T>
-class DDPendingValue {
+/// Helper class for keeping changed value until acknowledged (i.e. acknowledge() is called)
+template <class T> class DDPendingValue {
   public:
     DDPendingValue() {
       this->valueIsPending = false;
@@ -71,7 +68,8 @@ class DDPendingValue {
     inline T get() { return value; }
     inline void operator =(T value) { this->value = value; this->valueIsPending = true; }
     inline void set(T value) { this->value = value; this->valueIsPending = true; }
-    /* return whether there is pending value; if so, acknowledge and make the value not pending */
+    /// acknowledge pending changed value
+    /// @return whether there is pending value; if so, acknowledge and make the value not pending
     bool acknowledge() {
       if (valueIsPending) {
         valueIsPending = false;
@@ -86,9 +84,9 @@ class DDPendingValue {
 };
 
 
-/* *** DEPRECATED ... please use DDAutoPinConfig *** */
-template<int MAX_DEPTH> // MAX_DEPTH: depth of [nested] group
-class DDAutoPinConfigBuilder {
+/// ***Deprecated! Please use DDAutoPinConfig instead!***
+/// @deprecated
+template<int MAX_DEPTH> class DDAutoPinConfigBuilder {  // MAX_DEPTH: depth of [nested] group
   public:
     // dir: 'H' / 'V' / 'S'
     DDAutoPinConfigBuilder(char dir) {
@@ -157,9 +155,10 @@ class DDAutoPinConfigBuilder {
 };
 
 
+/// Class for "auto pin" config, to be passed to DumbDisplay::configAutoPin()
 class DDAutoPinConfig {
   public:
-    // dir: 'H' / 'V' / 'S'
+    /// @param dir directory of layers at the top level; can be 'H' for horizontal,  'V' for vertical and 'S' for stacked
     DDAutoPinConfig(char dir, int nestedDepth = 3) {
       
       config = String(dir) + "(";
@@ -171,47 +170,43 @@ class DDAutoPinConfig {
       delete started;
     }
   public:
-    // DDAutoPinConfig& test() {
-    //   return *this;
-    // }
-    // dir: 'H' / 'V' / 'S'
+    /// begin a layer group, creating a new level of nesting
+    /// @param dir directory of layers at the new level; can be 'H' for horizontal,  'V' for vertical and 'S' for stacked
     DDAutoPinConfig& beginGroup(char dir) {
       addConfig(String(dir) + "(");
       depth += 1;
       started[depth] = false;
       return *this;
     }  
-    // DDAutoPinConfigBuilder& beginPaddedGroup(int left, int top, int right, int bottom) {
-    //   addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
-    //   depth += 1;
-    //   started[depth] = false;
-    //   return *this;
-    // }  
+    /// end a begun group, returning to the previous level of nesting
     DDAutoPinConfig& endGroup() {
       config.concat(')');
       depth -= 1;
       return *this;
     }
+    /// add a layer to the current level
     DDAutoPinConfig& addLayer(DDLayer* layer) {
       if (layer != NULL) {
         addConfig(layer->getLayerId());
       }
       return *this;
     }
-    DDAutoPinConfig& beginPaddedGroup(int left, int top, int right, int bottom) {
-      addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
-      depth += 1;
-      started[depth] = false;
-      return *this;
-    }  
-    DDAutoPinConfig& endPaddedGroup() {
-      return endGroup();
-    }
-    // dir: 'H' / 'V' / 'S'
+    // DDAutoPinConfig& beginPaddedGroup(int left, int top, int right, int bottom) {
+    //   addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
+    //   depth += 1;
+    //   started[depth] = false;
+    //   return *this;
+    // }  
+    // DDAutoPinConfig& endPaddedGroup() {
+    //   return endGroup();
+    // }
+    /// add the layout direction for the layers not included
+    /// @param dir 'H' / 'V' / 'S
     DDAutoPinConfig& addRemainingGroup(char dir) {
       addConfig(String(dir) + "(*)");
       return *this;
     }
+    /// build the "auto pin" config string, to be passed to DumbDisplay::configAutoPin()
     const String& build() {
       if (config.length() == 2) {
         // just started
