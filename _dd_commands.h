@@ -121,8 +121,9 @@
 #define c_drawarc              "#aa"
 
 #define C_autorecenter         "#ab"
-#define C_movetocenter         "#ac"
-#define C_movetopos            "#ad" 
+#define C_colors               "#ac"
+#define C_movetocenter         "#ad"
+#define C_movetopos            "#ae" 
 
 
 #define C_fd               "fd"

@@ -641,7 +641,8 @@ class JoystickDDLayer: public DDLayer {
       _enableFeedback();
     }
     /// set auto recenter of not; if auto recenter, after user releases the joystick, it will move back to center
-    void setAutoRecenter(bool autoRecenter = true);
+    void autoRecenter(bool autoRecenter = true);
+    void colors(const String& stickColor, const String& stickOutlineColor, const String& socketColor, const String& socketOutlineColor);
     /// move joystick position (if joystick is single directional, will only move in the movable direction)
     /// @param x x to move to
     /// @param x y to move to
@@ -1059,8 +1060,9 @@ class DumbDisplay {
     /// create a joystick layer
     /// @param directions "lr": left-to-right; "tb": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
     ///                   use "+" combines the above like "lr+tb" to mearn both directions; "" the same as "lr+tb" 
-    /// @param maxStickScale 
-    JoystickDDLayer* createJoystickLayer(const String& directions = "", int maxStickScale = 255);
+    /// @param maxStickValue the max value of the stick; 255 by default
+    /// @param stickLookScaleFactor the scaling factor of the stick (UI); 1 by default 
+    JoystickDDLayer* createJoystickLayer(const String& directions = "", int maxStickValue = 255, float stickLookScaleFactor = 1.9);
     /// create a plotter layer
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     /// create a fixed-rate plotter layer

@@ -1980,8 +1980,11 @@ void SevenSegmentRowDDLayer::showFormatted(const String& formatted, bool complet
   _sendCommand3(layerId, C_showformatted, formatted, TO_BOOL(completeReplace), String(startIdx));
 }
 
-void JoystickDDLayer::setAutoRecenter(bool autoRecenter) {
+void JoystickDDLayer::autoRecenter(bool autoRecenter) {
   _sendCommand1(layerId, C_autorecenter, TO_BOOL(autoRecenter));
+}
+void JoystickDDLayer::colors(const String& stickColor, const String& stickOutlineColor, const String& socketColor, const String& socketOutlineColor) {
+  _sendCommand4(layerId, C_colors, stickColor, stickOutlineColor, socketColor, socketOutlineColor);
 }
 void JoystickDDLayer::moveToPos(int x, int y, bool sendFeedback) {
   _sendCommand3(layerId, C_movetopos, TO_C_INT(x), TO_C_INT(y), TO_BOOL(sendFeedback));
@@ -2568,10 +2571,10 @@ SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   _PostCreateLayer(pLayer);
   return pLayer;
 }
-JoystickDDLayer* DumbDisplay::createJoystickLayer(const String& directions, int maxStickScale) {
+JoystickDDLayer* DumbDisplay::createJoystickLayer(const String& directions, int maxStickValue, float stickLookScaleFactor) {
   int lid = _AllocLid();
   String layerId = String(lid);
-  _sendCommand3(layerId, "SU", String("joystick"), directions, String(maxStickScale));
+  _sendCommand4(layerId, "SU", String("joystick"), directions, String(maxStickValue),  TO_NUM(stickLookScaleFactor));
   JoystickDDLayer* pLayer = new JoystickDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;

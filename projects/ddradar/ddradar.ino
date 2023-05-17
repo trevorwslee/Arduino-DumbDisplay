@@ -217,8 +217,10 @@ void setup() {
   noDirectionalLayer->enableFeedback("f");
 
 #ifdef SERVO    
-  angleSliderLayer = dumbdisplay.createJoystickLayer("rl", MaxAngle);
+  angleSliderLayer = dumbdisplay.createJoystickLayer("rl", MaxAngle, 0.5);
   angleSliderLayer->border(3, "black");
+  angleSliderLayer->colors("green", "darkgreen", "blue", "darkblue");
+  angleSliderLayer->backgroundColor("cyan");
 #endif
 
   ultraSonicLayer = dumbdisplay.createLcdLayer(15, 1);
