@@ -155,7 +155,7 @@ template<int MAX_DEPTH> class DDAutoPinConfigBuilder {  // MAX_DEPTH: depth of [
 };
 
 
-/// Class for "auto pin" config, to be passed to DumbDisplay::configAutoPin()
+/// Class for "auto pin" config. To be passed to DumbDisplay::configAutoPin().
 class DDAutoPinConfig {
   public:
     /// @param dir directory of layers at the top level; can be 'H' for horizontal,  'V' for vertical and 'S' for stacked

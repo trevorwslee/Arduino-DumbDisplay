@@ -29,8 +29,8 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   * [Save Pictures to Phone Captured with ESP32 Cam](#save-pictures-to-phone-captured-with-esp32-cam)
   * [Caching Single-bit Bitmap to Phone](#caching-single-bit-bitmap-to-phone)
   * [Caching 16-bit Colored Bitmap to Phone](#caching-16-bit-colored-bitmap-to-phone)
-  * [Save Images](#save-images)
   * [Audio Supports](#audio-supports)
+  * [Saving Images for DumbDisplay](#saving-images-for-dumbdisplay)
 * [Reference](#reference)
 * [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
 * [Thank You!](#thank-you)
@@ -43,7 +43,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 Instead of connecting real gadgets to your Arduino IDE compatible microcontroller board for showing experiment results (or for getting simple input like clicking), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets remotely on your Android phone.
 
-By doing so you can defer buying / connecting real gadgets until later stage of your experiment. Even, you may be able to save a few microcontroller pins for other experiment needs, if you so decided that your Android phone can be your display gadget (and more) with DumbDisplay app.
+By doing so you can defer buying / wiring real gadgets until later stage of your experiment. Even, you may be able to save a few microcontroller pins for other experiment needs, if you so decided that Android phone can be your display gadget (and more) with DumbDisplay app.
 
 A few types of layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
@@ -52,6 +52,7 @@ A few types of layers can be created:
 * Turtle-like canvas
 * Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
+* Virtual Joystick, which can be used for getting virtual joystick movements
 * Plotter, which works similar to the plotter of DumbDisplay, but plotting data provided by sending commands
 * Terminal "device dependent view" layer, for logging sketch traces
 * TomTom map "device dependent view" layer, for showing location (latitude/longitude)
@@ -113,7 +114,7 @@ Notes:
  
 # Sample Code
 
-You have several options for connecting to DumbDisplay Android app.
+The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object, which require a object for communication with your Android DumbDisplay app:
 
 * Via Serial -- via OTG; reference: [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
   ```
@@ -124,7 +125,7 @@ You have several options for connecting to DumbDisplay Android app.
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - you should not be using Serial for other purposes
   - the default baud rate is 115200;  a lower baud rate, say 9600, may work better for some cases
-* Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- connected to Bluetooth module like HC-06
+* Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- connected to Bluetooth module like HC-06. For an example, you may want to refer to my post [Setup HC-05 and HC-06, for Wireless 'Number Invaders'](https://www.instructables.com/Setup-HC-05-and-HC-06-for-Wireless-Number-Invaders/)
   ```
     #include "ssdumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
@@ -231,6 +232,8 @@ Notes:
 
 ## More Samples
 
+Here, several examples are presented demonstrating the basis of DumbDisplay. More examples will be shown as when DumbDisplay features are described in later sections.
+
 
 | 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. "Layer feedback" | 7. "Tunnel" for getting Quotes |
 |--|--|--|--|--|--|--|
@@ -239,7 +242,7 @@ Notes:
 
 ### Screenshot 1 -- *Micro:bit*
 
-A more interesting sample would be like
+A more interesting sample would be like the one shown here, which shows how to use the [MbDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_mb_d_d_layer.html) to simulate a Micro:bit.
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddmb/ddmb.ino
 
@@ -279,7 +282,7 @@ void loop() {
 
 ### Screenshot 2 -- *LEDs + "Bar Meter" + LCD*
 
-An even more interesting sample would be like
+An even more interesting sample would be like the example shown here, which demonstrates how the [LedGridDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_led_grid_d_d_layer.html) works.
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddbarmeter/ddbarmeter.ino
 
@@ -419,7 +422,7 @@ void loop() {
 
 ### Screenshot 4 -- *Manual "pin" layers (LEDs + Turtle)*
 
-To showcase Turtle, as well as the more controller way of "pinning" layers
+To showcase Turtle layer [TurtleDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_turtle_d_d_layer.html), as well as the more controller way of "pinning" layers
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddpinturtle/ddpinturtle.ino
 
@@ -501,7 +504,7 @@ void loop() {
 
 ### Screenshot 5 -- *Graphical [LCD]*
 
-There is a graphical [LCD] layer which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features)
+There is a graphical [LCD] layer [GraphicalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) which is "derivded" from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features)
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddgraphical/ddgraphical.ino
 
@@ -1387,8 +1390,16 @@ The cached 16-bit pixel image is displayed to graphical layer as needed, like
 |In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by my post [Adaptation of "Space Wars" Game with DumbDisplay](https://www.instructables.com/Adaptation-of-Space-Wars-Game-With-DumbDisplay/).|![](screenshots/ddspacewars.gif)|
 
 
+## Audio Supports 
 
-## Save Images
+| | |
+|--|--|
+|![](screenshots/esp32-mic.png)|DumbDisplay have certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports. Additionally, you may also be interested in a more extensive application -- [Demo of ESP-Now Voice Commander Fun With Wit.ai and DumbDisplay](https://www.youtube.com/watch?v=dhlLU7gmmbE)|
+
+
+
+
+## Saving Images for DumbDisplay
 
 Even better, you may want to saved the images to DumbDisplay app image storage, for the use of your sketch. As hinted by the post, the steps can be like
 | | |
@@ -1399,13 +1410,6 @@ Notes:
 * not only from Chrome, you can share and save images from any app that can share images that it sees
 * images saved to DumbDisplay app's image storage will always be PNG; hence when asked for image name, you don't need the ".png" extension
 * you can use a file manager to navigate to the image storage; hints: the path is something like `/<main-storage>/Android/data/nobody.trevorlee.dumbdisplay/files/Pictures/DumbDisplay/`
-
-
-## Audio Supports 
-
-| | |
-|--|--|
-|![](screenshots/esp32-mic.png)|DumbDisplay have certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports. Additionally, you may also be interested in a more extensive application -- [Demo of ESP-Now Voice Commander Fun With Wit.ai and DumbDisplay](https://www.youtube.com/watch?v=dhlLU7gmmbE)|
 
 
 

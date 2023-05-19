@@ -640,8 +640,10 @@ class JoystickDDLayer: public DDLayer {
     JoystickDDLayer(int8_t layerId): DDLayer(layerId) {
       _enableFeedback();
     }
-    /// set auto recenter of not; if auto recenter, after user releases the joystick, it will move back to center
+    /// set joystick auto-recenter on / off; if auto recenter, after user releases the joystick, the joystick will move back to the center position automatically
+    /// note that it will not affect the current position; use moveToCenter() to move to the center
     void autoRecenter(bool autoRecenter = true);
+    /// set the colors of the stick UI
     void colors(const String& stickColor, const String& stickOutlineColor, const String& socketColor, const String& socketOutlineColor);
     /// move joystick position (if joystick is single directional, will only move in the movable direction)
     /// @param x x to move to
@@ -868,7 +870,7 @@ class DDBufferedTunnel: public DDTunnel {
     int8_t validArrayIdx;
     //bool done;
   public:
-    /// count buffer ready to be read
+    /// count buffer ready  read
     inline int count() { return _count(); }
     /// reached EOF?
     inline bool eof() { return _eof(); }
@@ -1053,49 +1055,64 @@ class DumbDisplay {
     /// create a LCD layer
     LcdDDLayer* createLcdLayer(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
     /// create a graphical LCD layer
+    /// @see GraphicalDDLayer
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
     /// create a 7-segment layer 
     /// @param digitCount show how many digits; 1 by default
+    /// @see SevenSegmentRowDDLayer
     SevenSegmentRowDDLayer* create7SegmentRowLayer(int digitCount = 1);
-    /// create a joystick layer
+    /// create a joystick layer:
+    /// - will send joystick positions as "feedback", and hence "feedback" is automatically enabled;
+    /// - initial position is (0, 0)
     /// @param directions "lr": left-to-right; "tb": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
     ///                   use "+" combines the above like "lr+tb" to mearn both directions; "" the same as "lr+tb" 
     /// @param maxStickValue the max value of the stick; 255 by default
     /// @param stickLookScaleFactor the scaling factor of the stick (UI); 1 by default 
+    /// @see JoystickDDLayer
     JoystickDDLayer* createJoystickLayer(const String& directions = "", int maxStickValue = 255, float stickLookScaleFactor = 1.9);
     /// create a plotter layer
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     /// create a fixed-rate plotter layer
     /// i.e. it will assume fixe-rate of PlotterDDLayer::set()
+    /// @see PlotterDDLayer
     PlotterDDLayer* createFixedRatePlotterLayer(int width, int height, int pixelsPerScale = 5);
     /// create a TomTom map layer
     /// @param mapKey should be provided; plesae visit TomTom's website to get one of your own
     ///               if pass in "" as mapKey, will use my testing one
+    /// @see
     TomTomMapDDLayer* createTomTomMapLayer(const String& mapKey, int width, int height);
     /// create a terminal layer
+    /// @see TerminalDDLayer
     TerminalDDLayer* createTerminalLayer(int width, int height);
     /// create a "tunnel" for accessing the Web
     /// @note if not connect now, need to connect via reconnect()
+    /// @see BasicDDTunnel
     BasicDDTunnel* createBasicTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
     /// create a JSON 'tunnel' for thing like making RESTful calls
     /// @note if not connect now, need to connect via reconnect()
+    /// @see BasicDDTunnel
     JsonDDTunnel* createJsonTunnel(const String& endPoint, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
     /// create a JSON 'tunnel' for thing like making RESTful calls; with result filtered
     /// @note if not connect now, need to connect via reconnect()
     /// @param fieldNames comma-delimited list of field names to accept; note that matching is "case-insensitive containment match" 
+    /// @see JsonDDTunnel
     JsonDDTunnel* createFilteredJsonTunnel(const String& endPoint, const String& fileNames, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
     /// create a "tunnel" to download image from the web, and save the downloaded image to phone;
     /// you will get result in JSON format: ```{"result":"ok"}``` or ```{"result":"failed"}```
     /// for simplicity, use SimpleToolDDTunnel.checkResult() to check the result
+    /// @see SimpleToolDDTunnel
     SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload = true);
     /// create a "service tunnel" for getting date-time info from phone;
     /// use reconnectTo() with commands like
     /// - now
     /// - now-millis
+    /// @see BasicDDTunnel
     BasicDDTunnel* createDateTimeServiceTunnel();
     /// create a "service tunnel" for getting GPS info from phone
+    /// @see GpsServiceDDTunnel
     GpsServiceDDTunnel* createGpsServiceTunnel();
     /// create a "service tunnel" for getting object detection info from phone; model used is the demo model `mobilenetv1.tflite`
+    /// @see ObjectDetetDemoServiceDDTunnel
     ObjectDetetDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0);
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
