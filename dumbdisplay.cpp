@@ -76,6 +76,9 @@
 #include "_dd_commands.h"
 
 
+bool _DDDisableParamEncoding = false;
+
+
 #ifdef SUPPORT_USE_WOIO
 class DDWriteOnyIO: public DDInputOutput {
   public:

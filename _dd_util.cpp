@@ -2,10 +2,10 @@
 #include "Arduino.h"
 
 
-boolean _EncodeIntEnabled = true;
+extern boolean _DDDisableParamEncoding;
 
 char* _DDEncodeInt(int32_t i, char* buffer, int bufferLen) {
-  if (!_EncodeIntEnabled) {
+  if (_DDDisableParamEncoding) {
     return itoa(i, buffer, 10);
   }
   bool isNeg;

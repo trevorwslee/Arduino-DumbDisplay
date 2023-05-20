@@ -2,9 +2,9 @@
 
 ============================
 
-if want to disable int parameter encoding, define DD_DISABLE_ENCODE_INT before includeing dumbdisplay.h, like
+if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODEING before includeing dumbdisplay.h, like
 
-#define DD_DISABLE_ENCODE_INT
+#define DD_DISABLE_PARAM_ENCODEING
 
 =============================
 
@@ -46,7 +46,7 @@ if want to disable int parameter encoding, define DD_DISABLE_ENCODE_INT before i
   #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
     #define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
   #else
-    #if defined(DD_DISABLE_ENCODE_INT)
+    #if defined(DD_DISABLE_PARAM_ENCODEING)
       #define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b)), 16))
     #else  
       #define DD_RGB_COLOR(r, g, b) ("+" + DDIntEncoder(0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b))).encoded())
@@ -91,6 +91,7 @@ if want to disable int parameter encoding, define DD_DISABLE_ENCODE_INT before i
 #include "_dd_serial.h"
 #include "_dd_io.h"
 #include "_dd_feedback.h"
+#include "_dd_colors.h"
 
 
 class DDLayer;
@@ -999,12 +1000,16 @@ typedef void (*DDIdleCallback)(long idleForMillis);
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 
+#ifdef DD_DISABLE_PARAM_ENCODEING
+  extern boolean _DDDisableParamEncoding;
+#endif
+
 /// Class for DumbDisplay. Everything starts here.
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE/*, bool enableDoubleClick = true*/) {
-#ifdef DD_DISABLE_ENCODE_INT
-    _EncodeIntEnabled = false;
+#ifdef DD_DISABLE_PARAM_ENCODEING
+    _DDDisableParamEncoding = true;
 #endif      
 #ifndef DD_NO_SERIAL      
       if (pIO->isSerial() || pIO->isBackupBySerial()) {
@@ -1066,10 +1071,10 @@ class DumbDisplay {
     /// - initial position is (0, 0)
     /// @param directions "lr": left-to-right; "tb": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
     ///                   use "+" combines the above like "lr+tb" to mearn both directions; "" the same as "lr+tb" 
-    /// @param maxStickValue the max value of the stick; 255 by default
+    /// @param maxStickValue the max value of the stick; 255 by default; min is 15
     /// @param stickLookScaleFactor the scaling factor of the stick (UI); 1 by default 
     /// @see JoystickDDLayer
-    JoystickDDLayer* createJoystickLayer(const String& directions = "", int maxStickValue = 255, float stickLookScaleFactor = 1.9);
+    JoystickDDLayer* createJoystickLayer(const String& directions = "", int maxStickValue = 255, float stickLookScaleFactor = 1.0);
     /// create a plotter layer
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     /// create a fixed-rate plotter layer
