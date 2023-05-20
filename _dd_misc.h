@@ -3,6 +3,12 @@
 
 
 
+/// the same usage as standard delay(), but it gives DD a chance to handle "feedbacks"
+void DDDelay(unsigned long ms);
+/// give DD a chance to handle "feedbacks"
+void DDYield();
+
+
 /// check whether system is LITTLE_ENDIAN or BIG_ENDIAN
 /// @return 0 if LITTLE_ENDIAN; 1 if BIG_ENDIAN
 inline int DDCheckEndian() {
@@ -156,6 +162,7 @@ template<int MAX_DEPTH> class DDAutoPinConfigBuilder {  // MAX_DEPTH: depth of [
 
 
 /// Class for building "auto pin" config. To be passed to DumbDisplay::configAutoPin().
+/// @since v0.9.7-r2
 class DDAutoPinConfig {
   public:
     /// @param dir directory of layers at the top level; can be 'H' for horizontal,  'V' for vertical and 'S' for stacked
@@ -249,9 +256,10 @@ class DDAutoPinConfig {
 
 
 
+/// Helper class for tracking connection "version" change, say, when reconnected afte disconnect
 class DDConnectVersionTracker {
   public:
-    /* . version: pass in -1 so that it will be considered a version change even when fresh start */
+    /// @param version version number to start with; -1 so that it will be considered a version change even when fresh start
     DDConnectVersionTracker(int version = 0) {
       this->version = version;
     }
@@ -265,84 +273,61 @@ class DDConnectVersionTracker {
 };
 
 
-/* the same usage as standard delay(), but it allows DD chances to handle feedback */
-void DDDelay(unsigned long ms);
-/* give DD a chance to handle feedback */
-void DDYield();
 
-
+/// Helper class for managing layer layout plus update of the layers.
+/// @since v0.9.7-r2
 class DDLayoutHelper {
   public: 
     DDLayoutHelper(DumbDisplay& dumbdisplay): dumbdisplay(dumbdisplay), versionTracker(-1) {}
-    //   this->layoutDoneBefore = false;
-    // }
-    // ~DDLayoutHelper() {
-    //   if (this->autoPinConfig != NULL) {
-    //     delete this->autoPinConfig;
-    //   }
-    // }
   public:
-    // /* check whether layout done before; if not, please call startInitializeLayout() to begin layout */
-    // bool checkNeedToInitializeLayout() {
-    //   DDYield();
-    //   return !layoutDoneBefore;
-    // }  
-    /* check whether layers need be updated, say, 1) just initialzed; or 2) DD reconnected */
+    /// check whether layers need be updated, say
+    /// - just initialzed
+    /// - DD reconnected
     bool checkNeedToUpdateLayers(/*DumbDisplay& dumbdisplay*/) {
       DDYield();
       return versionTracker.checkChanged(dumbdisplay);
     }
-    /* essentially dumbdisplay.recordLayerSetupCommands() */
-    /* MUST call finishInitializeLayout() when done */
+    /// essentially DumbDisplay::recordLayerSetupCommands()
+    /// *MUST* call finishInitializeLayout() layout when done
     inline void startInitializeLayout(/*DumbDisplay& dumbdisplay*/) {
-      //this->layoutDoneBefore = true;
       dumbdisplay.recordLayerSetupCommands();
     }
-    /* layerSetupPersistId is use for calling dumbdisplay.playbackLayerSetupCommands() */
+    /// after calling startInitializeLayout(), call this to finish the layout of layers
+    /// @param layerSetupPersistId is use for calling DumbDisplay.playbackLayerSetupCommands()
     inline void finishInitializeLayout(/*DumbDisplay& dumbdisplay, */String layerSetupPersistId) {
       dumbdisplay.playbackLayerSetupCommands(layerSetupPersistId);
     }
-    // // dir: 'H' / 'V' / 'S'
-    // DDAutoPinConfig& newAutoPinConfig(char dir, int nestedDepth = 3) {
-    //   if (autoPinConfig == NULL) {
-    //     autoPinConfig = new DDAutoPinConfig(dir, nestedDepth); 
-    //   }
-    //   return *autoPinConfig;
-    // }
-    // void configAutoPin(/*DumbDisplay dumbdisplay*/) {
-    //   if (autoPinConfig != NULL) {
-    //     dumbdisplay.configAutoPin(autoPinConfig->build());
-    //     delete autoPinConfig;
-    //     autoPinConfig = NULL;
-    //   }
-    // }
+    /// basically DumbDisplay::configAutoPin()
     inline void configAutoPin(const String& layoutSpec) {
       dumbdisplay.configAutoPin(layoutSpec);
     }
+    /// basically DumbDisplay::addRemainingAutoPinConfig()
     inline void addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
       dumbdisplay.addRemainingAutoPinConfig(remainingLayoutSpec);
     }
+    /// basically DumbDisplay::configPinFrame()
     inline void configPinFrame(int xUnitCount = 100, int yUnitCount = 100) {
       dumbdisplay.configPinFrame(xUnitCount, yUnitCount);
     }
+    /// basically DumbDisplay::configPinFrame()
     inline void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
       dumbdisplay.pinLayer(pLayer, uLeft, uTop, uWidth, uHeight, align);
     }
+    /// basically DumbDisplay::configPinFrame()
     inline void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
       dumbdisplay.pinAutoPinLayers(layoutSpec, uLeft, uTop, uWidth, uHeight, align);
     }
+    /// basically DumbDisplay::configPinFrame()
     inline void setIdleCallback(DDIdleCallback idleCallback) {
       dumbdisplay.setIdleCallback(idleCallback);
     }
-    // deprecated
-    inline void setIdleCalback(DDIdleCallback idleCallback) {
-      dumbdisplay.setIdleCalback(idleCallback);
-    }
+    // // deprecated
+    // inline void setIdleCalback(DDIdleCallback idleCallback) {
+    //   dumbdisplay.setIdleCalback(idleCallback);
+    // }
   private:
-    //bool layoutDoneBefore;
     DumbDisplay& dumbdisplay;
     DDConnectVersionTracker versionTracker;
-    //DDAutoPinConfig* autoPinConfig;
 };
 
 

@@ -635,6 +635,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
 
 
 /// Class for virtual joystick layer; created with DumbDisplay::createJoystickLayer()
+/// @since v0.9.7-r2
 class JoystickDDLayer: public DDLayer {
   public:
     /// for internal use only  
