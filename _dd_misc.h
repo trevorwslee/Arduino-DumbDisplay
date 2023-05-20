@@ -184,6 +184,25 @@ class DDAutoPinConfig {
       depth -= 1;
       return *this;
     }
+    /// begin a layer group, with specified padding
+    /// @param dir directory of layers at the new level; can be 'H' for horizontal,  'V' for vertical and 'S' for stacked
+    /// @param left left padding
+    /// @param top top padding  
+    /// @param right right padding
+    /// @param bottom bottom padding
+    DDAutoPinConfig& beginPaddedGroup(char dir, int left, int top, int right, int bottom) {
+      addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
+      depth += 1;
+      started[depth] = false;
+      return beginGroup(dir);
+    }  
+    /// end begun padded group
+    DDAutoPinConfig& endPaddedGroup() {
+      endGroup();
+      config.concat(')');
+      depth -= 1;
+      return *this;
+    }
     /// add a layer to the current level
     DDAutoPinConfig& addLayer(DDLayer* layer) {
       if (layer != NULL) {
@@ -191,15 +210,13 @@ class DDAutoPinConfig {
       }
       return *this;
     }
-    // DDAutoPinConfig& beginPaddedGroup(int left, int top, int right, int bottom) {
-    //   addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
-    //   depth += 1;
-    //   started[depth] = false;
-    //   return *this;
-    // }  
-    // DDAutoPinConfig& endPaddedGroup() {
-    //   return endGroup();
-    // }
+    /// add spacer, which is a placeholder layer with the specified size
+    /// @param width width of the placeholder layer
+    /// @param height height of the placeholder layer
+    DDAutoPinConfig& addSpacer(int width, int height) {
+      addConfig(String("<") + String(width) + "x" + String(height) + String(">"));
+      return *this;
+    }
     /// add the layout direction for the layers not included
     /// @param dir 'H' / 'V' / 'S
     DDAutoPinConfig& addRemainingGroup(char dir) {

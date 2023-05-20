@@ -1106,6 +1106,77 @@ To get a feel, you may want to refer to the video [**Raspberry Pi Pico playing s
 |--|--|
 |![](screenshots/pico-speaker_connection.png)|![](screenshots/ddmelody.jpg)|
 
+In fact, there is a builder for such "auto pin" config -- [DDAutoPinConfig](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_auto_pin_config.html)
+
+Using it shoud be appearent. Hopefully, some example should be sifficient.
+
+Example 1:
+```
+  dumbdisplay->configAutoPin(DDAutoPinConfig('V').
+                              beginGroup('H').
+                                  addSpacer(1, 1).
+                                  addLayer(pLedGridLayer).
+                                  addSpacer(2, 1).
+                                  addLayer(pLcdLayer).
+                                  addSpacer(1, 1).
+                              endGroup().
+                              addLayer(pTurtleLayer).
+                              build());
+```
+is equivalent to
+```
+  dumbdisplay->configAutoPin(DD_AP_VERT_2(
+                              DD_AP_HORI_5(
+                                  DD_AP_SPACER(1, 1),
+                                  pLedGridLayer->getLayerId(),
+                                  DD_AP_SPACER(2, 1),
+                                  pLcdLayer->getLayerId(),
+                                  DD_AP_SPACER(1, 1)),
+                              pTurtleLayer->getLayerId()));
+```
+
+Example 2:
+```
+    dumbdisplay.configAutoPin(
+      DDAutoPinConfig('V').
+        beginGroup('H').
+          addLayer(plotterLayer).
+          beginGroup('V').
+            addLayer(rLayer).addLayer(gLayer).addLayer(bLayer). 
+          endGroup().
+        endGroup().
+        beginGroup('S').
+          addLayer(colorLayer).
+          beginPaddedGroup('H', 50, 200, 50, 200).
+            addLayer(r7Layer).addLayer(g7Layer).addLayer(b7Layer).
+          endPaddedGroup().
+        endGroup().
+        beginGroup('H').
+          addLayer(whiteLayer).addLayer(blackLayer).
+        endGroup().
+        build()
+    );
+```
+is equalivent to
+```
+    dumbdisplay.configAutoPin(
+      DD_AP_VERT_3(
+        DD_AP_HORI_2(
+          plotterLayer->getLayerId(),
+          DD_AP_VERT_3(rLayer->getLayerId(), gLayer->getLayerId(), bLayer->getLayerId())
+        ),
+        DD_AP_STACK_2(
+          colorLayer->getLayerId(),
+          DD_AP_PADDING(50, 200, 50, 200,
+            DD_AP_HORI_3(r7Layer->getLayerId(), g7Layer->getLayerId(), b7Layer->getLayerId()))
+        ),
+        DD_AP_HORI_2(whiteLayer->getLayerId(), blackLayer->getLayerId())
+      )  
+    );
+```
+
+You can choose which one is more convenient for you!
+
 
 ## Record and Playback Commands
 
