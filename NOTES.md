@@ -1,6 +1,6 @@
 Notes:
 
-* If want to disable `int` parameter encoding, define `DD_DISABLE_PARAM_ENCODEING` before including `dumbdisplay.h`, like
+* If want to disable parameter encoding, define `DD_DISABLE_PARAM_ENCODEING` before including `dumbdisplay.h`, like
 
   ```
   #define DD_DISABLE_PARAM_ENCODEING
