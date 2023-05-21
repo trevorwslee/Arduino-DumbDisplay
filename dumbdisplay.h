@@ -679,7 +679,8 @@ class PlotterDDLayer: public DDLayer {
     void set(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3, const String& key4, float value4);  
 };
 
-/// Class for TomTom map "device dependent view" layer, which means that it is solely rendered by the Android view that it hosts 
+
+/// Class for TomTom map "device dependent view" layer, which means that it is solely rendered by the Android view that it hosts; 
 /// created with DumbDisplay::createTomTomMapLayer()
 class TomTomMapDDLayer: public DDLayer {
   public:
@@ -1085,7 +1086,7 @@ class DumbDisplay {
     /// create a TomTom map layer
     /// @param mapKey should be provided; plesae visit TomTom's website to get one of your own
     ///               if pass in "" as mapKey, will use my testing one
-    /// @see
+    /// @see TomTomMapDDLayer
     TomTomMapDDLayer* createTomTomMapLayer(const String& mapKey, int width, int height);
     /// create a terminal layer
     /// @see TerminalDDLayer

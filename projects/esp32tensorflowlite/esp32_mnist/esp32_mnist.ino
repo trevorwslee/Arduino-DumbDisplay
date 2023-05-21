@@ -53,7 +53,7 @@ GraphicalDDLayer* drawLayer;
 GraphicalDDLayer* copyLayer;
 LcdDDLayer* clearBtn;
 LcdDDLayer* centerBtn;
-LcdDDLayer* influenceBtn;
+LcdDDLayer* inferenceBtn;
 SevenSegmentRowDDLayer* resultLayer;
 
 
@@ -172,11 +172,11 @@ void setup() {
   centerBtn->writeCenteredLine("center");
   centerBtn->enableFeedback("fl");
 
-  influenceBtn = dumbdisplay.createLcdLayer(3, 3);
-  influenceBtn->pixelColor("darkblue");
-  influenceBtn->writeCenteredLine(">>>", 1);
-  influenceBtn->border(2, "gray", "raised");
-  influenceBtn->enableFeedback("f");
+  inferenceBtn = dumbdisplay.createLcdLayer(3, 3);
+  inferenceBtn->pixelColor("darkblue");
+  inferenceBtn->writeCenteredLine(">>>", 1);
+  inferenceBtn->border(2, "gray", "raised");
+  inferenceBtn->enableFeedback("f");
 
   resultLayer = dumbdisplay.create7SegmentRowLayer();
   resultLayer->border(10, "blue", "round", 5);
@@ -191,7 +191,7 @@ void setup() {
       .addLayer(drawLayer)
       .beginGroup('H')
         .addLayer(copyLayer)
-        .addLayer(influenceBtn)
+        .addLayer(inferenceBtn)
         .addLayer(resultLayer)  
       .endGroup()
       .build()
@@ -295,8 +295,8 @@ void loop() {
     }
   }
 
-  bool doInfluence = influenceBtn->getFeedback() != NULL;
-  if (doInfluence) {
+  bool doInference = inferenceBtn->getFeedback() != NULL;
+  if (doInference) {
     drawLayer->disabled(true);
     if (autoCenter) {
       int minX = 27;

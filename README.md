@@ -1525,6 +1525,7 @@ Greeting from the author Trevor Lee:
 
 > Be good! Be happy!
 > Peace be with you!
+> May God bless you!
 > Jesus loves you!
 
 
