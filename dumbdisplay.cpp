@@ -776,7 +776,7 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
     _WOIO->print(".");
   }
 #ifdef SUPPORT_ENCODE_OPER
-  if (_DDCompatibility >= 3 && layerId != "" && command[0] == '#') {
+  if (_DDCompatibility >= 3 && !_DDDisableParamEncoding && layerId != "" && command[0] == '#') {
     char encoded[3];
     encoded[0] = 14 + ((command[1] > '9') ? ((command[1] - 'a') + 10) : (command[1] - '0'));
     encoded[1] = 14 + ((command[2] > '9') ? ((command[2] - 'a') + 10) : (command[2] - '0'));

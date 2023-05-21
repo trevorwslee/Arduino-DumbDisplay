@@ -78,7 +78,7 @@ class DDBridge:
             self.line_list.insert(0, line)
         self.lock.release()
     def _sendLine(self, line, transDir):
-        raise Exception("should have been overridden")
+        raise Exception("DDWifiBridge: should have been overridden")
 
 class SimpleDDBridge(DDBridge):
     def __init__(self, ser, target):
@@ -141,7 +141,7 @@ class Tunnel:
             if protocol == 'http':
                 port = 80
             else:
-                raise Exception("no port specification for connection to " + end_point)
+                raise Exception("DDWifiBridge: no port specification for connection to " + end_point)
         self.bridge = SimpleDDBridge(ser, self)
         self.tunnel_id = tunnel_id
         self.protocol = protocol
@@ -159,7 +159,7 @@ class Tunnel:
         try:
             self._serveOnce()
         except BaseException as err:
-            print(f"failed to 'serve' end-point {self.host}:{self.port} ... {err}")
+            print(f"DDWifiBridge: failed to 'serve' end-point {self.host}:{self.port} ... {err}")
             self._close("OS error: {0}".format(err))
     def forward(self, line):
         sent = False
@@ -195,7 +195,7 @@ class Tunnel:
             try:
                 self.sock.connect((self.host, self.port))
             except BaseException as err:
-                print(f"failed to connect end-point {self.host}:{self.port} ... {err}")
+                print(f"DDWifiBridge: failed to connect end-point {self.host}:{self.port} ... {err}")
                 self._close("OS error: {0}".format(err))
                 return
             receiving_headers = False
@@ -240,7 +240,7 @@ class Tunnel:
                                 if line.startswith("HTTP/1.1 "):
                                     idx = line.find("200")
                                     if idx == -1:
-                                        raise Exception("HTTP error")
+                                        raise Exception("DDWifiBridge: HTTP error")
                 else:
                     rest = rest + d
             if received_any:
@@ -290,6 +290,7 @@ class SerialSource:
         self.error = None
         self.bridge: DDBridge = bridge
         self.tunnels = {}
+        #self.lt_buf = None
     def timeSlice(self, bridge):
         bridge.transportLine()
         if len(self.tunnels) > 0:
@@ -350,7 +351,7 @@ class SerialSource:
                         except:
                             ser_line = None
                         if ser_line == None:
-                            print('xxx failed to decode input')
+                            print('DDWifiBridge: xxx failed to decode input')
                             ser_bytes = bytes()
                             continue
                     try:
@@ -365,14 +366,25 @@ class SerialSource:
                                 buffered_bytes = [b]
                             continue
                     except:
-                        print('xxx failed to check bytes')
+                        print('DDWifiBridge: xxx failed to check bytes')
                         ser_bytes = bytes()
                         continue
                     insert_it = True
-                    if ser_line.startswith("%%>lt"):
+                    # if False:
+                    #     if ser_line.startswith("%%>ltbuf"):
+                    #         self.lt_buf = ser_line[9:]
+                    #         ser_bytes = bytes()
+                    #         sending_byte_count = None
+                    #         continue
+                    #     if self.lt_buf != None:
+                    #         ser_line = ser_line + self.lt_buf
+                    #     self.lt_buf = None        
+                    if False: # ser_line.startswith("%%>lt"):
                         insert_it = False
                         lt_line = ser_line[6:]
                         idx = lt_line.find('>')
+                        tid = None
+                        lt_command = None
                         if idx != -1:
                             lt_data = lt_line[idx + 1:]
                             lt_line = lt_line[0:idx]
@@ -446,6 +458,8 @@ class SerialSource:
                                 if _LOG_TUNNEL_IO:
                                     print(tid + ".))))) :" + lt_data)
                                 tunnel.insertSourceLine(lt_data)
+                    else:
+                        insert_it = True
                     if insert_it:
                         self.bridge.insertSourceLine(ser_line)
                     ser_bytes = bytes()

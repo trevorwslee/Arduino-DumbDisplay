@@ -1002,16 +1002,16 @@ typedef void (*DDIdleCallback)(long idleForMillis);
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 
-#ifdef DD_DISABLE_PARAM_ENCODEING
-  extern boolean _DDDisableParamEncoding;
-#endif
+extern boolean _DDDisableParamEncoding;
+inline void DDDebugDisableParamEncoding() { _DDDisableParamEncoding = true; }
+
 
 /// Class for DumbDisplay. Everything starts here.
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE/*, bool enableDoubleClick = true*/) {
 #ifdef DD_DISABLE_PARAM_ENCODEING
-    _DDDisableParamEncoding = true;
+    DDDebugDisableParamEncoding();
 #endif      
 #ifndef DD_NO_SERIAL      
       if (pIO->isSerial() || pIO->isBackupBySerial()) {
