@@ -6,7 +6,7 @@
 
 
 // if want Bluetooth, uncomment the following line
-// #define BLUETOOTH "ESP32BT"
+// #define BLUETOOTH "ESP32CamBT"
 #if defined(BLUETOOTH)
   #include "esp32dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
@@ -179,8 +179,6 @@ const int ledFreq = 5000;                            // PWM settings
 const int ledChannel = 15;                           // camera uses timer1
 const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
 
-//#define CAMERA_MODEL_AI_THINKER
-
 
 #if defined(FOR_LILYGO_TSIMCAM)
 
@@ -227,6 +225,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
 #else
 
 
+// for CAMERA_MODEL_AI_THINKER
 #define PWDN_GPIO_NUM     32      // power to camera (on/off)
 #define RESET_GPIO_NUM    -1      // -1 = not used
 #define XCLK_GPIO_NUM      0
