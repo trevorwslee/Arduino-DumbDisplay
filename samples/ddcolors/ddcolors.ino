@@ -1,5 +1,5 @@
 
-//#define DD_DISABLE_PARAM_ENCODEING
+#define DD_DISABLE_PARAM_ENCODEING
 
 
 #if defined(BLUETOOTH)
@@ -44,6 +44,10 @@ const char* colors[] = {
   DD_COLOR_lightgreen,
   DD_COLOR_darkred,
   DD_COLOR_lightblue,
+  DD_COLOR_darkorange,
+  DD_COLOR_darkviolet,
+  DD_COLOR_violet,
+  DD_COLOR_lightcyan,
 
   DD_COLOR_azure,
   DD_COLOR_plum,
@@ -58,7 +62,37 @@ const char* colors[] = {
   DD_COLOR_navy,
   DD_COLOR_midnightblue,
   DD_COLOR_aliceblue,
-
+  DD_COLOR_antiquewhite,
+  DD_COLOR_bisque,
+  DD_COLOR_cornsilk,
+  DD_COLOR_crimson,
+  DD_COLOR_maroon,
+  DD_COLOR_olive,
+  DD_COLOR_salmon,
+  DD_COLOR_silver,
+  DD_COLOR_skyblue,
+  DD_COLOR_snow,
+  DD_COLOR_tomato,
+  DD_COLOR_turquoise,
+  DD_COLOR_wheat,
+  DD_COLOR_whitesmoke,
+  DD_COLOR_tan,
+  DD_COLOR_springgreen,
+  DD_COLOR_steelblue,
+  DD_COLOR_slategray,
+  DD_COLOR_slateblue,
+  DD_COLOR_seashell,
+  DD_COLOR_royalblue,
+  DD_COLOR_rosybrown,
+  DD_COLOR_peru,
+  DD_COLOR_chartreuse,
+  DD_COLOR_chocolate,
+  DD_COLOR_greenyellow,
+  DD_COLOR_honeydew,
+  DD_COLOR_hotpink,
+  DD_COLOR_indianred,
+  DD_COLOR_khaki,
+  DD_COLOR_lavender
 };
 
 
