@@ -1,5 +1,5 @@
 
-#define DD_DISABLE_PARAM_ENCODEING
+//#define DD_DISABLE_PARAM_ENCODEING
 
 
 #if defined(BLUETOOTH)
