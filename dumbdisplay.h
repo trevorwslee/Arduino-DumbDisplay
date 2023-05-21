@@ -149,7 +149,7 @@ class DDLayer: public DDObject {
     /// clear the layer
     void clear();
     /// set layer background color
-    /// @param color DD_RGB_COLOR(...); color can be common "color name"
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void backgroundColor(const String& color);
     /// set no layer background color
     void noBackgroundColor();
@@ -255,7 +255,8 @@ class MbDDLayer: public DDLayer {
     /// - '|': delimit a row
     /// - e.g. "#|.#|..#" -- 3 rows
     void showLeds(const String& ledPattern);
-    /// set layer LED color with common "color name"
+    /// set LED color
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void ledColor(const String& color);
     MbImage* createImage(const String& ledPattern);
     void releaseImage(MbImage *pImage);
@@ -288,9 +289,11 @@ class TurtleDDLayer: public DDLayer {
     void setHeading(int angle);
     /// set pen size
     void penSize(int size);
-    /// set pen color with common color name
+    /// set pen color
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void penColor(const String& color);
-    /// set fill color with common color name
+    /// set fill color
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void fillColor(const String& color);
     /// set no fill color
     void noFillColor();
@@ -377,10 +380,10 @@ class LedGridDDLayer: public DDLayer {
     /// @param color LED on color; DD_RGB_COLOR(...) or common color name; empty string means what already set
     void verticalBarEx(int count, int startY = 0, const String& color = "");
     /// set LED on color
-    /// @param color DD_RGB_COLOR(...) or common color name
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void onColor(const String& color);
     /// set LED off color
-    /// @param color DD_RGB_COLOR(...) or common color name
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void offColor(const String& color);
     /// set no LED off color 
     void noOffColor();
@@ -443,7 +446,7 @@ class GraphicalDDLayer: public DDLayer {
     /// move cursor by some amount
     void moveCursorBy(int byX, int byY);
     /// set text color and text background color
-    /// @param color DD_RGB_COLOR(...) or common color name
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     /// @param bgColor empty background color means no background color
     void setTextColor(const String& color, const String& bgColor = "");
     /// set text size
@@ -455,7 +458,7 @@ class GraphicalDDLayer: public DDLayer {
     /// set whether "print" will auto wrap or not
     void setTextWrap(bool wrapOn);
     /// fill screen with color
-    /// @param color DD_RGB_COLOR(...) or common color name
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void fillScreen(const String& color);
     /// print text
     void print(const String& text);
@@ -536,10 +539,10 @@ class GraphicalDDLayer: public DDLayer {
     /// set pen size
     void penSize(int size);
     /// set pen color (i.e. text color)
-    /// @param color DD_RGB_COLOR(...) or common color nam
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void penColor(const String& color);
     /// set fill color (for shape)
-    /// @param color DD_RGB_COLOR(...) or common color nam
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void fillColor(const String& color);
     /// set no fill color (for shape)
     void noFillColor();
@@ -606,30 +609,32 @@ class SevenSegmentRowDDLayer: public DDLayer {
     SevenSegmentRowDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     /// set segment color
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void segmentColor(const String& color);
-    /* reset segment off color; note that this will clear all digits */
+    /// reset segment off color; note that this will clear all digits
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void resetSegmentOffColor(const String& color);
-    /* reset segment off color to no color; note that this will clear all digits */
+    /// reset segment off color to no color; note that this will clear all digits
     void resetSegmentOffNoColor();
-    /* turn on one or more segments */
-    /* - segments: each character represents a segment to turn on */
-    /*   . 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' */
+    /// turn on one or more segments
+    /// @param segments each character represents a segment to turn on -- 
+    ///                 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' 
     void turnOn(const String& segments, int digitIdx = 0);
-    /* turn off one or more segments */ 
-    /* - segments: each character represents a segment to turn off */
-    /*   . 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' */
+    /// turn off one or more segments
+    /// @param segments each character represents a segment to turn on -- 
+    ///                 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' 
     void turnOff(const String& segments, int digitIdx = 0);
-    /* like turnOn(), exception that the digit will be cleared first */
-    /* - empty segments basically means turn all segments of the digit off */
+    /// like turnOn(), exception that the digit will be cleared first
+    /// @param segments empty segments basically means turn all segments of the digit off
     void setOn(const String& segments = "", int digitIdx = 0);
-    /* show a digit */
+    /// show a digit
     void showDigit(int digit, int digitIdx = 0);
-    /* show number */
+    /// show number (can be float)
     void showNumber(float number, const String& padding = " ");
-    /* show HEX number */
+    /// show HEX number
     void showHexNumber(int number);
-    /* show formatted number (even number with hex digits) */
-    /* e.g. "12.00", "00.34", "-.12", "0ff" */
+    /// show formatted number (even number with hex digits);
+    /// e.g. "12.00", "00.34", "-.12", "0ff"
     void showFormatted(const String& formatted, bool completeReplace = true, int startIdx = 0);
 };
 
@@ -1123,7 +1128,8 @@ class DumbDisplay {
     ObjectDetetDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0);
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
-    /// set DD background color with common "color name" or DD_RGB_COLOR(...)
+    /// set DD background color
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void backgroundColor(const String& color);
     /// basically, functions the same as recordLayerCommands()
     void recordLayerSetupCommands();
