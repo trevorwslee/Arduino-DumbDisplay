@@ -233,9 +233,9 @@ DumbDisplay dumbdisplay(new DDInputOutput());
 Here, several examples are presented demonstrating the basis of DumbDisplay. More examples will be shown when DumbDisplay features are described in a bit more details later sections.
 
 
-| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. "Layer feedback" | 7. "Tunnel" for getting Quotes |
+| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. "Layer feedback" | 7. "Tunnel" for RESTful |
 |--|--|--|--|--|--|--|
-|![](screenshots/ddmb.png)|![](screenshots/ddbarmeter.png)|![](screenshots/ddautopin.png)|![](screenshots/ddpinturtle.png)|![](screenshots/ddgraphical.png)|![](screenshots/dddoodle.png)|![](screenshots/ddquote.png)|
+|![](screenshots/ddmb.png)|![](screenshots/ddbarmeter.png)|![](screenshots/ddautopin.png)|![](screenshots/ddpinturtle.png)|![](screenshots/ddgraphical.png)|![](screenshots/dddoodle.png)|![](screenshots/otgrest.png)|
 
 
 ### Screenshot 1 -- *Micro:bit*
@@ -704,69 +704,56 @@ Notes:
 * DumbDisplay library will work cooperatively with your code; therefore, do give DumbDisplay library chances to do its work. Please call `DDYeild()` and/or `DDDelay()` appropriately whenever possible. 
 
 
-### Screenshot 7 -- *"Tunnel" for getting Quotes*
+### Screenshot 7 -- *"Tunnel" for RESTful*
 
-This sample should demonstrate how to use "tunnel" to access the Internet for simple things, like "quote of the day" is this case:
+This sample should demonstrate how to use "tunnel" to access the Internet for simple things, like calling RESTful api:
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddquote/ddquote.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/eamples/ogtrest/ogtrest.ino
 
 ```
 #include "dumbdisplay.h"
 
-// can keep connecting to computer via USB; then use DumbDisplay WIFI Bridge for WIFI connection
+// create the DumbDisplay object; assuming USB connection with 115200 baud
 DumbDisplay dumbdisplay(new DDInputOutput());
 
-GraphicalDDLayer *pLayer;
-BasicDDTunnel *pTunnel;
-
-bool gettingNewQuoto = true;
+// declare a graphical layer object, to be created in setup()
+GraphicalDDLayer *graphicalLayer;
+// declare a tunnel object, to be created in setup()
+JsonDDTunnel *restTunnel;
 
 void setup() {
-  // setup a "graphical" layer 
-  pLayer = dumbdisplay.createGraphicalLayer(200, 150);  // size 200x150
-  pLayer->border(10, "azure", "round");                 // a round border of size 10  
-  pLayer->noBackgroundColor();                          // initial no background color
-  pLayer->penColor("teal");                             // set pen color
+  // setup a "graphial" layer with size 350x150
+  graphicalLayer = dumbdisplay.createGraphicalLayer(350, 150);
+  graphicalLayer->backgroundColor("yellow");        // set background color to yellow
+  graphicalLayer->border(10, "blue", "round");      // a round blue border of size 10  
+  graphicalLayer->penColor("red");                  // set pen color
 
-  // setup a "tunnel" to access "quote of the day" by djxmmx.net
-  pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17");  
+  // setup a "tunnel" to get "current time" JSON; suggest to specify the buffer size to be the same as fields wanted
+  restTunnel = dumbdisplay.createFilteredJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong", "client_ip,timezone,datetime,utc_datetime", true, 4);  
+
+  graphicalLayer->println();
+  graphicalLayer->println("-----");
+  while (!restTunnel->eof()) {           // check that not EOF (i.e. something still coming)
+    while (restTunnel->count() > 0) {    // check that received something
+      String fieldId;
+      String fieldValue;
+      restTunnel->read(fieldId, fieldValue);                // read whatever received
+      dumbdisplay.writeComment(fieldId + "=" + fieldValue); // write out that whatever to DD app as comment
+      if (fieldId == "client_ip" || fieldId == "timezone" || fieldId == "datetime" || fieldId == "utc_datetime") {
+        // if the expected field, print it out
+        graphicalLayer->print(fieldId);
+        graphicalLayer->print("=");
+        graphicalLayer->println(fieldValue);
+      }
+    }
+  }
+  graphicalLayer->println("-----");
 }
 
 void loop() {
-    if (!pTunnel->eof()) {
-      // not "reached" EOF (end-of-file)
-      if (pTunnel->count() > 0) {
-        // got something to read
-        if (gettingNewQuoto) {
-          // if just started to get the quote, reset something
-          pLayer->clear();           // clear the "graphical" layer
-          pLayer->setCursor(0, 10);  // set "cursor" to (0, 10)
-        }
-        String data = pTunnel->readLine();  // read what got so far
-        pLayer->print(data);                // print out to the "graphical" layer what got so far
-        gettingNewQuoto = false; 
-      }
-    } else {
-      // "reached" EOF (i.e. got everything)
-      // setup layer for getting "feedback" 
-      pLayer->backgroundColor("azure");  // set background color
-      pLayer->enableFeedback("f");       // enable "auto feedback" 
-      while (true) {                     // loop and wait for layer clicked
-        if (pLayer->getFeedback() != NULL) {
-          break;
-        }
-      }
-      // clicked ==> reset
-      pLayer->noBackgroundColor();  // no background color 
-      pLayer->disableFeedback();    // disable "feedback"
-      pTunnel->reconnect();         // reconnect to djxmmx.net to get another quote
-      gettingNewQuoto = true;       // indicating that a new quote is coming
-    }
-    DDDelay(500);  // delay a bit before another round; this also give DumbDisplay libary a chance to so its work
 }
 ```
 
-Note that this sketch will only works with DumbDisply WIFI Bridge, due to Android doesn't seem to allow connection to port 17.
 
 # Features
 

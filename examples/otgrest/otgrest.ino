@@ -21,7 +21,7 @@
 
 
 // create the DumbDisplay object; assuming USB connection with 115200 baud
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
+DumbDisplay dumbdisplay(new DDInputOutput());
 
 // declare a graphical layer object, to be created in setup()
 GraphicalDDLayer *graphicalLayer;
