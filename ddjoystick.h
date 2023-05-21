@@ -4,14 +4,14 @@
 #define ddjoystick_h
 
 
-/// struct used for JoystickInterface
+/// Struct used for JoystickInterface
 struct JoystickPress
 {
   int xPressed; // -1, 0 or 1
   int yPressed; // -1, 0 or 1
 };
 
-/// struct used for JoystickInterface
+/// Struct used for JoystickInterface
 struct ABCDPressed
 {
   bool aPressed;
@@ -21,7 +21,7 @@ struct ABCDPressed
 };
 
 
-/// struct used for JoystickInterface
+/// Struct used for JoystickInterface
 struct JoystickPressCode
 {
   int xPressed;
@@ -172,9 +172,9 @@ public:
   }
 
 protected:
-  /**
-   * @param button can be 'A' to 'E'
-   */
+  ///
+  /// @param button can be 'A' to 'E'
+  ///
   inline bool _checkPressed(char button, int repeat)
   {
     return _checkPressed(button, repeat, false);
@@ -293,6 +293,7 @@ private:
 };
 
 
+/// Helper class for joystick input tracking.
 class JoystickPressTracker
 {
 public:
@@ -307,9 +308,9 @@ public:
     this->autoTuneThreshold = -1;
     resetMinMax(minReading, maxReading, true);
   }
-  /**
-   * @param autoTuneThreshold -1 if no auto tune
-   */
+  ///
+  /// @param autoTuneThreshold -1 if no auto tune
+  ///
   JoystickPressTracker(uint8_t pin, bool reverseDir, int autoTuneThreshold = DefAutoTuneThreshold)
   {
     // int autoThreshold = autoTune ? 200 : -1;
@@ -527,6 +528,7 @@ private:
   int autoRepeatDir;
 };
 
+/// Helper class for joystick input tracking.
 class JoystickJoystick : public JoystickInterface
 {
 public:
@@ -618,6 +620,7 @@ private:
   ButtonPressTracker *swTracker;
 };
 
+/// Helper class for joystick input tracking.
 class ButtonJoystickBasic : public JoystickInterface
 {
 protected:
@@ -723,6 +726,7 @@ protected:
 };
 
 
+/// Helper class for joystick input tracking.
 class DecodedJoystick : public ButtonJoystickBasic
 {
 public:
@@ -805,7 +809,7 @@ private:
 };
 
 
-
+/// Helper class for joystick input tracking.
 class ButtonJoystick : public ButtonJoystickBasic
 {
 public:
@@ -932,6 +936,7 @@ private:
   //bool buttonsOnly;
 };
 
+/// Helper class for joystick input tracking.
 class ButtonsOnly : public ButtonJoystick
 {
 public:

@@ -331,6 +331,7 @@ class DDLayoutHelper {
 };
 
 
+/// Utility class 
 template<int MAX_LAYER_COUNT>
 class DDFadingLayers {
   public:
