@@ -30,16 +30,17 @@ JsonDDTunnel *restTunnel;
 
 
 void setup() {
-  // setup a "graphial" list 
-  graphicalLayer = dumbdisplay.createGraphicalLayer(480, 150);  // size 200x150
-  graphicalLayer->border(10, "azure", "round");                 // a round border of size 10  
-  graphicalLayer->penColor("navy");                             // set pen color
-  graphicalLayer->setTextWrap(false);
+  // setup a "graphial" layer with size 350x150
+  graphicalLayer = dumbdisplay.createGraphicalLayer(350, 150);
+  graphicalLayer->backgroundColor("yellow");        // set background color to yellow
+  graphicalLayer->border(10, "blue", "round");      // a round blue border of size 10  
+  graphicalLayer->penColor("red");                  // set pen color
 
   // setup a "tunnel" to get "current time" JSON; suggest to specify the buffer size to be the same as fields wanted
   restTunnel = dumbdisplay.createFilteredJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong", "client_ip,timezone,datetime,utc_datetime", true, 4);  
 
-  String result = "";
+  graphicalLayer->println();
+  graphicalLayer->println("-----");
   while (!restTunnel->eof()) {           // check that not EOF (i.e. something still coming)
     while (restTunnel->count() > 0) {    // check that received something
       String fieldId;
@@ -47,16 +48,14 @@ void setup() {
       restTunnel->read(fieldId, fieldValue);                // read whatever received
       dumbdisplay.writeComment(fieldId + "=" + fieldValue); // write out that whatever to DD app as comment
       if (fieldId == "client_ip" || fieldId == "timezone" || fieldId == "datetime" || fieldId == "utc_datetime") {
-        // if the expected field, append it to result
-        if (result.length() > 0) {
-          result += "; ";
-        }
-        result += fieldId + "=" + fieldValue;
+        // if the expected field, print it out
+        graphicalLayer->print(fieldId);
+        graphicalLayer->print("=");
+        graphicalLayer->println(fieldValue);
       }
     }
   }
-  graphicalLayer->clear();
-  graphicalLayer->print(result);
+  graphicalLayer->println("-----");
 }
 
 void loop() {
