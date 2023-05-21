@@ -41,19 +41,19 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 # Description
 
-Instead of connecting real gadgets to your Arduino framework compatible microcontroller board for showing experiment results (or for getting simple input like pressing), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets remotely on your Android phone.
+Instead of connecting real gadgets to your Arduino framework compatible microcontroller board for showing experiment results (or for getting simple input like pressing), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets remotely on your Android phone, or locally with OTG adaptor connecting your microcontroller board and your Android phone.
 
 By doing so you can defer buying / wiring real gadgets until later stage of your experiment. Even, you might be able to save a few microcontroller pins for other experiment needs, if you so decided that Android phone can be your display gadget (and more) with DumbDisplay app.
 
 A few types of layers can be created:
 * LED-grid, which can also be used to simulate "bar-meter"
-* LCD (text based)
+* LCD (text based), which is commonly used to simulate buttons
 * Micro:bit-like canvas
 * Turtle-like canvas
 * Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
-* Virtual Joystick, which can be used for getting virtual joystick movements
-* Plotter, which works similar to the plotter of DumbDisplay, but plotting data provided by sending commands
+* Joystick, which can be used for getting virtual joystick movement input
+* Plotter, which works similar to the plotter of DumbDisplay, but plotting data are sent by calling the layer's method
 * Terminal "device dependent view" layer, for logging sketch traces
 * TomTom map "device dependent view" layer, for showing location (latitude/longitude)
 
@@ -106,7 +106,7 @@ The app is itself a USB serial monitor, and certinaly can also accept DumbDispla
 
 Notes:
 * Out of so many microcontroller boards, I have only tested DumbDisplay with the microcontroller boards that I have access to.
-* In case DumbDisplay does not "handshake" with your microcontroller board correctly, you can try resetting your Arduino by pressing the "reset" button on your Arduino.
+* In case DumbDisplay does not "handshake" with your microcontroller board correctly, you can try resetting your microcontroller board, say, by pressing the "reset" button on your Arduino.
 * In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection) for more on the topic.
 
  
@@ -189,7 +189,7 @@ The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbD
     binded WIFI wifiname
     listening on 192.168.1.134:10201 ...
   ```  
-    where 192.168.1.134 is the host and 10201 is the port, which is the defaul port
+    where 192.168.1.134 is the IP of your microcontroller, and 10201 is the port which is the defaul port
 
   By making use of DumbDisply WIFI Bridge, WIFI connection is possible for any microcontroller board --
   With DumbDisply WIFI Bridge running on your computer, you can keep the microcontroller connected with USB, and make WIFI connection with DumbDisplay Android app.
@@ -708,12 +708,12 @@ Notes:
 
 This sample should demonstrate how to use "tunnel" to access the Internet for simple things, like calling RESTful api:
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/eamples/ogtrest/ogtrest.ino
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/examples/ogtrest/ogtrest.ino
 
 ```
 #include "dumbdisplay.h"
 
-// create the DumbDisplay object; assuming USB connection with 115200 baud
+// create the DumbDisplay object; assuming OTG (USB) connection with 115200 baud
 DumbDisplay dumbdisplay(new DDInputOutput());
 
 // declare a graphical layer object, to be created in setup()
@@ -728,7 +728,7 @@ void setup() {
   graphicalLayer->border(10, "blue", "round");      // a round blue border of size 10  
   graphicalLayer->penColor("red");                  // set pen color
 
-  // setup a "tunnel" to get "current time" JSON; suggest to specify the buffer size to be the same as fields wanted
+  // setup a "tunnel" to get "current time" JSON data; suggest to specify the buffer size to be the same as fields wanted
   restTunnel = dumbdisplay.createFilteredJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong", "client_ip,timezone,datetime,utc_datetime", true, 4);  
 
   graphicalLayer->println();
@@ -831,38 +831,49 @@ Please note that DumbDisplay library will check for "feedback" in several occasi
 ## DumbDispaly "Tunnel"
 
 
-By using DumbDisplay "tunnels", even Arduino Uno can get simple data from the Internet via DumbDisplay app (or DumbDisplay WIFI Bridge).
+By using DumbDisplay "tunnels", even Arduino Uno can get simple data from the Internet via DumbDisplay app. The above "Tunnel" for RESTful example should already show-case this feature.
 
 ```
-DumbDisplay dumbdisplay(new DDInputOutput(9600));
-BasicDDTunnel *pTunnel;
+#include "dumbdisplay.h"
+
+DumbDisplay dumbdisplay(new DDInputOutput());
+
+JsonDDTunnel *restTunnel;
+
 void setup() {
- pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17");  // sorry, it appears that Android doesn't allow accessing port 17; use DumbDisplay WIFI Bridge
-}
-void loop() {
-  if (!pTunnel->eof()) {  // check not "reached" EOF
-    if (pTunnel->count() > 0) {  // check something is there to read
-      const String& data = pTunnel->readLine();    // read what got so far
-      dumbdisplay.writeComment("{" + data + "}");  // write out what got as comment to DumbDisplay
+  // setup a "tunnel" to get "current time" JSON data; suggest to specify the buffer size to be the same as fields wanted
+  restTunnel = dumbdisplay.createFilteredJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong", "client_ip,timezone,datetime,utc_datetime", true, 4);  
+  while (!restTunnel->eof()) {           // check that not EOF (i.e. something still coming)
+    while (restTunnel->count() > 0) {    // check that received something
+      String fieldId;
+      String fieldValue;
+      restTunnel->read(fieldId, fieldValue);                // read whatever received
+      dumbdisplay.writeComment(fieldId + "=" + fieldValue); // write out that whatever to DD app as comment
+      if (fieldId == "client_ip" || fieldId == "timezone" || fieldId == "datetime" || fieldId == "utc_datetime") {
+        // if the expected field ...
+        ...
+      }
     }
-  } 
-  DDDelay(200);  // delay a bit, and give DD a chance to so some work
+  }
+}
+
+void loop() {
 }
 ```
 
 In case a "tunnel" reaches EOF, and needs be reinvoked:
 
 ```
-pTunnel->reconnect();
+restTunnel->reconnect();
 ```
 
 In case a "tunnel" finishes all its tasks in the middle of the sketch, it should be released in order for Arduino to claim back resources:
 
 ```
-dumbdisplay.deleteTunnel(pTunnel);
+dumbdisplay.deleteTunnel(restTunnel);
 ```
 
-In a more complicated case, you may want to get data from Internet open REST api that returns JSON. For simple "GET" case, `JsonDDTunnel` "tunnel" may be able to help:
+Here is some description on the how JSON response to JSON data is converted, and how to loop getting the JSON data:
 
 * you construct `JsonDDTunnel` "tunnel" and make REST request like:
   ```
@@ -897,11 +908,11 @@ In a more complicated case, you may want to get data from Internet open REST api
   
 * use `count()` to check if the "tunnel" has anything to read, and use `read()` to read what got, like:
   ```
-  while (!pTunnel->eof()) {
-    while (pTunnel->count() > 0) {
+  while (!restTunnel->eof()) {
+    while (restTunnel->count() > 0) {
       String fieldId;
       String fieldValue;
-      pTunnel->read(fieldId, fieldValue);  // fieldId and fieldValue combined is a piece of JSON data 
+      restTunnel->read(fieldId, fieldValue);  // fieldId and fieldValue combined is a piece of JSON data 
       dumbdisplay.writeComment(fieldId + "=" + fieldValue);
     }
   }  

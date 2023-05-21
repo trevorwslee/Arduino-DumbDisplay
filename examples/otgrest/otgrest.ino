@@ -36,7 +36,7 @@ void setup() {
   graphicalLayer->border(10, "blue", "round");      // a round blue border of size 10  
   graphicalLayer->penColor("red");                  // set pen color
 
-  // setup a "tunnel" to get "current time" JSON; suggest to specify the buffer size to be the same as fields wanted
+  // setup a "tunnel" to get "current time" JSON data; suggest to specify the buffer size to be the same as fields wanted
   restTunnel = dumbdisplay.createFilteredJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong", "client_ip,timezone,datetime,utc_datetime", true, 4);  
 
   graphicalLayer->println();
