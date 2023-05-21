@@ -1514,7 +1514,7 @@ Notes:
 * ***If DumbDisplay fails to make connection to DumbDisplay WIFI Bridge, check your descktop firewall settings; try switching desktop WIFI to use 2.4 GHz.***  
 
 
-For example, when something like the above Graphical [LCD] example is run with DumbDisplay WIFI Bridge as well as an Android emulator, you can see something like:
+For example, when something like the above Graphical [LCD] example is run with DumbDisplay WIFI Bridge as well as an Android emulator (e.g. [Genymotion](https://www.genymotion.com/)), you can see something like:
 
 ![](screenshots/ddwifibridge2.png)
 
