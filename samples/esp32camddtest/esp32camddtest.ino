@@ -31,21 +31,21 @@ LcdDDLayer* captureModeLayer;
 GraphicalDDLayer* imageLayer;
 
 
-LcdDDLayer* createAndSetupButton(DumbDisplay& dumbdisplay, const char* bgColor = "blue") {
+LcdDDLayer* createAndSetupButton(DumbDisplay& dumbdisplay, const char* bgColor = DD_COLOR_blue) {
   LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(11, 1);
-  buttonLayer->border(2, "gray", "round");
+  buttonLayer->border(2, DD_COLOR_gray, "round");
   buttonLayer->padding(1);
   buttonLayer->backgroundColor(bgColor);
-  buttonLayer->pixelColor("white");
+  buttonLayer->pixelColor(DD_COLOR_white);
   buttonLayer->enableFeedback("f");
   return buttonLayer;
 }
 
 GraphicalDDLayer * createAndSetupImageLayer(DumbDisplay& dumbdisplay) {
   GraphicalDDLayer* imgLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
-  imgLayer->backgroundColor("ivory");
+  imgLayer->backgroundColor(DD_COLOR_ivory);
   imgLayer->padding(10);
-  imgLayer->border(20, "blue");
+  imgLayer->border(20, DD_COLOR_blue);
   imgLayer->enableFeedback("f");
   return imgLayer;
 }
@@ -60,7 +60,7 @@ void setup() {
 
   flashLayer = createAndSetupButton(dumbdisplay);
   resolutionLayer = createAndSetupButton(dumbdisplay);
-  captureModeLayer = createAndSetupButton(dumbdisplay, "red");
+  captureModeLayer = createAndSetupButton(dumbdisplay, DD_COLOR_red);
 
   imageLayer = createAndSetupImageLayer(dumbdisplay);
 

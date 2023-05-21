@@ -104,9 +104,9 @@ void CalcCoor(int ang, int dist, int& x, int& y) {
 
 GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
   GraphicalDDLayer* layer = dumbdisplay.createGraphicalLayer(Width, Height);
-  layer->border(5, "darkblue", "round");
+  layer->border(5, DD_COLOR_darkblue, "round");
   layer->padding(3);
-  layer->penColor("green");
+  layer->penColor(DD_COLOR_green);
   if (backgroundColor != NULL) {
     layer->backgroundColor(backgroundColor);
   } else {

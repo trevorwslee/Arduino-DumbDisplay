@@ -155,17 +155,17 @@ void DrawPixelsTo(GraphicalDDLayer* targetLayer) {
 
 void setup() {
   drawLayer = dumbdisplay.createGraphicalLayer(28, 28);
-  drawLayer->border(1, "lightgray", "round", 0.5);
+  drawLayer->border(1, DD_COLOR_lightgray, "round", 0.5);
   drawLayer->enableFeedback("fs:drag");
 
   copyLayer = dumbdisplay.createGraphicalLayer(28, 28);
-  copyLayer->border(2, "blue", "round", 1);
+  copyLayer->border(2, DD_COLOR_blue, "round", 1);
 
   clearBtn = dumbdisplay.createLcdLayer(7, 1);   
-  clearBtn->backgroundColor("lightgreen");
-  clearBtn->pixelColor("darkblue");
+  clearBtn->backgroundColor(DD_COLOR_lightgreen);
+  clearBtn->pixelColor(DD_COLOR_darkblue);
   clearBtn->writeCenteredLine("clear");
-  clearBtn->border(2, "darkgreen", "raised");
+  clearBtn->border(2, DD_COLOR_darkgreen, "raised");
   clearBtn->enableFeedback("f");
 
   centerBtn = dumbdisplay.createLcdLayer(8, 1);
@@ -173,14 +173,14 @@ void setup() {
   centerBtn->enableFeedback("fl");
 
   inferenceBtn = dumbdisplay.createLcdLayer(3, 3);
-  inferenceBtn->pixelColor("darkblue");
+  inferenceBtn->pixelColor(DD_COLOR_darkblue);
   inferenceBtn->writeCenteredLine(">>>", 1);
-  inferenceBtn->border(2, "gray", "raised");
+  inferenceBtn->border(2, DD_COLOR_gray, "raised");
   inferenceBtn->enableFeedback("f");
 
   resultLayer = dumbdisplay.create7SegmentRowLayer();
-  resultLayer->border(10, "blue", "round", 5);
-  resultLayer->segmentColor("darkblue");
+  resultLayer->border(10, DD_COLOR_blue, "round", 5);
+  resultLayer->segmentColor(DD_COLOR_darkblue);
 
   dumbdisplay.configAutoPin(
     DDAutoPinConfig('V')

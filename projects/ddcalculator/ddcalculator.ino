@@ -92,11 +92,11 @@ void UpdateCaculatorDisplay()
 {
   if (calculator.isGrouing())
   {
-    displayLayer->backgroundColor("cyan");
+    displayLayer->backgroundColor(DD_COLOR_cyan);
   }
   else
   {
-    displayLayer->backgroundColor("azure");
+    displayLayer->backgroundColor(DD_COLOR_azure);
   }
   const char *formatted = calculator.getFormatted();
   displayLayer->showFormatted(formatted, true, DisplayWidth - strlen(formatted));

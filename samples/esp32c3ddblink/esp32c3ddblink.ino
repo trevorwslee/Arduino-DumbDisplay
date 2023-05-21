@@ -45,8 +45,8 @@ LcdDDLayer* CreateLayer(const char* label, int pin, const char* color) {
     // setup appearance of the layer
     button->writeCenteredLine(label, 1);
     button->pixelColor(color);
-    button->backgroundColor("darkgray");
-    button->border(1, "gray");
+    button->backgroundColor(DD_COLOR_darkgray);
+    button->border(1, DD_COLOR_gray);
 
     // set "feedback" handler
     button->setFeedbackHandler(FeedbackHandler, "f");

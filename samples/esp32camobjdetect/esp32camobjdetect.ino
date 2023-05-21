@@ -35,16 +35,16 @@ void setup() {
 
   // create the top layer for showing detected object rectangles
   objectLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
-  objectLayer->border(10, "blue");
+  objectLayer->border(10, DD_COLOR_blue);
   objectLayer->padding(5);
   objectLayer->noBackgroundColor();
   objectLayer->penSize(2);
 
   // create the bottom layer for showing the ESP32 CAM capatured image
   imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
-  imageLayer->border(10, "blue");
+  imageLayer->border(10, DD_COLOR_blue);
   imageLayer->padding(5);
-  imageLayer->backgroundColor("azure");
+  imageLayer->backgroundColor(DD_COLOR_azure);
 
   // create a tunnel for object detection demo via TensorFlow Lite running on phone side
   objectTunnel = dumbdisplay.createObjectDetectDemoServiceTunnel();
@@ -79,8 +79,8 @@ void loop() {
           int y = objectDetectResult.top;
           int w = objectDetectResult.right - objectDetectResult.left;
           int h = objectDetectResult.bottom - objectDetectResult.top;
-          objectLayer->drawRect(x, y, w, h, "green");
-          objectLayer->drawStr(x, y, objectDetectResult.label, "yellow", "a70%darkgreen", 32);
+          objectLayer->drawRect(x, y, w, h, DD_COLOR_green);
+          objectLayer->drawStr(x, y, objectDetectResult.label, DD_COLOR_yellow, "a70%darkgreen", 32);
           detecting = false;
         }
       }
