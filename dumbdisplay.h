@@ -117,7 +117,7 @@ struct DDObject {
 };
 
 
-/// Class for DDLayer; created with various layer creation methods of DumbDispaly
+/// Base class for the different layers support by DumbDisplay; created with various layer creation methods of DumbDispaly, DumbDisplay::createLedGridLayer()
 class DDLayer: public DDObject {
   public:
     /// set border for each size
@@ -190,7 +190,7 @@ class DDLayer: public DDObject {
     void enableFeedback(const String& autoFeedbackMethod = "");
     /// disable "feedback"
     void disableFeedback();
-    /// get "feedback"
+    /// get "feedback" DDFeedback
     /// @return NULL if no pending "feedback"
     const DDFeedback* getFeedback();
     void debugOnly(int i);
@@ -1011,7 +1011,7 @@ extern boolean _DDDisableParamEncoding;
 inline void DDDebugDisableParamEncoding() { _DDDisableParamEncoding = true; }
 
 
-/// Class for DumbDisplay. Everything starts here.
+/// The core -- class for DumbDisplay; everything starts here. For an example, please refer to [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE/*, bool enableDoubleClick = true*/) {
@@ -1076,12 +1076,12 @@ class DumbDisplay {
     /// create a joystick layer:
     /// - will send joystick positions as "feedback", and hence "feedback" is automatically enabled;
     /// - initial position is (0, 0)
+    /// @param maxStickValue the max value of the stick; e.g. 255 or 1023 (the default); min is 15
     /// @param directions "lr": left-to-right; "tb": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
     ///                   use "+" combines the above like "lr+tb" to mearn both directions; "" the same as "lr+tb" 
-    /// @param maxStickValue the max value of the stick; 255 by default; min is 15
     /// @param stickLookScaleFactor the scaling factor of the stick (UI); 1 by default 
     /// @see JoystickDDLayer
-    JoystickDDLayer* createJoystickLayer(const String& directions = "", int maxStickValue = 255, float stickLookScaleFactor = 1.0);
+    JoystickDDLayer* createJoystickLayer(int maxStickValue = 1023, const String& directions = "", float stickLookScaleFactor = 1.0);
     /// create a plotter layer
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     /// create a fixed-rate plotter layer

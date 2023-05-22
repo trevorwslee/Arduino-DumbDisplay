@@ -161,7 +161,7 @@ template<int MAX_DEPTH> class DDAutoPinConfigBuilder {  // MAX_DEPTH: depth of [
 };
 
 
-/// Class for building "auto pin" config. To be passed to DumbDisplay::configAutoPin().
+/// Class for building "auto pin" config, to be passed to DumbDisplay::configAutoPin().
 /// @since v0.9.7-r2
 class DDAutoPinConfig {
   public:
@@ -332,6 +332,7 @@ class DDLayoutHelper {
 
 
 /// Utility class 
+/// @since v0.9.7-r2
 template<int MAX_LAYER_COUNT>
 class DDFadingLayers {
   public:

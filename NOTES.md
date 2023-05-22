@@ -1,14 +1,10 @@
 Notes:
 
 * GitHub repository for DumbDisplay Arduino Library is https://github.com/trevorwslee/Arduino-DumbDisplay
-* The doc here is updated for v0.9.7-r2 
-* If want to disable parameter encoding, define `DD_DISABLE_PARAM_ENCODEING` before including `dumbdisplay.h`, like
 
-  ```
-  #define DD_DISABLE_PARAM_ENCODEING
-  #include "dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDInputOutput());
-  ```
+* The doc here is updated for v0.9.8
+
+* Other than reading the README of the GitHub project, you might be kick-started with what described in [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
 
 * ***Have Fun! Peace be with you! May God bless you! Jesus loves you!***  
 

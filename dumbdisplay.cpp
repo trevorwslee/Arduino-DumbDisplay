@@ -2574,10 +2574,10 @@ SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   _PostCreateLayer(pLayer);
   return pLayer;
 }
-JoystickDDLayer* DumbDisplay::createJoystickLayer(const String& directions, int maxStickValue, float stickLookScaleFactor) {
+JoystickDDLayer* DumbDisplay::createJoystickLayer(int maxStickValue, const String& directions, float stickLookScaleFactor) {
   int lid = _AllocLid();
   String layerId = String(lid);
-  _sendCommand4(layerId, "SU", String("joystick"), directions, String(maxStickValue),  TO_NUM(stickLookScaleFactor));
+  _sendCommand4(layerId, "SU", String("joystick"), String(maxStickValue),  directions, TO_NUM(stickLookScaleFactor));
   JoystickDDLayer* pLayer = new JoystickDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;

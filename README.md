@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.7-r2)
+# DumbDisplay Arduino Library (v0.9.8)
 
 [DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -33,6 +33,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   * [Audio Supports](#audio-supports)
 * [Reference](#reference)
 * [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
+* [DumbDisplay App Hints](#dumbdisplay-app-hints)
 * [Thank You!](#thank-you)
 * [License](#license)
 * [Change History](#change-history)
@@ -219,13 +220,6 @@ void loop() {
 
 You may want to refer to the post [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/), which talks about a slightly modified version of the above scketch.
 
-
-Also do note that many command parameters sent will be encoded for compression, and will look a bit cryptic (when shown on DumbDisplay app). If you want to disable parameter encoding, define `DD_DISABLE_PARAM_ENCODEING` before including `dumbdisplay.h`, like
-```
-#define DD_DISABLE_PARAM_ENCODEING
-#include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput());
-```
 
 
 ## More Samples
@@ -1479,9 +1473,6 @@ Notes:
 |![](screenshots/esp32-mic.png)|DumbDisplay has certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports. Additionally, you may also be interested in a more extensive application -- [Demo of ESP-Now Voice Commander Fun With Wit.ai and DumbDisplay](https://www.youtube.com/watch?v=dhlLU7gmmbE)|
 
 
-
-
-
 # Reference
 
 For reference, you may want to resort to the headers of the different related classes. To better display the headers, [Doxygen](https://www.doxygen.nl/index.html) is used to generate doc HTML pages autmoatically -- https://trevorwslee.github.io/ArduinoDumbDisplay/html
@@ -1519,6 +1510,23 @@ For example, when something like the above Graphical [LCD] example is run with D
 You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay app -- DumbDisplayWifiBridge**](https://www.youtube.com/watch?v=0UhRmXXBQi8)
 
 
+# DumbDisplay App Hints
+
+* Many command parameters sent will be encoded for compression, and will look a bit cryptic (when shown on DumbDisplay app). If you want to disable parameter encoding, define `DD_DISABLE_PARAM_ENCODEING` before including `dumbdisplay.h`, like
+
+  ```
+  #define DD_DISABLE_PARAM_ENCODEING
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput());
+  ```
+
+* In fact, showing commands on DumbDisplay app may slow things down, especially when commands are sent in fast rate. Hence, suggest to disable DumbDisplay app's "Show Commands" option.
+
+* Setting DumbDisplay app's "Pixel Density" to **Medium** will make the layer's text (etc) looks better. Setting it to **High** or even **Fine** would be very taxing to your phone. If still want higher "Pixel Density", try setting it to **Over**. Hopefully, **Over** is less taxing, since it is implemented differently, resulting in rendered text sligtly "over" the boundary where it should be 
+
+
+
+
 
 # Thank You!
 
@@ -1537,7 +1545,8 @@ MIT
 
 # Change History
 
-v0.9.7-r2
+v0.9.8
+  - enhanced documentation
   - added JoystickDDLayer
   - started to use Doxygen to generate doc HTML
   - bug fix

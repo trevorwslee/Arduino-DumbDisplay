@@ -6,7 +6,7 @@
 enum DDFeedbackType { CLICK, LONGPRESS, DOUBLECLICK, MOVE };  // DOUBLECLICK needs special option for DumbDisplay
 
 
-/// The struct that captures info about "feedback"
+/// The struct that captures info about "feedback". See DDLayer::enableFeedback()
 struct DDFeedback {
   /// type of the "feedback"
   DDFeedbackType type;
@@ -18,7 +18,7 @@ struct DDFeedback {
   String text;
 };
 
-/// Class for internal use to track "feedback"
+/// Class for internal use to track "feedback".
 class DDFeedbackManager {
   public: 
     DDFeedbackManager(int8_t bufferSize);

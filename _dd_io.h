@@ -1,7 +1,9 @@
 #ifndef _dd_io_h
 #define _dd_io_h
 
-/// Class for DD input/output; you explicitly constructed it, pass in when instantiate DumbDisplay, then it will be use by DD internally
+/// Class for DD input/output; you explicitly constructed it, pass in when instantiate DumbDisplay,
+/// then it will be use by DD internally for communication with DumbDisplay app.
+/// There are several derived class like DDSoftwareSerialIO, DDWiFiServerIO, DDBluetoothSerialIO, DDBLESerialIO, DDPicoUart1IO etc
 class DDInputOutput {
   public:
     DDInputOutput(unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, false, true) {
