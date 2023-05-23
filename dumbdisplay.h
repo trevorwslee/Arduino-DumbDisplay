@@ -43,15 +43,21 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODEING bef
 
 #ifdef DD_CONDENSE_COMMAND
   #define DD_INT_COLOR(color) ("+" + DDIntEncoder(color).encoded())
-  #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
-    #define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
+  #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO) ||  defined(DD_DISABLE_PARAM_ENCODEING)
+    #define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
   #else
-    #if defined(DD_DISABLE_PARAM_ENCODEING)
-      #define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b)), 16))
-    #else  
-      #define DD_RGB_COLOR(r, g, b) ("+" + DDIntEncoder(0xffffff & ((((((int32_t) r) << 8) + ((int32_t) g)) << 8) + ((int32_t) b))).encoded())
-    #endif
+    #define DD_RGB_COLOR(r, g, b) ("+" + DDIntEncoder(0xffffff & ((((((int32_t) (r)) << 8) + ((int32_t) (g))) << 8) + ((int32_t) (b)))).encoded())
   #endif
+  // #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+  //   #define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
+  //   //#define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
+  // #else
+  //   #if defined(DD_DISABLE_PARAM_ENCODEING)
+  //     #define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & ((((((int32_t) (r)) << 8) + ((int32_t) (g))) << 8) + ((int32_t) (b))), 16))
+  //   #else  
+  //     #define DD_RGB_COLOR(r, g, b) ("+" + DDIntEncoder(0xffffff & ((((((int32_t) (r)) << 8) + ((int32_t) (g))) << 8) + ((int32_t) (b)))).encoded())
+  //   #endif
+  // #endif
 #else
   #define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
   #define DD_INT_COLOR(color) ("+" + String(color))
@@ -1077,7 +1083,7 @@ class DumbDisplay {
     /// - will send joystick positions as "feedback", and hence "feedback" is automatically enabled;
     /// - initial position is (0, 0)
     /// @param maxStickValue the max value of the stick; e.g. 255 or 1023 (the default); min is 15
-    /// @param directions "lr": left-to-right; "tb": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
+    /// @param directions "lr" or "hori": left-to-right; "tb" or "vert": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
     ///                   use "+" combines the above like "lr+tb" to mearn both directions; "" the same as "lr+tb" 
     /// @param stickLookScaleFactor the scaling factor of the stick (UI); 1 by default 
     /// @see JoystickDDLayer

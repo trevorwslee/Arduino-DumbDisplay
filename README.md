@@ -1520,9 +1520,9 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
   DumbDisplay dumbdisplay(new DDInputOutput());
   ```
 
-* In fact, showing commands on DumbDisplay app may slow things down, especially when commands are sent in fast succession. Hence, suggest to disable DumbDisplay app's "Show Commands" option.
+* In fact, showing commands on DumbDisplay app may slow things down, even makes your DumbDisplay app non-responsive/freeze, especially when commands are sent in fast succession. Hence, suggest to disable DumbDisplay app's `Show Commands` option.
 
-* Setting DumbDisplay app's "Pixel Density" to **Medium** will make the layer's text (and other aspects) looks better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text, but don't want to pay the price, try setting it to **Over**. Hopefully, **Over** is less taxing, since it is implemented differently, resulting in rendered text sligtly "over" the boundary where it should be 
+* Setting DumbDisplay app's `Pixel Density` to **Medium** will make the layer's text and other aspects look better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text, but don't want to pay the price, try setting it to **Over**. Hopefully, **Over** is less taxing, since the text rendering it is implemented differently, resulting in rendered text sligtly "over" the boundary where it should be 
 
 
 
