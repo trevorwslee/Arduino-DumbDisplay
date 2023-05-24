@@ -46,15 +46,15 @@ Instead of connecting real gadgets to your Arduino framework compatible microcon
 
 By doing so you can defer buying / wiring real gadgets until later stage of your experiment. Even, you might be able to save a few microcontroller pins for other experiment needs, if you so decided that Android phone can be your display gadget (and more) with DumbDisplay app.
 
-A few types of layers can be created:
+A few types of layers can be created on DumbDisplay mixed-and-matched:
 * LED-grid, which can also be used to simulate "bar-meter"
-* LCD (text based), which is commonly used to simulate buttons
+* LCD (text based), which is also a good choice for simulating button
 * Micro:bit-like canvas
 * Turtle-like canvas
-* Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features) 
+* Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has certain Turtle-like features) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
 * Joystick, which can be used for getting virtual joystick movement input
-* Plotter, which works similar to the plotter of DumbDisplay, but plotting data are sent by calling the layer's method
+* Plotter, which works similar to the plotter of DumbDisplay [when it is acting as serial monitor], but plotting data are sent by calling the layer's method
 * Terminal "device dependent view" layer, for logging sketch traces
 * TomTom map "device dependent view" layer, for showing location (latitude/longitude)
 
@@ -65,13 +65,13 @@ Note that with the "layer feedback" mechanism, user interaction (like clicking o
 
 ## Arduino IDE
 
-The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show up; install it. As reference, you may want to see my post [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)  
+The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show up; install it. For a reference, you may want to see my post [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)  
 
 Alternative, you can choose to use the more "fluid" manual approach. The basic steps are
 1) download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
 2) to install, use Arduino IDE menu option **Sktech** | **Include Library** | **Add .ZIP library...** and choose the ZIP you just downloaded
 
-For demonstration on installing DumbDisplay Arduino Library, you may want to watch the video [**Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)**](https://www.youtube.com/watch?v=nN7nXRy7NMg)
+For demonstration on installing DumbDisplay Arduino Library this manual way, you may want to watch the video [**Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)**](https://www.youtube.com/watch?v=nN7nXRy7NMg)
 
 To upgrade DumbDisplay Arduino Library installed manually this way, you just need to replace the directory manually, by following the above steps again.
 
@@ -106,48 +106,47 @@ The app is itself a USB serial monitor, and certinaly can also accept DumbDispla
 * Serial2 (hardware serial, like for Raspberry Pi Pico)
 
 Notes:
-* Out of so many microcontroller boards, I have only tested DumbDisplay with the microcontroller boards that I have access to.
-* In case DumbDisplay does not "handshake" with your microcontroller board correctly, you can try resetting your microcontroller board, say, by pressing the "reset" button on your Arduino.
-* In certain use cases, and with a little bit of code change, DumbDisplay app can reconnect to your Arduino board after disconnect / app restart. Please refer to [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection) for more on the topic.
+* Out of so many microcontroller boards, I have only tested DumbDisplay with the microcontroller boards that I have access to. Nevertheless, I am hopeful that using Serial should work just fine [in general].
+* In case DumbDisplay does not handshake with your microcontroller board correctly, you can try resetting the board, say, by pressing the "reset" button on the board.
 
  
 # Sample Code
 
-The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object, which requires an IO object for communication with your Android DumbDisplay app:
+The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object, which requires an IO object for communicating with your Android DumbDisplay app:
 
-* Via Serial -- via OTG; reference: [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
+* Via Serial -- via OTG; you may want to refer to [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
   ```
     #include "dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDInputOutput(115200));
   ```
-  - need to include `dumbdisplay.h` -- `#include <dumbdisplay.h>`
+  - need to include `dumbdisplay.h` -- `#include "dumbdisplay.h"`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - you **should not** be using Serial for other purposes
   - the default baud rate is 115200;  a lower baud rate, say 9600, may work better in some cases
-* Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- connected to Bluetooth module like HC-06. For an example, you may want to refer to my post [Setup HC-05 and HC-06, for Wireless 'Number Invaders'](https://www.instructables.com/Setup-HC-05-and-HC-06-for-Wireless-Number-Invaders/)
+* Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- connected to Bluetooth module like HC-06. For an example, you may want to refer to the post [Setup HC-05 and HC-06, for Wireless 'Number Invaders'](https://www.instructables.com/Setup-HC-05-and-HC-06-for-Wireless-Number-Invaders/)
   ```
     #include "ssdumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
   ```
-  - need to include `ssdumbdisplay.h` -- `#include <ssdumbdisplay.h>`
+  - need to include `ssdumbdisplay.h` -- `#include "ssdumbdisplay.h"`
   - setup a `dumbdisplay` object -- e.g. `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200))`  
-    - in this example, 2 and 3 are the pins used by SoftwareSerial
+    - in this example, 2 and 3 are the pins used by `SoftwareSerial`
     - the default baud rate is 115200, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially true for HC-08, which connects via BLE. 
-  - you **should not** be using that SoftwareSerial for other purposes
+  - you **should not** be using that `SoftwareSerial` for other purposes
 * Via `Serial2` -- for STM32, connected to Bluetooth module like HC-06 
   ```
     #include "serial2dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSerial2IO(115200));
   ```
-  - need to include `serial2dumbdisplay.h` -- `#include <serial2dumbdisplay.h>`
+  - need to include `serial2dumbdisplay.h` -- `#include "serial2dumbdisplay.h"`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSerial2IO(115200))`
-  - e.g. STM32F103: PA3 (RX2) ==> TX; PA2 (TX2) ==> RX
+  - e.g. for STM32F103: connect PA3 (RX2) to TX of HC-06 and connect PA2 (TX2) to RX of HC-06
 * Via `Serial2` -- for Raspberry Pi Pico, connected to Bluetooth module like HC-06 
   ```
     #include <picodumbdisplay.h>
     DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
   ```
-  - need to include `picodumbdisplay.h` -- `#include <picodumbdisplay.h>`
+  - need to include `picodumbdisplay.h` -- `#include "picodumbdisplay.h"`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDPicoUart1IO(115200))`
   - **MUST** define DD_4_PICO_TX and DD_4_PICO_RX before including `picodumbdisplay.h`, like
   ```
@@ -161,16 +160,16 @@ The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbD
     #include "esp32dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
   ```
-  - include `esp32dumbdisplay.h` -- `#include <esp32dumbdisplay.h>`
+  - include `esp32dumbdisplay.h` -- `#include "esp32dumbdisplay.h"`
   - setup a `dumbdisplay` object -- e.g. `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"))`  
     - in the sample, "ESP32" is the name used by `BluetoothSerial`
-  - **you should not be using BluetoothSerial for other purposes**
+  - you **should not** be using `BluetoothSerial` for other purposes
 * Via **ESP32** `BLE`
   ```
     #include "esp32bledumbdisplay.h"
     DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"));
   ```
-  - include `esp32bledumbdisplay.h` -- `#include <esp32bledumbdisplay.h>`
+  - include `esp32bledumbdisplay.h` -- `#include "esp32bledumbdisplay.h"`
   - setup a `dumbdisplay` object -- e.g. `DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"))`  
     - in the sample, "ESP32BLE" is the name used by BLE
   - **you should not be using ESP32's BLE for other purposes**
@@ -190,18 +189,18 @@ The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbD
     binded WIFI wifiname
     listening on 192.168.1.134:10201 ...
   ```  
-    where 192.168.1.134 is the IP of your microcontroller, and 10201 is the port which is the defaul port
+    where 192.168.1.134 is the IP of your microcontroller and 10201 is the port which is the defaul port
 
-  By making use of DumbDisply WIFI Bridge, WIFI connection is possible for any microcontroller board --
+  By making use of DumbDisply WIFI Bridge, WIFI connection is possible for any microcontroller board (e.g. Arduino UNO) --
   With DumbDisply WIFI Bridge running on your computer, you can keep the microcontroller connected with USB, and make WIFI connection with DumbDisplay Android app.
-  Please refer to [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge) for more on DumbDisply WIFI Bridge.
+  Please refer to [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge) for more description on it.
 
 With a DumbDisplay object, you are ready to proceed with coding, like
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink/otgblink.ino
 
 ```
-#include "ssdumbdisplay.h"
+#include "dumbdisplay.h"
 
 // create the DumbDisplay object; assuming OTG (USB) connection with 115200 baud (default)
 DumbDisplay dumbdisplay(new DDInputOutput());
@@ -218,13 +217,13 @@ void loop() {
 }
 ```
 
-You may want to refer to the post [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/), which talks about a slightly modified version of the above scketch.
+You may want to refer to the post [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/), which talks about a slightly modified version of the above sketch.
 
 
 
 ## More Samples
 
-Here, several examples are presented demonstrating the basis of DumbDisplay. More examples will be shown when DumbDisplay features are described in a bit more details later sections.
+Here, several examples are presented demonstrating the basis of DumbDisplay. More examples will be shown when DumbDisplay features are described in a bit more details in later sections.
 
 
 | 1. [Micro:bit](#screenshot-1----microbit) | 2. [LEDs + "Bar Meter" + LCD](#screenshot-2----leds--bar-meter--lcd) | 3. [Nested "auto pin" layers](#screenshot-3----nested-auto-pin-layers)  | 4. [Manual "pin" layers (LEDs + Turtle)](#screenshot-4----manual-pin-layers-leds--turtle) | 5. [Graphical [LCD]](#screenshot-5----graphical-lcd) | 6. ["Layer feedback"](#screenshot-6----layer-feedback) | 7. ["Tunnel" for RESTful](#screenshot-7----tunnel-for-restful) |
@@ -825,7 +824,7 @@ Please note that DumbDisplay library will check for "feedback" in several occasi
 ## DumbDispaly "Tunnel"
 
 
-By using DumbDisplay "tunnels", even Arduino Uno can get simple data from the Internet via DumbDisplay app. The above "Tunnel" for RESTful example should already show-case this feature.
+By using DumbDisplay "tunnels", even Arduino UNO can get simple data from the Internet via DumbDisplay app. The above "Tunnel" for RESTful example should already show-case this feature.
 
 ```
 #include "dumbdisplay.h"
@@ -1066,11 +1065,11 @@ The automatic pinning of layers is the easier. You only need to call the DumbDis
 `DD_AP_HORI_2()` / `DD_AP_VERT_2()` macro pins 2 layers side by side horizontally / vertically. It accepts 2 arguments, with each one either a layer id, or another **DD_AP_XXX** macro. 
 
 The different **DD_AP_XXX* macros are
-* **DD_AP_HORI_`N`** : Horizontally layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_HORI** layouts all layers horizontally
-* **DD_AP_VERT_`N`** : Vertiallly layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_VERT** layouts all layers vertcally
-* **DD_AP_STACK_`N`** : Stack `N` layers (ids) or nested **DD_AP_XXX**; with the **DD_AP_STACK** stacks all layers
-* **DD_AP_PADDING** : It accepts padding sizes -- left, top, right and bottom -- and a layer (id) (or nested **DD_AP_XXX**)   
-* **DD_AP_SPACER** : It is a invisible "spacer" layer with dimension -- width and height
+* **DD_AP_HORI_`N`()** : Horizontally layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_HORI** layouts all layers horizontally
+* **DD_AP_VERT_`N`()** : Vertiallly layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_VERT** layouts all layers vertcally
+* **DD_AP_STACK_`N`()** : Stack `N` layers (ids) or nested **DD_AP_XXX**; with the **DD_AP_STACK** stacks all layers
+* **DD_AP_PADDING()** : It accepts padding sizes -- left, top, right and bottom -- and a layer (id) (or nested **DD_AP_XXX**)   
+* **DD_AP_SPACER()** : It is a invisible "spacer" layer with dimension -- width and height
 
 The manual way of pinning layers is a bit more complicated. First, a "pin frame" needs be defined with a fixed size; by default, the size is 100 by 100. To change the "pin frame" fixed size, use the DumbDisplay method `configPinFrame()`. 
 
@@ -1105,7 +1104,7 @@ To get a feel, you may want to refer to the video [**Raspberry Pi Pico playing s
 |--|--|
 |![](screenshots/pico-speaker_connection.png)|![](screenshots/ddmelody.jpg)|
 
-In fact, there is a builder for such "auto pin" config -- [DDAutoPinConfig](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_auto_pin_config.html)
+Going back to "auto pin". In fact, there is a builder for such "auto pin" config -- [DDAutoPinConfig](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_auto_pin_config.html)
 
 Using it shoud be appearent. Hopefully, some example should be sifficient.
 
