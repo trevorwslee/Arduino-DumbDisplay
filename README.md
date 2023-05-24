@@ -113,7 +113,7 @@ Notes:
  
 # Sample Code
 
-The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object, which require an IO object for communication with your Android DumbDisplay app:
+The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object, which requires an IO object for communication with your Android DumbDisplay app:
 
 * Via Serial -- via OTG; reference: [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
   ```
@@ -227,7 +227,7 @@ You may want to refer to the post [Blink Test With Virtual Display, DumbDisplay]
 Here, several examples are presented demonstrating the basis of DumbDisplay. More examples will be shown when DumbDisplay features are described in a bit more details later sections.
 
 
-| 1. Micro:bit | 2. LEDs + "Bar Meter" + LCD | 3. Nested "auto pin" layers  | 4. Manual "pin" layers (LEDs + Turtle) | 5. Graphical [LCD] | 6. "Layer feedback" | 7. "Tunnel" for RESTful |
+| 1. [Micro:bit](#screenshot-1----microbit) | 2. [LEDs + "Bar Meter" + LCD](#screenshot-2----leds--bar-meter--lcd) | 3. [Nested "auto pin" layers](#screenshot-3----nested-auto-pin-layers)  | 4. [Manual "pin" layers (LEDs + Turtle)](#screenshot-4----manual-pin-layers-leds--turtle) | 5. [Graphical [LCD]](#screenshot-5----graphical-lcd) | 6. ["Layer feedback"](#screenshot-6----layer-feedback) | 7. ["Tunnel" for RESTful](#screenshot-7----tunnel-for-restful) |
 |--|--|--|--|--|--|--|
 |![](screenshots/ddmb.png)|![](screenshots/ddbarmeter.png)|![](screenshots/ddautopin.png)|![](screenshots/ddpinturtle.png)|![](screenshots/ddgraphical.png)|![](screenshots/dddoodle.png)|![](screenshots/otgrest.png)|
 
@@ -1063,7 +1063,14 @@ The automatic pinning of layers is the easier. You only need to call the DumbDis
                                     pLcdLayer->getLayerId()),
                                 pTurtleLayer->getLayerId()));
 ```
-`DD_AP_HORI_2()` / `DD_AP_VERT_2()` macro pins 2 layers side by side horizontally / vertically. It accepts 2 arguments, with each one either a layer id, or another *DD_AP_XXX* macro. 
+`DD_AP_HORI_2()` / `DD_AP_VERT_2()` macro pins 2 layers side by side horizontally / vertically. It accepts 2 arguments, with each one either a layer id, or another **DD_AP_XXX** macro. 
+
+The different **DD_AP_XXX* macros are
+* **DD_AP_HORI_`N`** : Horizontally layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_HORI** layouts all layers horizontally
+* **DD_AP_VERT_`N`** : Vertiallly layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_VERT** layouts all layers vertcally
+* **DD_AP_STACK_`N`** : Stack `N` layers (ids) or nested **DD_AP_XXX**; with the **DD_AP_STACK** stacks all layers
+* **DD_AP_PADDING** : It accepts padding sizes -- left, top, right and bottom -- and a layer (id) (or nested **DD_AP_XXX**)   
+* **DD_AP_SPACER** : It is a invisible "spacer" layer with dimension -- width and height
 
 The manual way of pinning layers is a bit more complicated. First, a "pin frame" needs be defined with a fixed size; by default, the size is 100 by 100. To change the "pin frame" fixed size, use the DumbDisplay method `configPinFrame()`. 
 

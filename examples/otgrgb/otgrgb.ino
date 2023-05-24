@@ -19,7 +19,7 @@
 
 /******
  ****** 
- * Due to the large amount data exchanged between the microcontroller board and the DumbDisplay app,
+ * Due to the large amount of data exchanged between the microcontroller board and the DumbDisplay app,
  * stringly suggest to turn off DumbDisplay app's "show commands"!
  ****** 
  ****** 
