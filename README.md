@@ -1519,7 +1519,7 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 
 # DumbDisplay App Hints
 
-* Many command parameters sent will be encoded for compression, and will look a bit cryptic (when shown on DumbDisplay app). If you want to disable parameter encoding, define `DD_DISABLE_PARAM_ENCODEING` before including `dumbdisplay.h`, like
+* Many command parameters sent will be encoded for compression, and will look a bit cryptic (when shown on DumbDisplay app terminal view). If you want to disable parameter encoding, define `DD_DISABLE_PARAM_ENCODEING` before including `dumbdisplay.h`, like
 
   ```
   #define DD_DISABLE_PARAM_ENCODEING
@@ -1529,7 +1529,12 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 
 * In fact, showing commands on DumbDisplay app may slow things down, even makes your DumbDisplay app non-responsive/freeze, especially when commands are sent in fast succession. Hence, suggest to disable DumbDisplay app's `Show Commands` option.
 
-* Setting DumbDisplay app's `Pixel Density` to **Medium** will make the layer's text and other aspects look better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text, but don't want to pay the price, try setting it to **Over**. Hopefully, **Over** is less taxing, since the text rendering it is implemented differently, resulting in rendered text sligtly "over" the boundary where it should be 
+* Setting DumbDisplay app's `Pixel Density` to **Medium** will make the layer's text and other aspects look better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text, but don't want to pay the price, try setting it to **Over**. Hopefully, **Over** is less taxing, since the text rendering is implemented differently, resulting in rendered text sligtly "over" the boundary where it should be, but looks better 
+
+* You can drag the bottom left/right side of the DumbDisplay canvas to have it resized.
+* You can pin-zoom the DumbDisplay canvas to resize it as well, if `Allow Zoom` is off.
+* If `Allow Zoom` is on, pin-zoom the DumbDisplay canvas will eventually zoom it. When it is zoomed, it will not produce any "feedback". You double-click the canvas to return it to normal size.
+* You can long press the terminal view to disable it's autoscrolling.
 
 
 
