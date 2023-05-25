@@ -46,17 +46,18 @@ Instead of connecting real gadgets to your Arduino framework compatible microcon
 
 By doing so you can defer buying / wiring real gadgets until later stage of your experiment. Even, you might be able to save a few microcontroller pins for other experiment needs, if you so decided that Android phone can be your display gadget (and more) with DumbDisplay app.
 
-A few types of layers can be created on DumbDisplay mixed-and-matched:
-* LED-grid, which can also be used to simulate "bar-meter"
-* LCD (text based), which is also a good choice for simulating button
-* Micro:bit-like canvas
-* Turtle-like canvas
-* Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has certain Turtle-like features) 
-* 7-Segment-row, which can be used to display a series of digits, plus a decimal dot
-* Joystick, which can be used for getting virtual joystick movement input
-* Plotter, which works similar to the plotter of DumbDisplay [when it is acting as serial monitor], but plotting data are sent by calling the layer's method
-* Terminal "device dependent view" layer, for logging sketch traces
-* TomTom map "device dependent view" layer, for showing location (latitude/longitude)
+The core is of natually [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html).
+On it, a few types of layers can be created mixed-and-matched:
+* LED-grid, which can also be used to simulate "bar-meter" -- [LedGridDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_led_grid_d_d_layer.html)
+* LCD (text based), which is also a good choice for simulating button -- [LcdDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_lcd_d_d_layer.html)
+* Micro:bit-like canvas -- [MbDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_mb_d_d_layer.html)
+* Turtle-like canvas -- [TurtleDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_turtle_d_d_layer.html)
+* Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has certain Turtle-like features) -- [GraphicalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) 
+* 7-Segment-row, which can be used to display a series of digits, plus a decimal dot -- [SevenSegmentRowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_seven_segment_row_d_d_layer.html)
+* Joystick, which can be used for getting virtual joystick movement input, and can also be used for horizontal/vertial "slider" input -- [JoystickDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_joystick_d_d_layer.html)
+* Plotter, which works similar to the plotter of DumbDisplay [when it is acting as serial monitor], but plotting data are sent by calling the layer's method -- [PlotterDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_plotter_d_d_layer.html)
+* Terminal "device dependent view" layer, for logging sketch traces -- [TerminalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html)
+* TomTom map "device dependent view" layer, for showing location (latitude/longitude) -- [TomTomMapDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html)
 
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected microcontroller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism) for more on "layer feedback" mechanism.
 
@@ -106,7 +107,7 @@ The app is itself a USB serial monitor, and certinaly can also accept DumbDispla
 * Serial2 (hardware serial, like for Raspberry Pi Pico)
 
 Notes:
-* Out of so many microcontroller boards, I have only tested DumbDisplay with the microcontroller boards that I have access to. Nevertheless, I am hopeful that using Serial should work just fine [in general].
+* Out of so many microcontroller boards, I have only tested DumbDisplay with the microcontroller boards that I have access to. Nevertheless, I am hopeful that using Serial for other microcontroller boards should work just fine [in general].
 * In case DumbDisplay does not handshake with your microcontroller board correctly, you can try resetting the board, say, by pressing the "reset" button on the board.
 
  
@@ -121,7 +122,7 @@ The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbD
   ```
   - need to include `dumbdisplay.h` -- `#include "dumbdisplay.h"`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
-  - you **should not** be using Serial for other purposes
+  - you **should not** be using `Serial` for other purposes
   - the default baud rate is 115200;  a lower baud rate, say 9600, may work better in some cases
 * Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- connected to Bluetooth module like HC-06. For an example, you may want to refer to the post [Setup HC-05 and HC-06, for Wireless 'Number Invaders'](https://www.instructables.com/Setup-HC-05-and-HC-06-for-Wireless-Number-Invaders/)
   ```
@@ -172,8 +173,8 @@ The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbD
   - include `esp32bledumbdisplay.h` -- `#include "esp32bledumbdisplay.h"`
   - setup a `dumbdisplay` object -- e.g. `DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"))`  
     - in the sample, "ESP32BLE" is the name used by BLE
-  - **you should not be using ESP32's BLE for other purposes**
-  - **be warned that `DDBLESerialIO` is slow**; if class Bluetooth is support, choose `DDBluetoothSerialIO` instead 
+  - you **should not** be using ESP32's BLE for other purposes
+  - be **warned** that `DDBLESerialIO` is slow; if classic Bluetooth is supported by micrcontroller (like ESP32), choose `DDBluetoothSerialIO` instead 
 * Via WIFI as a [`WiFiServer`](https://www.arduino.cc/en/Reference/WiFi) -- for ESP01/ESP8266/ESP32/PicoW  
   ```
     #include "wifidumbdisplay.h"
@@ -185,8 +186,8 @@ The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbD
   - WIFI credentials are passed to `WiFi`
   - by default, DumbDisplay will setup and log using `Serial` with baud rate 115200; and you should see log lines like:
   ```
-    binding WIFI wifiname
-    binded WIFI wifiname
+    binding WIFI <wifiname>
+    binded WIFI <wifiname>
     listening on 192.168.1.134:10201 ...
   ```  
     where 192.168.1.134 is the IP of your microcontroller and 10201 is the port which is the defaul port
@@ -1531,9 +1532,8 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 * Setting DumbDisplay app's `Pixel Density` to **Medium** will make the layer's text and other aspects look better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text, but don't want to pay the price, try setting it to **Over**. Hopefully, **Over** is less taxing, since the text rendering is implemented differently, resulting in rendered text sligtly "over" the boundary where it should be, but looks better 
 
 * You can drag the bottom left/right side of the DumbDisplay canvas to have it resized.
-* You can pin-zoom the DumbDisplay canvas to resize it as well, if `Allow Zoom` is off.
-* If `Allow Zoom` is on, pin-zoom the DumbDisplay canvas will eventually zoom it. When it is zoomed, it will not produce any "feedback". You double-click the canvas to return it to normal size.
-* You can long press the terminal view to disable it's autoscrolling.
+* You can pinch-zoom the DumbDisplay canvas to resize it as well, if `Allow Zoom` is off. BTW, with the experimental `Allow Zoom` on, pinch-zooming the DumbDisplay canvas will eventually zoom it. When it is zoomed, it will not produce any "feedback". You double-click the canvas to return it to normal size.
+* You can long press the terminal view to disable it's autoscrolling. BTW, terminal view has the `Keep Lines` limit, which you set with the `Setting` page. And this `Keep Lines` can certainly affect how much memory DumbDisplay will be used, should you have so much lines to be display by the terminal view.
 
 
 
