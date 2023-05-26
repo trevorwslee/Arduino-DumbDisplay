@@ -46,7 +46,7 @@ Instead of connecting real gadgets to your Arduino framework compatible microcon
 
 By doing so you can defer buying / wiring real gadgets until later stage of your experiment. Even, you might be able to save a few microcontroller pins for other experiment needs, if you so decided that Android phone can be your display gadget (and more) with DumbDisplay app.
 
-The core is of natually [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html).
+The core is [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html).
 On it, a few types of layers can be created mixed-and-matched:
 * LED-grid, which can also be used to simulate "bar-meter" -- [LedGridDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_led_grid_d_d_layer.html)
 * LCD (text based), which is also a good choice for simulating button -- [LcdDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_lcd_d_d_layer.html)
@@ -1530,6 +1530,11 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 * In fact, showing commands on DumbDisplay app may slow things down, even makes your DumbDisplay app non-responsive/freeze, especially when commands are sent in fast succession. Hence, suggest to disable DumbDisplay app's `Show Commands` option.
 
 * Setting DumbDisplay app's `Pixel Density` to **Medium** will make the layer's text and other aspects look better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text, but don't want to pay the price, try setting it to **Over**. Hopefully, **Over** is less taxing, since the text rendering is implemented differently, resulting in rendered text sligtly "over" the boundary where it should be, but looks better 
+
+|***Normal***|***Medium***|***High***|***Fine***|***Over***|
+|--|--|--|--|--|
+|![](screenshots/dd_pixel_density_normal.png)|![](screenshots/dd_pixel_density_medium.png)|![](screenshots/dd_pixel_density_high.png)|![](screenshots/dd_pixel_density_fine.png)|![](screenshots/dd_pixel_density_over.png)|
+
 
 * You can drag the bottom left/right side of the DumbDisplay canvas to have it resized.
 * You can pinch-zoom the DumbDisplay canvas to resize it as well, if `Allow Zoom` is off. BTW, with the experimental `Allow Zoom` on, pinch-zooming the DumbDisplay canvas will eventually zoom it. When it is zoomed, it will not produce any "feedback". You double-click the canvas to return it to normal size.
