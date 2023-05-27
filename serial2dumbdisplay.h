@@ -4,6 +4,8 @@
 // e.g. STM32F103: PA3 (RX2) ==> TX; PA2 (TX2) ==> RX
 
 #include "dumbdisplay.h"
+
+/// Subclass of DDInputOutput
 class DDSerial2IO: public DDInputOutput {
   public:
     DDSerial2IO(unsigned long baud,

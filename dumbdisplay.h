@@ -395,6 +395,7 @@ class LedGridDDLayer: public DDLayer {
     void noOffColor();
 };
 
+/// @brief
 /// Class for LCD layer; created with DumbDisplay::createLcdLayer()
 /// @note with "feedback" enabled, can be used as a button
 /// @note with "feedback" enabled, can be used as checkbox; consider using these emojis for checkbox --
@@ -645,6 +646,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
 };
 
 
+/// @brief
 /// Class for virtual joystick layer; created with DumbDisplay::createJoystickLayer()
 /// @since v0.9.7-r2
 class JoystickDDLayer: public DDLayer {
@@ -691,6 +693,7 @@ class PlotterDDLayer: public DDLayer {
 };
 
 
+/// @brief
 /// Class for TomTom map "device dependent view" layer, which means that it is solely rendered by the Android view that it hosts; 
 /// created with DumbDisplay::createTomTomMapLayer()
 class TomTomMapDDLayer: public DDLayer {
@@ -734,7 +737,7 @@ class TerminalDDLayer: public DDLayer {
 };
 
 
-// Helper class for constructing "tunnel" endpoint, if the endpoint is not a simple URL
+/// Helper class for constructing "tunnel" endpoint, if the endpoint is not a simple URL. Can be used for DDTunnel::reconnectToEndpoint()
 class DDTunnelEndpoint {
   public:
     DDTunnelEndpoint(const String& endPoint) {
@@ -820,11 +823,15 @@ class DDTunnel: public DDObject {
       this->endPoint = endPoint;
       reconnect();
     }
+    /// reconnect to specified endpoint with parameters
+    /// @param endPoint endpoint to connect to
+    /// @param params parameters to to end point; empty if nont
     void reconnectToSetParams(const String& endPoint, const String& params) {
       this->endPoint = endPoint;
       this->params = params;
       reconnect();
     }
+    /// reconnect to specified endpoint. See DDTunnelEndpoint.
     void reconnectToEndpoint(const DDTunnelEndpoint endpoint) {
       this->endPoint = endpoint.endPoint;
       this->headers = endpoint.headers;
