@@ -1,6 +1,6 @@
 # DumbDisplay Arduino Library (v0.9.8)
 
-[DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual output gadgets (as well as some simple inputting means) for your microcontroller experiments.
+[DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
 You may want to watch the video [**Introducing DumbDisplay -- the little helper for Arduino experiments**](https://www.youtube.com/watch?v=QZkhO6jTf0U) for a brief introduction.
 
@@ -15,7 +15,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 * [Coding Introduction](#coding-introduction)
   * [Samples](#samples)
   * [More Samples](#more-samples)
-  * [More Standard Examples](#more-standard-examples)
+  * [More OTG Examples](#more-otg-examples)
 * [Features](#features)  
   * [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism)
   * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
@@ -711,7 +711,7 @@ Notes:
 
 
 
-## More Standard Examples
+## More OTG Examples
 
 | ["RGB "Sliders"](#example----rgb-sliders) |  ["Tunnel" for RESTful](#example----tunnel-for-restful) | ["Tunnel" for Web Image](#example----tunnel-for-web-image) | 
 |--|--|--|
