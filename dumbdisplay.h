@@ -1024,7 +1024,9 @@ extern boolean _DDDisableParamEncoding;
 inline void DDDebugDisableParamEncoding() { _DDDisableParamEncoding = true; }
 
 
-/// The core -- class for DumbDisplay; everything starts here. For an example, please refer to [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
+/// @brief
+/// The core class for DumbDisplay; everything starts here. The most important argument to DumbDisplay is an DDInputOutput object.
+/// For an example, please refer to [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE/*, bool enableDoubleClick = true*/) {

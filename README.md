@@ -714,7 +714,7 @@ Notes:
 
 ## More OTG Examples
 
-| ["RGB "Sliders"](#example----rgb-sliders) |  ["Tunnel" for RESTful](#example----tunnel-for-restful) | ["Tunnel" for Web Image](#example----tunnel-for-web-image) | 
+| [RGB "Sliders"](#example----rgb-sliders) |  ["Tunnel" for RESTful](#example----tunnel-for-restful) | ["Tunnel" for Web Image](#example----tunnel-for-web-image) | 
 |--|--|--|
 |![](screenshots/otgrgb.png)|![](screenshots/otgrest.png)|![](screenshots/otgwebimage.png)|
 
@@ -1637,7 +1637,7 @@ Notes:
 
 # Reference
 
-For reference, you may want to resort to the headers of the different related classes. To better display the headers, [Doxygen](https://www.doxygen.nl/index.html) is used to generate doc HTML pages autmoatically -- https://trevorwslee.github.io/ArduinoDumbDisplay/html
+For reference, you may want to resort to the headers of the different related classes. To better display the headers, [Doxygen](https://www.doxygen.nl/index.html) is used to generate doc HTML pages autmoatically -- https://trevorwslee.github.io/ArduinoDumbDisplay/html/
 
 
 
