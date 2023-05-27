@@ -1531,7 +1531,7 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 
 * Setting DumbDisplay app's `Pixel Density` to **Medium** will make the layer's text and other aspects look better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text, but don't want to pay the price, try setting it to **Over**. Hopefully, **Over** is less taxing, since the text rendering is implemented differently, resulting in rendered text sligtly "over" the boundary where it should be, but looks better 
 
-|***Normal***|***Medium***|***High***|***Fine***|***Over***|
+|**Normal**|**Medium**|**High**|**Fine**|**Over**|
 |--|--|--|--|--|
 |![](screenshots/dd_pixel_density_normal.png)|![](screenshots/dd_pixel_density_medium.png)|![](screenshots/dd_pixel_density_high.png)|![](screenshots/dd_pixel_density_fine.png)|![](screenshots/dd_pixel_density_over.png)|
 
