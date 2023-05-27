@@ -228,7 +228,7 @@ You may want to refer to the post [Blink Test With Virtual Display, DumbDisplay]
 Here, several examples are presented demonstrating the basis of DumbDisplay. More examples will be shown when DumbDisplay features are described in a bit more details in later sections.
 
 
-| [Micro:bit](#sample----microbit) | 2. [LEDs + "Bar Meter" + LCD](#sample----leds--bar-meter--lcd) | 3. [Graphical [LCD]](##sample----graphical-lcd) |
+| [Micro:bit](#sample----microbit) | [LEDs + "Bar Meter" + LCD](#sample----leds--bar-meter--lcd) | [Graphical [LCD]](#sample----graphical-lcd) |
 |--|--|--|
 |![](screenshots/ddmb.png)|![](screenshots/ddbarmeter.png)|![](screenshots/ddgraphical.png)|
 
@@ -422,10 +422,9 @@ void loop() {
 
 ## More Extra Samples
 
-
-| 3. [Nested "auto pin" layers](#sample----nested-auto-pin-layers)  | 4. [Manual "pin" layers (LEDs + Turtle)](#sample----manual-pin-layers-leds--turtle) | 6. ["Layer feedback"](#sample----layer-feedback) | 7. ["Tunnel" for RESTful](#example----tunnel-for-restful) |
-|--|--|--|--|
-|![](screenshots/ddautopin.png)|![](screenshots/ddpinturtle.png)|![](screenshots/dddoodle.png)|![](screenshots/otgrest.png)|
+| [Nested "auto pin" layers](#sample----nested-auto-pin-layers)  | [Manual "pin" layers (LEDs + Turtle)](#sample----manual-pin-layers-leds--turtle) | ["Layer feedback"](#sample----layer-feedback) |
+|--|--|--|
+|![](screenshots/ddautopin.png)|![](screenshots/ddpinturtle.png)|![](screenshots/dddoodle.png)|
 
 
 ### Sample -- *Nested "auto pin" layers*
@@ -707,6 +706,14 @@ void loop() {
 
 Notes:
 * DumbDisplay library will work cooperatively with your code; therefore, do give DumbDisplay library chances to do its work. Please call `DDYeild()` and/or `DDDelay()` appropriately whenever possible. 
+
+
+
+## More Standard Eamples
+
+| ["Tunnel" for RESTful](#example----tunnel-for-restful) |
+|--|
+|![](screenshots/otgrest.png)|
 
 
 
