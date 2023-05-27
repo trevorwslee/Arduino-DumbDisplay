@@ -97,7 +97,7 @@ To upgrade DumbDisplay Arduino Library for that PlatformIO project, you can simp
 
 # DumbDisplay Android App
 
-Obviously, you will need to install an app on your Android phone. Indeed, for Arduino DumbDisplay to work, you will need to install the free [Android DumbDisplay app](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay) from Android Play Store
+Obviously, you will need to install an app on your Android phone. Indeed, for Arduino DumbDisplay to work, you will need to install the free [DumbDisplay Android app](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay) from Android Play Store
 
 The app is itself a USB serial monitor, and certinaly can also accept DumbDisplay connection via
 * SoftwareSerial (e.g. Bluetooth by HC-05 / HC-06; even HC-08)
@@ -115,7 +115,8 @@ Notes:
  
 # Coding Introduction
 
-The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object, which requires an IO object for communicating with your Android DumbDisplay app:
+The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object,
+which requires an IO object for communicating with your DumbDisplay Android app:
 
 * Via Serial -- via OTG; you may want to refer to [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
   ```
