@@ -44,7 +44,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 # Description
 
-Instead of connecting real gadgets to your Arduino framework compatible microcontroller board for showing experiment results (or for getting simple input like pressing), you can make use of DumbDisplay for the purposes -- to realize virtual IO gadagets remotely on your Android phone, or locally with OTG adaptor connecting your microcontroller board and your Android phone.
+Instead of connecting real gadgets to your Arduino framework compatible microcontroller board for displaying purposes (or for getting simple inputs like pressing), you can make use of DumbDisplay for the similar purposes -- to realize virtual IO gadagets remotely on your Android phone, or locally with OTG adaptor connecting your microcontroller board and your Android phone.
 
 By doing so you can defer buying / wiring real gadgets until later stage of your experiment. Even, you might be able to save a few microcontroller pins for other experiment needs, if you so decided that Android phone can be your display gadget (and more) with DumbDisplay app.
 
@@ -76,7 +76,7 @@ Alternative, you can choose to use the more "fluid" manual approach. The basic s
 
 For demonstration on installing DumbDisplay Arduino Library this manual way, you may want to watch the video [**Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)**](https://www.youtube.com/watch?v=nN7nXRy7NMg)
 
-To upgrade DumbDisplay Arduino Library installed manually this way, you just need to replace the directory manually, by following the above steps again.
+To upgrade DumbDisplay Arduino Library installed manually this way, you just need to replace the directory, by following the above steps again.
 
 
 ## PlatformIO
@@ -97,7 +97,7 @@ To upgrade DumbDisplay Arduino Library for that PlatformIO project, you can simp
 
 # DumbDisplay Android App
 
-Obviously, you will need to install an app on your Android phone. Indeed, for Arduino DumbDisplay to work, you will need to install the free [DumbDisplay Arduino app](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay) from Android Play Store
+Obviously, you will need to install an app on your Android phone. Indeed, for Arduino DumbDisplay to work, you will need to install the free [Android DumbDisplay app](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay) from Android Play Store
 
 The app is itself a USB serial monitor, and certinaly can also accept DumbDisplay connection via
 * SoftwareSerial (e.g. Bluetooth by HC-05 / HC-06; even HC-08)
@@ -110,7 +110,7 @@ The app is itself a USB serial monitor, and certinaly can also accept DumbDispla
 
 Notes:
 * Out of so many microcontroller boards, I have only tested DumbDisplay with the microcontroller boards that I have access to. Nevertheless, I am hopeful that using Serial for other microcontroller boards should work just fine [in general].
-* In case DumbDisplay does not handshake with your microcontroller board correctly, you can try resetting the board, say, by pressing the "reset" button on the board.
+* In case DumbDisplay does not handshake with your microcontroller board correctly, you can try resetting the board, say, by pressing the "reset" button on it.
 
  
 # Coding Introduction
