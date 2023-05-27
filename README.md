@@ -196,9 +196,10 @@ The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbD
   With DumbDisply WIFI Bridge running on your computer, you can keep the microcontroller connected with USB, and make WIFI connection with DumbDisplay Android app.
   Please refer to [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge) for more description on it.
 
-With a DumbDisplay object, you are ready to proceed with coding, like
+|  | |
+|--|--|
+|With a DumbDisplay object, you are ready to proceed with coding, like https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink/otgblink.ino|![](screenshots/otgblink.png)|
 
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink/otgblink.ino
 
 ```
 #include "dumbdisplay.h"
@@ -222,17 +223,17 @@ You may want to refer to the post [Blink Test With Virtual Display, DumbDisplay]
 
 
 
-## More Samples
+## Extra Samples
 
 Here, several examples are presented demonstrating the basis of DumbDisplay. More examples will be shown when DumbDisplay features are described in a bit more details in later sections.
 
 
-| 1. [Micro:bit](#screenshot-1----microbit) | 2. [LEDs + "Bar Meter" + LCD](#screenshot-2----leds--bar-meter--lcd) | 3. [Nested "auto pin" layers](#screenshot-3----nested-auto-pin-layers)  | 4. [Manual "pin" layers (LEDs + Turtle)](#screenshot-4----manual-pin-layers-leds--turtle) | 5. [Graphical [LCD]](#screenshot-5----graphical-lcd) | 6. ["Layer feedback"](#screenshot-6----layer-feedback) | 7. ["Tunnel" for RESTful](#screenshot-7----tunnel-for-restful) |
-|--|--|--|--|--|--|--|
-|![](screenshots/ddmb.png)|![](screenshots/ddbarmeter.png)|![](screenshots/ddautopin.png)|![](screenshots/ddpinturtle.png)|![](screenshots/ddgraphical.png)|![](screenshots/dddoodle.png)|![](screenshots/otgrest.png)|
+| [Micro:bit](#sample----microbit) | 2. [LEDs + "Bar Meter" + LCD](#sample----leds--bar-meter--lcd) | 3. [Graphical [LCD]](##sample----graphical-lcd) |
+|--|--|--|
+|![](screenshots/ddmb.png)|![](screenshots/ddbarmeter.png)|![](screenshots/ddgraphical.png)|
 
 
-### Screenshot 1 -- *Micro:bit*
+### Sample -- *Micro:bit*
 
 A more interesting sample would be like the one shown here, which shows how to use the [MbDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_mb_d_d_layer.html) to simulate a Micro:bit.
 
@@ -272,7 +273,7 @@ void loop() {
 }
 ```
 
-### Screenshot 2 -- *LEDs + "Bar Meter" + LCD*
+### Sample -- *LEDs + "Bar Meter" + LCD*
 
 An even more interesting sample would be like the example shown here, which demonstrates how the [LedGridDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_led_grid_d_d_layer.html) can be used.
 
@@ -321,180 +322,7 @@ void loop() {
 ```
 
 
-### Screenshot 3 -- *Nested "auto pin" layers*
-
-Auto pinning of layers is not restricted to a single direction. In fact, it can be nested, like
-
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddautopin/ddautopin.ino
-
-```
-#include "dumbdisplay.h"
-
-// for connection
-// . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
-// . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
-DumbDisplay dumbdisplay(new DDInputOutput());
-
-LedGridDDLayer *rled;
-LedGridDDLayer *gled;
-LedGridDDLayer *bled;
-LedGridDDLayer *hmeter;
-LedGridDDLayer *vmeter;
-LcdDDLayer *lcd;
-
-int count = 20;
-
-void setup() {
-  // create R + G + B LED layers
-  rled = dumbdisplay.createLedGridLayer();
-  gled = dumbdisplay.createLedGridLayer();
-  bled = dumbdisplay.createLedGridLayer();
-
-  // create LED layers that will be used for "horizontal bar-meter"
-  hmeter = dumbdisplay.createLedGridLayer(2 * count, 1, 1, 5);
-  // create LED layers that will be used for "vertical bar-meter"
-  vmeter = dumbdisplay.createLedGridLayer(1, 2 * count, 5, 1);
-  
-  // create a LCD layers with 2 rows of 16 characters
-  lcd = dumbdisplay.createLcdLayer(16, 2);
-  
-  // configure to "auto pin" the different layers 
-  // -- end result of DD_AP_XXX(...) is the layout spec "H(V(0+1+2)+V(3+5)+4)"
-  // -- . H/V: layout direction
-  // -- . 0/1/2/3/4/5: layer id
-  dumbdisplay.configAutoPin(DD_AP_HORI_3(
-                              DD_AP_VERT_3(rled->getLayerId(), gled->getLayerId(), bled->getLayerId()),
-                              DD_AP_VERT_2(hmeter->getLayerId(), lcd->getLayerId()),
-                              vmeter->getLayerId()));
-        
-  // setup RGB leds color and turn them on
-  rled->onColor("red");
-  gled->onColor("green");
-  bled->onColor("blue");
-  rled->turnOn();
-  gled->turnOn();
-  bled->turnOn();
-  
-  // set "bar meters" colors
-  hmeter->onColor("blue");
-  hmeter->offColor("yellow");
-  hmeter->backgroundColor("black");
-  vmeter->onColor("green");
-  vmeter->offColor("lightgray");
-  vmeter->backgroundColor("blue");
-  
-  // set LCD colors and print out something
-  lcd->pixelColor("red");
-  lcd->bgPixelColor("lightgreen");
-  lcd->backgroundColor("black");
-  lcd->print("hello world");  
-  lcd->setCursor(0, 1);
-  lcd->print("how are you?");
-}
-
-void loop() {
-  delay(1000);
-  if (random(2) == 0) {
-    lcd->scrollDisplayLeft();
-    count--;
-  } else {  
-    lcd->scrollDisplayRight();
-    count++;
-  }
-  hmeter->horizontalBar(count);
-  vmeter->verticalBar(count);
-  if (random(2) == 0)
-    rled->toggle();
-  if (random(2) == 0)
-    gled->toggle();
-  if (random(2) == 0)
-    bled->toggle();
-}
-```
-
-### Screenshot 4 -- *Manual "pin" layers (LEDs + Turtle)*
-
-To showcase Turtle layer [TurtleDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_turtle_d_d_layer.html), as well as the more controller way of "pinning" layers
-
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddpinturtle/ddpinturtle.ino
-
-```
-#include "dumbdisplay.h"
-
-// for connection
-// . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
-// . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
-DumbDisplay dumbdisplay(new DDInputOutput());
-
-TurtleDDLayer *turtle = NULL;
-int r = random(0, 255);
-int g = 128;
-int b = 0;
-
-void setup() {
-  // create a Turtle layer with size 240 x 190
-  turtle = dumbdisplay.createTurtleLayer(240, 190);
-  // setup Turtle layer
-  turtle->backgroundColor("azure");
-  turtle->fillColor("lemonchiffon");
-  turtle->penSize(1);
-  turtle->penFilled(true);
-  // initially draw something on the Turtle layer (will change some settings)
-  turtle->centeredPolygon(70, 6, true);
-  turtle->penFilled(false);
-  turtle->circle(80, true);
-
-  // create 4 LEDs -- left-top, right-top, right-bottom and left-bottom 
-  LedGridDDLayer* ltLed = dumbdisplay.createLedGridLayer();
-  LedGridDDLayer* rtLed = dumbdisplay.createLedGridLayer();
-  LedGridDDLayer* rbLed = dumbdisplay.createLedGridLayer();
-  LedGridDDLayer* lbLed = dumbdisplay.createLedGridLayer();
-
-  // set LEDs background color
-  ltLed->backgroundColor("green");
-  rtLed->backgroundColor("green");
-  rbLed->backgroundColor("green");
-  lbLed->backgroundColor("green");
-
-  // turn ON the LEDs
-  ltLed->turnOn();
-  rtLed->turnOn();
-  rbLed->turnOn();
-  lbLed->turnOn();
-
-  // config "pin frame" to be 290 units x 250 units
-  // 290: 25 + 240 + 25
-  // 240: 25 + 190 + 25
-  dumbdisplay.configPinFrame(290, 240);
-
-  // pin top-left LED @ (0, 0) with size (25, 25)
-  dumbdisplay.pinLayer(ltLed, 0, 0, 25, 25);
-  // pin top-right LED @ (265, 0) with size (25, 25)
-  dumbdisplay.pinLayer(rtLed, 265, 0, 25, 25);
-  // pin right-bottom LED @ (265, 215) with size (25, 25)
-  dumbdisplay.pinLayer(rbLed, 265, 215, 25, 25);
-  // pin left-bottom LED @ (0, 215) with size (25, 25)
-  dumbdisplay.pinLayer(lbLed, 0, 215, 25, 25);
-
-  // pin Turtle @ (25, 25) with size (240, 190)
-  dumbdisplay.pinLayer(turtle, 25, 25, 240, 190);
-}
-
-void loop() {
-  delay(1000);
-  turtle->penColor(DD_RGB_COLOR(r, g, b));
-  turtle->circle(27);
-  turtle->rectangle(90, 20);
-  turtle->rightTurn(10);
-  b = b + 20;
-  if (b > 255) {
-      b = 0;
-      r = random(0, 255);
-  }
-}
-```
-
-### Screenshot 5 -- *Graphical [LCD]*
+### Sample -- *Graphical [LCD]*
 
 There is a graphical [LCD] layer [GraphicalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) which is "derivded" from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features)
 
@@ -591,7 +419,190 @@ void loop() {
 }
 ```
 
-### Screenshot 6 -- *"Layer feedback"*
+
+## More Extra Samples
+
+
+| 3. [Nested "auto pin" layers](#sample----nested-auto-pin-layers)  | 4. [Manual "pin" layers (LEDs + Turtle)](#sample----manual-pin-layers-leds--turtle) | 6. ["Layer feedback"](#sample----layer-feedback) | 7. ["Tunnel" for RESTful](#example----tunnel-for-restful) |
+|--|--|--|--|
+|![](screenshots/ddautopin.png)|![](screenshots/ddpinturtle.png)|![](screenshots/dddoodle.png)|![](screenshots/otgrest.png)|
+
+
+### Sample -- *Nested "auto pin" layers*
+
+Auto pinning of layers is not restricted to a single direction. In fact, it can be nested, like
+
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddautopin/ddautopin.ino
+
+```
+#include "dumbdisplay.h"
+
+// for connection
+// . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
+// . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
+DumbDisplay dumbdisplay(new DDInputOutput());
+
+LedGridDDLayer *rled;
+LedGridDDLayer *gled;
+LedGridDDLayer *bled;
+LedGridDDLayer *hmeter;
+LedGridDDLayer *vmeter;
+LcdDDLayer *lcd;
+
+int count = 20;
+
+void setup() {
+  // create R + G + B LED layers
+  rled = dumbdisplay.createLedGridLayer();
+  gled = dumbdisplay.createLedGridLayer();
+  bled = dumbdisplay.createLedGridLayer();
+
+  // create LED layers that will be used for "horizontal bar-meter"
+  hmeter = dumbdisplay.createLedGridLayer(2 * count, 1, 1, 5);
+  // create LED layers that will be used for "vertical bar-meter"
+  vmeter = dumbdisplay.createLedGridLayer(1, 2 * count, 5, 1);
+  
+  // create a LCD layers with 2 rows of 16 characters
+  lcd = dumbdisplay.createLcdLayer(16, 2);
+  
+  // configure to "auto pin" the different layers 
+  // -- end result of DD_AP_XXX(...) is the layout spec "H(V(0+1+2)+V(3+5)+4)"
+  // -- . H/V: layout direction
+  // -- . 0/1/2/3/4/5: layer id
+  dumbdisplay.configAutoPin(DD_AP_HORI_3(
+                              DD_AP_VERT_3(rled->getLayerId(), gled->getLayerId(), bled->getLayerId()),
+                              DD_AP_VERT_2(hmeter->getLayerId(), lcd->getLayerId()),
+                              vmeter->getLayerId()));
+        
+  // setup RGB leds color and turn them on
+  rled->onColor("red");
+  gled->onColor("green");
+  bled->onColor("blue");
+  rled->turnOn();
+  gled->turnOn();
+  bled->turnOn();
+  
+  // set "bar meters" colors
+  hmeter->onColor("blue");
+  hmeter->offColor("yellow");
+  hmeter->backgroundColor("black");
+  vmeter->onColor("green");
+  vmeter->offColor("lightgray");
+  vmeter->backgroundColor("blue");
+  
+  // set LCD colors and print out something
+  lcd->pixelColor("red");
+  lcd->bgPixelColor("lightgreen");
+  lcd->backgroundColor("black");
+  lcd->print("hello world");  
+  lcd->setCursor(0, 1);
+  lcd->print("how are you?");
+}
+
+void loop() {
+  delay(1000);
+  if (random(2) == 0) {
+    lcd->scrollDisplayLeft();
+    count--;
+  } else {  
+    lcd->scrollDisplayRight();
+    count++;
+  }
+  hmeter->horizontalBar(count);
+  vmeter->verticalBar(count);
+  if (random(2) == 0)
+    rled->toggle();
+  if (random(2) == 0)
+    gled->toggle();
+  if (random(2) == 0)
+    bled->toggle();
+}
+```
+
+
+### Sample -- *Manual "pin" layers (LEDs + Turtle)*
+
+To showcase Turtle layer [TurtleDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_turtle_d_d_layer.html), as well as the more controller way of "pinning" layers
+
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddpinturtle/ddpinturtle.ino
+
+```
+#include "dumbdisplay.h"
+
+// for connection
+// . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
+// . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
+DumbDisplay dumbdisplay(new DDInputOutput());
+
+TurtleDDLayer *turtle = NULL;
+int r = random(0, 255);
+int g = 128;
+int b = 0;
+
+void setup() {
+  // create a Turtle layer with size 240 x 190
+  turtle = dumbdisplay.createTurtleLayer(240, 190);
+  // setup Turtle layer
+  turtle->backgroundColor("azure");
+  turtle->fillColor("lemonchiffon");
+  turtle->penSize(1);
+  turtle->penFilled(true);
+  // initially draw something on the Turtle layer (will change some settings)
+  turtle->centeredPolygon(70, 6, true);
+  turtle->penFilled(false);
+  turtle->circle(80, true);
+
+  // create 4 LEDs -- left-top, right-top, right-bottom and left-bottom 
+  LedGridDDLayer* ltLed = dumbdisplay.createLedGridLayer();
+  LedGridDDLayer* rtLed = dumbdisplay.createLedGridLayer();
+  LedGridDDLayer* rbLed = dumbdisplay.createLedGridLayer();
+  LedGridDDLayer* lbLed = dumbdisplay.createLedGridLayer();
+
+  // set LEDs background color
+  ltLed->backgroundColor("green");
+  rtLed->backgroundColor("green");
+  rbLed->backgroundColor("green");
+  lbLed->backgroundColor("green");
+
+  // turn ON the LEDs
+  ltLed->turnOn();
+  rtLed->turnOn();
+  rbLed->turnOn();
+  lbLed->turnOn();
+
+  // config "pin frame" to be 290 units x 250 units
+  // 290: 25 + 240 + 25
+  // 240: 25 + 190 + 25
+  dumbdisplay.configPinFrame(290, 240);
+
+  // pin top-left LED @ (0, 0) with size (25, 25)
+  dumbdisplay.pinLayer(ltLed, 0, 0, 25, 25);
+  // pin top-right LED @ (265, 0) with size (25, 25)
+  dumbdisplay.pinLayer(rtLed, 265, 0, 25, 25);
+  // pin right-bottom LED @ (265, 215) with size (25, 25)
+  dumbdisplay.pinLayer(rbLed, 265, 215, 25, 25);
+  // pin left-bottom LED @ (0, 215) with size (25, 25)
+  dumbdisplay.pinLayer(lbLed, 0, 215, 25, 25);
+
+  // pin Turtle @ (25, 25) with size (240, 190)
+  dumbdisplay.pinLayer(turtle, 25, 25, 240, 190);
+}
+
+void loop() {
+  delay(1000);
+  turtle->penColor(DD_RGB_COLOR(r, g, b));
+  turtle->circle(27);
+  turtle->rectangle(90, 20);
+  turtle->rightTurn(10);
+  b = b + 20;
+  if (b > 255) {
+      b = 0;
+      r = random(0, 255);
+  }
+}
+```
+
+### Sample -- *"Layer feedback"*
 
 This very simple doodle sample shows how the "layer feedback" mechanism can be used to route user interaction (clicking) of layer to Arduino.
 
@@ -698,7 +709,8 @@ Notes:
 * DumbDisplay library will work cooperatively with your code; therefore, do give DumbDisplay library chances to do its work. Please call `DDYeild()` and/or `DDDelay()` appropriately whenever possible. 
 
 
-### Screenshot 7 -- *"Tunnel" for RESTful*
+
+### Example -- *"Tunnel" for RESTful*
 
 This sample should demonstrate how to use "tunnel" to access the Internet for simple things, like calling RESTful api:
 
