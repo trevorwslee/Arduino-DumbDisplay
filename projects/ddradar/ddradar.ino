@@ -217,7 +217,7 @@ void setup() {
   noDirectionalLayer->enableFeedback("f");
 
 #ifdef SERVO    
-  angleSliderLayer = dumbdisplay.createJoystickLayer("rl", MaxAngle, 0.5);
+  angleSliderLayer = dumbdisplay.createJoystickLayer(MaxAngle, "rl", 0.5);
   angleSliderLayer->border(3, "black");
   angleSliderLayer->colors("green", "darkgreen", "blue", "darkblue");
   angleSliderLayer->backgroundColor("cyan");
@@ -257,7 +257,7 @@ void setup() {
 
   layoutHelper.finishInitializeLayout("ddradar");
 
-  layoutHelper.setIdleCalback([](long idleForMillis) {
+  layoutHelper.setIdleCallback([](long idleForMillis) {
     isRunning = false;  // if idle, e.g. disconnected, stop whatever
   });
 
