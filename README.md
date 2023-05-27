@@ -12,8 +12,10 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   * [Arduino IDE](#arduino-ide)
   * [PlatformIO](#platformio)
 * [DumbDisplay Android App](#dumbDisplay-android-app)
-* [Sample Code](#sample-code)
+* [Coding Introduction](#coding-introduction)
+  * [Samples](#samples)
   * [More Samples](#more-samples)
+  * [More Standard Examples](#more-standard-examples)
 * [Features](#features)  
   * [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism)
   * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
@@ -111,7 +113,7 @@ Notes:
 * In case DumbDisplay does not handshake with your microcontroller board correctly, you can try resetting the board, say, by pressing the "reset" button on the board.
 
  
-# Sample Code
+# Coding Introduction
 
 The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object, which requires an IO object for communicating with your Android DumbDisplay app:
 
@@ -223,7 +225,7 @@ You may want to refer to the post [Blink Test With Virtual Display, DumbDisplay]
 
 
 
-## Extra Samples
+## Samples
 
 Here, several examples are presented demonstrating the basis of DumbDisplay. More examples will be shown when DumbDisplay features are described in a bit more details in later sections.
 
@@ -420,7 +422,7 @@ void loop() {
 ```
 
 
-## More Extra Samples
+## More Samples
 
 | [Nested "auto pin" layers](#sample----nested-auto-pin-layers)  | [Manual "pin" layers (LEDs + Turtle)](#sample----manual-pin-layers-leds--turtle) | ["Layer feedback"](#sample----layer-feedback) |
 |--|--|--|
@@ -709,17 +711,91 @@ Notes:
 
 
 
-## More Standard Eamples
+## More Standard Examples
 
-| ["Tunnel" for RESTful](#example----tunnel-for-restful) |
-|--|
-|![](screenshots/otgrest.png)|
+| ["RGB "Sliders"](#example----rgb-sliders) |  ["Tunnel" for RESTful](#example----tunnel-for-restful) | ["Tunnel" for Web Image](#example----tunnel-for-web-image) | 
+|--|--|--|
+|![](screenshots/otgrgb.png)|![](screenshots/otgrest.png)|![](screenshots/otgwebimage.png)|
 
 
+### Example -- *RGB "Sliders"*
+
+This example make use of the virtual Joystick layers to realize three "sliders" for the three primiary colors RGB.
+```
+#include "dumbdisplay.h"
+
+// create the DumbDisplay object; assuming USB connection with 115200 baud
+DumbDisplay dumbdisplay(new DDInputOutput());
+
+// declare a graphical layer object to show the selected color; to be created in setup()
+GraphicalDDLayer *colorLayer;
+// declare the R "slider" layer
+JoystickDDLayer *rSliderLayer;
+// declare the G "slider" layer
+JoystickDDLayer *gSliderLayer;
+// declare the B "slider" layer
+JoystickDDLayer *bSliderLayer;
+
+int r = 0;
+int g = 0;
+int b = 0;
+
+void setup() {
+  // create the "selected color" layer
+  colorLayer = dumbdisplay.createGraphicalLayer(350, 150);
+    colorLayer->border(5, "black", "round", 2);
+  
+  // create the R "slider" layer
+  rSliderLayer = dumbdisplay.createJoystickLayer(255, "hori", 0.5);
+  rSliderLayer->border(3, "darkred", "round", 1);
+  rSliderLayer->colors("red", DD_RGB_COLOR(0xff, 0x44, 0x44), "black", "darkgray");
+
+  // create the G "slider" layer
+  gSliderLayer = dumbdisplay.createJoystickLayer(255, "hori", 0.5);
+  gSliderLayer->border(3, "darkgreen", "round", 1);
+  gSliderLayer->colors("green", DD_RGB_COLOR(0x44, 0xff, 0x44), "black", "darkgray");
+
+  // create the B "slider" layer
+  bSliderLayer = dumbdisplay.createJoystickLayer(255, "hori", 0.5);
+  bSliderLayer->border(3, "darkblue", "round", 1);
+  bSliderLayer->colors("blue", DD_RGB_COLOR(0x44, 0x44, 0xff), "black", "darkgray");
+
+  // "auto pin" the layers vertically
+  dumbdisplay.configAutoPin(DD_AP_VERT);
+
+  colorLayer->backgroundColor(DD_RGB_COLOR(r, g, b));
+}
+
+void loop() {
+  int oldR = r;
+  int oldG = g;
+  int oldB = b;
+  
+  const DDFeedback*  fb;
+
+  fb = rSliderLayer->getFeedback();
+  if (fb != NULL) {
+    r = fb->x;
+  }
+  fb = gSliderLayer->getFeedback();
+  if (fb != NULL) {
+    g = fb->x;
+  }
+  fb = bSliderLayer->getFeedback();
+  if (fb != NULL) {
+    b = fb->x;
+  }
+
+  if (r != oldR || g != oldG || b != oldB) {
+    colorLayer->backgroundColor(DD_RGB_COLOR(r, g, b));
+  }
+
+}
+```
 
 ### Example -- *"Tunnel" for RESTful*
 
-This sample should demonstrate how to use "tunnel" to access the Internet for simple things, like calling RESTful api:
+This example should demonstrate how to use "tunnel" to access the Internet for simple things, like calling RESTful api:
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/examples/ogtrest/ogtrest.ino
 
@@ -766,6 +842,65 @@ void setup() {
 void loop() {
 }
 ```
+
+### Example -- *"Tunnel" for Web Image*
+
+This example should demonstrate how to use "tunnel" to get images from the Web and disply them -- blink with web images:
+
+https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/examples/ogtwebimage/ogtwebimage.ino
+```
+#include "dumbdisplay.h"
+
+DumbDisplay dumbdisplay(new DDInputOutput(115200));
+
+
+GraphicalDDLayer *graphical;
+SimpleToolDDTunnel *tunnel_unlocked;
+SimpleToolDDTunnel *tunnel_locked;
+
+void setup() {
+  // create a graphical layer for drawing the web images to
+  graphical = dumbdisplay.createGraphicalLayer(200, 300);
+
+  // create tunnels for downloading web images ... and save to your phone
+  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", "lock-unlocked.png");
+  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", "lock-locked.png");
+}
+
+bool locked = false;
+void loop() {
+  // get result whether web image downloaded .. 0: downloading; 1: downloaded ok; -1: failed to download 
+  int result_unlocked = tunnel_unlocked->checkResult();
+  int result_locked = tunnel_locked->checkResult();
+
+  int result;
+  const char* image_file_name;
+  if (locked) {
+    image_file_name = "lock-locked.png";
+    result = result_locked;
+  } else {
+    image_file_name = "lock-unlocked.png";
+    result = result_unlocked;
+  }
+  if (result == 1) {
+    graphical->drawImageFile(image_file_name);
+  } else if (result == 0) {
+    // downloading
+    graphical->clear();
+    graphical->setCursor(0, 10);
+    graphical->println("... ...");
+    graphical->println(image_file_name);
+    graphical->println("... ...");
+  } else if (result == -1) {
+    graphical->clear();
+    graphical->setCursor(0, 10);
+    graphical->println("XXX failed to download XXX");
+  }
+  locked = !locked;
+  delay(1000);
+}
+```
+
 
 
 # Features
