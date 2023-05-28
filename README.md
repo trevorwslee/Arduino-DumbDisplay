@@ -179,7 +179,7 @@ void loop() {
 
 Here is the list of all connection IO objects that you can use:
 
-* Via Serial -- via OTG; you may want to refer to [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
+* Via Serial -- via OTG; you may want to refer to [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/) -- [DDInputOutput](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_input_output.html)
   ```
     #include "dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDInputOutput(115200));
@@ -188,7 +188,7 @@ Here is the list of all connection IO objects that you can use:
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - you **should not** be using `Serial` for other purposes
   - the default baud rate is 115200;  a lower baud rate, say 9600, may work better in some cases
-* Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- connected to Bluetooth module like HC-06. For an example, you may want to refer to the post [Setup HC-05 and HC-06, for Wireless 'Number Invaders'](https://www.instructables.com/Setup-HC-05-and-HC-06-for-Wireless-Number-Invaders/)
+* Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- connected to Bluetooth module like HC-06. For an example, you may want to refer to the post [Setup HC-05 and HC-06, for Wireless 'Number Invaders'](https://www.instructables.com/Setup-HC-05-and-HC-06-for-Wireless-Number-Invaders/) -- [DDSoftwareSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_software_serial_i_o.html)
   ```
     #include "ssdumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
@@ -198,7 +198,7 @@ Here is the list of all connection IO objects that you can use:
     - in this example, 2 and 3 are the pins used by `SoftwareSerial`
     - the default baud rate is 115200, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially true for HC-08, which connects via BLE. 
   - you **should not** be using that `SoftwareSerial` for other purposes
-* Via `Serial2` -- for STM32, connected to Bluetooth module like HC-06 
+* Via `Serial2` -- for STM32, connected to Bluetooth module like HC-06 -- [DDSerial2IO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_serial2_i_o.html)
   ```
     #include "serial2dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSerial2IO(115200));
@@ -206,7 +206,7 @@ Here is the list of all connection IO objects that you can use:
   - need to include `serial2dumbdisplay.h` -- `#include "serial2dumbdisplay.h"`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSerial2IO(115200))`
   - e.g. for STM32F103: connect PA3 (RX2) to TX of HC-06 and connect PA2 (TX2) to RX of HC-06
-* Via `Serial2` -- for Raspberry Pi Pico, connected to Bluetooth module like HC-06 
+* Via `Serial2` -- for Raspberry Pi Pico, connected to Bluetooth module like HC-06 -- [DDPicoUart1IO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_pico_uart1_i_o.html)
   ```
     #include <picodumbdisplay.h>
     DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
@@ -220,7 +220,7 @@ Here is the list of all connection IO objects that you can use:
     #include "picodumbdisplay.h"
     DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
   ```
-* Via **ESP32** `BluetoothSerial`
+* Via **ESP32** `BluetoothSerial` -- [DDBluetoothSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_bluetooth_serial_i_o.html)
   ```
     #include "esp32dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"));
@@ -229,7 +229,7 @@ Here is the list of all connection IO objects that you can use:
   - setup a `dumbdisplay` object -- e.g. `DumbDisplay dumbdisplay(new DDBluetoothSerialIO("ESP32"))`  
     - in the sample, "ESP32" is the name used by `BluetoothSerial`
   - you **should not** be using `BluetoothSerial` for other purposes
-* Via **ESP32** `BLE`
+* Via **ESP32** `BLE` -- [DDBLESerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_b_l_e_serial_i_o.html)
   ```
     #include "esp32bledumbdisplay.h"
     DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"));
@@ -239,7 +239,7 @@ Here is the list of all connection IO objects that you can use:
     - in the sample, "ESP32BLE" is the name used by BLE
   - you **should not** be using ESP32's BLE for other purposes
   - be **warned** that `DDBLESerialIO` is slow; if classic Bluetooth is supported by micrcontroller (like ESP32), choose `DDBluetoothSerialIO` instead 
-* Via WIFI as a [`WiFiServer`](https://www.arduino.cc/en/Reference/WiFi) -- for ESP01/ESP8266/ESP32/PicoW  
+* Via WIFI as a [`WiFiServer`](https://www.arduino.cc/en/Reference/WiFi) -- for ESP01/ESP8266/ESP32/PicoW -- [DDWiFiServerIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_wi_fi_server_i_o.html)  
   ```
     #include "wifidumbdisplay.h"
     const char* ssid = "wifiname";
