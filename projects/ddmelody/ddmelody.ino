@@ -236,7 +236,7 @@ void setup() {
 
   dumbdisplay.playbackLayerSetupCommands("ddmelody");
 
-  dumbdisplay.setIdleCalback(IdleCallback);
+  dumbdisplay.setIdleCallback(IdleCallback);
 }
 
 void loop() {

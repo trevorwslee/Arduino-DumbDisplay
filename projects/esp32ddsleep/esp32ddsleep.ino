@@ -82,7 +82,7 @@ void setup() {
   touchAttachInterrupt(TOUCH_PIN, [](){}, TOUCH_THRESHOLD);
 
 #ifdef AUTO_SLEEP_WHEN_IDEL_MILLIS
-  dumbdisplay.setIdleCalback(IdleCallback);
+  dumbdisplay.setIdleCallback(IdleCallback);
 #endif
 
   detected = dumbdisplay.createLedGridLayer(2, 1);
