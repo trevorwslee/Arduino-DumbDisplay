@@ -177,7 +177,7 @@ void loop() {
 ```
 
 
-Here is the list of all connection IO object that you can use:
+Here is the list of all connection IO objects that you can use:
 
 * Via Serial -- via OTG; you may want to refer to [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
   ```
@@ -756,7 +756,7 @@ Notes:
 
 ### Example -- *RGB "Sliders"*
 
-This example make use of the virtual Joystick layers to realize three "sliders" for the three primiary colors RGB.
+This example make use of the virtual Joystick layers to realize three "sliders" for selecting the three primiary colors, to be realized with a virtual graphical [LCD] layer.
 ```
 #include "dumbdisplay.h"
 
@@ -881,7 +881,7 @@ void loop() {
 
 ### Example -- *"Tunnel" for Web Image*
 
-This example should demonstrate how to use "tunnel" to get images from the Web and disply them -- blink with web images:
+This example should demonstrate how to use "tunnel" to download images from the Web (to your phone's storage) and display them -- "blink" with images rather than LED:
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/examples/ogtwebimage/ogtwebimage.ino
 ```
