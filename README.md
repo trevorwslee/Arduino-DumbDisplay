@@ -1696,7 +1696,7 @@ Notes:
 * ***If DumbDisplay fails to make connection to DumbDisplay WIFI Bridge, check your descktop firewall settings; try switching desktop WIFI to use 2.4 GHz.***  
 
 
-For example, when something like the above Graphical [LCD] example is run with DumbDisplay WIFI Bridge as well as an Android emulator (e.g. [Genymotion](https://www.genymotion.com/)), you can see something like:
+For example, when sketch like the above Graphical [LCD] example is run with DumbDisplay WIFI Bridge as well as an Android emulator (e.g. [Genymotion](https://www.genymotion.com/)), you can see something like:
 
 ![](screenshots/ddwifibridge2.png)
 
@@ -1713,9 +1713,9 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
   DumbDisplay dumbdisplay(new DDInputOutput());
   ```
 
-* In fact, showing commands on DumbDisplay app may slow things down, even makes your DumbDisplay app non-responsive/freeze, especially when commands are sent in fast succession. Hence, suggest to disable DumbDisplay app's `Show Commands` option.
+* In fact, showing commands on DumbDisplay app may slow things down, even makes your DumbDisplay app non-responsive (like freeze), especially when commands are sent in fast succession. Hence, suggest to disable DumbDisplay app's `Show Commands` option.
 
-* Setting DumbDisplay app's `Pixel Density` to **Medium** will make the layer's text and other aspects look better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text, but don't want to pay the price, try setting it to **Over**. Hopefully, **Over** is less taxing, since the text rendering is implemented differently, resulting in rendered text sligtly "over" the boundary where it should be, but looks better 
+* Setting DumbDisplay app's `Pixel Density` to **Medium** will make the layer's text and other aspects look better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text but don't want to pay the price, try setting it to **Over**. Hopefully, **Over** is less taxing, since the text rendering is "native to your device", resulting in rendered text sligtly "over" the boundary where it should be, but looks better 
 
 |**Normal**|**Medium**|**High**|**Fine**|**Over**|
 |--|--|--|--|--|
