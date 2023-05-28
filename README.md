@@ -735,7 +735,6 @@ void setup() {
     Reset();
 }
 
-
 void loop() {
     // give DD a chance to capture "feedback"
     DDYield();
@@ -1183,21 +1182,22 @@ to a ```TerminalDDLayer```:
   TerminalDDLayer* terminal;
   void setup() {
     gpsSerial.begin(9600);
-    terminal= dumbdisplay.createTerminalLayer(600, 800);
+    terminal = dumbdisplay.createTerminalLayer(600, 800);
   }
-GpsSignal gpsSignal;
-void loop() {
-  if (gpsSignalReader.readOnce(gpsSignal)) {
-    terminal->print("- utc: ");
-    terminal->print(gpsSignal.utc_time);
-    terminal->print(" ... ");
-    if (gpsSignal.position_fixed) {
-      terminal->print("position fixed -- ");
-      terminal->print("lat:");
-      terminal->print(gpsSignal.latutude);
-      terminal->print(" long:");
-      terminal->print(gpsSignal.longitude);
-     ...
+  GpsSignal gpsSignal;
+  void loop() {
+    if (gpsSignalReader.readOnce(gpsSignal)) {
+      terminal->print("- utc: ");
+      terminal->print(gpsSignal.utc_time);
+      terminal->print(" ... ");
+      if (gpsSignal.position_fixed) {
+        terminal->print("position fixed -- ");
+        terminal->print("lat:");
+        terminal->print(gpsSignal.latutude);
+        terminal->print(" long:");
+        terminal->print(gpsSignal.longitude);
+        ...
+      }
     }
   }
 ```
