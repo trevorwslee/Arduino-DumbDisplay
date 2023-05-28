@@ -44,7 +44,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 # Description
 
-Instead of connecting real gadgets to your Arduino framework compatible microcontroller board for displaying purposes (or for getting simple inputs like pressing), you can make use of DumbDisplay for the similar purposes -- to realize virtual IO gadagets remotely on your Android phone, or locally with OTG adaptor connecting your microcontroller board and your Android phone.
+Instead of connecting real gadgets to your Arduino framework compatible microcontroller board for display purposes (or for getting simple inputs like pressing), you use DumbDisplay as some simiar virtualized alternatives -- to realize virtual IO gadagets remotely on your Android phone, or locally with OTG adaptor connecting your microcontroller board and your Android phone.
 
 By doing so you can defer buying / wiring real gadgets until later stage of your experiment. Even, you might be able to save a few microcontroller pins for other experiment needs, if you so decided that Android phone can be your display gadget (and more) with DumbDisplay app.
 
@@ -140,10 +140,10 @@ void loop() {
     delay(1000);
 }
 ```
-1) You declare a static [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object, giving it [DDInputOutput](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_input_output.html) (an IO object) for communicating with DumbDisplay app  
-2) Also, statically declare one or more [DDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_layer.html) objects. In this case, the `led` [LedGridDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_led_grid_d_d_layer.html) object, which is for simulating a virtual LED.
-3) In the `setup` block, create the layer object via the DumbDisplay object.
-4) Once created, the layer objects can be used, either in the `setup()` block or in the `loop()` block. Like in this case, the `toogle()` method of the `led` layer object is called, effectively blinking the virtual LED every second. 
+1) Declare a global [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object, giving it a [DDInputOutput](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_input_output.html) object (an IO object) for communicating with DumbDisplay app  
+2) Also, globally declare one or more [DDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_layer.html) objects. In this case, the `led` [LedGridDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_led_grid_d_d_layer.html) object, which is for simulating a virtual LED.
+3) In the `setup` block, create the globally declared layer objects via the DumbDisplay object.
+4) Once created, the layer objects can be used in the `loop()` block. Like in this case, the `toogle()` method of the `led` layer object is called, effectively blinking the virtual LED every second. 
 
 
 
@@ -247,23 +247,23 @@ Here is the list of all connection IO objects that you can use:
     DumbDisplay dumbdisplay(new DDWiFiServerIO(ssid, password));
   ```
   - ESP01 is basically a ESP8266
-  - WIFI credentials are passed to `WiFi`
+  - WIFI credentials are passed to `WiFiServer`
   - by default, DumbDisplay will setup and log using `Serial` with baud rate 115200; and you should see log lines like:
-  ```
-    binding WIFI <wifiname>
-    binded WIFI <wifiname>
-    listening on 192.168.1.134:10201 ...
-  ```  
+    ```
+      binding WIFI <wifiname>
+      binded WIFI <wifiname>
+      listening on 192.168.1.134:10201 ...
+    ```  
     where 192.168.1.134 is the IP of your microcontroller and 10201 is the port which is the defaul port
 
   By making use of DumbDisply WIFI Bridge, WIFI connection is possible for any microcontroller board (e.g. Arduino UNO) --
-  With DumbDisply WIFI Bridge running on your computer, you can keep the microcontroller connected with USB, and make WIFI connection with DumbDisplay Android app.
+  with DumbDisply WIFI Bridge running on your computer, you can keep the microcontroller connected with USB, and make WIFI connection with DumbDisplay Android app.
   Please refer to [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge) for more description on it.
 
 
 ## Samples
 
-Here, several examples are presented demonstrating the basis of DumbDisplay. More examples will be shown when DumbDisplay features are described in a bit more details in later sections.
+Here, several examples are presented demonstrating the basis of DumbDisplay. More samples will be shown when DumbDisplay features are described in a bit more details in later sections.
 
 
 | [Micro:bit](#sample----microbit) | [LEDs + "Bar Meter" + LCD](#sample----leds--bar-meter--lcd) | [Graphical [LCD]](#sample----graphical-lcd) |
@@ -756,7 +756,8 @@ Notes:
 
 ### Example -- *RGB "Sliders"*
 
-This example make use of the virtual Joystick layers to realize three "sliders" for selecting the three primiary colors, to be realized with a virtual graphical [LCD] layer.
+This example make use of the virtual Joystick layers to realize three "sliders" for selecting the three primiary colors, to be render with a virtual graphical [LCD] layer -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgrgb/otgrgb.ino
+
 ```
 #include "dumbdisplay.h"
 
@@ -825,15 +826,12 @@ void loop() {
   if (r != oldR || g != oldG || b != oldB) {
     colorLayer->backgroundColor(DD_RGB_COLOR(r, g, b));
   }
-
 }
 ```
 
 ### Example -- *"Tunnel" for RESTful*
 
-This example should demonstrate how to use "tunnel" to access the Internet for simple things, like calling RESTful api:
-
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/examples/ogtrest/ogtrest.ino
+This example should demonstrate how to use "tunnel" to access the Internet for simple things, like calling RESTful api -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgrest/otgrest.ino
 
 ```
 #include "dumbdisplay.h"
@@ -881,9 +879,7 @@ void loop() {
 
 ### Example -- *"Tunnel" for Web Image*
 
-This example should demonstrate how to use "tunnel" to download images from the Web (to your phone's storage) and display them -- "blink" with images rather than LED:
-
-https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/examples/ogtwebimage/ogtwebimage.ino
+This example should demonstrate how to use "tunnel" to download images from the Web (to your phone's storage) and display them -- "blink" with images rather than LED -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgwebimage/otgwebimage.ino
 ```
 #include "dumbdisplay.h"
 
@@ -1258,9 +1254,9 @@ The automatic pinning of layers is the easier. You only need to call the DumbDis
 The different **DD_AP_XXX* macros are
 * **DD_AP_HORI_`N`()** : Horizontally layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_HORI** layouts all layers horizontally
 * **DD_AP_VERT_`N`()** : Vertiallly layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_VERT** layouts all layers vertcally
-* **DD_AP_STACK_`N`()** : Stack `N` layers (ids) or nested **DD_AP_XXX**; with the **DD_AP_STACK** stacks all layers
+* **DD_AP_STACK_`N`()** : Stack `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_STACK** stacks all layers
 * **DD_AP_PADDING()** : It accepts padding sizes -- left, top, right and bottom -- and a layer (id) (or nested **DD_AP_XXX**)   
-* **DD_AP_SPACER()** : It is a invisible "spacer" layer with dimension -- width and height
+* **DD_AP_SPACER()** : It is an invisible "spacer" layer with the given dimension -- width and height
 
 The manual way of pinning layers is a bit more complicated. First, a "pin frame" needs be defined with a fixed size; by default, the size is 100 by 100. To change the "pin frame" fixed size, use the DumbDisplay method `configPinFrame()`. 
 
