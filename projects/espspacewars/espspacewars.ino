@@ -19,6 +19,18 @@
   DecodedJoystick* joystick = new DecodedJoystick(false);
   DecodedJoystick* buttons = new DecodedJoystick(true);
   
+#elif defined(ESP32)
+  
+  #define DOWNLOAD_IMAGES
+  #define SHOW_SPACE
+  #define DEBUG_LED_PIN 2
+  JoystickInterface* buttons = new ButtonsOnly(SetupNewButtonPressTracker(22),
+                                               SetupNewButtonPressTracker(23),
+                                               NULL, NULL);
+  JoystickInterface* joystick = new JoystickJoystick(SetupNewJoystickPressTracker(36, true),
+                                                     SetupNewJoystickPressTracker(39, true),
+                                                     NULL);
+ 
 #elif defined(ESP8266)
   
   #define DOWNLOAD_IMAGES
@@ -32,32 +44,7 @@
   JoystickInterface *joystick = new ButtonJoystick(upTracker, rightTracker, downTracker, leftTracker, NULL);
   JoystickInterface *buttons = new ButtonsOnly(rstTracker, setTracker, NULL, NULL);
 
-#elif defined(ARDUINO_AVR_UNO)
-  // *** config for Arduino UNO, with Joystick Shield
-
-  //#define DOWNLOAD_IMAGES
-  #define DEBUG_LED_PIN 13
-  JoystickInterface* buttons = new ButtonsOnly(new ButtonPressTracker(3),
-                                               new ButtonPressTracker(2),
-                                               NULL, NULL);
-  JoystickInterface* joystick = new JoystickJoystick(new JoystickPressTracker(A0, false),
-                                                     new JoystickPressTracker(A1, true),
-                                                     NULL);
- 
-#elif defined(PICO_SDK_VERSION_MAJOR)
-  // *** config for Raspberry Pi Pico, with Joystick and buttons
-
-  #define DOWNLOAD_IMAGES
-  #define SHOW_SPACE
-  #define DEBUG_LED_PIN 1
-  JoystickInterface* buttons = new ButtonsOnly(SetupNewButtonPressTracker(21),
-                                               SetupNewButtonPressTracker(18),
-                                               NULL, NULL);
-  JoystickInterface* joystick = new JoystickJoystick(SetupNewJoystickPressTracker(26, true),
-                                                     SetupNewJoystickPressTracker(27, true),
-                                                     NULL);
- 
-#else
+#else 
 
 #error not configured for board yet
 
@@ -67,8 +54,15 @@
 
 
 #if !defined(ESP_NOW_SERVER_FOR_MAC)
-#include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
+
+  #if defined(WIFI_SSID)
+    #include "wifidumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+  #else
+    #include "dumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDInputOutput(115200));
+  #endif
+
 #endif
 
 

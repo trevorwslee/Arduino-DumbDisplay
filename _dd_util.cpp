@@ -1,7 +1,13 @@
 
 #include "Arduino.h"
 
+
+extern boolean _DDDisableParamEncoding;
+
 char* _DDEncodeInt(int32_t i, char* buffer, int bufferLen) {
+  if (_DDDisableParamEncoding) {
+    return itoa(i, buffer, 10);
+  }
   bool isNeg;
   if (i < 0) {
     isNeg = true;

@@ -1,16 +1,69 @@
-#include <Arduino.h>
+
+// * you do not need everything, but at least ultrasonic sensor or laser range finder (tof10120)
+// * assign pins and/or comment out below pin assignment macros as appropriate
+// * - if you do not have servo, comment out SERVO_PIN 
+// * - if you do not have ultrasonic sensor, comment out US_TRIG_PIN and US_ECHO_PIN
+// * - if you do not have laster range finder (tof10120), command out TOF_TX_PIN and TOF_RX_PING
+
+#define SERVO_PIN    10
+#define US_TRIG_PIN   4
+#define US_ECHO_PIN   5
+#define TOF_TX_PIN   12
+#define TOF_RX_PIN   13
+
+// * by default, max servo angle is 90
+// * can set the max servo angle with the macro SERVO_MAX_ANGLE
+// * if need some simple adjustment, can set the macro SERVO_ADJUST_FACTOR ... the actual angle servo will go to is angle * adjust_factor
+//#define SERVO_MAX_ANGLE     90
+//#define SERVO_ADJUST_FACTOR 1.2
 
 
-#define PICO_BLUETOOTH
+
+#if defined(PICO_HC_BLUETOOTH)
+
+  // GP8 => RX of HC06; GP9 => TX of HC06
+  #define DD_4_PICO_TX 8
+  #define DD_4_PICO_RX 9
+  #include "picodumbdisplay.h"
+  /* HC-06 connectivity */
+  DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
+
+#elif defined(BLUETOOTH)
+
+  // #include "esp32dumbdisplay.h"
+  // DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+
+#elif defined(WIFI_SSID)
+
+  // #include "wifidumbdisplay.h"
+  // DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+
+#else
+
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput());
+
+#endif
 
 
 
-#define SERVO_PIN    11
+#ifdef SERVO_PIN
+  #ifdef ESP32
+    #include <ESP32_Servo.h> 
+    Servo servo;
+    #define SERVO servo
+  #else
+    #include <Servo.h> 
+    Servo servo;
+    #define SERVO servo
+  #endif
+#endif
 
-// #define US_TRIG_PIN   9
-// #define US_ECHO_PIN  10
-#define US_TRIG_PIN  12
-#define US_ECHO_PIN  13
+
+#ifdef TOF_TX_PIN
+  UART Serial3(TOF_TX_PIN, TOF_RX_PIN, 0, 0);   // TX: 12; RX: 13
+  #define TOF Serial3
+#endif
 
 
 
@@ -24,15 +77,18 @@ const int BoundDist = 50;
 const int VisibleDist = 49;
 const float DistFactor = W_half / BoundDist;
 
-const int MaxAngle = 120;
+#ifdef SERVO_MAX_ANGLE
+  #define _MAX_ANGLE SERVO_MAX_ANGLE
+#else
+  #define _MAX_ANGLE 90
+#endif
+const int MaxAngle = min(180, max(60, _MAX_ANGLE));
 const int AngleIncrement = 1;
 
 const int A_start = (180 - MaxAngle) / 2;
 
 
 const int ObjectDotRadius = 2;
-
-
 
 
 void CalcCoor(int ang, int dist, int& x, int& y) {
@@ -46,33 +102,11 @@ void CalcCoor(int ang, int dist, int& x, int& y) {
 }
 
 
-#include <Servo.h>
-Servo servo;
-
-
-#if defined(PICO_BLUETOOTH)
-
-  // GP8 => RX of HC06; GP9 => TX of HC06
-  #define DD_4_PICO_TX 8
-  #define DD_4_PICO_RX 9
-  #include "picodumbdisplay.h"
-  /* HC-06 connectivity */
-  DumbDisplay dumbdisplay(new DDPicoUart1IO(115200, true, 115200));
-
-#else
-
-  #include "dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDInputOutput());
-
-#endif
-
-
-
 GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
   GraphicalDDLayer* layer = dumbdisplay.createGraphicalLayer(Width, Height);
-  layer->border(5, "darkblue", "round");
+  layer->border(5, DD_COLOR_darkblue, "round");
   layer->padding(3);
-  layer->penColor("green");
+  layer->penColor(DD_COLOR_green);
   if (backgroundColor != NULL) {
     layer->backgroundColor(backgroundColor);
   } else {
@@ -81,12 +115,19 @@ GraphicalDDLayer* CreateGrahpicalLayer(const char* backgroundColor = NULL) {
   return layer;
 }
 
+void ServoGoto(int angle) {
+#ifdef SERVO_ADJUST_FACTOR
+  angle = (float) angle * SERVO_ADJUST_FACTOR;
+#endif  
+#ifdef SERVO
+  SERVO.write(angle);
+#endif
+}
+
 
 
 
 DDLayoutHelper layoutHelper(dumbdisplay);
-
-
 
 const int ObjectLayerCount = 2;
 DDFadingLayers<ObjectLayerCount> objectLayers; 
@@ -95,22 +136,56 @@ const int BeamLayerCount = 4;
 DDFadingLayers<BeamLayerCount> beamLayers; 
 
 
-
-PlotterDDLayer* plotterLayer;
 GraphicalDDLayer* mainLayer;
-LcdDDLayer* unDirectionalLayer;
+PlotterDDLayer* plotterLayer;
+
+#ifdef SERVO    
+LcdDDLayer* uniDirectionalLayer;
+LcdDDLayer* biDirectionalLayer;
+#endif
+
+LcdDDLayer* noDirectionalLayer;
+
+#ifdef SERVO    
+JoystickDDLayer* angleSliderLayer;
+#endif
+
+LcdDDLayer* ultraSonicLayer;
+LcdDDLayer* laserLayer;
+SevenSegmentRowDDLayer* distanceLayer;
 
 
+bool measureWithUS = true;
+short rotateType = 0;    //  0: undirecional; 1: bi-directional; 2: fixed 
 int angle = 0;
 bool isRunning = false;
 
 void setup() {
-  servo.attach(SERVO_PIN);
-  servo.write(angle);
+#ifdef TOF
+  TOF.begin(9600);
+  TOF.print("s5-1#");  // set not to auto send distance readins
+  //TOF.print("s3-1#");
+  measureWithUS = false;
+#endif  
+#ifdef US_TRIG_PIN
+  measureWithUS = true;
+#endif
+
+#ifdef SERVO
+  #ifdef ESP32
+    //SERVO.attach(SERVO_PIN, 500, 2400);  // 500 / 2400 for SG90 
+    SERVO.attach(SERVO_PIN); 
+  #else
+    SERVO.attach(SERVO_PIN);
+  #endif
+  ServoGoto(angle);
+#endif
 
 
+#ifdef US_TRIG_PIN
   pinMode(US_TRIG_PIN, OUTPUT); // Sets the trigPin as an Output
   pinMode(US_ECHO_PIN, INPUT); // Sets the echoPin as an Input
+#endif
 
   dumbdisplay.writeComment(String("Sketch compiled @ ") + CompiledAt);
   layoutHelper.startInitializeLayout();
@@ -130,25 +205,78 @@ void setup() {
   plotterLayer = dumbdisplay.createPlotterLayer(400, 160);
   plotterLayer->border(2, "blue");
 
-  unDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
-  unDirectionalLayer->enableFeedback("f");
+#ifdef SERVO    
+  uniDirectionalLayer = dumbdisplay.createLcdLayer(10, 1);
+  uniDirectionalLayer->enableFeedback("f");
+
+  biDirectionalLayer = dumbdisplay.createLcdLayer(10, 1);
+  biDirectionalLayer->enableFeedback("f");
+#endif
+
+  noDirectionalLayer = dumbdisplay.createLcdLayer(20, 1);
+  noDirectionalLayer->enableFeedback("f");
+
+#ifdef SERVO    
+  angleSliderLayer = dumbdisplay.createJoystickLayer(MaxAngle, "rl", 0.5);
+  angleSliderLayer->border(3, "black");
+  angleSliderLayer->colors("green", "darkgreen", "blue", "darkblue");
+  angleSliderLayer->backgroundColor("cyan");
+#endif
+
+  ultraSonicLayer = dumbdisplay.createLcdLayer(15, 1);
+  ultraSonicLayer->enableFeedback("f");
+
+  laserLayer = dumbdisplay.createLcdLayer(15, 1);
+  laserLayer->enableFeedback("f");
+
+  distanceLayer = dumbdisplay.create7SegmentRowLayer(2);
+  distanceLayer->margin(5);
+  distanceLayer->border(10, "darkred", "round");
 
   layoutHelper.configAutoPin(DDAutoPinConfig('V')
     .addRemainingGroup('S')
     .addLayer(plotterLayer)
-    .addLayer(unDirectionalLayer)
+    .beginGroup('H')
+      .beginGroup('V')    
+        .addLayer(ultraSonicLayer)
+        .addLayer(laserLayer)
+      .endGroup()
+      .addLayer(distanceLayer)
+    .endGroup()    
+#ifdef SERVO    
+    .addLayer(angleSliderLayer)
+#endif
+    .addLayer(noDirectionalLayer)
+#ifdef SERVO    
+    .beginGroup('H')
+      .addLayer(uniDirectionalLayer)
+      .addLayer(biDirectionalLayer)
+    .endGroup()  
+#endif
     .build());
 
   layoutHelper.finishInitializeLayout("ddradar");
 
-  layoutHelper.setIdleCalback([](long idleForMillis) {
+  layoutHelper.setIdleCallback([](long idleForMillis) {
     isRunning = false;  // if idle, e.g. disconnected, stop whatever
   });
+
+#ifndef SERVO
+  //uniDirectionalLayer->disabled(true);
+  //biDirectionalLayer->disabled(true);
+  angle = MaxAngle / 2;
+  rotateType = 2;
+#endif  
+#ifndef US_TRIG_PIN
+  ultraSonicLayer->disabled(true);
+#endif
+#ifndef TOF
+  laserLayer->disabled(true);
+#endif
 }
 
 
 
-bool unDirectional = true;
 bool angleIncreasing = true;
 GraphicalDDLayer* objectLayer = NULL;
 
@@ -162,8 +290,36 @@ int objectStartDistance = -1;
 void loop() {
   bool needToUpdateUI = layoutHelper.checkNeedToUpdateLayers(); 
 
-  if (unDirectionalLayer->getFeedback()) {
-    unDirectional = !unDirectional;
+  bool oriMeasureWithUS = measureWithUS;
+  short oriRotateType = rotateType;
+
+#ifdef SERVO    
+  if (uniDirectionalLayer->getFeedback()) {
+    rotateType = 0;
+    //needToUpdateUI = true;
+  } 
+  if (biDirectionalLayer->getFeedback()) {
+    rotateType = 1;
+    //needToUpdateUI = true;
+  }
+  if (noDirectionalLayer->getFeedback()) {
+    rotateType = 2;
+    //needToUpdateUI = true;
+  }
+#endif
+
+#if defined(US_TRIG_PIN) && defined (TOF)
+  if (ultraSonicLayer->getFeedback()) {
+    measureWithUS = true;
+    //needToUpdateUI = true;
+  }
+  if (laserLayer->getFeedback()) {
+    measureWithUS = false;
+    //needToUpdateUI = true;
+  }
+#endif
+
+  if (oriRotateType != rotateType || oriMeasureWithUS != measureWithUS) {
     needToUpdateUI = true;
   }
 
@@ -181,45 +337,151 @@ void loop() {
         mainLayer->drawLine(W_half, H, x, y, "red");
       }
 
-      if (unDirectional) {
-        unDirectionalLayer->border(2, "darkgreen", "flat");
-        unDirectionalLayer->pixelColor("darkgreen");
-        unDirectionalLayer->writeLine("✅  Single Direction");
-      } else {
-        unDirectionalLayer->border(2, "darkblue", "hair");
-        unDirectionalLayer->pixelColor("grey");
-        unDirectionalLayer->writeLine("🟩  Single Direction");
+      if (rotateType != 0) {
+        uniDirectionalLayer->border(2, "darkblue", "hair");
+        uniDirectionalLayer->pixelColor("darkgreen");
+        uniDirectionalLayer->writeLine("   Single");
       }
-
+      if (rotateType != 1) {
+        biDirectionalLayer->border(2, "darkblue", "hair");
+        biDirectionalLayer->pixelColor("darkgreen");
+        biDirectionalLayer->writeLine("   Both");
+      }
+      if (rotateType != 2) {
+        noDirectionalLayer->border(2, "darkblue", "hair");
+        noDirectionalLayer->pixelColor("darkgreen");
+        noDirectionalLayer->writeLine("   No Sweeping");
+#ifdef SERVO    
+        angleSliderLayer->disabled(true);
+#endif
+      }
+      if (rotateType == 0) {
+        uniDirectionalLayer->border(2, "darkblue", "flat");
+        uniDirectionalLayer->pixelColor("darkblue");
+        uniDirectionalLayer->writeLine("✅  Single");
+      } else if (rotateType == 1) {
+        biDirectionalLayer->border(2, "darkblue", "flat");
+        biDirectionalLayer->pixelColor("darkblue");
+        biDirectionalLayer->writeLine("✅  Both");
+      } else if (rotateType == 2) {
+        noDirectionalLayer->border(2, "darkblue", "flat");
+        noDirectionalLayer->pixelColor("darkblue");
+        noDirectionalLayer->writeLine("✅  No Sweeping");
+#ifdef SERVO    
+        angleSliderLayer->disabled(false);
+#endif
+      }
+      if (measureWithUS) {
+        ultraSonicLayer->border(2, "darkblue", "flat");
+        ultraSonicLayer->pixelColor("darkblue");
+        ultraSonicLayer->writeLine("✅  Ultra Sonic");
+        laserLayer->border(2, "darkblue", "hair");
+        laserLayer->pixelColor("darkgreen");
+        laserLayer->writeLine("   Laser");
+      } else {
+        ultraSonicLayer->border(2, "darkblue", "hair");
+        ultraSonicLayer->pixelColor("darkgreen");
+        ultraSonicLayer->writeLine("   Ultra Sonic");
+        laserLayer->border(2, "darkblue", "flat");
+        laserLayer->pixelColor("darkblue");
+        laserLayer->writeLine("✅  Laser");
+      }
       isRunning = true;
   }
 
   if (!isRunning) {
-    if (angle != 0) {
-      angle = 0;
-      servo.write(0);
+    int newAngle = 0;
+    if (rotateType == 2) {
+      newAngle = MaxAngle / 2;
+    }
+    if (angle != newAngle) {
+      angle = newAngle;
+#ifdef SERVO
+      ServoGoto(angle);
+      angleSliderLayer->moveToPos(angle, 0);
+#endif
     }
     return;
   }
 
-  servo.write(angle);
-  //delay(15);  // give it some time
-  delay(20);  // give it some time
-  if (angle == 0 || angle == MaxAngle) {
-    delay(200);
+  if (oriRotateType != rotateType) {
+    if (oriRotateType == 2 || rotateType == 2) { 
+      objectLayers.clear();
+      beamLayers.clear();
+      plotterLayer->clear();
+    }
+    distanceLayer->clear();
+  }
+  if (oriMeasureWithUS != measureWithUS) {
+    distanceLayer->clear();
   }
 
-  // read ultrasoncic sensor for detected object distance
-  digitalWrite(US_TRIG_PIN, LOW);
-  delayMicroseconds(2);
-  // . set the trigPin on HIGH state for 10 micro seconds
-  digitalWrite(US_TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(US_TRIG_PIN, LOW);
-  // . read the echoPin, returns the sound wave travel time in microseconds
-  long duration = pulseIn(US_ECHO_PIN, HIGH);
-  // . calculating the distance ... 0.034: sound travels 0.034 cm per second
-  int distance = duration * 0.034 / 2;
+  if (rotateType == 0 || rotateType == 1) {
+#ifdef SERVO
+    ServoGoto(angle);
+    angleSliderLayer->moveToPos(angle, 0);
+#endif
+    if (angle == 0 || angle == MaxAngle) {
+      delay(200);
+    }
+  } else {
+#ifdef SERVO
+    const DDFeedback* feedback = angleSliderLayer->getFeedback();
+    if (feedback != NULL) {
+      angle = feedback->x;
+      ServoGoto(angle);
+    }
+#endif
+  }
+  delay(20);  // delay a bit for each reading
+
+  int usDistance = -1;
+#ifdef US_TRIG_PIN
+  if (measureWithUS) {
+    // read ultrasoncic sensor for detected object distance
+    digitalWrite(US_TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    // . set the trigPin on HIGH state for 10 micro seconds
+    digitalWrite(US_TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(US_TRIG_PIN, LOW);
+    // . read the echoPin, returns the sound wave travel time in microseconds
+    long duration = pulseIn(US_ECHO_PIN, HIGH);
+    // . calculating the distance ... 0.034: sound travels 0.034 cm per second
+    usDistance = duration * 0.034 / 2;
+  }
+#endif
+
+  int tofDistance = -1;
+ #ifdef TOF
+  if (!measureWithUS) {
+    TOF.print("r6#");  // send command to read distance once ... will get back something like L=18mm
+    int count = 0;
+    while (count++ < 5) {
+      String dist = TOF.readStringUntil('\n');
+      if (false) {
+        dumbdisplay.writeComment(String(". TOF: [") + dist + "]");
+      }
+      if (dist.startsWith("L=")) {
+        tofDistance = dist.substring(2, dist.indexOf('m')).toInt() / 10;
+        if (false) {
+          dumbdisplay.writeComment(String("  - tofDist: ") + tofDistance);
+        }
+        break;
+      }
+    }
+  }
+#endif  
+  if (false) {
+    dumbdisplay.writeComment(String(". US: ") + usDistance + " / TOF: " + tofDistance);
+  }
+
+  int distance = usDistance != -1 ? usDistance : tofDistance;
+  if (distance != -1 && distance <= 99) {
+    distanceLayer->showNumber(distance);
+  } else {
+    distanceLayer->showFormatted("--");
+  }
 
   GraphicalDDLayer* beamLayer = (GraphicalDDLayer*) beamLayers.useLayer();
   int x;
@@ -227,10 +489,13 @@ void loop() {
   CalcCoor(angle, VisibleDist, x, y);
   beamLayer->drawLine(x, y, W_half, H);
 
-  if (objectLayer == NULL) {
-    objectLayer = (GraphicalDDLayer*) objectLayers.useLayer();
+  if (rotateType == 0 || rotateType == 1) {
+    if (objectLayer == NULL) {
+      objectLayer = (GraphicalDDLayer*) objectLayers.useLayer();
+    }
+  } else {
+      objectLayer = (GraphicalDDLayer*) objectLayers.useLayer();
   }
-
 
   bool atBoundary = false;
   if (angleIncreasing && angle == MaxAngle) {
@@ -238,7 +503,7 @@ void loop() {
   } else if (!angleIncreasing && angle == 0) {
     atBoundary = true;
   } else {
-    if (unDirectional) {
+    if (rotateType == 0) {
       if (angle == 0 || angle == MaxAngle) {
         objectStartAngle = -1;
       }
@@ -248,27 +513,38 @@ void loop() {
   int objectEndAngle = -1;
   int objectEndDistance = -1;
   bool isNewObject = false;
-  plotterLayer->set("Ang", angle, "Dist", distance > VisibleDist ? 0 : distance);
-  if (distance <= VisibleDist) {
+  if (rotateType == 0 || rotateType == 1) {
+    plotterLayer->set("Ang", angle, "Dist", distance > VisibleDist ? 0 : distance);
+  } else {
+    plotterLayer->set("Dist", distance > VisibleDist ? 0 : distance);
+  }
+  if (distance != -1 && distance <= VisibleDist) {
     CalcCoor(angle, distance, x, y);
     if (false) {
       dumbdisplay.writeComment(String("Ang:") + angle + " Dist:" + distance + " X:" + x + " Y:" + y);
     }
-    objectLayer->fillCircle(x, y, ObjectDotRadius);
-    if (objectStartAngle != -1) {
-      if  (atBoundary) {
-        objectEndAngle = angle;
-        objectEndDistance = distance;
-      } else {
-        if (abs(distance - objectStartDistance) >= 10) {
-          objectEndAngle = prevAngle;
-          objectEndDistance = prevDistance;
-          isNewObject = true;
+    if (rotateType == 0 || rotateType == 1) {
+      objectLayer->fillCircle(x, y, ObjectDotRadius);
+      if (objectStartAngle != -1) {
+        if  (atBoundary) {
+          objectEndAngle = angle;
+          objectEndDistance = distance;
+        } else {
+          if (abs(distance - objectStartDistance) >= 10) {
+            objectEndAngle = prevAngle;
+            objectEndDistance = prevDistance;
+            isNewObject = true;
+          }
         }
+      } else {
+        objectStartAngle = angle;
+        objectStartDistance = distance;
       }
     } else {
-      objectStartAngle = angle;
-      objectStartDistance = distance;
+        objectLayer->fillCircle(x, y, 3 * ObjectDotRadius, "green");
+        objectStartAngle = -1;
+        objectEndAngle = -1;
+        objectEndDistance = -1;
     }
   } else {
     objectEndAngle = prevAngle;
@@ -289,32 +565,32 @@ void loop() {
     }
   }
 
-
   prevAngle = angle;
   prevDistance = distance;
-  
-
-  if (angleIncreasing) {
-    angle += AngleIncrement;
-  } else {
-    angle -= AngleIncrement;
-  }
-  if (angle > MaxAngle) {
-    if (unDirectional) {
-      angle = 0;
+ 
+  if (rotateType == 0 || rotateType == 1) {
+    if (angleIncreasing) {
+      angle += AngleIncrement;
     } else {
-      angle = MaxAngle;
-      angleIncreasing = false;
+      angle -= AngleIncrement;
     }
-    objectLayer = NULL;
-  }
-  if (angle < 0) {
-    if (unDirectional) {
-      angle = MaxAngle;
-    } else {
-      angle = 0;
-      angleIncreasing = true;
+    if (angle > MaxAngle) {
+      if (rotateType == 0) {
+        angle = 0;
+      } else {
+        angle = MaxAngle;
+        angleIncreasing = false;
+      }
+      objectLayer = NULL;
     }
-    objectLayer = NULL;
+    if (angle < 0) {
+      if (rotateType == 0) {
+        angle = MaxAngle;
+      } else {
+        angle = 0;
+        angleIncreasing = true;
+      }
+      objectLayer = NULL;
+    }
   }
 }

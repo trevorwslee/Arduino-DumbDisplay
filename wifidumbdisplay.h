@@ -16,6 +16,7 @@
 //#define LOG_DDWIFI_STATUS
 
 
+/// Subclass of DDInputOutput
 class DDWiFiServerIO: public DDInputOutput {
   public:
     /* WiFI IO mechanism */

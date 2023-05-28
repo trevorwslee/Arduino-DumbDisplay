@@ -72,8 +72,8 @@ void setup() {
   // clicking it will invoke person detection
   detectImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);
   detectImageLayer->padding(3);
-  detectImageLayer->border(3, "blue", "round");
-  detectImageLayer->backgroundColor("blue");
+  detectImageLayer->border(3, DD_COLOR_blue, "round");
+  detectImageLayer->backgroundColor(DD_COLOR_blue);
   detectImageLayer->enableFeedback("fl");
 
   // create and setup [middle] LCD layer for showing person detection status
@@ -83,8 +83,8 @@ void setup() {
   // create and setup [bottom] graphical layer for showing the image used for image detection
   personImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);
   personImageLayer->padding(3);
-  personImageLayer->border(3, "blue", "round");
-  personImageLayer->backgroundColor("blue");
+  personImageLayer->border(3, DD_COLOR_blue, "round");
+  personImageLayer->backgroundColor(DD_COLOR_blue);
 
   // auto pin the layers vertically
   dumbdisplay.configAutoPin(DD_AP_VERT);
@@ -277,6 +277,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
 #else
 
 
+// for CAMERA_MODEL_AI_THINKER
 #define PWDN_GPIO_NUM     32      // power to camera (on/off)
 #define RESET_GPIO_NUM    -1      // -1 = not used
 #define XCLK_GPIO_NUM      0

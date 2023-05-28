@@ -10,14 +10,17 @@
 // #else
 
 #ifndef ESP32
-#error DDBluetoothSerialIO is for ESP32
-#else
+  #error DDBluetoothSerialIO is for ESP32
+#endif
+
+//#else
 
 
 #include "BluetoothSerial.h"
 #include "dumbdisplay.h"
 
 
+/// Subclass of DDInputOutput
 class DDBluetoothSerialIO: public DDInputOutput {
   public:
     /* ESP32 BluetoothSerial IO mechanism */
@@ -66,5 +69,5 @@ class DDBluetoothSerialIO: public DDInputOutput {
 };
 
 
-#endif
+//#endif
 #endif

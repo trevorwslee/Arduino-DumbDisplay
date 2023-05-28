@@ -9,9 +9,14 @@
 // #error DD_4_ESP32 need be defined in order to use DumbDisplay for ESP32 BLE
 // #else
 
+
 #ifndef ESP32
-#error DDBLESerialIO is for ESP32
-#else
+  #error DDBLESerialIO is for ESP32
+#endif
+
+// #ifndef ESP32
+// #error DDBLESerialIO is for ESP32
+// #else
 
 #include <BLEDevice.h>
 #include <BLEServer.h>
@@ -34,6 +39,7 @@
 
 
 
+/// Subclass of DDInputOutput
 class DDBLESerialIO: public DDInputOutput {
   public:
     /* ESP32 BLE IO mechanism */
@@ -309,5 +315,5 @@ class DDBLESerialIO: public DDInputOutput {
 };
 
 
-#endif
+//#endif
 #endif

@@ -3,16 +3,22 @@
 
 #define DD_FEEDBACK_BUFFER_SIZE 4
 
-enum DDFeedbackType { CLICK, LONGPRESS, DOUBLECLICK };  // DOUBLECLICK needs special option for DumbDisplay
+enum DDFeedbackType { CLICK, LONGPRESS, DOUBLECLICK, MOVE };  // DOUBLECLICK needs special option for DumbDisplay
 
 
+/// The struct that captures info about "feedback". See DDLayer::enableFeedback()
 struct DDFeedback {
+  /// type of the "feedback"
   DDFeedbackType type;
+  /// x of the "area" on the layer where was clicked
   int16_t x;
+  /// y of the "area" on the layer where was clicked
   int16_t y;
+  /// text input (if any)
   String text;
 };
 
+/// Class for internal use to track "feedback".
 class DDFeedbackManager {
   public: 
     DDFeedbackManager(int8_t bufferSize);

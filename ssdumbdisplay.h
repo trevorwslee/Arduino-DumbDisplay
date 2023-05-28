@@ -6,6 +6,7 @@
 
 //#define DD_BLUETOOTH_BAUD DUMBDISPLAY_BAUD
 
+/// Subclass of DDInputOutput
 class DDSoftwareSerialIO: public DDInputOutput {
   public:
     /* Software Serial IO mechanism */

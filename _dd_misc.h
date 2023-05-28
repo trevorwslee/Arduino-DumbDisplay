@@ -2,27 +2,30 @@
 #define _dd_misc_h
 
 
-//#define LITTLE_ENDIAN 0
-//#define BIG_ENDIAN    1
 
-// return
-// . 0 -- LITTLE_ENDIAN
-// . 1 -- BIG_ENDIAN
+/// the same usage as standard delay(), but it gives DD a chance to handle "feedbacks"
+void DDDelay(unsigned long ms);
+/// give DD a chance to handle "feedbacks"
+void DDYield();
+
+
+/// check whether system is LITTLE_ENDIAN or BIG_ENDIAN
+/// @return 0 if LITTLE_ENDIAN; 1 if BIG_ENDIAN
 inline int DDCheckEndian() {
     int i = 1;
     const char* p = (const char*) &i;
     if (p[0] == 1)
-        return 0;//LITTLE_ENDIAN;
+        return 0;  // LITTLE_ENDIAN;
     else
-        return 1;//BIG_ENDIAN;
+        return 1;  // BIG_ENDIAN;
 }
 
 
-template <class T>
-class DDValueStore {
+/// Helper class for keeping value
+template <class T> class DDValueStore {
   public:
     DDValueStore(T value): storedValue(value) {}
-    /* return true only if some value different set */
+    /// @return true only if some value different set
     bool set(T value) {
       bool same = storedValue == value;
       storedValue = value;
@@ -34,20 +37,20 @@ class DDValueStore {
 };
 
 
-template <class T>
-class DDValueRecord {
+/// Helper class for keeping changed value, until recorded (i.e. record() is called) to make the value known
+template <class T> class DDValueRecord {
   public:
-    /* initial value and known value will be set to the same */
+    /// initial value and known value will be set to the same
     DDValueRecord(T value): value(value), knownValue(value) {}
-    /* can set initial known value to be different from value */
+    /// can set initial known value to be different from value
     DDValueRecord(T value, T knownValue): value(value), knownValue(knownValue) {}
     inline operator T() { return value; } 
     inline T get() { return value; }
     inline void operator =(T value) { this->value = value; }
     inline void set(T value) { this->value = value; }
     inline T getRecorded() { return knownValue; }
-    /* make value set previously known; i.e. set known value to be the same as value */
-    /* return whether known value as different from value */ 
+    /// make value set previously known; i.e. set known value to be the same as value
+    /// @return whether known value as different from value
     bool record() {
       bool same = value == knownValue;
       knownValue = value;
@@ -58,8 +61,8 @@ class DDValueRecord {
     T knownValue;
 };
 
-template <class T>
-class DDPendingValue {
+/// Helper class for keeping changed value until acknowledged (i.e. acknowledge() is called)
+template <class T> class DDPendingValue {
   public:
     DDPendingValue() {
       this->valueIsPending = false;
@@ -71,7 +74,8 @@ class DDPendingValue {
     inline T get() { return value; }
     inline void operator =(T value) { this->value = value; this->valueIsPending = true; }
     inline void set(T value) { this->value = value; this->valueIsPending = true; }
-    /* return whether there is pending value; if so, acknowledge and make the value not pending */
+    /// acknowledge pending changed value
+    /// @return whether there is pending value; if so, acknowledge and make the value not pending
     bool acknowledge() {
       if (valueIsPending) {
         valueIsPending = false;
@@ -86,9 +90,9 @@ class DDPendingValue {
 };
 
 
-/* *** DEPRECATED ... please use DDAutoPinConfig *** */
-template<int MAX_DEPTH> // MAX_DEPTH: depth of [nested] group
-class DDAutoPinConfigBuilder {
+/// ***Deprecated! Please use DDAutoPinConfig instead!***
+/// @deprecated
+template<int MAX_DEPTH> class DDAutoPinConfigBuilder {  // MAX_DEPTH: depth of [nested] group
   public:
     // dir: 'H' / 'V' / 'S'
     DDAutoPinConfigBuilder(char dir) {
@@ -157,9 +161,12 @@ class DDAutoPinConfigBuilder {
 };
 
 
+/// @brief
+/// Class for building "auto pin" config, to be passed to DumbDisplay::configAutoPin().
+/// @since v0.9.7-r2
 class DDAutoPinConfig {
   public:
-    // dir: 'H' / 'V' / 'S'
+    /// @param dir directory of layers at the top level; can be 'H' for horizontal,  'V' for vertical and 'S' for stacked
     DDAutoPinConfig(char dir, int nestedDepth = 3) {
       
       config = String(dir) + "(";
@@ -171,45 +178,60 @@ class DDAutoPinConfig {
       delete started;
     }
   public:
-    // DDAutoPinConfig& test() {
-    //   return *this;
-    // }
-    // dir: 'H' / 'V' / 'S'
+    /// begin a layer group, creating a new level of nesting
+    /// @param dir directory of layers at the new level; can be 'H' for horizontal,  'V' for vertical and 'S' for stacked
     DDAutoPinConfig& beginGroup(char dir) {
       addConfig(String(dir) + "(");
       depth += 1;
       started[depth] = false;
       return *this;
     }  
-    // DDAutoPinConfigBuilder& beginPaddedGroup(int left, int top, int right, int bottom) {
-    //   addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
-    //   depth += 1;
-    //   started[depth] = false;
-    //   return *this;
-    // }  
+    /// end a begun group, returning to the previous level of nesting
     DDAutoPinConfig& endGroup() {
       config.concat(')');
       depth -= 1;
       return *this;
     }
-    DDAutoPinConfig& addLayer(DDLayer* layer) {
-      addConfig(layer->getLayerId());
-      return *this;
-    }
-    DDAutoPinConfig& beginPaddedGroup(int left, int top, int right, int bottom) {
+    /// begin a layer group, with specified padding
+    /// @param dir directory of layers at the new level; can be 'H' for horizontal,  'V' for vertical and 'S' for stacked
+    /// @param left left padding
+    /// @param top top padding  
+    /// @param right right padding
+    /// @param bottom bottom padding
+    DDAutoPinConfig& beginPaddedGroup(char dir, int left, int top, int right, int bottom) {
       addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
       depth += 1;
       started[depth] = false;
-      return *this;
+      return beginGroup(dir);
     }  
+    /// end begun padded group
     DDAutoPinConfig& endPaddedGroup() {
-      return endGroup();
+      endGroup();
+      config.concat(')');
+      depth -= 1;
+      return *this;
     }
-    // dir: 'H' / 'V' / 'S'
+    /// add a layer to the current level
+    DDAutoPinConfig& addLayer(DDLayer* layer) {
+      if (layer != NULL) {
+        addConfig(layer->getLayerId());
+      }
+      return *this;
+    }
+    /// add spacer, which is a placeholder layer with the specified size
+    /// @param width width of the placeholder layer
+    /// @param height height of the placeholder layer
+    DDAutoPinConfig& addSpacer(int width, int height) {
+      addConfig(String("<") + String(width) + "x" + String(height) + String(">"));
+      return *this;
+    }
+    /// add the layout direction for the layers not included
+    /// @param dir 'H' / 'V' / 'S
     DDAutoPinConfig& addRemainingGroup(char dir) {
       addConfig(String(dir) + "(*)");
       return *this;
     }
+    /// build the "auto pin" config string, to be passed to DumbDisplay::configAutoPin()
     const String& build() {
       if (config.length() == 2) {
         // just started
@@ -235,9 +257,10 @@ class DDAutoPinConfig {
 
 
 
+/// Helper class for tracking connection "version" change, say, when reconnected afte disconnect
 class DDConnectVersionTracker {
   public:
-    /* . version: pass in -1 so that it will be considered a version change even when fresh start */
+    /// @param version version number to start with; -1 so that it will be considered a version change even when fresh start
     DDConnectVersionTracker(int version = 0) {
       this->version = version;
     }
@@ -251,87 +274,66 @@ class DDConnectVersionTracker {
 };
 
 
-/* the same usage as standard delay(), but it allows DD chances to handle feedback */
-void DDDelay(unsigned long ms);
-/* give DD a chance to handle feedback */
-void DDYield();
 
-
+/// @brief
+/// Helper class for managing layer layout plus update of the layers.
+/// @since v0.9.7-r2
 class DDLayoutHelper {
   public: 
     DDLayoutHelper(DumbDisplay& dumbdisplay): dumbdisplay(dumbdisplay), versionTracker(-1) {}
-    //   this->layoutDoneBefore = false;
-    // }
-    // ~DDLayoutHelper() {
-    //   if (this->autoPinConfig != NULL) {
-    //     delete this->autoPinConfig;
-    //   }
-    // }
   public:
-    // /* check whether layout done before; if not, please call startInitializeLayout() to begin layout */
-    // bool checkNeedToInitializeLayout() {
-    //   DDYield();
-    //   return !layoutDoneBefore;
-    // }  
-    /* check whether layers need be updated, say, 1) just initialzed; or 2) DD reconnected */
+    /// check whether layers need be updated, say
+    /// - just initialzed
+    /// - DD reconnected
     bool checkNeedToUpdateLayers(/*DumbDisplay& dumbdisplay*/) {
       DDYield();
       return versionTracker.checkChanged(dumbdisplay);
     }
-    /* essentially dumbdisplay.recordLayerSetupCommands() */
-    /* MUST call finishInitializeLayout() when done */
+    /// essentially DumbDisplay::recordLayerSetupCommands()
+    /// *MUST* call finishInitializeLayout() layout when done
     inline void startInitializeLayout(/*DumbDisplay& dumbdisplay*/) {
-      //this->layoutDoneBefore = true;
       dumbdisplay.recordLayerSetupCommands();
     }
-    /* layerSetupPersistId is use for calling dumbdisplay.playbackLayerSetupCommands() */
+    /// after calling startInitializeLayout(), call this to finish the layout of layers
+    /// @param layerSetupPersistId is use for calling DumbDisplay.playbackLayerSetupCommands()
     inline void finishInitializeLayout(/*DumbDisplay& dumbdisplay, */String layerSetupPersistId) {
       dumbdisplay.playbackLayerSetupCommands(layerSetupPersistId);
     }
-    // // dir: 'H' / 'V' / 'S'
-    // DDAutoPinConfig& newAutoPinConfig(char dir, int nestedDepth = 3) {
-    //   if (autoPinConfig == NULL) {
-    //     autoPinConfig = new DDAutoPinConfig(dir, nestedDepth); 
-    //   }
-    //   return *autoPinConfig;
-    // }
-    // void configAutoPin(/*DumbDisplay dumbdisplay*/) {
-    //   if (autoPinConfig != NULL) {
-    //     dumbdisplay.configAutoPin(autoPinConfig->build());
-    //     delete autoPinConfig;
-    //     autoPinConfig = NULL;
-    //   }
-    // }
+    /// basically DumbDisplay::configAutoPin()
     inline void configAutoPin(const String& layoutSpec) {
       dumbdisplay.configAutoPin(layoutSpec);
     }
+    /// basically DumbDisplay::addRemainingAutoPinConfig()
     inline void addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
       dumbdisplay.addRemainingAutoPinConfig(remainingLayoutSpec);
     }
+    /// basically DumbDisplay::configPinFrame()
     inline void configPinFrame(int xUnitCount = 100, int yUnitCount = 100) {
       dumbdisplay.configPinFrame(xUnitCount, yUnitCount);
     }
+    /// basically DumbDisplay::configPinFrame()
     inline void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
       dumbdisplay.pinLayer(pLayer, uLeft, uTop, uWidth, uHeight, align);
     }
+    /// basically DumbDisplay::configPinFrame()
     inline void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
       dumbdisplay.pinAutoPinLayers(layoutSpec, uLeft, uTop, uWidth, uHeight, align);
     }
+    /// basically DumbDisplay::configPinFrame()
     inline void setIdleCallback(DDIdleCallback idleCallback) {
       dumbdisplay.setIdleCallback(idleCallback);
     }
-    // deprecated
-    inline void setIdleCalback(DDIdleCallback idleCallback) {
-      dumbdisplay.setIdleCalback(idleCallback);
-    }
+    // // deprecated
+    // inline void setIdleCalback(DDIdleCallback idleCallback) {
+    //   dumbdisplay.setIdleCalback(idleCallback);
+    // }
   private:
-    //bool layoutDoneBefore;
     DumbDisplay& dumbdisplay;
     DDConnectVersionTracker versionTracker;
-    //DDAutoPinConfig* autoPinConfig;
 };
 
 
+/// Utility class 
 template<int MAX_LAYER_COUNT>
 class DDFadingLayers {
   public:
@@ -343,6 +345,12 @@ class DDFadingLayers {
       if (layerCount < MAX_LAYER_COUNT) {
         layers[layerCount++] = layer;
       }
+    }
+    void clear() {
+      for (int i = 0; i < layerCount; i++) {
+        layers[i]->clear();
+      }
+      nextUseLayerIdx = 0;
     }
   public:  
     DDLayer* useLayer() {

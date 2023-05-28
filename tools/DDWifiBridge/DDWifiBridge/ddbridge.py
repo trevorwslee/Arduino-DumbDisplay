@@ -57,7 +57,7 @@ def main():
         if command_line:
             #options, _ = getopt.getopt(sys.argv[1:], "p:b:w:", ["port=", "baud=", "wifiport="])
             if port == None:
-                raise Exception("must provide port")
+                raise Exception("DDWifiBridge: must provide port")
             #import ddbclmain
             from . import ddbclmain
             param_dict = {"port": port, "baud": baud, "wifiPort": wifiPort }

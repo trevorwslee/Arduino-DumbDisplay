@@ -1,19 +1,18 @@
 
-#if defined(ESP32)
-
-  // ESP32 Bluetooth with name BT32
+// if want Bluetooth, uncomment the following line
+// #define BLUETOOTH "ESP32BT"
+#if defined(BLUETOOTH)
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200));
-
-
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+#elif defined(WIFI_SSID)
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 #else
-
-  // for connection
+  // for direct USB connecction to phone
   // . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
   // . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
   #include "dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDInputOutput(115200));
-
+  DumbDisplay dumbdisplay(new DDInputOutput());
 #endif
 
 
@@ -45,60 +44,60 @@ void setup() {
   // create "YES" lcd layer, acting as a button
   yesLayer = dumbdisplay.createLcdLayer(16, 3);
   yesLayer->writeCenteredLine("YES", 1);
-  yesLayer->border(3, "green", "round");
+  yesLayer->border(3, DD_COLOR_green, "round");
   yesLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create "NO" lcd layer, acting as a button
   noLayer = dumbdisplay.createLcdLayer(16, 3);
   noLayer->writeCenteredLine("NO", 1);
-  noLayer->border(3, "green", "round");
+  noLayer->border(3, DD_COLOR_green, "round");
   noLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create "WELL" lcd layer, acting as a button
   wellLayer = dumbdisplay.createLcdLayer(16, 3);
   wellLayer->writeCenteredLine("WELL", 1);
-  wellLayer->border(3, "red", "round");
+  wellLayer->border(3, DD_COLOR_red, "round");
   wellLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create "bark" lcd layer, acting as a button
   barkLayer = dumbdisplay.createLcdLayer(16, 3);
   barkLayer->writeCenteredLine("bark", 1);
-  barkLayer->border(3, "red", "round");
+  barkLayer->border(3, DD_COLOR_red, "round");
   barkLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create detect "YES" lcd layer, acting as a button
   detectYesLayer = dumbdisplay.createLcdLayer(16, 3);
   detectYesLayer->writeCenteredLine("Detect YES", 1);
-  detectYesLayer->border(3, "green", "round");
+  detectYesLayer->border(3, DD_COLOR_green, "round");
   detectYesLayer->backgroundColor("yellow");
   detectYesLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create detect "NO" lcd layer, acting as a button
   detectNoLayer = dumbdisplay.createLcdLayer(16, 3);
   detectNoLayer->writeCenteredLine("Detect NO", 1);
-  detectNoLayer->border(3, "green", "round");
+  detectNoLayer->border(3, DD_COLOR_green, "round");
   detectNoLayer->backgroundColor("yellow");
   detectNoLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create detect "WELL" lcd layer, acting as a button
   detectWellLayer = dumbdisplay.createLcdLayer(16, 3);
   detectWellLayer->writeCenteredLine("Detect WELL", 1);
-  detectWellLayer->border(3, "red", "round");
+  detectWellLayer->border(3, DD_COLOR_red, "round");
   detectWellLayer->backgroundColor("yellow");
   detectWellLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create detect "bark" lcd layer, acting as a button
   detectBarkLayer = dumbdisplay.createLcdLayer(16, 3);
   detectBarkLayer->writeCenteredLine("Detect bark", 1);
-  detectBarkLayer->border(3, "red", "round");
+  detectBarkLayer->border(3, DD_COLOR_red, "round");
   detectBarkLayer->backgroundColor("yellow");
   detectBarkLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   // create "status" lcd layer
   statusLayer = dumbdisplay.createLcdLayer(18, 1);
-  statusLayer->pixelColor("darkblue");
-  statusLayer->border(3, "blue");
-  statusLayer->backgroundColor("white");
+  statusLayer->pixelColor(DD_COLOR_darkblue);
+  statusLayer->border(3, DD_COLOR_blue);
+  statusLayer->backgroundColor(DD_COLOR_white);
 
   // create / setup "tunnel" etc to send detect request
   witTunnel = dumbdisplay.createJsonTunnel("", false);

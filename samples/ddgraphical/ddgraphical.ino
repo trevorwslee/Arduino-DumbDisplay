@@ -1,19 +1,29 @@
-#include "ssdumbdisplay.h"
 
 
-#define BLUETOOTH
+#if defined(ESP32)
 
-
-#ifdef BLUETOOTH
-
-
-// assume HC-06 connected; 2 => TX of HC06; 3 => RX of HC06
-DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
+  #if defined(BLUETOOTH)
+    #include "esp32dumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+  #elif defined(WIFI_SSID)
+    #include "wifidumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+  #else
+    #include "dumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDInputOutput());
+  #endif
 
 #else
 
-// otherwise, can use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
+  #ifdef BLUETOOTH
+    // assume HC-06 connected; 2 => TX of HC06; 3 => RX of HC06
+    #include "ssdumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200, true));
+  #else
+  // otherwise, can use DumbDisplayWifiBridge -- https://www.youtube.com/watch?v=0UhRmXXBQi8
+    #include "dumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDInputOutput(115200));
+  #endif
 
 #endif
 
@@ -27,10 +37,10 @@ void setup() {
   GraphicalDDLayer *pLayer4 = dumbdisplay.createGraphicalLayer(151, 101);
 
   // set fill screen with color
-  pLayer1->fillScreen("azure");
-  pLayer2->fillScreen("azure");
-  pLayer3->fillScreen("azure");
-  pLayer4->fillScreen("azure");
+  pLayer1->fillScreen(DD_COLOR_azure);
+  pLayer2->fillScreen(DD_COLOR_azure);
+  pLayer3->fillScreen(DD_COLOR_azure);
+  pLayer4->fillScreen(DD_COLOR_azure);
 
   //  configure to "auto pin" the 4 layers
   // -- end result of DD_AP_XXX(...) is the layout spec "H(V(0+1)+V(2+3))"
@@ -70,7 +80,7 @@ void setup() {
     int y1 = 0;
     int x2 = -150 + delta;
     int y2 = delta;
-    pLayer2->drawLine(x1, y1, x2, y2, "blue");
+    pLayer2->drawLine(x1, y1, x2, y2, DD_COLOR_blue);
     if (x2 > 150)
       break;
   }
@@ -82,7 +92,7 @@ void setup() {
     int y = delta;
     int w = 150 - 2 * x;
     int h = 100 - 2 * y;
-    pLayer3->drawRect(x, y, w, h, "plum");
+    pLayer3->drawRect(x, y, w, h, DD_COLOR_plum);
   }
 
   // draw circles
@@ -92,8 +102,8 @@ void setup() {
     for (int j = 0; j < 6; j++) {
       int y = 2 * radius * j;
       int r = radius;
-      pLayer4->drawCircle(x, y, r, "teal");
-      pLayer4->fillCircle(x + r, y + r, r, "gold");
+      pLayer4->drawCircle(x, y, r, DD_COLOR_teal);
+      pLayer4->fillCircle(x + r, y + r, r, DD_COLOR_gold);
     }
   }
 }

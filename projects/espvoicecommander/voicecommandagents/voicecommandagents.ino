@@ -61,7 +61,7 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len) {
     const char* commandAction = ReceivedPacket.commandAction;
     statusLayer->clear();
     statusLayer->setCursor(0, 0);
-    statusLayer->penColor("black");
+    statusLayer->penColor(DD_COLOR_black);
     statusLayer->println(String("* Received command for [") + commandTarget + "] to [" + commandAction + "]");
     receivedNewCommand = true;
   } else {

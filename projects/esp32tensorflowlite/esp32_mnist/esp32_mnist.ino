@@ -1,4 +1,3 @@
-
 // if want Bluetooth, uncomment the following line
 // #define BLUETOOTH "ESP32BT"
 #if defined(BLUETOOTH)
@@ -54,7 +53,7 @@ GraphicalDDLayer* drawLayer;
 GraphicalDDLayer* copyLayer;
 LcdDDLayer* clearBtn;
 LcdDDLayer* centerBtn;
-LcdDDLayer* influenceBtn;
+LcdDDLayer* inferenceBtn;
 SevenSegmentRowDDLayer* resultLayer;
 
 
@@ -156,32 +155,32 @@ void DrawPixelsTo(GraphicalDDLayer* targetLayer) {
 
 void setup() {
   drawLayer = dumbdisplay.createGraphicalLayer(28, 28);
-  drawLayer->border(1, "lightgray", "round", 0.5);
+  drawLayer->border(1, DD_COLOR_lightgray, "round", 0.5);
   drawLayer->enableFeedback("fs:drag");
 
   copyLayer = dumbdisplay.createGraphicalLayer(28, 28);
-  copyLayer->border(2, "blue", "round", 1);
+  copyLayer->border(2, DD_COLOR_blue, "round", 1);
 
   clearBtn = dumbdisplay.createLcdLayer(7, 1);   
-  clearBtn->backgroundColor("lightgreen");
-  clearBtn->pixelColor("darkblue");
+  clearBtn->backgroundColor(DD_COLOR_lightgreen);
+  clearBtn->pixelColor(DD_COLOR_darkblue);
   clearBtn->writeCenteredLine("clear");
-  clearBtn->border(2, "darkgreen", "raised");
+  clearBtn->border(2, DD_COLOR_darkgreen, "raised");
   clearBtn->enableFeedback("f");
 
   centerBtn = dumbdisplay.createLcdLayer(8, 1);
   centerBtn->writeCenteredLine("center");
   centerBtn->enableFeedback("fl");
 
-  influenceBtn = dumbdisplay.createLcdLayer(3, 3);
-  influenceBtn->pixelColor("darkblue");
-  influenceBtn->writeCenteredLine(">>>", 1);
-  influenceBtn->border(2, "gray", "raised");
-  influenceBtn->enableFeedback("f");
+  inferenceBtn = dumbdisplay.createLcdLayer(3, 3);
+  inferenceBtn->pixelColor(DD_COLOR_darkblue);
+  inferenceBtn->writeCenteredLine(">>>", 1);
+  inferenceBtn->border(2, DD_COLOR_gray, "raised");
+  inferenceBtn->enableFeedback("f");
 
   resultLayer = dumbdisplay.create7SegmentRowLayer();
-  resultLayer->border(10, "blue", "round", 5);
-  resultLayer->segmentColor("darkblue");
+  resultLayer->border(10, DD_COLOR_blue, "round", 5);
+  resultLayer->segmentColor(DD_COLOR_darkblue);
 
   dumbdisplay.configAutoPin(
     DDAutoPinConfig('V')
@@ -192,7 +191,7 @@ void setup() {
       .addLayer(drawLayer)
       .beginGroup('H')
         .addLayer(copyLayer)
-        .addLayer(influenceBtn)
+        .addLayer(inferenceBtn)
         .addLayer(resultLayer)  
       .endGroup()
       .build()
@@ -296,8 +295,8 @@ void loop() {
     }
   }
 
-  bool doInfluence = influenceBtn->getFeedback() != NULL;
-  if (doInfluence) {
+  bool doInference = inferenceBtn->getFeedback() != NULL;
+  if (doInference) {
     drawLayer->disabled(true);
     if (autoCenter) {
       int minX = 27;

@@ -110,8 +110,8 @@ void setup() {
   dumbdisplay.recordLayerSetupCommands();  // start recording the layout commands
 
   micLayer = dumbdisplay.createLcdLayer(16, 3);
-  micLayer->border(2, "darkgreen", "round", 2);
-  micLayer->backgroundColor("lightgreen");
+  micLayer->border(2, DD_COLOR_darkgreen, "round", 2);
+  micLayer->backgroundColor(DD_COLOR_lightgreen);
   micLayer->enableFeedback("fl");  // enable "feedback" ... i.e. it can be clicked
 
   replayLayer = dumbdisplay.createLcdLayer(10, 1);
@@ -120,21 +120,21 @@ void setup() {
 
   // create "amplify" label on top the the "amplify" meter layer (to be created next)
   amplifyLblLayer = dumbdisplay.createLcdLayer(12, 1);
-  amplifyLblLayer->pixelColor("darkred");
+  amplifyLblLayer->pixelColor(DD_COLOR_darkred);
   amplifyLblLayer->noBackgroundColor();
 
   // create "amplify" meter layer
   amplifyMeterLayer = dumbdisplay.createLedGridLayer(MaxAmplifyFactor, 1, 1, 5);
-  amplifyMeterLayer->onColor("darkblue");
-  amplifyMeterLayer->offColor("lightgray");
-  amplifyMeterLayer->border(0.2, "blue");
+  amplifyMeterLayer->onColor(DD_COLOR_darkblue);
+  amplifyMeterLayer->offColor(DD_COLOR_lightgray);
+  amplifyMeterLayer->border(0.2, DD_COLOR_blue);
   amplifyMeterLayer->enableFeedback("fa:rpt50");  // rep50 means auto repeat every 50 milli-seconds
 
   // create "status" layer
   statusLayer = dumbdisplay.createLcdLayer(18, 1);
-  statusLayer->pixelColor("darkblue");
+  statusLayer->pixelColor(DD_COLOR_darkblue);
   statusLayer->border(3, "blue");
-  statusLayer->backgroundColor("white");
+  statusLayer->backgroundColor(DD_COLOR_white);
   statusLayer->writeCenteredLine("not ready");
 
   // create / setup "tunnel" etc to send detect request

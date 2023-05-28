@@ -7,7 +7,7 @@
 #include "HardwareSerial.h"
 #endif
 
-
+/// Class for internal use only
 class DDSerial {
   public:
     virtual void begin(unsigned long serialBaud) {

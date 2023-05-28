@@ -4,12 +4,14 @@
 #define ddjoystick_h
 
 
+/// Struct used by the helper class like JoystickInterface
 struct JoystickPress
 {
   int xPressed; // -1, 0 or 1
   int yPressed; // -1, 0 or 1
 };
 
+/// Struct used by the helper class like JoystickInterface
 struct ABCDPressed
 {
   bool aPressed;
@@ -19,6 +21,7 @@ struct ABCDPressed
 };
 
 
+/// Struct used by the helper class like JoystickInterface
 struct JoystickPressCode
 {
   int xPressed;
@@ -26,6 +29,7 @@ struct JoystickPressCode
   bool swPressed;
 };
 
+/// Base Helper class for joystick input tracking. For an example use, you may want to refer to [Wireless Joystick Module Experiment With ESP8266 on ESP-Now](https://www.instructables.com/Wireless-Joystick-Module-Experiment-With-ESP8266-o/)
 class JoystickInterface
 {
 public:
@@ -168,9 +172,9 @@ public:
   }
 
 protected:
-  /**
-   * @param button can be 'A' to 'E'
-   */
+  ///
+  /// @param button can be 'A' to 'E'
+  ///
   inline bool _checkPressed(char button, int repeat)
   {
     return _checkPressed(button, repeat, false);
@@ -191,6 +195,7 @@ private:
   long lastCheckMillis;
 };
 
+/// Helper class for joystick input tracking. See JoystickInterface.
 class ButtonPressTracker
 {
 public:
@@ -289,6 +294,7 @@ private:
 };
 
 
+/// Helper class for joystick input tracking. See JoystickInterface.
 class JoystickPressTracker
 {
 public:
@@ -303,9 +309,9 @@ public:
     this->autoTuneThreshold = -1;
     resetMinMax(minReading, maxReading, true);
   }
-  /**
-   * @param autoTuneThreshold -1 if no auto tune
-   */
+  ///
+  /// @param autoTuneThreshold -1 if no auto tune
+  ///
   JoystickPressTracker(uint8_t pin, bool reverseDir, int autoTuneThreshold = DefAutoTuneThreshold)
   {
     // int autoThreshold = autoTune ? 200 : -1;
@@ -523,6 +529,7 @@ private:
   int autoRepeatDir;
 };
 
+/// Helper class for joystick input tracking. See JoystickInterface.
 class JoystickJoystick : public JoystickInterface
 {
 public:
@@ -614,6 +621,7 @@ private:
   ButtonPressTracker *swTracker;
 };
 
+/// Helper class for joystick input tracking. See JoystickInterface.
 class ButtonJoystickBasic : public JoystickInterface
 {
 protected:
@@ -719,6 +727,7 @@ protected:
 };
 
 
+/// Helper class for joystick input tracking. See JoystickInterface.
 class DecodedJoystick : public ButtonJoystickBasic
 {
 public:
@@ -801,7 +810,7 @@ private:
 };
 
 
-
+/// Helper class for joystick input tracking. See JoystickInterface.
 class ButtonJoystick : public ButtonJoystickBasic
 {
 public:
@@ -928,6 +937,7 @@ private:
   //bool buttonsOnly;
 };
 
+/// Helper class for joystick input tracking. See JoystickInterface.
 class ButtonsOnly : public ButtonJoystick
 {
 public:

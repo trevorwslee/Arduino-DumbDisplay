@@ -44,7 +44,7 @@
 //#define DEBUG_SHOW_FEEDBACK
 
 
-#define SUPPORT_LONG_PRESS_FEEDBACK
+//#define SUPPORT_LONG_PRESS_FEEDBACK
 
 #define SUPPORT_IDLE_CALLBACK
 #define SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
@@ -70,10 +70,13 @@
 #define YIELD_AFTER_HANDLE_FEEDBACK true
 
 // see nobody.trevorlee.dumbdisplay.DDActivity#ddSourceCompatibility
-#define DD_SID "Arduino-c6"
+#define DD_SID "Arduino-c7"
 
 
 #include "_dd_commands.h"
+
+
+bool _DDDisableParamEncoding = false;
 
 
 #ifdef SUPPORT_USE_WOIO
@@ -214,7 +217,7 @@ class IOProxy {
 };
 
 
-volatile bool _EnableDoubleClick = false;
+//volatile bool _EnableDoubleClick = false;
 volatile bool _Connected = false;
 volatile int _ConnectVersion = 0;
 
@@ -302,9 +305,9 @@ this->print("// NEED TO RECONNECT\n");
       this->print(DD_SID);
       this->print(":");
       this->print(this->reconnectRCId);
-      if (!_EnableDoubleClick) {
-        this->print(",dblclk=0");
-      }
+      // if (!_EnableDoubleClick) {
+      //   this->print(",dblclk=0");
+      // }
       this->print("\n");
       this->reconnectKeepAliveMillis = this->lastKeepAliveMillis;
     } else if (this->reconnectKeepAliveMillis > 0) {
@@ -383,9 +386,9 @@ volatile int _DebugLedPin = -1;
 #ifdef DEBUG_ECHO_FEEDBACK 
 volatile bool _DebugEnableEchoFeedback = false;
 #endif
-#ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
-volatile bool _NoEncodeInt = false;
-#endif
+// #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
+// volatile bool _NoEncodeInt = false;
+// #endif
 
 
 #define IS_FLOAT_ZERO(f) ((((f)<0?-(f):(f)) - 0.0) < 0.001)
@@ -394,15 +397,16 @@ volatile bool _NoEncodeInt = false;
 #define DD_FLOAT_DP 3
 
 #ifdef DD_CONDENSE_COMMAND
-#ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
-#define TO_C_INT(i) (_NoEncodeInt ? String(i) : DDIntEncoder(i).encoded())
+  #define TO_C_INT(i) (DDIntEncoder(i).encoded())
+// #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
+// #define TO_C_INT(i) (_NoEncodeInt ? String(i) : DDIntEncoder(i).encoded())
+// #else
+// #define TO_C_INT(i) (DDIntEncoder(i).encoded())
+// #endif
+  #define TO_NUM(num) IS_FLOAT_WHOLE(num) ? String((int) num) : String(num, DD_FLOAT_DP) 
 #else
-#define TO_C_INT(i) (DDIntEncoder(i).encoded())
-#endif
-#define TO_NUM(num) IS_FLOAT_WHOLE(num) ? String((int) num) : String(num, DD_FLOAT_DP) 
-#else
-#define TO_C_INT(i) String(i)
-#define TO_NUM(num) String(num) 
+  #define TO_C_INT(i) String(i)
+  #define TO_NUM(num) String(num) 
 #endif
 #define TO_C_NUM(num) IS_FLOAT_WHOLE(num) ? TO_C_INT((int) num) : String(num, DD_FLOAT_DP) 
 
@@ -473,8 +477,8 @@ void _Connect() {
     Serial.print("* _SendBufferSize=");
     Serial.println(_SendBufferSize);
 #endif
-    Serial.print("* _EnableDoubleClick=");
-    Serial.println(_EnableDoubleClick ? "yes" : "no");
+    //Serial.print("* _EnableDoubleClick=");
+    //Serial.println(_EnableDoubleClick ? "yes" : "no");
     Serial.println("**********");
     Serial.flush();
   }
@@ -569,9 +573,9 @@ void _Connect() {
         //ioProxy.print(">init>:Arduino-c1\n");
         ioProxy.print(">init>:");
         ioProxy.print(DD_SID);
-        if (!_EnableDoubleClick) {
-          ioProxy.print(",dblclk=0");
-        }
+        // if (!_EnableDoubleClick) {
+        //   ioProxy.print(",dblclk=0");
+        // }
         ioProxy.print("\n");
         nextTime = now + HAND_SHAKE_GAP;
       }
@@ -772,7 +776,7 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
     _WOIO->print(".");
   }
 #ifdef SUPPORT_ENCODE_OPER
-  if (_DDCompatibility >= 3 && layerId != "" && command[0] == '#') {
+  if (_DDCompatibility >= 3 && !_DDDisableParamEncoding && layerId != "" && command[0] == '#') {
     char encoded[3];
     encoded[0] = 14 + ((command[1] > '9') ? ((command[1] - 'a') + 10) : (command[1] - '0'));
     encoded[1] = 14 + ((command[2] > '9') ? ((command[2] - 'a') + 10) : (command[2] - '0'));
@@ -1172,13 +1176,13 @@ Serial.println("LT++++" + data + " - final:" + String(final));
         token = strtok(NULL, ":");
       }
       if (token != NULL) {
-#ifdef SUPPORT_LONG_PRESS_FEEDBACK        
         if (strcmp(token, "longpress") == 0) {
           type = LONGPRESS;
         } else if (strcmp(token, "doubleclick") == 0) {
           type = DOUBLECLICK;
+        } else if (strcmp(token, "move") == 0) {
+          type = MOVE;
         }
-#endif       
         token = strtok(NULL, ",");
       }
       if (token != NULL) {
@@ -1470,12 +1474,18 @@ void DDLayer::flashArea(int x, int y) {
 // void DDLayer::writeComment(const String& comment) {
 //   _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
 // }
-void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
-  _sendCommand2(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod);
-  feedbackHandler = NULL;
+void DDLayer::_enableFeedback() {
   if (pFeedbackManager != NULL)
     delete pFeedbackManager;
   pFeedbackManager = new DDFeedbackManager(FEEDBACK_BUFFER_SIZE + 1);  // need 1 more slot
+}
+void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
+  _sendCommand2(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod);
+  feedbackHandler = NULL;
+  _enableFeedback();
+  // if (pFeedbackManager != NULL)
+  //   delete pFeedbackManager;
+  // pFeedbackManager = new DDFeedbackManager(FEEDBACK_BUFFER_SIZE + 1);  // need 1 more slot
 }
 void DDLayer::disableFeedback() {
   _sendCommand1(layerId, C_feedback, TO_BOOL(false));
@@ -1915,10 +1925,10 @@ void GraphicalDDLayer::cachePixelImageGS(const String& imageName, const uint8_t 
   _sendByteArrayAfterCommand(data, byteCount, compressMethod);
 }
 void GraphicalDDLayer::saveCachedImageFile(const String& imageName) {
-  _sendCommand2("", "SAVECACHEDIMG", layerId, imageName);
+  _sendCommand2("", C_SAVECACHEDIMG, layerId, imageName);
 }
 void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
-  _sendCommand2("", "SAVECACHEDIMGS", layerId, stitchAsImageName);
+  _sendCommand2("", C_SAVECACHEDIMGS, layerId, stitchAsImageName);
 }
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
@@ -1972,6 +1982,20 @@ void SevenSegmentRowDDLayer::showHexNumber(int number) {
 void SevenSegmentRowDDLayer::showFormatted(const String& formatted, bool completeReplace, int startIdx) {
   _sendCommand3(layerId, C_showformatted, formatted, TO_BOOL(completeReplace), String(startIdx));
 }
+
+void JoystickDDLayer::autoRecenter(bool autoRecenter) {
+  _sendCommand1(layerId, C_autorecenter, TO_BOOL(autoRecenter));
+}
+void JoystickDDLayer::colors(const String& stickColor, const String& stickOutlineColor, const String& socketColor, const String& socketOutlineColor) {
+  _sendCommand4(layerId, C_colors, stickColor, stickOutlineColor, socketColor, socketOutlineColor);
+}
+void JoystickDDLayer::moveToPos(int x, int y, bool sendFeedback) {
+  _sendCommand3(layerId, C_movetopos, TO_C_INT(x), TO_C_INT(y), TO_BOOL(sendFeedback));
+}
+void JoystickDDLayer::moveToCenter(bool sendFeedback) {
+  _sendCommand1(layerId, C_movetocenter, TO_BOOL(sendFeedback));
+}
+
 
 void PlotterDDLayer::label(const String& key, const String& lab) {
   _sendCommand2(layerId, C_label, key, lab);
@@ -2462,10 +2486,10 @@ void JsonDDTunnelMultiplexer::reconnect() {
 #endif
 
 
-void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize, boolean enableDoubleClick) {
+void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, boolean enableDoubleClick*/) {
   _SetIO(pIO, sendBufferSize);
   //_IO = pIO;
-  _EnableDoubleClick = enableDoubleClick;
+  //_EnableDoubleClick = enableDoubleClick;
 }
 void DumbDisplay::connect() {
   _Connect();
@@ -2475,6 +2499,9 @@ bool DumbDisplay::connected() const {
 }
 int DumbDisplay::getConnectVersion() const {
   return _ConnectVersion;
+}
+int DumbDisplay::getCompatibilityVersion() const {
+  return _DDCompatibility;
 }
 void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
   _Connect();
@@ -2490,6 +2517,15 @@ void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
   _Connect();
   _sendCommand1("", "ADDRESTAP", remainingLayoutSpec);
 }
+void DumbDisplay::setFeedbackSingleClickOnly(bool singleClickOnly) {
+  _Connect();
+  _sendCommand1("", "SETFBSCO", TO_BOOL(singleClickOnly));
+}
+// void DumbDisplay::enableFeedbackDoubleClick(bool enable) {
+//   //_EnableDoubleClick = enable;
+//   _Connect();
+//   _sendCommand1("", "ENBFBDBLCLK", TO_BOOL(enable));
+// }
 MbDDLayer* DumbDisplay::createMicrobitLayer(int width, int height) {
   int lid = _AllocLid();
   String layerId = String(lid);
@@ -2535,6 +2571,14 @@ SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   String layerId = String(lid);
   _sendCommand2(layerId, "SU", String("7segrow"), String(digitCount));
   SevenSegmentRowDDLayer* pLayer = new SevenSegmentRowDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
+}
+JoystickDDLayer* DumbDisplay::createJoystickLayer(int maxStickValue, const String& directions, float stickLookScaleFactor) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand4(layerId, "SU", String("joystick"), String(maxStickValue),  directions, TO_NUM(stickLookScaleFactor));
+  JoystickDDLayer* pLayer = new JoystickDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
 }
@@ -2604,25 +2648,26 @@ void DumbDisplay::recordLayerSetupCommands() {
 #endif
 }
 void DumbDisplay::playbackLayerSetupCommands(const String& layerSetupPersistId) {
+  _sendCommand2("", C_SAVEC, layerSetupPersistId, TO_BOOL(true));
+  _sendCommand0("", C_PLAYC);
 #ifdef SUPPORT_USE_WOIO
   if (_SendBufferSize > 0) {
     ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(false);
+    ((DDWriteOnyIO*) _WOIO)->flush();
   }
 #endif
-  _sendCommand2("", C_SAVEC, layerSetupPersistId, TO_BOOL(true));
-  _sendCommand0("", C_PLAYC);
 #ifdef SUPPORT_RECONNECT
   _ConnectedIOProxy->setReconnectRCId(layerSetupPersistId);
 #endif
 }
 void DumbDisplay::recordLayerCommands() {
   _Connect();
-  _sendCommand0("", C_RECC);
 #ifdef SUPPORT_USE_WOIO
   if (_SendBufferSize > 0) {
     ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(true);
   }
 #endif
+  _sendCommand0("", C_RECC);
 }
 void DumbDisplay::playbackLayerCommands() {
 #ifdef SUPPORT_USE_WOIO
@@ -2751,8 +2796,8 @@ void DumbDisplay::sendSoundChunk16(int chunkId, const int16_t *data, int sampleC
 void DumbDisplay::saveCachedSound(const String& soundName) {
   _sendCommand1("", "SAVECACHEDSND", soundName);
 }
-void DumbDisplay::saveCachedSoundAsCC(const String& soundName) {
-  _sendCommand2("", "SAVECACHEDSNDASCC", soundName, TO_EDIAN());
+void DumbDisplay::saveCachedSoundAsH(const String& soundName) {
+  _sendCommand2("", "SAVECACHEDSNDASH", soundName, TO_EDIAN());
 }
 void DumbDisplay::playSound(const String& soundName) {
   _sendCommand1("", C_PLAYSND, soundName);
@@ -2864,7 +2909,9 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
 }
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   pTunnel->release();
-  delete pTunnel;
+#ifndef ESP32  
+  delete pTunnel;  // problem with ESP32 ... for now, just don't delete
+#endif  
 }
 #endif
 
@@ -2884,11 +2931,11 @@ void DumbDisplay::debugSetup(int debugLedPin/*, bool enableEchoFeedback*/) {
   _DebugEnableEchoFeedback = true;//enableEchoFeedback;
 #endif
 }
-#ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
-void DumbDisplay::optionNoCompression(bool noCompression) {
-  _NoEncodeInt = noCompression;
-}
-#endif
+// #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
+// void DumbDisplay::optionNoCompression(bool noCompression) {
+//   _NoEncodeInt = noCompression;
+// }
+//#endif
 void DumbDisplay::setIdleCallback(DDIdleCallback idleCallback) {
 #ifdef SUPPORT_IDLE_CALLBACK
   _IdleCallback = idleCallback;

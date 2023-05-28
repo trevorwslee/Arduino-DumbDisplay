@@ -43,7 +43,7 @@ def ClickedConnect():
 def ClickedClear():
     Text_box.delete('1.0', tk.END)
 
-def FillPortCombo(port: None):
+def FillPortCombo(port = None):
     ports = []
     if port != None:
         ports.append(port)

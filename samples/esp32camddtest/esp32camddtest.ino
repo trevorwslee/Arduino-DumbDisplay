@@ -6,7 +6,7 @@
 
 
 // if want Bluetooth, uncomment the following line
-// #define BLUETOOTH "ESP32BT"
+// #define BLUETOOTH "ESP32CamBT"
 #if defined(BLUETOOTH)
   #include "esp32dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
@@ -31,21 +31,21 @@ LcdDDLayer* captureModeLayer;
 GraphicalDDLayer* imageLayer;
 
 
-LcdDDLayer* createAndSetupButton(DumbDisplay& dumbdisplay, const char* bgColor = "blue") {
+LcdDDLayer* createAndSetupButton(DumbDisplay& dumbdisplay, const char* bgColor = DD_COLOR_blue) {
   LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(11, 1);
-  buttonLayer->border(2, "gray", "round");
+  buttonLayer->border(2, DD_COLOR_gray, "round");
   buttonLayer->padding(1);
   buttonLayer->backgroundColor(bgColor);
-  buttonLayer->pixelColor("white");
+  buttonLayer->pixelColor(DD_COLOR_white);
   buttonLayer->enableFeedback("f");
   return buttonLayer;
 }
 
 GraphicalDDLayer * createAndSetupImageLayer(DumbDisplay& dumbdisplay) {
   GraphicalDDLayer* imgLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
-  imgLayer->backgroundColor("ivory");
+  imgLayer->backgroundColor(DD_COLOR_ivory);
   imgLayer->padding(10);
-  imgLayer->border(20, "blue");
+  imgLayer->border(20, DD_COLOR_blue);
   imgLayer->enableFeedback("f");
   return imgLayer;
 }
@@ -60,7 +60,7 @@ void setup() {
 
   flashLayer = createAndSetupButton(dumbdisplay);
   resolutionLayer = createAndSetupButton(dumbdisplay);
-  captureModeLayer = createAndSetupButton(dumbdisplay, "red");
+  captureModeLayer = createAndSetupButton(dumbdisplay, DD_COLOR_red);
 
   imageLayer = createAndSetupImageLayer(dumbdisplay);
 
@@ -179,8 +179,6 @@ const int ledFreq = 5000;                            // PWM settings
 const int ledChannel = 15;                           // camera uses timer1
 const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
 
-//#define CAMERA_MODEL_AI_THINKER
-
 
 #if defined(FOR_LILYGO_TSIMCAM)
 
@@ -227,6 +225,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
 #else
 
 
+// for CAMERA_MODEL_AI_THINKER
 #define PWDN_GPIO_NUM     32      // power to camera (on/off)
 #define RESET_GPIO_NUM    -1      // -1 = not used
 #define XCLK_GPIO_NUM      0

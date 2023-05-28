@@ -1,5 +1,9 @@
 #include "dumbdisplay.h"
 
+// **********
+// *** Sorry, this sample doesn't appears to work anymore!
+// **********
+
 // for connection
 // . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
 // . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8

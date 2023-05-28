@@ -3,7 +3,7 @@
 
 #if defined(BLUETOOTH)
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true, 115200), DD_DEF_SEND_BUFFER_SIZE, false);
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true, 115200), DD_DEF_SEND_BUFFER_SIZE);
 #elif defined(WIFI_SSID)
   #include "wifidumbdisplay.h"
   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD), DD_DEF_SEND_BUFFER_SIZE, false);
@@ -58,6 +58,8 @@ void setup()
   Wire.onReceive(OnReceivedKey);
 #endif 
 
+  //dumbdisplay.enableFeedbackDoubleClick(false);
+  dumbdisplay.setFeedbackSingleClickOnly();
 
   displayLayer = CreateDisplayLayer();
   for (int r = 0; r < RowCount; r++)
@@ -90,11 +92,11 @@ void UpdateCaculatorDisplay()
 {
   if (calculator.isGrouing())
   {
-    displayLayer->backgroundColor("cyan");
+    displayLayer->backgroundColor(DD_COLOR_cyan);
   }
   else
   {
-    displayLayer->backgroundColor("azure");
+    displayLayer->backgroundColor(DD_COLOR_azure);
   }
   const char *formatted = calculator.getFormatted();
   displayLayer->showFormatted(formatted, true, DisplayWidth - strlen(formatted));

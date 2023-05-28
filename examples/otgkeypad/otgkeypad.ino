@@ -1,3 +1,7 @@
+// *****
+// * due to large amount of data to transfer, this sketch will not work correctly with Arduino UNO ... try with ESP32
+// *****
+
 /**
  * to run and see the result of this sketch, you will need two addition things:
  * . you will need to install Android DumbDisplay app from Play store
@@ -17,7 +21,7 @@
  */
 
 #include "dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDInputOutput(115200), false);
+DumbDisplay dumbdisplay(new DDInputOutput(115200));
 
 const char Keys[4][3] = {
     {'1', '2', '3'},
@@ -36,6 +40,10 @@ char CheckKeyPressed();
 
 void setup()
 {
+  // will only allow single click, which also makes clicking more responsive
+  dumbdisplay.setFeedbackSingleClickOnly();
+
+
   // loop through the keys and create the corresponding LCD layer [for each on of the key]
   for (int r = 0; r < 4; r++)
   {
@@ -45,6 +53,7 @@ void setup()
       keyLayers[r][c] = keyLayer;
     }
   }
+
   // auto "pin" the key LCD layers int the desired way -- 4 rows by 3 columns
   dumbdisplay.configAutoPin(DD_AP_VERT_4(
       DD_AP_HORI_3(keyLayers[0][0]->getLayerId(), keyLayers[0][1]->getLayerId(), keyLayers[0][2]->getLayerId()),
