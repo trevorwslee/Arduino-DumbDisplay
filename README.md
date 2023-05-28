@@ -12,7 +12,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   * [Arduino IDE](#arduino-ide)
   * [PlatformIO](#platformio)
 * [DumbDisplay Android App](#dumbDisplay-android-app)
-* [Coding Introduction](#coding-introduction)
+* [Kickstart](#Kickstart)
   * [Samples](#samples)
   * [More Samples](#more-samples)
   * [More OTG Examples](#more-otg-examples)
@@ -71,8 +71,8 @@ Note that with the "layer feedback" mechanism, user interaction (like clicking o
 The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show up; install it. For a reference, you may want to see my post [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)  
 
 Alternative, you can choose to use the more "fluid" manual approach. The basic steps are
-1) download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
-2) to install, use Arduino IDE menu option **Sktech** | **Include Library** | **Add .ZIP library...** and choose the ZIP you just downloaded
+1) Download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
+2) To install, use Arduino IDE menu option **Sktech** | **Include Library** | **Add .ZIP library...** and choose the ZIP you just downloaded
 
 For demonstration on installing DumbDisplay Arduino Library this manual way, you may want to watch the video [**Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)**](https://www.youtube.com/watch?v=nN7nXRy7NMg)
 
@@ -113,10 +113,71 @@ Notes:
 * In case DumbDisplay does not handshake with your microcontroller board correctly, you can try resetting the board, say, by pressing the "reset" button on it.
 
  
-# Coding Introduction
+# Kickstart
 
-The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object,
-which requires an IO object for communicating with your DumbDisplay Android app:
+The starting point is a DumbDisplay object,
+which requires an IO object for communicating with your DumbDisplay Android app.
+
+|  | |
+|--|--|
+|A kickstart virtual blink test example would be like https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink/otgblink.ino|![](screenshots/otgblink.png)|
+
+
+```
+#include "dumbdisplay.h"
+
+// create the DumbDisplay object; assuming OTG (USB) connection with 115200 baud (default)
+DumbDisplay dumbdisplay(new DDInputOutput());
+LedGridDDLayer *led;
+
+void setup() {
+    // create a LED layer
+    led = dumbdisplay.createLedGridLayer();
+}
+
+void loop() {
+    led->toggle();
+    delay(1000);
+}
+```
+1) You declare a static [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object, giving it [DDInputOutput](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_input_output.html) (an IO object) for communicating with DumbDisplay app  
+2) Also, statically declare one or more [DDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_layer.html) objects. In this case, the `led` [LedGridDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_led_grid_d_d_layer.html) object, which is for simulating a virtual LED.
+3) In the `setup` block, create the layer object via the DumbDisplay object.
+4) Once created, the layer objects can be used, either in the `setup()` block or in the `loop()` block. Like in this case, the `toogle()` method of the `led` layer object is called, effectively blinking the virtual LED every second. 
+
+
+
+|  | |
+|--|--|
+|![](screenshots/otg7segment.png)|Another simple example is making use of virtual 7-segment display for couting (from 0 to 9) like https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otg7segment/otg7segment.ino|
+
+```
+#include "dumbdisplay.h"
+
+// create the DumbDisplay object; assuming USB connection with 115200 baud
+DumbDisplay dumbdisplay(new DDInputOutput(115200));
+
+// declare a 7-segment layer object, to be created in setup()
+SevenSegmentRowDDLayer *sevenSeg;
+
+void setup() {
+    // create the 7-segment layer object, with only a single 7-segment digit
+    sevenSeg = dumbdisplay.create7SegmentRowLayer();
+}
+
+void loop() {
+    for (int digit = 0; digit < 10; digit++) {
+        // show the digit on the 7-segment
+        sevenSeg->showNumber(digit);
+
+        // delay a second
+        delay(1000);
+   }
+}
+```
+
+
+Here is the list of all connection IO object that you can use:
 
 * Via Serial -- via OTG; you may want to refer to [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
   ```
@@ -198,32 +259,6 @@ which requires an IO object for communicating with your DumbDisplay Android app:
   By making use of DumbDisply WIFI Bridge, WIFI connection is possible for any microcontroller board (e.g. Arduino UNO) --
   With DumbDisply WIFI Bridge running on your computer, you can keep the microcontroller connected with USB, and make WIFI connection with DumbDisplay Android app.
   Please refer to [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge) for more description on it.
-
-|  | |
-|--|--|
-|With a DumbDisplay object, you are ready to proceed with coding, like https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink/otgblink.ino|![](screenshots/otgblink.png)|
-
-
-```
-#include "dumbdisplay.h"
-
-// create the DumbDisplay object; assuming OTG (USB) connection with 115200 baud (default)
-DumbDisplay dumbdisplay(new DDInputOutput());
-LedGridDDLayer *led;
-
-void setup() {
-    // create a LED layer
-    led = dumbdisplay.createLedGridLayer();
-}
-
-void loop() {
-    led->toggle();
-    delay(1000);
-}
-```
-
-You may want to refer to the post [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/), which talks about a slightly modified version of the above sketch.
-
 
 
 ## Samples
