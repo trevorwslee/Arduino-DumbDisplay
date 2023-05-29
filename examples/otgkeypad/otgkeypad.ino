@@ -38,17 +38,13 @@ LcdDDLayer *CreateKeyLayer(int r, int c);
 char CheckKeyPressed();
 
 
-void setup()
-{
+void setup() {
   // will only allow single click, which also makes clicking more responsive
   dumbdisplay.setFeedbackSingleClickOnly();
-
-
+  
   // loop through the keys and create the corresponding LCD layer [for each on of the key]
-  for (int r = 0; r < 4; r++)
-  {
-    for (int c = 0; c < 3; c++)
-    {
+  for (int r = 0; r < 4; r++) {
+    for (int c = 0; c < 3; c++) {
       LcdDDLayer *keyLayer = CreateKeyLayer(r, c);
       keyLayers[r][c] = keyLayer;
     }
@@ -61,9 +57,8 @@ void setup()
       DD_AP_HORI_3(keyLayers[2][0]->getLayerId(), keyLayers[2][1]->getLayerId(), keyLayers[2][2]->getLayerId()),
       DD_AP_HORI_3(keyLayers[3][0]->getLayerId(), keyLayers[3][1]->getLayerId(), keyLayers[3][2]->getLayerId())));
 }
-
-void loop()
-{
+ 
+void loop() {
   char keyPressed = CheckKeyPressed();
   if (keyPressed != 0) {
     dumbdisplay.writeComment("key [" + String(keyPressed) + "]");
@@ -71,8 +66,7 @@ void loop()
 }
 
 // create key LCD layer; key defined by r and c
-LcdDDLayer *CreateKeyLayer(int r, int c)
-{
+LcdDDLayer *CreateKeyLayer(int r, int c) {
   String key = String(Keys[r][c]);
   LcdDDLayer *keyLayer = dumbdisplay.createLcdLayer(1, 1, 32);
   keyLayer->pixelColor("navy");
@@ -85,13 +79,10 @@ LcdDDLayer *CreateKeyLayer(int r, int c)
 }
 
 // check if any key is pressed; return the key pressed, or 0 if none
-char CheckKeyPressed()
-{
+char CheckKeyPressed() {
   // loop through the key LCD layers and check if any one has "feedback" (i.e. pressed)
-  for (int r = 0; r < 4; r++)
-  {
-    for (int c = 0; c < 3; c++)
-    {
+  for (int r = 0; r < 4; r++) {
+    for (int c = 0; c < 3; c++) {
       LcdDDLayer* keyLayer = keyLayers[r][c];
       const DDFeedback* feedback = keyLayer->getFeedback();
       if (feedback != NULL) {
