@@ -9,7 +9,7 @@
   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD), DD_DEF_SEND_BUFFER_SIZE, false);
 #else
   #include "dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDInputOutput(), DD_DEF_SEND_BUFFER_SIZE, false);
+  DumbDisplay dumbdisplay(new DDInputOutput(), DD_DEF_SEND_BUFFER_SIZE);
 #endif
 
 
