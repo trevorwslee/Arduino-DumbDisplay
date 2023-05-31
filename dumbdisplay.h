@@ -120,6 +120,9 @@ struct DDObject {
     int8_t objectType;
     /// custom data
     String customData;
+public:
+   // since 20230601
+    virtual ~DDObject() {}
 };
 
 
@@ -208,7 +211,8 @@ class DDLayer: public DDObject {
   protected:
     DDLayer(int8_t layerId);
   public:
-    ~DDLayer();
+    // made virtual since 20230601
+    virtual ~DDLayer();
   protected:
     void _enableFeedback();
   protected:
@@ -1016,7 +1020,7 @@ class JsonDDTunnelMultiplexer {
 };
 
 
-typedef void (*DDIdleCallback)(long idleForMillis);
+typedef void (*DDIdleCallback)(long idleForMillis, bool reconnecting);
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 
@@ -1240,19 +1244,25 @@ class DumbDisplay {
     void walkLayers(void (*walker)(DDLayer *));
     /// set the pin to flash when DD is sending data, for debugging purpose
     void debugSetup(int debugLedPin);
-    /// set 'idle callback', which will be called in 2 situations:
+    /// set 'idle callback', which will be called repeatedly in 2 situations:
     /// - no connection response while connecting
-    /// - detected no 'keep alive' signal
+    /// - detected no 'keep alive' signal (i.e. reconnecting)
     void setIdleCallback(DDIdleCallback idleCallback); 
-    /// @attention use setIdleCallback() instead
-    /// @deprecated
-    inline void setIdleCalback(DDIdleCallback idleCallback) {
-      setIdleCallback(idleCallback);
-    }
+    // inline void setIdleCalback(DDIdleCallback idleCallback) {
+    //   setIdleCallback(idleCallback);
+    // }
     /// set callback when version changed (e.g. reconnected after disconnect)
     void setConnectVersionChangedCalback(DDConnectVersionChangedCallback connectVersionChangedCallback); 
     /// log line to serial; if it is not safe to output to Serial, will write comment with writeComment() instead
     void logToSerial(const String& logLine);
+  public:
+    /// @brief
+    /// EXPERIMENTAL
+    /// "master reset" will 
+    /// . disconnect from DD app (if connected)
+    /// . delete all created layers and tunnels (hence, DO NOT use the pointer to them)
+    /// . DumbDisplay object will be just like at initial state
+    void masterReset();  
   private:
     void initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, bool enableDoubleClick*/);
     bool canLogToSerial();

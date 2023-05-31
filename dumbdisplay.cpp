@@ -16,6 +16,8 @@
 
 #define MORE_KEEP_ALIVE
 
+#define SUPPORT_MASTER_RESET 
+
 #define SUPPORT_ENCODE_OPER
 
 // #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
@@ -287,7 +289,7 @@ void IOProxy::validConnection() {
 #ifdef SUPPORT_IDLE_CALLBACK      
       if (_IdleCallback != NULL) {
         long idleForMillis = notKeptAliveMillis - RECONNECT_NO_KEEP_ALIVE_MILLIS;
-        _IdleCallback(idleForMillis);
+        _IdleCallback(idleForMillis, true);
       }
 #endif      
     }
@@ -433,9 +435,9 @@ volatile bool _HandlingFeedback = false;
 //   }
 // #endif
 // }
-void _Connect() {
+bool _Connect(long maxWaitMillis = -1) {
   if (_Connected)
-    return;
+    return true;
 // #ifdef SUPPORT_TUNNEL
 //   _Preconnect(); 
 // #else    
@@ -461,9 +463,23 @@ void _Connect() {
 #ifdef SUPPORT_IDLE_CALLBACK
         if (_IdleCallback != NULL) {
           long now = millis();
-          if ((now - lastCallMillis) >= HAND_SHAKE_GAP) {
+          long diffMillis = now - lastCallMillis;
+          if (maxWaitMillis != -1) {
+            if (diffMillis > maxWaitMillis) {
+#ifdef DEBUG_WITH_LED
+              int debugLedPin = _DebugLedPin;  
+              bool debugLedOn;
+              if (debugLedPin != -1) {
+                digitalWrite(debugLedPin, LOW);
+                debugLedOn = false;
+              }
+#endif
+              return false;
+            }
+          }
+          if (diffMillis >= HAND_SHAKE_GAP) {
             long idleForMillis = now - startMillis;
-            _IdleCallback(idleForMillis);
+            _IdleCallback(idleForMillis, false);
             lastCallMillis = now;
           }
         }
@@ -512,7 +528,7 @@ void _Connect() {
 #ifdef SUPPORT_IDLE_CALLBACK
         if (_IdleCallback != NULL) {
           long idleForMillis = now - startMillis;
-          _IdleCallback(idleForMillis);
+          _IdleCallback(idleForMillis, false);
         }
 #endif      
         nextTime = now + HAND_SHAKE_GAP;
@@ -629,6 +645,7 @@ void _Connect() {
 #ifdef DD_DEBUG_HS          
     Serial.println("// *** DONE MAKE CONNECTION");
 #endif        
+  return true;
 }
 
 
@@ -661,14 +678,14 @@ int _AllocLid() {
         }
         _DDLayerArray = layerArray;
       } else {
-        _MaxDDLayerCount = lid + DD_LAYER_INC;
-        DDObject** oriLayerArray = _DDLayerArray;
-        DDObject** layerArray = (DDObject**) malloc(_MaxDDLayerCount * sizeof(DDObject*));
-        if (oriLayerArray != NULL) {
-          memcpy(layerArray, oriLayerArray, (_MaxDDLayerCount - DD_LAYER_INC) * sizeof(DDObject*));
-          free(oriLayerArray);
-        }
-        _DDLayerArray = layerArray;
+        // _MaxDDLayerCount = lid + DD_LAYER_INC;
+        // DDObject** oriLayerArray = _DDLayerArray;
+        // DDObject** layerArray = (DDObject**) malloc(_MaxDDLayerCount * sizeof(DDObject*));
+        // if (oriLayerArray != NULL) {
+        //   memcpy(layerArray, oriLayerArray, (_MaxDDLayerCount - DD_LAYER_INC) * sizeof(DDObject*));
+        //   free(oriLayerArray);
+        // }
+        // _DDLayerArray = layerArray;
       }
     }
   } else {
@@ -2909,8 +2926,9 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
 }
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   pTunnel->release();
+// problem with ESP32 ... for now, just don't delete
 #ifndef ESP32  
-  delete pTunnel;  // problem with ESP32 ... for now, just don't delete
+  delete pTunnel;  // will call _PreDeleteTunnel
 #endif  
 }
 #endif
@@ -2961,6 +2979,50 @@ void DumbDisplay::logToSerial(const String& logLine) {
     writeComment(logLine);
   }
 }
+
+void DumbDisplay::masterReset() {
+#ifdef SUPPORT_MASTER_RESET
+  // try the best to delete objects tracked
+  if (_Connected) {
+    _sendCommand0("", "DISCONNECT");
+  }
+
+  if (_NextLid > 0) {
+    for (int i = 0; i < _NextLid; i++) {
+      DDObject* pObject = _DDLayerArray[i];
+      if (pObject != NULL) {
+        delete pObject;
+      }
+    }
+    delete _DDLayerArray;
+    _DDLayerArray = NULL;
+  }
+  _NextLid = 0;
+  _NextImgId = 0;  // allocated image not tracked
+  _NextBytesId = 0;
+
+  _IO = NULL;
+#ifdef SUPPORT_USE_WOIO
+  if (_WOIO != NULL) {
+	  delete _WOIO;
+    _WOIO = NULL;
+  }  
+#endif
+  if (_ConnectedIOProxy != NULL) {
+    delete _ConnectedIOProxy;
+    _ConnectedIOProxy = NULL;
+  }
+
+  _SendingCommand = false;
+  _HandlingFeedback = false;
+  _Connected = false;
+  _ConnectVersion = 0;
+  _IdleCallback = NULL;
+  _ConnectVersionChangedCallback = NULL;
+  //_DebugLedPin = -1;
+#endif
+}
+
 
 
 

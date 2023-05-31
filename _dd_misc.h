@@ -311,15 +311,15 @@ class DDLayoutHelper {
     inline void configPinFrame(int xUnitCount = 100, int yUnitCount = 100) {
       dumbdisplay.configPinFrame(xUnitCount, yUnitCount);
     }
-    /// basically DumbDisplay::configPinFrame()
+    /// basically DumbDisplay::pinLayer()
     inline void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
       dumbdisplay.pinLayer(pLayer, uLeft, uTop, uWidth, uHeight, align);
     }
-    /// basically DumbDisplay::configPinFrame()
+    /// basically DumbDisplay::pinAutoPinLayers()
     inline void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
       dumbdisplay.pinAutoPinLayers(layoutSpec, uLeft, uTop, uWidth, uHeight, align);
     }
-    /// basically DumbDisplay::configPinFrame()
+    /// basically DumbDisplay::setIdleCallback()
     inline void setIdleCallback(DDIdleCallback idleCallback) {
       dumbdisplay.setIdleCallback(idleCallback);
     }
