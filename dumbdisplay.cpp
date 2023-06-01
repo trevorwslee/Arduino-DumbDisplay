@@ -6,6 +6,9 @@
 #define HAND_SHAKE_GAP 1000
 #define VALIDATE_GAP 2000
 
+
+#define SUPPORT_PASSIVE_MODE
+
 #define ENABLE_FEEDBACK
 #define STORE_LAYERS
 #define HANDLE_FEEDBACK_DURING_DELAY
@@ -219,16 +222,17 @@ class IOProxy {
 };
 
 
-//volatile bool _EnableDoubleClick = false;
-volatile bool _Connected = false;
-volatile int _ConnectVersion = 0;
+bool _IsInPassiveMode = false;
+
+/*volatile */bool _Connected = false;
+/*volatile */int _ConnectVersion = 0;
 
 #ifdef SUPPORT_IDLE_CALLBACK
-volatile DDIdleCallback _IdleCallback = NULL; 
+/*volatile */DDIdleCallback _IdleCallback = NULL; 
 #endif
 
 #ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
-volatile DDConnectVersionChangedCallback _ConnectVersionChangedCallback = NULL; 
+/*volatile */DDConnectVersionChangedCallback _ConnectVersionChangedCallback = NULL; 
 #endif
 
 bool IOProxy::available() {
@@ -279,6 +283,11 @@ void IOProxy::validConnection() {
   Serial.println(" ...");
 #endif 
   pIO->validConnection();
+#ifdef SUPPORT_PASSIVE_MODE
+  if (_IsInPassiveMode) {
+    return;
+  }  
+#endif  
 #if defined (SUPPORT_IDLE_CALLBACK) || defined (SUPPORT_RECONNECT)
   bool needReconnect = false;
   if (this->lastKeepAliveMillis > 0) {
@@ -289,7 +298,7 @@ void IOProxy::validConnection() {
 #ifdef SUPPORT_IDLE_CALLBACK      
       if (_IdleCallback != NULL) {
         long idleForMillis = notKeptAliveMillis - RECONNECT_NO_KEEP_ALIVE_MILLIS;
-        _IdleCallback(idleForMillis, true);
+        _IdleCallback(idleForMillis, DDIdleConnectionState::RECONNECTING);
       }
 #endif      
     }
@@ -379,14 +388,14 @@ inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize) {
 
 
 
-IOProxy* volatile _ConnectedIOProxy = NULL;
-volatile bool _ConnectedFromSerial = false; 
+IOProxy* /*volatile */_ConnectedIOProxy = NULL;
+/*volatile */bool _ConnectedFromSerial = false; 
 
-#ifdef DEBUG_WITH_LED
-volatile int _DebugLedPin = -1;
-#endif
+// #ifdef DEBUG_WITH_LED
+// /*volatile */int _DebugLedPin = -1;
+// #endif
 #ifdef DEBUG_ECHO_FEEDBACK 
-volatile bool _DebugEnableEchoFeedback = false;
+/*volatile */bool _DebugEnableEchoFeedback = false;
 #endif
 // #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
 // volatile bool _NoEncodeInt = false;
@@ -435,14 +444,238 @@ volatile bool _HandlingFeedback = false;
 //   }
 // #endif
 // }
-bool _Connect(long maxWaitMillis = -1) {
+
+#ifdef SUPPORT_PASSIVE_MODE
+
+int _C_state;
+long _C_startMillis;
+long _C_lastCallMillis;
+bool _C_firstCall;
+
+bool __Connect(/*bool calledPassive = false*/) {
+//   if (_C_startMillis == -1) {
+// // #ifdef DEBUG_WITH_LED
+// //     int debugLedPin = _DebugLedPin;  
+// //     bool debugLedOn;
+// //     if (debugLedPin != -1) {
+// //       digitalWrite(debugLedPin, HIGH);
+// //       debugLedOn = true;
+// //     }
+// // #endif
+//   }
+  if (_C_state == 0) {
+    _C_startMillis = millis();
+    _C_lastCallMillis = _C_startMillis;
+    _C_firstCall = true;
+    _C_state = 1;
+    return false;
+  }
+  if (_C_state == 1) {
+    if (_IO->preConnect(_C_firstCall)) {
+      _C_state = 2;
+      return false;
+    }
+#ifdef SUPPORT_IDLE_CALLBACK
+    if (!_IsInPassiveMode && _IdleCallback != NULL) {
+      long now = millis();
+      long diffMillis = now - _C_lastCallMillis;
+      if (diffMillis >= HAND_SHAKE_GAP) {
+        long idleForMillis = now - _C_startMillis;
+        _IdleCallback(idleForMillis, DDIdleConnectionState::NOT_CONNECTED);
+        _C_lastCallMillis = now;
+      }
+    }
+#endif      
+    _C_firstCall = false;
+    return false;
+  }
+  if (!_IO->isSerial()) {
+    Serial.println("**********");
+#ifdef SUPPORT_USE_WOIO
+    Serial.print("* _SendBufferSize=");
+    Serial.println(_SendBufferSize);
+#endif
+    //Serial.print("* _EnableDoubleClick=");
+    //Serial.println(_EnableDoubleClick ? "yes" : "no");
+    Serial.println("**********");
+    Serial.flush();
+  }
+  if (true) {
+    long nextTime = 0;
+    IOProxy ioProxy(_IO);
+    IOProxy* pSerialIOProxy = NULL;
+    DDInputOutput *pSIO = NULL;
+    if (_IO->isBackupBySerial()) {
+      //pSIO = new DDInputOutput(_IO);
+      pSIO = _IO->newForSerialConnection();
+      pSerialIOProxy = new IOProxy(pSIO);
+    }
+    long startMillis = millis();
+    while (true) {
+      YIELD();
+      long now = millis();
+      if (now > nextTime) {
+// #ifdef DEBUG_WITH_LED
+//         if (debugLedPin != -1) {
+//           debugLedOn = !debugLedOn;
+//           digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
+//         }
+// #endif
+        ioProxy.print("ddhello\n");
+        if (pSerialIOProxy != NULL) 
+          pSerialIOProxy->print("ddhello\n");
+#ifdef DD_DEBUG_HS          
+        Serial.println("handshake:ddhello");
+#endif        
+#ifdef SUPPORT_IDLE_CALLBACK
+        if (!_IsInPassiveMode && _IdleCallback != NULL) {
+          long idleForMillis = now - startMillis;
+          _IdleCallback(idleForMillis, DDIdleConnectionState::CONNECTING);
+        }
+#endif      
+        nextTime = now + HAND_SHAKE_GAP;
+      }
+      bool fromSerial = false;
+      bool available = ioProxy.available();
+      if (!available && pSerialIOProxy != NULL) {
+        if (pSerialIOProxy->available()) {
+          available = true;
+          fromSerial = true;
+        }
+      }
+      if (available) {
+        const String& data = fromSerial ? pSerialIOProxy->get() : ioProxy.get();
+#ifdef DD_DEBUG_HS          
+        Serial.println("handshake:data-" + data);
+#endif        
+        if (data == "ddhello") {
+          if (fromSerial) {
+            _SetIO(pSIO, DD_DEF_SEND_BUFFER_SIZE);
+            //_IO = pSIO;
+            pSIO = NULL;
+          }
+          _ConnectedIOProxy = new IOProxy(_IO);
+//          _ConnectedFromSerial = fromSerial;
+          _ConnectedFromSerial = _IO->isSerial();
+          break;
+        }
+#ifdef DD_DEBUG_HS          
+        Serial.println("handshake:DONE");
+#endif        
+        if (fromSerial) 
+          pSerialIOProxy->clear();
+        else
+          ioProxy.clear();  
+      }
+    }
+    if (pSerialIOProxy != NULL)
+      delete pSerialIOProxy;
+    if (pSIO != NULL)
+      delete pSIO;
+  }
+  int compatibility = 0;
+  { 
+    long nextTime = 0;
+    IOProxy ioProxy(_IO);
+    while (true) {
+      YIELD();
+      long now = millis();
+      if (now > nextTime) {
+// #ifdef DEBUG_WITH_LED
+//         if (debugLedPin != -1) {
+//           debugLedOn = !debugLedOn;
+//           digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
+//         }
+// #endif
+//Serial.println((_ConnectedFromSerial ? "SERIAL" : "NON-SERIAL"));
+        //ioProxy.print(">init>:Arduino-c1\n");
+        ioProxy.print(">init>:");
+        ioProxy.print(DD_SID);
+        // if (!_EnableDoubleClick) {
+        //   ioProxy.print(",dblclk=0");
+        // }
+        ioProxy.print("\n");
+        nextTime = now + HAND_SHAKE_GAP;
+      }
+      if (ioProxy.available()) {
+        const String& data = ioProxy.get();
+        if (data == "<init<")
+          break;
+        if (data.startsWith("<init<:")) {
+            compatibility = data.substring(7).toInt();
+            break;
+        }  
+        ioProxy.clear();  
+      }
+    }
+  }
+  _Connected = true;
+  _ConnectVersion = 1;
+//  _ConnectedIOProxy = new IOProxy(_IO);
+  _DDCompatibility = compatibility;
+  if (false) {
+    // ignore any input in 1000ms window
+    delay(1000);
+    while (_IO->available()) {
+      _IO->read();
+    }
+  }
+  if (true) {       
+    _IO->print("// connected to DD c" + String(compatibility) + "\n"/*.c_str()*/);
+    //_IO->flush();
+    if (false) {
+      // *** debug code
+      for (int i = 0; i < 10; i++) {
+        delay(500);
+        _IO->print("// connected to DD c" + String(compatibility) + "\n"/*.c_str()*/);
+      }
+    }
+#ifdef DD_DEBUG_HS          
+    Serial.println("// *** CONNECTED");
+#endif        
+  }
+// #ifdef DEBUG_WITH_LED
+//     if (debugLedPin != -1) {
+//       digitalWrite(debugLedPin, LOW);
+//     }
+// #endif
+    // if (false) {
+    //   // *** debug code
+    //   _IO->print("// connection to DD made\n");
+    //    _sendCommand0("", "// *** connection made ***");
+    // }
+#ifdef DD_DEBUG_HS          
+    Serial.println("// *** DONE MAKE CONNECTION");
+#endif        
+  return true;
+}
+bool _Connect(bool calledPassive = false) {
   if (_Connected)
     return true;
-// #ifdef SUPPORT_TUNNEL
-//   _Preconnect(); 
-// #else    
-//   _IO->preConnect();
-// #endif
+  if (_IsInPassiveMode && !calledPassive) {
+    return false;
+  }  
+  _C_state = 0;
+  while (true) {
+    YIELD();
+    if (__Connect()) {
+      return true;
+    }
+  }
+}
+
+#else
+
+bool _Connect(long maxWaitMillis = -1, bool calledPassive = false) {
+  if (_Connected)
+    return true;
+#ifdef SUPPORT_PASSIVE_MODE
+  if (_IsInPassiveMode) {
+    if (!calledPassive) {
+      return false;
+    }
+  }  
+#endif  
 #ifdef DEBUG_WITH_LED
   int debugLedPin = _DebugLedPin;  
   bool debugLedOn;
@@ -479,7 +712,7 @@ bool _Connect(long maxWaitMillis = -1) {
           }
           if (diffMillis >= HAND_SHAKE_GAP) {
             long idleForMillis = now - startMillis;
-            _IdleCallback(idleForMillis, false);
+            _IdleCallback(idleForMillis, DDIdleConnectionState::NOT_CONNECTED);
             lastCallMillis = now;
           }
         }
@@ -528,7 +761,7 @@ bool _Connect(long maxWaitMillis = -1) {
 #ifdef SUPPORT_IDLE_CALLBACK
         if (_IdleCallback != NULL) {
           long idleForMillis = now - startMillis;
-          _IdleCallback(idleForMillis, false);
+          _IdleCallback(idleForMillis, DDIdleConnectionState::CONNECTING);
         }
 #endif      
         nextTime = now + HAND_SHAKE_GAP;
@@ -648,6 +881,7 @@ bool _Connect(long maxWaitMillis = -1) {
   return true;
 }
 
+#endif
 
 int _AllocBytesId() {
   int bytesId = _NextBytesId++;
@@ -879,12 +1113,12 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
   _SendingCommand = true;
 
-#ifdef DEBUG_WITH_LED
-  int debugLedPin = _DebugLedPin;
-  if (debugLedPin != -1) {
-    digitalWrite(debugLedPin, HIGH);
-  }
-#endif   
+// #ifdef DEBUG_WITH_LED
+//   int debugLedPin = _DebugLedPin;
+//   if (debugLedPin != -1) {
+//     digitalWrite(debugLedPin, HIGH);
+//   }
+// #endif   
 
   if (command != NULL) {
     __SendCommand(layerId, command, pParam1, pParam2, pParam3, pParam4, pParam5, pParam6, pParam7, pParam8, pParam9);
@@ -896,11 +1130,11 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   }
 #endif
 
-#ifdef DEBUG_WITH_LED
-  if (debugLedPin != -1) {
-    digitalWrite(debugLedPin, LOW);
-  }  
-#endif
+// #ifdef DEBUG_WITH_LED
+//   if (debugLedPin != -1) {
+//     digitalWrite(debugLedPin, LOW);
+//   }  
+// #endif
 
   _SendingCommand = false;
 }
@@ -1053,21 +1287,21 @@ void __SendByteArrayPortion(const char* bytesNature, const uint8_t *bytes, int b
 void _SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
   _SendingCommand = true;
-#ifdef DEBUG_WITH_LED
-  int debugLedPin = _DebugLedPin;
-  if (debugLedPin != -1) {
-    digitalWrite(debugLedPin, HIGH);
-  }
+// #ifdef DEBUG_WITH_LED
+//   int debugLedPin = _DebugLedPin;
+//   if (debugLedPin != -1) {
+//     digitalWrite(debugLedPin, HIGH);
+//   }
+// #endif   
   __SendSpecialCommand(specialType, specialId, specialCommand, specialData);
-#endif   
   if (!alreadySendingCommand) {
     _HandleFeedback();
   }
-#ifdef DEBUG_WITH_LED
-  if (debugLedPin != -1) {
-    digitalWrite(debugLedPin, LOW);
-  }  
-#endif
+// #ifdef DEBUG_WITH_LED
+//   if (debugLedPin != -1) {
+//     digitalWrite(debugLedPin, LOW);
+//   }  
+// #endif
   _SendingCommand = false;
 }
 
@@ -2939,12 +3173,12 @@ bool DumbDisplay::canLogToSerial() {
 }
 
 void DumbDisplay::debugSetup(int debugLedPin/*, bool enableEchoFeedback*/) {
-#ifdef DEBUG_WITH_LED
-  if (debugLedPin != -1) {
-     pinMode(debugLedPin, OUTPUT);
-   }
-  _DebugLedPin = debugLedPin;
-#endif  
+// #ifdef DEBUG_WITH_LED
+//   if (debugLedPin != -1) {
+//      pinMode(debugLedPin, OUTPUT);
+//    }
+//   _DebugLedPin = debugLedPin;
+// #endif  
 #ifdef DEBUG_ECHO_FEEDBACK
   _DebugEnableEchoFeedback = true;//enableEchoFeedback;
 #endif
@@ -2959,7 +3193,7 @@ void DumbDisplay::setIdleCallback(DDIdleCallback idleCallback) {
   _IdleCallback = idleCallback;
 #endif
 }
-void DumbDisplay::setConnectVersionChangedCalback(DDConnectVersionChangedCallback connectVersionChangedCallback) {
+void DumbDisplay::setConnectVersionChangedCallback(DDConnectVersionChangedCallback connectVersionChangedCallback) {
 #ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
   _ConnectVersionChangedCallback = connectVersionChangedCallback;
 #endif

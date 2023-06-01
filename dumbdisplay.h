@@ -102,8 +102,9 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODEING bef
 
 class DDLayer;
 
-
-/// Type for "feedback" handler.
+/// @struct DDFeedbackHandler
+/// @brief
+/// Type signature for "feedback" handler. See DDLayer::setFeedbackHandler()
 /// @param pLayer pointer to the DDLayer from which "feedback" is for 
 /// @param type type of the "feedback" 
 /// @param feedback data concerning the "feedback"
@@ -187,6 +188,7 @@ class DDLayer: public DDObject {
     /// - "fa" -- flash the area where the layer is clicked
     /// - "fas" -- flash the area (as a spot) where the layer is clicked
     /// - "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
+    /// @param handler "feedback" handler; see DDFeedbackHandler
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     /// rely on getFeedback() being called
     /// autoFeedbackMethod:
@@ -1019,8 +1021,19 @@ class JsonDDTunnelMultiplexer {
      JsonDDTunnel** tunnels;
 };
 
-
-typedef void (*DDIdleCallback)(long idleForMillis, bool reconnecting);
+/// @struct DDIdleConnectionState
+/// @brief
+/// See DDIdleCallback
+enum DDIdleConnectionState { NOT_CONNECTED, CONNECTING, RECONNECTING };
+/// @struct DDIdleCallback
+/// @brief
+/// Type signature for callback function that will be called when idle. See DumbDisplay::setIdleCallback()
+/// @param idleForMillis  how long (millis) the connection has been idle
+/// @param connectionState  the connection state
+typedef void (*DDIdleCallback)(long idleForMillis, DDIdleConnectionState connectionState);
+/// @struct DDConnectVersionChangedCallback
+/// @brief
+/// Type signature for callback function that will be called when connect version (couting up) changed. See DumbDisplay::setConnectVersionChangedCallback()
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 
@@ -1247,12 +1260,11 @@ class DumbDisplay {
     /// set 'idle callback', which will be called repeatedly in 2 situations:
     /// - no connection response while connecting
     /// - detected no 'keep alive' signal (i.e. reconnecting)
+    /// @param idleCallback the callback function; see DDIdleCallback
     void setIdleCallback(DDIdleCallback idleCallback); 
-    // inline void setIdleCalback(DDIdleCallback idleCallback) {
-    //   setIdleCallback(idleCallback);
-    // }
     /// set callback when version changed (e.g. reconnected after disconnect)
-    void setConnectVersionChangedCalback(DDConnectVersionChangedCallback connectVersionChangedCallback); 
+    /// @param connectVersionChangedCallback the callback function; see DDConnectVersionChangedCallback
+    void setConnectVersionChangedCallback(DDConnectVersionChangedCallback connectVersionChangedCallback); 
     /// log line to serial; if it is not safe to output to Serial, will write comment with writeComment() instead
     void logToSerial(const String& logLine);
   public:

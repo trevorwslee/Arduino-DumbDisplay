@@ -13,6 +13,7 @@
 UART Serial2(DD_4_PICO_TX, DD_4_PICO_RX, 0, 0);
 
 
+/// Subclass of DDInputOutput
 class DDPicoUart1IO: public DDInputOutput {
   public:
     /* using PICO Uart1 */

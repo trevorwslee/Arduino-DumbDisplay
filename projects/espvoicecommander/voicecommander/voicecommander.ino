@@ -162,8 +162,8 @@ void setup() {
   dumbdisplay.playbackLayerSetupCommands("esp32ddvoicecommander");  // playback the stored layout commands, as well as persist the layout to phone, so that can reconnect
 
   // set when DD idle handler ... here is a lambda expression
-  dumbdisplay.setIdleCallback([](long idleForMillis, bool recconnecting) {
-    if (recconnecting) {
+  dumbdisplay.setIdleCallback([](long idleForMillis, DDIdleConnectionState connectionState) {
+    if (connectionState == DDIdleConnectionState::RECONNECTING) {
       cachingVoice = false;
     }
   });
