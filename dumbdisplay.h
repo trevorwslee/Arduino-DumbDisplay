@@ -1024,7 +1024,7 @@ class JsonDDTunnelMultiplexer {
 /// @struct DDIdleConnectionState
 /// @brief
 /// See DDIdleCallback
-enum DDIdleConnectionState { NOT_CONNECTED, CONNECTING, RECONNECTING };
+enum DDIdleConnectionState { IDLE_NOT_CONNECTED, IDLE_CONNECTING, IDLE_RECONNECTING };
 /// @struct DDIdleCallback
 /// @brief
 /// Type signature for callback function that will be called when idle. See DumbDisplay::setIdleCallback()
@@ -1035,6 +1035,14 @@ typedef void (*DDIdleCallback)(long idleForMillis, DDIdleConnectionState connect
 /// @brief
 /// Type signature for callback function that will be called when connect version (couting up) changed. See DumbDisplay::setConnectVersionChangedCallback()
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
+
+
+enum DDDebugConnectionState { DEBUG_NOT_CONNECTED, DEBUG_CONNECTING, DEBUG_CONNECTED, DEBUG_RECONNECTING, DEBUG_RECONNECTED };
+class DDDebugInterface {
+  public:
+    virtual void logConnectionState(DDDebugConnectionState connectionState) {}
+};
+
 
 
 extern boolean _DDDisableParamEncoding;
@@ -1062,6 +1070,9 @@ class DumbDisplay {
     void connect();
     /// @return connected or not
     bool connected() const;
+    /// check if connection lost and making reconnection
+    /// @return reconnecting or not 
+    bool checkReconnecting() const;
     /// @return the version of the connection, which when reconnected will be bumped up
     int getConnectVersion() const;
     /// @return compatibility version
@@ -1247,7 +1258,6 @@ class DumbDisplay {
     /// @param imageNames '+' delimited
     /// @param asImageName name for the stitched image
     void stitchImages(const String& imageNames, const String& asImageName);
-    void debugOnly(int i);
     /// reorder the layer (by moving one layer in the z-order plane)
     /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
     void reorderLayer(DDLayer *pLayer, const String& how);
@@ -1255,8 +1265,6 @@ class DumbDisplay {
     void deleteLayer(DDLayer *pLayer);
     /// loop through all the existing layers calling the function passed in
     void walkLayers(void (*walker)(DDLayer *));
-    /// set the pin to flash when DD is sending data, for debugging purpose
-    void debugSetup(int debugLedPin);
     /// set 'idle callback', which will be called repeatedly in 2 situations:
     /// - no connection response while connecting
     /// - detected no 'keep alive' signal (i.e. reconnecting)
@@ -1270,11 +1278,17 @@ class DumbDisplay {
   public:
     /// @brief
     /// EXPERIMENTAL
+    bool connectPassive();
+    /// @brief
+    /// EXPERIMENTAL
     /// "master reset" will 
     /// . disconnect from DD app (if connected)
     /// . delete all created layers and tunnels (hence, DO NOT use the pointer to them)
     /// . DumbDisplay object will be just like at initial state
     void masterReset();  
+    /// set the pin to flash when DD is sending data, for debugging purpose
+    void debugSetup(DDDebugInterface *debugInterface);
+    void debugOnly(int i);
   private:
     void initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, bool enableDoubleClick*/);
     bool canLogToSerial();

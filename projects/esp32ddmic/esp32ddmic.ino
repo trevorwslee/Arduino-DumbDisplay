@@ -175,8 +175,10 @@ void setup() {
   dumbdisplay.playbackLayerSetupCommands("esp32ddmice");  // playback the stored layout commands, as well as persist the layout to phone, so that can reconnect
 
   // set when DD idle handler ... here is a lambda expression
-  dumbdisplay.setIdleCallback([](long idleForMillis) {
-    started = false;  // if idle, e.g. disconnected, stop whatever
+  dumbdisplay.setIdleCallback([](long idleForMillis, DDIdleConnectionState connectionState) {
+    if (connectionState == DDIdleConnectionState::RECONNECTING) {
+      started = false;  // if idle, e.g. disconnected, stop whatever
+    }
   });
 
 }

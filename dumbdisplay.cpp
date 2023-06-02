@@ -7,7 +7,7 @@
 #define VALIDATE_GAP 2000
 
 
-#define SUPPORT_PASSIVE_MODE
+//#define SUPPORT_PASSIVE_MODE
 
 #define ENABLE_FEEDBACK
 #define STORE_LAYERS
@@ -193,6 +193,7 @@ class IOProxy {
       this->lastKeepAliveMillis = 0;
       this->reconnectEnabled = false;
 #endif
+      this->reconnecting = false;
     }
     bool available();
     const String& get();
@@ -209,6 +210,9 @@ class IOProxy {
       this->reconnectKeepAliveMillis = 0;
 #endif
     }
+    bool isReconnecting() {
+      return this->reconnecting;
+    }
   private:
     DDInputOutput *pIO;
     bool fromSerial;
@@ -219,17 +223,23 @@ class IOProxy {
     String reconnectRCId;
     long reconnectKeepAliveMillis;
 #endif
+    bool reconnecting;
 };
 
 
+#ifdef SUPPORT_PASSIVE_MODE
 bool _IsInPassiveMode = false;
+#endif
 
 /*volatile */bool _Connected = false;
 /*volatile */int _ConnectVersion = 0;
+//bool _Reconnecting = false;
 
 #ifdef SUPPORT_IDLE_CALLBACK
 /*volatile */DDIdleCallback _IdleCallback = NULL; 
 #endif
+
+DDDebugInterface *_DebugInterface;
 
 #ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
 /*volatile */DDConnectVersionChangedCallback _ConnectVersionChangedCallback = NULL; 
@@ -298,12 +308,16 @@ void IOProxy::validConnection() {
 #ifdef SUPPORT_IDLE_CALLBACK      
       if (_IdleCallback != NULL) {
         long idleForMillis = notKeptAliveMillis - RECONNECT_NO_KEEP_ALIVE_MILLIS;
-        _IdleCallback(idleForMillis, DDIdleConnectionState::RECONNECTING);
+        _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_RECONNECTING);
       }
 #endif      
     }
 #ifdef SUPPORT_RECONNECT
     if (this->reconnectEnabled && needReconnect) {
+      this->reconnecting = true;
+      if (_DebugInterface != NULL) {
+        _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_RECONNECTING);
+      }
       YIELD();
 #ifdef DEBUG_RECONNECT_WITH_COMMENT 
 this->print("// NEED TO RECONNECT\n");
@@ -322,6 +336,7 @@ this->print("// NEED TO RECONNECT\n");
       this->print("\n");
       this->reconnectKeepAliveMillis = this->lastKeepAliveMillis;
     } else if (this->reconnectKeepAliveMillis > 0) {
+      this->reconnecting = false;
       _ConnectVersion = _ConnectVersion + 1;
 #ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK   
       if (_ConnectVersionChangedCallback != NULL) {
@@ -339,7 +354,10 @@ this->print("// NEED TO RECONNECT\n");
 #ifdef RECONNECTED_RESET_KEEP_ALIVE
       this->lastKeepAliveMillis = millis();
 #endif
-    }
+      if (_DebugInterface != NULL) {
+        _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_RECONNECTED);
+      }
+     }
 #endif
   }
 #endif  
@@ -445,9 +463,9 @@ volatile bool _HandlingFeedback = false;
 // #endif
 // }
 
-#ifdef SUPPORT_PASSIVE_MODE
+#if 1
 
-int _C_state;
+int _C_state = 0;
 long _C_startMillis;
 long _C_lastCallMillis;
 bool _C_firstCall;
@@ -468,20 +486,30 @@ bool __Connect(/*bool calledPassive = false*/) {
     _C_lastCallMillis = _C_startMillis;
     _C_firstCall = true;
     _C_state = 1;
+    if (_DebugInterface != NULL) {
+      _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_NOT_CONNECTED);
+    }
     return false;
   }
   if (_C_state == 1) {
     if (_IO->preConnect(_C_firstCall)) {
       _C_state = 2;
+      if (_DebugInterface != NULL) {
+        _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
+      }
       return false;
     }
 #ifdef SUPPORT_IDLE_CALLBACK
-    if (!_IsInPassiveMode && _IdleCallback != NULL) {
+    bool checkIdle = _IdleCallback != NULL;
+#ifdef SUPPORT_PASSIVE_MODE
+    checkIdle &= !_IsInPassiveMode;
+#endif    
+    if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
       long now = millis();
       long diffMillis = now - _C_lastCallMillis;
       if (diffMillis >= HAND_SHAKE_GAP) {
         long idleForMillis = now - _C_startMillis;
-        _IdleCallback(idleForMillis, DDIdleConnectionState::NOT_CONNECTED);
+        _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_NOT_CONNECTED);
         _C_lastCallMillis = now;
       }
     }
@@ -515,6 +543,9 @@ bool __Connect(/*bool calledPassive = false*/) {
       YIELD();
       long now = millis();
       if (now > nextTime) {
+      if (_DebugInterface != NULL) {
+        _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
+      }
 // #ifdef DEBUG_WITH_LED
 //         if (debugLedPin != -1) {
 //           debugLedOn = !debugLedOn;
@@ -528,9 +559,13 @@ bool __Connect(/*bool calledPassive = false*/) {
         Serial.println("handshake:ddhello");
 #endif        
 #ifdef SUPPORT_IDLE_CALLBACK
-        if (!_IsInPassiveMode && _IdleCallback != NULL) {
+        bool checkIdle = _IdleCallback != NULL;
+#ifdef SUPPORT_PASSIVE_MODE
+        checkIdle &= !_IsInPassiveMode;
+#endif
+        if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
           long idleForMillis = now - startMillis;
-          _IdleCallback(idleForMillis, DDIdleConnectionState::CONNECTING);
+          _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_CONNECTING);
         }
 #endif      
         nextTime = now + HAND_SHAKE_GAP;
@@ -652,14 +687,24 @@ bool __Connect(/*bool calledPassive = false*/) {
 bool _Connect(bool calledPassive = false) {
   if (_Connected)
     return true;
-  if (_IsInPassiveMode && !calledPassive) {
-    return false;
-  }  
-  _C_state = 0;
+// #ifdef SUPPORT_PASSIVE_MODE
+//   if (_IsInPassiveMode && !calledPassive) {
+//     return false;
+//   }  
+// #endif  
+  if (!calledPassive) {
+    _C_state = 0;  // ASSUME initially _c_state == 0
+  }
   while (true) {
     YIELD();
     if (__Connect()) {
+      if (_DebugInterface != NULL) {
+        _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTED);
+      }
       return true;
+    }
+    if (calledPassive) {
+      return false;
     }
   }
 }
@@ -982,14 +1027,27 @@ void _PreDeleteTunnel(DDTunnel* pTunnel) {
 #ifdef VALIDATE_CONNECTION
 long _LastValidateConnectionMillis = 0;
 #endif
+void _ValidateConnection() {
+#ifdef VALIDATE_CONNECTION
+    if (_ConnectedIOProxy != NULL) {
+      long now = millis();
+      long diff = now - _LastValidateConnectionMillis;
+      if (diff >= VALIDATE_GAP/*2000*//*5000*/) {
+        _ConnectedIOProxy->validConnection();
+        _LastValidateConnectionMillis = now;
+      }
+    }
+#endif
+}
 String* _ReadFeedback(String& buffer) {
 #ifdef VALIDATE_CONNECTION
-    long now = millis();
-    long diff = now - _LastValidateConnectionMillis;
-    if (diff >= VALIDATE_GAP/*2000*//*5000*/) {
-      _ConnectedIOProxy->validConnection();
-      _LastValidateConnectionMillis = now;
-    }
+    // long now = millis();
+    // long diff = now - _LastValidateConnectionMillis;
+    // if (diff >= VALIDATE_GAP/*2000*//*5000*/) {
+    //   /*_Reconnecting = !*/_ConnectedIOProxy->validConnection();
+    //   _LastValidateConnectionMillis = now;
+    // }
+    _ValidateConnection();
 #endif
   if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
     return NULL;
@@ -1759,14 +1817,6 @@ void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFe
     delete pFeedbackManager;
     pFeedbackManager = NULL;
   }
-}
-void DDLayer::debugOnly(int i) {
-  _sendCommand2(layerId, "debugonly", String(i), TO_C_INT(i));
-  // byte bytes[i];
-  // for (int j = 0; j < i; j++) {
-  //   bytes[j] = j;
-  // }
-  // _sendByteArrayAfterCommand(bytes, i);
 }
 
 
@@ -2754,6 +2804,12 @@ int DumbDisplay::getConnectVersion() const {
 int DumbDisplay::getCompatibilityVersion() const {
   return _DDCompatibility;
 }
+bool DumbDisplay::checkReconnecting() const {
+  _Yield();
+  //_ValidateConnection();
+  //return false;
+  return _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
+}
 void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
   _Connect();
   if (xUnitCount != 100 || yUnitCount != 100) {
@@ -3172,17 +3228,6 @@ bool DumbDisplay::canLogToSerial() {
   return _CanLogToSerial();
 }
 
-void DumbDisplay::debugSetup(int debugLedPin/*, bool enableEchoFeedback*/) {
-// #ifdef DEBUG_WITH_LED
-//   if (debugLedPin != -1) {
-//      pinMode(debugLedPin, OUTPUT);
-//    }
-//   _DebugLedPin = debugLedPin;
-// #endif  
-#ifdef DEBUG_ECHO_FEEDBACK
-  _DebugEnableEchoFeedback = true;//enableEchoFeedback;
-#endif
-}
 // #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
 // void DumbDisplay::optionNoCompression(bool noCompression) {
 //   _NoEncodeInt = noCompression;
@@ -3212,6 +3257,11 @@ void DumbDisplay::logToSerial(const String& logLine) {
   } else {
     writeComment(logLine);
   }
+}
+
+
+bool DumbDisplay::connectPassive() {
+  return _Connect(true);
 }
 
 void DumbDisplay::masterReset() {
@@ -3257,6 +3307,27 @@ void DumbDisplay::masterReset() {
 #endif
 }
 
+//void DumbDisplay::debugSetup(int debugLedPin/*, bool enableEchoFeedback*/) {
+void DumbDisplay::debugSetup(DDDebugInterface *debugInterface) {
+  _DebugInterface = debugInterface;
+// #ifdef DEBUG_WITH_LED
+//   if (debugLedPin != -1) {
+//      pinMode(debugLedPin, OUTPUT);
+//    }
+//   _DebugLedPin = debugLedPin;
+// #endif  
+#ifdef DEBUG_ECHO_FEEDBACK
+  _DebugEnableEchoFeedback = true;//enableEchoFeedback;
+#endif
+}
+void DDLayer::debugOnly(int i) {
+  _sendCommand2(layerId, "debugonly", String(i), TO_C_INT(i));
+  // byte bytes[i];
+  // for (int j = 0; j < i; j++) {
+  //   bytes[j] = j;
+  // }
+  // _sendByteArrayAfterCommand(bytes, i);
+}
 
 
 

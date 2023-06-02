@@ -3,6 +3,29 @@
 
 
 
+class ToSerialDDDebugInterface: public DDDebugInterface {
+  public:
+    virtual void logConnectionState(DDDebugConnectionState connectionState) {
+      switch (connectionState) {
+        case DDDebugConnectionState::DEBUG_NOT_CONNECTED:
+          Serial.println("* DebugConnection: not connected");
+          break;
+        case DDDebugConnectionState::DEBUG_CONNECTING:
+          Serial.println("* DebugConnection: connecting");
+          break;
+        case DDDebugConnectionState::DEBUG_CONNECTED:
+          Serial.println("* DebugConnection: connected");
+          break;
+        case DDDebugConnectionState::DEBUG_RECONNECTING:
+          Serial.println("* DebugConnection: reconnecting");
+          break;
+        case DDDebugConnectionState::DEBUG_RECONNECTED:
+          Serial.println("* DebugConnection: reconnected");
+          break;
+      }
+    }
+};
+
 /// the same usage as standard delay(), but it gives DD a chance to handle "feedbacks"
 void DDDelay(unsigned long ms);
 /// give DD a chance to handle "feedbacks"
