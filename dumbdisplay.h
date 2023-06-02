@@ -1273,18 +1273,22 @@ class DumbDisplay {
     /// log line to serial; if it is not safe to output to Serial, will write comment with writeComment() instead
     void logToSerial(const String& logLine);
   public:
-    /// @brief
-    /// EXPERIMENTAL
-    /// @param pConnecting if not NULL, check if connection lost and making reconnection
+    /// EXPERIMENTAL; make connection passively; i.e. will not block, and require continuously calling to complete connection
+    /// @param pConnecting if not NULL, check if connection lost and is making reconnection
     bool connectPassive(bool* pReconnecting = NULL);
-    /// @brief
-    /// EXPERIMENTAL
-    /// "master reset" will 
+    /// EXPERIMENTAL; "master reset" to be just like uninitialized;
+    /// "master reset" will:
     /// . disconnect from DD app (if connected)
-    /// . delete all created layers and tunnels (hence, DO NOT use the pointer to them)
-    /// . DumbDisplay object will be just like at initial state
+    /// . delete all created layers and tunnels; hence, DO NOT use the pointers to them after "master reset"
+    /// . DumbDisplay object will be just like at initial state; it will *not* be deleted
     void masterReset();  
-    /// set the pin to flash when DD is sending data, for debugging purpose
+    // /// EXPERIMENTAL; like connectPassive();
+    // /// if detected reconnecting, will "master reset", which ...
+    // /// . disconnect from DD app (if connected)
+    // /// . delete all created layers and tunnels (hence, DO NOT use the pointer to them)
+    // /// . DumbDisplay object will be just like at initial state
+    // bool connectPassiveReset();
+  public:
     void debugSetup(DDDebugInterface *debugInterface);
     void debugOnly(int i);
   private:

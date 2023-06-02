@@ -21,6 +21,7 @@
 
 #define SUPPORT_MASTER_RESET 
 
+
 #define SUPPORT_ENCODE_OPER
 
 // #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
@@ -192,6 +193,7 @@ class IOProxy {
     IOProxy(DDInputOutput *pIO) {
       this->pIO = pIO;
 #ifdef SUPPORT_RECONNECT      
+      this->reconnectKeepAliveMillis = 0;
       this->lastKeepAliveMillis = 0;
       this->reconnectEnabled = false;
 #endif
@@ -314,6 +316,11 @@ void IOProxy::validConnection() {
       }
 #endif      
     }
+#ifdef SUPPORT_MASTER_RESET
+    if (needReconnect) {
+      this->reconnecting = true;
+    }
+#endif        
 #ifdef SUPPORT_RECONNECT
     if (this->reconnectEnabled && needReconnect) {
       this->reconnecting = true;
@@ -590,6 +597,9 @@ bool __Connect(/*bool calledPassive = false*/) {
             _SetIO(pSIO, DD_DEF_SEND_BUFFER_SIZE);
             //_IO = pSIO;
             pSIO = NULL;
+          }
+          if (_ConnectedIOProxy != NULL) {
+            delete _ConnectedIOProxy;
           }
           _ConnectedIOProxy = new IOProxy(_IO);
 //          _ConnectedFromSerial = fromSerial;
@@ -3274,15 +3284,40 @@ bool DumbDisplay::connectPassive(bool* pReconnecting) {
   }
   return connected;
 }
-
+// bool DumbDisplay::connectPassiveReset() {
+//   bool reconnecting;
+//   bool connected = connectPassive(&reconnecting);
+//   if (!connected) {
+//     return false;
+//   }
+//   if (reconnecting) {
+//     masterReset();
+//     return false;
+//   } else {
+//     return true;
+//   }
+// }
 void DumbDisplay::masterReset() {
 #ifdef SUPPORT_MASTER_RESET
+  bool reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
+  bool canLogToSerial = !_IO->isSerial();
+
+  if (canLogToSerial) {
+    Serial.println();
+    Serial.println("***** Master Reset (START) *****");
+    if (reconnecting) {
+      Serial.println("- during reconnecting");
+    }
+  }
+
   // try the best to delete objects tracked
-  if (_Connected) {
+  if (_Connected && !reconnecting) {
+    if (canLogToSerial) Serial.println(". send command to DD app to disconnect");
     _sendCommand0("", "DISCONNECT");
   }
 
   if (_NextLid > 0) {
+    if (canLogToSerial) Serial.println(". cleanup layers / tunnels");
     for (int i = 0; i < _NextLid; i++) {
       DDObject* pObject = _DDLayerArray[i];
       if (pObject != NULL) {
@@ -3291,30 +3326,37 @@ void DumbDisplay::masterReset() {
     }
     delete _DDLayerArray;
     _DDLayerArray = NULL;
+    _MaxDDLayerCount = 0;
   }
   _NextLid = 0;
   _NextImgId = 0;  // allocated image not tracked
   _NextBytesId = 0;
 
-  _IO = NULL;
-#ifdef SUPPORT_USE_WOIO
-  if (_WOIO != NULL) {
-	  delete _WOIO;
-    _WOIO = NULL;
-  }  
-#endif
+  //_IO = NULL;
+// #ifdef SUPPORT_USE_WOIO
+//   if (_WOIO != NULL) {
+// 	  delete _WOIO;
+//     _WOIO = NULL;
+//   }  
+// #endif
+
+  if (canLogToSerial) Serial.println(". reset states");
   if (_ConnectedIOProxy != NULL) {
     delete _ConnectedIOProxy;
     _ConnectedIOProxy = NULL;
   }
-
   _SendingCommand = false;
   _HandlingFeedback = false;
   _Connected = false;
   _ConnectVersion = 0;
-  _IdleCallback = NULL;
-  _ConnectVersionChangedCallback = NULL;
-  //_DebugLedPin = -1;
+  // _IdleCallback = NULL;
+  // _ConnectVersionChangedCallback = NULL;
+  _C_state = 0;
+
+  if (canLogToSerial) {
+    Serial.println("***** Master Reset (END) *****");
+    Serial.println();
+  }
 #endif
 }
 
