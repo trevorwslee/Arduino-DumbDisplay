@@ -4,7 +4,7 @@
 
 
 #define HAND_SHAKE_GAP 1000
-#define VALIDATE_GAP 2000
+//#define VALIDATE_GAP 2000
 
 
 //#define SUPPORT_PASSIVE_MODE
@@ -63,6 +63,8 @@
 
 #define SUPPORT_RECONNECT
 #define RECONNECT_NO_KEEP_ALIVE_MILLIS 5000
+#define VALIDATE_GAP 1000
+#define RECONNECTING_VALIDATE_GAP 500
 
 //#define SHOW_KEEP_ALIVE
 //#define DEBUG_RECONNECT_WITH_COMMENT
@@ -1030,9 +1032,10 @@ long _LastValidateConnectionMillis = 0;
 void _ValidateConnection() {
 #ifdef VALIDATE_CONNECTION
     if (_ConnectedIOProxy != NULL) {
+      long validateGap = _ConnectedIOProxy->isReconnecting() ? RECONNECTING_VALIDATE_GAP : VALIDATE_GAP; 
       long now = millis();
       long diff = now - _LastValidateConnectionMillis;
-      if (diff >= VALIDATE_GAP/*2000*//*5000*/) {
+      if (diff >= validateGap/*VALIDATE_GAP*//*2000*//*5000*/) {
         _ConnectedIOProxy->validConnection();
         _LastValidateConnectionMillis = now;
       }
@@ -1398,8 +1401,8 @@ void _HandleFeedback() {
       Serial.println(*pFeedback);
 #endif      
 #ifdef MORE_KEEP_ALIVE
-          // keep alive wheneven received someting
-        _ConnectedIOProxy->keepAlive();
+      // keep alive wheneven received someting
+      _ConnectedIOProxy->keepAlive();
 #endif        
       if (*(pFeedback->c_str()) == '<') {
         if (pFeedback->length() == 1) {
