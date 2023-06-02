@@ -1273,9 +1273,8 @@ class DumbDisplay {
     /// log line to serial; if it is not safe to output to Serial, will write comment with writeComment() instead
     void logToSerial(const String& logLine);
   public:
-    /// EXPERIMENTAL; 
-    /// make connection passively; i.e. will not block, but will require continuous calling to for making connection;
-    /// however, once started hand-shaking, will block until handshake done
+    /// @brief
+    /// make connection passively; i.e. will not block, but will require continuous calling for making connection
     /// @param pConnecting if not NULL, check if connection lost and is making reconnection
     bool connectPassive(bool* pReconnecting = NULL);
     /// EXPERIMENTAL; "master reset" to be just like uninitialized;

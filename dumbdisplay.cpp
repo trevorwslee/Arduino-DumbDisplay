@@ -381,10 +381,10 @@ this->print("// NEED TO RECONNECT\n");
 
 //volatile bool _Preconneced = false;
 //volatile bool _Connected = false;
-volatile int _DDCompatibility = 0;
-volatile int _NextLid = 0;
-volatile int _NextImgId = 0;
-volatile int _NextBytesId = 0;
+/*volatile */short _DDCompatibility = 0;
+/*volatile */int _NextLid = 0;
+/*volatile*/int _NextImgId = 0;
+/*volatile*/int _NextBytesId = 0;
 
 #ifdef SUPPORT_TUNNEL
 #define DD_LAYER_INC   2
@@ -481,7 +481,7 @@ volatile bool _HandlingFeedback = false;
 
 struct _ConnectState {
   _ConnectState(): step(0) {}
-  int step;
+  short step;
   long startMillis;
   long lastCallMillis;
   bool firstCall;
@@ -489,6 +489,7 @@ struct _ConnectState {
   IOProxy* pIOProxy;
   IOProxy* pSerialIOProxy;
   DDInputOutput *pSIO;
+  short compatibility;
 };
 _ConnectState _C_state;
 
@@ -656,14 +657,19 @@ bool __Connect(/*bool calledPassive = false*/) {
     //   delete pSIO;
     return false;
   }
-  int compatibility = 0;
-  { 
-    long nextTime = 0;
-    IOProxy ioProxy(_IO);
-    while (true) {
-      YIELD();
+  //int compatibility = 0;
+  if (_C_state.step == 5) { 
+    //_C_state.compatibility = 0;
+    _C_state.nextTime = millis();
+    _C_state.step = 6;
+    return false;
+  }
+  if (_C_state.step == 6) { 
+    //IOProxy ioProxy(_IO);
+    /*while (true) */{
+      //YIELD();
       long now = millis();
-      if (now > nextTime) {
+      if (now > _C_state.nextTime) {
 // #ifdef DEBUG_WITH_LED
 //         if (debugLedPin != -1) {
 //           debugLedOn = !debugLedOn;
@@ -672,30 +678,42 @@ bool __Connect(/*bool calledPassive = false*/) {
 // #endif
 //Serial.println((_ConnectedFromSerial ? "SERIAL" : "NON-SERIAL"));
         //ioProxy.print(">init>:Arduino-c1\n");
-        ioProxy.print(">init>:");
-        ioProxy.print(DD_SID);
+        _ConnectedIOProxy->/*ioProxy.*/print(">init>:");
+        _ConnectedIOProxy->/*ioProxy.*/print(DD_SID);
         // if (!_EnableDoubleClick) {
         //   ioProxy.print(",dblclk=0");
         // }
-        ioProxy.print("\n");
-        nextTime = now + HAND_SHAKE_GAP;
+        _ConnectedIOProxy->/*ioProxy.*/print("\n");
+        _C_state.nextTime = now + HAND_SHAKE_GAP;
       }
-      if (ioProxy.available()) {
-        const String& data = ioProxy.get();
-        if (data == "<init<")
-          break;
-        if (data.startsWith("<init<:")) {
-            compatibility = data.substring(7).toInt();
-            break;
-        }  
-        ioProxy.clear();  
+      if (_ConnectedIOProxy->/*ioProxy.*/available()) {
+        const String& data = _ConnectedIOProxy->/*ioProxy.*/get();
+        short compatibility = -1;
+        if (data == "<init<") {
+          //break;
+          compatibility = 0;
+          //_C_state.step = 7;
+          //return false;
+        } else if (data.startsWith("<init<:")) {
+          compatibility = data.substring(7).toInt();
+          //break;
+          //_C_state.step = 7;
+          //return false;
+        } 
+        if (compatibility != -1) {
+          _C_state.compatibility = compatibility;
+          _C_state.step = 7;
+          return false;
+        } 
+        _ConnectedIOProxy->/*ioProxy.*/clear();  
       }
     }
+    return false;
   }
   _Connected = true;
   _ConnectVersion = 1;
 //  _ConnectedIOProxy = new IOProxy(_IO);
-  _DDCompatibility = compatibility;
+  _DDCompatibility = _C_state.compatibility;
   if (false) {
     // ignore any input in 1000ms window
     delay(1000);
@@ -704,13 +722,13 @@ bool __Connect(/*bool calledPassive = false*/) {
     }
   }
   if (true) {       
-    _IO->print("// connected to DD c" + String(compatibility) + "\n"/*.c_str()*/);
+    _IO->print("// connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
     //_IO->flush();
     if (false) {
       // *** debug code
       for (int i = 0; i < 10; i++) {
         delay(500);
-        _IO->print("// connected to DD c" + String(compatibility) + "\n"/*.c_str()*/);
+        _IO->print("// connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
       }
     }
 #ifdef DD_DEBUG_HS          
