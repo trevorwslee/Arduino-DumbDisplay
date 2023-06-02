@@ -297,6 +297,11 @@ void IOProxy::validConnection() {
   Serial.println(" ...");
 #endif 
   pIO->validConnection();
+#if defined(SUPPORT_MASTER_RESET)
+  if (lastKeepAliveMillis == 0) {  // since 2023-06-02
+    lastKeepAliveMillis = millis();  // don't wait for keep alive 
+  }
+#endif  
 // #ifdef SUPPORT_PASSIVE_MODE
 //   if (_IsInPassiveMode) {
 //     return;
@@ -474,10 +479,14 @@ volatile bool _HandlingFeedback = false;
 
 #if 1
 
-int _C_state = 0;
-long _C_startMillis;
-long _C_lastCallMillis;
-bool _C_firstCall;
+struct _ConnectState {
+  _ConnectState(): step(0) {}
+  int step;
+  long startMillis;
+  long lastCallMillis;
+  bool firstCall;
+};
+_ConnectState _C_state;
 
 bool __Connect(/*bool calledPassive = false*/) {
 //   if (_C_startMillis == -1) {
@@ -490,19 +499,19 @@ bool __Connect(/*bool calledPassive = false*/) {
 // //     }
 // // #endif
 //   }
-  if (_C_state == 0) {
-    _C_startMillis = millis();
-    _C_lastCallMillis = _C_startMillis;
-    _C_firstCall = true;
-    _C_state = 1;
+  if (_C_state.step == 0) {
+    _C_state.startMillis = millis();
+    _C_state.lastCallMillis = _C_state.startMillis;
+    _C_state.firstCall = true;
+    _C_state.step = 1;
     if (_DebugInterface != NULL) {
       _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_NOT_CONNECTED);
     }
     return false;
   }
-  if (_C_state == 1) {
-    if (_IO->preConnect(_C_firstCall)) {
-      _C_state = 2;
+  if (_C_state.step == 1) {
+    if (_IO->preConnect(_C_state.firstCall)) {
+      _C_state.step = 2;
       if (_DebugInterface != NULL) {
         _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
       }
@@ -515,15 +524,15 @@ bool __Connect(/*bool calledPassive = false*/) {
 // #endif    
     if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
       long now = millis();
-      long diffMillis = now - _C_lastCallMillis;
+      long diffMillis = now - _C_state.lastCallMillis;
       if (diffMillis >= HAND_SHAKE_GAP) {
-        long idleForMillis = now - _C_startMillis;
+        long idleForMillis = now - _C_state.startMillis;
         _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_NOT_CONNECTED);
-        _C_lastCallMillis = now;
+        _C_state.lastCallMillis = now;
       }
     }
 #endif      
-    _C_firstCall = false;
+    _C_state.firstCall = false;
     return false;
   }
   if (!_IO->isSerial()) {
@@ -552,9 +561,9 @@ bool __Connect(/*bool calledPassive = false*/) {
       YIELD();
       long now = millis();
       if (now > nextTime) {
-      if (_DebugInterface != NULL) {
-        _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
-      }
+        if (_DebugInterface != NULL) {
+          _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
+        }
 // #ifdef DEBUG_WITH_LED
 //         if (debugLedPin != -1) {
 //           debugLedOn = !debugLedOn;
@@ -680,6 +689,7 @@ bool __Connect(/*bool calledPassive = false*/) {
 #ifdef DD_DEBUG_HS          
     Serial.println("// *** CONNECTED");
 #endif        
+    _C_state.step = 0;
   }
 // #ifdef DEBUG_WITH_LED
 //     if (debugLedPin != -1) {
@@ -705,7 +715,7 @@ bool _Connect(bool calledPassive = false) {
 //   }  
 // #endif  
   if (!calledPassive) {
-    _C_state = 0;  // ASSUME initially _c_state == 0
+    _C_state.step = 0;
   }
   while (true) {
     YIELD();
@@ -3351,7 +3361,7 @@ void DumbDisplay::masterReset() {
   _ConnectVersion = 0;
   // _IdleCallback = NULL;
   // _ConnectVersionChangedCallback = NULL;
-  _C_state = 0;
+  _C_state.step = 0;
 
   if (canLogToSerial) {
     Serial.println("***** Master Reset (END) *****");
