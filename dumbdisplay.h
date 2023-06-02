@@ -1070,9 +1070,6 @@ class DumbDisplay {
     void connect();
     /// @return connected or not
     bool connected() const;
-    /// check if connection lost and making reconnection
-    /// @return reconnecting or not 
-    bool checkReconnecting() const;
     /// @return the version of the connection, which when reconnected will be bumped up
     int getConnectVersion() const;
     /// @return compatibility version
@@ -1278,7 +1275,8 @@ class DumbDisplay {
   public:
     /// @brief
     /// EXPERIMENTAL
-    bool connectPassive();
+    /// @param pConnecting if not NULL, check if connection lost and making reconnection
+    bool connectPassive(bool* pReconnecting = NULL);
     /// @brief
     /// EXPERIMENTAL
     /// "master reset" will 

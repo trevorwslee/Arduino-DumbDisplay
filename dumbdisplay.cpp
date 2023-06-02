@@ -2807,12 +2807,12 @@ int DumbDisplay::getConnectVersion() const {
 int DumbDisplay::getCompatibilityVersion() const {
   return _DDCompatibility;
 }
-bool DumbDisplay::checkReconnecting() const {
-  _Yield();
-  //_ValidateConnection();
-  //return false;
-  return _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
-}
+// bool DumbDisplay::checkReconnecting() const {
+//   _Yield();
+//   //_ValidateConnection();
+//   //return false;
+//   return _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
+// }
 void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
   _Connect();
   if (xUnitCount != 100 || yUnitCount != 100) {
@@ -3263,8 +3263,16 @@ void DumbDisplay::logToSerial(const String& logLine) {
 }
 
 
-bool DumbDisplay::connectPassive() {
-  return _Connect(true);
+bool DumbDisplay::connectPassive(bool* pReconnecting) {
+  bool connected = _Connect(true);
+  if (connected) {
+    _Yield();
+    if (pReconnecting != NULL) {
+      *pReconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
+    }
+
+  }
+  return connected;
 }
 
 void DumbDisplay::masterReset() {
