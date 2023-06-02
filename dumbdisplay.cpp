@@ -485,6 +485,10 @@ struct _ConnectState {
   long startMillis;
   long lastCallMillis;
   bool firstCall;
+  long nextTime;
+  IOProxy* pIOProxy;
+  IOProxy* pSerialIOProxy;
+  DDInputOutput *pSIO;
 };
 _ConnectState _C_state;
 
@@ -535,32 +539,50 @@ bool __Connect(/*bool calledPassive = false*/) {
     _C_state.firstCall = false;
     return false;
   }
-  if (!_IO->isSerial()) {
-    Serial.println("**********");
-#ifdef SUPPORT_USE_WOIO
-    Serial.print("* _SendBufferSize=");
-    Serial.println(_SendBufferSize);
-#endif
-    //Serial.print("* _EnableDoubleClick=");
-    //Serial.println(_EnableDoubleClick ? "yes" : "no");
-    Serial.println("**********");
-    Serial.flush();
+  if (_C_state.step == 2) {
+    if (!_IO->isSerial()) {
+      Serial.println("**********");
+  #ifdef SUPPORT_USE_WOIO
+      Serial.print("* _SendBufferSize=");
+      Serial.println(_SendBufferSize);
+  #endif
+      //Serial.print("* _EnableDoubleClick=");
+      //Serial.println(_EnableDoubleClick ? "yes" : "no");
+      Serial.println("**********");
+      Serial.flush();
+    }
+    _C_state.step = 3;
+    return false;
   }
-  if (true) {
-    long nextTime = 0;
-    IOProxy ioProxy(_IO);
-    IOProxy* pSerialIOProxy = NULL;
-    DDInputOutput *pSIO = NULL;
+  if (_C_state.step == 3) {
+    _C_state.nextTime = 0;
+    //IOProxy ioProxy(_IO);
+    if (_C_state.pIOProxy != NULL) {
+      delete _C_state.pIOProxy;
+    }
+    if (_C_state.pSerialIOProxy != NULL) {
+      delete _C_state.pSerialIOProxy;
+    }
+    if (_C_state.pSIO != NULL) {
+      delete _C_state.pSIO;
+    }
+    _C_state.pIOProxy = new IOProxy(_IO);
+    _C_state.pSerialIOProxy = NULL;
+    _C_state.pSIO = NULL;
     if (_IO->isBackupBySerial()) {
       //pSIO = new DDInputOutput(_IO);
-      pSIO = _IO->newForSerialConnection();
-      pSerialIOProxy = new IOProxy(pSIO);
+      _C_state.pSIO = _IO->newForSerialConnection();
+      _C_state.pSerialIOProxy = new IOProxy(_C_state.pSIO);
     }
-    long startMillis = millis();
-    while (true) {
-      YIELD();
+    _C_state.startMillis = millis();
+    _C_state.step = 4;
+    return false;
+  }
+  if (_C_state.step == 4) {
+    /*while (true) */{
+      //YIELD();
       long now = millis();
-      if (now > nextTime) {
+      if (now > _C_state.nextTime) {
         if (_DebugInterface != NULL) {
           _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
         }
@@ -570,9 +592,10 @@ bool __Connect(/*bool calledPassive = false*/) {
 //           digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
 //         }
 // #endif
-        ioProxy.print("ddhello\n");
-        if (pSerialIOProxy != NULL) 
-          pSerialIOProxy->print("ddhello\n");
+        _C_state.pIOProxy->print("ddhello\n");
+        if (_C_state.pSerialIOProxy != NULL) {
+          _C_state.pSerialIOProxy->print("ddhello\n");
+        }
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:ddhello");
 #endif        
@@ -582,30 +605,30 @@ bool __Connect(/*bool calledPassive = false*/) {
 //         checkIdle &= !_IsInPassiveMode;
 // #endif
         if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
-          long idleForMillis = now - startMillis;
+          long idleForMillis = now - _C_state.startMillis;
           _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_CONNECTING);
         }
 #endif      
-        nextTime = now + HAND_SHAKE_GAP;
+        _C_state.nextTime = now + HAND_SHAKE_GAP;
       }
       bool fromSerial = false;
-      bool available = ioProxy.available();
-      if (!available && pSerialIOProxy != NULL) {
-        if (pSerialIOProxy->available()) {
+      bool available = _C_state.pIOProxy->available();
+      if (!available && _C_state.pSerialIOProxy != NULL) {
+        if (_C_state.pSerialIOProxy->available()) {
           available = true;
           fromSerial = true;
         }
       }
       if (available) {
-        const String& data = fromSerial ? pSerialIOProxy->get() : ioProxy.get();
+        const String& data = fromSerial ? _C_state.pSerialIOProxy->get() : _C_state.pIOProxy->get();
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:data-" + data);
 #endif        
         if (data == "ddhello") {
           if (fromSerial) {
-            _SetIO(pSIO, DD_DEF_SEND_BUFFER_SIZE);
+            _SetIO(_C_state.pSIO, DD_DEF_SEND_BUFFER_SIZE);
             //_IO = pSIO;
-            pSIO = NULL;
+            _C_state.pSIO = NULL;
           }
           if (_ConnectedIOProxy != NULL) {
             delete _ConnectedIOProxy;
@@ -613,21 +636,25 @@ bool __Connect(/*bool calledPassive = false*/) {
           _ConnectedIOProxy = new IOProxy(_IO);
 //          _ConnectedFromSerial = fromSerial;
           _ConnectedFromSerial = _IO->isSerial();
-          break;
+          //break;
+          _C_state.step = 5;
+          return false;
         }
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:DONE");
 #endif        
         if (fromSerial) 
-          pSerialIOProxy->clear();
+          _C_state.pSerialIOProxy->clear();
         else
-          ioProxy.clear();  
+          _C_state.pIOProxy->clear();  
       }
     }
-    if (pSerialIOProxy != NULL)
-      delete pSerialIOProxy;
-    if (pSIO != NULL)
-      delete pSIO;
+    // moved up
+    // if (pSerialIOProxy != NULL)
+    //   delete pSerialIOProxy;
+    // if (pSIO != NULL)
+    //   delete pSIO;
+    return false;
   }
   int compatibility = 0;
   { 
