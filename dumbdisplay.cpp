@@ -297,11 +297,11 @@ void IOProxy::validConnection() {
   Serial.println(" ...");
 #endif 
   pIO->validConnection();
-#ifdef SUPPORT_PASSIVE_MODE
-  if (_IsInPassiveMode) {
-    return;
-  }  
-#endif  
+// #ifdef SUPPORT_PASSIVE_MODE
+//   if (_IsInPassiveMode) {
+//     return;
+//   }  
+// #endif  
 #if defined (SUPPORT_IDLE_CALLBACK) || defined (SUPPORT_RECONNECT)
   bool needReconnect = false;
   if (this->lastKeepAliveMillis > 0) {
@@ -510,9 +510,9 @@ bool __Connect(/*bool calledPassive = false*/) {
     }
 #ifdef SUPPORT_IDLE_CALLBACK
     bool checkIdle = _IdleCallback != NULL;
-#ifdef SUPPORT_PASSIVE_MODE
-    checkIdle &= !_IsInPassiveMode;
-#endif    
+// #ifdef SUPPORT_PASSIVE_MODE
+//     checkIdle &= !_IsInPassiveMode;
+// #endif    
     if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
       long now = millis();
       long diffMillis = now - _C_lastCallMillis;
@@ -569,9 +569,9 @@ bool __Connect(/*bool calledPassive = false*/) {
 #endif        
 #ifdef SUPPORT_IDLE_CALLBACK
         bool checkIdle = _IdleCallback != NULL;
-#ifdef SUPPORT_PASSIVE_MODE
-        checkIdle &= !_IsInPassiveMode;
-#endif
+// #ifdef SUPPORT_PASSIVE_MODE
+//         checkIdle &= !_IsInPassiveMode;
+// #endif
         if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
           long idleForMillis = now - startMillis;
           _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_CONNECTING);
