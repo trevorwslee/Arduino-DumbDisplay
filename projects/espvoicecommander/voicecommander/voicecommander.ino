@@ -163,7 +163,7 @@ void setup() {
 
   // set when DD idle handler ... here is a lambda expression
   dumbdisplay.setIdleCallback([](long idleForMillis, DDIdleConnectionState connectionState) {
-    if (connectionState == DDIdleConnectionState::RECONNECTING) {
+    if (connectionState == DDIdleConnectionState::IDLE_RECONNECTING) {
       cachingVoice = false;
     }
   });
