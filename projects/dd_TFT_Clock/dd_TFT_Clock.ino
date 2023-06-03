@@ -1,4 +1,4 @@
-#define FOR_DD
+#define WITH_DD
 
 // *****
 // * say, for TTGO T-Display
@@ -8,9 +8,9 @@
 // *****
 
 
-#ifdef FOR_DD
+#ifdef WITH_DD
 
-  #undef BLUETOOTH
+  //#undef BLUETOOTH
 
   #if defined(BLUETOOTH)
     #include "esp32dumbdisplay.h"
@@ -26,11 +26,10 @@
 
   LcdDDLayer* syncButton = NULL;
   BasicDDTunnel* datetimeTunnel = NULL;
-  LedGridDDLayer *led = NULL;
-
+  JoystickDDLayer* colorJoystick = NULL;
+  
 
 #endif
-
 
 /*
  An example analogue clock using a TFT LCD screen to show the time
@@ -52,6 +51,7 @@ TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 
 #define TFT_GREY 0xBDF7
 
+
 float sx = 0, sy = 1, mx = 1, my = 0, hx = -1, hy = 0;    // Saved H, M, S x & y multipliers
 float sdeg=0, mdeg=0, hdeg=0;
 uint16_t osx=64, osy=64, omx=64, omy=64, ohx=64, ohy=64;  // Saved H, M, S x & y coords
@@ -68,6 +68,8 @@ static uint8_t conv2d(const char* p) {
 uint8_t hh=conv2d(__TIME__), mm=conv2d(__TIME__+3), ss=conv2d(__TIME__+6);  // Get H, M, S from compile time
 
 bool initial = 1;
+uint32_t ClockBGC = 0;
+
 
 void setup(void) {
   tft.init();
@@ -77,7 +79,7 @@ void setup(void) {
   
   // Draw clock face
   tft.fillCircle(64, 64, 61, TFT_BLUE);
-  tft.fillCircle(64, 64, 57, TFT_BLACK);
+  tft.fillCircle(64, 64, 57, ClockBGC/*TFT_BLACK*/);
 
   // Draw 12 lines
   for(int i = 0; i<360; i+= 30) {
@@ -115,9 +117,10 @@ void setup(void) {
   targetTime = millis() + 1000; 
 }
 
+
 void loop() {
 
-#ifdef FOR_DD
+#ifdef WITH_DD
   bool reconnecting;
   bool connected = dumbdisplay.connectPassive(&reconnecting);
   if (connected) {
@@ -126,18 +129,30 @@ void loop() {
         dumbdisplay.masterReset();
         syncButton = NULL;
         datetimeTunnel = NULL;
+        tft.setTextColor(TFT_GREY, TFT_GREY);
+        tft.drawCentreString("Connected",66,160,4);
         return;
       }
       if (syncButton == NULL) {
         // DD not initiallized (or started over again) ==> initialize it
-        syncButton = dumbdisplay.createLcdLayer(9, 1);
+        syncButton = dumbdisplay.createLcdLayer(14, 1);
         syncButton->border(2, "darkgreen", "raised");
-        syncButton->writeLine(" SYNC 🔄");
+        syncButton->writeLine(" 🔄  Sync Time");
         syncButton->enableFeedback("f");
-        led = dumbdisplay.createLedGridLayer();
-        led->onColor("darkblue");
-        led->offColor("gray");
+        colorJoystick = dumbdisplay.createJoystickLayer(127, "hori");
+        colorJoystick->moveToPos(ClockBGC & 127, 0);
+        colorJoystick->border(5, "darkgray", "round", 3);
+//        led = dumbdisplay.createLedGridLayer();
+//        led->onColor("darkblue");
+//        led->offColor("gray");
         dumbdisplay.configAutoPin(DD_AP_VERT);
+        tft.setTextColor(TFT_RED, TFT_GREY);
+        tft.drawCentreString("Connected",66,160,4);
+        // if (true) {
+        //   ClockBGC = TFT_YELLOW; 
+        //   tft.fillCircle(64, 64, 48, ClockBGC);
+        //   initial = 1;
+        // }
       }
       if (syncButton->getFeedback()) {
         // "sync" button clicked ==> create a "tunnel" to get current date time
@@ -146,6 +161,12 @@ void loop() {
         }
         datetimeTunnel = dumbdisplay.createDateTimeServiceTunnel();
         datetimeTunnel->reconnectTo("now:hhmmss");
+      }
+      const DDFeedback* fb = colorJoystick->getFeedback();
+      if (fb != NULL) {
+        ClockBGC = fb->x; 
+        tft.fillCircle(64, 64, 48, ClockBGC);
+        initial = 1;
       }
       if (datetimeTunnel != NULL) {
         String nowStr;
@@ -163,12 +184,13 @@ void loop() {
           dumbdisplay.deleteTunnel(datetimeTunnel);
           datetimeTunnel = NULL;
           dumbdisplay.tone(2000, 100);
+          initial = 1;
         }
 
       }
-      if (targetTime < millis()) {
-        led->toggle();
-      }
+      // if (targetTime < millis()) {
+      //   led->toggle();
+      // }
   }
 
 #endif
@@ -202,16 +224,16 @@ void loop() {
     if (ss==0 || initial) {
       initial = 0;
       // Erase hour and minute hand positions every minute
-      tft.drawLine(ohx, ohy, 65, 65, TFT_BLACK);
+      tft.drawLine(ohx, ohy, 65, 65, ClockBGC/*TFT_BLACK*/);
       ohx = hx*33+65;    
       ohy = hy*33+65;
-      tft.drawLine(omx, omy, 65, 65, TFT_BLACK);
+      tft.drawLine(omx, omy, 65, 65, ClockBGC/*TFT_BLACK*/);
       omx = mx*44+65;    
       omy = my*44+65;
     }
 
       // Redraw new hand positions, hour and minute hands not erased here to avoid flicker
-      tft.drawLine(osx, osy, 65, 65, TFT_BLACK);
+      tft.drawLine(osx, osy, 65, 65, ClockBGC/*TFT_BLACK*/);
       tft.drawLine(ohx, ohy, 65, 65, TFT_WHITE);
       tft.drawLine(omx, omy, 65, 65, TFT_WHITE);
       osx = sx*47+65;    
