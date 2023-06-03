@@ -1060,7 +1060,7 @@ class DumbDisplay {
     DDDebugDisableParamEncoding();
 #endif      
 #ifndef DD_NO_SERIAL      
-      if (pIO->isSerial() || pIO->isBackupBySerial()) {
+      if (pIO->isForSerial() || pIO->isBackupBySerial()) {
         _The_DD_Serial = new DDSerial();
       }
 #endif      

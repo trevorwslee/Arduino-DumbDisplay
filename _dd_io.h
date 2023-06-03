@@ -58,10 +58,11 @@ class DDInputOutput {
       return false;
     }
   public:  
-    bool isSerial() {
-      return !backupBySerial && setupForSerial;
+    inline bool isForSerial() {
+      return setupForSerial;  // since 2023-06-03
+      //return !backupBySerial && setupForSerial;
     }
-    bool isBackupBySerial() {
+    inline bool isBackupBySerial() {
       return backupBySerial;
     }
   protected:

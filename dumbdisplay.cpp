@@ -188,6 +188,8 @@ DDSerial* _The_DD_Serial = NULL;
 
 namespace DDImpl {
 
+bool _CanLogToSerial();
+
 
 class IOProxy {
   public: 
@@ -321,6 +323,9 @@ void IOProxy::validConnection() {
         _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_RECONNECTING);
       }
 #endif      
+#ifdef DEBUG_BASIC  
+      if (_CanLogToSerial()) Serial.println("--- no \"keep alive\" ==> reconnect");
+#endif
     }
 #ifdef SUPPORT_MASTER_RESET
     if (needReconnect) {
@@ -425,10 +430,10 @@ IOProxy* /*volatile */_ConnectedIOProxy = NULL;
 /*volatile */bool _ConnectedFromSerial = false;
 
 bool _CanLogToSerial() {
-  if (_Connected) {
+  if (_ConnectedIOProxy != NULL) {
     return !_ConnectedFromSerial;
   } else {
-    return _IO != NULL && !_IO->isSerial();
+    return _IO != NULL && !(_IO->isForSerial() || _IO->isBackupBySerial());
   }
 }
 
@@ -550,17 +555,17 @@ bool __Connect(/*bool calledPassive = false*/) {
     return false;
   }
   if (_C_state.step == 2) {
-    if (!_IO->isSerial()) {
-      Serial.println("**********");
-  #ifdef SUPPORT_USE_WOIO
-      Serial.print("* _SendBufferSize=");
-      Serial.println(_SendBufferSize);
-  #endif
-      //Serial.print("* _EnableDoubleClick=");
-      //Serial.println(_EnableDoubleClick ? "yes" : "no");
-      Serial.println("**********");
-      Serial.flush();
-    }
+  //   if (!_IO->isSerial()) {
+  //     Serial.println("**********");
+  // #ifdef SUPPORT_USE_WOIO
+  //     Serial.print("* _SendBufferSize=");
+  //     Serial.println(_SendBufferSize);
+  // #endif
+  //     //Serial.print("* _EnableDoubleClick=");
+  //     //Serial.println(_EnableDoubleClick ? "yes" : "no");
+  //     Serial.println("**********");
+  //     Serial.flush();
+  //   }
     _C_state.step = 3;
     return false;
   }
@@ -650,6 +655,23 @@ bool __Connect(/*bool calledPassive = false*/) {
 #ifdef DEBUG_BASIC  
           if (_CanLogToSerial()) Serial.println("--- connection established");
 #endif
+          if (_CanLogToSerial()) {
+            Serial.println("**********");
+#ifdef DEBUG_BASIC  
+            Serial.print("* _IO.isForSerial()=");
+            Serial.println(_IO->isForSerial());
+            Serial.print("* _IO.isBackupBySerial()=");
+            Serial.println(_IO->isBackupBySerial());
+#endif
+#ifdef SUPPORT_USE_WOIO
+            Serial.print("* _SendBufferSize=");
+            Serial.println(_SendBufferSize);
+#endif
+            //Serial.print("* _EnableDoubleClick=");
+            //Serial.println(_EnableDoubleClick ? "yes" : "no");
+            Serial.println("**********");
+            Serial.flush();
+          }
           //break;
           _C_state.step = 5;
           return false;
