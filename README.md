@@ -1728,7 +1728,8 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 
 
 * You can drag the bottom left/right side of the DumbDisplay canvas to have it resized.
-* You can pinch-zoom the DumbDisplay canvas to resize it as well, if `Allow Zoom` is off. BTW, with the experimental `Allow Zoom` on, pinch-zooming the DumbDisplay canvas will eventually zoom it. When it is zoomed, it will not produce any "feedback". You double-click the canvas to return it to normal size.
+* You can pinch-zoom the DumbDisplay canvas to resize it as well, if `Zoom Mode` is set to *ZOOM*. BTW, with the experimental `Zoom Mode` set to *ZOOM*, pinch-zooming the DumbDisplay canvas will zoom it (the layers on it). When it is zoomed, it will not produce any "feedback". You double-click the canvas to return it to normal size.
+* You may want to set `Zoom Mode` to *DISABLED*. If disabled, action like moving virtual joystick "feedback" can be simultaneous with other "feedback" like clicking.
 * You can long press the terminal view to disable it's autoscrolling. BTW, terminal view has the `Keep Lines` limit, which you set with the `Setting` page. And this `Keep Lines` can certainly affect how much memory DumbDisplay will be used, should you have so much lines to be display by the terminal view.
 
 
