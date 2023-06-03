@@ -26,7 +26,7 @@
 
   LcdDDLayer* syncButton = NULL;
   BasicDDTunnel* datetimeTunnel = NULL;
-  JoystickDDLayer* colorJoystick = NULL;
+  JoystickDDLayer* blueSlider = NULL;
   
 
 #endif
@@ -139,9 +139,9 @@ void loop() {
         syncButton->border(2, "darkgreen", "raised");
         syncButton->writeLine(" 🔄  Sync Time");
         syncButton->enableFeedback("f");
-        colorJoystick = dumbdisplay.createJoystickLayer(127, "hori");
-        colorJoystick->moveToPos(ClockBGC & 127, 0);
-        colorJoystick->border(5, "darkgray", "round", 3);
+        blueSlider = dumbdisplay.createJoystickLayer(127, "hori");
+        blueSlider->moveToPos(ClockBGC & 127, 0);
+        blueSlider->border(5, "darkgray", "round", 3);
 //        led = dumbdisplay.createLedGridLayer();
 //        led->onColor("darkblue");
 //        led->offColor("gray");
@@ -162,7 +162,7 @@ void loop() {
         datetimeTunnel = dumbdisplay.createDateTimeServiceTunnel();
         datetimeTunnel->reconnectTo("now:hhmmss");
       }
-      const DDFeedback* fb = colorJoystick->getFeedback();
+      const DDFeedback* fb = blueSlider->getFeedback();
       if (fb != NULL) {
         ClockBGC = fb->x; 
         tft.fillCircle(64, 64, 48, ClockBGC);
