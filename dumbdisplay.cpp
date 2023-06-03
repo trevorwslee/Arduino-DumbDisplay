@@ -1773,6 +1773,7 @@ DDLayer::DDLayer(int8_t layerId)/*: DDObject(DD_OBJECT_TYPE_LAYER)*/ {
   this->feedbackHandler = NULL;
 }
 DDLayer::~DDLayer() {
+  //Serial.println("----- delete DDLayer");
   _PreDeleteLayer(this);
   if (pFeedbackManager != NULL)
     delete pFeedbackManager;
@@ -2436,6 +2437,7 @@ DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& params, co
   }
 }
 DDTunnel::~DDTunnel() {
+  //Serial.println("----- delete DDTunnel");
   _PreDeleteTunnel(this);
   //delete this->dataArray;
 } 
@@ -2563,7 +2565,9 @@ DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const St
   //this->done = false;
 }
 DDBufferedTunnel::~DDBufferedTunnel() {
-  delete this->dataArray;
+#ifndef ESP32
+    delete this->dataArray;  // there seems to be issue delete it with ESP32
+#endif
 } 
 void DDBufferedTunnel::reconnect() {
   nextArrayIdx = 0;
@@ -2656,12 +2660,12 @@ Serial.print(" / nextArrayIdx:");
 Serial.println(nextArrayIdx);
 #endif  
 }
-String BasicDDTunnel::readLine() {
+String DDBufferedTunnel::readLine() {
   String buffer;
   _readLine(buffer);
   return buffer;
 }
-bool BasicDDTunnel::read(String& fieldId, String& fieldValue) {
+bool DDBufferedTunnel::read(String& fieldId, String& fieldValue) {
   fieldId = "";
   if (!_readLine(fieldValue)) {
     return false;
@@ -3284,10 +3288,7 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
 }
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
   pTunnel->release();
-// problem with ESP32 ... for now, just don't delete
-#ifndef ESP32  
   delete pTunnel;  // will call _PreDeleteTunnel
-#endif  
 }
 #endif
 

@@ -192,8 +192,8 @@ class DDLayer: public DDObject {
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     /// rely on getFeedback() being called
     /// autoFeedbackMethod:
-    /// - "" -- no auto feedback
-    /// - "f" -- flash the default way (layer + border)
+    /// - "" -- no auto feedback (the default)
+    /// - "f" -- flash the standard way (layer + border)
     /// - "fl" -- flash the layer
     /// - "fa" -- flash the area where the layer is clicked
     /// - "fas" -- flash the area (as a spot) where the layer is clicked
@@ -1037,6 +1037,7 @@ typedef void (*DDIdleCallback)(long idleForMillis, DDIdleConnectionState connect
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 
+
 enum DDDebugConnectionState { DEBUG_NOT_CONNECTED, DEBUG_CONNECTING, DEBUG_CONNECTED, DEBUG_RECONNECTING, DEBUG_RECONNECTED };
 class DDDebugInterface {
   public:
@@ -1276,12 +1277,14 @@ class DumbDisplay {
     /// @brief
     /// make connection passively; i.e. will not block, but will require continuous calling for making connection
     /// @param pConnecting if not NULL, check if connection lost and is making reconnection
+    /// @since 0.9.8-r1
     bool connectPassive(bool* pReconnecting = NULL);
     /// EXPERIMENTAL; "master reset" to be just like uninitialized;
     /// "master reset" will:
     /// . disconnect from DD app (if connected)
     /// . delete all created layers and tunnels; hence, DO NOT use the pointers to them after "master reset"
     /// . DumbDisplay object will be just like at initial state; it will *not* be deleted
+    /// @since 0.9.8-r1
     void masterReset();  
     // /// EXPERIMENTAL; like connectPassive();
     // /// if detected reconnecting, will "master reset", which ...
