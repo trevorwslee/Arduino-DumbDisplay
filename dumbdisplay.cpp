@@ -40,6 +40,7 @@
 #define TO_EDIAN() String(DDCheckEndian())
 
 
+#define DEBUG_BASIC
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
@@ -421,7 +422,15 @@ inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize) {
 
 
 IOProxy* /*volatile */_ConnectedIOProxy = NULL;
-/*volatile */bool _ConnectedFromSerial = false; 
+/*volatile */bool _ConnectedFromSerial = false;
+
+bool _CanLogToSerial() {
+  if (_Connected) {
+    return !_ConnectedFromSerial;
+  } else {
+    return _IO != NULL && !_IO->isSerial();
+  }
+}
 
 // #ifdef DEBUG_WITH_LED
 // /*volatile */int _DebugLedPin = -1;
@@ -485,7 +494,8 @@ struct _ConnectState {
   long startMillis;
   long lastCallMillis;
   bool firstCall;
-  long nextTime;
+  long hsStartMillis;
+  long hsNextMillis;
   IOProxy* pIOProxy;
   IOProxy* pSerialIOProxy;
   DDInputOutput *pSIO;
@@ -494,19 +504,18 @@ struct _ConnectState {
 _ConnectState _C_state;
 
 bool __Connect(/*bool calledPassive = false*/) {
-//   if (_C_startMillis == -1) {
-// // #ifdef DEBUG_WITH_LED
-// //     int debugLedPin = _DebugLedPin;  
-// //     bool debugLedOn;
-// //     if (debugLedPin != -1) {
-// //       digitalWrite(debugLedPin, HIGH);
-// //       debugLedOn = true;
-// //     }
-// // #endif
-//   }
+  if (_C_state.step > 0 && _C_state.hsStartMillis > 0) {
+    long diffMillis = millis() - _C_state.hsStartMillis;
+    if (diffMillis > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
+      // start over
+      _C_state.step = 0;
+      return false;
+    }
+  }
   if (_C_state.step == 0) {
     _C_state.startMillis = millis();
     _C_state.lastCallMillis = _C_state.startMillis;
+    _C_state.hsStartMillis = 0;
     _C_state.firstCall = true;
     _C_state.step = 1;
     if (_DebugInterface != NULL) {
@@ -556,7 +565,7 @@ bool __Connect(/*bool calledPassive = false*/) {
     return false;
   }
   if (_C_state.step == 3) {
-    _C_state.nextTime = 0;
+    _C_state.hsNextMillis = millis();
     //IOProxy ioProxy(_IO);
     if (_C_state.pIOProxy != NULL) {
       delete _C_state.pIOProxy;
@@ -575,7 +584,7 @@ bool __Connect(/*bool calledPassive = false*/) {
       _C_state.pSIO = _IO->newForSerialConnection();
       _C_state.pSerialIOProxy = new IOProxy(_C_state.pSIO);
     }
-    _C_state.startMillis = millis();
+    _C_state.hsStartMillis = millis();
     _C_state.step = 4;
     return false;
   }
@@ -583,7 +592,7 @@ bool __Connect(/*bool calledPassive = false*/) {
     /*while (true) */{
       //YIELD();
       long now = millis();
-      if (now > _C_state.nextTime) {
+      if (now > _C_state.hsNextMillis) {
         if (_DebugInterface != NULL) {
           _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
         }
@@ -610,7 +619,7 @@ bool __Connect(/*bool calledPassive = false*/) {
           _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_CONNECTING);
         }
 #endif      
-        _C_state.nextTime = now + HAND_SHAKE_GAP;
+        _C_state.hsNextMillis = now + HAND_SHAKE_GAP;
       }
       bool fromSerial = false;
       bool available = _C_state.pIOProxy->available();
@@ -636,7 +645,11 @@ bool __Connect(/*bool calledPassive = false*/) {
           }
           _ConnectedIOProxy = new IOProxy(_IO);
 //          _ConnectedFromSerial = fromSerial;
-          _ConnectedFromSerial = _IO->isSerial();
+          //_ConnectedFromSerial = _IO->isSerial();
+          _ConnectedFromSerial = fromSerial;
+#ifdef DEBUG_BASIC  
+          if (_CanLogToSerial()) Serial.println("--- connection established");
+#endif
           //break;
           _C_state.step = 5;
           return false;
@@ -660,7 +673,7 @@ bool __Connect(/*bool calledPassive = false*/) {
   //int compatibility = 0;
   if (_C_state.step == 5) { 
     //_C_state.compatibility = 0;
-    _C_state.nextTime = millis();
+    _C_state.hsNextMillis = millis();
     _C_state.step = 6;
     return false;
   }
@@ -669,7 +682,7 @@ bool __Connect(/*bool calledPassive = false*/) {
     /*while (true) */{
       //YIELD();
       long now = millis();
-      if (now > _C_state.nextTime) {
+      if (now > _C_state.hsNextMillis) {
 // #ifdef DEBUG_WITH_LED
 //         if (debugLedPin != -1) {
 //           debugLedOn = !debugLedOn;
@@ -684,7 +697,7 @@ bool __Connect(/*bool calledPassive = false*/) {
         //   ioProxy.print(",dblclk=0");
         // }
         _ConnectedIOProxy->/*ioProxy.*/print("\n");
-        _C_state.nextTime = now + HAND_SHAKE_GAP;
+        _C_state.hsNextMillis = now + HAND_SHAKE_GAP;
       }
       if (_ConnectedIOProxy->/*ioProxy.*/available()) {
         const String& data = _ConnectedIOProxy->/*ioProxy.*/get();
@@ -1432,13 +1445,13 @@ void _SendSpecialCommand(const char* specialType, const String& specialId, const
 }
 
 
-bool _CanLogToSerial() {
-  if (!_ConnectedFromSerial || !_Connected) {
-    return true;
-  } else {
-    return false;
-  }
-}
+// bool _CanLogToSerial() {
+//   if (!_ConnectedFromSerial || !_Connected) {
+//     return true;
+//   } else {
+//     return false;
+//   }
+// }
 // inline void _LogToSerial(const String& logLine) {
 //   if (!_ConnectedFromSerial || !_Connected) {
 //     Serial.println(logLine);  // in case not connected ... hmm ... assume ... Serial.begin() called
@@ -1773,7 +1786,9 @@ DDLayer::DDLayer(int8_t layerId)/*: DDObject(DD_OBJECT_TYPE_LAYER)*/ {
   this->feedbackHandler = NULL;
 }
 DDLayer::~DDLayer() {
-  //Serial.println("----- delete DDLayer");
+#ifdef DEBUG_BASIC  
+  if (_CanLogToSerial()) Serial.println("--- delete DDLayer");
+#endif
   _PreDeleteLayer(this);
   if (pFeedbackManager != NULL)
     delete pFeedbackManager;
@@ -2437,7 +2452,9 @@ DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& params, co
   }
 }
 DDTunnel::~DDTunnel() {
-  //Serial.println("----- delete DDTunnel");
+#ifdef DEBUG_BASIC  
+  if (_CanLogToSerial()) Serial.println("--- delete DDTunnel");
+#endif
   _PreDeleteTunnel(this);
   //delete this->dataArray;
 } 
@@ -3293,9 +3310,9 @@ void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
 #endif
 
 
-bool DumbDisplay::canLogToSerial() {
-  return _CanLogToSerial();
-}
+// bool DumbDisplay::canLogToSerial() {
+//   return _CanLogToSerial();
+// }
 
 // #ifdef DD_CAN_TURN_OFF_CONDENSE_COMMAND
 // void DumbDisplay::optionNoCompression(bool noCompression) {
@@ -3318,13 +3335,15 @@ void DumbDisplay::setConnectVersionChangedCallback(DDConnectVersionChangedCallba
 //   _Delay(ms);
 // }
 void DumbDisplay::logToSerial(const String& logLine) {
-  if (canLogToSerial()) {
+  if (_CanLogToSerial()) {
     if (_The_DD_Serial != NULL) {
       _The_DD_Serial->print(logLine);
       _The_DD_Serial->print("\n");
     }
   } else {
-    writeComment(logLine);
+    if (_Connect) {
+      writeComment(logLine);
+    }
   }
 }
 
@@ -3356,7 +3375,8 @@ bool DumbDisplay::connectPassive(bool* pReconnecting) {
 void DumbDisplay::masterReset() {
 #ifdef SUPPORT_MASTER_RESET
   bool reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
-  bool canLogToSerial = !_IO->isSerial();
+  //bool canLogToSerial = !_IO->isSerial();
+  bool canLogToSerial = _CanLogToSerial();
 
   if (canLogToSerial) {
     Serial.println();

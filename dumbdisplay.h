@@ -1297,7 +1297,7 @@ class DumbDisplay {
     void debugOnly(int i);
   private:
     void initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, bool enableDoubleClick*/);
-    bool canLogToSerial();
+    //bool canLogToSerial();
 };
 
 #include "_dd_misc.h"
