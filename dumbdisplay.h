@@ -1175,7 +1175,7 @@ class DumbDisplay {
     /// basically, functions the same as recordLayerCommands()
     void recordLayerSetupCommands();
     /// basically, functions the same as playbackLayerCommands().
-    /// additionally: */
+    /// additionally:
     /// - save and persiste the layer commands
     /// - enable DumbDisplay reconnect feature -- tells the layer setup commands to use when DumbDisplay reconnects
     void playbackLayerSetupCommands(const String& persist_id);

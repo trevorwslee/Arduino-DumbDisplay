@@ -27,7 +27,14 @@
   LcdDDLayer* syncButton = NULL;
   BasicDDTunnel* datetimeTunnel = NULL;
   JoystickDDLayer* blueSlider = NULL;
-  
+  SevenSegmentRowDDLayer* left7Seg;
+  SevenSegmentRowDDLayer* mid7Seg;
+  SevenSegmentRowDDLayer* right7Seg;
+  LedGridDDLayer* sepLed1;
+  LedGridDDLayer* sepLed2;
+
+
+  int shownHH, shownMM, shownSS = -1;
 
 #endif
 
@@ -135,24 +142,69 @@ void loop() {
       }
       if (syncButton == NULL) {
         // DD not initiallized (or started over again) ==> initialize it
+        dumbdisplay.recordLayerSetupCommands();
         syncButton = dumbdisplay.createLcdLayer(14, 1);
-        syncButton->border(2, "darkgreen", "raised");
+        syncButton->border(2, DD_COLOR_darkgreen, "raised");
         syncButton->writeLine(" 🔄  Sync Time");
         syncButton->enableFeedback("f");
         blueSlider = dumbdisplay.createJoystickLayer(127, "hori");
         blueSlider->moveToPos(ClockBGC & 127, 0);
-        blueSlider->border(5, "darkgray", "round", 3);
-//        led = dumbdisplay.createLedGridLayer();
-//        led->onColor("darkblue");
-//        led->offColor("gray");
-        dumbdisplay.configAutoPin(DD_AP_VERT);
+        blueSlider->border(5, DD_COLOR_darkgray, "round", 3);
+        left7Seg = dumbdisplay.create7SegmentRowLayer(2);   // 2 digits
+        mid7Seg = dumbdisplay.create7SegmentRowLayer(2);    // 2 digits
+        right7Seg = dumbdisplay.create7SegmentRowLayer(2);  // 2 digits
+        sepLed1 = dumbdisplay.createLedGridLayer(3, 7);     // 3x7 leds
+        sepLed2 = dumbdisplay.createLedGridLayer(3, 7);     // 3x7 leds
+        left7Seg->segmentColor(DD_COLOR_navy);
+        left7Seg->backgroundColor(DD_COLOR_ivory);
+        mid7Seg->segmentColor(DD_COLOR_navy);
+        mid7Seg->backgroundColor(DD_COLOR_ivory);
+        right7Seg->segmentColor(DD_COLOR_navy);
+        right7Seg->backgroundColor(DD_COLOR_ivory);
+        sepLed1->onColor(DD_COLOR_navy);
+        sepLed1->backgroundColor(DD_COLOR_ivory);
+        sepLed2->onColor(DD_COLOR_navy);
+        sepLed2->backgroundColor(DD_COLOR_ivory);
+        dumbdisplay.configAutoPin(DDAutoPinConfig('V')
+          .addLayer(syncButton)
+          .beginGroup('H')
+            .addLayer(left7Seg)
+            .addLayer(sepLed1)
+            .addLayer(mid7Seg)
+            .addLayer(sepLed2)
+            .addLayer(right7Seg)
+          .endGroup()
+          .addLayer(blueSlider)
+          .build()
+        );
+        dumbdisplay.playbackLayerSetupCommands( __FILE__);
+        dumbdisplay.backgroundColor(DD_INT_COLOR(ClockBGC));
         tft.setTextColor(TFT_RED, TFT_GREY);
         tft.drawCentreString("Connected",66,160,4);
-        // if (true) {
-        //   ClockBGC = TFT_YELLOW; 
-        //   tft.fillCircle(64, 64, 48, ClockBGC);
-        //   initial = 1;
-        // }
+        initial = 1;
+      }
+      if (initial || hh != shownHH) {
+        left7Seg->showNumber(hh, "0");
+        shownHH = hh;
+      }
+      if (initial || mm != shownMM) {
+        mid7Seg->showNumber(mm, "0");
+        shownMM = mm;
+      }
+      if (initial || ss != shownSS) {
+        right7Seg->showNumber(ss, "0");
+        shownSS = ss;
+        if ((ss % 2) == 1) {
+          sepLed1->turnOn(1, 2);
+          sepLed1->turnOn(1, 4);
+          sepLed2->turnOn(1, 2);
+          sepLed2->turnOn(1, 4);
+        } else {
+          sepLed1->turnOff(1, 2);
+          sepLed1->turnOff(1, 4);
+          sepLed2->turnOff(1, 2);
+          sepLed2->turnOff(1, 4);
+        }
       }
       if (syncButton->getFeedback()) {
         // "sync" button clicked ==> create a "tunnel" to get current date time
@@ -166,6 +218,7 @@ void loop() {
       const DDFeedback* fb = blueSlider->getFeedback();
       if (fb != NULL) {
         ClockBGC = fb->x; 
+        dumbdisplay.backgroundColor(DD_INT_COLOR(ClockBGC));
         tft.fillCircle(64, 64, 48, ClockBGC);
         initial = 1;
       }
@@ -182,11 +235,7 @@ void loop() {
           dumbdisplay.tone(2000, 100);
           initial = 1;
         }
-
       }
-      // if (targetTime < millis()) {
-      //   led->toggle();
-      // }
   }
 
 #endif
