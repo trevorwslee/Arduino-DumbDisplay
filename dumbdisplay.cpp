@@ -798,11 +798,6 @@ bool __Connect(/*bool calledPassive = false*/) {
 bool _Connect(bool calledPassive = false) {
   if (_Connected)
     return true;
-// #ifdef SUPPORT_PASSIVE_MODE
-//   if (_IsInPassiveMode && !calledPassive) {
-//     return false;
-//   }  
-// #endif  
   if (!calledPassive) {
     _C_state.step = 0;
   }

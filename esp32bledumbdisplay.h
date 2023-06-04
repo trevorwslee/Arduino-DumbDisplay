@@ -90,7 +90,7 @@ class DDBLESerialIO: public DDInputOutput {
 #endif      
       }
     }  
-    bool canUseBuffer() {
+    bool canConnectPassive() {
       return false;
     }
     bool canUseBuffer() {
