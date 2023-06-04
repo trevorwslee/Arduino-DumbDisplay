@@ -2,7 +2,7 @@
 #include "Arduino.h"
 
 
-extern boolean _DDDisableParamEncoding;
+extern bool _DDDisableParamEncoding;
 
 char* _DDEncodeInt(int32_t i, char* buffer, int bufferLen) {
   if (_DDDisableParamEncoding) {

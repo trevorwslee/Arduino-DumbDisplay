@@ -128,10 +128,9 @@ void setup(void) {
 void loop() {
 
 #ifdef WITH_DD
-  bool reconnecting;
-  bool connected = dumbdisplay.connectPassive(&reconnecting);
-  if (connected) {
-      if (syncButton != NULL && reconnecting) {
+  const DDConnectPassiveStatus& connectStatus = dumbdisplay.connectPassive();
+  if (connectStatus.connected) {
+      if (syncButton != NULL && connectStatus.reconnecting) {
         // if reconnecting (after connected) ==> master reset to start over DD again
         dumbdisplay.masterReset();
         syncButton = NULL;

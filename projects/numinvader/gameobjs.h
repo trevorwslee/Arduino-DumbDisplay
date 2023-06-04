@@ -80,7 +80,7 @@ public:
   }
 public:
   // return true if not dead
-  boolean loop() {
+  bool loop() {
     if (variantCount == -1) {
       return false;
     }

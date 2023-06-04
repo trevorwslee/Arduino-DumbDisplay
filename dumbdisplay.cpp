@@ -3333,21 +3333,31 @@ void DumbDisplay::logToSerial(const String& logLine) {
 }
 
 
-bool DumbDisplay::connectPassive(bool* pReconnecting) {
+DDConnectPassiveStatus _ConnectivePassiveStatus;
+const DDConnectPassiveStatus& DumbDisplay::connectPassive() {
 #ifdef SUPPORT_PASSIVE
-  bool connected = _Connect(true);
-  if (connected) {
-    _Yield();
-    if (pReconnecting != NULL) {
-      *pReconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
-    }
-
-  }
-  return connected;
-#else
-  return false;
+  _ConnectivePassiveStatus.connected = _Connect(true);
+  _ConnectivePassiveStatus.reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
 #endif  
+  return _ConnectivePassiveStatus;
 }
+// bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus = NULL) {
+// #ifdef SUPPORT_PASSIVE
+//   bool connected = _Connect(true);
+//   if (pStatus != NULL) {
+//     pStatue->connected = connected;
+//   }
+//   if (connected) {
+//     if (pStatus != NULL) {
+//       pStatus->reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
+//     }
+
+//   }
+//   return connected;
+// #else
+//   return false;
+// #endif  
+// }
 // bool DumbDisplay::connectPassiveReset() {
 //   bool reconnecting;
 //   bool connected = connectPassive(&reconnecting);

@@ -33,6 +33,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   * [Caching 16-bit Colored Bitmap to Phone](#caching-16-bit-colored-bitmap-to-phone)
   * [Saving Images for DumbDisplay](#saving-images-for-dumbdisplay)
   * [Audio Supports](#audio-supports)
+  * [Passive Connection](#passive-connection)
 * [Reference](#reference)
 * [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
 * [DumbDisplay App Hints](#dumbdisplay-app-hints)
@@ -44,7 +45,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 # Description
 
-Instead of connecting real gadgets to your Arduino framework compatible microcontroller board for display purposes (or for getting simple inputs like pressing), you use DumbDisplay as some simiar virtualized alternatives -- to realize virtual IO gadagets remotely on your Android phone, or locally with OTG adaptor connecting your microcontroller board and your Android phone.
+Instead of connecting real gadgets to your Arduino framework compatible microcontroller board for display purposes (or for getting simple inputs like pressing), you use DumbDisplay as some similar virtualized alternatives -- to realize virtual IO gadgets remotely on your Android phone, or locally with OTG adaptor connecting your microcontroller board and your Android phone.
 
 By doing so you can defer buying / wiring real gadgets until later stage of your experiment. Even, you might be able to save a few microcontroller pins for other experiment needs, if you so decided that Android phone can be your display gadget (and more) with DumbDisplay app.
 
@@ -54,9 +55,9 @@ On it, a few types of layers can be created mixed-and-matched:
 * LCD (text based), which is also a good choice for simulating button -- [LcdDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_lcd_d_d_layer.html)
 * Micro:bit-like canvas -- [MbDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_mb_d_d_layer.html)
 * Turtle-like canvas -- [TurtleDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_turtle_d_d_layer.html)
-* Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has certain Turtle-like features) -- [GraphicalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) 
+* Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general features of graphical LCD, it also has certain Turtle-like features) -- [GraphicalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot -- [SevenSegmentRowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_seven_segment_row_d_d_layer.html)
-* Joystick, which can be used for getting virtual joystick movement input, and can also be used for horizontal/vertial "slider" input -- [JoystickDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_joystick_d_d_layer.html)
+* Joystick, which can be used for getting virtual joystick movement input, and can also be used for horizontal/vertical "slider" input -- [JoystickDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_joystick_d_d_layer.html)
 * Plotter, which works similar to the plotter of DumbDisplay [when it is acting as serial monitor], but plotting data are sent by calling the layer's method -- [PlotterDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_plotter_d_d_layer.html)
 * Terminal "device dependent view" layer, for logging sketch traces -- [TerminalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html)
 * TomTom map "device dependent view" layer, for showing location (latitude/longitude) -- [TomTomMapDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html)
@@ -70,11 +71,11 @@ Note that with the "layer feedback" mechanism, user interaction (like clicking o
 
 The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show up; install it. For a reference, you may want to see my post [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)  
 
-Alternative, you can choose to use the more "fluid" manual approach. The basic steps are
+Alternatively, you can choose to use the more "fluid" manual approach. The basic steps are
 1) Download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
 2) To install, use Arduino IDE menu option **Sktech** | **Include Library** | **Add .ZIP library...** and choose the ZIP you just downloaded
 
-For demonstration on installing DumbDisplay Arduino Library this manual way, you may want to watch the video [**Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)**](https://www.youtube.com/watch?v=nN7nXRy7NMg)
+For demo on installing DumbDisplay Arduino Library this manual way, you may want to watch the video [**Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)**](https://www.youtube.com/watch?v=nN7nXRy7NMg)
 
 To upgrade DumbDisplay Arduino Library installed manually this way, you just need to replace the directory, by following the above steps again.
 
@@ -90,7 +91,7 @@ lib_deps =
 ```
 
 
-For demonstration on installing DumbDisplay Arduino Library for PlatformIO project, you may want to watch the video [**Arduino UNO Programming with PlatformIO and DumbDisplay**](https://www.youtube.com/watch?v=PkeFa2ih4EY) 
+For demo on installing DumbDisplay Arduino Library for PlatformIO project, you may want to watch the video [**Arduino UNO Programming with PlatformIO and DumbDisplay**](https://www.youtube.com/watch?v=PkeFa2ih4EY) 
 
 To upgrade DumbDisplay Arduino Library for that PlatformIO project, you can simply delete the 'depended libraries' directory `.pio/libdeps` to force all to be re-installed.
 
@@ -99,7 +100,7 @@ To upgrade DumbDisplay Arduino Library for that PlatformIO project, you can simp
 
 Obviously, you will need to install an app on your Android phone. Indeed, for Arduino DumbDisplay to work, you will need to install the free [DumbDisplay Android app](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay) from Android Play Store
 
-The app is itself a USB serial monitor, and certinaly can also accept DumbDisplay connection via
+The app is itself a USB serial monitor, and certainly can also accept DumbDisplay connection via
 * SoftwareSerial (e.g. Bluetooth by HC-05 / HC-06; even HC-08)
 * BluetoothSerial (for ESP32)
 * Bluetooth LE (for ESP32, ESP32C3 and ESP32S3)
@@ -1670,6 +1671,32 @@ Notes:
 |--|--|
 |![](screenshots/esp32-mic.png)|DumbDisplay has certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports. Additionally, you may also be interested in a more extensive application -- [Demo of ESP-Now Voice Commander Fun With Wit.ai and DumbDisplay](https://www.youtube.com/watch?v=dhlLU7gmmbE)|
 
+## Passive Connection
+
+What has been mentioned previously is more or less "active" in that DumbDisplay will need to establish connection with DumbDisplay app before the sketch can proceed.
+Say, when you create a layer in the `setup()` block, it blocks implicitly until an connection is established. Moreover in some cases, you may even want deliberately call DumbDisplay object's `connect()` method to explicitly block for connection.
+
+After a connection is established however, DumbDisplay is "coorporative" in that only certain calls, like sending layer commands or checking for "feedbacks", will "steal" some time slices for DumbDisplay's internal working. Note that you explicitly give DumbDisplay time slices by calling `DDDelay()` / `DDYield()`.
+
+Nevertheless, in some use cases, you may not want this "active" behavior. In deed, you can "passive" approach for driving DumbDisplay to make connection with DumbDisplay app.
+
+There are two "passive" approaches. Both approaches require calling DumbDisplay object's method `connectPassively()` before most things like creating layers
+```
+void loop() {
+
+}
+```
+
+### Passive Connection and Auto Reconnection
+
+
+
+### Passive Connection and Master Reset
+
+
+
+
+
 
 # Reference
 
@@ -1750,6 +1777,11 @@ MIT
 
 
 # Change History
+
+. v0.9.8-r1
+  - added option for "passive" connection
+  - option for virtual joysticks to feedback simultaneously
+  - bug fix
 
 v0.9.8
   - enhanced documentation
