@@ -25,17 +25,18 @@ class DDWiFiServerIO: public DDInputOutput {
     /* - serverPort: server port (pass to WiFiServer) */
     /* - logToSerial: log to Serial (default will log toSerial) */
     /* - serialBaud: Serial baud rate, if logToSerial (default is 115200) */
-    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT,
-                   bool logToSerial = true, unsigned long serialBaud = DD_SERIAL_BAUD):
+    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT/*,
+                   bool logToSerial = true, unsigned long serialBaud = DD_SERIAL_BAUD*/):
                    DDInputOutput(serialBaud, false, false),
                    server(serverPort) {
       this->ssid = ssid;
       this->password = passphrase;
       this->port = serverPort;
       this->logToSerial = logToSerial;
-      if (logToSerial) {
-        Serial.begin(serialBaud);
-      }
+      // if (logToSerial) {
+      //   Serial.begin(serialBaud);
+      // }
+      Serial.begin(DD_SERIAL_BAUD);
     }
     bool available() {
       return client.available() > 0;
@@ -82,6 +83,9 @@ class DDWiFiServerIO: public DDInputOutput {
       }
 #endif      
       checkConnection();
+    }
+    bool canConnectPassive() {
+      return true;
     }
     bool canUseBuffer() {
       return true;

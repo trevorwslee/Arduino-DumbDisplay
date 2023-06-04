@@ -31,6 +31,9 @@ class DDBluetoothSerialIO: public DDInputOutput {
                         unsigned long serialBaud = DD_SERIAL_BAUD):
                         DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->btLocalName = btLocalName;
+      if (!enableSerial) {
+        Serial.begin(serialBaud);
+      }
     }
     bool available() {
       return serialBT.available();
@@ -59,6 +62,9 @@ class DDBluetoothSerialIO: public DDInputOutput {
       if (false) {
         serialBT.flush();  // not the expected "flush"
       }
+    }
+    bool canConnectPassive() {
+      return true;
     }
     bool canUseBuffer() {
       return true;

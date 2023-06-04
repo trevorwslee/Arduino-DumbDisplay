@@ -54,6 +54,9 @@ class DDInputOutput {
       }
       return true;
     }
+    virtual bool canConnectPassive() {
+      return false;
+    }
     virtual bool canUseBuffer() {
       return false;
     }

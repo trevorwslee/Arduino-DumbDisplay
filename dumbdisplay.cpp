@@ -7,7 +7,9 @@
 //#define VALIDATE_GAP 2000
 
 
-//#define SUPPORT_PASSIVE_MODE
+
+#define SUPPORT_PASSIVE
+#define SUPPORT_MASTER_RESET 
 
 #define ENABLE_FEEDBACK
 #define STORE_LAYERS
@@ -19,7 +21,6 @@
 
 #define MORE_KEEP_ALIVE
 
-#define SUPPORT_MASTER_RESET 
 
 
 #define SUPPORT_ENCODE_OPER
@@ -234,9 +235,6 @@ class IOProxy {
 };
 
 
-#ifdef SUPPORT_PASSIVE_MODE
-bool _IsInPassiveMode = false;
-#endif
 
 /*volatile */bool _Connected = false;
 /*volatile */int _ConnectVersion = 0;
@@ -305,11 +303,6 @@ void IOProxy::validConnection() {
     lastKeepAliveMillis = millis();  // don't wait for keep alive 
   }
 #endif  
-// #ifdef SUPPORT_PASSIVE_MODE
-//   if (_IsInPassiveMode) {
-//     return;
-//   }  
-// #endif  
 #if defined (SUPPORT_IDLE_CALLBACK) || defined (SUPPORT_RECONNECT)
   bool needReconnect = false;
   if (this->lastKeepAliveMillis > 0) {
@@ -491,7 +484,7 @@ volatile bool _HandlingFeedback = false;
 // #endif
 // }
 
-#if 1
+#ifdef SUPPORT_PASSIVE
 
 struct _ConnectState {
   _ConnectState(): step(0) {}
@@ -509,6 +502,8 @@ struct _ConnectState {
 _ConnectState _C_state;
 
 bool __Connect(/*bool calledPassive = false*/) {
+  bool mustLoop = !_IO->canConnectPassive();
+//Serial.print(_C_state.step);
   if (_C_state.step > 0 && _C_state.hsStartMillis > 0) {
     long diffMillis = millis() - _C_state.hsStartMillis;
     if (diffMillis > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
@@ -555,17 +550,6 @@ bool __Connect(/*bool calledPassive = false*/) {
     return false;
   }
   if (_C_state.step == 2) {
-  //   if (!_IO->isSerial()) {
-  //     Serial.println("**********");
-  // #ifdef SUPPORT_USE_WOIO
-  //     Serial.print("* _SendBufferSize=");
-  //     Serial.println(_SendBufferSize);
-  // #endif
-  //     //Serial.print("* _EnableDoubleClick=");
-  //     //Serial.println(_EnableDoubleClick ? "yes" : "no");
-  //     Serial.println("**********");
-  //     Serial.flush();
-  //   }
     _C_state.step = 3;
     return false;
   }
@@ -594,8 +578,8 @@ bool __Connect(/*bool calledPassive = false*/) {
     return false;
   }
   if (_C_state.step == 4) {
-    /*while (true) */{
-      //YIELD();
+    while (true) {
+      if (mustLoop) YIELD();
       long now = millis();
       if (now > _C_state.hsNextMillis) {
         if (_DebugInterface != NULL) {
@@ -662,6 +646,10 @@ bool __Connect(/*bool calledPassive = false*/) {
             Serial.println(_IO->isForSerial());
             Serial.print("* _IO.isBackupBySerial()=");
             Serial.println(_IO->isBackupBySerial());
+            Serial.print("* _IO.canConnectPassive()=");
+            Serial.println(_IO->canConnectPassive());
+            Serial.print("* _IO.canUseBuffer()=");
+            Serial.println(_IO->canUseBuffer());
 #endif
 #ifdef SUPPORT_USE_WOIO
             Serial.print("* _SendBufferSize=");
@@ -674,6 +662,9 @@ bool __Connect(/*bool calledPassive = false*/) {
           }
           //break;
           _C_state.step = 5;
+          if (mustLoop) {
+            break;
+          }
           return false;
         }
 #ifdef DD_DEBUG_HS          
@@ -684,25 +675,33 @@ bool __Connect(/*bool calledPassive = false*/) {
         else
           _C_state.pIOProxy->clear();  
       }
+      if (!mustLoop) {
+        break;
+      }
     }
     // moved up
     // if (pSerialIOProxy != NULL)
     //   delete pSerialIOProxy;
     // if (pSIO != NULL)
     //   delete pSIO;
-    return false;
+      if (!mustLoop) {
+        return false;
+      }
+//Serial.print("$$$$$$$$$$ "); Serial.println(_C_state.step);      
   }
   //int compatibility = 0;
   if (_C_state.step == 5) { 
     //_C_state.compatibility = 0;
     _C_state.hsNextMillis = millis();
     _C_state.step = 6;
-    return false;
+    if (!mustLoop) {
+      return false;
+    }
   }
   if (_C_state.step == 6) { 
     //IOProxy ioProxy(_IO);
-    /*while (true) */{
-      //YIELD();
+    while (true) {
+      if (mustLoop) YIELD();
       long now = millis();
       if (now > _C_state.hsNextMillis) {
 // #ifdef DEBUG_WITH_LED
@@ -738,12 +737,20 @@ bool __Connect(/*bool calledPassive = false*/) {
         if (compatibility != -1) {
           _C_state.compatibility = compatibility;
           _C_state.step = 7;
+          if (mustLoop) {
+            break;
+          }
           return false;
         } 
         _ConnectedIOProxy->/*ioProxy.*/clear();  
       }
+      if (!mustLoop) {
+        break;
+      }
     }
-    return false;
+    if (!mustLoop) {
+      return false;
+    }
   }
   _Connected = true;
   _ConnectVersion = 1;
@@ -813,24 +820,9 @@ bool _Connect(bool calledPassive = false) {
 
 #else
 
-bool _Connect(long maxWaitMillis = -1, bool calledPassive = false) {
+void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
   if (_Connected)
-    return true;
-#ifdef SUPPORT_PASSIVE_MODE
-  if (_IsInPassiveMode) {
-    if (!calledPassive) {
-      return false;
-    }
-  }  
-#endif  
-#ifdef DEBUG_WITH_LED
-  int debugLedPin = _DebugLedPin;  
-  bool debugLedOn;
-  if (debugLedPin != -1) {
-    digitalWrite(debugLedPin, HIGH);
-    debugLedOn = true;
-  }
-#endif
+    return;
   {
     long startMillis = millis();
     long lastCallMillis = startMillis;
@@ -844,22 +836,9 @@ bool _Connect(long maxWaitMillis = -1, bool calledPassive = false) {
         if (_IdleCallback != NULL) {
           long now = millis();
           long diffMillis = now - lastCallMillis;
-          if (maxWaitMillis != -1) {
-            if (diffMillis > maxWaitMillis) {
-#ifdef DEBUG_WITH_LED
-              int debugLedPin = _DebugLedPin;  
-              bool debugLedOn;
-              if (debugLedPin != -1) {
-                digitalWrite(debugLedPin, LOW);
-                debugLedOn = false;
-              }
-#endif
-              return false;
-            }
-          }
           if (diffMillis >= HAND_SHAKE_GAP) {
             long idleForMillis = now - startMillis;
-            _IdleCallback(idleForMillis, DDIdleConnectionState::NOT_CONNECTED);
+            _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_NOT_CONNECTED);
             lastCallMillis = now;
           }
         }
@@ -867,17 +846,17 @@ bool _Connect(long maxWaitMillis = -1, bool calledPassive = false) {
       firstCall = false;
     }
   }
-  if (!_IO->isSerial()) {
-    Serial.println("**********");
-#ifdef SUPPORT_USE_WOIO
-    Serial.print("* _SendBufferSize=");
-    Serial.println(_SendBufferSize);
-#endif
-    //Serial.print("* _EnableDoubleClick=");
-    //Serial.println(_EnableDoubleClick ? "yes" : "no");
-    Serial.println("**********");
-    Serial.flush();
-  }
+//   if (!_IO->isSerial()) {
+//     Serial.println("**********");
+// #ifdef SUPPORT_USE_WOIO
+//     Serial.print("* _SendBufferSize=");
+//     Serial.println(_SendBufferSize);
+// #endif
+//     //Serial.print("* _EnableDoubleClick=");
+//     //Serial.println(_EnableDoubleClick ? "yes" : "no");
+//     Serial.println("**********");
+//     Serial.flush();
+//   }
   {
     long nextTime = 0;
     IOProxy ioProxy(_IO);
@@ -893,12 +872,6 @@ bool _Connect(long maxWaitMillis = -1, bool calledPassive = false) {
       YIELD();
       long now = millis();
       if (now > nextTime) {
-#ifdef DEBUG_WITH_LED
-        if (debugLedPin != -1) {
-          debugLedOn = !debugLedOn;
-          digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
-        }
-#endif
         ioProxy.print("ddhello\n");
         if (pSerialIOProxy != NULL) 
           pSerialIOProxy->print("ddhello\n");
@@ -908,7 +881,7 @@ bool _Connect(long maxWaitMillis = -1, bool calledPassive = false) {
 #ifdef SUPPORT_IDLE_CALLBACK
         if (_IdleCallback != NULL) {
           long idleForMillis = now - startMillis;
-          _IdleCallback(idleForMillis, DDIdleConnectionState::CONNECTING);
+          _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_CONNECTING);
         }
 #endif      
         nextTime = now + HAND_SHAKE_GAP;
@@ -933,8 +906,8 @@ bool _Connect(long maxWaitMillis = -1, bool calledPassive = false) {
             pSIO = NULL;
           }
           _ConnectedIOProxy = new IOProxy(_IO);
-//          _ConnectedFromSerial = fromSerial;
-          _ConnectedFromSerial = _IO->isSerial();
+          _ConnectedFromSerial = fromSerial;
+          //_ConnectedFromSerial = _IO->isSerial();
           break;
         }
 #ifdef DD_DEBUG_HS          
@@ -959,12 +932,6 @@ bool _Connect(long maxWaitMillis = -1, bool calledPassive = false) {
       YIELD();
       long now = millis();
       if (now > nextTime) {
-#ifdef DEBUG_WITH_LED
-        if (debugLedPin != -1) {
-          debugLedOn = !debugLedOn;
-          digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
-        }
-#endif
 //Serial.println((_ConnectedFromSerial ? "SERIAL" : "NON-SERIAL"));
         //ioProxy.print(">init>:Arduino-c1\n");
         ioProxy.print(">init>:");
@@ -1012,11 +979,6 @@ bool _Connect(long maxWaitMillis = -1, bool calledPassive = false) {
     Serial.println("// *** CONNECTED");
 #endif        
   }
-#ifdef DEBUG_WITH_LED
-    if (debugLedPin != -1) {
-      digitalWrite(debugLedPin, LOW);
-    }
-#endif
     // if (false) {
     //   // *** debug code
     //   _IO->print("// connection to DD made\n");
@@ -1025,7 +987,6 @@ bool _Connect(long maxWaitMillis = -1, bool calledPassive = false) {
 #ifdef DD_DEBUG_HS          
     Serial.println("// *** DONE MAKE CONNECTION");
 #endif        
-  return true;
 }
 
 #endif
@@ -3371,6 +3332,7 @@ void DumbDisplay::logToSerial(const String& logLine) {
 
 
 bool DumbDisplay::connectPassive(bool* pReconnecting) {
+#ifdef SUPPORT_PASSIVE
   bool connected = _Connect(true);
   if (connected) {
     _Yield();
@@ -3380,6 +3342,9 @@ bool DumbDisplay::connectPassive(bool* pReconnecting) {
 
   }
   return connected;
+#else
+  return false;
+#endif  
 }
 // bool DumbDisplay::connectPassiveReset() {
 //   bool reconnecting;
