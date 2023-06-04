@@ -159,6 +159,7 @@ void loop() {
         if (datetimeTunnel != NULL) {
           dumbdisplay.deleteTunnel(datetimeTunnel);
         }
+        dumbdisplay.logToSerial("getting time for sync ...");
         datetimeTunnel = dumbdisplay.createDateTimeServiceTunnel();
         datetimeTunnel->reconnectTo("now:hhmmss");
       }
@@ -171,16 +172,11 @@ void loop() {
       if (datetimeTunnel != NULL) {
         String nowStr;
         if (datetimeTunnel->readLine(nowStr)) {
-          //Serial.print("NOW: ");
-          //Serial.println(nowStr);
+          dumbdisplay.logToSerial("... got sync time " + nowStr);
           int now = nowStr.toInt();
           hh = now / 10000;
           mm = (now / 100) % 100;
           ss = now % 100;
-          // Serial.print("NOW: ");
-          // Serial.print(hh);
-          // Serial.print(mm);
-          // Serial.println(ss);
           dumbdisplay.deleteTunnel(datetimeTunnel);
           datetimeTunnel = NULL;
           dumbdisplay.tone(2000, 100);

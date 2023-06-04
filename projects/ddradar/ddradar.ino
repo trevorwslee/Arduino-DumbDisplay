@@ -257,8 +257,8 @@ void setup() {
 
   layoutHelper.finishInitializeLayout("ddradar");
 
-  layoutHelper.setIdleCallback([](long idleForMillis, bool recconnecting) {
-    if (recconnecting) {
+  layoutHelper.setIdleCallback([](long idleForMillis, DDIdleConnectionState connectionState) {
+    if (connectionState == DDIdleConnectionState::IDLE_RECONNECTING) {
       isRunning = false;
     }
   });

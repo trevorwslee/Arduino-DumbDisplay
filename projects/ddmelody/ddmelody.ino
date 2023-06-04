@@ -147,7 +147,7 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
   }
 }
 
-void IdleCallback(long idleForMillis, bool recconnecting) {
+void IdleCallback(long idleForMillis, DDIdleConnectionState connectionState) {
   play = false;
 }
 

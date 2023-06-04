@@ -1270,8 +1270,10 @@ class DumbDisplay {
     void setIdleCallback(DDIdleCallback idleCallback); 
     /// set callback when version changed (e.g. reconnected after disconnect)
     /// @param connectVersionChangedCallback the callback function; see DDConnectVersionChangedCallback
-    void setConnectVersionChangedCallback(DDConnectVersionChangedCallback connectVersionChangedCallback); 
-    /// log line to serial; if it is not safe to output to Serial, will write comment with writeComment() instead
+    void setConnectVersionChangedCallback(DDConnectVersionChangedCallback connectVersionChangedCallback);
+    /// check if it is safe to print to Serial
+    bool canPrintToSerial();
+    /// log line to Serial; if it is not safe to output to Serial, will write comment with DumbDisplay::writeComment() instead
     void logToSerial(const String& logLine);
   public:
     /// @brief

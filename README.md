@@ -1502,7 +1502,7 @@ pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag-9999");
 It is possible to setup ESP32 to go to deep sleep when DumbDisplay library detects "idle", after, say, 15 seconds:
 
 ```
-void IdleCallback(long idleForMillis, bool reconnecting) {
+void IdleCallback(long idleForMillis, DDIdleConnectionState connectionState) {
   if (idleForMillis > 15000) {  // go to sleep if idle for more than 15 seconds
     esp_sleep_enable_timer_wakeup(5 * 1000 * 1000);  // wake up in 5 seconds
     esp_deep_sleep_start();

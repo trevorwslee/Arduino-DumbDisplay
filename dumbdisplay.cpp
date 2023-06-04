@@ -185,7 +185,7 @@ private:
 #define YIELD() delay(1)
 
 
-DDSerial* _The_DD_Serial = NULL;
+DDSerial* _The_DD_Serial = NULL;  // TODO: remove it's use
 
 namespace DDImpl {
 
@@ -3319,11 +3319,16 @@ void DumbDisplay::setConnectVersionChangedCallback(DDConnectVersionChangedCallba
 // void DumbDisplay::delay(unsigned long ms) {
 //   _Delay(ms);
 // }
+bool DumbDisplay::canPrintToSerial() {
+  return _CanLogToSerial();
+}
 void DumbDisplay::logToSerial(const String& logLine) {
   if (_CanLogToSerial()) {
     if (_The_DD_Serial != NULL) {
       _The_DD_Serial->print(logLine);
       _The_DD_Serial->print("\n");
+    } else {
+      Serial.println(logLine);
     }
   } else {
     if (_Connected) {
