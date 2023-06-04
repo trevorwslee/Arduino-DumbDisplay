@@ -317,7 +317,7 @@ void IOProxy::validConnection() {
       }
 #endif      
 #ifdef DEBUG_BASIC  
-      if (_CanLogToSerial()) Serial.println("--- no \"keep alive\" ==> reconnect");
+      if (_CanLogToSerial()) Serial.println("--- no 'keep alive' ==> reconnect");
 #endif
     }
 #ifdef SUPPORT_MASTER_RESET
@@ -495,8 +495,8 @@ struct _ConnectState {
   long hsStartMillis;
   long hsNextMillis;
   IOProxy* pIOProxy;
-  IOProxy* pSerialIOProxy;
-  DDInputOutput *pSIO;
+  IOProxy* pBUSerialIOProxy;
+  DDInputOutput *pBUSIO;
   short compatibility;
 };
 _ConnectState _C_state;
@@ -559,19 +559,19 @@ bool __Connect(/*bool calledPassive = false*/) {
     if (_C_state.pIOProxy != NULL) {
       delete _C_state.pIOProxy;
     }
-    if (_C_state.pSerialIOProxy != NULL) {
-      delete _C_state.pSerialIOProxy;
+    if (_C_state.pBUSerialIOProxy != NULL) {
+      delete _C_state.pBUSerialIOProxy;
     }
-    if (_C_state.pSIO != NULL) {
-      delete _C_state.pSIO;
+    if (_C_state.pBUSIO != NULL) {
+      delete _C_state.pBUSIO;
     }
     _C_state.pIOProxy = new IOProxy(_IO);
-    _C_state.pSerialIOProxy = NULL;
-    _C_state.pSIO = NULL;
+    _C_state.pBUSerialIOProxy = NULL;
+    _C_state.pBUSIO = NULL;
     if (_IO->isBackupBySerial()) {
       //pSIO = new DDInputOutput(_IO);
-      _C_state.pSIO = _IO->newForSerialConnection();
-      _C_state.pSerialIOProxy = new IOProxy(_C_state.pSIO);
+      _C_state.pBUSIO = _IO->newForSerialConnection();
+      _C_state.pBUSerialIOProxy = new IOProxy(_C_state.pBUSIO);
     }
     _C_state.hsStartMillis = millis();
     _C_state.step = 4;
@@ -592,8 +592,8 @@ bool __Connect(/*bool calledPassive = false*/) {
 //         }
 // #endif
         _C_state.pIOProxy->print("ddhello\n");
-        if (_C_state.pSerialIOProxy != NULL) {
-          _C_state.pSerialIOProxy->print("ddhello\n");
+        if (_C_state.pBUSerialIOProxy != NULL) {
+          _C_state.pBUSerialIOProxy->print("ddhello\n");
         }
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:ddhello");
@@ -610,24 +610,24 @@ bool __Connect(/*bool calledPassive = false*/) {
 #endif      
         _C_state.hsNextMillis = now + HAND_SHAKE_GAP;
       }
-      bool fromSerial = false;
+      bool fromBUSerial = false;
       bool available = _C_state.pIOProxy->available();
-      if (!available && _C_state.pSerialIOProxy != NULL) {
-        if (_C_state.pSerialIOProxy->available()) {
+      if (!available && _C_state.pBUSerialIOProxy != NULL) {
+        if (_C_state.pBUSerialIOProxy->available()) {
           available = true;
-          fromSerial = true;
+          fromBUSerial = true;
         }
       }
       if (available) {
-        const String& data = fromSerial ? _C_state.pSerialIOProxy->get() : _C_state.pIOProxy->get();
+        const String& data = fromBUSerial ? _C_state.pBUSerialIOProxy->get() : _C_state.pIOProxy->get();
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:data-" + data);
 #endif        
         if (data == "ddhello") {
-          if (fromSerial) {
-            _SetIO(_C_state.pSIO, DD_DEF_SEND_BUFFER_SIZE);
+          if (fromBUSerial) {
+            _SetIO(_C_state.pBUSIO, DD_DEF_SEND_BUFFER_SIZE);
             //_IO = pSIO;
-            _C_state.pSIO = NULL;
+            _C_state.pBUSIO = NULL;
           }
           if (_ConnectedIOProxy != NULL) {
             delete _ConnectedIOProxy;
@@ -635,13 +635,15 @@ bool __Connect(/*bool calledPassive = false*/) {
           _ConnectedIOProxy = new IOProxy(_IO);
 //          _ConnectedFromSerial = fromSerial;
           //_ConnectedFromSerial = _IO->isSerial();
-          _ConnectedFromSerial = fromSerial;
+          _ConnectedFromSerial =  fromBUSerial || _IO->isSerial();
 #ifdef DEBUG_BASIC  
           if (_CanLogToSerial()) Serial.println("--- connection established");
 #endif
           if (_CanLogToSerial()) {
             Serial.println("**********");
 #ifdef DEBUG_BASIC  
+            Serial.print("* _IO.isSerial()=");
+            Serial.println(_IO->isSerial());
             Serial.print("* _IO.isForSerial()=");
             Serial.println(_IO->isForSerial());
             Serial.print("* _IO.isBackupBySerial()=");
@@ -670,8 +672,8 @@ bool __Connect(/*bool calledPassive = false*/) {
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:DONE");
 #endif        
-        if (fromSerial) 
-          _C_state.pSerialIOProxy->clear();
+        if (fromBUSerial) 
+          _C_state.pBUSerialIOProxy->clear();
         else
           _C_state.pIOProxy->clear();  
       }
@@ -3324,7 +3326,7 @@ void DumbDisplay::logToSerial(const String& logLine) {
       _The_DD_Serial->print("\n");
     }
   } else {
-    if (_Connect) {
+    if (_Connected) {
       writeComment(logLine);
     }
   }

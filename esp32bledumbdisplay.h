@@ -93,6 +93,9 @@ class DDBLESerialIO: public DDInputOutput {
     bool canUseBuffer() {
       return false;
     }
+    bool canUseBuffer() {
+      return false;
+    }
   private:
     class ServerCallbacks: public BLEServerCallbacks {
       public:
