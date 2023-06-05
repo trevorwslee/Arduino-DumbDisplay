@@ -521,7 +521,8 @@ bool __Connect(/*bool calledPassive = false*/) {
     if (_DebugInterface != NULL) {
       _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_NOT_CONNECTED);
     }
-    return false;
+    // faster
+    //return false;
   }
   if (_C_state.step == 1) {
     if (_IO->preConnect(_C_state.firstCall)) {
@@ -551,7 +552,8 @@ bool __Connect(/*bool calledPassive = false*/) {
   }
   if (_C_state.step == 2) {
     _C_state.step = 3;
-    return false;
+    // faster
+    //return false;
   }
   if (_C_state.step == 3) {
     _C_state.hsNextMillis = millis();
@@ -585,12 +587,6 @@ bool __Connect(/*bool calledPassive = false*/) {
         if (_DebugInterface != NULL) {
           _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
         }
-// #ifdef DEBUG_WITH_LED
-//         if (debugLedPin != -1) {
-//           debugLedOn = !debugLedOn;
-//           digitalWrite(debugLedPin, debugLedOn ? HIGH : LOW);
-//         }
-// #endif
         _C_state.pIOProxy->print("ddhello\n");
         if (_C_state.pBUSerialIOProxy != NULL) {
           _C_state.pBUSerialIOProxy->print("ddhello\n");
@@ -696,9 +692,10 @@ bool __Connect(/*bool calledPassive = false*/) {
     //_C_state.compatibility = 0;
     _C_state.hsNextMillis = millis();
     _C_state.step = 6;
-    if (!mustLoop) {
-      return false;
-    }
+     // faster
+     // if (!mustLoop) {
+     //   return false;
+     // }
   }
   if (_C_state.step == 6) { 
     //IOProxy ioProxy(_IO);
@@ -3333,43 +3330,33 @@ void DumbDisplay::logToSerial(const String& logLine) {
 }
 
 
-DDConnectPassiveStatus _ConnectivePassiveStatus;
-const DDConnectPassiveStatus& DumbDisplay::connectPassive() {
+bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {
 #ifdef SUPPORT_PASSIVE
-  _ConnectivePassiveStatus.connected = _Connect(true);
-  _ConnectivePassiveStatus.reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
+  bool connected = _Connect(true);
+  if (pStatus != NULL) {
+    pStatus->connected = connected;
+    pStatus->reconnecting = false;
+  }
+  if (connected && pStatus != NULL) {
+    _Yield();
+    pStatus->reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
+  }
+  return connected;
+#else
+  return false;
 #endif  
-  return _ConnectivePassiveStatus;
 }
-// bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus = NULL) {
+// bool DumbDisplay::connectPassive(bool* pReconnecting) {
 // #ifdef SUPPORT_PASSIVE
 //   bool connected = _Connect(true);
-//   if (pStatus != NULL) {
-//     pStatue->connected = connected;
-//   }
-//   if (connected) {
-//     if (pStatus != NULL) {
-//       pStatus->reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
-//     }
-
+//   if (pReconnecting != NULL) {
+//     _Yield();
+//     *pReconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
 //   }
 //   return connected;
 // #else
 //   return false;
 // #endif  
-// }
-// bool DumbDisplay::connectPassiveReset() {
-//   bool reconnecting;
-//   bool connected = connectPassive(&reconnecting);
-//   if (!connected) {
-//     return false;
-//   }
-//   if (reconnecting) {
-//     masterReset();
-//     return false;
-//   } else {
-//     return true;
-//   }
 // }
 void DumbDisplay::masterReset() {
 #ifdef SUPPORT_MASTER_RESET

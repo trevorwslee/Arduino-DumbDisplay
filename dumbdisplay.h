@@ -1046,11 +1046,11 @@ class DDDebugInterface {
 
 
 /// @struct DDPassiveConnectStatus
-/// Return values for DumbDisplay::connectPassive()
+/// Struct for the status values of calling DumbDisplay::connectPassive()
 struct DDConnectPassiveStatus {
-  /// connection made or not (note that even if connection lost and requires reconnecting, it is still considered connected)
+  /// connection made or not -- same as the return value of DumbDisplay::connectPassive() 
   bool connected;
-  /// whether it needs reconnecting or not 
+  /// detected reconnecting (after lost of connection) 
   bool reconnecting;
 };
 
@@ -1287,15 +1287,15 @@ class DumbDisplay {
   public:
     /// @brief
     /// make connection passively; i.e. will not block, but will require continuous calling for making connection
-    /// @return status DDConnectPassiveStatus
+    /// @return connection made or not (note that even if connection lost and requires reconnecting, it is still considered connected)
     /// @since 0.9.8-r1
-    const DDConnectPassiveStatus& connectPassive();
+    bool connectPassive(DDConnectPassiveStatus* pStatus = NULL);
 // /// @brief
 // /// make connection passively; i.e. will not block, but will require continuous calling for making connection
 // /// @param pConnecting if not NULL, check if connection lost and is making reconnection
 // /// @return connection made or not (note that even if connection lost and requires reconnecting, it is still considered connected)
 // /// @since 0.9.8-r1
-// bool connectPassive(DDConnectPassiveStatus* pStatus = NULL);
+// bool connectPassive(bool* pReconnecting = NULL);
     /// EXPERIMENTAL; "master reset" to be just like uninitialized;
     /// "master reset" will:
     /// . disconnect from DD app (if connected)
