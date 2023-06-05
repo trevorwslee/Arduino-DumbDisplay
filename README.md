@@ -33,7 +33,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   * [Caching 16-bit Colored Bitmap to Phone](#caching-16-bit-colored-bitmap-to-phone)
   * [Saving Images for DumbDisplay](#saving-images-for-dumbdisplay)
   * [Audio Supports](#audio-supports)
-  * [Passive Connection](#passive-connection)
+  * ["Passive" Connection](#passive-connection)
 * [Reference](#reference)
 * [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
 * [DumbDisplay App Hints](#dumbdisplay-app-hints)
@@ -1671,29 +1671,65 @@ Notes:
 |--|--|
 |![](screenshots/esp32-mic.png)|DumbDisplay has certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports. Additionally, you may also be interested in a more extensive application -- [Demo of ESP-Now Voice Commander Fun With Wit.ai and DumbDisplay](https://www.youtube.com/watch?v=dhlLU7gmmbE)|
 
-## Passive Connection
+## "Passive" Connection
 
 What has been mentioned previously is more or less "active" in that DumbDisplay will need to establish connection with DumbDisplay app before the sketch can proceed.
-Say, when you create a layer in the `setup()` block, it blocks implicitly until an connection is established. Moreover in some cases, you may even want deliberately call DumbDisplay object's `connect()` method to explicitly block for connection.
+Say, when you create a layer in the `setup()` block, it blocks implicitly until an connection is established. Moreover in some cases, you may even want to deliberately call DumbDisplay object's `connect()` method to explicitly block for connection.
 
 After a connection is established however, DumbDisplay is "coorporative" in that only certain calls, like sending layer commands or checking for "feedbacks", will "steal" some time slices for DumbDisplay's internal working. Note that you explicitly give DumbDisplay time slices by calling `DDDelay()` / `DDYield()`.
 
-Nevertheless, in some use cases, you may not want this "active" behavior. In deed, you can "passive" approach for driving DumbDisplay to make connection with DumbDisplay app.
+Nevertheless, in some use cases, you may not want this "active" behavior. In deed, you can "passively" drive DumbDisplay to make connection with DumbDisplay app.
 
-There are two "passive" approaches. Both approaches require calling DumbDisplay object's method `connectPassively()` before most things like creating layers
+Let's take the Arduino IDE example basic *blink* sketch, and modify it to add yet another virtual blinking LED on DumbDisplay app (if it is connected)
+
+Here is the original *blink* sketch:
+
 ```
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+}
 void loop() {
-
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(1000);                     
+  digitalWrite(LED_BUILTIN, LOW); 
+  delay(1000);                     
 }
 ```
 
-### Passive Connection and Auto Reconnection
+The modified sketch can be like
 
-
-
-### Passive Connection and Master Reset
-
-
+```
+DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+LedGridDDLayer *led = NULL;
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+void loop() {
+  if (dumbdisplay.connectPassive()) {
+    if (led == NULL) {
+      dumbdisplay.recordLayerSetupCommands();
+      led = dumbdisplay.createLedGridLayer();
+      dumbdisplay.playbackLayerSetupCommands("blink");
+    }
+    led->toggle();
+  }
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(250);                     
+  digitalWrite(LED_BUILTIN, LOW); 
+  delay(250);                     
+}
+```
+Notice:
+* The global DumbDisplay object `dumbdisplay` is still defined the normal way
+* A DD layer `led` is declare globally. Note that `led` is initially assigned `NULL`
+* No DD layers creation etc in the `setup()` block
+* At the beginning of the `loop()` block, `dumbdisplay` is given a chance to "passively" make connection with DumbDisplay app "non-block", by calling `connectPassive()`.
+* If connection established; i.e. `connectPassive()` return `true`
+  * Check `led` to see if it is still `NULL` (i.e. nothing created and assigned to it)
+    * If so, create DD layer `led` the normal way. Notice how `recordLayerSetupCommands()` and `playbackLayerSetupCommands()` are called so that reconnect after connection lost is possible (as mentioned in previous section [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)).
+  * In any case, toggle `led`
+* After giving chance for DumbDisplay to make connection "passively", blink `LED_BUILTIN` -- turn it ON then OFF.
+* ***Do notice that the delay here is 250!*** The delay needs be brief since `connectPassive()` should not be called too infrequently -- at least 1 or 2 times a second   
 
 
 
