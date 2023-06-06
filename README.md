@@ -1,6 +1,6 @@
 # DumbDisplay Arduino Library (0.9.8-r1)
 
-[DumbDisplay Ardunio Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
+[DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
 You may want to watch the video [**Introducing DumbDisplay -- the little helper for Arduino experiments**](https://www.youtube.com/watch?v=QZkhO6jTf0U) for a brief introduction.
 
@@ -17,8 +17,8 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   * [More Samples](#more-samples)
   * [More OTG Examples](#more-otg-examples)
 * [Features](#features)  
-  * [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism)
-  * [DumbDispaly "Tunnel"](#dumbDispaly-tunnel)
+  * [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism)
+  * [DumbDisplay "Tunnel"](#dumbDisplay-tunnel)
   * [Service "Tunnels"](#service-tunnels)
   * ["Device Dependent View" Layers](#device-dependent-view-layers)
   * [Downloadable Font Support](#downloadable-font-support)
@@ -35,7 +35,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   * [Audio Supports](#audio-supports)
   * ["Passive" Connection](#passive-connection)
 * [Reference](#reference)
-* [DumbDispaly WIFI Bridge](#dumbdispaly-wifi-bridge)
+* [DumbDisplay WIFI Bridge](#dumbdisplay-wifi-bridge)
 * [DumbDisplay App Hints](#dumbdisplay-app-hints)
 * [Thank You!](#thank-you)
 * [License](#license)
@@ -62,18 +62,18 @@ On it, a few types of layers can be created mixed-and-matched:
 * Terminal "device dependent view" layer, for logging sketch traces -- [TerminalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html)
 * TomTom map "device dependent view" layer, for showing location (latitude/longitude) -- [TomTomMapDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html)
 
-Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected microcontroller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDispaly "Feedback" Mechanism](#dumbdispaly-feedback-mechanism) for more on "layer feedback" mechanism.
+Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected microcontroller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism) for more on "layer feedback" mechanism.
 
 
 # Installation
 
 ## Arduino IDE
 
-The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumpdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show up; install it. For a reference, you may want to see my post [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)  
+The easiest way to install DumbDisplay Arduino Library is through Arduino IDE's Library Manager -- open ***Manage Libraries***, then search for "dumbdisplay" ... an item showing ```DumbDisplay by Trevor Lee``` should show up; install it. For a reference, you may want to see my post [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)  
 
 Alternatively, you can choose to use the more "fluid" manual approach. The basic steps are
 1) Download **CODE** ZIP file (the green button), from https://github.com/trevorwslee/Arduino-DumbDisplay
-2) To install, use Arduino IDE menu option **Sktech** | **Include Library** | **Add .ZIP library...** and choose the ZIP you just downloaded
+2) To install, use Arduino IDE menu option **Sketch** | **Include Library** | **Add .ZIP library...** and choose the ZIP you just downloaded
 
 For demo on installing DumbDisplay Arduino Library this manual way, you may want to watch the video [**Arduino Project -- HC-06 To DumbDisplay (BLINK with DumbDisplay)**](https://www.youtube.com/watch?v=nN7nXRy7NMg)
 
@@ -144,13 +144,13 @@ void loop() {
 1) Declare a global [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object, giving it a [DDInputOutput](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_input_output.html) object (an IO object) for communicating with DumbDisplay app  
 2) Also, globally declare one or more [DDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_layer.html) objects. In this case, the `led` [LedGridDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_led_grid_d_d_layer.html) object, which is for simulating a virtual LED.
 3) In the `setup` block, create the globally declared layer objects via the DumbDisplay object.
-4) Once created, the layer objects can be used in the `loop()` block. Like in this case, the `toogle()` method of the `led` layer object is called, effectively blinking the virtual LED every second. 
+4) Once created, the layer objects can be used in the `loop()` block. Like in this case, the `toggle()` method of the `led` layer object is called, effectively blinking the virtual LED every second. 
 
 
 
 |  | |
 |--|--|
-|![](screenshots/otg7segment.png)|Another simple example is making use of virtual 7-segment display for couting (from 0 to 9) like https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otg7segment/otg7segment.ino|
+|![](screenshots/otg7segment.png)|Another simple example is making use of virtual 7-segment display for counting (from 0 to 9) like https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otg7segment/otg7segment.ino|
 
 ```
 #include "dumbdisplay.h"
@@ -239,7 +239,7 @@ Here is the list of all connection IO objects that you can use:
   - setup a `dumbdisplay` object -- e.g. `DumbDisplay dumbdisplay(new DDBLESerialIO("ESP32BLE"))`  
     - in the sample, "ESP32BLE" is the name used by BLE
   - you **should not** be using ESP32's BLE for other purposes
-  - be **warned** that `DDBLESerialIO` is slow; if classic Bluetooth is supported by micrcontroller (like ESP32), choose `DDBluetoothSerialIO` instead 
+  - be **warned** that `DDBLESerialIO` is slow; if classic Bluetooth is supported by microcontroller (like ESP32), choose `DDBluetoothSerialIO` instead 
 * Via WIFI as a [`WiFiServer`](https://www.arduino.cc/en/Reference/WiFi) -- for ESP01/ESP8266/ESP32/PicoW -- [DDWiFiServerIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_wi_fi_server_i_o.html)  
   ```
     #include "wifidumbdisplay.h"
@@ -255,10 +255,10 @@ Here is the list of all connection IO objects that you can use:
       binded WIFI <wifiname>
       listening on 192.168.1.134:10201 ...
     ```  
-    where 192.168.1.134 is the IP of your microcontroller and 10201 is the port which is the defaul port
+    where 192.168.1.134 is the IP of your microcontroller and 10201 is the port which is the default port
 
-  By making use of DumbDisply WIFI Bridge, WIFI connection is possible for any microcontroller board (e.g. Arduino UNO) --
-  with DumbDisply WIFI Bridge running on your computer, you can keep the microcontroller connected with USB, and make WIFI connection with DumbDisplay Android app.
+  By making use of DumbDisplay WIFI Bridge, WIFI connection is possible for any microcontroller board (e.g. Arduino UNO) --
+  with DumbDisplay WIFI Bridge running on your computer, you can keep the microcontroller connected with USB, and make WIFI connection with DumbDisplay Android app.
   Please refer to [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge) for more description on it.
 
 
@@ -363,7 +363,7 @@ void loop() {
 
 ### Sample -- *Graphical [LCD]*
 
-There is a graphical [LCD] layer [GraphicalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) which is "derivded" from the Turtle layer (i.e. in addition to general feaures of graphical LCD, it also has Turtle-like features)
+There is a graphical [LCD] layer [GraphicalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) which is "derived" from the Turtle layer (i.e. in addition to the general features of graphical LCD, it also has Turtle-like features)
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddgraphical/ddgraphical.ino
 
@@ -743,7 +743,7 @@ void loop() {
 ```
 
 Notes:
-* DumbDisplay library will work cooperatively with your code; therefore, do give DumbDisplay library chances to do its work. Please call `DDYeild()` and/or `DDDelay()` appropriately whenever possible. 
+* DumbDisplay library will work cooperatively with your code; therefore, do give DumbDisplay library chances to do its work. Please call `DDYield()` and/or `DDDelay()` appropriately whenever possible. 
 
 
 
@@ -845,7 +845,7 @@ GraphicalDDLayer *graphicalLayer;
 JsonDDTunnel *restTunnel;
 
 void setup() {
-  // setup a "graphial" layer with size 350x150
+  // setup a "graphical" layer with size 350x150
   graphicalLayer = dumbdisplay.createGraphicalLayer(350, 150);
   graphicalLayer->backgroundColor("yellow");        // set background color to yellow
   graphicalLayer->border(10, "blue", "round");      // a round blue border of size 10  
@@ -938,7 +938,7 @@ void loop() {
 # Features
 
 
-## DumbDispaly "Feedback" Mechanism
+## DumbDisplay "Feedback" Mechanism
 
 You can also try out "layer feedback" from DumbDisplay like
 
@@ -970,7 +970,7 @@ void loop() {
 }
 ```
 
-Alternativelly, can setup "callback" function to handle "feedback" passively, like
+Alternatively, can setup "callback" function to handle "feedback" passively, like
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddonoffmb/ddonoffmb.ino
 
@@ -983,7 +983,7 @@ DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200,
 MbDDLayer* pMbLayer = NULL;
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
-    // got a click on (x, y) ... toogle it
+    // got a click on (x, y) ... toggle it
     pMbLayer->toggle(feedback.x, feedback.y);
 }
 
@@ -1008,7 +1008,7 @@ Please note that DumbDisplay library will check for "feedback" in several occasi
 * calling "tunnel" to check for EOF
 
 
-## DumbDispaly "Tunnel"
+## DumbDisplay "Tunnel"
 
 
 By using DumbDisplay "tunnels", even Arduino UNO can get simple data from the Internet via DumbDisplay app. The above "Tunnel" for RESTful example should already show-case this feature.
@@ -1155,7 +1155,7 @@ The two service "tunnels" are:
 
 ## "Device Dependent View" Layers
 
-A "device dependent view" layer is a layer that embeeds a specific kind of Android View as a DD Layer. And hence, it's rendering is totally controlled by the Android View itself. DumbDisplay app simply provides a place where it will reside.
+A "device dependent view" layer is a layer that embeds a specific kind of Android View as a DD Layer. And hence, it's rendering is totally controlled by the Android View itself. DumbDisplay app simply provides a place where it will reside.
 
 Nevertheless, do note that:
 * DDLayer's margin, border, padding, as well as visibility, will work as expected.
@@ -1194,7 +1194,7 @@ to a ```TerminalDDLayer```:
       if (gpsSignal.position_fixed) {
         terminal->print("position fixed -- ");
         terminal->print("lat:");
-        terminal->print(gpsSignal.latutude);
+        terminal->print(gpsSignal.latitude);
         terminal->print(" long:");
         terminal->print(gpsSignal.longitude);
         ...
@@ -1236,7 +1236,7 @@ For a complete sample sketch of using downloadable font, please refer to https:/
 
 ## Positioning of Layers
 
-By default, layers are stacked one by one, with the one created first on the top of the stack. Each layer will be automatically stretched to fit the DumbDisplay screen, with the aspact ratio kept unchanged.
+By default, layers are stacked one by one, with the one created first on the top of the stack. Each layer will be automatically stretched to fit the DumbDisplay screen, with the aspect ratio kept unchanged.
 
 This stacking behavior is not suitable for all cases. In fact, I would say that this default behavior is not suitable for many cases, except for the most simple case when you only have a single layer.
 
@@ -1254,7 +1254,7 @@ The automatic pinning of layers is the easier. You only need to call the DumbDis
 
 The different **DD_AP_XXX* macros are
 * **DD_AP_HORI_`N`()** : Horizontally layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_HORI** layouts all layers horizontally
-* **DD_AP_VERT_`N`()** : Vertiallly layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_VERT** layouts all layers vertcally
+* **DD_AP_VERT_`N`()** : Vertically layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_VERT** layouts all layers vertically
 * **DD_AP_STACK_`N`()** : Stack `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_STACK** stacks all layers
 * **DD_AP_PADDING()** : It accepts padding sizes -- left, top, right and bottom -- and a layer (id) (or nested **DD_AP_XXX**)   
 * **DD_AP_SPACER()** : It is an invisible "spacer" layer with the given dimension -- width and height
@@ -1282,7 +1282,7 @@ For example
   // pin Turtle @ (25, 25) with size (240, 190)
   dumbdisplay.pinLayer(turtle, 25, 25, 240, 190);
 ```
-The DumbDisplay method `pinLayer` accepts 5 arguments. The first argument is the layer to pin. The rest four arguments define the rectangular area on the "pin frame" to pin the layer to -- the four argments are "left-top" corner and the "width-height" of the rectangular area.
+The DumbDisplay method `pinLayer` accepts 5 arguments. The first argument is the layer to pin. The rest four arguments define the rectangular area on the "pin frame" to pin the layer to -- the four arguments are "left-top" corner and the "width-height" of the rectangular area.
 
 As a matter of fact, the "auto pin" mechanism can be used in conjunction with the manual pinning mechanism. The method to used is `pinAutoPinLayers`.
 
@@ -1294,7 +1294,7 @@ To get a feel, you may want to refer to the video [**Raspberry Pi Pico playing s
 
 Going back to "auto pin". In fact, there is a builder for such "auto pin" config -- [DDAutoPinConfig](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_auto_pin_config.html)
 
-Using it shoud be appearent. Hopefully, some example should be sifficient.
+Using it should be apparent. Hopefully, some example should be sufficient.
 
 Example 1:
 ```
@@ -1343,7 +1343,7 @@ Example 2:
         build()
     );
 ```
-is equalivent to
+is equivalent to
 ```
     dumbdisplay.configAutoPin(
       DD_AP_VERT_3(
@@ -1368,7 +1368,7 @@ You can choose which one is more convenient for you!
 
 It is apparent that turning on LEDs, drawing on graphical LCDs, etc, by sending text-based commands is not particularly efficient. Indeed, screen flickering is a commonplace, especial when there are lots of activities.
 
-In order to relieve this flickering situation a bit, it is possilbe to freeze DumbDisplay's screen during sending bulk of commands:
+In order to relieve this flickering situation a bit, it is possible to freeze DumbDisplay's screen during sending bulk of commands:
 * `dumbdisplay.recordLayerCommands()` -- start recording commands (freeze DumbDisplay screen)
 * `dumbdisplay.playbackLayerCommands()` -- end recording commands and playback the recorded commands (unfreeze Dumbdisplay screen)
 
@@ -1494,7 +1494,7 @@ pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag-9999");
 
 |||
 |--|--|
-|For a complete example, please refer to the sketch as shown in the YouTube -- [Building a DL model for the Mnist Dataset, to building an Arduino Sketch for ESP32S3 (also ESP32)](https://www.youtube.com/watch?v=cL1-5BKJu30) The drawing of the hand-written digit is basially triggered by "drag" "feedbacks" |![](screenshots/esp32_mnist.gif)|
+|For a complete example, please refer to the sketch as shown in the YouTube -- [Building a DL model for the Mnist Dataset, to building an Arduino Sketch for ESP32S3 (also ESP32)](https://www.youtube.com/watch?v=cL1-5BKJu30) The drawing of the hand-written digit is basically triggered by "drag" "feedbacks" |![](screenshots/esp32_mnist.gif)|
 
 
 
@@ -1518,7 +1518,7 @@ void setup() {
 ```
 
 Please note that there are two situations DumbDisplay are considered "idle":
-1) When initialy wait for connection to DumbDisplay app.
+1) When initially wait for connection to DumbDisplay app.
 2) When trying to reconnect after lost of connection DumbDisplay app. 
 
 
@@ -1765,7 +1765,7 @@ For reference, you may want to resort to the headers of the different related cl
 
 
 
-# DumbDispaly WIFI Bridge
+# DumbDisplay WIFI Bridge
 
 Very likely you will be using your desktop computer (say Windows) for Arduino development, which will be connecting to your microcontroller via Serial connection. Wouldn't it be nice to be able to connect to DumbDisplay similarly, via the same Serial wiring as well?
 
