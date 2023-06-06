@@ -1740,11 +1740,11 @@ Instead of relying on reconnection, you may choose to "master reset" DumbDisplay
 void loop() {
   DDConnectPassiveStatus connectStatus;
   if (dumbdisplay.connectPassive(&connectStatus)) {
+    if (connectStatus.reconnecting) {
+        dumbdisplay.masterReset();
+        led = NULL;
+    }
     if (led == NULL) {
-      if (connectStatus.reconnecting) {
-          dumbdisplay.masterReset();
-          led = NULL;
-      }
       led = dumbdisplay.createLedGridLayer();
     }
     led->toggle();

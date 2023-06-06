@@ -521,40 +521,32 @@ bool __Connect(/*bool calledPassive = false*/) {
     if (_DebugInterface != NULL) {
       _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_NOT_CONNECTED);
     }
-    // faster
-    //return false;
   }
   if (_C_state.step == 1) {
-    if (_IO->preConnect(_C_state.firstCall)) {
-      _C_state.step = 2;
-      if (_DebugInterface != NULL) {
-        _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
+    if (!_IO->preConnect(_C_state.firstCall)) {
+#ifdef SUPPORT_IDLE_CALLBACK
+      bool checkIdle = _IdleCallback != NULL;
+      if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
+        long now = millis();
+        long diffMillis = now - _C_state.lastCallMillis;
+        if (diffMillis >= HAND_SHAKE_GAP) {
+          long idleForMillis = now - _C_state.startMillis;
+          _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_NOT_CONNECTED);
+          _C_state.lastCallMillis = now;
+        }
       }
+#endif      
+      _C_state.firstCall = false;
       return false;
     }
-#ifdef SUPPORT_IDLE_CALLBACK
-    bool checkIdle = _IdleCallback != NULL;
-// #ifdef SUPPORT_PASSIVE_MODE
-//     checkIdle &= !_IsInPassiveMode;
-// #endif    
-    if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
-      long now = millis();
-      long diffMillis = now - _C_state.lastCallMillis;
-      if (diffMillis >= HAND_SHAKE_GAP) {
-        long idleForMillis = now - _C_state.startMillis;
-        _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_NOT_CONNECTED);
-        _C_state.lastCallMillis = now;
-      }
+    _C_state.step = 3/*2*/;
+    if (_DebugInterface != NULL) {
+      _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
     }
-#endif      
-    _C_state.firstCall = false;
-    return false;
   }
-  if (_C_state.step == 2) {
-    _C_state.step = 3;
-    // faster
-    //return false;
-  }
+  // if (_C_state.step == 2) {
+  //   _C_state.step = 3;
+  // }
   if (_C_state.step == 3) {
     _C_state.hsNextMillis = millis();
     //IOProxy ioProxy(_IO);
@@ -596,9 +588,6 @@ bool __Connect(/*bool calledPassive = false*/) {
 #endif        
 #ifdef SUPPORT_IDLE_CALLBACK
         bool checkIdle = _IdleCallback != NULL;
-// #ifdef SUPPORT_PASSIVE_MODE
-//         checkIdle &= !_IsInPassiveMode;
-// #endif
         if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
           long idleForMillis = now - _C_state.startMillis;
           _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_CONNECTING);
@@ -658,12 +647,12 @@ bool __Connect(/*bool calledPassive = false*/) {
             Serial.println("**********");
             Serial.flush();
           }
-          //break;
           _C_state.step = 5;
-          if (mustLoop) {
-            break;
-          }
-          return false;
+          // if (mustLoop) {
+          //   break;
+          // }
+          // return false;
+          break;  // faster
         }
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:DONE");
@@ -692,10 +681,6 @@ bool __Connect(/*bool calledPassive = false*/) {
     //_C_state.compatibility = 0;
     _C_state.hsNextMillis = millis();
     _C_state.step = 6;
-     // faster
-     // if (!mustLoop) {
-     //   return false;
-     // }
   }
   if (_C_state.step == 6) { 
     //IOProxy ioProxy(_IO);
