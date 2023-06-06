@@ -1701,7 +1701,8 @@ void loop() {
 The modified sketch can be like
 
 ```
-DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput());
 LedGridDDLayer *led = NULL;
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
