@@ -508,7 +508,6 @@ _ConnectState _C_state;
 
 bool __Connect(/*bool calledPassive = false*/) {
   bool mustLoop = !_IO->canConnectPassive();
-//Serial.print(_C_state.step);
   if (_C_state.step > 0 && _C_state.hsStartMillis > 0) {
     long diffMillis = millis() - _C_state.hsStartMillis;
     if (diffMillis > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
@@ -517,6 +516,8 @@ bool __Connect(/*bool calledPassive = false*/) {
       return false;
     }
   }
+// Serial.print(">");
+// Serial.print(_C_state.step);
   if (_C_state.step == 0) {
     _C_state.startMillis = millis();
     _C_state.lastCallMillis = _C_state.startMillis;
@@ -3323,13 +3324,18 @@ bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {
   bool connected = _Connect(true);
   if (pStatus != NULL) {
     pStatus->connected = connected;
+    pStatus->connecting = false;
     pStatus->reconnecting = false;
   }
+  if (!connected && pStatus != NULL) {
+    pStatus->connecting = _C_state.step >= _C_HANDSHAKE/*_C_HANDSHAKE*/; 
+  }
   if (connected && pStatus != NULL) {
-    pStatus->connecting = _C_state.step >= _C_HANDSHAKE; 
     _Yield();
     pStatus->reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
   }
+// Serial.print("$");
+//Serial.print(_C_state.step);
   return connected;
 #else
   return false;

@@ -9,7 +9,15 @@
 
 
 #ifdef WITH_DD
-  #define IDLE_MILLIS 10000
+  
+  // for T-DISPLAY -- LEFT: 0 ... RIGHT: 35  ... 0 seems doesn't work
+  
+  #define IDLE_MILLIS           10000
+
+  #define WAKE_BUTTON_PIN       35
+  #define WAKE_BUTTON_PIN_NUM   GPIO_NUM_35
+  //#define WAKE_MILLIS           10000
+
 
   //#undef BLUETOOTH
 
@@ -37,12 +45,12 @@
 
   
   int shownHH, shownMM, shownSS = -1;
-  RTC_DATA_ATTR DDSavedConnectPassiveState savedConnectState;
+  //RTC_DATA_ATTR DDSavedConnectPassiveState savedConnectState;
   RTC_DATA_ATTR int sleepHH, sleepMM, sleepSS = -1;
 
 
   #ifdef IDLE_MILLIS
-    long sleepIdleMillis = IDLE_MILLIS;
+    //long sleepIdleMillis = IDLE_MILLIS;
     long idleStartMillis = millis();
   #endif  
 
@@ -90,9 +98,11 @@ uint32_t ClockBGC = 0;
 
 void setup(void) {  
 
-Serial.begin(115200);
 
 #ifdef WITH_DD
+
+  Serial.begin(115200);
+
   #if defined(BLUETOOTH)
       dumbdisplay = new DumbDisplay(new DDBluetoothSerialIO(BLUETOOTH, true, DD_SERIAL_BAUD));
   #elif defined(WIFI_SSID)
@@ -100,7 +110,10 @@ Serial.begin(115200);
   #else
     dumbdisplay = new DumbDisplay(new DDInputOutput());
   #endif
-  dumbdisplay->restorePassiveConnectState(savedConnectState);
+  //dumbdisplay->restorePassiveConnectState(savedConnectState);
+#ifdef WAKE_BUTTON_PIN  
+  pinMode(WAKE_BUTTON_PIN, INPUT);
+#endif  
 #endif
 
   tft.init();
@@ -152,8 +165,8 @@ Serial.begin(115200);
 // Serial.println("=====");
 // Serial.println(sleepSS);    
   if (sleepSS != -1) {
-    sleepIdleMillis = 0;  // just woke ==> go to sleep ASAP
-    sleepSS += 1;  // wake every second
+    //sleepIdleMillis = 0;  // just woke ==> go to sleep ASAP
+    sleepSS += 1;  // assume wake up in a second
     if (sleepSS == 60) {
       sleepSS = 0;
       sleepMM += 1;
@@ -169,6 +182,7 @@ Serial.begin(115200);
     mm = sleepMM;
     ss = sleepSS;
   }
+  Serial.println("*** READY!!!");
 #endif
 }
 
@@ -177,13 +191,8 @@ void loop() {
 #ifdef WITH_DD
   DDConnectPassiveStatus connectStatus;
   dumbdisplay->connectPassive(&connectStatus);
-//Serial.print(connectStatus.connected);
   if (connectStatus.connected) {
-  #ifdef IDLE_MILLIS    
-//Serial.println("**** RESET IDLE");  
-    sleepIdleMillis = IDLE_MILLIS;
     idleStartMillis = millis();
-  #endif    
     if (syncButton != NULL && connectStatus.reconnecting) {
       // if reconnecting (after connected) ==> master reset to start over DD again
       dumbdisplay->masterReset();
@@ -291,21 +300,28 @@ void loop() {
     }
   } else {
   #ifdef IDLE_MILLIS    
-    if (!connectStatus.connecting) {
+    if (true/*!connectStatus.connecting*/) {
       long diffMillis = millis() - idleStartMillis;
-      if (sleepIdleMillis == 0 || diffMillis >= sleepIdleMillis) {
-        Serial.print("*** idle going to sleep for a second");
-        Serial.print("; HH=");
+      if (diffMillis >= IDLE_MILLIS) {
+        Serial.print("*** idle going to sleep ... ");
+        Serial.print("HH=");
         Serial.print(sleepHH);
         Serial.print("; MM=");
         Serial.print(sleepMM);
         Serial.print("; SS=");
-        Serial.println(sleepSS);
+        Serial.print(sleepSS);
+        Serial.print(" ... ");
         sleepHH = hh;
         sleepMM = mm;
         sleepSS = ss;
-        dumbdisplay->savePassiveConnectState(savedConnectState);
-        esp_sleep_enable_timer_wakeup(1000 * 1000);  // wake up in a second
+        //dumbdisplay->savePassiveConnectState(savedConnectState);
+#ifdef WAKE_BUTTON_PIN     
+        Serial.println("wake by button (LILYGO right) ...");
+        esp_sleep_enable_ext0_wakeup(WAKE_BUTTON_PIN_NUM, 0);
+#else
+        Serial.println("wake in delay ...");
+        esp_sleep_enable_timer_wakeup(WAKE_MILLIS * 1000);  // wake up some time later
+#endif
         esp_deep_sleep_start();    
       }
     }

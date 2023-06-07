@@ -57,21 +57,36 @@ class DDWiFiServerIO: public DDInputOutput {
       client.write(buf, size);
     }
     bool preConnect(bool firstCall) {
-      if (firstCall) {
-        // if (logToSerial)
-        //   Serial.begin(serialBaud);
-        if (true) {  // since 2023-06-03
-          client.stop();
-          WiFi.disconnect();
+      if (true) {  // since 2023-06-05
+        if (firstCall) {
+          if (true) {  // since 2023-06-03
+            client.stop();
+            WiFi.disconnect();
+          }
+          WiFi.begin(ssid, password);
+          connectionState = ' ';
+          stateMillis = 0;
         }
-        WiFi.begin(ssid, password);
-        connectionState = ' ';
-        stateMillis = 0;
-      } else {
+        //  delay(200);
         checkConnection();
-        delay(200);
-      }
-      return connectionState == 'C';
+        return connectionState == 'C';
+    } else {  
+        if (firstCall) {
+          // if (logToSerial)
+          //   Serial.begin(serialBaud);
+          if (true) {  // since 2023-06-03
+            client.stop();
+            WiFi.disconnect();
+          }
+          WiFi.begin(ssid, password);
+          connectionState = ' ';
+          stateMillis = 0;
+        } else {
+          checkConnection();
+          delay(200);
+        }
+        return connectionState == 'C';
+    }
     }
     void flush() {
       client.flush();
@@ -192,7 +207,7 @@ class DDWiFiServerIO: public DDInputOutput {
           stateMillis = 0;
         } else {
           long diff = millis() - stateMillis;
-          if (diff > 1000) {
+          if (stateMillis == 0 || diff > 1000) {
             if (logToSerial) {
               Serial.print("binding WIFI ");
               Serial.print(ssid);

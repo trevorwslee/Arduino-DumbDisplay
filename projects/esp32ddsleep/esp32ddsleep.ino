@@ -1,4 +1,4 @@
-// for a desciption of the ESP32 Deep Sleep experiment, please watch the YouTube video 
+// for a description of the ESP32 Deep Sleep experiment, please watch the YouTube video 
 // -- ESP32 Deep Sleep Experiment using Arduino with DumbDisplay
 // -- https://www.youtube.com/watch?v=a61hRLIaqy8
 
@@ -7,15 +7,15 @@
 #include "esp32dumbdisplay.h"
 
 
-#define NOISE_PIN 15
-#define NOISE_PIN_NUM GPIO_NUM_15
+//#define NOISE_PIN 15
+//#define NOISE_PIN_NUM GPIO_NUM_15
 
-#define TOUCH_PIN 4 
-#define TOUCH_PIN_NUM T0
-#define TOUCH_THRESHOLD 40
+//#define TOUCH_PIN 4 
+//#define TOUCH_PIN_NUM T0
+//#define TOUCH_THRESHOLD 40
 
-// uncommend out if want DumbDisplay to go to sleep when 'idle'
-//#define AUTO_SLEEP_WHEN_IDEL_MILLIS 10000
+// uncomment out if want DumbDisplay to go to sleep when 'idle'
+//#define AUTO_SLEEP_WHEN_IDLE_MILLIS 10000
 
 
 
@@ -31,9 +31,9 @@ LcdDDLayer* inFive;
 LcdDDLayer* touch;
 LcdDDLayer* noise;
 
-#ifdef AUTO_SLEEP_WHEN_IDEL_MILLIS
+#ifdef AUTO_SLEEP_WHEN_IDLE_MILLIS
 void IdleCallback(long idleForMillis) {
-  if (idleForMillis > AUTO_SLEEP_WHEN_IDEL_MILLIS) {
+  if (idleForMillis > AUTO_SLEEP_WHEN_IDLE_MILLIS) {
     esp_sleep_enable_ext0_wakeup(NOISE_PIN_NUM, 0);
     esp_deep_sleep_start();
   }
@@ -48,11 +48,15 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
     esp_sleep_enable_timer_wakeup(5 * 1000 * 1000);  // wake up in 5 seconds
     esp_deep_sleep_start();
   } else if (pLayer == touch) {
+#if defined (TOUCH_PIN) && defined(TOUCH_THRESHOLD)
     esp_sleep_enable_touchpad_wakeup();
     esp_deep_sleep_start();
+#endif
   } else if (pLayer == noise) {
+#ifdef NOISE_PIN_NUM     
     esp_sleep_enable_ext0_wakeup(NOISE_PIN_NUM, 0);
     esp_deep_sleep_start();
+#endif
   }
 }
 
@@ -77,11 +81,15 @@ void DetectedNoise() {
 
 
 void setup() {
+#ifdef NOISE_PIN  
   pinMode(NOISE_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(NOISE_PIN), DetectedNoise, RISING);
+#endif
+#if defined (TOUCH_PIN) && defined(TOUCH_THRESHOLD)
   touchAttachInterrupt(TOUCH_PIN, [](){}, TOUCH_THRESHOLD);
+#endif
 
-#ifdef AUTO_SLEEP_WHEN_IDEL_MILLIS
+#ifdef AUTO_SLEEP_WHEN_IDLE_MILLIS
   dumbdisplay.setIdleCallback(IdleCallback);
 #endif
 
@@ -133,6 +141,7 @@ void loop() {
     lastMillis = millis();
   }
 
+#if defined (TOUCH_PIN) && defined(TOUCH_THRESHOLD)
   int touchValue = touchRead(TOUCH_PIN);
   bool touched = touchValue < TOUCH_THRESHOLD;
   if (touched != wasTouched) {
@@ -143,6 +152,7 @@ void loop() {
     }
     wasTouched = touched;
   }
+#endif
 
   bool noisy = (millis() - noisyMillis) < 200;
   if (noisy != wasNoisy) {
