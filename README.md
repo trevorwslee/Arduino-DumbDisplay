@@ -1728,13 +1728,12 @@ Notice:
 * No DD layers creation etc in the `setup()` block
 * At the beginning of the `loop()` block, `dumbdisplay` is given a chance to "passively" make connection with DumbDisplay app "non-block", by calling `connectPassive()`.
 * If connection established; i.e. `connectPassive()` return `true`
-  * Check `led` to see if it is still `NULL` (i.e. nothing created and assigned to it)
-    * If so, create DD layer `led` the normal way. Notice how `recordLayerSetupCommands()` and `playbackLayerSetupCommands()` are called so that reconnect after connection lost is possible (as mentioned in previous section [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)).
+  * Check `led` to see if it is still `NULL` (i.e. nothing created and assigned to it). If so, create DD layer `led` the normal way. Notice how `recordLayerSetupCommands()` and `playbackLayerSetupCommands()` are called so that reconnect after connection lost is possible (as mentioned in previous section [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)).
   * In any case, toggle `led`
-* After giving chance for DumbDisplay to make connection "passively", blink `LED_BUILTIN` -- turn it ON then OFF.
+* After giving a chance for DumbDisplay to make connection "passively", blink `LED_BUILTIN` -- turn it ON then OFF.
 * ***Do notice that the delay here is 250!*** The delay needs be brief since `connectPassive()` should not be called too infrequently -- at least 1 or 2 times a second   
 
-Instead of relying on reconnection, you may choose to "master reset" DumbDisplay to ground-0 and "passively" wait for connection afresh. To do so, the above sketch need be modified
+Instead of relying on reconnection, you may choose to "master reset" DumbDisplay to ground-zero, and "passively" wait for connection afresh. To do so, the above sketch need be modified like
 
 ```
 ...
@@ -1753,10 +1752,11 @@ void loop() {
   ...
 }
 ```
+
 Notice:
 * A `connectStatus` structure is passed to `connectPassive()` in order to receive more info about the connection status.
 * In case the connection status is reconnecting, "master reset" `dumpdisplay` by calling `masterReset()`
-* Note that after "master reset", the layers / tunnels created will not be valid anymore. See that there `led` is set be to `NULL` to indicate that `led` need be created on connected [again]
+* Note that after "master reset", the layers / tunnels created will not be valid anymore. See that `led` is set be to `NULL` to indicate that `led` need be created up on connected again
 * Sorry, "master reset" doesn't work in case the IO object is [DDBLESerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_b_l_e_serial_i_o.html)
 
 

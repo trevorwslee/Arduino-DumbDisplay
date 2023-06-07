@@ -1036,8 +1036,6 @@ typedef void (*DDIdleCallback)(long idleForMillis, DDIdleConnectionState connect
 /// Type signature for callback function that will be called when connect version (counting up) changed. See DumbDisplay::setConnectVersionChangedCallback()
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
-
-
 enum DDDebugConnectionState { DEBUG_NOT_CONNECTED, DEBUG_CONNECTING, DEBUG_CONNECTED, DEBUG_RECONNECTING, DEBUG_RECONNECTED };
 class DDDebugInterface {
   public:
@@ -1050,9 +1048,24 @@ class DDDebugInterface {
 struct DDConnectPassiveStatus {
   /// connection made or not -- same as the return value of DumbDisplay::connectPassive() 
   bool connected;
-  /// detected reconnecting (after lost of connection) 
+  /// when not connected; starting to establish connection by sending hand-shake messages
+  bool connecting;
+  /// when connected; detected reconnecting (after lost of connection) 
   bool reconnecting;
 };
+
+// EXPERIMENTAL
+struct DDSavedConnectPassiveState {
+  int initialized;
+  short step;
+  long startMillis;
+  long lastCallMillis;
+  bool firstCall;
+  long hsStartMillis;
+  long hsNextMillis;
+};
+
+
 
 
 extern bool _DDDisableParamEncoding;
@@ -1290,12 +1303,10 @@ class DumbDisplay {
     /// @return connection made or not (note that even if connection lost and requires reconnecting, it is still considered connected)
     /// @since 0.9.8-r1
     bool connectPassive(DDConnectPassiveStatus* pStatus = NULL);
-// /// @brief
-// /// make connection passively; i.e. will not block, but will require continuous calling for making connection
-// /// @param pConnecting if not NULL, check if connection lost and is making reconnection
-// /// @return connection made or not (note that even if connection lost and requires reconnecting, it is still considered connected)
-// /// @since 0.9.8-r1
-// bool connectPassive(bool* pReconnecting = NULL);
+    // EXPERIMENTAL
+    void savePassiveConnectState(DDSavedConnectPassiveState& state);
+    // EXPERIMENTAL
+    void restorePassiveConnectState(DDSavedConnectPassiveState& state);
     /// EXPERIMENTAL; "master reset" to be just like uninitialized;
     /// "master reset" will:
     /// . disconnect from DD app (if connected)

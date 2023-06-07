@@ -486,6 +486,11 @@ volatile bool _HandlingFeedback = false;
 
 #ifdef SUPPORT_PASSIVE
 
+#define _C_PRECONNECTING  1
+#define _C_PRECONNECTED   3
+#define _C_IOPROXY_SET    4
+#define _C_HANDSHAKE      5
+
 struct _ConnectState {
   _ConnectState(): step(0) {}
   short step;
@@ -517,12 +522,12 @@ bool __Connect(/*bool calledPassive = false*/) {
     _C_state.lastCallMillis = _C_state.startMillis;
     _C_state.hsStartMillis = 0;
     _C_state.firstCall = true;
-    _C_state.step = 1;
+    _C_state.step = _C_PRECONNECTING/*1*/;
     if (_DebugInterface != NULL) {
       _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_NOT_CONNECTED);
     }
   }
-  if (_C_state.step == 1) {
+  if (_C_state.step == _C_PRECONNECTING/*1*/) {
     if (!_IO->preConnect(_C_state.firstCall)) {
 #ifdef SUPPORT_IDLE_CALLBACK
       bool checkIdle = _IdleCallback != NULL;
@@ -539,15 +544,12 @@ bool __Connect(/*bool calledPassive = false*/) {
       _C_state.firstCall = false;
       return false;
     }
-    _C_state.step = 3/*2*/;
+    _C_state.step = _C_PRECONNECTED/*3*//*2*/;
     if (_DebugInterface != NULL) {
       _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
     }
   }
-  // if (_C_state.step == 2) {
-  //   _C_state.step = 3;
-  // }
-  if (_C_state.step == 3) {
+  if (_C_state.step == _C_PRECONNECTED/*3*/) {
     _C_state.hsNextMillis = millis();
     //IOProxy ioProxy(_IO);
     if (_C_state.pIOProxy != NULL) {
@@ -568,10 +570,11 @@ bool __Connect(/*bool calledPassive = false*/) {
       _C_state.pBUSerialIOProxy = new IOProxy(_C_state.pBUSIO);
     }
     _C_state.hsStartMillis = millis();
-    _C_state.step = 4;
-    return false;
+    _C_state.step = _C_IOPROXY_SET/*4*/;
+    // faster
+    //return false;
   }
-  if (_C_state.step == 4) {
+  if (_C_state.step == _C_IOPROXY_SET/*4*/) {
     while (true) {
       if (mustLoop) YIELD();
       long now = millis();
@@ -647,7 +650,7 @@ bool __Connect(/*bool calledPassive = false*/) {
             Serial.println("**********");
             Serial.flush();
           }
-          _C_state.step = 5;
+          _C_state.step = _C_HANDSHAKE/*5*/;
           // if (mustLoop) {
           //   break;
           // }
@@ -677,7 +680,7 @@ bool __Connect(/*bool calledPassive = false*/) {
 //Serial.print("$$$$$$$$$$ "); Serial.println(_C_state.step);      
   }
   //int compatibility = 0;
-  if (_C_state.step == 5) { 
+  if (_C_state.step == _C_HANDSHAKE/*5*/) { 
     //_C_state.compatibility = 0;
     _C_state.hsNextMillis = millis();
     _C_state.step = 6;
@@ -3323,6 +3326,7 @@ bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {
     pStatus->reconnecting = false;
   }
   if (connected && pStatus != NULL) {
+    pStatus->connecting = _C_state.step >= _C_HANDSHAKE; 
     _Yield();
     pStatus->reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
   }
@@ -3330,6 +3334,33 @@ bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {
 #else
   return false;
 #endif  
+}
+void DumbDisplay::savePassiveConnectState(DDSavedConnectPassiveState& state) {
+  state.initialized = 12345;
+  state.step = _C_state.step;
+  state.startMillis =_C_state.startMillis;
+  state.lastCallMillis = _C_state.lastCallMillis;
+  state.firstCall = _C_state.firstCall;
+  state.hsStartMillis = _C_state.hsStartMillis;
+  state.hsNextMillis = _C_state.hsNextMillis;
+}
+void DumbDisplay::restorePassiveConnectState(DDSavedConnectPassiveState& state) {
+  if (state.initialized == 12345) {
+    if (true) {
+      state.step = 0;
+    }
+    _C_state.step = state.step;
+    _C_state.startMillis = state.startMillis;
+    _C_state.lastCallMillis = state.lastCallMillis;
+    _C_state.firstCall = state.firstCall;
+    _C_state.hsStartMillis = state.hsStartMillis;
+    _C_state.hsNextMillis = state.hsNextMillis;
+    // if (state.step >= _C_IOPROXY_SET) {
+    //   __C_SetupIOProxy();
+    // }
+// Serial.print("-----");
+// Serial.println(state.step);
+  }
 }
 // bool DumbDisplay::connectPassive(bool* pReconnecting) {
 // #ifdef SUPPORT_PASSIVE
