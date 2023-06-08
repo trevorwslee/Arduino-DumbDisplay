@@ -1,4 +1,16 @@
-#define WITH_DD
+
+// if want to use Bluetooth for connection, uncomment the following like whic also define the Bluetooth device name
+// note that if not using Bluetooth, WIFI is assumed
+//#define BLUETOOTH "ESP32"
+
+#if defined(BLUETOOTH)
+  #include "esp32dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true, DD_SERIAL_BAUD));
+#else
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+#endif
+
 
 // *****
 // * say, for TTGO T-Display
@@ -7,54 +19,39 @@
 // * . uncomment #include <User_Setups/Setup25_TTGO_T_Display.h>
 // *****
 
+// for T-DISPLAY -- LEFT: 0 ... RIGHT: 35  ... 0 seems doesn't work
 
-#ifdef WITH_DD
-  
-  // for T-DISPLAY -- LEFT: 0 ... RIGHT: 35  ... 0 seems doesn't work
-  
-  #define IDLE_MILLIS           10000
-
-  #define WAKE_BUTTON_PIN       35
-  #define WAKE_BUTTON_PIN_NUM   GPIO_NUM_35
-  //#define WAKE_MILLIS           10000
+// if not for TTGO T-Display, comment out the following lines
+// #define WAKE_BUTTON_PIN       35
+// #define WAKE_BUTTON_PIN_NUM   GPIO_NUM_35
+#define WAKE_BUTTON_PIN       0
+#define WAKE_BUTTON_PIN_NUM   GPIO_NUM_0
 
 
-  //#undef BLUETOOTH
 
-  #if defined(BLUETOOTH)
-    #include "esp32dumbdisplay.h"
-  #elif defined(WIFI_SSID)
-    #define CAN_USE_SERIAL
-    #include "wifidumbdisplay.h"
-  #else
-    #include "dumbdisplay.h"
-  #endif
-  
-  DumbDisplay* dumbdisplay;
-
-
-  LcdDDLayer* syncButton = NULL;
-  BasicDDTunnel* datetimeTunnel = NULL;
-  JoystickDDLayer* blueSlider = NULL;
-  SevenSegmentRowDDLayer* left7Seg;
-  SevenSegmentRowDDLayer* mid7Seg;
-  SevenSegmentRowDDLayer* right7Seg;
-  LedGridDDLayer* sepLed1;
-  LedGridDDLayer* sepLed2;
+LcdDDLayer* syncButton = NULL;
+BasicDDTunnel* datetimeTunnel;
+JoystickDDLayer* blueSlider;
+SevenSegmentRowDDLayer* left7Seg;
+SevenSegmentRowDDLayer* mid7Seg;
+SevenSegmentRowDDLayer* right7Seg;
+LedGridDDLayer* sepLed1;
+LedGridDDLayer* sepLed2;
+LcdDDLayer* sleepIdleLabel;
+LcdDDLayer* sleepNoneButton;
+LcdDDLayer* sleep2MinsButton;
 
 
-  
-  int shownHH, shownMM, shownSS = -1;
-  //RTC_DATA_ATTR DDSavedConnectPassiveState savedConnectState;
-  RTC_DATA_ATTR int sleepHH, sleepMM, sleepSS = -1;
+int shownHH, shownMM, shownSS = -1;
+//RTC_DATA_ATTR int sleepHH, sleepMM, sleepSS = -1;
 
 
-  #ifdef IDLE_MILLIS
-    //long sleepIdleMillis = IDLE_MILLIS;
-    long idleStartMillis = millis();
-  #endif  
+const int DefaultMaxIdleMillis = 2 * 60 * 1000;
+RTC_DATA_ATTR int maxIdleMillis = -1;//DefaultMaxIdleMillis;
+long idleStartMillis;
 
-#endif
+
+
 
 /*
  An example analogue clock using a TFT LCD screen to show the time
@@ -90,31 +87,19 @@ static uint8_t conv2d(const char* p) {
   return 10 * v + *++p - '0';
 }
 
-uint8_t hh=conv2d(__TIME__), mm=conv2d(__TIME__+3), ss=conv2d(__TIME__+6);  // Get H, M, S from compile time
+RTC_DATA_ATTR uint8_t hh=conv2d(__TIME__), mm=conv2d(__TIME__+3), ss=conv2d(__TIME__+6);  // Get H, M, S from compile time
+RTC_DATA_ATTR uint32_t ClockBGC = 0;
 
 bool initial = 1;
-uint32_t ClockBGC = 0;
 
 
 void setup(void) {  
-
-
-#ifdef WITH_DD
-
   Serial.begin(115200);
+  idleStartMillis = millis();
 
-  #if defined(BLUETOOTH)
-      dumbdisplay = new DumbDisplay(new DDBluetoothSerialIO(BLUETOOTH, true, DD_SERIAL_BAUD));
-  #elif defined(WIFI_SSID)
-    dumbdisplay = new DumbDisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
-  #else
-    dumbdisplay = new DumbDisplay(new DDInputOutput());
-  #endif
-  //dumbdisplay->restorePassiveConnectState(savedConnectState);
 #ifdef WAKE_BUTTON_PIN  
-  pinMode(WAKE_BUTTON_PIN, INPUT);
+  pinMode(WAKE_BUTTON_PIN, INPUT_PULLUP);
 #endif  
-#endif
 
   tft.init();
   tft.setRotation(0);
@@ -160,63 +145,52 @@ void setup(void) {
 
   targetTime = millis() + 1000; 
 
-#ifdef IDLE_MILLIS
-// Serial.begin(115200);
-// Serial.println("=====");
-// Serial.println(sleepSS);    
-  if (sleepSS != -1) {
-    //sleepIdleMillis = 0;  // just woke ==> go to sleep ASAP
-    sleepSS += 1;  // assume wake up in a second
-    if (sleepSS == 60) {
-      sleepSS = 0;
-      sleepMM += 1;
-      if (sleepMM == 60) {
-        sleepMM = 0;
-        sleepHH += 1;
-        if (sleepHH == 12) {
-          sleepHH = 0;
-        }
-      }
-    }
-    hh = sleepHH;
-    mm = sleepMM;
-    ss = sleepSS;
-  }
   Serial.println("*** READY!!!");
-#endif
 }
 
 
 void loop() {
-#ifdef WITH_DD
+
+#ifdef WAKE_BUTTON_PIN  
+  int v = digitalRead(WAKE_BUTTON_PIN);
+  if (v == LOW) {
+    Serial.println("$");
+  }
+#endif  
+
+
   DDConnectPassiveStatus connectStatus;
-  dumbdisplay->connectPassive(&connectStatus);
+  dumbdisplay.connectPassive(&connectStatus);
   if (connectStatus.connected) {
     idleStartMillis = millis();
+
     if (syncButton != NULL && connectStatus.reconnecting) {
-      // if reconnecting (after connected) ==> master reset to start over DD again
-      dumbdisplay->masterReset();
+      dumbdisplay.masterReset();
       syncButton = NULL;
       datetimeTunnel = NULL;
       tft.setTextColor(TFT_GREY, TFT_GREY);
       tft.drawCentreString("Connected",66,160,4);
       return;
     }
+
+    bool updateUI = false;
     if (syncButton == NULL) {
-      // DD not initialized (or started over again) ==> initialize it
-      dumbdisplay->recordLayerSetupCommands();
-      syncButton = dumbdisplay->createLcdLayer(14, 1);
+      dumbdisplay.recordLayerSetupCommands();
+
+      syncButton = dumbdisplay.createLcdLayer(14, 1);
       syncButton->border(2, DD_COLOR_darkgreen, "raised");
       syncButton->writeLine(" 🔄  Sync Time");
-      syncButton->enableFeedback("f");
-      blueSlider = dumbdisplay->createJoystickLayer(127, "hori");
+      syncButton->enableFeedback("fl");
+
+      blueSlider = dumbdisplay.createJoystickLayer(127, "hori");
       blueSlider->moveToPos(ClockBGC & 127, 0);
       blueSlider->border(5, DD_COLOR_darkgray, "round", 3);
-      left7Seg = dumbdisplay->create7SegmentRowLayer(2);   // 2 digits
-      mid7Seg = dumbdisplay->create7SegmentRowLayer(2);    // 2 digits
-      right7Seg = dumbdisplay->create7SegmentRowLayer(2);  // 2 digits
-      sepLed1 = dumbdisplay->createLedGridLayer(3, 7);     // 3x7 leds
-      sepLed2 = dumbdisplay->createLedGridLayer(3, 7);     // 3x7 leds
+
+      left7Seg = dumbdisplay.create7SegmentRowLayer(2);   // 2 digits
+      mid7Seg = dumbdisplay.create7SegmentRowLayer(2);    // 2 digits
+      right7Seg = dumbdisplay.create7SegmentRowLayer(2);  // 2 digits
+      sepLed1 = dumbdisplay.createLedGridLayer(3, 7);     // 3x7 leds
+      sepLed2 = dumbdisplay.createLedGridLayer(3, 7);     // 3x7 leds
       left7Seg->segmentColor(DD_COLOR_navy);
       left7Seg->backgroundColor(DD_COLOR_ivory);
       mid7Seg->segmentColor(DD_COLOR_navy);
@@ -227,7 +201,22 @@ void loop() {
       sepLed1->backgroundColor(DD_COLOR_ivory);
       sepLed2->onColor(DD_COLOR_navy);
       sepLed2->backgroundColor(DD_COLOR_ivory);
-      dumbdisplay->configAutoPin(DDAutoPinConfig('V')
+
+      sleepIdleLabel = dumbdisplay.createLcdLayer(7, 2);
+      sleepIdleLabel->pixelColor(DD_COLOR_darkblue);
+      sleepIdleLabel->border(1, DD_COLOR_gray, "flat");
+      sleepIdleLabel->writeLine("😴 Idle", 0);
+      sleepIdleLabel->writeLine(" Sleep", 1);
+      
+      sleepNoneButton = dumbdisplay.createLcdLayer(6, 1);
+      sleepNoneButton->writeLine(" None ");
+      sleepNoneButton->enableFeedback("f");
+      
+      sleep2MinsButton = dumbdisplay.createLcdLayer(6, 1);
+      sleep2MinsButton->writeLine("2 Mins");
+      sleep2MinsButton->enableFeedback("f");
+
+      dumbdisplay.configAutoPin(DDAutoPinConfig('V')
         .addLayer(syncButton)
         .beginGroup('H')
           .addLayer(left7Seg)
@@ -237,14 +226,24 @@ void loop() {
           .addLayer(right7Seg)
         .endGroup()
         .addLayer(blueSlider)
+        .beginGroup('H')
+          .addLayer(sleepIdleLabel)
+          .beginGroup('V')
+            .addLayer(sleepNoneButton)
+            .addLayer(sleep2MinsButton)
+          .endGroup()
+        .endGroup()
         .build()
       );
-      dumbdisplay->playbackLayerSetupCommands( __FILE__);
-      dumbdisplay->backgroundColor(DD_INT_COLOR(ClockBGC));
+      dumbdisplay.playbackLayerSetupCommands( __FILE__);
+      dumbdisplay.backgroundColor(DD_INT_COLOR(ClockBGC));
       tft.setTextColor(TFT_RED, TFT_GREY);
       tft.drawCentreString("Connected",66,160,4);
+
+      updateUI = true;
       initial = 1;
     }
+
     if (initial || hh != shownHH) {
       left7Seg->showNumber(hh, "0");
       shownHH = hh;
@@ -268,66 +267,77 @@ void loop() {
         sepLed2->turnOff(1, 4);
       }
     }
+
     if (syncButton->getFeedback()) {
       // "sync" button clicked ==> create a "tunnel" to get current date time
       if (datetimeTunnel != NULL) {
-        dumbdisplay->deleteTunnel(datetimeTunnel);
+        dumbdisplay.deleteTunnel(datetimeTunnel);
       }
-      dumbdisplay->logToSerial("getting time for sync ...");
-      datetimeTunnel = dumbdisplay->createDateTimeServiceTunnel();
+      dumbdisplay.logToSerial("getting time for sync ...");
+      datetimeTunnel = dumbdisplay.createDateTimeServiceTunnel();
       datetimeTunnel->reconnectTo("now:hhmmss");
     }
+
     const DDFeedback* fb = blueSlider->getFeedback();
     if (fb != NULL) {
       ClockBGC = fb->x; 
-      dumbdisplay->backgroundColor(DD_INT_COLOR(ClockBGC));
+      dumbdisplay.backgroundColor(DD_INT_COLOR(ClockBGC));
       tft.fillCircle(64, 64, 48, ClockBGC);
       initial = 1;
     }
     if (datetimeTunnel != NULL) {
       String nowStr;
       if (datetimeTunnel->readLine(nowStr)) {
-        dumbdisplay->logToSerial("... got sync time " + nowStr);
+        dumbdisplay.logToSerial("... got sync time " + nowStr);
         int now = nowStr.toInt();
         hh = now / 10000;
         mm = (now / 100) % 100;
         ss = now % 100;
-        dumbdisplay->deleteTunnel(datetimeTunnel);
+        dumbdisplay.deleteTunnel(datetimeTunnel);
         datetimeTunnel = NULL;
-        dumbdisplay->tone(2000, 100);
+        dumbdisplay.tone(2000, 100);
         initial = 1;
       }
     }
+
+    if (sleepNoneButton->getFeedback()) {
+      maxIdleMillis = -1;
+      updateUI = true;
+    }
+    if (sleep2MinsButton->getFeedback()) {
+      maxIdleMillis = DefaultMaxIdleMillis;
+      updateUI = true;
+    }
+
+    if (updateUI) {
+      sleepNoneButton->border(1, DD_COLOR_gray, maxIdleMillis == -1 ? "flat" : "hair");
+      sleepNoneButton->pixelColor(maxIdleMillis == -1 ? DD_COLOR_darkblue : DD_COLOR_gray);
+      sleep2MinsButton->border(1, DD_COLOR_gray, maxIdleMillis != -1 ? "flat" : "hair");
+      sleep2MinsButton->pixelColor(maxIdleMillis != -1 ? DD_COLOR_darkblue : DD_COLOR_gray);
+    }
   } else {
-  #ifdef IDLE_MILLIS    
-    if (true/*!connectStatus.connecting*/) {
+    if (maxIdleMillis != -1) {
       long diffMillis = millis() - idleStartMillis;
-      if (diffMillis >= IDLE_MILLIS) {
+      if (diffMillis >= maxIdleMillis) {
         Serial.print("*** idle going to sleep ... ");
         Serial.print("HH=");
-        Serial.print(sleepHH);
+        Serial.print(hh);
         Serial.print("; MM=");
-        Serial.print(sleepMM);
+        Serial.print(mm);
         Serial.print("; SS=");
-        Serial.print(sleepSS);
+        Serial.print(ss);
         Serial.print(" ... ");
-        sleepHH = hh;
-        sleepMM = mm;
-        sleepSS = ss;
         //dumbdisplay->savePassiveConnectState(savedConnectState);
 #ifdef WAKE_BUTTON_PIN     
-        Serial.println("wake by button (LILYGO right) ...");
+        // Serial.println("wake in delay ...");
+        // esp_sleep_enable_timer_wakeup(10 * 1000 * 1000);  // wake in 10 later
+        Serial.println("wake by button (TTGO right button) ...");
         esp_sleep_enable_ext0_wakeup(WAKE_BUTTON_PIN_NUM, 0);
-#else
-        Serial.println("wake in delay ...");
-        esp_sleep_enable_timer_wakeup(WAKE_MILLIS * 1000);  // wake up some time later
 #endif
         esp_deep_sleep_start();    
       }
     }
-  #endif
   }
-#endif
 
   if (targetTime < millis()) {
     targetTime = millis()+1000;
