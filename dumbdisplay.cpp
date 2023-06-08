@@ -3303,7 +3303,7 @@ void DumbDisplay::setConnectVersionChangedCallback(DDConnectVersionChangedCallba
 bool DumbDisplay::canPrintToSerial() {
   return _CanLogToSerial();
 }
-void DumbDisplay::logToSerial(const String& logLine) {
+void DumbDisplay::logToSerial(const String& logLine, boolean force) {
   if (_CanLogToSerial()) {
     if (_The_DD_Serial != NULL) {
       _The_DD_Serial->print(logLine);
@@ -3314,6 +3314,8 @@ void DumbDisplay::logToSerial(const String& logLine) {
   } else {
     if (_Connected) {
       writeComment(logLine);
+    } else if (force) {
+      Serial.println(logLine);
     }
   }
 }

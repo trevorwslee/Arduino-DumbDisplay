@@ -261,6 +261,8 @@ Here is the list of all connection IO objects that you can use:
   with DumbDisplay WIFI Bridge running on your computer, you can keep the microcontroller connected with USB, and make WIFI connection with DumbDisplay Android app.
   Please refer to [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge) for more description on it.
 
+Note on using of `Serial`. If DumbDisplay will make connection using `Serial`, you certainly should not print to `Serial`. However, if you are sure that DumbDisplay will not make connection with `Serial`, call `Serial.begin(115200)` (115200 is the default baud rate of DumbDisplay) in the beginning of the `setup()` block. In any case, be aware that DumbDisplay itself might be logging to `Serial`.    
+
 
 ## Samples
 

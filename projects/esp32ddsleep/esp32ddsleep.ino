@@ -7,12 +7,12 @@
 #include "esp32dumbdisplay.h"
 
 
-//#define NOISE_PIN 15
-//#define NOISE_PIN_NUM GPIO_NUM_15
+#define NOISE_PIN 15
+#define NOISE_PIN_NUM GPIO_NUM_15
 
-//#define TOUCH_PIN 4 
-//#define TOUCH_PIN_NUM T0
-//#define TOUCH_THRESHOLD 40
+#define TOUCH_PIN 4 
+#define TOUCH_PIN_NUM T0
+#define TOUCH_THRESHOLD 40
 
 // uncomment out if want DumbDisplay to go to sleep when 'idle'
 //#define AUTO_SLEEP_WHEN_IDLE_MILLIS 10000

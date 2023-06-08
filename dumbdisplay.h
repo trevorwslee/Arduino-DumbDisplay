@@ -1296,7 +1296,7 @@ class DumbDisplay {
     /// check if it is safe to print to Serial
     bool canPrintToSerial();
     /// log line to Serial; if it is not safe to output to Serial, will write comment with DumbDisplay::writeComment() instead
-    void logToSerial(const String& logLine);
+    void logToSerial(const String& logLine, bool force = false);
   public:
     /// @brief
     /// make connection passively; i.e. will not block, but will require continuous calling for making connection
