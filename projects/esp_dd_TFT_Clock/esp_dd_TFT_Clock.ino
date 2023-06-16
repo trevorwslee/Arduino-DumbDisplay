@@ -1,6 +1,6 @@
 
-// if want to use Bluetooth for connection, uncomment the following like whic also define the Bluetooth device name
-// note that if not using Bluetooth, WIFI is assumed
+// *** if want to use Bluetooth for connection, uncomment the following like whic also define the Bluetooth device name
+// *** note that if not using Bluetooth, WIFI is assumed
 //#define BLUETOOTH "ESP32"
 
 #if defined(BLUETOOTH)
@@ -12,18 +12,9 @@
 #endif
 
 
-// *****
-// * say, for TTGO T-Display
-// * - modify User_Setup_Select.h
-// * . comment out #include <User_Setup.h>
-// * . uncomment #include <User_Setups/Setup25_TTGO_T_Display.h>
-// *****
 
-// for T-DISPLAY -- LEFT: 0 ... RIGHT: 35  ... 0 seems doesn't work
-
-// if not for TTGO T-Display, comment out the following lines
-// #define WAKE_BUTTON_PIN       35
-// #define WAKE_BUTTON_PIN_NUM   GPIO_NUM_35
+// *** for T-DISPLAY -- LEFT: 0 ... RIGHT: 35  ... 0 seems doesn't work
+// *** if not for TTGO T-Display, comment out the following lines
 #define WAKE_BUTTON_PIN       0
 #define WAKE_BUTTON_PIN_NUM   GPIO_NUM_0
 
@@ -43,14 +34,15 @@ LcdDDLayer* sleep2MinsButton;
 
 
 int shownHH, shownMM, shownSS = -1;
-//RTC_DATA_ATTR int sleepHH, sleepMM, sleepSS = -1;
 
 
 const int DefaultMaxIdleMillis = 2 * 60 * 1000;
-RTC_DATA_ATTR int maxIdleMillis = -1;//DefaultMaxIdleMillis;
+RTC_DATA_ATTR int maxIdleMillis = -1;
 long idleStartMillis;
 
 
+
+// ---------------------------------------------------------------
 
 
 /*
@@ -68,6 +60,19 @@ long idleStartMillis;
 
 #include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
+
+// ***
+// * User_Setup_Select.h should already be included by 
+// * Hence it should not hurt including it again.
+// * But it should give you an easy way to modify User_Setup_Select.h for setting TFT_eSPI up for TTGO T-Display
+// * Ctrl-click User_Setup_Select.h below and modify the file for TTGO T-Display like
+// * . comment out #include <User_Setup.h>
+// * . uncomment #include <User_Setups/Setup25_TTGO_T_Display.h>
+// ***
+#include "User_Setup_Select.h"
+
+
+
 
 TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 
@@ -87,8 +92,16 @@ static uint8_t conv2d(const char* p) {
   return 10 * v + *++p - '0';
 }
 
-RTC_DATA_ATTR uint8_t hh=conv2d(__TIME__), mm=conv2d(__TIME__+3), ss=conv2d(__TIME__+6);  // Get H, M, S from compile time
-RTC_DATA_ATTR uint32_t ClockBGC = 0;
+// *** 
+// * the following global should be declared RTC by adding RTC_DATA_ATTR
+// * RTC put the variables in memory area that wil survive when wakeup from sleep
+// * Note that clockBackgroundColor is the clock background color
+// ***
+RTC_DATA_ATTR uint8_t hh = 0;//conv2d(__TIME__);
+RTC_DATA_ATTR uint8_t mm = 0;//conv2d(__TIME__+3);
+RTC_DATA_ATTR uint8_t ss = 0;//conv2d(__TIME__+6);
+RTC_DATA_ATTR uint32_t clockBackgroundColor = TFT_BLACK;
+
 
 bool initial = 1;
 
@@ -108,7 +121,7 @@ void setup(void) {
   
   // Draw clock face
   tft.fillCircle(64, 64, 61, TFT_BLUE);
-  tft.fillCircle(64, 64, 57, ClockBGC/*TFT_BLACK*/);
+  tft.fillCircle(64, 64, 57, clockBackgroundColor/*TFT_BLACK*/);
 
   // Draw 12 lines
   for(int i = 0; i<360; i+= 30) {
@@ -159,12 +172,14 @@ void loop() {
 #endif  
 
 
+  // "passively" make connection with DumbDisplay app non-block
   DDConnectPassiveStatus connectStatus;
   dumbdisplay.connectPassive(&connectStatus);
   if (connectStatus.connected) {
     idleStartMillis = millis();
 
     if (syncButton != NULL && connectStatus.reconnecting) {
+      // if reconnecting (i.e. previous lost previous connection, "master reset" DumbDisplay)
       dumbdisplay.masterReset();
       syncButton = NULL;
       datetimeTunnel = NULL;
@@ -175,6 +190,7 @@ void loop() {
 
     bool updateUI = false;
     if (syncButton == NULL) {
+      // create the needed layers for DumbDisplay
       dumbdisplay.recordLayerSetupCommands();
 
       syncButton = dumbdisplay.createLcdLayer(14, 1);
@@ -183,7 +199,7 @@ void loop() {
       syncButton->enableFeedback("fl");
 
       blueSlider = dumbdisplay.createJoystickLayer(127, "hori");
-      blueSlider->moveToPos(ClockBGC & 127, 0);
+      blueSlider->moveToPos(clockBackgroundColor & 127, 0);
       blueSlider->border(5, DD_COLOR_darkgray, "round", 3);
 
       left7Seg = dumbdisplay.create7SegmentRowLayer(2);   // 2 digits
@@ -204,7 +220,7 @@ void loop() {
 
       sleepIdleLabel = dumbdisplay.createLcdLayer(7, 2);
       sleepIdleLabel->pixelColor(DD_COLOR_darkblue);
-      sleepIdleLabel->border(1, DD_COLOR_gray, "flat");
+      sleepIdleLabel->border(1, DD_COLOR_darkgreen, "flat");
       sleepIdleLabel->writeLine("😴 Idle", 0);
       sleepIdleLabel->writeLine(" Sleep", 1);
       
@@ -236,14 +252,15 @@ void loop() {
         .build()
       );
       dumbdisplay.playbackLayerSetupCommands( __FILE__);
-      dumbdisplay.backgroundColor(DD_INT_COLOR(ClockBGC));
+      dumbdisplay.backgroundColor(DD_INT_COLOR(clockBackgroundColor));
       tft.setTextColor(TFT_RED, TFT_GREY);
       tft.drawCentreString("Connected",66,160,4);
 
-      updateUI = true;
-      initial = 1;
+      updateUI = true;  // will update the "sleep" button states below
+      initial = 1;      // will force redraw of the clock hands
     }
 
+    // show hh/mm/ss to DumbDisplay app
     if (initial || hh != shownHH) {
       left7Seg->showNumber(hh, "0");
       shownHH = hh;
@@ -275,17 +292,11 @@ void loop() {
       }
       dumbdisplay.logToSerial("getting time for sync ...");
       datetimeTunnel = dumbdisplay.createDateTimeServiceTunnel();
-      datetimeTunnel->reconnectTo("now:hhmmss");
+      datetimeTunnel->reconnectTo("now:hhmmss");  // ask DumbDisplay app for current time in "hhmmss" format
     }
 
-    const DDFeedback* fb = blueSlider->getFeedback();
-    if (fb != NULL) {
-      ClockBGC = fb->x; 
-      dumbdisplay.backgroundColor(DD_INT_COLOR(ClockBGC));
-      tft.fillCircle(64, 64, 48, ClockBGC);
-      initial = 1;
-    }
     if (datetimeTunnel != NULL) {
+      // got current time "feedback" from DumbDisplay app => use it to sync hh/mm/ss
       String nowStr;
       if (datetimeTunnel->readLine(nowStr)) {
         dumbdisplay.logToSerial("... got sync time " + nowStr);
@@ -300,6 +311,16 @@ void loop() {
       }
     }
 
+    const DDFeedback* fb = blueSlider->getFeedback();
+    if (fb != NULL) {
+      // got "feedback" from the "slider" => use it's x value as color background color
+      clockBackgroundColor = fb->x; 
+      dumbdisplay.backgroundColor(DD_INT_COLOR(clockBackgroundColor));
+      tft.fillCircle(64, 64, 48, clockBackgroundColor);
+      initial = 1;
+    }
+
+
     if (sleepNoneButton->getFeedback()) {
       maxIdleMillis = -1;
       updateUI = true;
@@ -310,12 +331,16 @@ void loop() {
     }
 
     if (updateUI) {
-      sleepNoneButton->border(1, DD_COLOR_gray, maxIdleMillis == -1 ? "flat" : "hair");
+      sleepNoneButton->border(1, DD_COLOR_darkgreen, maxIdleMillis == -1 ? "flat" : "hair");
       sleepNoneButton->pixelColor(maxIdleMillis == -1 ? DD_COLOR_darkblue : DD_COLOR_gray);
-      sleep2MinsButton->border(1, DD_COLOR_gray, maxIdleMillis != -1 ? "flat" : "hair");
+      //sleepNoneButton->noBackgroundColor();
+      sleep2MinsButton->border(1, DD_COLOR_darkgreen, maxIdleMillis != -1 ? "flat" : "hair");
       sleep2MinsButton->pixelColor(maxIdleMillis != -1 ? DD_COLOR_darkblue : DD_COLOR_gray);
+      //sleep2MinsButton->noBackgroundColor();
     }
+
   } else {
+    // not connected to DumbDisplay app ==> check for idle; go to sleep if idle for too long
     if (maxIdleMillis != -1) {
       long diffMillis = millis() - idleStartMillis;
       if (diffMillis >= maxIdleMillis) {
@@ -327,14 +352,15 @@ void loop() {
         Serial.print("; SS=");
         Serial.print(ss);
         Serial.print(" ... ");
-        //dumbdisplay->savePassiveConnectState(savedConnectState);
 #ifdef WAKE_BUTTON_PIN     
-        // Serial.println("wake in delay ...");
-        // esp_sleep_enable_timer_wakeup(10 * 1000 * 1000);  // wake in 10 later
-        Serial.println("wake by button (TTGO right button) ...");
+        Serial.println("wake it by pressing the LEFT button ...");
         esp_sleep_enable_ext0_wakeup(WAKE_BUTTON_PIN_NUM, 0);
+#else        
+        Serial.println("wakeup in 10 seconds ...");
+        esp_sleep_enable_timer_wakeup(10 * 1000 * 1000);  // wakeup in 10 later
 #endif
         esp_deep_sleep_start();    
+        // the above call will not return
       }
     }
   }
@@ -368,16 +394,16 @@ void loop() {
     if (ss==0 || initial) {
       initial = 0;
       // Erase hour and minute hand positions every minute
-      tft.drawLine(ohx, ohy, 65, 65, ClockBGC/*TFT_BLACK*/);
+      tft.drawLine(ohx, ohy, 65, 65, clockBackgroundColor/*TFT_BLACK*/);
       ohx = hx*33+65;    
       ohy = hy*33+65;
-      tft.drawLine(omx, omy, 65, 65, ClockBGC/*TFT_BLACK*/);
+      tft.drawLine(omx, omy, 65, 65, clockBackgroundColor/*TFT_BLACK*/);
       omx = mx*44+65;    
       omy = my*44+65;
     }
 
       // Redraw new hand positions, hour and minute hands not erased here to avoid flicker
-      tft.drawLine(osx, osy, 65, 65, ClockBGC/*TFT_BLACK*/);
+      tft.drawLine(osx, osy, 65, 65, clockBackgroundColor/*TFT_BLACK*/);
       tft.drawLine(ohx, ohy, 65, 65, TFT_WHITE);
       tft.drawLine(omx, omy, 65, 65, TFT_WHITE);
       osx = sx*47+65;    

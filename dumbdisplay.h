@@ -135,6 +135,7 @@ class DDLayer: public DDObject {
     ///             - LcdLayer -- each character is composed of pixels
     ///             - 7SegmentRowLayer -- each 7-segment is composed of fixed 220 x 320 pixels
     ///             - LedGridLayer -- a LED is considered as a pixel  
+    /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     /// @param shape can be "flat", "hair", "round", "raised" or "sunken"  
     /// @param extraSize simply add to size; however if shape is "round", it affects the "roundness"
     void border(float size, const String& color, const String& shape = "flat", float extraSize = 0);
