@@ -30,7 +30,7 @@
 // #endif
 
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
-#define TL_BUFFER_DATA_LEN 24
+#define TL_BUFFER_DATA_LEN 16
 #else
 #define TL_BUFFER_DATA_LEN 128
 #define SUPPORT_USE_WOIO
