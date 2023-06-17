@@ -45,11 +45,11 @@
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
+//#define DEBUG_VALIDATE_CONNECTION
 //#define DEBUG_RECEIVE_FEEDBACK
 //#define DEBUG_ECHO_FEEDBACK
-//#define DEBUG_VALIDATE_CONNECTION
-//#define DEBUG_TUNNEL_RESPONSE
 //#define DEBUG_SHOW_FEEDBACK
+//#define DEBUG_TUNNEL_RESPONSE
 
 
 //#define SUPPORT_LONG_PRESS_FEEDBACK
@@ -725,6 +725,10 @@ bool __Connect(/*bool calledPassive = false*/) {
         if (compatibility != -1) {
           _C_state.compatibility = compatibility;
           _C_state.step = 7;
+          if (true) {
+            // since 2023-06-17
+            _ConnectedIOProxy->/*ioProxy.*/clear();  
+          }
           if (mustLoop) {
             break;
           }
