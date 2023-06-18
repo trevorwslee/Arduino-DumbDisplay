@@ -821,7 +821,8 @@ class DDTunnelEndpoint {
 class DDTunnel: public DDObject {
   public:
     /// for internal use only
-    DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow/*, int8_t bufferSize*/);
+    DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/);
+    void afterConstruct(bool connectNow);
     virtual ~DDTunnel();
   public:
     virtual void release();
@@ -876,7 +877,7 @@ class DDTunnel: public DDObject {
 class DDBufferedTunnel: public DDTunnel {
   public:
     /// for internal use only
-    DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize);
+    DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize);
     virtual ~DDBufferedTunnel();
     virtual void release();
     virtual void reconnect();
@@ -950,8 +951,8 @@ typedef BasicDDTunnel JsonDDTunnel;
 class SimpleToolDDTunnel: public BasicDDTunnel {
   public:
     /// @attention constructed via DumbDisplay object
-    SimpleToolDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int bufferSize):
-        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    SimpleToolDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int bufferSize):
+        BasicDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {
       this->result = 0;
     }
   public:
@@ -971,8 +972,8 @@ struct DDLocation {
 class GpsServiceDDTunnel: public BasicDDTunnel {
   public:
     /// @attention constructed via DumbDisplay object
-    GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
-        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    GpsServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize):
+        BasicDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {
     }
   public:
     /// @param repeat  how often (seconds) data will be sent back; -1 means no repeat
@@ -993,8 +994,8 @@ struct DDObjectDetectDemoResult {
 class ObjectDetetDemoServiceDDTunnel: public BasicDDTunnel {
   public:
     /// @attention constructed via DumbDisplay object
-    ObjectDetetDemoServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
-        BasicDDTunnel(type, tunnelId, params, endPoint, connectNow, bufferSize) {
+    ObjectDetetDemoServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize):
+        BasicDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {
     }
   public:
     void reconnectForObjectDetect(const String& imageName);

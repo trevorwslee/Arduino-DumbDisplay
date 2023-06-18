@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include <Arduino.h>
 
 #include "dumbdisplay.h"
 
@@ -50,6 +50,7 @@
 //#define DEBUG_ECHO_FEEDBACK
 //#define DEBUG_SHOW_FEEDBACK
 //#define DEBUG_TUNNEL_RESPONSE
+//#define DEBUG_MISSING_ENDPOINT
 
 
 //#define SUPPORT_LONG_PRESS_FEEDBACK
@@ -1060,11 +1061,12 @@ void _PreDeleteLayer(DDLayer* pLayer) {
 int _AllocTid() {
   return _AllocLid();
 }
-void _PostCreateTunnel(DDTunnel* pTunnel) {
+void _PostCreateTunnel(DDTunnel* pTunnel, bool connectNow) {
 #ifdef STORE_LAYERS  
   int8_t lid = _LayerIdToLid(pTunnel->getTunnelId());
   _DDLayerArray[lid] = pTunnel;
 #endif
+  pTunnel->afterConstruct(connectNow);
 }
 void _PreDeleteTunnel(DDTunnel* pTunnel) {
 #ifdef STORE_LAYERS  
@@ -1217,6 +1219,49 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
   Serial.println(command);
 #endif        
 }  
+void __SendComment(const char* comment, bool isError = false) {
+  _WOIO->print("//");
+  if (isError) {
+    _WOIO->print("X");
+  }
+  _WOIO->print(" ");
+  _WOIO->print(comment);
+  _WOIO->print("\n");
+  if (FLUSH_AFTER_SENT_COMMAND) {
+    _WOIO->flush();
+  }
+  if (YIELD_AFTER_SEND_COMMAND) {
+    yield();
+  }
+}
+#ifdef DEBUG_MISSING_ENDPOINT  
+void __SendComment(const String& comment, bool isError = false) {
+  Serial.print("//");
+  if (isError) {
+    Serial.print("X");
+  }
+  Serial.print(" <<");
+  // Serial.print(String(comment.length()).c_str());
+  // Serial.print("/");
+  Serial.print(comment.length());
+  Serial.print(">> ");
+  int len = comment.length();
+  for (int i = 0; i < len; i++) {
+    _WOIO->write(comment.charAt(i));
+  }
+  _WOIO->print(" --\n");
+  if (FLUSH_AFTER_SENT_COMMAND) {
+    _WOIO->flush();
+  }
+  if (YIELD_AFTER_SEND_COMMAND) {
+    yield();
+  }
+}
+#else
+inline void __SendComment(const String& comment, bool isError = false) {
+  __SendComment(comment.c_str(), isError);
+}
+#endif  
 void _HandleFeedback();
 void _SendCommand(const String& layerId, const char* command, const String* pParam1 = NULL, const String* pParam2 = NULL, const String* pParam3 = NULL, const String* pParam4 = NULL, const String* pParam5 = NULL, const String* pParam6 = NULL, const String* pParam7 = NULL, const String* pParam8 = NULL, const String* pParam9 = NULL) {
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
@@ -2408,8 +2453,8 @@ void TerminalDDLayer::println(const String& val) {
 // }
 
 #ifdef SUPPORT_TUNNEL
-DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow/*, int8_t bufferSize*/):
-  /*DDObject(DD_OBJECT_TYPE_TUNNEL), */type(type), tunnelId(String(tunnelId)), params(params), endPoint(endPoint) {
+DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& paramsParam, const String& endPointParam/*, bool connectNow*/):
+  /*DDObject(DD_OBJECT_TYPE_TUNNEL), */type(type), tunnelId(String(tunnelId)), endPoint(endPointParam), params(paramsParam) {
     this->objectType = DD_OBJECT_TYPE_TUNNEL;
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
@@ -2417,6 +2462,29 @@ DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& params, co
   // this->validArrayIdx = 0;
 //  this->done = false;
   this->done = true;
+  // if (connectNow) {
+  //   reconnect();
+  // }
+// #ifdef DEBUG_MISSING_ENDPOINT  
+//     if (this->endPoint.c_str() == NULL) {
+//       __SendComment("XXXXX");
+//     }
+//   __SendComment("ConstructEP!!! aaa");
+//   __SendComment(this->endPoint);
+//   __SendComment("ConstructEP!!! bbb");
+//   __SendComment(endPointParam);
+//   __SendComment("ConstructEP!!! ccc");
+// #endif
+}
+void DDTunnel::afterConstruct(bool connectNow) {
+// #ifdef DEBUG_MISSING_ENDPOINT  
+// __SendComment("Before!!!");
+// //__SendComment("==> https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png");
+// __SendComment(endPoint);
+// //__SendComment(("AfterConstructEP -- " + endPoint).c_str());
+// //__SendComment("AfterConstructEP -- " + String(endPoint.length()));
+// __SendComment("After!!!");
+// #endif
   if (connectNow) {
     reconnect();
   }
@@ -2429,6 +2497,16 @@ DDTunnel::~DDTunnel() {
   //delete this->dataArray;
 } 
 void DDTunnel::reconnect() {
+  if (true) {
+    if (endPoint.c_str() == NULL) {
+      //__SendComment("DDTunnel::reconnect() - invalid tunnel endpoint", true);
+      __SendComment("invalid tunnel endpoint", true);
+      return;
+    }
+  }
+#ifdef DEBUG_MISSING_ENDPOINT  
+_sendCommand0("", ("// EP -- " + endPoint).c_str());
+#endif
   if (endPoint != "") {
     //nextArrayIdx = 0;
     //validArrayIdx = 0;
@@ -2542,8 +2620,8 @@ void DDTunnel::handleInput(const String& data, bool final) {
     this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
 }
-DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint, bool connectNow, int8_t bufferSize):
-  DDTunnel(type, tunnelId, params, endPoint, connectNow/*, bufferSize*/) {
+DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize):
+  DDTunnel(type, tunnelId, params, endPoint/*, connectNow, bufferSize*/) {
   bufferSize = bufferSize + 1;  // need one more
   this->arraySize = bufferSize;
   this->dataArray = new String[bufferSize];
@@ -2877,6 +2955,12 @@ void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
 }
 void DumbDisplay::configAutoPin(const String& layoutSpec) {
   _Connect();
+  if (true) {
+    if (layoutSpec.c_str() == NULL) {
+      __SendComment("invalid autopin config", true);
+      return;
+    }
+  }
   _sendCommand1("", "CFGAP", layoutSpec);
 }
 void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
@@ -3214,8 +3298,8 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool conne
   // if (connectNow) {
   //   _sendSpecialCommand("lt", tunnelId, "connect", "ddbasic@" + endPoint);
   // }
-  BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", tid, "", endPoint, connectNow, bufferSize);
-  _PostCreateTunnel(pTunnel);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", tid, "", endPoint/*, connectNow*/, bufferSize);
+  _PostCreateTunnel(pTunnel, connectNow);
   return pTunnel;
 }
 JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connectNow, int8_t bufferSize) {
@@ -3224,15 +3308,15 @@ JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connect
   // if (connectNow) {
   //   _sendSpecialCommand("lt", tunnelId, "connect", "ddsimplejson@" + endPoint);
   // }
-  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, "", endPoint, connectNow, bufferSize);
-  _PostCreateTunnel(pTunnel);
+  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, "", endPoint/*, connectNow*/, bufferSize);
+  _PostCreateTunnel(pTunnel, connectNow);
   return pTunnel;
 }
 JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, const String& fieldNames, bool connectNow, int8_t bufferSize) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, fieldNames, endPoint, connectNow, bufferSize);
-  _PostCreateTunnel(pTunnel);
+  JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, fieldNames, endPoint/*, connectNow*/, bufferSize);
+  _PostCreateTunnel(pTunnel, connectNow);
   return pTunnel;
 }
 SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload) {
@@ -3242,23 +3326,26 @@ SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoin
   if (!redownload) {
     params = params + ",NRDL";
   }
-  SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, params, endPoint, true, 1);
-  _PostCreateTunnel(pTunnel);
+#ifdef DEBUG_MISSING_ENDPOINT  
+_sendCommand0("", ("// CreateEP -- " + endPoint).c_str());
+#endif
+  SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, params, endPoint/*, true*/, 1);
+  _PostCreateTunnel(pTunnel, true);
   return pTunnel;
 }
 BasicDDTunnel* DumbDisplay::createDateTimeServiceTunnel() {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  BasicDDTunnel* pTunnel = new BasicDDTunnel("datetimeservice", tid, "", "", false, 1);
-  _PostCreateTunnel(pTunnel);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel("datetimeservice", tid, "", ""/*, false*/, 1);
+  _PostCreateTunnel(pTunnel, false);
   return pTunnel;
 }
 
 GpsServiceDDTunnel* DumbDisplay::createGpsServiceTunnel() {
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  GpsServiceDDTunnel* pTunnel = new GpsServiceDDTunnel("gpsservice", tid, "", "", false, 1);
-  _PostCreateTunnel(pTunnel);
+  GpsServiceDDTunnel* pTunnel = new GpsServiceDDTunnel("gpsservice", tid, "", ""/*, false*/, 1);
+  _PostCreateTunnel(pTunnel, false);
   return pTunnel;
 }
 
@@ -3269,8 +3356,8 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
   if (scaleToWidth > 0 && scaleToHeight > 0) {
     params = String(scaleToWidth) + "," + String(scaleToHeight);
   }
-  ObjectDetetDemoServiceDDTunnel* pTunnel = new ObjectDetetDemoServiceDDTunnel("objectdetectdemo", tid, params, "", false, DD_TUNNEL_DEF_BUFFER_SIZE);
-  _PostCreateTunnel(pTunnel);
+  ObjectDetetDemoServiceDDTunnel* pTunnel = new ObjectDetetDemoServiceDDTunnel("objectdetectdemo", tid, params, ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
+  _PostCreateTunnel(pTunnel, false);
   return pTunnel;
 }
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
