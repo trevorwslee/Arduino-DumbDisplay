@@ -1227,6 +1227,8 @@ class DumbDisplay {
     /// @param height height of the display on which to render the layers
     /// @attention old file with the same name will be  replaced
     void capture(const String& imageFileName, int width, int height);
+    /// send "no-op" command
+    void sendNoOp();
     /// write out a comment to DD app
     void writeComment(const String& comment);
     /// make DD app sound a tone

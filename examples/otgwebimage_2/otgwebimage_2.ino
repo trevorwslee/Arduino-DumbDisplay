@@ -56,6 +56,14 @@ void loop() {
  
   bool refresh = false;
 
+  if (false) {
+    long now = millis();
+    long diff = now - lastShownMillis;
+    if (diff > 1000) {
+      dumbdisplay.sendNoOp();
+    }
+  }
+
   if (!allReady) {
     // not all ready ... if not refresh for a while (1000 ms), refresh
     long now = millis();
@@ -63,6 +71,7 @@ void loop() {
     if (diff > 1000) {
       locked = !locked;
       refresh = true;
+      dumbdisplay.writeComment("... waiting ...");
     }
   } else {
     // if all ready ... see if double clicked ... if so, refresh

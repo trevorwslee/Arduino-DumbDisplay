@@ -50,7 +50,9 @@
 //#define DEBUG_ECHO_FEEDBACK
 //#define DEBUG_SHOW_FEEDBACK
 //#define DEBUG_TUNNEL_RESPONSE
-//#define DEBUG_MISSING_ENDPOINT
+
+//#define DEBUG_MISSING_ENDPOINT_C
+//#define DEBUG_TUNNEL_RESPONSE_C
 
 
 //#define SUPPORT_LONG_PRESS_FEEDBACK
@@ -1234,7 +1236,7 @@ void __SendComment(const char* comment, bool isError = false) {
     yield();
   }
 }
-#ifdef DEBUG_MISSING_ENDPOINT  
+#ifdef DEBUG_MISSING_ENDPOINT_C  
 void __SendComment(const String& comment, bool isError = false) {
   Serial.print("//");
   if (isError) {
@@ -1543,6 +1545,9 @@ Serial.println("LT-command:[" + command + "]");
 #ifdef DEBUG_TUNNEL_RESPONSE                
 //Serial.println(String("// ") + (final ? "F" : "."));
 Serial.println("LT++++" + data + " - final:" + String(final));
+#endif
+#ifdef DEBUG_TUNNEL_RESPONSE_C                
+__SendComment("LT++++" + data + " - final:" + String(final));
 #endif
                 pTunnel->handleInput(data, final);
               }
@@ -2465,7 +2470,7 @@ DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& paramsPara
   // if (connectNow) {
   //   reconnect();
   // }
-// #ifdef DEBUG_MISSING_ENDPOINT  
+// #ifdef DEBUG_MISSING_ENDPOINT_C  
 //     if (this->endPoint.c_str() == NULL) {
 //       __SendComment("XXXXX");
 //     }
@@ -2477,7 +2482,7 @@ DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& paramsPara
 // #endif
 }
 void DDTunnel::afterConstruct(bool connectNow) {
-// #ifdef DEBUG_MISSING_ENDPOINT  
+// #ifdef DEBUG_MISSING_ENDPOINT_C  
 // __SendComment("Before!!!");
 // //__SendComment("==> https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png");
 // __SendComment(endPoint);
@@ -2504,7 +2509,7 @@ void DDTunnel::reconnect() {
       return;
     }
   }
-#ifdef DEBUG_MISSING_ENDPOINT  
+#ifdef DEBUG_MISSING_ENDPOINT_C  
 _sendCommand0("", ("// EP -- " + endPoint).c_str());
 #endif
   if (endPoint != "") {
@@ -2581,6 +2586,9 @@ bool DDTunnel::_eof() {
 #ifdef DEBUG_TUNNEL_RESPONSE
 Serial.println("_EOF: DONE");
 #endif                
+#ifdef DEBUG_TUNNEL_RESPONSE_C                
+__SendComment("_EOF: DONE");
+#endif
       return true;
     }
     long diff = millis() - connectMillis;
@@ -2804,10 +2812,16 @@ Serial.println(fieldValue);
       if (fieldId == "result") {
         this->result = fieldValue == "ok" ? 1 : -1;
       }
+#ifdef DEBUG_TUNNEL_RESPONSE_C      
+__SendComment("GOT [" + fieldId + "] = [" + fieldValue + "] ==> result=" + this->result); 
+#endif    
     } else if (eof()) {
       // not quite expected
 #ifdef DEBUG_TUNNEL_RESPONSE      
 Serial.println("XXX EOF???");
+#endif
+#ifdef DEBUG_TUNNEL_RESPONSE_C      
+__SendComment("XXX EOF???");
 #endif
       this->result = -1;
     }
@@ -3143,6 +3157,9 @@ void DumbDisplay::backgroundColor(const String& color) {
   _Connect();
   _sendCommand1("", "BGC", color);
 }
+void DumbDisplay::sendNoOp() {
+    _sendCommand0("", C_KAL);
+}
 void DumbDisplay::writeComment(const String& comment) {
   _Connect();
   //_sendCommand0("", ("// " + comment).c_str());
@@ -3326,7 +3343,7 @@ SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoin
   if (!redownload) {
     params = params + ",NRDL";
   }
-#ifdef DEBUG_MISSING_ENDPOINT  
+#ifdef DEBUG_MISSING_ENDPOINT_C  
 _sendCommand0("", ("// CreateEP -- " + endPoint).c_str());
 #endif
   SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, params, endPoint/*, true*/, 1);
