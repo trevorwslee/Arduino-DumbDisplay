@@ -1045,7 +1045,6 @@ class DDDebugInterface {
 };
 
 
-/// @struct DDPassiveConnectStatus
 /// Struct for the status values of calling DumbDisplay::connectPassive()
 struct DDConnectPassiveStatus {
   /// connection made or not -- same as the return value of DumbDisplay::connectPassive() 
@@ -1056,16 +1055,16 @@ struct DDConnectPassiveStatus {
   bool reconnecting;
 };
 
-// EXPERIMENTAL
-struct DDSavedConnectPassiveState {
-  int initialized;
-  short step;
-  long startMillis;
-  long lastCallMillis;
-  bool firstCall;
-  long hsStartMillis;
-  long hsNextMillis;
-};
+// /// EXPERIMENTAL
+// struct DDSavedConnectPassiveState {
+//   int initialized;
+//   short step;
+//   long startMillis;
+//   long lastCallMillis;
+//   bool firstCall;
+//   long hsStartMillis;
+//   long hsNextMillis;
+// };
 
 
 
@@ -1307,10 +1306,10 @@ class DumbDisplay {
     /// @return connection made or not (note that even if connection lost and requires reconnecting, it is still considered connected)
     /// @since 0.9.8-r1
     bool connectPassive(DDConnectPassiveStatus* pStatus = NULL);
-    // EXPERIMENTAL
-    void savePassiveConnectState(DDSavedConnectPassiveState& state);
-    // EXPERIMENTAL
-    void restorePassiveConnectState(DDSavedConnectPassiveState& state);
+    // // EXPERIMENTAL
+    // void savePassiveConnectState(DDSavedConnectPassiveState& state);
+    // // EXPERIMENTAL
+    // void restorePassiveConnectState(DDSavedConnectPassiveState& state);
     /// EXPERIMENTAL; "master reset" to be just like uninitialized;
     /// "master reset" will:
     /// . disconnect from DD app (if connected)

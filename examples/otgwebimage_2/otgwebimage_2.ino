@@ -56,14 +56,6 @@ void loop() {
  
   bool refresh = false;
 
-  if (false) {
-    long now = millis();
-    long diff = now - lastShownMillis;
-    if (diff > 1000) {
-      dumbdisplay.sendNoOp();
-    }
-  }
-
   if (!allReady) {
     // not all ready ... if not refresh for a while (1000 ms), refresh
     long now = millis();
@@ -87,7 +79,12 @@ void loop() {
     return;
   }
 
-  allReady = lockedResult == 1 && unlockedResult == 1;
+  if (!allReady) {
+    allReady = lockedResult == 1 && unlockedResult == 1;
+    if (allReady) {
+      dumbdisplay.writeComment("... READY");
+    }
+  }
 
   int result;
   const char* imageFileName;

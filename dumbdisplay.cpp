@@ -3451,33 +3451,33 @@ bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {
   return false;
 #endif  
 }
-void DumbDisplay::savePassiveConnectState(DDSavedConnectPassiveState& state) {
-  state.initialized = 12345;
-  state.step = _C_state.step;
-  state.startMillis =_C_state.startMillis;
-  state.lastCallMillis = _C_state.lastCallMillis;
-  state.firstCall = _C_state.firstCall;
-  state.hsStartMillis = _C_state.hsStartMillis;
-  state.hsNextMillis = _C_state.hsNextMillis;
-}
-void DumbDisplay::restorePassiveConnectState(DDSavedConnectPassiveState& state) {
-  if (state.initialized == 12345) {
-    if (true) {
-      state.step = 0;
-    }
-    _C_state.step = state.step;
-    _C_state.startMillis = state.startMillis;
-    _C_state.lastCallMillis = state.lastCallMillis;
-    _C_state.firstCall = state.firstCall;
-    _C_state.hsStartMillis = state.hsStartMillis;
-    _C_state.hsNextMillis = state.hsNextMillis;
-    // if (state.step >= _C_IOPROXY_SET) {
-    //   __C_SetupIOProxy();
-    // }
-// Serial.print("-----");
-// Serial.println(state.step);
-  }
-}
+// void DumbDisplay::savePassiveConnectState(DDSavedConnectPassiveState& state) {
+//   state.initialized = 12345;
+//   state.step = _C_state.step;
+//   state.startMillis =_C_state.startMillis;
+//   state.lastCallMillis = _C_state.lastCallMillis;
+//   state.firstCall = _C_state.firstCall;
+//   state.hsStartMillis = _C_state.hsStartMillis;
+//   state.hsNextMillis = _C_state.hsNextMillis;
+// }
+// void DumbDisplay::restorePassiveConnectState(DDSavedConnectPassiveState& state) {
+//   if (state.initialized == 12345) {
+//     if (true) {
+//       state.step = 0;
+//     }
+//     _C_state.step = state.step;
+//     _C_state.startMillis = state.startMillis;
+//     _C_state.lastCallMillis = state.lastCallMillis;
+//     _C_state.firstCall = state.firstCall;
+//     _C_state.hsStartMillis = state.hsStartMillis;
+//     _C_state.hsNextMillis = state.hsNextMillis;
+//     // if (state.step >= _C_IOPROXY_SET) {
+//     //   __C_SetupIOProxy();
+//     // }
+// // Serial.print("-----");
+// // Serial.println(state.step);
+//   }
+// }
 // bool DumbDisplay::connectPassive(bool* pReconnecting) {
 // #ifdef SUPPORT_PASSIVE
 //   bool connected = _Connect(true);
