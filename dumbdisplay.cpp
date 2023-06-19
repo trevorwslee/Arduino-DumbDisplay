@@ -29,11 +29,12 @@
 //   #define PGM_READ_BYTERS
 // #endif
 
+
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
-#define TL_BUFFER_DATA_LEN 16
+  #define TL_BUFFER_DATA_LEN 16
 #else
-#define TL_BUFFER_DATA_LEN 128
-#define SUPPORT_USE_WOIO
+  #define TL_BUFFER_DATA_LEN 128
+  #define SUPPORT_USE_WOIO
 #endif
 
 
@@ -77,8 +78,8 @@
 //#define RECONNECTED_RESET_KEEP_ALIVE
 
 
-// not flush seems to be a bit better for Serial (lost data)
-#define FLUSH_AFTER_SENT_COMMAND false
+// not flush seems to be a bit better for Serial (lost data) ... BUT ... seems require to flush for STM32 ... PASSIVE/blink/blink.ino
+#define FLUSH_AFTER_SENT_COMMAND true
 #define YIELD_AFTER_SEND_COMMAND false
 #define YIELD_AFTER_HANDLE_FEEDBACK true
 

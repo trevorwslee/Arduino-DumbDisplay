@@ -1049,9 +1049,9 @@ class DDDebugInterface {
 struct DDConnectPassiveStatus {
   /// connection made or not -- same as the return value of DumbDisplay::connectPassive() 
   bool connected;
-  /// when not connected; starting to establish connection by sending hand-shake messages
+  /// connecting: when not connected; starting to establish connection by sending hand-shake messages
   bool connecting;
-  /// when connected; detected reconnecting (after lost of connection) 
+  /// reconnecting: when connected; detected reconnecting (after lost of connection) 
   bool reconnecting;
 };
 
