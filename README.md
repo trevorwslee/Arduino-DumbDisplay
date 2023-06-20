@@ -1254,7 +1254,7 @@ The automatic pinning of layers is the easier. You only need to call the DumbDis
 ```
 `DD_AP_HORI_2()` / `DD_AP_VERT_2()` macro pins 2 layers side by side horizontally / vertically. It accepts 2 arguments, with each one either a layer id, or another **DD_AP_XXX** macro. 
 
-The different **DD_AP_XXX* macros are
+The different **DD_AP_XXX** macros are
 * **DD_AP_HORI_`N`()** : Horizontally layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_HORI** layouts all layers horizontally
 * **DD_AP_VERT_`N`()** : Vertically layout `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_VERT** layouts all layers vertically
 * **DD_AP_STACK_`N`()** : Stack `N` layers (ids) or nested **DD_AP_XXX**; with **DD_AP_STACK** stacks all layers
@@ -1396,7 +1396,7 @@ To do this, you simply need to enclose the "layer setup" code with the record/pl
 
 More precisely, you will need to use the following methods of DumbDisplay object:
 * `dumbdisplay.recordLayerSetupCommands()` -- start recording "setup" commands (freeze DumbDisplay screen)
-* `dumbdisplay.playbackLayerSetupCommands("<setup-id>")` -- end recording "setup" commands and playback the recorded "setup" commands. **The argument `"<setup-id>"`, is the name for DumbDisplay app to persist the "setup" commands. When reconnect, those "setup" commands will be played back automatically.**
+* `dumbdisplay.playbackLayerSetupCommands("<setup-id>")` -- end recording "setup" commands and playback the recorded "setup" commands. **The argument `"<setup-id>"`, is the name for DumbDisplay app to identify and persist the "setup" commands. When reconnect, those "setup" commands will be played back automatically.**
 
 E.g.
 ```
@@ -1521,7 +1521,7 @@ void setup() {
 
 Please note that there are two situations DumbDisplay are considered "idle":
 1) When initially wait for connection to DumbDisplay app.
-2) When trying to reconnect after lost of connection DumbDisplay app. 
+2) When trying to reconnect after lost of connection with DumbDisplay app. 
 
 
 For reference, you may want to refer to the example as shown by the video [**ESP32 Deep Sleep Experiment using Arduino with DumbDisplay**](https://www.youtube.com/watch?v=a61hRLIaqy8) 
@@ -1594,7 +1594,7 @@ You may also want to watch the YouTube Video ESP32-CAM Experiment -- [**Capture 
 A single-bit bitmap image is a common image format for displaying image in Arduino environment. And here in DumbDisplay, such 
 image is referred to as pixel image (as opposed to full colored image).
 
-To certain extend, DumbDisplay supports displaying these pixel images to graphical image as well. 
+To certain extend, DumbDisplay supports displaying these pixel images to graphical layer as well. 
 Two steps are involves:
 
 * The pixel image is transferred to DumbDisplay at initialization time, like
@@ -1616,6 +1616,10 @@ const unsigned char phoneBitmap [] PROGMEM = {
     ...
   }
 ```
+Notes:
+* If *PROGMEM* is used to mark the byte array, `PgmCopyBytes()` reads the bytes view `pgm_read_byte`
+* You you will need to `#include "pgm_util.h"` to use `PgmCopyBytes()`
+
 Under the hook, the pixel image is actually converted to, say in this case, PNG format.
 * The cached pixel image is displayed to graphical layer as needed, like
 ```
@@ -1820,8 +1824,8 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 
 
 * You can drag the bottom left/right side of the DumbDisplay canvas to have it resized.
-* You can pinch-zoom the DumbDisplay canvas to resize it as well, if `Zoom Mode` is set to *ZOOM*. BTW, with the experimental `Zoom Mode` set to *ZOOM*, pinch-zooming the DumbDisplay canvas will zoom it (the layers on it). When it is zoomed, it will not produce any "feedback". You double-click the canvas to return it to normal size.
-* You may want to set `Zoom Mode` to *DISABLED*. If disabled, action like moving virtual joystick "feedback" can be simultaneous with other "feedback" like clicking.
+* You can pinch-zoom the DumbDisplay canvas to resize it as well, if `Zoom Mode` is set to *ZOOM*. BTW, with `Zoom Mode` set to *ZOOM*, pinch-zooming the DumbDisplay canvas will zoom it (the layers). When it is zoomed, it will not produce any "feedback". You double-click the canvas to return it to normal size.
+* You may want to set `Zoom Mode` to *DISABLED*. If disabled, action like moving virtual joystick "feedback" can be simultaneous with other "feedback" like clicking (like using both hands for dragging and clicking).
 * You can long press the terminal view to disable it's autoscrolling. BTW, terminal view has the `Keep Lines` limit, which you set with the `Setting` page. And this `Keep Lines` can certainly affect how much memory DumbDisplay will be used, should you have so much lines to be display by the terminal view.
 
 
