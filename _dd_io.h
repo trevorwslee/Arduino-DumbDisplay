@@ -54,14 +54,20 @@ class DDInputOutput {
       }
       return true;
     }
+    virtual bool canConnectPassive() {
+      return true;
+    }
     virtual bool canUseBuffer() {
       return false;
     }
   public:  
-    bool isSerial() {
+    inline bool isSerial() {
       return !backupBySerial && setupForSerial;
     }
-    bool isBackupBySerial() {
+    inline bool isForSerial() {
+      return setupForSerial;  // since 2023-06-03
+    }
+    inline bool isBackupBySerial() {
       return backupBySerial;
     }
   protected:

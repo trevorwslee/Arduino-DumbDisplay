@@ -50,6 +50,9 @@ class DDBLESerialIO: public DDInputOutput {
                   unsigned long serialBaud = DD_SERIAL_BAUD):
                   DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->deviceName = deviceName;
+      if (!enableSerial) {
+        Serial.begin(serialBaud);
+      }
     }
     bool available() {
       return pCallbacks->available();
@@ -87,6 +90,9 @@ class DDBLESerialIO: public DDInputOutput {
 #endif      
       }
     }  
+    bool canConnectPassive() {
+      return false;
+    }
     bool canUseBuffer() {
       return false;
     }

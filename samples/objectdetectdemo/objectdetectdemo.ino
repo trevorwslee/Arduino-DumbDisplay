@@ -1,10 +1,11 @@
 
 #include "Arduino.h"
 
-#if defined(ESP32) 
-  // ESP32 board ... use Bluetooth with name "BT32"
+// if want Bluetooth, uncomment the following line
+// #define BLUETOOTH "ESP32BT"
+#if defined(BLUETOOTH) 
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO("BT32", true, 115200));
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true, 115200));
 #else
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput(115200));
@@ -45,6 +46,7 @@ const char* getDownloadImageURL() {
 void loop() {
     // set the URL to download web image ... using a bit different size so that web image will be different 
     String url = getDownloadImageURL();
+    //String url = "https://placekitten.com/640/480";
     web_image_tunnel->reconnectTo(url);
 
     while (true) {

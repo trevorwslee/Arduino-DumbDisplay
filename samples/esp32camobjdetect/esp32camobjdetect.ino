@@ -103,6 +103,8 @@ const int ledFreq = 5000;                            // PWM settings
 const int ledChannel = 15;                           // camera uses timer1
 const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
 
+
+
 #if defined(FOR_LILYGO_TSIMCAM)
 
 

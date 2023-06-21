@@ -3,6 +3,29 @@
 
 
 
+class ToSerialDDDebugInterface: public DDDebugInterface {
+  public:
+    virtual void logConnectionState(DDDebugConnectionState connectionState) {
+      switch (connectionState) {
+        case DDDebugConnectionState::DEBUG_NOT_CONNECTED:
+          Serial.println("* DebugConnection: not connected");
+          break;
+        case DDDebugConnectionState::DEBUG_CONNECTING:
+          Serial.println("* DebugConnection: connecting");
+          break;
+        case DDDebugConnectionState::DEBUG_CONNECTED:
+          Serial.println("* DebugConnection: connected");
+          break;
+        case DDDebugConnectionState::DEBUG_RECONNECTING:
+          Serial.println("* DebugConnection: reconnecting");
+          break;
+        case DDDebugConnectionState::DEBUG_RECONNECTED:
+          Serial.println("* DebugConnection: reconnected");
+          break;
+      }
+    }
+};
+
 /// the same usage as standard delay(), but it gives DD a chance to handle "feedbacks"
 void DDDelay(unsigned long ms);
 /// give DD a chance to handle "feedbacks"
@@ -311,15 +334,15 @@ class DDLayoutHelper {
     inline void configPinFrame(int xUnitCount = 100, int yUnitCount = 100) {
       dumbdisplay.configPinFrame(xUnitCount, yUnitCount);
     }
-    /// basically DumbDisplay::configPinFrame()
+    /// basically DumbDisplay::pinLayer()
     inline void pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
       dumbdisplay.pinLayer(pLayer, uLeft, uTop, uWidth, uHeight, align);
     }
-    /// basically DumbDisplay::configPinFrame()
+    /// basically DumbDisplay::pinAutoPinLayers()
     inline void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
       dumbdisplay.pinAutoPinLayers(layoutSpec, uLeft, uTop, uWidth, uHeight, align);
     }
-    /// basically DumbDisplay::configPinFrame()
+    /// basically DumbDisplay::setIdleCallback()
     inline void setIdleCallback(DDIdleCallback idleCallback) {
       dumbdisplay.setIdleCallback(idleCallback);
     }

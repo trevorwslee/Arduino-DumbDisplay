@@ -199,8 +199,10 @@ void setup() {
 
 
   // set "idle callback restart ESP32 if idle (i.e. disconnected)
-  dumbdisplay.setIdleCallback([](long idleForMillis) {
-    ESP.restart(); 
+  dumbdisplay.setIdleCallback([](long idleForMillis, DDIdleConnectionState connectionState) {
+    if (connectionState == DDIdleConnectionState::IDLE_RECONNECTING) {
+      ESP.restart(); 
+    }
   });
 
   

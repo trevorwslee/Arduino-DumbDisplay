@@ -3,7 +3,7 @@
 // #define BLUETOOTH "ESP32BT"
 #if defined(BLUETOOTH)
   #include "esp32dumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true));
 #elif defined(WIFI_SSID)
   #include "wifidumbdisplay.h"
   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));

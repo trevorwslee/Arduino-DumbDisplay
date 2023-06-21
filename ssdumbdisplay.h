@@ -13,7 +13,7 @@ class DDSoftwareSerialIO: public DDInputOutput {
     /* - baud -- default to DUMBDISPLAY_BAUD */
     /* - enableSerial: enable Serial as well or not (if enabled, connecting via USB will also work) */
     /* - serialBaud: Serial baud rate (if enableSerial) */
-    DDSoftwareSerialIO(SoftwareSerial* pSS, unsigned long baud,
+    DDSoftwareSerialIO(SoftwareSerial* pSS, unsigned long baud = DD_SERIAL_BAUD,
                        bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD):
                        DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->baud = baud;
@@ -39,11 +39,20 @@ class DDSoftwareSerialIO: public DDInputOutput {
     }
     bool preConnect(bool firstCall) {
       DDInputOutput::preConnect(firstCall);
+      if (!setupForSerial) {
+        Serial.begin(serialBaud);
+      }
       pSS->begin(baud/*DUMBDISPLAY_BAUD*/);
       return true;
     }
     void flush() {
       pSS->flush();
+    }
+    bool canConnectPassive() {
+      return true;
+    }
+    bool canUseBuffer() {
+      return false;
     }
   private:
     unsigned long baud;

@@ -3,9 +3,13 @@
 
 #define DD_FEEDBACK_BUFFER_SIZE 4
 
+/// @struct DDFeedbackType
+/// @brief
+/// The enum indicating the type of "feedback". See DDFeedback
 enum DDFeedbackType { CLICK, LONGPRESS, DOUBLECLICK, MOVE };  // DOUBLECLICK needs special option for DumbDisplay
 
-
+/// @struct DDFeedback
+/// @brief
 /// The struct that captures info about "feedback". See DDLayer::enableFeedback()
 struct DDFeedback {
   /// type of the "feedback"
@@ -18,7 +22,7 @@ struct DDFeedback {
   String text;
 };
 
-/// Class for internal use to track "feedback".
+/// Class for internal use to track "feedbacks".
 class DDFeedbackManager {
   public: 
     DDFeedbackManager(int8_t bufferSize);

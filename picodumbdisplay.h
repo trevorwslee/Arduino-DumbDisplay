@@ -13,13 +13,17 @@
 UART Serial2(DD_4_PICO_TX, DD_4_PICO_RX, 0, 0);
 
 
+/// Subclass of DDInputOutput
 class DDPicoUart1IO: public DDInputOutput {
   public:
     /* using PICO Uart1 */
-    DDPicoUart1IO(unsigned long baud,
+    DDPicoUart1IO(unsigned long baud = DD_SERIAL_BAUD,
                   bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD):
                   DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->baud = baud;
+      // if (!enableSerial) {
+      //   Serial.begin(serialBaud);  // not a good idea to do it here
+      // }
     }
     bool available() {
       return Serial2.available();
@@ -44,6 +48,9 @@ class DDPicoUart1IO: public DDInputOutput {
       return true;
     }
     void flush() {
+    }
+    bool canConnectPassive() {
+      return true;
     }
     bool canUseBuffer() {
       return true;

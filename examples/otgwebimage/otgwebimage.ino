@@ -30,9 +30,9 @@ void setup() {
   // create a graphical layer for drawing the web images to
   graphical = dumbdisplay.createGraphicalLayer(200, 300);
 
-  // create tunnels for downloading web images ... and save to your phone
-  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", "lock-unlocked.png");
-  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", "lock-locked.png");
+  // create tunnels for downloading web images ... and save to your phone ... optionally: in order to send less duplicated data (in URL), create a map entry for R
+  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots}/lock-unlocked.png", "lock-unlocked.png");
+  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://${R}/lock-locked.png", "lock-locked.png");
 }
 
 bool locked = false;

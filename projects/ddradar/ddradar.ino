@@ -257,8 +257,10 @@ void setup() {
 
   layoutHelper.finishInitializeLayout("ddradar");
 
-  layoutHelper.setIdleCallback([](long idleForMillis) {
-    isRunning = false;  // if idle, e.g. disconnected, stop whatever
+  layoutHelper.setIdleCallback([](long idleForMillis, DDIdleConnectionState connectionState) {
+    if (connectionState == DDIdleConnectionState::IDLE_RECONNECTING) {
+      isRunning = false;
+    }
   });
 
 #ifndef SERVO

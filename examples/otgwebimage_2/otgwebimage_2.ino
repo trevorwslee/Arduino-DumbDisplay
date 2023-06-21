@@ -63,6 +63,7 @@ void loop() {
     if (diff > 1000) {
       locked = !locked;
       refresh = true;
+      dumbdisplay.writeComment("... waiting ...");
     }
   } else {
     // if all ready ... see if double clicked ... if so, refresh
@@ -78,7 +79,12 @@ void loop() {
     return;
   }
 
-  allReady = lockedResult == 1 && unlockedResult == 1;
+  if (!allReady) {
+    allReady = lockedResult == 1 && unlockedResult == 1;
+    if (allReady) {
+      dumbdisplay.writeComment("... READY");
+    }
+  }
 
   int result;
   const char* imageFileName;

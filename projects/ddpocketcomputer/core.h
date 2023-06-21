@@ -22,7 +22,7 @@ void resetDisplayState() {
   dms = -1;
   dss = -1;
 }
-boolean checkDisplayState(int8_t mainState, int32_t subState) {
+bool checkDisplayState(int8_t mainState, int32_t subState) {
   int8_t oridms = dms;
   int32_t oridss = dss;
   dms = mainState;
