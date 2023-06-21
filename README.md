@@ -896,9 +896,10 @@ void setup() {
   // create a graphical layer for drawing the web images to
   graphical = dumbdisplay.createGraphicalLayer(200, 300);
 
-  // create tunnels for downloading web images ... and save to your phone
-  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", "lock-unlocked.png");
-  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png", "lock-locked.png");
+
+  // create tunnels for downloading web images ... and save to your phone ... optionally: in order to send less duplicated data (in URL), create a map entry for R
+  tunnel_unlocked = dumbdisplay.createImageDownloadTunnel("https://${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots}/lock-unlocked.png", "lock-unlocked.png");
+  tunnel_locked = dumbdisplay.createImageDownloadTunnel("https://${R}/lock-locked.png", "lock-locked.png");
 }
 
 bool locked = false;
@@ -934,7 +935,17 @@ void loop() {
   delay(1000);
 }
 ```
+The original URLs to download the images should have been
+* ```https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png```
+* ```https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png```
 
+However, in the sketch, the URLs are encoded as
+* ```https://${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots}/lock-unlocked.png```
+* ```https://${R}/lock-locked.png```
+
+in order to reduce the total amount of data to send to DumbDisplay app. This encoding is a better choice for microcontroller like Arduino UNO which is not as powerful as others like ESP32.
+
+Basically, ```${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots}``` not only specify that portion of URL to be ```raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots```. It also tells to set up a mapping from ```R``` to ```raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots``` as well. As a result ```https://${R}/lock-locked.png``` rewrites to ```https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png```.
 
 
 # Features
@@ -1813,6 +1824,8 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput());
   ```
+
+  Note that include header files like `ssdumbdisplay.h` actually in turn includes `dumbdisplay.h`
 
 * In fact, showing commands on DumbDisplay app may slow things down, even makes your DumbDisplay app non-responsive (like freeze), especially when commands are sent in fast succession. Hence, suggest to disable DumbDisplay app's `Show Commands` option.
 
