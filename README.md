@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (0.9.8-r1)
+# DumbDisplay Arduino Library (v0.9.8-r1)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -936,16 +936,16 @@ void loop() {
 }
 ```
 The original URLs to download the images should have been
-* ```https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png```
-* ```https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png```
+* `https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png`
+* `https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png`
 
 However, in the sketch, the URLs are encoded as
-* ```https://${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots}/lock-unlocked.png```
-* ```https://${R}/lock-locked.png```
+* `https://${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots}/lock-unlocked.png`
+* `https://${R}/lock-locked.png`
 
 in order to reduce the total amount of data to send to DumbDisplay app. This encoding is a better choice for microcontroller like Arduino UNO which is not as powerful as others like ESP32.
 
-Basically, ```${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots}``` not only specify that portion of URL to be ```raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots```. It also tells to set up a mapping from ```R``` to ```raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots``` as well. As a result ```https://${R}/lock-locked.png``` rewrites to ```https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png```.
+Basically, `${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots}` not only specifies that portion of URL to be `raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots`. It also tells to set up a mapping from `R` to `raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots` as well. As a result `https://${R}/lock-locked.png` rewrites to `https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png`.
 
 
 # Features
@@ -1840,6 +1840,7 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 * You can pinch-zoom the DumbDisplay canvas to resize it as well, if `Zoom Mode` is set to *ZOOM*. BTW, with `Zoom Mode` set to *ZOOM*, pinch-zooming the DumbDisplay canvas will zoom it (the layers). When it is zoomed, it will not produce any "feedback". You double-click the canvas to return it to normal size.
 * You may want to set `Zoom Mode` to *DISABLED*. If disabled, action like moving virtual joystick "feedback" can be simultaneous with other "feedback" like clicking (like using both hands for dragging and clicking).
 * You can long press the terminal view to disable it's autoscrolling. BTW, terminal view has the `Keep Lines` limit, which you set with the `Setting` page. And this `Keep Lines` can certainly affect how much memory DumbDisplay will be used, should you have so much lines to be display by the terminal view.
+* When DumbDisplay app is connected and is in the foreground, your phone will not go to sleep. If DumbDisplay is put to the background, connection will still be kept.
 
 
 
