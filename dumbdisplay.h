@@ -1038,10 +1038,19 @@ typedef void (*DDIdleCallback)(long idleForMillis, DDIdleConnectionState connect
 /// Type signature for callback function that will be called when connect version (counting up) changed. See DumbDisplay::setConnectVersionChangedCallback()
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
+
+/// @struct DDDebugConnectionState
+/// @brief
+/// See DDDebugInterface
 enum DDDebugConnectionState { DEBUG_NOT_CONNECTED, DEBUG_CONNECTING, DEBUG_CONNECTED, DEBUG_RECONNECTING, DEBUG_RECONNECTED };
+
+/// Base class for debug callback set by calling DumbDisplay::debugSetup()
 class DDDebugInterface {
   public:
+    /// See DDDebugConnectionState
     virtual void logConnectionState(DDDebugConnectionState connectionState) {}
+    /// @param state 1: start senging; 0: stop sending
+    virtual void logSendCommand(int state) {}
 };
 
 
@@ -1054,18 +1063,6 @@ struct DDConnectPassiveStatus {
   /// reconnecting: when connected; detected reconnecting (after lost of connection) 
   bool reconnecting;
 };
-
-// /// EXPERIMENTAL
-// struct DDSavedConnectPassiveState {
-//   int initialized;
-//   short step;
-//   long startMillis;
-//   long lastCallMillis;
-//   bool firstCall;
-//   long hsStartMillis;
-//   long hsNextMillis;
-// };
-
 
 
 
@@ -1324,6 +1321,8 @@ class DumbDisplay {
     // /// . DumbDisplay object will be just like at initial state
     // bool connectPassiveReset();
   public:
+    /// set debug use callback
+    /// @param debugInterface a concrete implementation of DDDebugInterface 
     void debugSetup(DDDebugInterface *debugInterface);
     void debugOnly(int i);
   private:

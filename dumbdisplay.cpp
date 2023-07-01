@@ -470,23 +470,6 @@ volatile bool _SendingCommand = false;
 volatile bool _HandlingFeedback = false;
 
 
-// void _Preconnect() {
-//   if (_Preconneced) {
-//     return;
-//   }
-// #ifdef DEBUG_WITH_LED
-//   int debugLedPin = _DebugLedPin;  
-//   if (debugLedPin != -1) {
-//     digitalWrite(debugLedPin, HIGH);
-//   }
-// #endif
-//   _IO->preConnect();
-// #ifdef DEBUG_WITH_LED
-//   if (debugLedPin != -1) {
-//     digitalWrite(debugLedPin, LOW);
-//   }
-// #endif
-// }
 
 #ifdef SUPPORT_PASSIVE
 
@@ -1270,6 +1253,9 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
   _SendingCommand = true;
 
+  if (_DebugInterface != NULL) {
+    _DebugInterface->logSendCommand(1);
+  }
 // #ifdef DEBUG_WITH_LED
 //   int debugLedPin = _DebugLedPin;
 //   if (debugLedPin != -1) {
@@ -1287,6 +1273,9 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   }
 #endif
 
+  if (_DebugInterface != NULL) {
+    _DebugInterface->logSendCommand(0);
+  }
 // #ifdef DEBUG_WITH_LED
 //   if (debugLedPin != -1) {
 //     digitalWrite(debugLedPin, LOW);
