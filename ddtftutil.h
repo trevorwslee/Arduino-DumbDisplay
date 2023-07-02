@@ -1,6 +1,6 @@
 
-#ifndef _dd_tft_io_h
-#define _dd_tft_io_h
+#ifndef _dd_tft_util_h
+#define _dd_tft_util_h
 
 #include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 //#include <SPI.h>
@@ -39,16 +39,16 @@ class TftDDDebugInterface: public DDDebugInterface {
         uint8_t textsize = tft.textsize;
         tft.setTextColor(TFT_RED, TFT_WHITE);
         tft.setTextSize(fontSize);
-        tft.drawString(state, x + 15, y, font);
+        tft.drawString(state, x + 16, y, font);
         tft.setTextColor(textcolor, textbgcolor);
         tft.setTextSize(textsize);
       }
     }
     virtual void logSendCommand(int state) {
-      tft.fillRect(x + 1, y + 1, x + 13, y + 13, TFT_SKYBLUE);
-      //if (state == 1) {
-        tft.fillCircle(x + 6, y + 6, 5, TFT_RED);
-      //}
+      tft.fillRect(x + 2, y + 2, x + 12, y + 12, TFT_WHITE);
+      if (state == 1) {
+        tft.fillCircle(x + 7, y + 7, 5, TFT_RED);
+      }
     }
   private:
     TFT_eSPI& tft;  
