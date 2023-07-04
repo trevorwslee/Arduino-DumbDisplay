@@ -34,14 +34,15 @@ class TftDDDebugInterface: public DDDebugInterface {
           break;
       }
       if (state != NULL) {
-        uint32_t textcolor = tft.textcolor;
-        uint32_t textbgcolor = tft.textbgcolor;
-        uint8_t textsize = tft.textsize;
-        tft.setTextColor(TFT_RED, TFT_WHITE);
-        tft.setTextSize(fontSize);
-        tft.drawString(state, x + 16, y, font);
-        tft.setTextColor(textcolor, textbgcolor);
-        tft.setTextSize(textsize);
+        showMsg(state, 16);
+        // uint32_t textcolor = tft.textcolor;
+        // uint32_t textbgcolor = tft.textbgcolor;
+        // uint8_t textsize = tft.textsize;
+        // tft.setTextColor(TFT_RED, TFT_WHITE);
+        // tft.setTextSize(fontSize);
+        // tft.drawString(state, x + 16, y, font);
+        // tft.setTextColor(textcolor, textbgcolor);
+        // tft.setTextSize(textsize);
       }
     }
     virtual void logSendCommand(int state) {
@@ -49,6 +50,20 @@ class TftDDDebugInterface: public DDDebugInterface {
       if (state == 1) {
         tft.fillCircle(x + 7, y + 7, 5, TFT_RED);
       }
+    }
+    virtual void logError(const String& errMsg) {
+        showMsg("Err", 80);
+    }
+  private:  
+    void showMsg(const char* msg, int xOff) {
+      uint32_t textcolor = tft.textcolor;
+      uint32_t textbgcolor = tft.textbgcolor;
+      uint8_t textsize = tft.textsize;
+      tft.setTextColor(TFT_RED, TFT_WHITE);
+      tft.setTextSize(fontSize);
+      tft.drawString(msg, x + xOff, y, font);
+      tft.setTextColor(textcolor, textbgcolor);
+      tft.setTextSize(textsize);
     }
   private:
     TFT_eSPI& tft;  

@@ -1206,6 +1206,11 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
 #endif        
 }  
 void __SendComment(const char* comment, bool isError = false) {
+  if (isError) {
+      if (_DebugInterface != NULL) {
+        _DebugInterface->logError(comment);
+      }
+  }
   _WOIO->print("//");
   if (isError) {
     _WOIO->print("X");

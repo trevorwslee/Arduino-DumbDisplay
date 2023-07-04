@@ -1,8 +1,6 @@
 #ifndef _dd_misc_h
 #define _dd_misc_h
 
-
-
 class ToSerialDDDebugInterface: public DDDebugInterface {
   public:
     virtual void logConnectionState(DDDebugConnectionState connectionState) {
@@ -24,6 +22,44 @@ class ToSerialDDDebugInterface: public DDDebugInterface {
           break;
       }
     }
+    virtual void logError(const String& errMsg) {
+      Serial.print("XXX Error: ");
+      Serial.println(errMsg);
+    }
+};
+class LedDDDebugInterface: public DDDebugInterface {
+  public:
+    LedDDDebugInterface(uint8_t ledPin) {
+      this->ledPin = ledPin;
+      pinMode(ledPin, OUTPUT);
+    }
+    virtual void logSendCommand(int state) {
+      digitalWrite(ledPin, state == 1 ? HIGH : LOW);
+    }
+  private:
+    uint8_t ledPin;
+};
+class CompositDDDebugIntreface: public DDDebugInterface {
+  public:
+    CompositDDDebugIntreface(DDDebugInterface* debug1, DDDebugInterface* debug2){
+      this->debug1 = debug1;
+      this->debug2 = debug2;
+    }
+    virtual void logConnectionState(DDDebugConnectionState connectionState) {
+      if (debug1 != NULL) debug1->logConnectionState(connectionState);
+      if (debug2 != NULL) debug2->logConnectionState(connectionState);
+    }
+    virtual void logSendCommand(int state) {
+      if (debug1 != NULL) debug1->logSendCommand(state);
+      if (debug2 != NULL) debug2->logSendCommand(state);
+    }
+    virtual void logError(const String& errMsg) {
+      if (debug1 != NULL) debug1->logError(errMsg);
+      if (debug2 != NULL) debug2->logError(errMsg);
+    }
+  private:
+    DDDebugInterface* debug1;
+    DDDebugInterface* debug2;    
 };
 
 /// the same usage as standard delay(), but it gives DD a chance to handle "feedbacks"

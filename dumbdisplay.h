@@ -1049,8 +1049,9 @@ class DDDebugInterface {
   public:
     /// See DDDebugConnectionState
     virtual void logConnectionState(DDDebugConnectionState connectionState) {}
-    /// @param state 1: start senging; 0: stop sending
+    /// @param state 1: start sending; 0: stop sending
     virtual void logSendCommand(int state) {}
+    virtual void logError(const String& errMsg) {}
 };
 
 

@@ -18,7 +18,7 @@ uint32_t clockBackgroundColor = 0;
 
 
 #define PIN_TFT_BL 4
-#define DEBUG
+#define DD_DEBUG
 
 
 /*
@@ -41,6 +41,7 @@ TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 
 //#define TFT_GREY 0xBDF7
 
+int8_t ampm = -1;
 float sx = 0, sy = 1, mx = 1, my = 0, hx = -1, hy = 0;    // Saved H, M, S x & y multipliers
 float sdeg=0, mdeg=0, hdeg=0;
 uint16_t osx=64, osy=64, omx=64, omy=64, ohx=64, ohy=64;  // Saved H, M, S x & y coords
@@ -68,8 +69,13 @@ void setup(void) {
   tft.fillScreen(TFT_LIGHTGREY/*TFT_GREY*/);
   tft.setTextColor(TFT_GREEN, TFT_LIGHTGREY/*TFT_GREY*/);  // Adding a black background colour erases previous text automatically
 
-#if defined(DEBUG)
+#if defined(DD_DEBUG)
+  #if defined(LED_BUILTIN)
+  dumbdisplay.debugSetup(new CompositDDDebugIntreface(new TftDDDebugInterface(tft, 0, 220),
+                                                      new LedDDDebugInterface(LED_BUILTIN)));
+  #else
   dumbdisplay.debugSetup(new TftDDDebugInterface(tft, 0, 220));
+  #endif
 #endif
 
   // Draw clock face
@@ -172,7 +178,7 @@ void loop() {
       // "sync" button clicked ==> create a "tunnel" to get current date time
       dumbdisplay.logToSerial("getting time for sync ...");
       datetimeTunnel = dumbdisplay.createDateTimeServiceTunnel();
-      datetimeTunnel->reconnectTo("now:hhmmss");  // ask DumbDisplay app for current time in "hhmmss" format
+      datetimeTunnel->reconnectTo("now:HHmmss");  // ask DumbDisplay app for current time in "HHmmss" format
     }
     if (datetimeTunnel != NULL) {
       String nowStr;
@@ -180,6 +186,11 @@ void loop() {
         // got current time "feedback" from DumbDisplay app => use it to sync hh/mm/ss
         dumbdisplay.logToSerial("... got sync time " + nowStr);
         int now = nowStr.toInt();
+        if (now > 120000) {
+          ampm = 1;
+        } else {
+          ampm = 0;
+        }
         hh = now / 10000;
         mm = (now / 100) % 100;
         ss = now % 100;
@@ -237,6 +248,11 @@ void loop() {
         hh++;          // Advance hour
         if (hh>23) {
           hh=0;
+          if (ampm == 0) {
+            ampm = 1;
+          } else if (ampm == 1) {
+            ampm = 0;
+          }
         }
       }
     }
@@ -262,6 +278,14 @@ void loop() {
       tft.drawLine(omx, omy, 65, 65, clockBackgroundColor/*TFT_BLACK*/);
       omx = mx*44+65;    
       omy = my*44+65;
+    }
+
+    tft.setTextColor(TFT_WHITE, clockBackgroundColor/*TFT_BLACK*/);
+    if (ampm == 0) {
+      tft.drawString("AM",40,80,2);
+    }
+    if (ampm == 1) {
+      tft.drawString("PM",75,80,2);
     }
 
       // Redraw new hand positions, hour and minute hands not erased here to avoid flicker
