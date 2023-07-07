@@ -1,8 +1,11 @@
+// ***
+// * assume inclusion TFT_eSPI.h
+// ***
 
 #ifndef _dd_tft_util_h
 #define _dd_tft_util_h
 
-#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
+//#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 //#include <SPI.h>
 
 class TftDDDebugInterface: public DDDebugInterface {
