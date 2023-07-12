@@ -5,16 +5,14 @@
 #ifndef _dd_tft_util_h
 #define _dd_tft_util_h
 
-//#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
-//#include <SPI.h>
-
 class TftDDDebugInterface: public DDDebugInterface {
   public:
-    TftDDDebugInterface(TFT_eSPI& tft, int x = 0, int y = 0, uint8_t fontSize = 2, uint8_t font = 1): tft(tft) {
+    TftDDDebugInterface(TFT_eSPI& tft, int x = 0, int y = 0, uint8_t fontSize = 2, uint8_t font = 1, bool showSendCommand = true): tft(tft) {
       this->x = x;
       this->y = y;
       this->fontSize = fontSize;
       this->font = font;
+      this->showSendCommand = showSendCommand;
     }
   public:
     virtual void logConnectionState(DDDebugConnectionState connectionState) {
@@ -38,20 +36,14 @@ class TftDDDebugInterface: public DDDebugInterface {
       }
       if (state != NULL) {
         showMsg(state, 16);
-        // uint32_t textcolor = tft.textcolor;
-        // uint32_t textbgcolor = tft.textbgcolor;
-        // uint8_t textsize = tft.textsize;
-        // tft.setTextColor(TFT_RED, TFT_WHITE);
-        // tft.setTextSize(fontSize);
-        // tft.drawString(state, x + 16, y, font);
-        // tft.setTextColor(textcolor, textbgcolor);
-        // tft.setTextSize(textsize);
       }
     }
     virtual void logSendCommand(int state) {
-      tft.fillRect(x + 2, y + 2, x + 12, y + 12, TFT_WHITE);
-      if (state == 1) {
-        tft.fillCircle(x + 7, y + 7, 5, TFT_RED);
+      if (showSendCommand) {
+        tft.fillRect(x + 2, y + 2, x + 12, y + 12, TFT_WHITE);
+        if (state == 1) {
+          tft.fillCircle(x + 7, y + 7, 5, TFT_RED);
+        }
       }
     }
     virtual void logError(const String& errMsg) {
@@ -74,6 +66,7 @@ class TftDDDebugInterface: public DDDebugInterface {
     int y;
     uint8_t fontSize;
     uint8_t font;
+    bool showSendCommand;
 };
 
 #endif

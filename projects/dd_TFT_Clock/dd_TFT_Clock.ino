@@ -1,7 +1,6 @@
 #include <Arduino.h>
 
 #include "dumbdisplay.h"
-#include "ddtftutil.h"
 DumbDisplay dumbdisplay(new DDInputOutput());
 
 LcdDDLayer* syncButton = NULL;
@@ -35,7 +34,8 @@ uint32_t clockBackgroundColor = 0;
  */
 
 #include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
-#include <SPI.h>
+#include "ddtftutil.h"
+//#include <SPI.h>
 
 TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 

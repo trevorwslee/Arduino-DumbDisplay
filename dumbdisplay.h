@@ -1092,7 +1092,7 @@ class DumbDisplay {
     void connect();
     /// @return connected or not
     bool connected() const;
-    /// @return the version of the connection, which when reconnected will be bumped up
+    /// @return the version of the connection, which when reconnected will be bumped up; note that if not connected, version will be 0
     int getConnectVersion() const;
     /// @return compatibility version
     /// @note only meaningful after connection

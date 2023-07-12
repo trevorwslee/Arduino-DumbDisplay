@@ -60,6 +60,7 @@
 
 #define SUPPORT_IDLE_CALLBACK
 #define SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
+#define FIRST_CONNECT_VERSION_CONSIDER_CHANGED
 
 #define SUPPORT_TUNNEL
 #define TUNNEL_TIMEOUT_MILLIS 30000
@@ -247,12 +248,10 @@ class IOProxy {
 #ifdef SUPPORT_IDLE_CALLBACK
 /*volatile */DDIdleCallback _IdleCallback = NULL; 
 #endif
-
-DDDebugInterface *_DebugInterface;
-
 #ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
 /*volatile */DDConnectVersionChangedCallback _ConnectVersionChangedCallback = NULL; 
 #endif
+DDDebugInterface *_DebugInterface;
 
 bool IOProxy::available() {
   bool done = false;
@@ -769,7 +768,12 @@ bool __Connect(/*bool calledPassive = false*/) {
     // }
 #ifdef DD_DEBUG_HS          
     Serial.println("// *** DONE MAKE CONNECTION");
-#endif        
+#endif
+#ifdef FIRST_CONNECT_VERSION_CONSIDER_CHANGED
+    if (_ConnectVersionChangedCallback != NULL) {
+      _ConnectVersionChangedCallback(_ConnectVersion);  // will be 1
+    }
+#endif   
   return true;
 }
 bool _Connect(bool calledPassive = false) {

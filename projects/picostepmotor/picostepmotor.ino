@@ -170,7 +170,7 @@ DDValueRecord<int> toAngle(0);
 DDValueRecord<bool> calibrating(true);
 DDValueRecord<int> turnSpeed(0);
 
-DDConnectVersionTracker ddConnectionChecker(-1);
+DDConnectVersionTracker ddConnectionChecker(0);
 
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
