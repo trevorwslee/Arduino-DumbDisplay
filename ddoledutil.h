@@ -1,19 +1,18 @@
 // ***
-// * assume inclusion TFT_eSPI.h
+// * assume inclusion Adafruit_SSD1306.h
 // ***
+//#include <Adafruit_SSD1306.h>
 
-//#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
+#ifndef _dd_oled_util_h
+#define _dd_oled_util_h
 
-#ifndef _dd_tft_util_h
-#define _dd_tft_util_h
-
-class TftDDDebugInterface: public DDDebugInterface {
+class OledDDDebugInterface: public DDDebugInterface {
   public:
-    TftDDDebugInterface(TFT_eSPI& tft, int x = 0, int y = 0, uint8_t fontSize = 2, uint8_t font = 1, bool showSendCommand = true): tft(tft) {
+    OledDDDebugInterface(Adafruit_SSD1306& display, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1, */, bool showSendCommand = true): display(display) {
       this->x = x;
       this->y = y;
-      this->fontSize = fontSize;
-      this->font = font;
+      //this->fontSize = fontSize;
+      //this->font = font;
       this->showSendCommand = showSendCommand;
     }
   public:
@@ -37,37 +36,42 @@ class TftDDDebugInterface: public DDDebugInterface {
           break;
       }
       if (state != NULL) {
-        showMsg(state, 16);
+        showMsg(state, 12/*16*/);
       }
     }
     virtual void logSendCommand(int state) {
       if (showSendCommand) {
-        tft.fillRect(x + 2, y + 2, x + 12, y + 12, TFT_WHITE);
+        display.fillRect(x, y, x + 8, y + 8, WHITE);
         if (state == 1) {
-          tft.fillCircle(x + 7, y + 7, 5, TFT_RED);
+          display.fillCircle(x + 4, y + 4, 4, BLACK);
         }
+        display.display();
+        // display.fillRect(x + 2, y + 2, x + 12, y + 12, WHITE);
+        // if (state == 1) {
+        //   display.fillCircle(x + 7, y + 7, 5, BLACK);
+        // }
+        // display.display();
       }
     }
     virtual void logError(const String& errMsg) {
-        showMsg("Err", 80);
+        showMsg("Err", 70/*80*/);
     }
   private:  
     void showMsg(const char* msg, int xOff) {
-      uint32_t textcolor = tft.textcolor;
-      uint32_t textbgcolor = tft.textbgcolor;
-      uint8_t textsize = tft.textsize;
-      tft.setTextColor(TFT_RED, TFT_WHITE);
-      tft.setTextSize(fontSize);
-      tft.drawString(msg, x + xOff, y, font);
-      tft.setTextColor(textcolor, textbgcolor);
-      tft.setTextSize(textsize);
+      const int charWidth = 6;
+      for (int i = 0;; i++) {
+        char c = msg[i];
+        if (c == 0) {
+          break;
+        }
+        display.drawChar(x + xOff + charWidth * i, y, c, WHITE, BLACK, 1);
+      }
+      display.display();
     }
   private:
-    TFT_eSPI& tft;  
+    Adafruit_SSD1306& display;  
     int x;
     int y;
-    uint8_t fontSize;
-    uint8_t font;
     bool showSendCommand;
 };
 
