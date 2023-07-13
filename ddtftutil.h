@@ -9,7 +9,7 @@
 
 class TftDDDebugInterface: public DDDebugInterface {
   public:
-    TftDDDebugInterface(TFT_eSPI& tft, int x = 0, int y = 0, uint8_t fontSize = 2, uint8_t font = 1, bool showSendCommand = true): tft(tft) {
+    TftDDDebugInterface(TFT_eSPI& tft, int x = 0, int y = 0, uint8_t fontSize = 2, uint8_t font = 1, bool showSendCommand = false): tft(tft) {
       this->x = x;
       this->y = y;
       this->fontSize = fontSize;

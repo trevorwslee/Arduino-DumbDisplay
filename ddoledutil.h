@@ -8,7 +8,7 @@
 
 class OledDDDebugInterface: public DDDebugInterface {
   public:
-    OledDDDebugInterface(Adafruit_SSD1306& display, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1, */, bool showSendCommand = true): display(display) {
+    OledDDDebugInterface(Adafruit_SSD1306& display, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1, */, bool showSendCommand = false): display(display) {
       this->x = x;
       this->y = y;
       //this->fontSize = fontSize;
