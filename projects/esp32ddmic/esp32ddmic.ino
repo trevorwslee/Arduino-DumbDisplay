@@ -89,7 +89,7 @@ void i2s_install();
 void i2s_setpin();
  
 
-DDConnectVersionTracker cvTracker(0);  // it is for tracking [new] DD connection established 
+DDConnectVersionTracker cvTracker;  // it is for tracking [new] DD connection established 
 int what = 1;  // 1: mic; 2: record; 3: play
 bool started = false;
 int amplifyFactor = DefAmplifyFactor;//10;

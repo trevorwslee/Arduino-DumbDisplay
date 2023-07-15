@@ -83,7 +83,7 @@ const char* witAccessToken = WIT_VC_ACCESS_TOKEN;
 DDTunnelEndpoint witEndpoint("https://api.wit.ai/speech");
 
 
-DDConnectVersionTracker cvTracker(0);  // it is for tracking [new] DD connection established 
+DDConnectVersionTracker cvTracker;  // it is for tracking [new] DD connection established 
 bool replayVoiceAfterCache = false;
 int amplifyFactor = DefAmplifyFactor;
 bool cachingVoice = false;

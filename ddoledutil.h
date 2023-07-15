@@ -8,12 +8,12 @@
 
 class OledDDDebugInterface: public DDDebugInterface {
   public:
-    OledDDDebugInterface(Adafruit_SSD1306& display, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1, */, bool showSendCommand = false): display(display) {
+    OledDDDebugInterface(Adafruit_SSD1306& display, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1, */, bool indicateSendCommand = false): display(display) {
       this->x = x;
       this->y = y;
       //this->fontSize = fontSize;
       //this->font = font;
-      this->showSendCommand = showSendCommand;
+      this->indicateSendCommand = indicateSendCommand;
     }
   public:
     virtual void logConnectionState(DDDebugConnectionState connectionState) {
@@ -40,7 +40,7 @@ class OledDDDebugInterface: public DDDebugInterface {
       }
     }
     virtual void logSendCommand(int state) {
-      if (showSendCommand) {
+      if (indicateSendCommand) {
         display.fillRect(x, y, x + 8, y + 8, WHITE);
         if (state == 1) {
           display.fillCircle(x + 4, y + 4, 4, BLACK);
@@ -72,7 +72,7 @@ class OledDDDebugInterface: public DDDebugInterface {
     Adafruit_SSD1306& display;  
     int x;
     int y;
-    bool showSendCommand;
+    bool indicateSendCommand;
 };
 
 #endif

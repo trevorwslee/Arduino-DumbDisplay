@@ -9,12 +9,12 @@
 
 class TftDDDebugInterface: public DDDebugInterface {
   public:
-    TftDDDebugInterface(TFT_eSPI& tft, int x = 0, int y = 0, uint8_t fontSize = 2, uint8_t font = 1, bool showSendCommand = false): tft(tft) {
+    TftDDDebugInterface(TFT_eSPI& tft, int x = 0, int y = 0, uint8_t fontSize = 2, uint8_t font = 1, bool indicateSendCommand = false): tft(tft) {
       this->x = x;
       this->y = y;
       this->fontSize = fontSize;
       this->font = font;
-      this->showSendCommand = showSendCommand;
+      this->indicateSendCommand = indicateSendCommand;
     }
   public:
     virtual void logConnectionState(DDDebugConnectionState connectionState) {
@@ -41,7 +41,7 @@ class TftDDDebugInterface: public DDDebugInterface {
       }
     }
     virtual void logSendCommand(int state) {
-      if (showSendCommand) {
+      if (indicateSendCommand) {
         tft.fillRect(x + 2, y + 2, x + 12, y + 12, TFT_WHITE);
         if (state == 1) {
           tft.fillCircle(x + 7, y + 7, 5, TFT_RED);
@@ -68,7 +68,7 @@ class TftDDDebugInterface: public DDDebugInterface {
     int y;
     uint8_t fontSize;
     uint8_t font;
-    bool showSendCommand;
+    bool indicateSendCommand;
 };
 
 #endif

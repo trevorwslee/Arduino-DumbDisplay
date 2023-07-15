@@ -317,14 +317,14 @@ class DDAutoPinConfig {
 
 
 /// Helper class for tracking connection "version" change.
-/// - Initial connection will have version 1
-/// - When reconnected (after disconnect) version will be incremented every such event
+/// - initial connection will have version 1
+/// - when reconnected (after disconnect) version will be incremented every such event
 class DDConnectVersionTracker {
   public:
     /// @param version start-off version number; 
-    ///                0 so that it will be considered a version change even when first start;
-    ///                note that the initial connected version is 1
-    DDConnectVersionTracker(int version = 1) {
+    ///                0 so that it will be considered a version change even when first start, 
+    ///                1 if only want to detect re-connect
+    DDConnectVersionTracker(int version = 0) {
       this->version = version;
     }
     bool checkChanged(DumbDisplay& dumbdisplay) {
