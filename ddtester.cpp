@@ -38,7 +38,7 @@ void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
       DDDelay(1000);
       pLayer->showNumber(8);
       DDDelay(1000);
-      pLayer->showString("a,b,c");
+      pLayer->showString("a,B,c,D");
       DDDelay(5000);
     }
     

@@ -51,7 +51,7 @@ void setup() {
 
 
 
-DDConnectVersionTracker cvTracker(-1);
+DDConnectVersionTracker cvTracker;
 String datetime;
 DDLocation location;
 

@@ -1038,10 +1038,20 @@ typedef void (*DDIdleCallback)(long idleForMillis, DDIdleConnectionState connect
 /// Type signature for callback function that will be called when connect version (counting up) changed. See DumbDisplay::setConnectVersionChangedCallback()
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
+
+/// @struct DDDebugConnectionState
+/// @brief
+/// See DDDebugInterface
 enum DDDebugConnectionState { DEBUG_NOT_CONNECTED, DEBUG_CONNECTING, DEBUG_CONNECTED, DEBUG_RECONNECTING, DEBUG_RECONNECTED };
+
+/// Base class for debug callback set by calling DumbDisplay::debugSetup()
 class DDDebugInterface {
   public:
+    /// See DDDebugConnectionState
     virtual void logConnectionState(DDDebugConnectionState connectionState) {}
+    /// @param state 1: start sending; 0: stop sending
+    virtual void logSendCommand(int state) {}
+    virtual void logError(const String& errMsg) {}
 };
 
 
@@ -1054,18 +1064,6 @@ struct DDConnectPassiveStatus {
   /// reconnecting: when connected; detected reconnecting (after lost of connection) 
   bool reconnecting;
 };
-
-// /// EXPERIMENTAL
-// struct DDSavedConnectPassiveState {
-//   int initialized;
-//   short step;
-//   long startMillis;
-//   long lastCallMillis;
-//   bool firstCall;
-//   long hsStartMillis;
-//   long hsNextMillis;
-// };
-
 
 
 
@@ -1094,7 +1092,7 @@ class DumbDisplay {
     void connect();
     /// @return connected or not
     bool connected() const;
-    /// @return the version of the connection, which when reconnected will be bumped up
+    /// @return the version of the connection, which when reconnected will be bumped up; note that if not connected, version will be 0
     int getConnectVersion() const;
     /// @return compatibility version
     /// @note only meaningful after connection
@@ -1324,6 +1322,8 @@ class DumbDisplay {
     // /// . DumbDisplay object will be just like at initial state
     // bool connectPassiveReset();
   public:
+    /// set debug use callback
+    /// @param debugInterface a concrete implementation of DDDebugInterface 
     void debugSetup(DDDebugInterface *debugInterface);
     void debugOnly(int i);
   private:

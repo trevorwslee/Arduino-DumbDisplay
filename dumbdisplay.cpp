@@ -42,7 +42,7 @@
 #define TO_EDIAN() String(DDCheckEndian())
 
 
-#define DEBUG_BASIC
+//#define DEBUG_BASIC
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
@@ -60,6 +60,7 @@
 
 #define SUPPORT_IDLE_CALLBACK
 #define SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
+#define FIRST_CONNECT_VERSION_CONSIDER_CHANGED
 
 #define SUPPORT_TUNNEL
 #define TUNNEL_TIMEOUT_MILLIS 30000
@@ -247,12 +248,10 @@ class IOProxy {
 #ifdef SUPPORT_IDLE_CALLBACK
 /*volatile */DDIdleCallback _IdleCallback = NULL; 
 #endif
-
-DDDebugInterface *_DebugInterface;
-
 #ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
 /*volatile */DDConnectVersionChangedCallback _ConnectVersionChangedCallback = NULL; 
 #endif
+DDDebugInterface *_DebugInterface;
 
 bool IOProxy::available() {
   bool done = false;
@@ -470,23 +469,6 @@ volatile bool _SendingCommand = false;
 volatile bool _HandlingFeedback = false;
 
 
-// void _Preconnect() {
-//   if (_Preconneced) {
-//     return;
-//   }
-// #ifdef DEBUG_WITH_LED
-//   int debugLedPin = _DebugLedPin;  
-//   if (debugLedPin != -1) {
-//     digitalWrite(debugLedPin, HIGH);
-//   }
-// #endif
-//   _IO->preConnect();
-// #ifdef DEBUG_WITH_LED
-//   if (debugLedPin != -1) {
-//     digitalWrite(debugLedPin, LOW);
-//   }
-// #endif
-// }
 
 #ifdef SUPPORT_PASSIVE
 
@@ -786,7 +768,12 @@ bool __Connect(/*bool calledPassive = false*/) {
     // }
 #ifdef DD_DEBUG_HS          
     Serial.println("// *** DONE MAKE CONNECTION");
-#endif        
+#endif
+#ifdef FIRST_CONNECT_VERSION_CONSIDER_CHANGED
+    if (_ConnectVersionChangedCallback != NULL) {
+      _ConnectVersionChangedCallback(_ConnectVersion);  // will be 1
+    }
+#endif   
   return true;
 }
 bool _Connect(bool calledPassive = false) {
@@ -1223,6 +1210,11 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
 #endif        
 }  
 void __SendComment(const char* comment, bool isError = false) {
+  if (isError) {
+      if (_DebugInterface != NULL) {
+        _DebugInterface->logError(comment);
+      }
+  }
   _WOIO->print("//");
   if (isError) {
     _WOIO->print("X");
@@ -1270,6 +1262,9 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
   _SendingCommand = true;
 
+  if (_DebugInterface != NULL) {
+    _DebugInterface->logSendCommand(1);
+  }
 // #ifdef DEBUG_WITH_LED
 //   int debugLedPin = _DebugLedPin;
 //   if (debugLedPin != -1) {
@@ -1287,6 +1282,9 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   }
 #endif
 
+  if (_DebugInterface != NULL) {
+    _DebugInterface->logSendCommand(0);
+  }
 // #ifdef DEBUG_WITH_LED
 //   if (debugLedPin != -1) {
 //     digitalWrite(debugLedPin, LOW);
