@@ -42,7 +42,7 @@
 #define TO_EDIAN() String(DDCheckEndian())
 
 
-#define DEBUG_BASIC
+//#define DEBUG_BASIC
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
