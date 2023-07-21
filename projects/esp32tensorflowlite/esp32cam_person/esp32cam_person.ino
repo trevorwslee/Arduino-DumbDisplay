@@ -233,7 +233,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
 
 
 #if defined(FOR_LILYGO_TCAMERA)
-  // for TCAMERA v7
+  // for TCAMERA v17
   #define PWDN_GPIO_NUM     26
   #define RESET_GPIO_NUM    -1      // -1 = not used
   #define XCLK_GPIO_NUM     32

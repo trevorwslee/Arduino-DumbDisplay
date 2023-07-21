@@ -13,19 +13,34 @@
 #include <driver/i2s.h>
  
 // INMP441 I2S pin assignment
-#if defined(FOR_LILYGO_TSIMCAM)
+#if defined(FOR_LILYGO_TCAMERAPLUS)
+  // for the mic built-in to LiLyGO TCamerPlus
+  #define I2S_WS               32
+  #define I2S_SD               33
+  #define I2S_SCK              14
+  #define I2S_SAMPLE_BIT_COUNT 32
+  #define I2S_PORT             I2S_NUM_0
+  #define SOUND_SAMPLE_RATE    16000
+  #define SOUND_CHANNEL_COUNT  1
+#elif defined(FOR_LILYGO_TSIMCAM)
   // for the mic built-in to LiLyGO TSimCam
-  #define I2S_WS  42
-  #define I2S_SD   2
-  #define I2S_SCK 41
+  #define I2S_WS               42
+  #define I2S_SD                2
+  #define I2S_SCK              41
+  #define I2S_SAMPLE_BIT_COUNT 16
+  #define I2S_PORT             I2S_NUM_0
+  #define SOUND_SAMPLE_RATE    16000
+  #define SOUND_CHANNEL_COUNT  1
 #else
-  #define I2S_WS  25
-  #define I2S_SD  33
-  #define I2S_SCK 32
+  #define I2S_WS               25
+  #define I2S_SD               33
+  #define I2S_SCK              32
+  #define I2S_SAMPLE_BIT_COUNT 16
+  #define I2S_PORT             I2S_NUM_0
+  #define SOUND_SAMPLE_RATE    8000
+  #define SOUND_CHANNEL_COUNT  1
 #endif
 
-// I2S processor
-#define I2S_PORT I2S_NUM_0
 
 
 
@@ -64,21 +79,33 @@ LedGridDDLayer* amplifyMeterLayer;
 
 
 
-// name of recoreded WAV file; since only a single name; hence new one will always overwrite old one
+// name of recorded WAV file; since only a single name; hence new one will always overwrite old one
 const char* SoundName = "recorded_sound";
 
 
 const int I2S_DMA_BUF_COUNT = 8;
 const int I2S_DMA_BUF_LEN = 1024;
 
-const int SoundSampleRate = 8000;  // will be 16-bit per sample
-const int SoundNumChannels = 1;
+// const int SoundSampleRate = 8000;  // will be 16-bit per sample
+// const int SoundNumChannels = 1;
 
 
-// 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 256 bytes = 16 ms per read
-const int StreamBufferNumBytes = 256;
-const int StreamBufferLen = StreamBufferNumBytes / 2;
-int16_t StreamBuffer[StreamBufferLen];
+#if I2S_SAMPLE_BIT_COUNT == 32
+  const int StreamBufferNumBytes = 512;
+  //const int StreamBufferNumBytes = 1024;
+  const int StreamBufferLen = StreamBufferNumBytes / 4;
+  int32_t StreamBuffer[StreamBufferLen];
+#else
+  #if SOUND_SAMPLE_RATE == 16000
+    // for 16 bits ... 16000 sample per second (32000 bytes per second; since 16 bits per sample) ==> 512 bytes = 16 ms per read
+    const int StreamBufferNumBytes = 512;
+  #else
+    // for 16 bits ... 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 256 bytes = 16 ms per read
+    const int StreamBufferNumBytes = 256;
+  #endif  
+  const int StreamBufferLen = StreamBufferNumBytes / 2;
+  int16_t StreamBuffer[StreamBufferLen];
+#endif
 
 // sound sample (16 bits) amplification
 const int MaxAmplifyFactor = 20;
@@ -107,14 +134,19 @@ void setup() {
   // set up I2S
   i2s_install();
   i2s_setpin();
+// #if defined(FOR_LILYGO_TCAMERAPLUS)
+//   i2s_zero_dma_buffer(I2S_PORT);
+// #else
+  i2s_zero_dma_buffer(I2S_PORT);
   i2s_start(I2S_PORT);
+//#endif
 
   Serial.println("... DONE SETUP MIC");
 
 
   dumbdisplay.recordLayerSetupCommands();  // start recording the layout commands
 
-  plotterLayer = dumbdisplay.createPlotterLayer(1024, 256, SoundSampleRate / StreamBufferLen);
+  plotterLayer = dumbdisplay.createPlotterLayer(1024, 256, SOUND_SAMPLE_RATE / StreamBufferLen);
 
   // create "MIC/REC/PLAY" lcd layers, as tab
   micTabLayer = dumbdisplay.createLcdLayer(8, 1);
@@ -277,13 +309,25 @@ void loop() {
   esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
  
   int samplesRead = 0;
+#if I2S_SAMPLE_BIT_COUNT == 32
+  int16_t sampleStreamBuffer[StreamBufferLen];
+#else
+  int16_t *sampleStreamBuffer = StreamBuffer;
+#endif
   if (result == ESP_OK) {
-    samplesRead = bytesRead / 2;  // 16 bit per sample
+#if I2S_SAMPLE_BIT_COUNT == 32
+      samplesRead = bytesRead / 4;  // 32 bit per sample
+#else
+      samplesRead = bytesRead / 2;  // 16 bit per sample
+#endif    
     if (samplesRead > 0) {
       // find the samples mean ... and amplify the sound sample, by simply multiple it by some "amplify factor"
       float sumVal = 0;
       for (int i = 0; i < samplesRead; ++i) {
         int32_t val = StreamBuffer[i];
+#if I2S_SAMPLE_BIT_COUNT == 32
+        val = val / 0x0000ffff;
+#endif
         if (amplifyFactor > 1) {
           val = amplifyFactor * val;
           if (val > 32700) {
@@ -291,8 +335,9 @@ void loop() {
           } else if (val < -32700) {
             val = -32700;
           }
-          StreamBuffer[i] = val;
+          //StreamBuffer[i] = val;
         }
+        sampleStreamBuffer[i] = val;
         sumVal += val;
       }
       float meanVal = sumVal / samplesRead;
@@ -317,11 +362,11 @@ void loop() {
       // while started ... if no allocated "chunk id" (i.e. not yet started sending sound)
       if (what == 1) {
         // start streaming sound, and get the assigned "chunk id"
-        soundChunkId = dumbdisplay.streamSound16(SoundSampleRate, SoundNumChannels); // sound is 16 bits per sample
+        soundChunkId = dumbdisplay.streamSound16(SOUND_SAMPLE_RATE, SOUND_CHANNEL_COUNT); // sound is 16 bits per sample
         dumbdisplay.writeComment(String("STARTED mic streaming with chunk id [") + soundChunkId + "]");
       } else if (what == 2) {
         // started saving sound, and get the assigned "chunk id" 
-        soundChunkId = dumbdisplay.saveSoundChunked16(SoundName, SoundSampleRate, SoundNumChannels);
+        soundChunkId = dumbdisplay.saveSoundChunked16(SoundName, SOUND_SAMPLE_RATE, SOUND_CHANNEL_COUNT);
         dumbdisplay.writeComment(String("STARTED record streaming with chunk id [") + soundChunkId + "]");
       }
       streamingMillis = millis();
@@ -333,7 +378,7 @@ void loop() {
     if (soundChunkId != -1) {
       // send sound samples read
       bool isFinalChunk = !started;  // it is the final chink if justed turned to stop
-      dumbdisplay.sendSoundChunk16(soundChunkId, StreamBuffer, samplesRead, isFinalChunk);
+      dumbdisplay.sendSoundChunk16(soundChunkId, sampleStreamBuffer, samplesRead, isFinalChunk);
       streamingTotalSampleCount += samplesRead;
       if (isFinalChunk) {
         dumbdisplay.writeComment(String("DONE streaming with chunk id [") + soundChunkId + "]");
@@ -351,25 +396,51 @@ void loop() {
 
 void i2s_install() {
   const i2s_config_t i2s_config = {
+// #if defined(FOR_LILYGO_TCAMERAPLUS)
+//         .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
+//         .sample_rate = SoundSampleRate,
+//         .bits_per_sample = i2s_bits_per_sample_t(32),
+//         .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+//         .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+//         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2,
+//         .dma_buf_count = I2S_DMA_BUF_COUNT,
+//         .dma_buf_len = I2S_DMA_BUF_LEN,
+// #else
     .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
-    .sample_rate = SoundSampleRate,
-    .bits_per_sample = i2s_bits_per_sample_t(16),
+    .sample_rate = SOUND_SAMPLE_RATE,
+    .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BIT_COUNT),
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+// #if I2S_SAMPLE_BIT_COUNT == 32
+//     .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BIT_COUNT),
+//     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+// #else
+//     .bits_per_sample = i2s_bits_per_sample_t(16),
+//     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+// #endif
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = 0,
     .dma_buf_count = I2S_DMA_BUF_COUNT/*8*/,
     .dma_buf_len = I2S_DMA_BUF_LEN/*1024*/,
     .use_apll = false
+//#endif
   };
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
 }
  
 void i2s_setpin() {
   const i2s_pin_config_t pin_config = {
+// #if defined(FOR_LILYGO_TCAMERAPLUS)
+//     .mck_io_num = I2S_PIN_NO_CHANGE,
+//     .bck_io_num = I2S_SCK,
+//     .ws_io_num  = I2S_WS,
+//     .data_out_num = I2S_PIN_NO_CHANGE,
+//     .data_in_num = I2S_SD
+// #else
     .bck_io_num = I2S_SCK,
-    .ws_io_num = I2S_WS,
+    .ws_io_num = I2S_WS,   
     .data_out_num = -1,
     .data_in_num = I2S_SD
+//#endif
   };
   i2s_set_pin(I2S_PORT, &pin_config);
 }
