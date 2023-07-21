@@ -1495,7 +1495,7 @@ void _HandleFeedback() {
       Serial.println(*pFeedback);
 #endif      
 #ifdef MORE_KEEP_ALIVE
-      // keep alive wheneven received someting
+      // keep alive whenever received something
       _ConnectedIOProxy->keepAlive();
 #endif        
       if (*(pFeedback->c_str()) == '<') {
@@ -2578,7 +2578,11 @@ void DDTunnel::release() {
 //   return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
 // }
 bool DDTunnel::_eof() {
-  //yield();
+  // if (true) {
+  //   delay(200);
+  // } else {
+  //   yield();
+  // }
   _HandleFeedback();
 #ifdef TUNNEL_TIMEOUT_MILLIS
     if (done) {
@@ -2592,6 +2596,10 @@ __SendComment("_EOF: DONE");
     }
     long diff = millis() - connectMillis;
     if (diff > TUNNEL_TIMEOUT_MILLIS) {
+#ifdef DEBUG_TUNNEL_RESPONSE
+      Serial.println("_EOF: XXX TIMEOUT XXX");
+#endif                
+      __SendComment("*** TUNNEL TIMEOUT ***", true);
       return true;
     }
     return false;
@@ -2668,7 +2676,7 @@ int DDBufferedTunnel::_count() {
   return count;
 }
 bool DDBufferedTunnel::_eof() {
-  if (true) {
+  if (false) {  // disabled since 2023-07-18
       _HandleFeedback();
   }
   if (!this->DDTunnel::_eof()) {
