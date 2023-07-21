@@ -2577,15 +2577,18 @@ void DDTunnel::release() {
 // int DDTunnel::_count() {
 //   return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
 // }
-bool DDTunnel::_eof() {
+bool DDTunnel::_eof(long timeoutMillis) {
   // if (true) {
   //   delay(200);
   // } else {
   //   yield();
   // }
   _HandleFeedback();
-#ifdef TUNNEL_TIMEOUT_MILLIS
-    if (done) {
+#ifdef DD_DEF_TUNNEL_TIMEOUT
+  if (timeoutMillis <= 0) {
+    timeoutMillis = DD_DEF_TUNNEL_TIMEOUT;
+  }
+  if (done) {
 #ifdef DEBUG_TUNNEL_RESPONSE
 Serial.println("_EOF: DONE");
 #endif                
@@ -2675,11 +2678,11 @@ int DDBufferedTunnel::_count() {
 // #endif
   return count;
 }
-bool DDBufferedTunnel::_eof() {
+bool DDBufferedTunnel::_eof(long timeoutMillis) {
   if (false) {  // disabled since 2023-07-18
       _HandleFeedback();
   }
-  if (!this->DDTunnel::_eof()) {
+  if (!this->DDTunnel::_eof(timeoutMillis)) {
     return false;
   }
 // #ifdef DEBUG_TUNNEL_RESPONSE                

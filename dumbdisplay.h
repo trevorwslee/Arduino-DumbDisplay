@@ -29,10 +29,10 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODEING bef
 
 
 #define DD_DEF_SEND_BUFFER_SIZE 128
+#define DD_DEF_TUNNEL_TIMEOUT   150000
 
 
 #include "_dd_util.h"
-
 
 
 #define DD_CONDENSE_COMMAND
@@ -850,7 +850,7 @@ class DDTunnel: public DDObject {
     const String& getTunnelId() const { return tunnelId; }
   protected:
     //int _count();
-    virtual bool _eof();
+    virtual bool _eof(long timeoutMillis);
     //void _readLine(String &buffer);
     void _writeLine(const String& data);
     void _writeSound(const String& soundName);
@@ -884,7 +884,7 @@ class DDBufferedTunnel: public DDTunnel {
     //const String& getTunnelId() { return tunnelId; }
   protected:
     int _count();
-    virtual bool _eof();
+    virtual bool _eof(long timeoutMillis);
     bool _readLine(String &buffer);
     //void _writeLine(const String& data);
   public:
@@ -902,7 +902,7 @@ class DDBufferedTunnel: public DDTunnel {
     /// count buffer ready  read
     inline int count() { return _count(); }
     /// reached EOF?
-    inline bool eof() { return _eof(); }
+    inline bool eof(long timeoutMillis = DD_DEF_TUNNEL_TIMEOUT) { return _eof(timeoutMillis); }
     /// read a line from buffer
     String readLine();
     /// read a line from buffer, in to the buffer passed in
