@@ -47,11 +47,13 @@ GraphicalDDLayer * createAndSetupImageLayer(DumbDisplay& dumbdisplay) {
 
 
 bool initialiseCamera(framesize_t frameSize);
+void uninitialiseCamera();
 bool captureImage(bool useFlash);
 
 
 #define I2S_PORT  I2S_NUM_0
 void i2s_install();
+void i2s_uninstall();
 void i2s_setpin();
 
 
@@ -65,11 +67,10 @@ struct MicInfo {
 
 void readMicData(MicInfo &micInfo);
 
-const int MaxAmplifyFactor = 20;
-const int DefAmplifyFactor = 10;
+//const int MaxAmplifyFactor = 20;
+//const int DefAmplifyFactor = 10;
 
-//bool micStarted = false;
-int micAmplifyFactor = DefAmplifyFactor;//10;
+int micAmplifyFactor = 10;//DefAmplifyFactor;
 int micSoundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
 long micStreamingMillis = 0;
 int micStreamingTotalSampleCount = 0;
@@ -123,6 +124,8 @@ void loop() {
     delay(5000);
     return;
   }
+
+  int oriState = state;
 
   if (flashLayer->getFeedback()) {
     flashOn = !flashOn;
@@ -204,29 +207,23 @@ void loop() {
 
   if (state == STATE_TO_MIC) {
     if (cameraReady) {
+      uninitialiseCamera();
+      cameraReady = false;
       imageLayer->drawImageFile(imageName, 0, 0, 0, 0, "f:;l:GS");
     }
     if (!micReady) {
-      Serial.println("SETUP MIC ...");
+      dumbdisplay.writeComment("SETUP MIC ...");
       i2s_install();
       i2s_setpin();
       i2s_zero_dma_buffer(I2S_PORT);
       i2s_start(I2S_PORT);
-      Serial.println("... DONE SETUP MIC");
+      dumbdisplay.writeComment("... DONE SETUP MIC");
       micReady = true;
     }
     if (micReady) {
       state = STATE_MIC_RUNNING;
     }
   }
-
-  // if (cameraLayer->getFeedback()) {
-  //   cameraOn = !cameraOn;
-  // }
-  // if (micLayer->getFeedback()) {
-  //   micOn = !micOn;
-  // }
-
 
   if (state == STATE_CAMERA_RUNNING && cameraReady) {
     //Serial.print("===");
@@ -238,7 +235,7 @@ void loop() {
     }
   }
 
-  if (state == STATE_MIC_RUNNING || state == STATE_TO_CAMERA || state == STATE_OFF) {
+  if (state == STATE_MIC_RUNNING || oriState == STATE_MIC_RUNNING) {
     MicInfo micInfo;
     readMicData(micInfo);
     if (micSoundChunkId == -1) {
@@ -262,6 +259,8 @@ void loop() {
           dumbdisplay.writeComment(String(". total streamed samples: ") + totalSampleCount + " in " + String(forMillis / 1000.0) + "s");
           dumbdisplay.writeComment(String(". stream sample rate: ") + String(1000.0 * ((float) totalSampleCount / forMillis)));
           micSoundChunkId = -1;
+          i2s_uninstall();
+          micReady = false;
         }
       }
     }
@@ -431,7 +430,10 @@ bool initialiseCamera(framesize_t frameSize) {
 
   return (camerr == ESP_OK);                    // return boolean result of camera initialisation
 }
-
+void uninitialiseCamera() {
+  esp_camera_deinit();     // disable camera
+  delay(50);
+}
 
 // change illumination LED brightness
 void brightLed(byte ledBrightness){
@@ -533,7 +535,10 @@ void i2s_install() {
   };
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
 }
- 
+void i2s_uninstall() {
+  i2s_driver_uninstall(I2S_PORT);
+}
+
 void i2s_setpin() {
   const i2s_pin_config_t pin_config = {
     .bck_io_num = I2S_SCK,
@@ -544,13 +549,16 @@ void i2s_setpin() {
   i2s_set_pin(I2S_PORT, &pin_config);
 }
 
+#if I2S_SAMPLE_BIT_COUNT == 32
+  int16_t SampleStreamBuffer[StreamBufferLen];
+#endif
 void readMicData(MicInfo &micInfo) {
   // read I2S data and place in data buffer
   size_t bytesRead = 0;
   esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
   int samplesRead = 0;
 #if I2S_SAMPLE_BIT_COUNT == 32
-  int16_t sampleStreamBuffer[StreamBufferLen];
+  int16_t *sampleStreamBuffer = SampleStreamBuffer;
 #else
   int16_t *sampleStreamBuffer = StreamBuffer;
 #endif
