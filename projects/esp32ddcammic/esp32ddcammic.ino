@@ -1,5 +1,17 @@
-// if want Bluetooth, uncomment the following line
-// #define BLUETOOTH "ESP32CamBT"
+#include <Arduino.h>
+#include <esp_camera.h> 
+#include <driver/i2s.h>
+
+
+// * For board selection, uncomment on of following 
+//#define FOR_ESP32CAM
+//#define FOR_LILYGO_TCAMERAPLUS
+//#define FOR_LILYGO_TSIMCAM
+
+
+// * Strongly suggest to use Bluetooth (if board supported), in such a case uncomment the following BLUETOOTH, which defines the name of the Bluetooth device (the board)
+// * Otherwise will assume WIFI connectivity
+// #define BLUETOOTH "CamMicBT"
 #if defined(BLUETOOTH)
   #include "esp32dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
@@ -7,11 +19,6 @@
   #include "wifidumbdisplay.h"
   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 #endif
-
-
-
-#include "esp_camera.h" 
-#include <driver/i2s.h>
 
 
 #if defined(FOR_ESP32CAM)
@@ -22,7 +29,6 @@
   TFT_eSPI tft = TFT_eSPI();
   #define TFT              tft
   #define TFT_BL_PIN       2
-  //#define MIC_BUTTON_PIN   18
 #elif defined(FOR_LILYGO_TSIMCAM)
 #else
   #error board not supported
