@@ -16,11 +16,13 @@
 
 #if defined(FOR_ESP32CAM)
   #define FLASH_PIN        4
+  #define MIC_BUTTON_PIN   15
 #elif defined(FOR_LILYGO_TCAMERAPLUS)
-  #define MIC_BUTTON_PIN   18
   #include <TFT_eSPI.h>
   TFT_eSPI tft = TFT_eSPI();
-  #define TFT tft
+  #define TFT              tft
+  #define TFT_BL_PIN       2
+  //#define MIC_BUTTON_PIN   18
 #elif defined(FOR_LILYGO_TSIMCAM)
 #else
   #error board not supported
@@ -100,8 +102,11 @@ void setup() {
 #if defined(MIC_BUTTON_PIN)
   pinMode(MIC_BUTTON_PIN, INPUT_PULLDOWN);
 #endif  
-#if defined(TFT)
+#if defined(TFT_BL_PIN)
   TFT.init();
+  TFT.fillScreen(TFT_WHITE);
+  pinMode(TFT_BL_PIN, OUTPUT);
+  digitalWrite(TFT_BL_PIN, LOW);
 #endif
 
   flashLayer = createAndSetupButton(dumbdisplay);
@@ -135,8 +140,9 @@ void setFlash(bool flashOn) {
 #if defined(FLASH_PIN)
     digitalWrite(FLASH_PIN, flashOn ? HIGH : LOW);
 #endif
-#if defined(TFT)
-  TFT.fillScreen(flashOn ? TFT_WHITE : TFT_BLACK);
+#if defined(TFT_BL_PIN)
+  digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
+  //TFT.fillScreen(flashOn ? TFT_WHITE : TFT_BLACK);
 #endif
 
 }
@@ -158,7 +164,7 @@ void loop() {
   int oriState = state;
 
 #if defined(MIC_BUTTON_PIN)
-  bool pressed = digitalRead(MIC_BUTTON_PIN) == LOW;
+  bool pressed = digitalRead(MIC_BUTTON_PIN) == HIGH;
   if (pressed) {
     if (state == STATE_CAMERA_RUNNING) {
       micOn = true;
@@ -477,14 +483,14 @@ bool captureImage(/*bool useFlash*/) {
   #define I2S_SD                2
   #define I2S_SCK              41
   #define I2S_SAMPLE_BIT_COUNT 16
-  #define SOUND_SAMPLE_RATE    8000
+  #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
 #else
   #define I2S_WS               12
   #define I2S_SD               13
   #define I2S_SCK              14
   #define I2S_SAMPLE_BIT_COUNT 16
-  #define SOUND_SAMPLE_RATE    8000
+  #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
 #endif
 
