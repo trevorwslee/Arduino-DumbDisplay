@@ -12,7 +12,19 @@
 
 #include "esp_camera.h" 
 #include <driver/i2s.h>
- 
+
+
+#if defined(FOR_ESP32CAM)
+  #define FLASH_PIN        4
+#elif defined(FOR_LILYGO_TCAMERAPLUS)
+  #define MIC_BUTTON_PIN   18
+  #include <TFT_eSPI.h>
+  TFT_eSPI tft = TFT_eSPI();
+  #define TFT tft
+#elif defined(FOR_LILYGO_TSIMCAM)
+#else
+  #error board not supported
+#endif
 
 
 const int imageLayerWidth = 1024;
@@ -21,10 +33,8 @@ const char* imageName = "esp32camwmic.jpg";
 
 
 LcdDDLayer* flashLayer;
-// LcdDDLayer* cameraLayer;
 LcdDDLayer* micLayer;
 GraphicalDDLayer* imageLayer;
-
 
 LcdDDLayer* createAndSetupButton(DumbDisplay& dumbdisplay, const char* bgColor = DD_COLOR_blue) {
   LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(11, 1);
@@ -48,7 +58,7 @@ GraphicalDDLayer * createAndSetupImageLayer(DumbDisplay& dumbdisplay) {
 
 bool initialiseCamera(framesize_t frameSize);
 void uninitialiseCamera();
-bool captureImage(bool useFlash);
+bool captureImage(/*bool useFlash*/);
 
 
 #define I2S_PORT  I2S_NUM_0
@@ -67,10 +77,7 @@ struct MicInfo {
 
 void readMicData(MicInfo &micInfo);
 
-//const int MaxAmplifyFactor = 20;
-//const int DefAmplifyFactor = 10;
-
-int micAmplifyFactor = 10;//DefAmplifyFactor;
+int micAmplifyFactor = 10;
 int micSoundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
 long micStreamingMillis = 0;
 int micStreamingTotalSampleCount = 0;
@@ -87,14 +94,22 @@ int state = STATE_TO_CAMERA;
 void setup() {
   Serial.begin(115200);
 
-  flashLayer = createAndSetupButton(dumbdisplay);
-  //cameraLayer = createAndSetupButton(dumbdisplay);
-  micLayer = createAndSetupButton(dumbdisplay);
+#if defined(FLASH_PIN)
+  pinMode(FLASH_PIN, OUTPUT);
+#endif  
+#if defined(MIC_BUTTON_PIN)
+  pinMode(MIC_BUTTON_PIN, INPUT_PULLDOWN);
+#endif  
+#if defined(TFT)
+  TFT.init();
+#endif
 
+  flashLayer = createAndSetupButton(dumbdisplay);
+  micLayer = createAndSetupButton(dumbdisplay);
   imageLayer = createAndSetupImageLayer(dumbdisplay);
 
   dumbdisplay.configAutoPin(DD_AP_VERT_2(
-    DD_AP_HORI_2(flashLayer->getLayerId()/*, cameraLayer->getLayerId()*/, micLayer->getLayerId()),
+    DD_AP_HORI_2(flashLayer->getLayerId(), micLayer->getLayerId()),
     imageLayer->getLayerId()
   ));
 
@@ -105,17 +120,32 @@ void setup() {
     }
   });
 
+#if !defined(FLASH_PIN) && !defined(TFT)
+  flashLayer->disabled(true);
+#endif  
+#if defined(MIC_BUTTON_PIN)
+  micLayer->disabled(true);
+#endif  
+
   imageLayer->drawImageFileFit("dumbdisplay.png");
 }
 
+
+void setFlash(bool flashOn) {
+#if defined(FLASH_PIN)
+    digitalWrite(FLASH_PIN, flashOn ? HIGH : LOW);
+#endif
+#if defined(TFT)
+  TFT.fillScreen(flashOn ? TFT_WHITE : TFT_BLACK);
+#endif
+
+}
 
 
 bool cameraReady = false;
 bool micReady = false;
 DDValueRecord<bool> flashOn(false, true);
-// DDValueRecord<bool> cameraOn(false, true);
 DDValueRecord<bool> micOn(false, true);
-
 
 void loop() {
 
@@ -126,6 +156,21 @@ void loop() {
   }
 
   int oriState = state;
+
+#if defined(MIC_BUTTON_PIN)
+  bool pressed = digitalRead(MIC_BUTTON_PIN) == LOW;
+  if (pressed) {
+    if (state == STATE_CAMERA_RUNNING) {
+      micOn = true;
+      //state = STATE_TO_MIC;
+    }
+  } else {
+    if (state == STATE_MIC_RUNNING) {
+      micOn = false;
+      //state = STATE_TO_CAMERA;
+    }
+  }
+#endif
 
   if (flashLayer->getFeedback()) {
     flashOn = !flashOn;
@@ -142,6 +187,7 @@ void loop() {
       flashLayer->pixelColor(DD_COLOR_white);
       flashLayer->writeCenteredLine("FLASH OFF");
     }  
+    setFlash(flashOn);
   }
 
   if (micOn.record()) {
@@ -155,33 +201,6 @@ void loop() {
       state = STATE_TO_CAMERA;
     }  
   }
-
-  // bool cameraWasOn = cameraOn;
-  // if (cameraOn.record()) {
-  //   if (cameraOn) {
-  //     cameraLayer->pixelColor(DD_COLOR_red);
-  //     cameraLayer->writeCenteredLine("CAM ON");
-  //     //micStarted = true;
-  //   } else {
-  //     cameraLayer->pixelColor(DD_COLOR_white);
-  //     cameraLayer->writeCenteredLine("CAM OFF");
-  //     //micStarted = false;
-  //   }  
-  // }
-
-
-  // bool micRunning = micStarted;
-  // if (micOn.record()) {
-  //   if (micOn) {
-  //     micLayer->pixelColor(DD_COLOR_red);
-  //     micLayer->writeCenteredLine("MIC ON");
-  //     micStarted = true;
-  //   } else {
-  //     micLayer->pixelColor(DD_COLOR_white);
-  //     micLayer->writeCenteredLine("MIC OFF");
-  //     micStarted = false;
-  //   }  
-  // }
 
   if (state == STATE_TO_CAMERA) {
     if (!cameraReady) {
@@ -198,11 +217,6 @@ void loop() {
     if (cameraReady) {
       state = STATE_CAMERA_RUNNING;
     }
-    // Serial.print("^^^");
-    // Serial.print(cameraReady);
-    // Serial.print("---");
-    // Serial.print(state);
-    // Serial.println("^^^");
   }
 
   if (state == STATE_TO_MIC) {
@@ -227,7 +241,7 @@ void loop() {
 
   if (state == STATE_CAMERA_RUNNING && cameraReady) {
     //Serial.print("===");
-    if (captureImage(flashOn)) {
+    if (captureImage(/*flashOn*/)) {
       imageLayer->drawImageFileFit(imageName);
     } else {
       dumbdisplay.writeComment("Failed to capture image!");
@@ -276,30 +290,30 @@ const bool serialDebug = 1;                          // show debug info. on seri
 #define PIXFORMAT PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
 int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
 
-const int brightLED = 4;                             // onboard Illumination/flash LED pin (4)
-const int ledFreq = 5000;                            // PWM settings
-const int ledChannel = 15;                           // camera uses timer1
-const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
+// const int brightLED = 4;                             // onboard Illumination/flash LED pin (4)
+// const int ledFreq = 5000;                            // PWM settings
+// const int ledChannel = 15;                           // camera uses timer1
+// const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
 
 
-#if defined(FOR_LILYGO_TCAMERA)
-  // for TCAMERA v7
-  #define PWDN_GPIO_NUM     26
+#if defined(FOR_ESP32CAM)
+  // for CAMERA_MODEL_AI_THINKER
+  #define PWDN_GPIO_NUM     32      // power to camera (on/off)
   #define RESET_GPIO_NUM    -1      // -1 = not used
-  #define XCLK_GPIO_NUM     32
-  #define SIOD_GPIO_NUM     13      // i2c sda
-  #define SIOC_GPIO_NUM     12      // i2c scl
-  #define Y9_GPIO_NUM       39
-  #define Y8_GPIO_NUM       36
-  #define Y7_GPIO_NUM       23
-  #define Y6_GPIO_NUM       18
-  #define Y5_GPIO_NUM       15
-  #define Y4_GPIO_NUM        4
-  #define Y3_GPIO_NUM       14
+  #define XCLK_GPIO_NUM      0
+  #define SIOD_GPIO_NUM     26      // i2c sda
+  #define SIOC_GPIO_NUM     27      // i2c scl
+  #define Y9_GPIO_NUM       35
+  #define Y8_GPIO_NUM       34
+  #define Y7_GPIO_NUM       39
+  #define Y6_GPIO_NUM       36
+  #define Y5_GPIO_NUM       21
+  #define Y4_GPIO_NUM       19
+  #define Y3_GPIO_NUM       18
   #define Y2_GPIO_NUM        5
-  #define VSYNC_GPIO_NUM    27      // vsync_pin
-  #define HREF_GPIO_NUM     25      // href_pin
-  #define PCLK_GPIO_NUM     19      // pixel_clock_pin
+  #define VSYNC_GPIO_NUM    25      // vsync_pin
+  #define HREF_GPIO_NUM     23      // href_pin
+  #define PCLK_GPIO_NUM     22      // pixel_clock_pin
 #elif defined(FOR_LILYGO_TCAMERAPLUS)
   // for T-CAMERA PLUS
   #define PWDN_GPIO_NUM     -1
@@ -336,23 +350,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
   #define HREF_GPIO_NUM      7      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
 #else
-  // for CAMERA_MODEL_AI_THINKER
-  #define PWDN_GPIO_NUM     32      // power to camera (on/off)
-  #define RESET_GPIO_NUM    -1      // -1 = not used
-  #define XCLK_GPIO_NUM      0
-  #define SIOD_GPIO_NUM     26      // i2c sda
-  #define SIOC_GPIO_NUM     27      // i2c scl
-  #define Y9_GPIO_NUM       35
-  #define Y8_GPIO_NUM       34
-  #define Y7_GPIO_NUM       39
-  #define Y6_GPIO_NUM       36
-  #define Y5_GPIO_NUM       21
-  #define Y4_GPIO_NUM       19
-  #define Y3_GPIO_NUM       18
-  #define Y2_GPIO_NUM        5
-  #define VSYNC_GPIO_NUM    25      // vsync_pin
-  #define HREF_GPIO_NUM     23      // href_pin
-  #define PCLK_GPIO_NUM     22      // pixel_clock_pin
+  #error board not supported
 #endif
 
 
@@ -377,12 +375,12 @@ bool cameraImageSettings() {
 
 
 
-void setupFlashPWM();
+//void setupFlashPWM();
 
 bool initialiseCamera(framesize_t frameSize) {
   esp_camera_deinit();     // disable camera
   delay(50);
-  setupFlashPWM();    // configure PWM for the illumination LED
+  //setupFlashPWM();    // configure PWM for the illumination LED
 
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -425,9 +423,6 @@ bool initialiseCamera(framesize_t frameSize) {
 
   cameraImageSettings();                        // apply custom camera settings
 
-// Serial.print(">>>");
-// Serial.println(camerr);
-
   return (camerr == ESP_OK);                    // return boolean result of camera initialisation
 }
 void uninitialiseCamera() {
@@ -435,20 +430,20 @@ void uninitialiseCamera() {
   delay(50);
 }
 
-// change illumination LED brightness
-void brightLed(byte ledBrightness){
-   ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
-}
+// // change illumination LED brightness
+// void brightLed(byte ledBrightness){
+//    ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
+// }
 
-void setupFlashPWM() {
-    ledcSetup(ledChannel, ledFreq, ledRresolution);
-    ledcAttachPin(brightLED, ledChannel);
-    brightLed(32);
-    brightLed(0);
-}
+// void setupFlashPWM() {
+//     ledcSetup(ledChannel, ledFreq, ledRresolution);
+//     ledcAttachPin(brightLED, ledChannel);
+//     brightLed(32);
+//     brightLed(0);
+// }
 
 
-bool captureImage(bool useFlash) {
+bool captureImage(/*bool useFlash*/) {
 
   //if (useFlash) brightLed(255);            // change LED brightness (0 - 255)
   camera_fb_t *fb = esp_camera_fb_get();   // capture image frame from camera
@@ -485,9 +480,9 @@ bool captureImage(bool useFlash) {
   #define SOUND_SAMPLE_RATE    8000
   #define SOUND_CHANNEL_COUNT  1
 #else
-  #define I2S_WS               25
-  #define I2S_SD               33
-  #define I2S_SCK              32
+  #define I2S_WS               12
+  #define I2S_SD               13
+  #define I2S_SCK              14
   #define I2S_SAMPLE_BIT_COUNT 16
   #define SOUND_SAMPLE_RATE    8000
   #define SOUND_CHANNEL_COUNT  1
