@@ -2337,11 +2337,15 @@ void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
 }
-void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h) {
-  if (w == 0 && h == 0) {
+void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h, const String& options) {
+  if (w == 0 && h == 0 && options == "") {
     _sendCommand3(layerId, C_drawimagefile, imageFileName, String(x), String(y));
   } else {
-    _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+    if (options == "") {
+      _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+    } else {
+      _sendCommand6(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h), options);
+    }
   }
 }
 void GraphicalDDLayer::drawImageFileFit(const String& imageFileName, int x, int y, int w, int h, const String& align) {

@@ -19,7 +19,6 @@
   #define I2S_SD               33
   #define I2S_SCK              14
   #define I2S_SAMPLE_BIT_COUNT 32
-  #define I2S_PORT             I2S_NUM_0
   #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
 #elif defined(FOR_LILYGO_TSIMCAM)
@@ -28,7 +27,6 @@
   #define I2S_SD                2
   #define I2S_SCK              41
   #define I2S_SAMPLE_BIT_COUNT 16
-  #define I2S_PORT             I2S_NUM_0
   #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
 #else
@@ -36,36 +34,12 @@
   #define I2S_SD               33
   #define I2S_SCK              32
   #define I2S_SAMPLE_BIT_COUNT 16
-  #define I2S_PORT             I2S_NUM_0
   #define SOUND_SAMPLE_RATE    8000
   #define SOUND_CHANNEL_COUNT  1
 #endif
 
+#define I2S_PORT  I2S_NUM_0
 
-
-
-// #if defined(FOR_LILYGO_TSIMCAM)
-// // only support wifi
-// #else
-// #define BLUETOOTH "ESP32"
-// #endif
-
-
-
-// #define BLUETOOTH
-// #if defined(BLUETOOTH)
-
-//   // ESP32 Bluetooth with name  ESP32
-//   #include "esp32dumbdisplay.h"
-//   DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
-
-// #else
-
-//   // ESP32 WiFi
-//   #include "wifidumbdisplay.h"
-//   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
-
-// #endif
 
 
 PlotterDDLayer* plotterLayer;
@@ -86,13 +60,9 @@ const char* SoundName = "recorded_sound";
 const int I2S_DMA_BUF_COUNT = 8;
 const int I2S_DMA_BUF_LEN = 1024;
 
-// const int SoundSampleRate = 8000;  // will be 16-bit per sample
-// const int SoundNumChannels = 1;
-
 
 #if I2S_SAMPLE_BIT_COUNT == 32
   const int StreamBufferNumBytes = 512;
-  //const int StreamBufferNumBytes = 1024;
   const int StreamBufferLen = StreamBufferNumBytes / 4;
   int32_t StreamBuffer[StreamBufferLen];
 #else
@@ -134,12 +104,8 @@ void setup() {
   // set up I2S
   i2s_install();
   i2s_setpin();
-// #if defined(FOR_LILYGO_TCAMERAPLUS)
-//   i2s_zero_dma_buffer(I2S_PORT);
-// #else
   i2s_zero_dma_buffer(I2S_PORT);
   i2s_start(I2S_PORT);
-//#endif
 
   Serial.println("... DONE SETUP MIC");
 
@@ -396,51 +362,25 @@ void loop() {
 
 void i2s_install() {
   const i2s_config_t i2s_config = {
-// #if defined(FOR_LILYGO_TCAMERAPLUS)
-//         .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
-//         .sample_rate = SoundSampleRate,
-//         .bits_per_sample = i2s_bits_per_sample_t(32),
-//         .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-//         .communication_format = I2S_COMM_FORMAT_STAND_I2S,
-//         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2,
-//         .dma_buf_count = I2S_DMA_BUF_COUNT,
-//         .dma_buf_len = I2S_DMA_BUF_LEN,
-// #else
     .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
     .sample_rate = SOUND_SAMPLE_RATE,
     .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BIT_COUNT),
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-// #if I2S_SAMPLE_BIT_COUNT == 32
-//     .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BIT_COUNT),
-//     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-// #else
-//     .bits_per_sample = i2s_bits_per_sample_t(16),
-//     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-// #endif
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = 0,
     .dma_buf_count = I2S_DMA_BUF_COUNT/*8*/,
     .dma_buf_len = I2S_DMA_BUF_LEN/*1024*/,
     .use_apll = false
-//#endif
   };
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
 }
  
 void i2s_setpin() {
   const i2s_pin_config_t pin_config = {
-// #if defined(FOR_LILYGO_TCAMERAPLUS)
-//     .mck_io_num = I2S_PIN_NO_CHANGE,
-//     .bck_io_num = I2S_SCK,
-//     .ws_io_num  = I2S_WS,
-//     .data_out_num = I2S_PIN_NO_CHANGE,
-//     .data_in_num = I2S_SD
-// #else
     .bck_io_num = I2S_SCK,
     .ws_io_num = I2S_WS,   
     .data_out_num = -1,
     .data_in_num = I2S_SD
-//#endif
   };
   i2s_set_pin(I2S_PORT, &pin_config);
 }

@@ -592,11 +592,11 @@ class GraphicalDDLayer: public DDLayer {
     /// unload image file from cache
     void unloadImageFile(const String& imageFileName);
     /// draw image file in cache (if not already loaded to cache, load it) 
-    /// - x / y: position of the left-top corne
+    /// - x / y: position of the left-top corner
     /// - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
-    void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0);
+    void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& options = "");
     /// draw image file in cache (if not already loaded to cache, load it)
-    /// - x / y / w / h: aread to draw the image; 0 means the default value
+    /// - x / y / w / h: rect to draw the image; 0 means the default value
     /// - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /// cache image; not saved
@@ -605,7 +605,7 @@ class GraphicalDDLayer: public DDLayer {
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
     /// cache 16-bit "pixel" image; not saved
     void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
-    /// cache greyscale "pixel" image; as if image saved and loaded
+    /// cache grayscale "pixel" image; as if image saved and loaded
     void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// saved cached image
     /// @param imageName cachedImageName
