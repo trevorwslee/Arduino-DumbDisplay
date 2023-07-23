@@ -2,12 +2,10 @@
 #include <esp_camera.h> 
 #include <driver/i2s.h>
 
-
 // * For board selection, uncomment on of following 
 //#define FOR_ESP32CAM
 //#define FOR_LILYGO_TCAMERAPLUS
 //#define FOR_LILYGO_TSIMCAM
-
 
 // * Strongly suggest to use Bluetooth (if board supported), in such a case uncomment the following BLUETOOTH, which defines the name of the Bluetooth device (the board)
 // * Otherwise will assume WIFI connectivity
@@ -27,7 +25,6 @@
 #elif defined(FOR_LILYGO_TCAMERAPLUS)
   #include <TFT_eSPI.h>
   TFT_eSPI tft = TFT_eSPI();
-  #define TFT              tft
   #define TFT_BL_PIN       2
 #elif defined(FOR_LILYGO_TSIMCAM)
 #else
@@ -35,278 +32,11 @@
 #endif
 
 
-const int imageLayerWidth = 1024;
-const int imageLayerHeight = 768;
-const char* imageName = "esp32camwmic.jpg";
-
-
-LcdDDLayer* flashLayer;
-LcdDDLayer* micLayer;
-GraphicalDDLayer* imageLayer;
-
-LcdDDLayer* createAndSetupButton(DumbDisplay& dumbdisplay, const char* bgColor = DD_COLOR_blue) {
-  LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(11, 1);
-  buttonLayer->border(2, DD_COLOR_gray, "round");
-  buttonLayer->padding(1);
-  buttonLayer->backgroundColor(bgColor);
-  //buttonLayer->pixelColor(DD_COLOR_white);
-  buttonLayer->enableFeedback("f");
-  return buttonLayer;
-}
-
-GraphicalDDLayer * createAndSetupImageLayer(DumbDisplay& dumbdisplay) {
-  GraphicalDDLayer* imgLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
-  imgLayer->backgroundColor(DD_COLOR_ivory);
-  imgLayer->padding(10);
-  imgLayer->border(20, DD_COLOR_blue);
-  //imgLayer->enableFeedback("f");
-  return imgLayer;
-}
-
-
-bool initialiseCamera(framesize_t frameSize);
-void uninitialiseCamera();
-bool captureImage(/*bool useFlash*/);
-
-
-#define I2S_PORT  I2S_NUM_0
-void i2s_install();
-void i2s_uninstall();
-void i2s_setpin();
-
-
-struct MicInfo {
-  int sampleRate;
-  int numChannels;
-  esp_err_t result;
-  int samplesRead;
-  int16_t *sampleStreamBuffer;
-};
-
-void readMicData(MicInfo &micInfo);
-
-int micAmplifyFactor = 10;
-int micSoundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
-long micStreamingMillis = 0;
-int micStreamingTotalSampleCount = 0;
-
-
-
-#define STATE_TO_CAMERA      0
-#define STATE_CAMERA_RUNNING 1
-#define STATE_TO_MIC         2
-#define STATE_MIC_RUNNING    3
-#define STATE_OFF            4
-int state = STATE_TO_CAMERA;
-
-void setup() {
-  Serial.begin(115200);
-
-#if defined(FLASH_PIN)
-  pinMode(FLASH_PIN, OUTPUT);
-#endif  
-#if defined(MIC_BUTTON_PIN)
-  pinMode(MIC_BUTTON_PIN, INPUT_PULLDOWN);
-#endif  
-#if defined(TFT_BL_PIN)
-  TFT.init();
-  TFT.fillScreen(TFT_WHITE);
-  pinMode(TFT_BL_PIN, OUTPUT);
-  digitalWrite(TFT_BL_PIN, LOW);
-#endif
-
-  flashLayer = createAndSetupButton(dumbdisplay);
-  micLayer = createAndSetupButton(dumbdisplay);
-  imageLayer = createAndSetupImageLayer(dumbdisplay);
-
-  dumbdisplay.configAutoPin(DD_AP_VERT_2(
-    DD_AP_HORI_2(flashLayer->getLayerId(), micLayer->getLayerId()),
-    imageLayer->getLayerId()
-  ));
-
-  // set when DD idle handler ... here is a lambda expression
-  dumbdisplay.setIdleCallback([](long idleForMillis, DDIdleConnectionState connectionState) {
-    if (connectionState == DDIdleConnectionState::IDLE_RECONNECTING) {
-      state == STATE_OFF;
-    }
-  });
-
-#if !defined(FLASH_PIN) && !defined(TFT)
-  flashLayer->disabled(true);
-#endif  
-#if defined(MIC_BUTTON_PIN)
-  micLayer->disabled(true);
-#endif  
-
-  imageLayer->drawImageFileFit("dumbdisplay.png");
-}
-
-
-void setFlash(bool flashOn) {
-#if defined(FLASH_PIN)
-    digitalWrite(FLASH_PIN, flashOn ? HIGH : LOW);
-#endif
-#if defined(TFT_BL_PIN)
-  digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
-  //TFT.fillScreen(flashOn ? TFT_WHITE : TFT_BLACK);
-#endif
-
-}
-
-
-bool cameraReady = false;
-bool micReady = false;
-DDValueRecord<bool> flashOn(false, true);
-DDValueRecord<bool> micOn(false, true);
-
-void loop() {
-
-  if (state == STATE_OFF) {
-    Serial.println("*** OFF ***");
-    delay(5000);
-    return;
-  }
-
-  int oriState = state;
-
-#if defined(MIC_BUTTON_PIN)
-  bool pressed = digitalRead(MIC_BUTTON_PIN) == HIGH;
-  if (pressed) {
-    if (state == STATE_CAMERA_RUNNING) {
-      micOn = true;
-      //state = STATE_TO_MIC;
-    }
-  } else {
-    if (state == STATE_MIC_RUNNING) {
-      micOn = false;
-      //state = STATE_TO_CAMERA;
-    }
-  }
-#endif
-
-  if (flashLayer->getFeedback()) {
-    flashOn = !flashOn;
-  }
-  if (micLayer->getFeedback()) {
-    micOn = !micOn;
-  }
-
-  if (flashOn.record()) {
-    if (flashOn) {
-      flashLayer->pixelColor(DD_COLOR_red);
-      flashLayer->writeCenteredLine("FLASH ON");
-    } else {
-      flashLayer->pixelColor(DD_COLOR_white);
-      flashLayer->writeCenteredLine("FLASH OFF");
-    }  
-    setFlash(flashOn);
-  }
-
-  if (micOn.record()) {
-    if (micOn) {
-      micLayer->pixelColor(DD_COLOR_red);
-      micLayer->writeCenteredLine("MIC ON");
-      state = STATE_TO_MIC;
-    } else {
-      micLayer->pixelColor(DD_COLOR_white);
-      micLayer->writeCenteredLine("MIC OFF");
-      state = STATE_TO_CAMERA;
-    }  
-  }
-
-  if (state == STATE_TO_CAMERA) {
-    if (!cameraReady) {
-      dumbdisplay.writeComment("Initializing camera ...");
-      cameraReady = initialiseCamera(FRAMESIZE_VGA); 
-      // Serial.print("&&&&&");
-      // Serial.println(cameraReady);
-      if (cameraReady) {
-        dumbdisplay.writeComment("... initialized camera!");
-      } else {
-        dumbdisplay.writeComment("... failed to initialize camera!");
-      }
-    }
-    if (cameraReady) {
-      state = STATE_CAMERA_RUNNING;
-    }
-  }
-
-  if (state == STATE_TO_MIC) {
-    if (cameraReady) {
-      uninitialiseCamera();
-      cameraReady = false;
-      imageLayer->drawImageFile(imageName, 0, 0, 0, 0, "f:;l:GS");
-    }
-    if (!micReady) {
-      dumbdisplay.writeComment("SETUP MIC ...");
-      i2s_install();
-      i2s_setpin();
-      i2s_zero_dma_buffer(I2S_PORT);
-      i2s_start(I2S_PORT);
-      dumbdisplay.writeComment("... DONE SETUP MIC");
-      micReady = true;
-    }
-    if (micReady) {
-      state = STATE_MIC_RUNNING;
-    }
-  }
-
-  if (state == STATE_CAMERA_RUNNING && cameraReady) {
-    //Serial.print("===");
-    if (captureImage(/*flashOn*/)) {
-      imageLayer->drawImageFileFit(imageName);
-    } else {
-      dumbdisplay.writeComment("Failed to capture image!");
-      delay(1000);
-    }
-  }
-
-  if (state == STATE_MIC_RUNNING || oriState == STATE_MIC_RUNNING) {
-    MicInfo micInfo;
-    readMicData(micInfo);
-    if (micSoundChunkId == -1) {
-      // while started ... if no allocated "chunk id" (i.e. not yet started sending sound)
-      // start streaming sound, and get the assigned "chunk id"
-      micSoundChunkId = dumbdisplay.streamSound16(micInfo.sampleRate, micInfo.numChannels);
-      dumbdisplay.writeComment(String("STARTED mic streaming with chunk id [") + micSoundChunkId + "]");
-      micStreamingMillis = millis();
-      micStreamingTotalSampleCount = 0;
-    }
-    if (micInfo.result == ESP_OK) {
-      if (micSoundChunkId != -1) {
-        // send sound samples read
-        bool isFinalChunk = state != STATE_MIC_RUNNING;  // it is the final chink if justed turned to stop
-        dumbdisplay.sendSoundChunk16(micSoundChunkId, micInfo.sampleStreamBuffer, micInfo.samplesRead, isFinalChunk);
-        micStreamingTotalSampleCount += micInfo.samplesRead;
-        if (isFinalChunk) {
-          dumbdisplay.writeComment(String("DONE streaming with chunk id [") + micSoundChunkId + "]");
-          long forMillis = millis() - micStreamingMillis;
-          int totalSampleCount = micStreamingTotalSampleCount;
-          dumbdisplay.writeComment(String(". total streamed samples: ") + totalSampleCount + " in " + String(forMillis / 1000.0) + "s");
-          dumbdisplay.writeComment(String(". stream sample rate: ") + String(1000.0 * ((float) totalSampleCount / forMillis)));
-          micSoundChunkId = -1;
-          i2s_uninstall();
-          micReady = false;
-        }
-      }
-    }
-  }
-}
-
-
-
-
 const bool serialDebug = 1;                          // show debug info. on serial port (1=enabled, disable if using pins 1 and 3 as gpio)
 
 
-#define PIXFORMAT PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
-int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
-
-// const int brightLED = 4;                             // onboard Illumination/flash LED pin (4)
-// const int ledFreq = 5000;                            // PWM settings
-// const int ledChannel = 15;                           // camera uses timer1
-// const int ledRresolution = 8;                        // resolution (8 = from 0 to 255)
-
+// ====================
+// ====================
 
 #if defined(FOR_ESP32CAM)
   // for CAMERA_MODEL_AI_THINKER
@@ -366,6 +96,353 @@ int cameraImageBrightness = 0;                       // Image brightness (-2 to 
 #endif
 
 
+
+const int imageLayerWidth = 1024;
+const int imageLayerHeight = 768;
+const char* imageName = "esp32camwmic.jpg";
+
+LcdDDLayer* flashLayer;
+LcdDDLayer* micLayer;
+PlotterDDLayer* plotterLayer;
+GraphicalDDLayer* imageLayer;
+
+
+
+bool initializeCamera(framesize_t frameSize);
+void uninitializeCamera();
+bool captureImage();
+
+
+
+// ====================
+// ====================
+
+// INMP441 I2S pin assignment
+#if defined(FOR_ESP32CAM)
+  #define I2S_WS               12
+  #define I2S_SD               13
+  #define I2S_SCK              14
+  #define I2S_SAMPLE_BIT_COUNT 16
+#elif defined(FOR_LILYGO_TCAMERAPLUS)
+  // for the mic built-in to LiLyGO TCamerPlus
+  #define I2S_WS               32
+  #define I2S_SD               33
+  #define I2S_SCK              14
+  #define I2S_SAMPLE_BIT_COUNT 32
+#elif defined(FOR_LILYGO_TSIMCAM)
+  // for the mic built-in to LiLyGO TSimCam
+  #define I2S_WS               42
+  #define I2S_SD                2
+  #define I2S_SCK              41
+  #define I2S_SAMPLE_BIT_COUNT 16
+#else
+  #error board not supported
+#endif
+
+#define I2S_PORT  I2S_NUM_0
+#define SOUND_SAMPLE_RATE    16000
+#define SOUND_CHANNEL_COUNT  1
+
+const int I2S_DMA_BUF_COUNT = 8;
+const int I2S_DMA_BUF_LEN = 1024;
+
+
+// name of recorded WAV file; since only a single name; hence new one will always overwrite old one
+const char* SoundName = "recorded_sound";
+
+
+const int StreamBufferNumBytes = 256;//512;
+#if I2S_SAMPLE_BIT_COUNT == 32
+  const int StreamBufferLen = StreamBufferNumBytes / 4;
+  int32_t StreamBuffer[StreamBufferLen];
+#else
+  const int StreamBufferLen = StreamBufferNumBytes / 2;
+  int16_t StreamBuffer[StreamBufferLen];
+#endif
+
+
+void i2s_install();
+void i2s_uninstall();
+void i2s_setpin();
+
+struct MicInfo {
+  int sampleRate;
+  int numChannels;
+  esp_err_t result;
+  int samplesRead;
+  int16_t *sampleStreamBuffer;
+};
+
+void readMicData(MicInfo &micInfo);
+
+//int micAmplifyFactor = -1;//10;
+int micSoundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
+long micStreamingMillis = 0;
+int micStreamingTotalSampleCount = 0;
+
+
+// ====================
+// ====================
+
+
+#define STATE_TO_CAMERA      0
+#define STATE_CAMERA_RUNNING 1
+#define STATE_TO_MIC         2
+#define STATE_MIC_RUNNING    3
+#define STATE_OFF            4
+int state = STATE_TO_CAMERA;
+
+
+LcdDDLayer* createAndSetupButton(const char* bgColor = DD_COLOR_blue) {
+  LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(15, 1);
+  buttonLayer->border(2, DD_COLOR_darkblue, "round");
+  buttonLayer->padding(2);
+  buttonLayer->backgroundColor(bgColor);
+  buttonLayer->enableFeedback("f");
+  return buttonLayer;
+}
+
+GraphicalDDLayer* createAndSetupImageLayer() {
+  GraphicalDDLayer* imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
+  imageLayer->setTextFont("DL::Roboto");
+  imageLayer->setTextSize(64);
+  imageLayer->backgroundColor(DD_COLOR_ivory);
+  imageLayer->padding(10);
+  imageLayer->border(20, DD_COLOR_blue);
+  return imageLayer;
+}
+
+PlotterDDLayer* createAndSetupPlotterLayer() {
+  PlotterDDLayer* plotterLayer = dumbdisplay.createPlotterLayer(1024, 256, SOUND_SAMPLE_RATE / StreamBufferLen);
+  plotterLayer->backgroundColor(DD_COLOR_azure);
+  plotterLayer->padding(10);
+  plotterLayer->border(5, DD_COLOR_blue);
+  return plotterLayer;
+} 
+
+
+void setup() {
+  Serial.begin(115200);
+
+#if defined(FLASH_PIN)
+  pinMode(FLASH_PIN, OUTPUT);
+#endif  
+#if defined(MIC_BUTTON_PIN)
+  pinMode(MIC_BUTTON_PIN, INPUT_PULLDOWN);
+#endif  
+#if defined(TFT_BL_PIN)
+  tft.init(); 
+  tft.fillScreen(TFT_WHITE);
+  pinMode(TFT_BL_PIN, OUTPUT);
+  digitalWrite(TFT_BL_PIN, LOW);
+#endif
+
+  flashLayer = createAndSetupButton();
+  micLayer = createAndSetupButton();
+  imageLayer = createAndSetupImageLayer();
+  plotterLayer = createAndSetupPlotterLayer();
+
+  dumbdisplay.configAutoPin(
+    DDAutoPinConfig('V')
+      .addLayer(micLayer)
+      .addLayer(plotterLayer)
+      .addLayer(flashLayer)
+      .addLayer(imageLayer)
+    .build()
+  );
+
+  // set when DD idle handler ... here is a lambda expression
+  dumbdisplay.setIdleCallback([](long idleForMillis, DDIdleConnectionState connectionState) {
+    if (connectionState == DDIdleConnectionState::IDLE_RECONNECTING) {
+      state = STATE_OFF;
+    }
+  });
+
+#if !defined(FLASH_PIN) && !defined(TFT_BL_PIN)
+  flashLayer->disabled(true);
+#endif  
+#if defined(MIC_BUTTON_PIN)
+  micLayer->disabled(true);
+#endif  
+
+  imageLayer->drawImageFileFit("dumbdisplay.png");
+}
+
+
+void setFlash(bool flashOn) {
+#if defined(FLASH_PIN)
+    digitalWrite(FLASH_PIN, flashOn ? HIGH : LOW);
+#endif
+#if defined(TFT_BL_PIN)
+  digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
+#endif
+
+}
+
+
+bool cameraReady = false;
+bool micReady = false;
+DDValueRecord<bool> flashOn(false, true);
+DDValueRecord<bool> micOn(false, true);
+
+void loop() {
+
+  if (state == STATE_OFF) {
+#if defined(TFT_BL_PIN)
+    digitalWrite(TFT_BL_PIN, LOW);
+#endif
+    Serial.println("*** OFF ***");
+    delay(500);
+    return;
+  }
+
+  int oriState = state;
+
+#if defined(MIC_BUTTON_PIN)
+  bool pressed = digitalRead(MIC_BUTTON_PIN) == HIGH;
+  if (pressed) {
+    if (state == STATE_CAMERA_RUNNING) {
+      micOn = true;
+      //state = STATE_TO_MIC;
+    }
+  } else {
+    if (state == STATE_MIC_RUNNING) {
+      micOn = false;
+      //state = STATE_TO_CAMERA;
+    }
+  }
+#endif
+
+  if (flashLayer->getFeedback()) {
+    flashOn = !flashOn;
+  }
+  if (micLayer->getFeedback()) {
+    micOn = !micOn;
+  }
+
+  if (flashOn.record()) {
+    if (flashOn) {
+      flashLayer->pixelColor(DD_COLOR_red);
+      flashLayer->writeCenteredLine("FLASH ON");
+    } else {
+      flashLayer->pixelColor(DD_COLOR_white);
+      flashLayer->writeCenteredLine("FLASH OFF");
+    }  
+    setFlash(flashOn);
+  }
+
+  if (micOn.record()) {
+    if (micOn) {
+      micLayer->pixelColor(DD_COLOR_red);
+      micLayer->writeCenteredLine("MIC ON");
+      state = STATE_TO_MIC;
+    } else {
+      micLayer->pixelColor(DD_COLOR_white);
+      micLayer->writeCenteredLine("MIC OFF");
+      state = STATE_TO_CAMERA;
+    }  
+  }
+
+  if (state == STATE_TO_CAMERA) {
+    plotterLayer->clear();
+#if defined(TFT_BL_PIN)
+    tft.fillScreen(TFT_WHITE);
+    digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
+#endif
+    if (!cameraReady) {
+      dumbdisplay.writeComment("Initializing camera ...");
+      cameraReady = initializeCamera(FRAMESIZE_VGA); 
+      if (cameraReady) {
+        dumbdisplay.writeComment("... initialized camera!");
+      } else {
+        dumbdisplay.writeComment("... failed to initialize camera!");
+      }
+    }
+    if (cameraReady) {
+      state = STATE_CAMERA_RUNNING;
+    }
+  }
+
+  if (state == STATE_TO_MIC) {
+#if defined(TFT_BL_PIN)
+    tft.fillScreen(TFT_BLACK);
+      tft.setTextColor(TFT_RED, TFT_BLACK);
+      tft.setTextSize(3);
+    tft.drawString("TALKING ...", 20, 40, 1);
+    digitalWrite(TFT_BL_PIN, HIGH);
+#endif
+    if (cameraReady) {
+      uninitializeCamera();
+      cameraReady = false;
+      imageLayer->drawImageFile(imageName, 0, 0, 0, 0, "f:;l:GS");
+      imageLayer->drawStr(50, imageLayerHeight - 100, "TALK ...", "red");
+    }
+    if (!micReady) {
+      dumbdisplay.writeComment("SETUP MIC ...");
+      i2s_install();
+      i2s_setpin();
+      i2s_zero_dma_buffer(I2S_PORT);
+      i2s_start(I2S_PORT);
+      dumbdisplay.writeComment("... DONE SETUP MIC");
+      micReady = true;
+    }
+    if (micReady) {
+      state = STATE_MIC_RUNNING;
+    }
+  }
+
+  if (state == STATE_CAMERA_RUNNING && cameraReady) {
+    if (captureImage()) {
+      imageLayer->drawImageFileFit(imageName);
+    } else {
+      dumbdisplay.writeComment("Failed to capture image!");
+      delay(1000);
+    }
+  }
+
+  if (state == STATE_MIC_RUNNING || oriState == STATE_MIC_RUNNING) {
+    MicInfo micInfo;
+    readMicData(micInfo);
+    if (micSoundChunkId == -1) {
+      // while started ... if no allocated "chunk id" (i.e. not yet started sending sound)
+      // start streaming sound, and get the assigned "chunk id"
+      micSoundChunkId = dumbdisplay.streamSound16(micInfo.sampleRate, micInfo.numChannels);
+      dumbdisplay.writeComment(String("STARTED mic streaming with chunk id [") + micSoundChunkId + "]");
+      micStreamingMillis = millis();
+      micStreamingTotalSampleCount = 0;
+    }
+    if (micInfo.result == ESP_OK) {
+      if (micSoundChunkId != -1) {
+        // send sound samples read
+        bool isFinalChunk = state != STATE_MIC_RUNNING;  // it is the final chink if justed turned to stop
+        dumbdisplay.sendSoundChunk16(micSoundChunkId, micInfo.sampleStreamBuffer, micInfo.samplesRead, isFinalChunk);
+        micStreamingTotalSampleCount += micInfo.samplesRead;
+        if (isFinalChunk) {
+          dumbdisplay.writeComment(String("DONE streaming with chunk id [") + micSoundChunkId + "]");
+          long forMillis = millis() - micStreamingMillis;
+          int totalSampleCount = micStreamingTotalSampleCount;
+          dumbdisplay.writeComment(String(". total streamed samples: ") + totalSampleCount + " in " + String(forMillis / 1000.0) + "s");
+          dumbdisplay.writeComment(String(". stream sample rate: ") + String(1000.0 * ((float) totalSampleCount / forMillis)));
+          micSoundChunkId = -1;
+          i2s_uninstall();
+          micReady = false;
+        }
+      }
+    }
+  }
+}
+
+
+
+// ====================
+// ====================
+
+
+#define PIXFORMAT PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
+int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
+
+
+
 bool cameraImageSettings() {
 
   if (serialDebug) Serial.println("Applying camera settings");
@@ -383,16 +460,11 @@ bool cameraImageSettings() {
   s->set_brightness(s, cameraImageBrightness);  // (-2 to 2) - set brightness
 
    return 1;
-}  // cameraImageSettings
+}
 
-
-
-//void setupFlashPWM();
-
-bool initialiseCamera(framesize_t frameSize) {
+bool initializeCamera(framesize_t frameSize) {
   esp_camera_deinit();     // disable camera
   delay(50);
-  //setupFlashPWM();    // configure PWM for the illumination LED
 
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -437,29 +509,15 @@ bool initialiseCamera(framesize_t frameSize) {
 
   return (camerr == ESP_OK);                    // return boolean result of camera initialisation
 }
-void uninitialiseCamera() {
+
+void uninitializeCamera() {
   esp_camera_deinit();     // disable camera
   delay(50);
 }
 
-// // change illumination LED brightness
-// void brightLed(byte ledBrightness){
-//    ledcWrite(ledChannel, ledBrightness);   // change LED brightness (0 - 255)
-// }
+bool captureImage() {
 
-// void setupFlashPWM() {
-//     ledcSetup(ledChannel, ledFreq, ledRresolution);
-//     ledcAttachPin(brightLED, ledChannel);
-//     brightLed(32);
-//     brightLed(0);
-// }
-
-
-bool captureImage(/*bool useFlash*/) {
-
-  //if (useFlash) brightLed(255);            // change LED brightness (0 - 255)
   camera_fb_t *fb = esp_camera_fb_get();   // capture image frame from camera
-  //if (useFlash) brightLed(0);              // change LED brightness back to previous state
   if (fb == NULL) {
     if (serialDebug) Serial.println("Error: Camera capture failed");
      return false;
@@ -473,60 +531,9 @@ bool captureImage(/*bool useFlash*/) {
 }
 
 
+// ====================
+// ====================
 
-// INMP441 I2S pin assignment
-#if defined(FOR_LILYGO_TCAMERAPLUS)
-  // for the mic built-in to LiLyGO TCamerPlus
-  #define I2S_WS               32
-  #define I2S_SD               33
-  #define I2S_SCK              14
-  #define I2S_SAMPLE_BIT_COUNT 32
-  #define SOUND_SAMPLE_RATE    16000
-  #define SOUND_CHANNEL_COUNT  1
-#elif defined(FOR_LILYGO_TSIMCAM)
-  // for the mic built-in to LiLyGO TSimCam
-  #define I2S_WS               42
-  #define I2S_SD                2
-  #define I2S_SCK              41
-  #define I2S_SAMPLE_BIT_COUNT 16
-  #define SOUND_SAMPLE_RATE    16000
-  #define SOUND_CHANNEL_COUNT  1
-#else
-  #define I2S_WS               12
-  #define I2S_SD               13
-  #define I2S_SCK              14
-  #define I2S_SAMPLE_BIT_COUNT 16
-  #define SOUND_SAMPLE_RATE    16000
-  #define SOUND_CHANNEL_COUNT  1
-#endif
-
-// name of recorded WAV file; since only a single name; hence new one will always overwrite old one
-const char* SoundName = "recorded_sound";
-
-
-const int I2S_DMA_BUF_COUNT = 8;
-const int I2S_DMA_BUF_LEN = 1024;
-
-
-#if I2S_SAMPLE_BIT_COUNT == 32
-  const int StreamBufferNumBytes = 512;
-  const int StreamBufferLen = StreamBufferNumBytes / 4;
-  int32_t StreamBuffer[StreamBufferLen];
-#else
-  #if SOUND_SAMPLE_RATE == 16000
-    // for 16 bits ... 16000 sample per second (32000 bytes per second; since 16 bits per sample) ==> 512 bytes = 16 ms per read
-    const int StreamBufferNumBytes = 512;
-  #else
-    // for 16 bits ... 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 256 bytes = 16 ms per read
-    const int StreamBufferNumBytes = 256;
-  #endif  
-  const int StreamBufferLen = StreamBufferNumBytes / 2;
-  int16_t StreamBuffer[StreamBufferLen];
-#endif
-
-// sound sample (16 bits) amplification
-// const int MaxAmplifyFactor = 20;
-// const int DefAmplifyFactor = 10;
 
 void i2s_install() {
   const i2s_config_t i2s_config = {
@@ -577,25 +584,25 @@ void readMicData(MicInfo &micInfo) {
 #endif    
     if (samplesRead > 0) {
       // find the samples mean ... and amplify the sound sample, by simply multiple it by some "amplify factor"
-      //float sumVal = 0;
+      float sumVal = 0;
       for (int i = 0; i < samplesRead; ++i) {
         int32_t val = StreamBuffer[i];
 #if I2S_SAMPLE_BIT_COUNT == 32
-        val = val / 0x0000ffff;
+        val = val / 0x0000ffff;  // 32bit to 16 bit
 #endif
-        if (micAmplifyFactor > 1) {
-          val = micAmplifyFactor * val;
-          if (val > 32700) {
-            val = 32700;
-          } else if (val < -32700) {
-            val = -32700;
-          }
-        }
+        // if (micAmplifyFactor > 1) {
+        //   val = micAmplifyFactor * val;
+        // }
+        // if (val > 32700) {
+        //   val = 32700;
+        // } else if (val < -32700) {
+        //   val = -32700;
+        // }
         sampleStreamBuffer[i] = val;
-        //sumVal += val;
+        sumVal += val;
       }
-      //float meanVal = sumVal / samplesRead;
-      //plotterLayer->set(meanVal);
+      float meanVal = sumVal / samplesRead;
+      plotterLayer->set(meanVal);
     }
   }
   micInfo.sampleRate = SOUND_SAMPLE_RATE;
@@ -603,5 +610,4 @@ void readMicData(MicInfo &micInfo) {
   micInfo.result = result;
   micInfo.samplesRead = samplesRead;
   micInfo.sampleStreamBuffer = sampleStreamBuffer;
-
 }
