@@ -15,6 +15,15 @@
  
 
 
+// #define CAM_FORMAT           PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
+// #define CAM_SIZE             FRAMESIZE_VGA
+// #define CAM_FORMAT           PIXFORMAT_RGB565                   // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
+// #define CAM_SIZE             FRAMESIZE_96X96
+#define CAM_FORMAT           PIXFORMAT_GRAYSCALE                   // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
+#define CAM_SIZE             FRAMESIZE_96X96
+
+
+
 const int imageLayerWidth = 1024;
 const int imageLayerHeight = 768;
 const char* imageName = "esp32camwmic.jpg";
@@ -161,7 +170,7 @@ void loop() {
   if (!cameraReady) {
     //imageLayer->clear();
     dumbdisplay.writeComment("Initializing camera ...");
-    cameraReady = initialiseCamera(FRAMESIZE_VGA); 
+    cameraReady = initialiseCamera(CAM_SIZE); 
     if (cameraReady) {
       dumbdisplay.writeComment("... initialized camera!");
     } else {
@@ -229,7 +238,7 @@ void loop() {
 const bool serialDebug = 1;                            // show debug info. on serial port (1=enabled, disable if using pins 1 and 3 as gpio)
 
 
-#define PIXFORMAT PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
+//#define PIXFORMAT PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
 int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
 
 const int brightLED = 4;                             // onboard Illumination/flash LED pin (4)
@@ -360,7 +369,7 @@ bool initialiseCamera(framesize_t frameSize) {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;               // XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
-  config.pixel_format = PIXFORMAT;              // Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
+  config.pixel_format = CAM_FORMAT;              // Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
   config.frame_size = frameSize;                // Image sizes: 160x120 (QQVGA), 128x160 (QQVGA2), 176x144 (QCIF), 240x176 (HQVGA), 320x240 (QVGA),
                                                 //              400x296 (CIF), 640x480 (VGA, default), 800x600 (SVGA), 1024x768 (XGA), 1280x1024 (SXGA),
                                                 //              1600x1200 (UXGA)
@@ -408,7 +417,13 @@ bool captureImage(bool useFlash) {
      return false;
   }
 
-  imageLayer->cacheImage(imageName, fb->buf, fb->len);
+  if (CAM_FORMAT == PIXFORMAT_JPEG) {
+    imageLayer->cacheImage(imageName, fb->buf, fb->len);
+  } else if (CAM_FORMAT == PIXFORMAT_RGB565) {
+    imageLayer->cachePixelImage16(imageName, (const uint16_t*) fb->buf, fb->width, fb->height, "sbo");
+  } else if (CAM_FORMAT == PIXFORMAT_GRAYSCALE) {
+    imageLayer->cachePixelImageGS(imageName, fb->buf, fb->width, fb->height);
+  }
 
   esp_camera_fb_return(fb);        // return frame so memory can be released
 
@@ -452,16 +467,16 @@ const int I2S_DMA_BUF_LEN = 1024;
 
 
 #if I2S_SAMPLE_BIT_COUNT == 32
-  const int StreamBufferNumBytes = 512;
+  const int StreamBufferNumBytes = 256;//512;
   const int StreamBufferLen = StreamBufferNumBytes / 4;
   int32_t StreamBuffer[StreamBufferLen];
 #else
   #if SOUND_SAMPLE_RATE == 16000
     // for 16 bits ... 16000 sample per second (32000 bytes per second; since 16 bits per sample) ==> 512 bytes = 16 ms per read
-    const int StreamBufferNumBytes = 512;
+    const int StreamBufferNumBytes = 256;//512;
   #else
     // for 16 bits ... 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 256 bytes = 16 ms per read
-    const int StreamBufferNumBytes = 256;
+    const int StreamBufferNumBytes = 128;//256;
   #endif  
   const int StreamBufferLen = StreamBufferNumBytes / 2;
   int16_t StreamBuffer[StreamBufferLen];
