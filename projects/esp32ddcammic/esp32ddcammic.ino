@@ -62,11 +62,6 @@
 
 #define CAM_FORMAT           PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
 #define CAM_SIZE             FRAMESIZE_VGA
-// #define CAM_FORMAT           PIXFORMAT_RGB565                   // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
-// #define CAM_SIZE             FRAMESIZE_96X96
-// #define CAM_FORMAT           PIXFORMAT_GRAYSCALE                   // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
-// #define CAM_SIZE             FRAMESIZE_96X96
-
 
 
 // ====================
@@ -119,6 +114,11 @@ struct MicInfo {
 
 void readMicData(MicInfo &micInfo);
 
+
+const int UIAmplifyMultiplier = 10;
+const int MaxAmplifyFactor = 20;
+int amplifyFactor = 0;
+
 int micSoundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
 long micStreamingMillis = 0;
 int micStreamingTotalSampleCount = 0;
@@ -135,6 +135,8 @@ GraphicalDDLayer* imageLayer = NULL;  // initially assign it NULL
 LcdDDLayer* flashLayer;
 LcdDDLayer* micLayer;
 PlotterDDLayer* plotterLayer;
+LcdDDLayer* amplifyLblLayer;
+JoystickDDLayer* amplifySlider;
 
 bool initializeCamera(framesize_t frameSize);
 void uninitializeCamera();
@@ -147,7 +149,7 @@ bool captureImage();
 int state = STATE_TO_CAMERA;
 
 LcdDDLayer* createAndSetupButton(const char* bgColor = DD_COLOR_blue) {
-  LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(15, 1);
+  LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(9, 1);
   buttonLayer->border(2, DD_COLOR_darkblue, "round");
   buttonLayer->padding(2);
   buttonLayer->backgroundColor(bgColor);
@@ -158,7 +160,7 @@ LcdDDLayer* createAndSetupButton(const char* bgColor = DD_COLOR_blue) {
 GraphicalDDLayer* createAndSetupImageLayer() {
   GraphicalDDLayer* imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
   imageLayer->setTextFont("DL::Roboto");
-  imageLayer->setTextSize(64);
+  imageLayer->setTextSize(72);
   imageLayer->backgroundColor(DD_COLOR_ivory);
   imageLayer->padding(10);
   imageLayer->border(20, DD_COLOR_blue);
@@ -166,23 +168,49 @@ GraphicalDDLayer* createAndSetupImageLayer() {
 }
 
 PlotterDDLayer* createAndSetupPlotterLayer() {
-  PlotterDDLayer* plotterLayer = dumbdisplay.createPlotterLayer(1024, 256, SOUND_SAMPLE_RATE / StreamBufferLen);
+  PlotterDDLayer* plotterLayer = dumbdisplay.createPlotterLayer(1000, 300, SOUND_SAMPLE_RATE / StreamBufferLen);
   plotterLayer->backgroundColor(DD_COLOR_azure);
   plotterLayer->padding(10);
-  plotterLayer->border(5, DD_COLOR_blue);
+  plotterLayer->border(5, DD_COLOR_crimson);
   return plotterLayer;
 } 
+
+LcdDDLayer* createAndSetupAmplifyLblLayer() {
+  LcdDDLayer* amplifyLblLayer = dumbdisplay.createLcdLayer(4, 1);
+  amplifyLblLayer->pixelColor(DD_COLOR_red);
+  amplifyLblLayer->noBackgroundColor();
+  return amplifyLblLayer;
+}
+
+JoystickDDLayer* createAndSetupAmplifySlider() {
+  JoystickDDLayer* amplifySlider = dumbdisplay.createJoystickLayer(UIAmplifyMultiplier * MaxAmplifyFactor, "hori");
+  amplifySlider->padding(1);
+  amplifySlider->border(1, DD_COLOR_navy);
+  return amplifySlider;
+}
 
 void setupDumbdisplay() {
   flashLayer = createAndSetupButton();
   micLayer = createAndSetupButton();
   imageLayer = createAndSetupImageLayer();
+  amplifyLblLayer = createAndSetupAmplifyLblLayer();
+  amplifySlider = createAndSetupAmplifySlider();
   plotterLayer = createAndSetupPlotterLayer();
   dumbdisplay.configAutoPin(
     DDAutoPinConfig('V')
-      .addLayer(micLayer)
-      .addLayer(plotterLayer)
-      .addLayer(flashLayer)
+      .beginGroup('H')
+        .beginGroup('V')
+          .addLayer(flashLayer)
+          .addLayer(micLayer)
+        .endGroup()
+        .beginGroup('V')
+          .addLayer(plotterLayer)
+          .beginGroup('S')  // stacked, one on top of another
+            .addLayer(amplifyLblLayer)  
+            .addLayer(amplifySlider)
+          .endGroup() 
+        .endGroup()
+      .endGroup()
       .addLayer(imageLayer)
     .build()
   );
@@ -273,7 +301,7 @@ void loop() {
     flashOn = !flashOn;
     updateUI = true;
   }
-
+  
   if (updateUI) {
     if (flashOn) {
       flashLayer->pixelColor(DD_COLOR_red);
@@ -286,12 +314,22 @@ void loop() {
     if (micOn) {
       micLayer->pixelColor(DD_COLOR_red);
       micLayer->writeCenteredLine("MIC ON");
+      //amplifySlider->disabled(true);
       state = STATE_TO_MIC;
     } else {
       micLayer->pixelColor(DD_COLOR_white);
       micLayer->writeCenteredLine("MIC OFF");
+      //amplifySlider->disabled(false);
       state = STATE_TO_CAMERA;
     }  
+  }
+
+  const DDFeedback* fb = amplifySlider->getFeedback();
+  if (fb != NULL) {
+    amplifyFactor = fb->x / UIAmplifyMultiplier;
+  }
+  if (fb != NULL || updateUI) {
+    amplifyLblLayer->writeLine(String(amplifyFactor), 0, "R");
   }
 
   if (state == STATE_TO_CAMERA) {
@@ -310,6 +348,7 @@ void loop() {
       }
     }
     if (cameraReady) {
+      imageLayer->clear();
       state = STATE_CAMERA_RUNNING;
     }
   }
@@ -626,6 +665,14 @@ void readMicData(MicInfo &micInfo) {
 #if I2S_SAMPLE_BIT_COUNT == 32
         val = val / 0x0000ffff;  // 32 bit to 16 bit
 #endif
+        if (amplifyFactor > 1) {
+          val = amplifyFactor * val;
+        }
+        if (val > 32700) {
+          val = 32700;
+        } else if (val < -32700) {
+          val = -32700;
+        }
         sampleStreamBuffer[i] = val;
         sumVal += val;
       }
