@@ -21,6 +21,7 @@
   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 #endif
 
+
 #if defined(FOR_ESP32CAM)
   #define FLASH_PIN        4
   #define MIC_BUTTON_PIN   15
@@ -57,7 +58,7 @@
 #endif
 
 #define I2S_PORT             I2S_NUM_0
-#define SOUND_SAMPLE_RATE    16000
+#define SOUND_SAMPLE_RATE    8000
 #define SOUND_CHANNEL_COUNT  1
 
 #define CAM_FORMAT           PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
@@ -113,7 +114,6 @@ struct MicInfo {
 };
 
 void readMicData(MicInfo &micInfo);
-
 
 const int UIAmplifyMultiplier = 10;
 const int MaxAmplifyFactor = 20;
@@ -264,11 +264,17 @@ void loop() {
     setFlash(false);
     flashOn = false;
     micOn = false;
+    Serial.println("***********");
+    Serial.println("*** OFF ***");
+    Serial.println("***********");
     return;
   }
 
   boolean updateUI = false;
   if (imageLayer == NULL) {
+    Serial.println("**********");
+    Serial.println("*** ON ***");
+    Serial.println("**********");
     // just connected ==> set things up like freshly initialized
     setupDumbdisplay();
     state = STATE_TO_CAMERA;
