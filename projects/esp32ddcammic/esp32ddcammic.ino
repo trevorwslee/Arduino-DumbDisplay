@@ -3,10 +3,11 @@
 #include <driver/i2s.h>
 
 
-// *** For board selection, uncomment on of following 
+// *** For board selection, uncomment one of following ; note that ESP32CAM is AI Thinker board and TCAMERA is v1.7
 //#define FOR_ESP32CAM
 //#define FOR_LILYGO_TCAMERAPLUS
 //#define FOR_LILYGO_TSIMCAM
+//#define FOR_LILYGO_TCAMERA
 
 // *** Strongly suggest to use Bluetooth (if board supported), in such a case uncomment the following BLUETOOTH macro, which defines the name of the Bluetooth device (the board)
 // *** Otherwise will assume WIFI connectivity; need WIFI_SSID and WIFI_PASSWORD macros
@@ -29,40 +30,40 @@
   #define TFT_BL_PIN       2
   #include <TFT_eSPI.h>
   TFT_eSPI tft = TFT_eSPI();
-#elif defined(FOR_LILYGO_TSIMCAM)
-#else
-  #error board not supported
 #endif
 
+#define SUPPORT_FACE_DETECTION
 
-// INMP441 I2S pin assignment
 #if defined(FOR_ESP32CAM)
+  // *** comments out the following T2S_WS macro if INMP441 not attached
   #define I2S_WS               12
   #define I2S_SD               13
   #define I2S_SCK              14
   #define I2S_SAMPLE_BIT_COUNT 16
 #elif defined(FOR_LILYGO_TCAMERAPLUS)
-  // for the mic built-in to LiLyGO TCamerPlus
+  // for the mic built-in of LiLyGO TCameraPlus
   #define I2S_WS               32
   #define I2S_SD               33
   #define I2S_SCK              14
   #define I2S_SAMPLE_BIT_COUNT 32
 #elif defined(FOR_LILYGO_TSIMCAM)
-  // for the mic built-in to LiLyGO TSimCam
+  // for the mic built-in of LiLyGO TSimCam
   #define I2S_WS               42
   #define I2S_SD                2
   #define I2S_SCK              41
   #define I2S_SAMPLE_BIT_COUNT 16
-#else
-  #error board not supported
 #endif
 
 #define I2S_PORT             I2S_NUM_0
 #define SOUND_SAMPLE_RATE    8000
 #define SOUND_CHANNEL_COUNT  1
 
-#define CAM_FORMAT           PIXFORMAT_JPEG                     // image format, Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
-#define CAM_SIZE             FRAMESIZE_VGA
+#if defined(SUPPORT_FACE_DETECTION)
+  #include "human_face_detect_msr01.hpp"
+  #include "human_face_detect_mnp01.hpp"
+  HumanFaceDetectMSR01 detector(0.3F, 0.3F, 10, 0.75F/*0.3F*/);  // 0.75F is adjusted for 96x96; original 0.3F is for 240x240
+  HumanFaceDetectMNP01 detector2(0.4F, 0.3F, 10);
+#endif
 
 
 // ====================
@@ -103,9 +104,11 @@ const int StreamBufferNumBytes = 256;
   int16_t StreamBuffer[StreamBufferLen];
 #endif
 
+#if defined(I2S_WS)
 void i2s_install();
 void i2s_uninstall();
 void i2s_setpin();
+#endif
 
 struct MicInfo {
   esp_err_t result;
@@ -127,20 +130,31 @@ int micStreamingTotalSampleCount = 0;
 // ====================
 // ====================
 
-const int imageLayerWidth = 1024;
-const int imageLayerHeight = 768;
+const int imageLayerWidth = 640;
+const int imageLayerHeight = 480;
 const char* imageName = "captured_image.jpg";
 
 GraphicalDDLayer* imageLayer = NULL;  // initially assign it NULL
 LcdDDLayer* flashLayer;
+LcdDDLayer* faceLayer;
 LcdDDLayer* micLayer;
 PlotterDDLayer* plotterLayer;
 LcdDDLayer* amplifyLblLayer;
 JoystickDDLayer* amplifySlider;
 
-bool initializeCamera(framesize_t frameSize);
+bool initializeCamera(framesize_t frameSize, pixformat_t pixelFormat);
 void uninitializeCamera();
 bool captureImage();
+
+framesize_t cameraSize;
+pixformat_t cameraFormat;
+
+bool cameraReady = false;
+bool micReady = false;
+
+bool flashOn = false;
+bool micOn = false;
+bool faceOn = false;
 
 #define STATE_TO_CAMERA      0
 #define STATE_CAMERA_RUNNING 1
@@ -191,6 +205,7 @@ JoystickDDLayer* createAndSetupAmplifySlider() {
 
 void setupDumbdisplay() {
   flashLayer = createAndSetupButton();
+  faceLayer = createAndSetupButton();
   micLayer = createAndSetupButton();
   imageLayer = createAndSetupImageLayer();
   amplifyLblLayer = createAndSetupAmplifyLblLayer();
@@ -201,6 +216,7 @@ void setupDumbdisplay() {
       .beginGroup('H')
         .beginGroup('V')
           .addLayer(flashLayer)
+          .addLayer(faceLayer)
           .addLayer(micLayer)
         .endGroup()
         .beginGroup('V')
@@ -218,7 +234,10 @@ void setupDumbdisplay() {
 #if !defined(FLASH_PIN) && !defined(TFT_BL_PIN)
   flashLayer->disabled(true);
 #endif  
-#if defined(MIC_BUTTON_PIN)
+#if !defined(SUPPORT_FACE_DETECTION)
+  faceLayer->disabled(true);
+#endif
+#if !defined(I2S_WS) || defined(MIC_BUTTON_PIN)
   micLayer->disabled(true);
 #endif  
 
@@ -233,11 +252,6 @@ void setFlash(bool flashOn) {
   digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
 #endif
 }
-
-bool cameraReady = false;
-bool micReady = false;
-bool flashOn = false;
-bool micOn = false;
 
 void loop() {
 
@@ -257,10 +271,12 @@ void loop() {
       uninitializeCamera();
       cameraReady = false;
     }
+#if defined(I2S_WS)
     if (micReady) {
       i2s_uninstall();
       micReady = false;
     }
+#endif
     setFlash(false);
     flashOn = false;
     micOn = false;
@@ -281,6 +297,8 @@ void loop() {
     updateUI = true;
   }
 
+  framesize_t oriCameraSize = cameraSize;
+  pixformat_t oriCameraFormat = cameraFormat;
   int oriState = state;
 
 #if defined(MIC_BUTTON_PIN)
@@ -307,6 +325,11 @@ void loop() {
     flashOn = !flashOn;
     updateUI = true;
   }
+  if (faceLayer->getFeedback()) {
+    faceOn = !faceOn;
+    updateUI = true;
+  }
+
   
   if (updateUI) {
     if (flashOn) {
@@ -320,13 +343,18 @@ void loop() {
     if (micOn) {
       micLayer->pixelColor(DD_COLOR_red);
       micLayer->writeCenteredLine("MIC ON");
-      //amplifySlider->disabled(true);
       state = STATE_TO_MIC;
     } else {
       micLayer->pixelColor(DD_COLOR_white);
       micLayer->writeCenteredLine("MIC OFF");
-      //amplifySlider->disabled(false);
       state = STATE_TO_CAMERA;
+      if (faceOn) {
+        faceLayer->pixelColor(DD_COLOR_red);
+        faceLayer->writeCenteredLine("FACE ON");
+      } else {
+        faceLayer->pixelColor(DD_COLOR_white);
+        faceLayer->writeCenteredLine("FACE OFF");
+      }
     }  
   }
 
@@ -344,9 +372,21 @@ void loop() {
     tft.fillScreen(TFT_WHITE);
     digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
 #endif
+    if (faceOn) {
+      cameraSize = FRAMESIZE_96X96;
+      cameraFormat = PIXFORMAT_RGB565;
+    } else {
+      cameraSize = FRAMESIZE_VGA;
+      cameraFormat = PIXFORMAT_JPEG;
+    }
+    if (cameraReady) {
+      if (oriCameraSize != cameraSize || oriCameraFormat != oriCameraFormat) {
+        cameraReady = false;
+      }
+    }
     if (!cameraReady) {
       dumbdisplay.writeComment("Initializing camera ...");
-      cameraReady = initializeCamera(CAM_SIZE); 
+      cameraReady = initializeCamera(cameraSize, cameraFormat); 
       if (cameraReady) {
         dumbdisplay.writeComment("... initialized camera!");
       } else {
@@ -358,6 +398,8 @@ void loop() {
       state = STATE_CAMERA_RUNNING;
     }
   }
+
+#if defined(I2S_WS)
 
   if (state == STATE_TO_MIC) {
 #if defined(TFT_BL_PIN)
@@ -426,6 +468,8 @@ void loop() {
       }
     }
   }
+
+#endif  
 }
 
 
@@ -487,6 +531,24 @@ void loop() {
   #define VSYNC_GPIO_NUM     6      // vsync_pin
   #define HREF_GPIO_NUM      7      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
+#elif defined(FOR_LILYGO_TCAMERA)
+  // for TCAMERA v1.7
+  #define PWDN_GPIO_NUM     26
+  #define RESET_GPIO_NUM    -1      // -1 = not used
+  #define XCLK_GPIO_NUM     32
+  #define SIOD_GPIO_NUM     13      // i2c sda
+  #define SIOC_GPIO_NUM     12      // i2c scl
+  #define Y9_GPIO_NUM       39
+  #define Y8_GPIO_NUM       36
+  #define Y7_GPIO_NUM       23
+  #define Y6_GPIO_NUM       18
+  #define Y5_GPIO_NUM       15
+  #define Y4_GPIO_NUM        4
+  #define Y3_GPIO_NUM       14
+  #define Y2_GPIO_NUM        5
+  #define VSYNC_GPIO_NUM    27      // vsync_pin
+  #define HREF_GPIO_NUM     25      // href_pin
+  #define PCLK_GPIO_NUM     19      // pixel_clock_pin
 #else
   #error board not supported
 #endif
@@ -515,11 +577,32 @@ bool cameraImageSettings() {
    return 1;
 }
 
-bool initializeCamera(framesize_t frameSize) {
+bool initializeCamera(framesize_t frameSize, pixformat_t pixelFormat) {
   esp_camera_deinit();     // disable camera
   delay(50);
 
-#if defined(FOR_LILYGO_TCAMERAPLUS)
+  // camera_config_t config;
+  // config.ledc_channel = LEDC_CHANNEL_0;
+  // config.ledc_timer = LEDC_TIMER_0;
+  // config.pin_d0 = Y2_GPIO_NUM;
+  // config.pin_d1 = Y3_GPIO_NUM;
+  // config.pin_d2 = Y4_GPIO_NUM;
+  // config.pin_d3 = Y5_GPIO_NUM;
+  // config.pin_d4 = Y6_GPIO_NUM;
+  // config.pin_d5 = Y7_GPIO_NUM;
+  // config.pin_d6 = Y8_GPIO_NUM;
+  // config.pin_d7 = Y9_GPIO_NUM;
+  // config.pin_xclk = XCLK_GPIO_NUM;
+  // config.pin_pclk = PCLK_GPIO_NUM;
+  // config.pin_vsync = VSYNC_GPIO_NUM;
+  // config.pin_href = HREF_GPIO_NUM;
+  // config.pin_sscb_sda = SIOD_GPIO_NUM;
+  // config.pin_sscb_scl = SIOC_GPIO_NUM;
+  // config.pin_pwdn = PWDN_GPIO_NUM;
+  // config.pin_reset = RESET_GPIO_NUM;
+  // config.xclk_freq_hz = 20000000;               // XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)`
+  // config.pixel_format = pixelFormat;            // Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
+  // config.frame_size = frameSize;                // Image sizes: 160x120 (QQVGA), 128x160 (QQVGA2), 176x144 (QCIF), 240x176 (HQVGA), 320x240 (QVGA),
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
@@ -540,32 +623,9 @@ bool initializeCamera(framesize_t frameSize) {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;               // XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)`
-  config.pixel_format = CAM_FORMAT;             // Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
+  config.pixel_format = pixelFormat;            // Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
   config.frame_size = frameSize;                // Image sizes: 160x120 (QQVGA), 128x160 (QQVGA2), 176x144 (QCIF), 240x176 (HQVGA), 320x240 (QVGA),
-#else
-  camera_config_t config;
-  config.ledc_channel = LEDC_CHANNEL_0;
-  config.ledc_timer = LEDC_TIMER_0;
-  config.pin_d0 = Y2_GPIO_NUM;
-  config.pin_d1 = Y3_GPIO_NUM;
-  config.pin_d2 = Y4_GPIO_NUM;
-  config.pin_d3 = Y5_GPIO_NUM;
-  config.pin_d4 = Y6_GPIO_NUM;
-  config.pin_d5 = Y7_GPIO_NUM;
-  config.pin_d6 = Y8_GPIO_NUM;
-  config.pin_d7 = Y9_GPIO_NUM;
-  config.pin_xclk = XCLK_GPIO_NUM;
-  config.pin_pclk = PCLK_GPIO_NUM;
-  config.pin_vsync = VSYNC_GPIO_NUM;
-  config.pin_href = HREF_GPIO_NUM;
-  config.pin_sscb_sda = SIOD_GPIO_NUM;
-  config.pin_sscb_scl = SIOC_GPIO_NUM;
-  config.pin_pwdn = PWDN_GPIO_NUM;
-  config.pin_reset = RESET_GPIO_NUM;
-  config.xclk_freq_hz = 20000000;               // XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)`
-  config.pixel_format = CAM_FORMAT;             // Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
-  config.frame_size = frameSize;                // Image sizes: 160x120 (QQVGA), 128x160 (QQVGA2), 176x144 (QCIF), 240x176 (HQVGA), 320x240 (QVGA),
-#endif                                                //              400x296 (CIF), 640x480 (VGA, default), 800x600 (SVGA), 1024x768 (XGA), 1280x1024 (SXGA),
+                                                //              400x296 (CIF), 640x480 (VGA, default), 800x600 (SVGA), 1024x768 (XGA), 1280x1024 (SXGA),
                                                 //              1600x1200 (UXGA)
   config.jpeg_quality = 15;                     // 0-63 lower number means higher quality
   config.fb_count = 1;                          // if more than one, i2s runs in continuous mode. Use only with JPEG
@@ -592,20 +652,71 @@ void uninitializeCamera() {
   delay(50);
 }
 
+int fd_x1 = -1;  // track the last detected one
+int fd_y1 = -1;
+int fd_x2 = -1;
+int fd_y2 = -1;
+
 bool captureImage() {
+#if defined(SUPPORT_FACE_DETECTION)
+  if (cameraFormat == PIXFORMAT_RGB565) {
+    if (fd_x1 != -1) {
+      float scale = imageLayerHeight / 96;  // assume 96x96
+      int xOff = (imageLayerWidth - imageLayerHeight) / 2;
+      imageLayer->drawRect(xOff + scale * fd_x1, scale * fd_y1, scale * (fd_x2 - fd_x1), scale * (fd_y2 - fd_y1), DD_COLOR_green);
+    }
+  }
+#endif
+
   camera_fb_t *fb = esp_camera_fb_get();   // capture image frame from camera
   if (fb == NULL) {
     if (serialDebug) Serial.println("Error: Camera capture failed");
      return false;
   }
 
-  if (CAM_FORMAT == PIXFORMAT_JPEG) {
+#if defined(SUPPORT_FACE_DETECTION)
+  if (cameraFormat == PIXFORMAT_RGB565) {
+    std::list<dl::detect::result_t> &candidates = detector.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
+    std::list<dl::detect::result_t> &results = detector2.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3}, candidates);
+    if (results.size()) {
+      Serial.print("* FD:[]");
+      int i = 0;
+      for (std::list<dl::detect::result_t>::iterator prediction = results.begin(); prediction != results.end(); prediction++, i++) {
+        fd_x1 = prediction->box[0];
+        fd_y1 = prediction->box[1];
+        fd_x2 = prediction->box[2];
+        fd_y2 = prediction->box[3];
+        Serial.print(i);
+        Serial.print(':');
+        Serial.print(fd_x1);
+        Serial.print(',');
+        Serial.print(fd_y1);
+        Serial.print('-');
+        Serial.print(fd_x2);
+        Serial.print(',');
+        Serial.print(fd_y2);
+      }
+      Serial.println("]");
+    } else {
+      fd_x1 = -1;
+    } 
+  }
+#endif
+
+  // long startMs = millis();
+  if (cameraFormat == PIXFORMAT_JPEG) {
     imageLayer->cacheImage(imageName, fb->buf, fb->len);
-  } else if (CAM_FORMAT == PIXFORMAT_RGB565) {
+  } else if (cameraFormat == PIXFORMAT_RGB565) {
     imageLayer->cachePixelImage16(imageName, (const uint16_t*) fb->buf, fb->width, fb->height, "sbo");
-  } else if (CAM_FORMAT == PIXFORMAT_GRAYSCALE) {
+  } else if (cameraFormat == PIXFORMAT_GRAYSCALE) {
     imageLayer->cachePixelImageGS(imageName, fb->buf, fb->width, fb->height);
   }
+  // long endMs = millis();
+  // long taken = endMs - startMs;
+  // Serial.print(fb->len);
+  // Serial.print(':');
+  // Serial.print(taken);
+  // Serial.println("ms");
 
   esp_camera_fb_return(fb);        // return frame so memory can be released
 
@@ -615,6 +726,9 @@ bool captureImage() {
 
 // ====================
 // ====================
+
+#if defined(I2S_WS)
+
 
 void i2s_install() {
   const i2s_config_t i2s_config = {
@@ -690,3 +804,6 @@ void readMicData(MicInfo &micInfo) {
   micInfo.samplesRead = samplesRead;
   micInfo.sampleStreamBuffer = sampleStreamBuffer;
 }
+
+
+#endif
