@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <esp_camera.h> 
-#include <driver/i2s.h>
 
 
 // *** For board selection, uncomment one of following ; note that ESP32CAM is AI Thinker board and TCAMERA is v1.7
@@ -54,9 +53,13 @@
   #define I2S_SAMPLE_BIT_COUNT 16
 #endif
 
-#define I2S_PORT             I2S_NUM_0
+
 #define SOUND_SAMPLE_RATE    8000
 #define SOUND_CHANNEL_COUNT  1
+#if defined(I2S_WS)
+  #include <driver/i2s.h>
+  #define I2S_PORT             I2S_NUM_0
+#endif
 
 #if defined(SUPPORT_FACE_DETECTION)
   #include "human_face_detect_msr01.hpp"
@@ -79,7 +82,7 @@ void setup() {
 #endif  
 #if defined(TFT_BL_PIN)
   tft.init(); 
-  tft.fillScreen(TFT_WHITE);
+  //tft.fillScreen(TFT_WHITE);
   pinMode(TFT_BL_PIN, OUTPUT);
   digitalWrite(TFT_BL_PIN, LOW);
 #endif
@@ -174,7 +177,7 @@ LcdDDLayer* createAndSetupButton(const char* bgColor = DD_COLOR_blue) {
 GraphicalDDLayer* createAndSetupImageLayer() {
   GraphicalDDLayer* imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
   imageLayer->setTextFont("DL::Roboto");
-  imageLayer->setTextSize(72);
+  //imageLayer->setTextSize(72);
   imageLayer->backgroundColor(DD_COLOR_ivory);
   imageLayer->padding(10);
   imageLayer->border(20, DD_COLOR_blue);
@@ -231,7 +234,7 @@ void setupDumbdisplay() {
     .build()
   );
 
-#if !defined(FLASH_PIN) && !defined(TFT_BL_PIN)
+#if !defined(FLASH_PIN)// && !defined(TFT_BL_PIN)
   flashLayer->disabled(true);
 #endif  
 #if !defined(SUPPORT_FACE_DETECTION)
@@ -239,6 +242,9 @@ void setupDumbdisplay() {
 #endif
 #if !defined(I2S_WS) || defined(MIC_BUTTON_PIN)
   micLayer->disabled(true);
+#endif  
+#if !defined(I2S_WS)
+  amplifySlider->disabled(true);
 #endif  
 
   imageLayer->drawImageFileFit("dumbdisplay.png");
@@ -248,9 +254,9 @@ void setFlash(bool flashOn) {
 #if defined(FLASH_PIN)
     digitalWrite(FLASH_PIN, flashOn ? HIGH : LOW);
 #endif
-#if defined(TFT_BL_PIN)
-  digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
-#endif
+// #if defined(TFT_BL_PIN)
+//   digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
+// #endif
 }
 
 void loop() {
@@ -369,7 +375,7 @@ void loop() {
   if (state == STATE_TO_CAMERA) {
     plotterLayer->clear();
 #if defined(TFT_BL_PIN)
-    tft.fillScreen(TFT_WHITE);
+    //tft.fillScreen(TFT_WHITE);
     digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
 #endif
     if (faceOn) {
@@ -396,10 +402,18 @@ void loop() {
     if (cameraReady) {
       imageLayer->clear();
       state = STATE_CAMERA_RUNNING;
+#if defined(TFT_BL_PIN)
+      if (faceOn) {
+        tft.fillScreen(TFT_BLACK);
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);
+        tft.setTextSize(2);
+        tft.drawString("Look at the camera", 10, 40, 1);
+        tft.drawString("... and smile!", 10, 60, 1);
+        digitalWrite(TFT_BL_PIN, HIGH);
+      }
+#endif
     }
   }
-
-#if defined(I2S_WS)
 
   if (state == STATE_TO_MIC) {
 #if defined(TFT_BL_PIN)
@@ -413,8 +427,10 @@ void loop() {
       uninitializeCamera();
       cameraReady = false;
       imageLayer->drawImageFile(imageName, 0, 0, 0, 0, "f:;l:GS");
+      imageLayer->setTextSize(72);
       imageLayer->drawStr(50, imageLayerHeight - 100, "TALK ...", "red");
     }
+#if defined(I2S_WS)    
     if (!micReady) {
       dumbdisplay.writeComment("SETUP MIC ...");
       i2s_install();
@@ -427,6 +443,7 @@ void loop() {
     if (micReady) {
       state = STATE_MIC_RUNNING;
     }
+#endif
   }
 
   if (state == STATE_CAMERA_RUNNING && cameraReady) {
@@ -438,6 +455,7 @@ void loop() {
     }
   }
 
+#if defined(I2S_WS)    
   if (state == STATE_MIC_RUNNING || oriState == STATE_MIC_RUNNING) {
     MicInfo micInfo;
     readMicData(micInfo);
@@ -468,8 +486,7 @@ void loop() {
       }
     }
   }
-
-#endif  
+#endif    
 }
 
 
@@ -656,14 +673,20 @@ int fd_x1 = -1;  // track the last detected one
 int fd_y1 = -1;
 int fd_x2 = -1;
 int fd_y2 = -1;
+long fd_ms = -1;
 
 bool captureImage() {
 #if defined(SUPPORT_FACE_DETECTION)
   if (cameraFormat == PIXFORMAT_RGB565) {
+    int xOff = (imageLayerWidth - imageLayerHeight) / 2;
     if (fd_x1 != -1) {
       float scale = imageLayerHeight / 96;  // assume 96x96
-      int xOff = (imageLayerWidth - imageLayerHeight) / 2;
       imageLayer->drawRect(xOff + scale * fd_x1, scale * fd_y1, scale * (fd_x2 - fd_x1), scale * (fd_y2 - fd_y1), DD_COLOR_green);
+    }
+    if (fd_ms != -1) {
+      String str = "FD:" + String(fd_ms) + "ms";
+      imageLayer->setTextSize(30);
+      imageLayer->drawStr(xOff + 7, imageLayerHeight - 40, str, DD_COLOR_darkblue, "a50%green");
     }
   }
 #endif
@@ -676,8 +699,11 @@ bool captureImage() {
 
 #if defined(SUPPORT_FACE_DETECTION)
   if (cameraFormat == PIXFORMAT_RGB565) {
+    long startMs = millis();
     std::list<dl::detect::result_t> &candidates = detector.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
     std::list<dl::detect::result_t> &results = detector2.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3}, candidates);
+    long takenMs = millis() - startMs;
+    fd_ms = takenMs;
     if (results.size()) {
       Serial.print("* FD:[]");
       int i = 0;
@@ -703,7 +729,7 @@ bool captureImage() {
   }
 #endif
 
-  // long startMs = millis();
+  //long startMs = millis();
   if (cameraFormat == PIXFORMAT_JPEG) {
     imageLayer->cacheImage(imageName, fb->buf, fb->len);
   } else if (cameraFormat == PIXFORMAT_RGB565) {
