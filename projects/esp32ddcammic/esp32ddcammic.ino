@@ -123,7 +123,7 @@ void readMicData(MicInfo &micInfo);
 
 const int UIAmplifyMultiplier = 10;
 const int MaxAmplifyFactor = 20;
-int amplifyFactor = 0;
+int micAmplifyFactor = 0;
 
 int micSoundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
 long micStreamingMillis = 0;
@@ -135,11 +135,13 @@ int micStreamingTotalSampleCount = 0;
 
 const int imageLayerWidth = 640;
 const int imageLayerHeight = 480;
+const int defImageLayerTextSize = 30;
 const char* imageName = "captured_image.jpg";
 
 GraphicalDDLayer* imageLayer = NULL;  // initially assign it NULL
 LcdDDLayer* flashLayer;
 LcdDDLayer* faceLayer;
+LcdDDLayer* sizeLayer;
 LcdDDLayer* micLayer;
 PlotterDDLayer* plotterLayer;
 LcdDDLayer* amplifyLblLayer;
@@ -158,6 +160,10 @@ bool micReady = false;
 bool flashOn = false;
 bool micOn = false;
 bool faceOn = false;
+int frameSize = 2;
+
+long fps_lastMs = -1;
+long fps_lastLastMs = -1;
 
 #define STATE_TO_CAMERA      0
 #define STATE_CAMERA_RUNNING 1
@@ -166,7 +172,7 @@ bool faceOn = false;
 int state = STATE_TO_CAMERA;
 
 LcdDDLayer* createAndSetupButton(const char* bgColor = DD_COLOR_blue) {
-  LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(9, 1);
+  LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(10, 1);
   buttonLayer->border(2, DD_COLOR_darkblue, "round");
   buttonLayer->padding(2);
   buttonLayer->backgroundColor(bgColor);
@@ -177,7 +183,7 @@ LcdDDLayer* createAndSetupButton(const char* bgColor = DD_COLOR_blue) {
 GraphicalDDLayer* createAndSetupImageLayer() {
   GraphicalDDLayer* imageLayer = dumbdisplay.createGraphicalLayer(imageLayerWidth, imageLayerHeight);
   imageLayer->setTextFont("DL::Roboto");
-  //imageLayer->setTextSize(72);
+  imageLayer->setTextSize(defImageLayerTextSize);
   imageLayer->backgroundColor(DD_COLOR_ivory);
   imageLayer->padding(10);
   imageLayer->border(20, DD_COLOR_blue);
@@ -209,6 +215,7 @@ JoystickDDLayer* createAndSetupAmplifySlider() {
 void setupDumbdisplay() {
   flashLayer = createAndSetupButton();
   faceLayer = createAndSetupButton();
+  sizeLayer = createAndSetupButton();
   micLayer = createAndSetupButton();
   imageLayer = createAndSetupImageLayer();
   amplifyLblLayer = createAndSetupAmplifyLblLayer();
@@ -219,6 +226,7 @@ void setupDumbdisplay() {
       .beginGroup('H')
         .beginGroup('V')
           .addLayer(flashLayer)
+          .addLayer(sizeLayer)
           .addLayer(faceLayer)
           .addLayer(micLayer)
         .endGroup()
@@ -327,6 +335,11 @@ void loop() {
   }
 #endif
 
+  if (sizeLayer->getFeedback()) {
+    frameSize = (frameSize + 1) % 4;
+    updateUI = true;
+    state = STATE_TO_CAMERA;
+  }
   if (flashLayer->getFeedback()) {
     flashOn = !flashOn;
     updateUI = true;
@@ -338,6 +351,18 @@ void loop() {
 
   
   if (updateUI) {
+    const char* sizeLabel;
+    if (frameSize == 0) {
+      sizeLabel = "QQVGA";
+    } else  if (frameSize == 1) {
+      sizeLabel = "QVGA";
+    } else  if (frameSize == 2) {
+      sizeLabel = "VGA";
+    } else {
+      sizeLabel = "SVGA";
+    }
+    sizeLayer->pixelColor(DD_COLOR_red);
+    sizeLayer->writeCenteredLine(String("SIZE ") + sizeLabel);
     if (flashOn) {
       flashLayer->pixelColor(DD_COLOR_red);
       flashLayer->writeCenteredLine("FLASH ON");
@@ -357,19 +382,21 @@ void loop() {
       if (faceOn) {
         faceLayer->pixelColor(DD_COLOR_red);
         faceLayer->writeCenteredLine("FACE ON");
+        sizeLayer->disabled(true);
       } else {
         faceLayer->pixelColor(DD_COLOR_white);
         faceLayer->writeCenteredLine("FACE OFF");
+        sizeLayer->disabled(false);
       }
     }  
   }
 
   const DDFeedback* fb = amplifySlider->getFeedback();
   if (fb != NULL) {
-    amplifyFactor = fb->x / UIAmplifyMultiplier;
+    micAmplifyFactor = fb->x / UIAmplifyMultiplier;
   }
   if (fb != NULL || updateUI) {
-    amplifyLblLayer->writeLine(String(amplifyFactor), 0, "R");
+    amplifyLblLayer->writeLine(String(micAmplifyFactor), 0, "R");
   }
 
   if (state == STATE_TO_CAMERA) {
@@ -382,7 +409,15 @@ void loop() {
       cameraSize = FRAMESIZE_96X96;
       cameraFormat = PIXFORMAT_RGB565;
     } else {
-      cameraSize = FRAMESIZE_VGA;
+      if (frameSize == 0) {
+        cameraSize = FRAMESIZE_QQVGA;
+      } else if (frameSize == 1) {
+        cameraSize = FRAMESIZE_QVGA;
+      } else if (frameSize == 2) {
+        cameraSize = FRAMESIZE_VGA;
+      } else {
+        cameraSize = FRAMESIZE_SVGA;
+      }
       cameraFormat = PIXFORMAT_JPEG;
     }
     if (cameraReady) {
@@ -429,6 +464,7 @@ void loop() {
       imageLayer->drawImageFile(imageName, 0, 0, 0, 0, "f:;l:GS");
       imageLayer->setTextSize(72);
       imageLayer->drawStr(50, imageLayerHeight - 100, "TALK ...", "red");
+      imageLayer->setTextSize(defImageLayerTextSize);
     }
 #if defined(I2S_WS)    
     if (!micReady) {
@@ -442,6 +478,8 @@ void loop() {
     }
     if (micReady) {
       state = STATE_MIC_RUNNING;
+      fps_lastMs = -1;
+      fps_lastLastMs = -1;
     }
 #endif
   }
@@ -570,10 +608,8 @@ void loop() {
   #error board not supported
 #endif
 
-
 const bool serialDebug = 1;                          // show debug info. on serial port (1=enabled, disable if using pins 1 and 3 as gpio)
 int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
-
 
 bool cameraImageSettings() {
 
@@ -673,19 +709,47 @@ int fd_x1 = -1;  // track the last detected one
 int fd_y1 = -1;
 int fd_x2 = -1;
 int fd_y2 = -1;
+int fd_le_x = -1;
+int fd_le_y = -1;
+int fd_re_x = -1;
+int fd_re_y = -1;
+int fd_n_x = -1;
+int fd_n_y = -1;
+int fd_ml_x = -1;
+int fd_ml_y = -1;
+int fd_mr_x = -1;
+int fd_mr_y = -1;
 long fd_ms = -1;
 
 bool captureImage() {
+
+  int xOff = (imageLayerWidth - imageLayerHeight) / 2;
+
+  fps_lastLastMs = fps_lastMs;
+  fps_lastMs = millis();
+  if (fps_lastLastMs != -1) {
+    long diffMs = fps_lastMs - fps_lastLastMs;
+    double fps = 1000.0 / (double) diffMs;
+    String str = "FPS:" + String(fps, 2);
+    //imageLayer->setTextSize(30);
+    imageLayer->drawStr(xOff + 7, 5, str, DD_COLOR_darkred, "a50%yellow");
+  }
+
 #if defined(SUPPORT_FACE_DETECTION)
   if (cameraFormat == PIXFORMAT_RGB565) {
-    int xOff = (imageLayerWidth - imageLayerHeight) / 2;
     if (fd_x1 != -1) {
       float scale = imageLayerHeight / 96;  // assume 96x96
       imageLayer->drawRect(xOff + scale * fd_x1, scale * fd_y1, scale * (fd_x2 - fd_x1), scale * (fd_y2 - fd_y1), DD_COLOR_green);
+      if (true) {
+        imageLayer->fillCircle(xOff + scale * fd_le_x, scale * fd_le_y, 4, DD_COLOR_red);  // left eye
+        imageLayer->fillCircle(xOff + scale * fd_re_x, scale * fd_re_y, 4, DD_COLOR_red);  // right eye
+        imageLayer->fillCircle(xOff + scale * fd_n_x, scale * fd_n_y, 6, DD_COLOR_green);  // nose
+        imageLayer->fillRect(xOff + scale * fd_ml_x, scale * fd_ml_y, scale * (fd_mr_x - fd_ml_x), 4, DD_COLOR_blue);  // mouth
+      }
     }
     if (fd_ms != -1) {
       String str = "FD:" + String(fd_ms) + "ms";
-      imageLayer->setTextSize(30);
+      //imageLayer->setTextSize(30);
       imageLayer->drawStr(xOff + 7, imageLayerHeight - 40, str, DD_COLOR_darkblue, "a50%green");
     }
   }
@@ -708,6 +772,16 @@ bool captureImage() {
       Serial.print("* FD:[]");
       int i = 0;
       for (std::list<dl::detect::result_t>::iterator prediction = results.begin(); prediction != results.end(); prediction++, i++) {
+        fd_le_x = prediction->keypoint[0];
+        fd_le_y = prediction->keypoint[1];
+        fd_re_x = prediction->keypoint[6];
+        fd_re_y = prediction->keypoint[7];
+        fd_n_x = prediction->keypoint[4];
+        fd_n_y = prediction->keypoint[5];
+        fd_ml_x = prediction->keypoint[2];
+        fd_ml_y = prediction->keypoint[3];
+        fd_mr_x = prediction->keypoint[8];
+        fd_mr_y = prediction->keypoint[9];
         fd_x1 = prediction->box[0];
         fd_y1 = prediction->box[1];
         fd_x2 = prediction->box[2];
@@ -811,8 +885,8 @@ void readMicData(MicInfo &micInfo) {
 #if I2S_SAMPLE_BIT_COUNT == 32
         val = val / 0x0000ffff;  // 32 bit to 16 bit
 #endif
-        if (amplifyFactor > 1) {
-          val = amplifyFactor * val;
+        if (micAmplifyFactor > 1) {
+          val = micAmplifyFactor * val;
         }
         if (val > 32700) {
           val = 32700;
