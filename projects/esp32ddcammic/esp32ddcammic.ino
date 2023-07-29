@@ -33,6 +33,7 @@
   #define I2S_SCK              14
   #define I2S_SAMPLE_BIT_COUNT 32
   #define I2S_SAMPLE_RATE      8000
+  #define SUPPORT_CAM_AND_MIC  true
 #elif defined(FOR_LILYGO_TCAMERAPLUS)
   #define TFT_BL_PIN           2
   #include <TFT_eSPI.h>
@@ -43,6 +44,7 @@
   #define I2S_SCK              14
   #define I2S_SAMPLE_BIT_COUNT 32
   #define I2S_SAMPLE_RATE      8000
+  #define SUPPORT_CAM_AND_MIC  false
 #elif defined(FOR_LILYGO_TSIMCAM)
   // for the built-in mic of LiLyGO TSimCam
   #define I2S_WS               42
@@ -50,6 +52,7 @@
   #define I2S_SCK              41
   #define I2S_SAMPLE_BIT_COUNT 32
   #define I2S_SAMPLE_RATE      8000
+  #define SUPPORT_CAM_AND_MIC  true
 #endif
 
 
@@ -138,7 +141,7 @@ GraphicalDDLayer* imageLayer = NULL;  // initially assign it NULL
 LcdDDLayer* flashLayer;
 LcdDDLayer* faceLayer;
 LcdDDLayer* sizeLayer;
-LcdDDLayer* fpsLayer;
+LcdDDLayer* rateLayer;
 LcdDDLayer* micLayer;
 PlotterDDLayer* plotterLayer;
 LcdDDLayer* amplifyLblLayer;
@@ -157,8 +160,9 @@ bool micReady = false;
 bool flashOn = false;
 bool micOn = false;
 bool faceOn = false;
-int frameSize = 2;
+int frameSize = 0;
 int frameRate = 0;  // 0 means AFAP (as fast as possible)
+int camOnlyFrameRate = 0;
 
 long lastCaptureImageMs = 0;
 
@@ -220,7 +224,7 @@ void setupDumbdisplay() {
   flashLayer = createAndSetupButton();
   faceLayer = createAndSetupButton();
   sizeLayer = createAndSetupButton();
-  fpsLayer = createAndSetupButton();
+  rateLayer = createAndSetupButton();
   micLayer = createAndSetupButton();
   imageLayer = createAndSetupImageLayer();
   amplifyLblLayer = createAndSetupAmplifyLblLayer();
@@ -245,7 +249,7 @@ void setupDumbdisplay() {
       .addLayer(imageLayer)
       .beginGroup('H')
         .addLayer(sizeLayer)
-        .addLayer(fpsLayer)
+        .addLayer(rateLayer)
       .endGroup()
     .build()
   );
@@ -272,7 +276,7 @@ void switchFlash(bool flashOn) {
 #endif
 }
 
-bool simultaneousMicCamera = false;
+//bool simultaneousMicCamera = false;
 
 void loop() {
 
@@ -354,11 +358,11 @@ void loop() {
 #endif
 
   if (sizeLayer->getFeedback()) {
-    frameSize = (frameSize + 1) % 4;
+    frameSize = (frameSize + 1) % 3;
     updateUI = true;
     cameraState = CAM_TURNING_ON;
   }
-  if (fpsLayer->getFeedback()) {
+  if (rateLayer->getFeedback()) {
     if (frameRate == 0) {
       frameRate = 1;
     } else if (frameRate <= 4) {
@@ -376,17 +380,53 @@ void loop() {
     faceOn = !faceOn;
     updateUI = true;
   }
-
-  
+ 
   if (updateUI) {
-    const char* sizeLabel;
+    if (flashOn) {
+      flashLayer->pixelColor(DD_COLOR_red);
+      flashLayer->writeCenteredLine("FLASH ON");
+    } else {
+      flashLayer->pixelColor(DD_COLOR_white);
+      flashLayer->writeCenteredLine("FLASH OFF");
+    }  
+    switchFlash(flashOn);
+    if (micOn) {
+      micLayer->pixelColor(DD_COLOR_red);
+      micLayer->writeCenteredLine("MIC ON");
+      micState = MIC_TURNING_ON;
+      if (SUPPORT_CAM_AND_MIC) {
+        camOnlyFrameRate = frameRate;
+        frameRate = 4;
+      } else {
+        cameraState = CAM_OFF;
+        rateLayer->disabled(true);
+      }
+    } else {
+      micLayer->pixelColor(DD_COLOR_white);
+      micLayer->writeCenteredLine("MIC OFF");
+      micState = MIC_OFF;
+      cameraState = CAM_TURNING_ON;
+      if (faceOn) {
+        faceLayer->pixelColor(DD_COLOR_red);
+        faceLayer->writeCenteredLine("FACE ON");
+        sizeLayer->disabled(true);
+      } else {
+        faceLayer->pixelColor(DD_COLOR_white);
+        faceLayer->writeCenteredLine("FACE OFF");
+        sizeLayer->disabled(false);
+      }
+      if (SUPPORT_CAM_AND_MIC) {
+        frameRate = camOnlyFrameRate;
+      } else {
+        rateLayer->disabled(false);
+      }
+    }  
+     const char* sizeLabel;
     if (frameSize == 0) {
-      sizeLabel = "QQVGA";
-    } else  if (frameSize == 1) {
       sizeLabel = "QVGA";
-    } else if (frameSize == 2) {
+    } else if (frameSize == 1) {
       sizeLabel = "VGA";
-    } else if (frameSize == 3) {
+    } else if (frameSize == 2) {
       sizeLabel = "SVGA";
     } else {
       sizeLabel = "---";
@@ -407,41 +447,9 @@ void loop() {
     } else {
       fpsLabel = "---";
     }
-    fpsLayer->pixelColor(DD_COLOR_red);
-    fpsLayer->writeCenteredLine(String("RATE ") + fpsLabel);
-    if (flashOn) {
-      flashLayer->pixelColor(DD_COLOR_red);
-      flashLayer->writeCenteredLine("FLASH ON");
-    } else {
-      flashLayer->pixelColor(DD_COLOR_white);
-      flashLayer->writeCenteredLine("FLASH OFF");
-    }  
-    switchFlash(flashOn);
-    if (micOn) {
-      micLayer->pixelColor(DD_COLOR_red);
-      micLayer->writeCenteredLine("MIC ON");
-      //state = STATE_TO_MIC;
-      micState = MIC_TURNING_ON;
-      if (!simultaneousMicCamera) {
-        cameraState = CAM_OFF;
-      }
-    } else {
-      micLayer->pixelColor(DD_COLOR_white);
-      micLayer->writeCenteredLine("MIC OFF");
-      //state = STATE_TO_CAMERA;
-      micState = MIC_OFF;
-      cameraState = CAM_TURNING_ON;
-      if (faceOn) {
-        faceLayer->pixelColor(DD_COLOR_red);
-        faceLayer->writeCenteredLine("FACE ON");
-        sizeLayer->disabled(true);
-      } else {
-        faceLayer->pixelColor(DD_COLOR_white);
-        faceLayer->writeCenteredLine("FACE OFF");
-        sizeLayer->disabled(false);
-      }
-    }  
-  }
+    rateLayer->pixelColor(DD_COLOR_red);
+    rateLayer->writeCenteredLine(String("RATE ") + fpsLabel);
+ }
 
   const DDFeedback* fb = amplifySlider->getFeedback();
   if (fb != NULL) {
@@ -459,7 +467,7 @@ void loop() {
     tft.drawString("TALKING ...", 20, 40, 1);
     digitalWrite(TFT_BL_PIN, HIGH);
 #endif
-    if (cameraReady && !simultaneousMicCamera) {
+    if (cameraReady && !SUPPORT_CAM_AND_MIC) {
       deinitializeCamera();
       cameraReady = false;
       imageLayer->drawImageFile(imageName, 0, 0, 0, 0, "f:;l:GS");
@@ -469,7 +477,7 @@ void loop() {
     }
   }
 
-  if (cameraState == CAM_TURNING_ON && (simultaneousMicCamera || !micReady)) {
+  if (cameraState == CAM_TURNING_ON && (SUPPORT_CAM_AND_MIC || !micReady)) {
     plotterLayer->clear();
 #if defined(TFT_BL_PIN)
     //tft.fillScreen(TFT_WHITE);
@@ -480,13 +488,13 @@ void loop() {
       cameraFormat = PIXFORMAT_RGB565;
     } else {
       if (frameSize == 0) {
-        cameraSize = FRAMESIZE_QQVGA;
-      } else if (frameSize == 1) {
         cameraSize = FRAMESIZE_QVGA;
-      } else if (frameSize == 2) {
+      } else if (frameSize == 1) {
         cameraSize = FRAMESIZE_VGA;
-      } else {
+      } else if (frameSize == 2) {
         cameraSize = FRAMESIZE_SVGA;
+      } else {
+        cameraSize = FRAMESIZE_96X96;  // not expected
       }
       cameraFormat = PIXFORMAT_JPEG;
     }
@@ -521,7 +529,7 @@ void loop() {
     }
   }
 
-  if (micState == MIC_TURNING_ON && (simultaneousMicCamera || !cameraReady)) {
+  if (micState == MIC_TURNING_ON && (SUPPORT_CAM_AND_MIC || !cameraReady)) {
 #if defined(I2S_WS)    
     if (!micReady) {
       dumbdisplay.writeComment("SETUP MIC ...");
