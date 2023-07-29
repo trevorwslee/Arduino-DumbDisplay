@@ -31,7 +31,7 @@
   #define I2S_WS               12
   #define I2S_SD               13
   #define I2S_SCK              14
-  #define I2S_SAMPLE_BIT_COUNT 16
+  #define I2S_SAMPLE_BIT_COUNT 32
 #elif defined(FOR_LILYGO_TCAMERAPLUS)
   #define TFT_BL_PIN           2
   #include <TFT_eSPI.h>
@@ -46,7 +46,7 @@
   #define I2S_WS               42
   #define I2S_SD                2
   #define I2S_SCK              41
-  #define I2S_SAMPLE_BIT_COUNT 16
+  #define I2S_SAMPLE_BIT_COUNT 32
 #endif
 
 
@@ -88,27 +88,17 @@ void setup() {
 // ====================
 // ====================
 
-#define SOUND_SAMPLE_RATE    8000
-#define SOUND_CHANNEL_COUNT  1
-
 #if defined(I2S_WS)
   #include <driver/i2s.h>
   #define I2S_PORT             I2S_NUM_0
+  #define SOUND_SAMPLE_RATE    8000
+  #define SOUND_CHANNEL_COUNT  1
 
   const int I2S_DMA_BUF_COUNT = 8;
   const int I2S_DMA_BUF_LEN = 1024;
 
   // name of recorded WAV file; since only a single name; hence new one will always overwrite old one
   const char* SoundName = "recorded_sound";
-
-  const int StreamBufferNumBytes = 256;
-  #if I2S_SAMPLE_BIT_COUNT == 32
-    const int StreamBufferLen = StreamBufferNumBytes / 4;
-    int32_t StreamBuffer[StreamBufferLen];
-  #else
-    const int StreamBufferLen = StreamBufferNumBytes / 2;
-    int16_t StreamBuffer[StreamBufferLen];
-  #endif
 
   void i2s_install();
   void i2s_uninstall();
@@ -122,9 +112,13 @@ void setup() {
   void readMicData(MicInfo &micInfo);
 #endif
 
+#define MIC_PLOTTER_FIXED_RATE
+#define MAX_MIC_SAMPLE_VALUE 5000
+
+
 const int UIAmplifyMultiplier = 10;
 const int MaxAmplifyFactor = 20;
-int micAmplifyFactor = 0;
+int micAmplifyFactor = 5;//0;
 
 int micSoundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
 long micStreamingMillis = 0;
@@ -166,11 +160,6 @@ int frameSize = 2;
 long fps_lastMs = -1;
 long fps_lastLastMs = -1;
 
-// #define STATE_TO_CAMERA      0
-// #define STATE_CAMERA_RUNNING 1
-// #define STATE_TO_MIC         2
-// #define STATE_MIC_RUNNING    3
-// int state = STATE_TO_CAMERA;
 enum CameraState { CAM_OFF, CAM_TURNING_ON, CAM_RUNNING };
 enum MicState { MIC_OFF, MIC_TURNING_ON, MIC_RUNNING };
 CameraState cameraState = CAM_TURNING_ON;
@@ -195,11 +184,12 @@ GraphicalDDLayer* createAndSetupImageLayer() {
   return imageLayer;
 }
 
+
 PlotterDDLayer* createAndSetupPlotterLayer() {
-#if defined(I2S_WS)
-  PlotterDDLayer* plotterLayer = dumbdisplay.createPlotterLayer(1000, 300, SOUND_SAMPLE_RATE / StreamBufferLen);
+#if defined(MIC_PLOTTER_FIXED_RATE)
+  PlotterDDLayer* plotterLayer = dumbdisplay.createFixedRatePlotterLayer(1000, 300, 2);
 #else
-  PlotterDDLayer* plotterLayer = dumbdisplay.createPlotterLayer(1000, 300);
+  PlotterDDLayer* plotterLayer = dumbdisplay.createPlotterLayer(1000, 300, 120);
 #endif
   plotterLayer->backgroundColor(DD_COLOR_azure);
   plotterLayer->padding(10);
@@ -271,14 +261,16 @@ void setFlash(bool flashOn) {
 #if defined(FLASH_PIN)
     digitalWrite(FLASH_PIN, flashOn ? HIGH : LOW);
 #endif
-// #if defined(TFT_BL_PIN)
-//   digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
-// #endif
 }
 
 #define SUPPORT_SIMULTANEOUS_MIC_CAM   false
 
 void loop() {
+
+  framesize_t oriCameraSize = cameraSize;
+  pixformat_t oriCameraFormat = cameraFormat;
+  //int oriState = state;
+  MicState oriMicState = micState;
 
   // "passively" make connection with DumbDisplay app non-block
   DDConnectPassiveStatus connectStatus;
@@ -290,25 +282,29 @@ void loop() {
 
   if (connectStatus.reconnecting) {
     //  reconnecting (i.e. lost previous connection) ==> "master reset" DumbDisplay and reset other things, then return immediately
-    dumbdisplay.masterReset();
-    imageLayer = NULL;
-    if (cameraReady) {
-      uninitializeCamera();
-      cameraReady = false;
-    }
-#if defined(I2S_WS)
     if (micReady) {
-      i2s_uninstall();
-      micReady = false;
+      micState = MIC_OFF;
+    } else {
+      dumbdisplay.masterReset();
+      imageLayer = NULL;
+      if (cameraReady) {
+        uninitializeCamera();
+        cameraReady = false;
+      }
+  // #if defined(I2S_WS)
+  //     if (micReady) {
+  //       i2s_uninstall();
+  //       micReady = false;
+  //     }
+  // #endif
+      setFlash(false);
+      flashOn = false;
+      micOn = false;
+      Serial.println("***********");
+      Serial.println("*** OFF ***");
+      Serial.println("***********");
+      return;
     }
-#endif
-    setFlash(false);
-    flashOn = false;
-    micOn = false;
-    Serial.println("***********");
-    Serial.println("*** OFF ***");
-    Serial.println("***********");
-    return;
   }
 
   boolean updateUI = false;
@@ -324,10 +320,10 @@ void loop() {
     updateUI = true;
   }
 
-  framesize_t oriCameraSize = cameraSize;
-  pixformat_t oriCameraFormat = cameraFormat;
-  //int oriState = state;
-  MicState oriMicState = micState;
+  // framesize_t oriCameraSize = cameraSize;
+  // pixformat_t oriCameraFormat = cameraFormat;
+  // //int oriState = state;
+  // MicState oriMicState = micState;
 
 #if defined(MIC_BUTTON_PIN)
   bool pressed = digitalRead(MIC_BUTTON_PIN) == HIGH;
@@ -491,21 +487,6 @@ void loop() {
   }
 
   if (micState == MIC_TURNING_ON/*state == STATE_TO_MIC*/ && (SUPPORT_SIMULTANEOUS_MIC_CAM || !cameraReady)) {
-// #if defined(TFT_BL_PIN)
-//     tft.fillScreen(TFT_BLACK);
-//       tft.setTextColor(TFT_RED, TFT_BLACK);
-//       tft.setTextSize(3);
-//     tft.drawString("TALKING ...", 20, 40, 1);
-//     digitalWrite(TFT_BL_PIN, HIGH);
-// #endif
-    // if (cameraReady) {
-    //   uninitializeCamera();
-    //   cameraReady = false;
-    //   imageLayer->drawImageFile(imageName, 0, 0, 0, 0, "f:;l:GS");
-    //   imageLayer->setTextSize(72);
-    //   imageLayer->drawStr(50, imageLayerHeight - 100, "TALK ...", "red");
-    //   imageLayer->setTextSize(defImageLayerTextSize);
-    // }
 #if defined(I2S_WS)    
     if (!micReady) {
       dumbdisplay.writeComment("SETUP MIC ...");
@@ -649,16 +630,13 @@ void loop() {
   #error board not supported
 #endif
 
-const bool serialDebug = 1;                          // show debug info. on serial port (1=enabled, disable if using pins 1 and 3 as gpio)
-int cameraImageBrightness = 0;                       // Image brightness (-2 to +2)
-
 bool cameraImageSettings() {
 
-  if (serialDebug) Serial.println("Applying camera settings");
+  Serial.println("Applying camera settings");
 
   sensor_t *s = esp_camera_sensor_get();
   if (s == NULL) {
-    if (serialDebug) Serial.println("Error: problem reading camera sensor settings");
+    Serial.println("Error: problem reading camera sensor settings");
     return 0;
   }
 
@@ -666,37 +644,18 @@ bool cameraImageSettings() {
   s->set_gain_ctrl(s, 1);                       // auto gain on
   s->set_exposure_ctrl(s, 1);                   // auto exposure on
   s->set_awb_gain(s, 1);                        // Auto White Balance enable (0 or 1)
-  s->set_brightness(s, cameraImageBrightness);  // (-2 to 2) - set brightness
+  s->set_brightness(s, 0);                      // (-2 to 2) - set brightness
 
    return 1;
 }
 
 bool initializeCamera(framesize_t frameSize, pixformat_t pixelFormat) {
+  
+  Serial.println("Initializing camera");
+
   esp_camera_deinit();     // disable camera
   delay(50);
 
-  // camera_config_t config;
-  // config.ledc_channel = LEDC_CHANNEL_0;
-  // config.ledc_timer = LEDC_TIMER_0;
-  // config.pin_d0 = Y2_GPIO_NUM;
-  // config.pin_d1 = Y3_GPIO_NUM;
-  // config.pin_d2 = Y4_GPIO_NUM;
-  // config.pin_d3 = Y5_GPIO_NUM;
-  // config.pin_d4 = Y6_GPIO_NUM;
-  // config.pin_d5 = Y7_GPIO_NUM;
-  // config.pin_d6 = Y8_GPIO_NUM;
-  // config.pin_d7 = Y9_GPIO_NUM;
-  // config.pin_xclk = XCLK_GPIO_NUM;
-  // config.pin_pclk = PCLK_GPIO_NUM;
-  // config.pin_vsync = VSYNC_GPIO_NUM;
-  // config.pin_href = HREF_GPIO_NUM;
-  // config.pin_sscb_sda = SIOD_GPIO_NUM;
-  // config.pin_sscb_scl = SIOC_GPIO_NUM;
-  // config.pin_pwdn = PWDN_GPIO_NUM;
-  // config.pin_reset = RESET_GPIO_NUM;
-  // config.xclk_freq_hz = 20000000;               // XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)`
-  // config.pixel_format = pixelFormat;            // Options =  YUV422, GRAYSCALE, RGB565, JPEG, RGB888
-  // config.frame_size = frameSize;                // Image sizes: 160x120 (QQVGA), 128x160 (QQVGA2), 176x144 (QCIF), 240x176 (HQVGA), 320x240 (QVGA),
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
@@ -727,13 +686,13 @@ bool initializeCamera(framesize_t frameSize, pixformat_t pixelFormat) {
   // check the esp32cam board has a psram chip installed (extra memory used for storing captured images)
   //    Note: if not using "AI thinker esp32 cam" in the Arduino IDE, SPIFFS must be enabled
   if (!psramFound()) {
-    if (serialDebug) Serial.println("Warning: No PSRam found so defaulting to image size 'CIF'");
+    Serial.println("Warning: No PSRam found so defaulting to image size 'CIF'");
     config.frame_size = FRAMESIZE_CIF;
   }
 
   esp_err_t camerr = esp_camera_init(&config);  // initialise the camera
   if (camerr != ESP_OK) {
-    if (serialDebug) Serial.printf("ERROR: Camera init failed with error 0x%x", camerr);
+    Serial.printf("ERROR: Camera init failed with error 0x%x", camerr);
   }
 
   cameraImageSettings();                        // apply custom camera settings
@@ -742,6 +701,7 @@ bool initializeCamera(framesize_t frameSize, pixformat_t pixelFormat) {
 }
 
 void uninitializeCamera() {
+  Serial.println("Uninitializing camera");
   esp_camera_deinit();     // disable camera
   delay(50);
 }
@@ -772,7 +732,6 @@ bool captureImage() {
     long diffMs = fps_lastMs - fps_lastLastMs;
     double fps = 1000.0 / (double) diffMs;
     String str = "FPS:" + String(fps, 2);
-    //imageLayer->setTextSize(30);
     imageLayer->drawStr(xOff + 7, 5, str, DD_COLOR_darkred, "a50%yellow");
   }
 
@@ -790,7 +749,6 @@ bool captureImage() {
     }
     if (fd_ms != -1) {
       String str = "FD:" + String(fd_ms) + "ms";
-      //imageLayer->setTextSize(30);
       imageLayer->drawStr(xOff + 7, imageLayerHeight - 40, str, DD_COLOR_darkblue, "a50%green");
     }
   }
@@ -798,7 +756,7 @@ bool captureImage() {
 
   camera_fb_t *fb = esp_camera_fb_get();   // capture image frame from camera
   if (fb == NULL) {
-    if (serialDebug) Serial.println("Error: Camera capture failed");
+     Serial.println("Error: Camera capture failed");
      return false;
   }
 
@@ -870,8 +828,20 @@ bool captureImage() {
 
 #if defined(I2S_WS)
 
+#if I2S_SAMPLE_BIT_COUNT == 32
+  const int StreamBufferNumBytes = 512;
+  const int StreamBufferLen = StreamBufferNumBytes / 4;
+  int32_t StreamBuffer[StreamBufferLen];
+  int16_t SampleStreamBuffer[StreamBufferLen];
+#else
+  const int StreamBufferNumBytes = 256;
+  const int StreamBufferLen = StreamBufferNumBytes / 2;
+  int16_t StreamBuffer[StreamBufferLen];
+#endif
+
 
 void i2s_install() {
+  Serial.println("Installing I2S");
   const i2s_config_t i2s_config = {
     .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
     .sample_rate = SOUND_SAMPLE_RATE,
@@ -886,6 +856,7 @@ void i2s_install() {
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
 }
 void i2s_uninstall() {
+  Serial.println("Unnstalling I2S");
   i2s_driver_uninstall(I2S_PORT);
 }
 
@@ -899,9 +870,9 @@ void i2s_setpin() {
   i2s_set_pin(I2S_PORT, &pin_config);
 }
 
-#if I2S_SAMPLE_BIT_COUNT == 32
-  int16_t SampleStreamBuffer[StreamBufferLen];
-#endif
+// #if I2S_SAMPLE_BIT_COUNT == 32
+//   int16_t SampleStreamBuffer[StreamBufferLen];
+// #endif
 void readMicData(MicInfo &micInfo) {
   // read I2S data and place in data buffer
   size_t bytesRead = 0;
@@ -920,7 +891,9 @@ void readMicData(MicInfo &micInfo) {
 #endif    
     if (samplesRead > 0) {
       // find the samples mean ... and amplify the sound sample, by simply multiple it by some "amplify factor"
+      float minVal = 0;
       float sumVal = 0;
+      float maxVal = 0;
       for (int i = 0; i < samplesRead; ++i) {
         int32_t val = StreamBuffer[i];
 #if I2S_SAMPLE_BIT_COUNT == 32
@@ -929,16 +902,31 @@ void readMicData(MicInfo &micInfo) {
         if (micAmplifyFactor > 1) {
           val = micAmplifyFactor * val;
         }
-        if (val > 32700) {
-          val = 32700;
-        } else if (val < -32700) {
-          val = -32700;
+        // if (val > 32700) {
+        //   val = 32700;
+        // } else if (val < -32700) {
+        //   val = -32700;
+        // }
+        if (val > MAX_MIC_SAMPLE_VALUE) {
+          val = MAX_MIC_SAMPLE_VALUE;
+        } else if (val < -MAX_MIC_SAMPLE_VALUE) {
+          val = -MAX_MIC_SAMPLE_VALUE;
         }
         sampleStreamBuffer[i] = val;
         sumVal += val;
+        if (val < minVal) {
+          minVal = val;
+        } else if (val > maxVal) {
+          maxVal = val;
+        }
       }
+#if defined (MIC_PLOTTER_FIXED_RATE)
+      plotterLayer->set(minVal);
+      plotterLayer->set(maxVal);
+#else      
       float meanVal = (float) sumVal / (float) samplesRead;
       plotterLayer->set(meanVal);
+#endif
     }
   }
   micInfo.result = result;
