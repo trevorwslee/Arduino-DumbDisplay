@@ -281,7 +281,7 @@ void setupDumbdisplay() {
     .build()
   );
 
-#if !defined(FLASH_PIN)// && !defined(TFT_BL_PIN)
+#if !defined(FLASH_PIN)
   flashLayer->disabled(true);
 #endif  
 #if !defined(ENABLE_FACE_DETECTION)
@@ -473,6 +473,25 @@ void loop() {
       sizeLayer->disabled(false);
       if (switchFace) cameraState = CAM_TURNING_ON;
     }
+#if defined(TFT_BL_PIN)
+    if (micOn) {
+      tft.fillScreen(TFT_BLACK);
+      tft.setTextColor(TFT_RED, TFT_BLACK);
+      tft.setTextSize(3);
+      tft.drawString("TALKING ...", 20, 40, 1);
+      digitalWrite(TFT_BL_PIN, HIGH);
+    } else if (faceOn) {
+      tft.fillScreen(TFT_BLACK);
+      tft.setTextColor(TFT_GREEN, TFT_BLACK);
+      tft.setTextSize(2);
+      tft.drawString("Look at the camera", 10, 40, 1);
+      tft.drawString("... and smile!", 10, 60, 1);
+      digitalWrite(TFT_BL_PIN, HIGH);
+    } else {
+      tft.fillScreen(TFT_BLACK);
+      digitalWrite(TFT_BL_PIN, LOW);
+    }
+#endif
     if (flashOn) {
       flashLayer->pixelColor(DD_COLOR_red);
       flashLayer->writeCenteredLine("FLASH ON");
@@ -519,14 +538,14 @@ void loop() {
     amplifyLblLayer->writeLine(String(micAmplifyFactor), 0, "R");
   }
 
-  if (micState == MIC_TURNING_ON/*state == STATE_TO_MIC*/) {
-#if defined(TFT_BL_PIN)
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_RED, TFT_BLACK);
-    tft.setTextSize(3);
-    tft.drawString("TALKING ...", 20, 40, 1);
-    digitalWrite(TFT_BL_PIN, HIGH);
-#endif
+  if (micState == MIC_TURNING_ON) {
+// #if defined(TFT_BL_PIN)
+//     tft.fillScreen(TFT_BLACK);
+//     tft.setTextColor(TFT_RED, TFT_BLACK);
+//     tft.setTextSize(3);
+//     tft.drawString("TALKING ...", 20, 40, 1);
+//     digitalWrite(TFT_BL_PIN, HIGH);
+// #endif
     if (cameraReady && !SUPPORT_CAM_AND_MIC) {
       deinitializeCamera();
       cameraReady = false;
@@ -539,9 +558,9 @@ void loop() {
 
   if (cameraState == CAM_TURNING_ON && (SUPPORT_CAM_AND_MIC || !micReady)) {
     plotterLayer->clear();
-#if defined(TFT_BL_PIN)
-    digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
-#endif
+// #if defined(TFT_BL_PIN)
+//     digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
+// #endif
     if (faceOn) {
       cameraSize = FRAMESIZE_96X96;
       cameraFormat = PIXFORMAT_RGB565;
@@ -575,16 +594,16 @@ void loop() {
       imageLayer->clear();
       //state = STATE_CAMERA_RUNNING;
       cameraState = CAM_RUNNING;
-#if defined(TFT_BL_PIN)
-      if (faceOn) {
-        tft.fillScreen(TFT_BLACK);
-        tft.setTextColor(TFT_GREEN, TFT_BLACK);
-        tft.setTextSize(2);
-        tft.drawString("Look at the camera", 10, 40, 1);
-        tft.drawString("... and smile!", 10, 60, 1);
-        digitalWrite(TFT_BL_PIN, HIGH);
-      }
-#endif
+// #if defined(TFT_BL_PIN)
+//       if (faceOn) {
+//         tft.fillScreen(TFT_BLACK);
+//         tft.setTextColor(TFT_GREEN, TFT_BLACK);
+//         tft.setTextSize(2);
+//         tft.drawString("Look at the camera", 10, 40, 1);
+//         tft.drawString("... and smile!", 10, 60, 1);
+//         digitalWrite(TFT_BL_PIN, HIGH);
+//       }
+// #endif
     }
   }
 
