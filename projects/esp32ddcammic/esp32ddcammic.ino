@@ -21,41 +21,47 @@
   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 #endif
 
-#define SUPPORT_FACE_DETECTION
-
 #if defined(FOR_ESP32CAM)
   // *** If attached button, uncomment the following MIC_BUTTON_PIN and WAKE_GPIO_PIN macros 
-  #define MIC_BUTTON_PIN       15
-  //#define WAKE_GPIO_PIN        GPIO_NUM_15
-  #define FLASH_PIN            4
+  #define MIC_BUTTON_PIN         15
+  #define FLASH_PIN              4
   // ***  For ESP_CAM, if INMP441 not attached, comments out the following I2S_WS macro 
-  #define I2S_WS               12
-  #define I2S_SD               13
-  #define I2S_SCK              14
-  #define I2S_SAMPLE_BIT_COUNT 32
-  #define I2S_SAMPLE_RATE      8000
-  #define SUPPORT_CAM_AND_MIC  true
+  #define I2S_WS                 12
+  #define I2S_SD                 13
+  #define I2S_SCK                14
+  #define SUPPORT_CAM_AND_MIC    false
+  #define ENABLE_FACE_DETECTION
+
+  #define I2S_SAMPLE_BIT_COUNT   16
+  #define I2S_SAMPLE_RATE        8000
+  #define I2S_PORT               I2S_NUM_1
 #elif defined(FOR_LILYGO_TCAMERAPLUS)
-  #define TFT_BL_PIN           2
+  //#define MIC_BUTTON_PIN         23
+  //#define WAKE_GPIO_PIN          GPIO_NUM_23
+  #define TFT_BL_PIN             2
   #include <TFT_eSPI.h>
   TFT_eSPI tft = TFT_eSPI();
   // for the built-in mic of LiLyGO TCameraPlus
-  #define I2S_WS               32
-  #define I2S_SD               33
-  #define I2S_SCK              14
-  #define I2S_SAMPLE_BIT_COUNT 32
-  #define I2S_SAMPLE_RATE      8000
-  #define SUPPORT_CAM_AND_MIC  false
+  #define I2S_WS                 32
+  #define I2S_SD                 33
+  #define I2S_SCK                14
+  #define SUPPORT_CAM_AND_MIC    true
+  #define ENABLE_FACE_DETECTION
+  #define I2S_SAMPLE_BIT_COUNT   32
+  #define I2S_SAMPLE_RATE        8000
+  #define I2S_PORT               I2S_NUM_1
 #elif defined(FOR_LILYGO_TSIMCAM)
   // for the built-in mic of LiLyGO TSimCam
-  #define I2S_WS               42
-  #define I2S_SD                2
-  #define I2S_SCK              41
-  #define I2S_SAMPLE_BIT_COUNT 32
-  #define I2S_SAMPLE_RATE      8000
-  #define SUPPORT_CAM_AND_MIC  true
+  #define I2S_WS                 42
+  #define I2S_SD                  2
+  #define I2S_SCK                41
+  #define SUPPORT_CAM_AND_MIC    true
+  #define ENABLE_FACE_DETECTION
+  #define I2S_SAMPLE_BIT_COUNT   32
+  #define I2S_SAMPLE_RATE        8000
+  #define I2S_PORT               I2S_NUM_0
 #else
-  #define SUPPORT_CAM_AND_MIC  false
+  #define SUPPORT_CAM_AND_MIC    false
 #endif
 
 
@@ -66,7 +72,7 @@
 //   #define I2S_PORT             I2S_NUM_0
 // #endif
 
-#if defined(SUPPORT_FACE_DETECTION)
+#if defined(ENABLE_FACE_DETECTION)
   #include "human_face_detect_msr01.hpp"
   #include "human_face_detect_mnp01.hpp"
   HumanFaceDetectMSR01 detector(0.3F, 0.3F, 10, 0.75F/*0.3F*/);  // 0.75F is adjusted for 96x96; original 0.3F is for 240x240
@@ -98,7 +104,7 @@ void setup() {
 
 #if defined(I2S_WS)
   #include <driver/i2s.h>
-  #define I2S_PORT             I2S_NUM_0
+  //#define I2S_PORT             I2S_NUM_0
   //#define I2S_SAMPLE_RATE    8000
   #define SOUND_CHANNEL_COUNT  1
 
@@ -278,7 +284,7 @@ void setupDumbdisplay() {
 #if !defined(FLASH_PIN)// && !defined(TFT_BL_PIN)
   flashLayer->disabled(true);
 #endif  
-#if !defined(SUPPORT_FACE_DETECTION)
+#if !defined(ENABLE_FACE_DETECTION)
   faceLayer->disabled(true);
 #endif
 #if !defined(I2S_WS) || defined(MIC_BUTTON_PIN)
@@ -342,6 +348,10 @@ void loop() {
       switchFlash(false);
       flashOn = false;
       micOn = false;
+#if defined(TFT_BL_PIN)
+    tft.fillScreen(TFT_BLACK);
+    digitalWrite(TFT_BL_PIN, LOW);
+#endif
       Serial.println("***********");
       Serial.println("*** OFF ***");
       Serial.println("***********");
@@ -423,6 +433,11 @@ void loop() {
       micLayer->writeCenteredLine("MIC ON");
       if (switchMic) {
         micState = MIC_TURNING_ON;
+#if defined(ENABLE_FACE_DETECTION) && SUPPORT_CAM_AND_MIC
+        faceOn = false;
+        faceLayer->disabled(true);
+        cameraState = CAM_TURNING_ON;
+#endif
         if (SUPPORT_CAM_AND_MIC) {
           camOnlyFrameRate = frameRate;
           frameRate = 4;
@@ -436,6 +451,9 @@ void loop() {
       micLayer->writeCenteredLine("MIC OFF");
       if (switchMic) {
         micState = MIC_OFF;
+#if defined(ENABLE_FACE_DETECTION) && SUPPORT_CAM_AND_MIC
+        faceLayer->disabled(false);
+#endif
         if (SUPPORT_CAM_AND_MIC) {
           frameRate = camOnlyFrameRate;
         } else {
@@ -504,8 +522,8 @@ void loop() {
   if (micState == MIC_TURNING_ON/*state == STATE_TO_MIC*/) {
 #if defined(TFT_BL_PIN)
     tft.fillScreen(TFT_BLACK);
-      tft.setTextColor(TFT_RED, TFT_BLACK);
-      tft.setTextSize(3);
+    tft.setTextColor(TFT_RED, TFT_BLACK);
+    tft.setTextSize(3);
     tft.drawString("TALKING ...", 20, 40, 1);
     digitalWrite(TFT_BL_PIN, HIGH);
 #endif
@@ -522,7 +540,6 @@ void loop() {
   if (cameraState == CAM_TURNING_ON && (SUPPORT_CAM_AND_MIC || !micReady)) {
     plotterLayer->clear();
 #if defined(TFT_BL_PIN)
-    //tft.fillScreen(TFT_WHITE);
     digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
 #endif
     if (faceOn) {
@@ -612,7 +629,7 @@ void loop() {
           String str = "FPS:" + String(fps, 2);
           imageLayer->drawStr(xOff + 7, 5, str, DD_COLOR_darkred, "a50%yellow");
         }
-#if defined(SUPPORT_FACE_DETECTION)
+#if defined(ENABLE_FACE_DETECTION)
         if (cameraFormat == PIXFORMAT_RGB565) {
           if (fd_x1 != -1) {
             float scale = imageLayerHeight / 96;  // assume 96x96
@@ -856,7 +873,7 @@ bool captureImage() {
   //   imageLayer->drawStr(xOff + 7, 5, str, DD_COLOR_darkred, "a50%yellow");
   // }
 
-// #if defined(SUPPORT_FACE_DETECTION)
+// #if defined(ENABLE_FACE_DETECTION)
 //   int xOff = (imageLayerWidth - imageLayerHeight) / 2;
 //   if (cameraFormat == PIXFORMAT_RGB565) {
 //     if (fd_x1 != -1) {
@@ -883,7 +900,7 @@ bool captureImage() {
   }
 
 
-#if defined(SUPPORT_FACE_DETECTION)
+#if defined(ENABLE_FACE_DETECTION)
   if (cameraFormat == PIXFORMAT_RGB565) {
     long startMs = millis();
     std::list<dl::detect::result_t> &candidates = detector.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
