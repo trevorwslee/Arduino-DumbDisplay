@@ -24,9 +24,10 @@
 #define SUPPORT_FACE_DETECTION
 
 #if defined(FOR_ESP32CAM)
-  // *** If attached button, uncomment the following MIC_BUTTON_PIN macro 
+  // *** If attached button, uncomment the following MIC_BUTTON_PIN and WAKE_GPIO_PIN macros 
   #define MIC_BUTTON_PIN       15
-  #define FLASH_PIN             4
+  //#define WAKE_GPIO_PIN        GPIO_NUM_15
+  #define FLASH_PIN            4
   // ***  For ESP_CAM, if INMP441 not attached, comments out the following I2S_WS macro 
   #define I2S_WS               12
   #define I2S_SD               13
@@ -53,6 +54,8 @@
   #define I2S_SAMPLE_BIT_COUNT 32
   #define I2S_SAMPLE_RATE      8000
   #define SUPPORT_CAM_AND_MIC  true
+#else
+  #define SUPPORT_CAM_AND_MIC  false
 #endif
 
 
@@ -169,10 +172,28 @@ long lastCaptureImageMs = 0;
 long fps_lastMs = -1;
 long fps_lastLastMs = -1;
 
+int fd_x1 = -1;  // track the last detected face
+int fd_y1 = -1;
+int fd_x2 = -1;
+int fd_y2 = -1;
+int fd_le_x = -1;
+int fd_le_y = -1;
+int fd_re_x = -1;
+int fd_re_y = -1;
+int fd_n_x = -1;
+int fd_n_y = -1;
+int fd_ml_x = -1;
+int fd_ml_y = -1;
+int fd_mr_x = -1;
+int fd_mr_y = -1;
+long fd_ms = -1;
+
 enum CameraState { CAM_OFF, CAM_TURNING_ON, CAM_RUNNING };
 enum MicState { MIC_OFF, MIC_TURNING_ON, MIC_RUNNING };
 CameraState cameraState = CAM_TURNING_ON;
 MicState micState = MIC_OFF;
+
+long countDownMs = millis();
 
 LcdDDLayer* createAndSetupButton(const char* bgColor = DD_COLOR_blue) {
   LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(10, 1);
@@ -290,6 +311,14 @@ void loop() {
   dumbdisplay.connectPassive(&connectStatus);
   if (!connectStatus.connected) {
     // not connected ==> return immediately
+#if defined(WAKE_GPIO_PIN)
+    if ((millis() - countDownMs) > (10 * 1000)) {
+        // count down (to sleep) more than 10 seconds
+        Serial.println("*** going to sleep ***");
+        esp_sleep_enable_ext0_wakeup(WAKE_GPIO_PIN, 0);
+        esp_deep_sleep_start();    
+    }
+#endif
     return;
   }
 
@@ -316,11 +345,14 @@ void loop() {
       Serial.println("***********");
       Serial.println("*** OFF ***");
       Serial.println("***********");
+      countDownMs = millis();
       return;
     }
   }
 
   boolean updateUI = false;
+  boolean switchFace = false;
+  boolean switchMic = false;
   if (imageLayer == NULL) {
     Serial.println("**********");
     Serial.println("*** ON ***");
@@ -343,17 +375,20 @@ void loop() {
     if (cameraState == CAM_RUNNING) {
       micOn = true;
       updateUI = true;
+      switchMic = true;
     }
   } else {
     if (micState == MIC_RUNNING) {
       micOn = false;
       updateUI = true;
+      switchMic = true;
     }
   }
 #else  
   if (micLayer->getFeedback()) {
     micOn = !micOn;
     updateUI = true;
+    switchMic = true;
   }
 #endif
 
@@ -379,9 +414,47 @@ void loop() {
   if (faceLayer->getFeedback()) {
     faceOn = !faceOn;
     updateUI = true;
+    switchFace = true;
   }
- 
+
   if (updateUI) {
+    if (micOn) {
+      micLayer->pixelColor(DD_COLOR_red);
+      micLayer->writeCenteredLine("MIC ON");
+      if (switchMic) {
+        micState = MIC_TURNING_ON;
+        if (SUPPORT_CAM_AND_MIC) {
+          camOnlyFrameRate = frameRate;
+          frameRate = 4;
+        } else {
+          cameraState = CAM_OFF;
+          rateLayer->disabled(true);
+        }
+      }
+    } else {
+      micLayer->pixelColor(DD_COLOR_white);
+      micLayer->writeCenteredLine("MIC OFF");
+      if (switchMic) {
+        micState = MIC_OFF;
+        if (SUPPORT_CAM_AND_MIC) {
+          frameRate = camOnlyFrameRate;
+        } else {
+          cameraState = CAM_TURNING_ON;
+          rateLayer->disabled(false);
+        }
+      }
+    }  
+    if (faceOn) {
+      faceLayer->pixelColor(DD_COLOR_red);
+      faceLayer->writeCenteredLine("FACE ON");
+      sizeLayer->disabled(true);
+      if (switchFace) cameraState = CAM_TURNING_ON;
+    } else {
+      faceLayer->pixelColor(DD_COLOR_white);
+      faceLayer->writeCenteredLine("FACE OFF");
+      sizeLayer->disabled(false);
+      if (switchFace) cameraState = CAM_TURNING_ON;
+    }
     if (flashOn) {
       flashLayer->pixelColor(DD_COLOR_red);
       flashLayer->writeCenteredLine("FLASH ON");
@@ -390,38 +463,7 @@ void loop() {
       flashLayer->writeCenteredLine("FLASH OFF");
     }  
     switchFlash(flashOn);
-    if (micOn) {
-      micLayer->pixelColor(DD_COLOR_red);
-      micLayer->writeCenteredLine("MIC ON");
-      micState = MIC_TURNING_ON;
-      if (SUPPORT_CAM_AND_MIC) {
-        camOnlyFrameRate = frameRate;
-        frameRate = 4;
-      } else {
-        cameraState = CAM_OFF;
-        rateLayer->disabled(true);
-      }
-    } else {
-      micLayer->pixelColor(DD_COLOR_white);
-      micLayer->writeCenteredLine("MIC OFF");
-      micState = MIC_OFF;
-      cameraState = CAM_TURNING_ON;
-      if (faceOn) {
-        faceLayer->pixelColor(DD_COLOR_red);
-        faceLayer->writeCenteredLine("FACE ON");
-        sizeLayer->disabled(true);
-      } else {
-        faceLayer->pixelColor(DD_COLOR_white);
-        faceLayer->writeCenteredLine("FACE OFF");
-        sizeLayer->disabled(false);
-      }
-      if (SUPPORT_CAM_AND_MIC) {
-        frameRate = camOnlyFrameRate;
-      } else {
-        rateLayer->disabled(false);
-      }
-    }  
-     const char* sizeLabel;
+    const char* sizeLabel;
     if (frameSize == 0) {
       sizeLabel = "QVGA";
     } else if (frameSize == 1) {
@@ -429,13 +471,13 @@ void loop() {
     } else if (frameSize == 2) {
       sizeLabel = "SVGA";
     } else {
-      sizeLabel = "---";
+      sizeLabel = "???";
     }
     sizeLayer->pixelColor(DD_COLOR_red);
     sizeLayer->writeCenteredLine(String("SIZE ") + sizeLabel);
     const char* fpsLabel;
     if (frameRate == 0) {
-      fpsLabel = "DEF";
+      fpsLabel = "---";
     } else if (frameRate == 1) {
       fpsLabel = "1";
     } else if (frameRate == 2) {
@@ -445,7 +487,7 @@ void loop() {
     } else if (frameRate == 8) {
       fpsLabel = "8";
     } else {
-      fpsLabel = "---";
+      fpsLabel = "?";
     }
     rateLayer->pixelColor(DD_COLOR_red);
     rateLayer->writeCenteredLine(String("RATE ") + fpsLabel);
@@ -570,6 +612,24 @@ void loop() {
           String str = "FPS:" + String(fps, 2);
           imageLayer->drawStr(xOff + 7, 5, str, DD_COLOR_darkred, "a50%yellow");
         }
+#if defined(SUPPORT_FACE_DETECTION)
+        if (cameraFormat == PIXFORMAT_RGB565) {
+          if (fd_x1 != -1) {
+            float scale = imageLayerHeight / 96;  // assume 96x96
+            imageLayer->drawRect(xOff + scale * fd_x1, scale * fd_y1, scale * (fd_x2 - fd_x1), scale * (fd_y2 - fd_y1), DD_COLOR_green);
+            if (true) {
+              imageLayer->fillCircle(xOff + scale * fd_le_x, scale * fd_le_y, 4, DD_COLOR_red);  // left eye
+              imageLayer->fillCircle(xOff + scale * fd_re_x, scale * fd_re_y, 4, DD_COLOR_red);  // right eye
+              imageLayer->fillCircle(xOff + scale * fd_n_x, scale * fd_n_y, 6, DD_COLOR_green);  // nose
+              imageLayer->fillRect(xOff + scale * fd_ml_x, scale * fd_ml_y, scale * (fd_mr_x - fd_ml_x), 4, DD_COLOR_blue);  // mouth
+            }
+          }
+          if (fd_ms != -1) {
+            String str = "FD:" + String(fd_ms) + "ms";
+            imageLayer->drawStr(xOff + 7, imageLayerHeight - 40, str, DD_COLOR_darkblue, "a50%green");
+          }
+        }
+#endif
       } else {
         dumbdisplay.writeComment("Failed to capture image!");
         delay(1000);
@@ -770,26 +830,23 @@ void deinitializeCamera() {
   delay(50);
 }
 
-int fd_x1 = -1;  // track the last detected one
-int fd_y1 = -1;
-int fd_x2 = -1;
-int fd_y2 = -1;
-int fd_le_x = -1;
-int fd_le_y = -1;
-int fd_re_x = -1;
-int fd_re_y = -1;
-int fd_n_x = -1;
-int fd_n_y = -1;
-int fd_ml_x = -1;
-int fd_ml_y = -1;
-int fd_mr_x = -1;
-int fd_mr_y = -1;
-long fd_ms = -1;
+// int fd_x1 = -1;  // track the last detected one
+// int fd_y1 = -1;
+// int fd_x2 = -1;
+// int fd_y2 = -1;
+// int fd_le_x = -1;
+// int fd_le_y = -1;
+// int fd_re_x = -1;
+// int fd_re_y = -1;
+// int fd_n_x = -1;
+// int fd_n_y = -1;
+// int fd_ml_x = -1;
+// int fd_ml_y = -1;
+// int fd_mr_x = -1;
+// int fd_mr_y = -1;
+// long fd_ms = -1;
 
 bool captureImage() {
-
-  int xOff = (imageLayerWidth - imageLayerHeight) / 2;
-
   // fps_lastLastMs = fps_lastMs;
   // fps_lastMs = millis();
   // if (fps_lastLastMs != -1) {
@@ -799,24 +856,25 @@ bool captureImage() {
   //   imageLayer->drawStr(xOff + 7, 5, str, DD_COLOR_darkred, "a50%yellow");
   // }
 
-#if defined(SUPPORT_FACE_DETECTION)
-  if (cameraFormat == PIXFORMAT_RGB565) {
-    if (fd_x1 != -1) {
-      float scale = imageLayerHeight / 96;  // assume 96x96
-      imageLayer->drawRect(xOff + scale * fd_x1, scale * fd_y1, scale * (fd_x2 - fd_x1), scale * (fd_y2 - fd_y1), DD_COLOR_green);
-      if (true) {
-        imageLayer->fillCircle(xOff + scale * fd_le_x, scale * fd_le_y, 4, DD_COLOR_red);  // left eye
-        imageLayer->fillCircle(xOff + scale * fd_re_x, scale * fd_re_y, 4, DD_COLOR_red);  // right eye
-        imageLayer->fillCircle(xOff + scale * fd_n_x, scale * fd_n_y, 6, DD_COLOR_green);  // nose
-        imageLayer->fillRect(xOff + scale * fd_ml_x, scale * fd_ml_y, scale * (fd_mr_x - fd_ml_x), 4, DD_COLOR_blue);  // mouth
-      }
-    }
-    if (fd_ms != -1) {
-      String str = "FD:" + String(fd_ms) + "ms";
-      imageLayer->drawStr(xOff + 7, imageLayerHeight - 40, str, DD_COLOR_darkblue, "a50%green");
-    }
-  }
-#endif
+// #if defined(SUPPORT_FACE_DETECTION)
+//   int xOff = (imageLayerWidth - imageLayerHeight) / 2;
+//   if (cameraFormat == PIXFORMAT_RGB565) {
+//     if (fd_x1 != -1) {
+//       float scale = imageLayerHeight / 96;  // assume 96x96
+//       imageLayer->drawRect(xOff + scale * fd_x1, scale * fd_y1, scale * (fd_x2 - fd_x1), scale * (fd_y2 - fd_y1), DD_COLOR_green);
+//       if (true) {
+//         imageLayer->fillCircle(xOff + scale * fd_le_x, scale * fd_le_y, 4, DD_COLOR_red);  // left eye
+//         imageLayer->fillCircle(xOff + scale * fd_re_x, scale * fd_re_y, 4, DD_COLOR_red);  // right eye
+//         imageLayer->fillCircle(xOff + scale * fd_n_x, scale * fd_n_y, 6, DD_COLOR_green);  // nose
+//         imageLayer->fillRect(xOff + scale * fd_ml_x, scale * fd_ml_y, scale * (fd_mr_x - fd_ml_x), 4, DD_COLOR_blue);  // mouth
+//       }
+//     }
+//     if (fd_ms != -1) {
+//       String str = "FD:" + String(fd_ms) + "ms";
+//       imageLayer->drawStr(xOff + 7, imageLayerHeight - 40, str, DD_COLOR_darkblue, "a50%green");
+//     }
+//   }
+// #endif
 
   camera_fb_t *fb = esp_camera_fb_get();   // capture image frame from camera
   if (fb == NULL) {
