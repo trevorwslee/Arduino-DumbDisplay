@@ -3441,6 +3441,19 @@ void DumbDisplay::logToSerial(const String& logLine, boolean force) {
     }
   }
 }
+void DumbDisplay::log(const String& logLine, boolean isError) {
+  if (_CanLogToSerial()) {
+    if (_The_DD_Serial != NULL) {
+      _The_DD_Serial->print(logLine);
+      _The_DD_Serial->print("\n");
+    } else {
+      Serial.println(logLine);
+    }
+  }
+  if (_Connected) {
+    __SendComment(logLine, isError);
+  }  
+}
 
 
 bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {

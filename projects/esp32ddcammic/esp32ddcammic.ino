@@ -35,9 +35,9 @@
   #define I2S_SAMPLE_RATE           8000
   #define I2S_PORT                  I2S_NUM_1
 #elif defined(FOR_LILYGO_TCAMERAPLUS)
-  #define TFT_BL_PIN                2
-  #include <TFT_eSPI.h>
+  #include <TFT_eSPI.h> // Setup44_TTGO_CameraPlus.h             
   TFT_eSPI tft = TFT_eSPI();
+  #define TFT_BL_PIN                2
   // for the built-in mic of LiLyGO TCameraPlus
   #define I2S_WS                     32
   #define I2S_SD                     33
@@ -72,7 +72,7 @@
 // ====================
 
 void setup() {
-  Serial.begin(115200);
+  //Serial.begin(115200);
 #if defined(FLASH_PIN)
   pinMode(FLASH_PIN, OUTPUT);
 #endif  
@@ -326,7 +326,7 @@ void loop() {
       digitalWrite(TFT_BL_PIN, HIGH);
 #endif
       } else {
-        Serial.println("*** OFF ***");
+        dumbdisplay.log("*** OFF ***");
 #if defined(TFT_BL_PIN)
         digitalWrite(TFT_BL_PIN, LOW);
 #endif
@@ -358,9 +358,7 @@ void loop() {
       tft.fillScreen(TFT_LIGHTGREY);
       digitalWrite(TFT_BL_PIN, LOW);
 #endif
-      Serial.println("************");
-      Serial.println("*** IDLE ***");
-      Serial.println("************");
+      dumbdisplay.log("*** IDLE ***");
       countdownStartMs = millis();
       countdownNextMs = countdownStartMs;
       return;
@@ -375,9 +373,7 @@ void loop() {
     tft.fillScreen(TFT_BLACK);
     digitalWrite(TFT_BL_PIN, LOW);
 #endif
-    Serial.println("**********");
-    Serial.println("*** ON ***");
-    Serial.println("**********");
+    dumbdisplay.log("*** ON ***");
     // just connected ==> set things up like freshly initialized
     setupDumbdisplay();
     cameraState = CAM_TURNING_ON;
@@ -578,13 +574,13 @@ void loop() {
       }
     }
     if (!cameraReady) {
-      dumbdisplay.writeComment("Initializing camera ...");
+      //dumbdisplay.logToSerialAndComment("Initializing camera ...");
       cameraReady = initializeCamera(cameraSize, cameraFormat); 
-      if (cameraReady) {
-        dumbdisplay.writeComment("... initialized camera!");
-      } else {
-        dumbdisplay.writeComment("... failed to initialize camera!");
-      }
+      // if (cameraReady) {
+      //   dumbdisplay.logToSerialAndComment("... initialized camera!");
+      // } else {
+      //   dumbdisplay.logToSerialAndComment("... failed to initialize camera!", true);
+      // }
     }
     if (cameraReady) {
       imageLayer->clear();
@@ -596,12 +592,12 @@ void loop() {
   if (micState == MIC_TURNING_ON && (simultaneousCameraAndMic || !cameraReady)) {
 #if defined(I2S_WS)    
     if (!micReady) {
-      dumbdisplay.writeComment("SETUP MIC ...");
+      //dumbdisplay.logToSerialAndComment("SETUP MIC ...");
       i2s_install();
       i2s_setpin();
       i2s_zero_dma_buffer(I2S_PORT);
       i2s_start(I2S_PORT);
-      dumbdisplay.writeComment("... DONE SETUP MIC");
+      //dumbdisplay.logToSerialAndComment("... DONE SETUP MIC");
       micReady = true;
     }
     if (micReady) {
@@ -658,7 +654,7 @@ void loop() {
         }
 #endif
       } else {
-        dumbdisplay.writeComment("Failed to capture image!");
+        dumbdisplay.log("Failed to capture image!", true);
         delay(1000);
       }
       lastCaptureImageMs = millis();
@@ -673,7 +669,7 @@ void loop() {
       // while started ... if no allocated "chunk id" (i.e. not yet started sending sound)
       // start streaming sound, and get the assigned "chunk id"
       micSoundChunkId = dumbdisplay.streamSound16(I2S_SAMPLE_RATE, SOUND_CHANNEL_COUNT);
-      dumbdisplay.writeComment(String("STARTED mic streaming with chunk id [") + micSoundChunkId + "]");
+      dumbdisplay.log(String("STARTED mic streaming with chunk id [") + micSoundChunkId + "]");
       micStreamingMillis = millis();
       micStreamingTotalSampleCount = 0;
     }
@@ -684,11 +680,11 @@ void loop() {
         dumbdisplay.sendSoundChunk16(micSoundChunkId, micInfo.sampleStreamBuffer, micInfo.samplesRead, isFinalChunk);
         micStreamingTotalSampleCount += micInfo.samplesRead;
         if (isFinalChunk) {
-          dumbdisplay.writeComment(String("DONE streaming with chunk id [") + micSoundChunkId + "]");
+          dumbdisplay.log(String("DONE streaming with chunk id [") + micSoundChunkId + "]");
           long forMillis = millis() - micStreamingMillis;
           int totalSampleCount = micStreamingTotalSampleCount;
-          dumbdisplay.writeComment(String(". total streamed samples: ") + totalSampleCount + " in " + String(forMillis / 1000.0) + "s");
-          dumbdisplay.writeComment(String(". stream sample rate: ") + String(1000.0 * ((float) totalSampleCount / forMillis)));
+          dumbdisplay.log(String(". total streamed samples: ") + totalSampleCount + " in " + String(forMillis / 1000.0) + "s");
+          dumbdisplay.log(String(". stream sample rate: ") + String(1000.0 * ((float) totalSampleCount / forMillis)));
           micSoundChunkId = -1;
           i2s_uninstall();
           micReady = false;
@@ -782,11 +778,11 @@ void loop() {
 
 bool cameraImageSettings() {
 
-  Serial.println("Applying camera settings");
+  dumbdisplay.log("Applying camera settings");
 
   sensor_t *s = esp_camera_sensor_get();
   if (s == NULL) {
-    Serial.println("Error: problem reading camera sensor settings");
+    dumbdisplay.log("Error: problem reading camera sensor settings", true);
     return 0;
   }
 
@@ -801,7 +797,7 @@ bool cameraImageSettings() {
 
 bool initializeCamera(framesize_t frameSize, pixformat_t pixelFormat) {
   
-  Serial.println("Initializing camera");
+  dumbdisplay.log("Initialize camera");
 
   esp_camera_deinit();     // disable camera
   delay(50);
@@ -836,14 +832,14 @@ bool initializeCamera(framesize_t frameSize, pixformat_t pixelFormat) {
   // check the esp32cam board has a psram chip installed (extra memory used for storing captured images)
   //    Note: if not using "AI thinker esp32 cam" in the Arduino IDE, SPIFFS must be enabled
   if (!psramFound()) {
-    Serial.println("ERROR: No PSRam found");
+    dumbdisplay.log("ERROR: No PSRam found", true);
     //config.frame_size = FRAMESIZE_CIF;
     return false;
   }
 
   esp_err_t camerr = esp_camera_init(&config);  // initialise the camera
   if (camerr != ESP_OK) {
-    Serial.printf("ERROR: Camera init failed with error 0x%x", camerr);
+    dumbdisplay.log("ERROR: Camera init failed with error -- " + String(camerr), true);
   }
 
   cameraImageSettings();                        // apply custom camera settings
@@ -852,7 +848,7 @@ bool initializeCamera(framesize_t frameSize, pixformat_t pixelFormat) {
 }
 
 void deinitializeCamera() {
-  Serial.println("Deinitializing camera");
+  Serial.println("Deinitialize camera");
   esp_camera_deinit();     // disable camera
   delay(50);
 }
@@ -991,7 +987,7 @@ bool captureImage() {
 
 
 void i2s_install() {
-  Serial.println("Installing I2S");
+  dumbdisplay.log("Install I2S");
   const i2s_config_t i2s_config = {
     .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
     .sample_rate = I2S_SAMPLE_RATE,
@@ -1006,7 +1002,7 @@ void i2s_install() {
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
 }
 void i2s_uninstall() {
-  Serial.println("Uninstalling I2S");
+  dumbdisplay.log("Uninstall I2S");
   i2s_driver_uninstall(I2S_PORT);
 }
 
