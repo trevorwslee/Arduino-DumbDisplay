@@ -23,54 +23,42 @@
 
 #if defined(FOR_ESP32CAM)
   // *** If attached button, uncomment the following MIC_BUTTON_PIN and WAKE_GPIO_PIN macros 
-  #define MIC_BUTTON_PIN         15
-  #define FLASH_PIN              4
+  #define MIC_BUTTON_PIN            15
+  #define FLASH_PIN                 4
   // ***  For ESP_CAM, if INMP441 not attached, comments out the following I2S_WS macro 
-  #define I2S_WS                 12
-  #define I2S_SD                 13
-  #define I2S_SCK                14
-  #define SUPPORT_CAM_AND_MIC    false
+  #define I2S_WS                    12
+  #define I2S_SD                    13
+  #define I2S_SCK                   14
   #define ENABLE_FACE_DETECTION
 
-  #define I2S_SAMPLE_BIT_COUNT   16
-  #define I2S_SAMPLE_RATE        8000
-  #define I2S_PORT               I2S_NUM_1
+  #define I2S_SAMPLE_BIT_COUNT      16
+  #define I2S_SAMPLE_RATE           8000
+  #define I2S_PORT                  I2S_NUM_1
 #elif defined(FOR_LILYGO_TCAMERAPLUS)
-  //#define MIC_BUTTON_PIN         23
-  //#define WAKE_GPIO_PIN          GPIO_NUM_23
-  #define TFT_BL_PIN             2
+  #define TFT_BL_PIN                2
   #include <TFT_eSPI.h>
   TFT_eSPI tft = TFT_eSPI();
   // for the built-in mic of LiLyGO TCameraPlus
-  #define I2S_WS                 32
-  #define I2S_SD                 33
-  #define I2S_SCK                14
-  #define SUPPORT_CAM_AND_MIC    true
+  #define I2S_WS                     32
+  #define I2S_SD                     33
+  #define I2S_SCK                    14
+  #define SIMULTANEOUS_CAM_MIC_RATE  4
   #define ENABLE_FACE_DETECTION
-  #define I2S_SAMPLE_BIT_COUNT   32
-  #define I2S_SAMPLE_RATE        8000
-  #define I2S_PORT               I2S_NUM_1
+  #define I2S_SAMPLE_BIT_COUNT       32
+  #define I2S_SAMPLE_RATE            8000
+  #define I2S_PORT                   I2S_NUM_1
 #elif defined(FOR_LILYGO_TSIMCAM)
   // for the built-in mic of LiLyGO TSimCam
-  #define I2S_WS                 42
-  #define I2S_SD                  2
-  #define I2S_SCK                41
-  #define SUPPORT_CAM_AND_MIC    true
+  #define I2S_WS                     42
+  #define I2S_SD                     2
+  #define I2S_SCK                    41
+  #define SIMULTANEOUS_CAM_MIC_RATE  4
   #define ENABLE_FACE_DETECTION
-  #define I2S_SAMPLE_BIT_COUNT   32
-  #define I2S_SAMPLE_RATE        8000
-  #define I2S_PORT               I2S_NUM_0
-#else
-  #define SUPPORT_CAM_AND_MIC    false
+  #define I2S_SAMPLE_BIT_COUNT       32
+  #define I2S_SAMPLE_RATE            8000
+  #define I2S_PORT                   I2S_NUM_0
 #endif
 
-
-// #define I2S_SAMPLE_RATE    8000
-// #define SOUND_CHANNEL_COUNT  1
-// #if defined(I2S_WS)
-//   #include <driver/i2s.h>
-//   #define I2S_PORT             I2S_NUM_0
-// #endif
 
 #if defined(ENABLE_FACE_DETECTION)
   #include "human_face_detect_msr01.hpp"
@@ -93,6 +81,7 @@ void setup() {
 #endif  
 #if defined(TFT_BL_PIN)
   tft.init(); 
+  tft.fillScreen(TFT_LIGHTGREY);
   pinMode(TFT_BL_PIN, OUTPUT);
   digitalWrite(TFT_BL_PIN, LOW);
 #endif
@@ -104,8 +93,6 @@ void setup() {
 
 #if defined(I2S_WS)
   #include <driver/i2s.h>
-  //#define I2S_PORT             I2S_NUM_0
-  //#define I2S_SAMPLE_RATE    8000
   #define SOUND_CHANNEL_COUNT  1
 
   const int I2S_DMA_BUF_COUNT = 8;
@@ -198,8 +185,6 @@ enum CameraState { CAM_OFF, CAM_TURNING_ON, CAM_RUNNING };
 enum MicState { MIC_OFF, MIC_TURNING_ON, MIC_RUNNING };
 CameraState cameraState = CAM_TURNING_ON;
 MicState micState = MIC_OFF;
-
-long countDownMs = millis();
 
 LcdDDLayer* createAndSetupButton(const char* bgColor = DD_COLOR_blue) {
   LcdDDLayer* buttonLayer = dumbdisplay.createLcdLayer(10, 1);
@@ -303,7 +288,16 @@ void switchFlash(bool flashOn) {
 #endif
 }
 
-//bool simultaneousMicCamera = false;
+#if defined (SIMULTANEOUS_CAM_MIC_RATE)
+  const bool simultaneousCameraAndMic = true;
+  const int simultaneousCameraAndMicRate = SIMULTANEOUS_CAM_MIC_RATE;
+#else
+  const bool simultaneousCameraAndMic = false;
+  const int simultaneousCameraAndMicRate = 1;
+#endif
+
+long countdownStartMs = millis();
+long countdownNextMs = countdownStartMs;
 
 void loop() {
 
@@ -317,14 +311,32 @@ void loop() {
   dumbdisplay.connectPassive(&connectStatus);
   if (!connectStatus.connected) {
     // not connected ==> return immediately
-#if defined(WAKE_GPIO_PIN)
-    if ((millis() - countDownMs) > (10 * 1000)) {
-        // count down (to sleep) more than 10 seconds
-        Serial.println("*** going to sleep ***");
-        esp_sleep_enable_ext0_wakeup(WAKE_GPIO_PIN, 0);
-        esp_deep_sleep_start();    
-    }
+    long now = millis();
+    if ((now - countdownNextMs) > 0) {
+      countdownNextMs = now + 1000;
+      int diffS = (now - countdownStartMs) / 1000;
+      if (diffS < 9) {
+#if defined(TFT_BL_PIN)
+      String inMsg = String("... in ") + String(9 - diffS);
+      //tft.fillScreen(TFT_LIGHTGREY);
+      tft.setTextColor(TFT_BLUE, TFT_LIGHTGREY);
+      tft.setTextSize(3);
+      tft.drawString("OFF ...", 20, 40, 1);
+      tft.drawString(inMsg, 20, 75, 1);
+      digitalWrite(TFT_BL_PIN, HIGH);
 #endif
+      } else {
+        Serial.println("*** OFF ***");
+#if defined(TFT_BL_PIN)
+        digitalWrite(TFT_BL_PIN, LOW);
+#endif
+#if defined(WAKE_GPIO_PIN)
+        Serial.println("*** going to sleep ***");
+        esp_sleep_enable_ext0_wakeup(WAKE_GPIO_PIN, 0);  // e.g. GPIO_NUM_23
+        esp_deep_sleep_start();    
+#endif
+      }
+    }
     return;
   }
 
@@ -339,23 +351,18 @@ void loop() {
         deinitializeCamera();
         cameraReady = false;
       }
-  // #if defined(I2S_WS)
-  //     if (micReady) {
-  //       i2s_uninstall();
-  //       micReady = false;
-  //     }
-  // #endif
       switchFlash(false);
       flashOn = false;
       micOn = false;
 #if defined(TFT_BL_PIN)
-    tft.fillScreen(TFT_BLACK);
-    digitalWrite(TFT_BL_PIN, LOW);
+      tft.fillScreen(TFT_LIGHTGREY);
+      digitalWrite(TFT_BL_PIN, LOW);
 #endif
-      Serial.println("***********");
-      Serial.println("*** OFF ***");
-      Serial.println("***********");
-      countDownMs = millis();
+      Serial.println("************");
+      Serial.println("*** IDLE ***");
+      Serial.println("************");
+      countdownStartMs = millis();
+      countdownNextMs = countdownStartMs;
       return;
     }
   }
@@ -364,6 +371,10 @@ void loop() {
   boolean switchFace = false;
   boolean switchMic = false;
   if (imageLayer == NULL) {
+#if defined(TFT_BL_PIN)
+    tft.fillScreen(TFT_BLACK);
+    digitalWrite(TFT_BL_PIN, LOW);
+#endif
     Serial.println("**********");
     Serial.println("*** ON ***");
     Serial.println("**********");
@@ -373,11 +384,6 @@ void loop() {
     micState = MIC_OFF;
     updateUI = true;
   }
-
-  // framesize_t oriCameraSize = cameraSize;
-  // pixformat_t oriCameraFormat = cameraFormat;
-  // //int oriState = state;
-  // MicState oriMicState = micState;
 
 #if defined(MIC_BUTTON_PIN)
   bool pressed = digitalRead(MIC_BUTTON_PIN) == HIGH;
@@ -433,14 +439,14 @@ void loop() {
       micLayer->writeCenteredLine("MIC ON");
       if (switchMic) {
         micState = MIC_TURNING_ON;
-#if defined(ENABLE_FACE_DETECTION) && SUPPORT_CAM_AND_MIC
-        faceOn = false;
-        faceLayer->disabled(true);
-        cameraState = CAM_TURNING_ON;
+        if (simultaneousCameraAndMic) {
+#if defined(ENABLE_FACE_DETECTION)
+          faceOn = false;
+          faceLayer->disabled(true);
+          cameraState = CAM_TURNING_ON;
 #endif
-        if (SUPPORT_CAM_AND_MIC) {
           camOnlyFrameRate = frameRate;
-          frameRate = 4;
+          frameRate = simultaneousCameraAndMicRate;
         } else {
           cameraState = CAM_OFF;
           rateLayer->disabled(true);
@@ -451,10 +457,10 @@ void loop() {
       micLayer->writeCenteredLine("MIC OFF");
       if (switchMic) {
         micState = MIC_OFF;
-#if defined(ENABLE_FACE_DETECTION) && SUPPORT_CAM_AND_MIC
-        faceLayer->disabled(false);
+        if (simultaneousCameraAndMic) {
+#if defined(ENABLE_FACE_DETECTION)
+          faceLayer->disabled(false);
 #endif
-        if (SUPPORT_CAM_AND_MIC) {
           frameRate = camOnlyFrameRate;
         } else {
           cameraState = CAM_TURNING_ON;
@@ -539,28 +545,18 @@ void loop() {
   }
 
   if (micState == MIC_TURNING_ON) {
-// #if defined(TFT_BL_PIN)
-//     tft.fillScreen(TFT_BLACK);
-//     tft.setTextColor(TFT_RED, TFT_BLACK);
-//     tft.setTextSize(3);
-//     tft.drawString("TALKING ...", 20, 40, 1);
-//     digitalWrite(TFT_BL_PIN, HIGH);
-// #endif
-    if (cameraReady && !SUPPORT_CAM_AND_MIC) {
+    if (cameraReady && !simultaneousCameraAndMic) {
       deinitializeCamera();
       cameraReady = false;
       imageLayer->drawImageFile(imageName, 0, 0, 0, 0, "f:;l:GS");
       imageLayer->setTextSize(72);
-      imageLayer->drawStr(50, imageLayerHeight - 100, "TALK ...", "red");
+      imageLayer->drawStr(50, imageLayerHeight - 100, "talking ...", "red");
       imageLayer->setTextSize(defImageLayerTextSize);
     }
   }
 
-  if (cameraState == CAM_TURNING_ON && (SUPPORT_CAM_AND_MIC || !micReady)) {
+  if (cameraState == CAM_TURNING_ON && (simultaneousCameraAndMic || !micReady)) {
     plotterLayer->clear();
-// #if defined(TFT_BL_PIN)
-//     digitalWrite(TFT_BL_PIN, flashOn ? HIGH : LOW);
-// #endif
     if (faceOn) {
       cameraSize = FRAMESIZE_96X96;
       cameraFormat = PIXFORMAT_RGB565;
@@ -594,20 +590,10 @@ void loop() {
       imageLayer->clear();
       //state = STATE_CAMERA_RUNNING;
       cameraState = CAM_RUNNING;
-// #if defined(TFT_BL_PIN)
-//       if (faceOn) {
-//         tft.fillScreen(TFT_BLACK);
-//         tft.setTextColor(TFT_GREEN, TFT_BLACK);
-//         tft.setTextSize(2);
-//         tft.drawString("Look at the camera", 10, 40, 1);
-//         tft.drawString("... and smile!", 10, 60, 1);
-//         digitalWrite(TFT_BL_PIN, HIGH);
-//       }
-// #endif
     }
   }
 
-  if (micState == MIC_TURNING_ON && (SUPPORT_CAM_AND_MIC || !cameraReady)) {
+  if (micState == MIC_TURNING_ON && (simultaneousCameraAndMic || !cameraReady)) {
 #if defined(I2S_WS)    
     if (!micReady) {
       dumbdisplay.writeComment("SETUP MIC ...");
@@ -619,7 +605,6 @@ void loop() {
       micReady = true;
     }
     if (micReady) {
-      //state = STATE_MIC_RUNNING;
       micState = MIC_RUNNING;
       fps_lastMs = -1;
       fps_lastLastMs = -1;
@@ -663,6 +648,12 @@ void loop() {
           if (fd_ms != -1) {
             String str = "FD:" + String(fd_ms) + "ms";
             imageLayer->drawStr(xOff + 7, imageLayerHeight - 40, str, DD_COLOR_darkblue, "a50%green");
+          }
+          if (micOn) {
+            imageLayer->drawImageFile(imageName, 0, 0, 0, 0, "f:;l:GS");
+            imageLayer->setTextSize(72);
+            imageLayer->drawStr(50, imageLayerHeight - 100, "talking ...", "red");
+            imageLayer->setTextSize(defImageLayerTextSize);
           }
         }
 #endif
