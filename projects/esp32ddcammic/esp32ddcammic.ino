@@ -552,7 +552,7 @@ void loop() {
   }
 
   if (cameraState == CAM_TURNING_ON && (simultaneousCameraAndMic || !micReady)) {
-    plotterLayer->clear();
+    //plotterLayer->clear();
     if (faceOn) {
       cameraSize = FRAMESIZE_96X96;
       cameraFormat = PIXFORMAT_RGB565;
@@ -688,6 +688,7 @@ void loop() {
           micSoundChunkId = -1;
           i2s_uninstall();
           micReady = false;
+          plotterLayer->clear();
         }
       }
     }
@@ -853,58 +854,12 @@ void deinitializeCamera() {
   delay(50);
 }
 
-// int fd_x1 = -1;  // track the last detected one
-// int fd_y1 = -1;
-// int fd_x2 = -1;
-// int fd_y2 = -1;
-// int fd_le_x = -1;
-// int fd_le_y = -1;
-// int fd_re_x = -1;
-// int fd_re_y = -1;
-// int fd_n_x = -1;
-// int fd_n_y = -1;
-// int fd_ml_x = -1;
-// int fd_ml_y = -1;
-// int fd_mr_x = -1;
-// int fd_mr_y = -1;
-// long fd_ms = -1;
-
 bool captureImage() {
-  // fps_lastLastMs = fps_lastMs;
-  // fps_lastMs = millis();
-  // if (fps_lastLastMs != -1) {
-  //   long diffMs = fps_lastMs - fps_lastLastMs;
-  //   double fps = 1000.0 / (double) diffMs;
-  //   String str = "FPS:" + String(fps, 2);
-  //   imageLayer->drawStr(xOff + 7, 5, str, DD_COLOR_darkred, "a50%yellow");
-  // }
-
-// #if defined(ENABLE_FACE_DETECTION)
-//   int xOff = (imageLayerWidth - imageLayerHeight) / 2;
-//   if (cameraFormat == PIXFORMAT_RGB565) {
-//     if (fd_x1 != -1) {
-//       float scale = imageLayerHeight / 96;  // assume 96x96
-//       imageLayer->drawRect(xOff + scale * fd_x1, scale * fd_y1, scale * (fd_x2 - fd_x1), scale * (fd_y2 - fd_y1), DD_COLOR_green);
-//       if (true) {
-//         imageLayer->fillCircle(xOff + scale * fd_le_x, scale * fd_le_y, 4, DD_COLOR_red);  // left eye
-//         imageLayer->fillCircle(xOff + scale * fd_re_x, scale * fd_re_y, 4, DD_COLOR_red);  // right eye
-//         imageLayer->fillCircle(xOff + scale * fd_n_x, scale * fd_n_y, 6, DD_COLOR_green);  // nose
-//         imageLayer->fillRect(xOff + scale * fd_ml_x, scale * fd_ml_y, scale * (fd_mr_x - fd_ml_x), 4, DD_COLOR_blue);  // mouth
-//       }
-//     }
-//     if (fd_ms != -1) {
-//       String str = "FD:" + String(fd_ms) + "ms";
-//       imageLayer->drawStr(xOff + 7, imageLayerHeight - 40, str, DD_COLOR_darkblue, "a50%green");
-//     }
-//   }
-// #endif
-
   camera_fb_t *fb = esp_camera_fb_get();   // capture image frame from camera
   if (fb == NULL) {
      Serial.println("Error: Camera capture failed");
      return false;
   }
-
 
 #if defined(ENABLE_FACE_DETECTION)
   if (cameraFormat == PIXFORMAT_RGB565) {
@@ -914,19 +869,25 @@ bool captureImage() {
     long takenMs = millis() - startMs;
     fd_ms = takenMs;
     if (results.size()) {
-      Serial.print("* FD:[]");
+      Serial.print("* FD:[");
       int i = 0;
       for (std::list<dl::detect::result_t>::iterator prediction = results.begin(); prediction != results.end(); prediction++, i++) {
+        // left-eye
         fd_le_x = prediction->keypoint[0];
         fd_le_y = prediction->keypoint[1];
+        // right-eye
         fd_re_x = prediction->keypoint[6];
         fd_re_y = prediction->keypoint[7];
+        // nose
         fd_n_x = prediction->keypoint[4];
         fd_n_y = prediction->keypoint[5];
+        // mouth-left
         fd_ml_x = prediction->keypoint[2];
         fd_ml_y = prediction->keypoint[3];
+        // mouth-right
         fd_mr_x = prediction->keypoint[8];
         fd_mr_y = prediction->keypoint[9];
+        // face rectangle
         fd_x1 = prediction->box[0];
         fd_y1 = prediction->box[1];
         fd_x2 = prediction->box[2];
@@ -948,7 +909,6 @@ bool captureImage() {
   }
 #endif
 
-  //long startMs = millis();
   if (cameraFormat == PIXFORMAT_JPEG) {
     imageLayer->cacheImage(imageName, fb->buf, fb->len);
   } else if (cameraFormat == PIXFORMAT_RGB565) {
@@ -956,12 +916,6 @@ bool captureImage() {
   } else if (cameraFormat == PIXFORMAT_GRAYSCALE) {
     imageLayer->cachePixelImageGS(imageName, fb->buf, fb->width, fb->height);
   }
-  // long endMs = millis();
-  // long taken = endMs - startMs;
-  // Serial.print(fb->len);
-  // Serial.print(':');
-  // Serial.print(taken);
-  // Serial.println("ms");
 
   esp_camera_fb_return(fb);        // return frame so memory can be released
 
