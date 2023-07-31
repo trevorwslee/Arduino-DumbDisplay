@@ -6,7 +6,7 @@
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true, 115200), DD_DEF_SEND_BUFFER_SIZE);
 #elif defined(WIFI_SSID)
   #include "wifidumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD), DD_DEF_SEND_BUFFER_SIZE, false);
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD), DD_DEF_SEND_BUFFER_SIZE);
 #else
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput(), DD_DEF_SEND_BUFFER_SIZE);
@@ -31,7 +31,7 @@ const char Keys[RowCount][ColCount] = {
     {'1', '2', '3', '-'},
     {'0', '.', '=', '+'}};
 
-void UpdateCaculatorDisplay();
+void UpdateCalculatorDisplay();
 SevenSegmentRowDDLayer *CreateDisplayLayer();
 LcdDDLayer *CreateKeyLayer(int r, int c);
 
@@ -58,7 +58,6 @@ void setup()
   Wire.onReceive(OnReceivedKey);
 #endif 
 
-  //dumbdisplay.enableFeedbackDoubleClick(false);
   dumbdisplay.setFeedbackSingleClickOnly();
 
   displayLayer = CreateDisplayLayer();
@@ -70,7 +69,7 @@ void setup()
       keyLayers[r][c] = keyLayer;
     }
   }
-  UpdateCaculatorDisplay();
+  UpdateCalculatorDisplay();
   dumbdisplay.configAutoPin(
       DD_AP_VERT_2(
           displayLayer->getLayerId(),
@@ -88,9 +87,9 @@ void loop()
   DDYield(); // need to call this so that DumbDisplay lib can check for "feedback"
 }
 
-void UpdateCaculatorDisplay()
+void UpdateCalculatorDisplay()
 {
-  if (calculator.isGrouing())
+  if (calculator.isGrouping())
   {
     displayLayer->backgroundColor(DD_COLOR_cyan);
   }
@@ -110,13 +109,13 @@ void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &fee
 {
   if (pLayer == displayLayer)
   {
-    if (type == LONGPRESS)
-    {
-      displayLayer->flash();
-      calculator.reset();
-      dumbdisplay.tone(TONE_CLEAR, 300);
-      UpdateCaculatorDisplay();
-    }
+    // if (type == LONGPRESS)
+    // {
+    //   displayLayer->flash();
+    //   calculator.reset();
+    //   dumbdisplay.tone(TONE_CLEAR, 300);
+    //   UpdateCalculatorDisplay();
+    // }
   }
   else
   {
@@ -149,7 +148,7 @@ void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &fee
       //   const char* formatted = calculator.getFormatted();
       //   dumbdisplay.writeComment(String(num) + " ==> " + formatted);
       // }
-      UpdateCaculatorDisplay();
+      UpdateCalculatorDisplay();
     }
   }
 }
@@ -157,13 +156,10 @@ void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &fee
 SevenSegmentRowDDLayer *CreateDisplayLayer()
 {
   SevenSegmentRowDDLayer *displayLayer = dumbdisplay.create7SegmentRowLayer(DisplayWidth); // .createLcdLayer(DisplayWidth, 1, 28, "sans-serif");
-  // displayLayer->backgroundColor("azure");
   displayLayer->segmentColor("darkblue");
-  // displayLayer->pixelColor("black");
   displayLayer->border(50, "grey", "raised");
   displayLayer->padding(50);
-  displayLayer->setFeedbackHandler(FeedbackHandler);
-  //displayLayer->enableFeedback("fl");
+  //displayLayer->setFeedbackHandler(FeedbackHandler);  // single click only
   return displayLayer;
 }
 LcdDDLayer *CreateKeyLayer(int r, int c)

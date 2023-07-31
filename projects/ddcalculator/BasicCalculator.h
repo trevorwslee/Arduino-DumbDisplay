@@ -336,7 +336,7 @@ class BasicCalculator {
         inline bool isInError() {
             return this->curr->calc.isInError();
         }
-        inline bool isGrouing() {
+        inline bool isGrouping() {
             return this->curr->prev != NULL;
         }
         inline const char* getFormatted(char* buffer = CaculatorDisplayBuffer) {

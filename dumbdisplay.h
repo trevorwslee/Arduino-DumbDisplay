@@ -29,10 +29,10 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODEING bef
 
 
 #define DD_DEF_SEND_BUFFER_SIZE 128
+#define DD_DEF_TUNNEL_TIMEOUT   150000
 
 
 #include "_dd_util.h"
-
 
 
 #define DD_CONDENSE_COMMAND
@@ -592,11 +592,11 @@ class GraphicalDDLayer: public DDLayer {
     /// unload image file from cache
     void unloadImageFile(const String& imageFileName);
     /// draw image file in cache (if not already loaded to cache, load it) 
-    /// - x / y: position of the left-top corne
+    /// - x / y: position of the left-top corner
     /// - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
-    void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0);
+    void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& options = "");
     /// draw image file in cache (if not already loaded to cache, load it)
-    /// - x / y / w / h: aread to draw the image; 0 means the default value
+    /// - x / y / w / h: rect to draw the image; 0 means the default value
     /// - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /// cache image; not saved
@@ -605,7 +605,7 @@ class GraphicalDDLayer: public DDLayer {
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
     /// cache 16-bit "pixel" image; not saved
     void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
-    /// cache greyscale "pixel" image; as if image saved and loaded
+    /// cache grayscale "pixel" image; as if image saved and loaded
     void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// saved cached image
     /// @param imageName cachedImageName
@@ -850,7 +850,7 @@ class DDTunnel: public DDObject {
     const String& getTunnelId() const { return tunnelId; }
   protected:
     //int _count();
-    virtual bool _eof();
+    virtual bool _eof(long timeoutMillis);
     //void _readLine(String &buffer);
     void _writeLine(const String& data);
     void _writeSound(const String& soundName);
@@ -884,7 +884,7 @@ class DDBufferedTunnel: public DDTunnel {
     //const String& getTunnelId() { return tunnelId; }
   protected:
     int _count();
-    virtual bool _eof();
+    virtual bool _eof(long timeoutMillis);
     bool _readLine(String &buffer);
     //void _writeLine(const String& data);
   public:
@@ -902,7 +902,7 @@ class DDBufferedTunnel: public DDTunnel {
     /// count buffer ready  read
     inline int count() { return _count(); }
     /// reached EOF?
-    inline bool eof() { return _eof(); }
+    inline bool eof(long timeoutMillis = DD_DEF_TUNNEL_TIMEOUT) { return _eof(timeoutMillis); }
     /// read a line from buffer
     String readLine();
     /// read a line from buffer, in to the buffer passed in
@@ -1298,7 +1298,9 @@ class DumbDisplay {
     bool canPrintToSerial();
     /// log line to Serial; if it is not safe to output to Serial, will write comment with DumbDisplay::writeComment() instead
     void logToSerial(const String& logLine, bool force = false);
-  public:
+    /// like to Serial (if safe to do so); and if connected,  will log as comment to DD as well  
+    void log(const String& logLine, boolean isError = false);
+ public:
     /// @brief
     /// make connection passively; i.e. will not block, but will require continuous calling for making connection
     /// @return connection made or not (note that even if connection lost and requires reconnecting, it is still considered connected)

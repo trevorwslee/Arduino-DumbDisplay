@@ -1495,7 +1495,7 @@ void _HandleFeedback() {
       Serial.println(*pFeedback);
 #endif      
 #ifdef MORE_KEEP_ALIVE
-      // keep alive wheneven received someting
+      // keep alive whenever received something
       _ConnectedIOProxy->keepAlive();
 #endif        
       if (*(pFeedback->c_str()) == '<') {
@@ -2337,11 +2337,15 @@ void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
 }
-void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h) {
-  if (w == 0 && h == 0) {
+void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h, const String& options) {
+  if (w == 0 && h == 0 && options == "") {
     _sendCommand3(layerId, C_drawimagefile, imageFileName, String(x), String(y));
   } else {
-    _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+    if (options == "") {
+      _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+    } else {
+      _sendCommand6(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h), options);
+    }
   }
 }
 void GraphicalDDLayer::drawImageFileFit(const String& imageFileName, int x, int y, int w, int h, const String& align) {
@@ -2577,11 +2581,18 @@ void DDTunnel::release() {
 // int DDTunnel::_count() {
 //   return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
 // }
-bool DDTunnel::_eof() {
-  //yield();
+bool DDTunnel::_eof(long timeoutMillis) {
+  // if (true) {
+  //   delay(200);
+  // } else {
+  //   yield();
+  // }
   _HandleFeedback();
-#ifdef TUNNEL_TIMEOUT_MILLIS
-    if (done) {
+#ifdef DD_DEF_TUNNEL_TIMEOUT
+  if (timeoutMillis <= 0) {
+    timeoutMillis = DD_DEF_TUNNEL_TIMEOUT;
+  }
+  if (done) {
 #ifdef DEBUG_TUNNEL_RESPONSE
 Serial.println("_EOF: DONE");
 #endif                
@@ -2592,6 +2603,10 @@ __SendComment("_EOF: DONE");
     }
     long diff = millis() - connectMillis;
     if (diff > TUNNEL_TIMEOUT_MILLIS) {
+#ifdef DEBUG_TUNNEL_RESPONSE
+      Serial.println("_EOF: XXX TIMEOUT XXX");
+#endif                
+      __SendComment("*** TUNNEL TIMEOUT ***", true);
       return true;
     }
     return false;
@@ -2667,11 +2682,11 @@ int DDBufferedTunnel::_count() {
 // #endif
   return count;
 }
-bool DDBufferedTunnel::_eof() {
-  if (true) {
+bool DDBufferedTunnel::_eof(long timeoutMillis) {
+  if (false) {  // disabled since 2023-07-18
       _HandleFeedback();
   }
-  if (!this->DDTunnel::_eof()) {
+  if (!this->DDTunnel::_eof(timeoutMillis)) {
     return false;
   }
 // #ifdef DEBUG_TUNNEL_RESPONSE                
@@ -3425,6 +3440,19 @@ void DumbDisplay::logToSerial(const String& logLine, boolean force) {
       Serial.println(logLine);
     }
   }
+}
+void DumbDisplay::log(const String& logLine, boolean isError) {
+  if (_CanLogToSerial()) {
+    if (_The_DD_Serial != NULL) {
+      _The_DD_Serial->print(logLine);
+      _The_DD_Serial->print("\n");
+    } else {
+      Serial.println(logLine);
+    }
+  }
+  if (_Connected) {
+    __SendComment(logLine, isError);
+  }  
 }
 
 

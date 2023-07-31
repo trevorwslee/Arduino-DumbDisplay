@@ -1,4 +1,4 @@
-
+#include <Arduino.h>
 
 //#define ESP_NOW_SERVER_FOR_MAC 0x48, 0x3F, 0xDA, 0x51, 0x22, 0x15
 //#define ESP_NOW_CLIENT
@@ -9,6 +9,18 @@
 #if defined(ESP_NOW_CLIENT)
 DecodedJoystick *Joystick1 = new DecodedJoystick(false);
 DecodedJoystick *Joystick2 = new DecodedJoystick(true);
+#elif defined(ESP32)
+JoystickPressTracker *xTracker = SetupNewJoystickPressTracker(34, false);
+JoystickPressTracker *yTracker = SetupNewJoystickPressTracker(35, true);
+ButtonPressTracker *swTracker = SetupNewButtonPressTracker(33);
+ButtonPressTracker *aTracker = SetupNewButtonPressTracker(23);
+ButtonPressTracker *bTracker = SetupNewButtonPressTracker(22);
+ButtonPressTracker *cTracker = SetupNewButtonPressTracker(21);
+ButtonPressTracker *dTracker = SetupNewButtonPressTracker(19);
+JoystickJoystick *joystick = new JoystickJoystick(xTracker, yTracker, swTracker);
+ButtonsOnly *buttons = new ButtonsOnly(aTracker, bTracker, cTracker, dTracker);
+JoystickInterface *Joystick1 = joystick;
+JoystickInterface *Joystick2 = buttons;
 #elif defined(ESP8266)
 ButtonPressTracker *upTracker = SetupNewButtonPressTracker(D7);
 ButtonPressTracker *downTracker = SetupNewButtonPressTracker(D6);
@@ -90,7 +102,9 @@ void OnReceivedData(uint8_t *mac, uint8_t *incomingData, uint8_t len)
 
 const long JoystickPressAutoRepeatMillis = 200; // 0 means no auto repeat
 
+#if defined(ESP_NOW_SERVER_FOR_MAC) || defined(ESP_NOW_CLIENT)
 int espNowStatus = 0;
+#endif
 
 void setup()
 {

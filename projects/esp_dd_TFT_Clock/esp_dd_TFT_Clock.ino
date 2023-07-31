@@ -1,5 +1,13 @@
-#include "esp32dumbdisplay.h"
-DumbDisplay dumbdisplay(new DDBluetoothSerialIO("TTGO", true, DD_SERIAL_BAUD));  // can use connect to phone with USB cable via OTG
+#if defined(BLUETOOTH)
+  #include "esp32dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
+#elif defined(WIFI_SSID)
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+#else
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput());                         // can connect to phone with USB cable via OTG
+#endif
 
 LcdDDLayer* syncButton = NULL;
 BasicDDTunnel* datetimeTunnel = NULL;
