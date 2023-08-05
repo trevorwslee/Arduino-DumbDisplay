@@ -22,7 +22,7 @@
 #endif
 
 #if defined(FOR_ESP32CAM)
-  // *** If attached button, uncomment the following MIC_BUTTON_PIN and WAKE_GPIO_PIN macros 
+  // *** For ESP_CAM, if button not attached, comment out the following MIC_BUTTON_PIN macro 
   #define MIC_BUTTON_PIN            15
   #define FLASH_PIN                 4
   // ***  For ESP_CAM, if INMP441 not attached, comments out the following I2S_WS macro 
