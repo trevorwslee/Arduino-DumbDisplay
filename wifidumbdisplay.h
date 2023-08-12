@@ -29,7 +29,7 @@ class DDWiFiServerIO: public DDInputOutput {
       this->password = passphrase;
       this->port = serverPort;
       //this->logToSerial = logToSerial;
-      Serial.begin(DD_SERIAL_BAUD);
+      //Serial.begin(DD_SERIAL_BAUD);
     }
     bool available() {
       return client.available() > 0;

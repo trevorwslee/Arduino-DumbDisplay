@@ -18,12 +18,8 @@
 
 //#define DEBUG_IT
 
-#define DD_DEBUG_AT
-
-// #ifdef DD_DEBUG_AT
-//   #define DEBUG_ESP_AT
-//   //#define LOG_DDWIFI_STATUS
-// #endif
+//#define DEBUG_ESP_AT
+// #define LOG_DDWIFI_STATUS
 #include "_loespat.h"
 
 
@@ -42,7 +38,7 @@ class DDATWiFiIO: public DDInputOutput {
       this->linkId = -1;
       this->data = "";
       this->dataIdx = 0;
-      Serial.begin(DD_SERIAL_BAUD);
+      //Serial.begin(DD_SERIAL_BAUD);
     }
     bool available() {
 // #ifdef DEBUG_IT

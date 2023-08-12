@@ -62,12 +62,32 @@ namespace LOEspAt {
         String response;
         response = ESP_SERIAL.readStringUntil('\n');
         int len = response.length();
-        if (response.charAt(len - 1) == '\r') {
+        if (len > 0 && response.charAt(len - 1) == '\r') {
           response = response.substring(0, len - 1);
+          len -= 1;
         }
-        if (response.length() == 0) {
+        if (true) {
+          if (response_idx == 0 && (len < 2 || !response.startsWith("AT"))) {
+#ifdef DEBUG_ESP_AT
+            if (!silent) {
+              Serial.print("<x");
+              Serial.print(response);
+              Serial.print("x>");
+            }
+#endif          
+            response = "";
+            len = 0;
+          }
+        }
+        if (len/*response.length()*/ == 0) {
           long diff = millis() - start_ms;
           if (diff > timeout_ms) {
+#ifdef DEBUG_ESP_AT
+            if (!silent) {
+              Serial.println("TO");
+            }  
+#endif
+            ok = false;
             return false;
           }  
           continue;
@@ -98,7 +118,7 @@ namespace LOEspAt {
         if (diff_ms > timeout_ms) {
 #ifdef DEBUG_ESP_AT
           if (!silent) {
-            Serial.print("TO");
+            Serial.println("TO");
           }  
 #endif
           ok = false;
