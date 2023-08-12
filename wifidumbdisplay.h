@@ -23,8 +23,7 @@ class DDWiFiServerIO: public DDInputOutput {
     /* - ssid: WIFI name (pass to WiFi) */
     /* - passphrase: WIFI password (pass to WiFi) */
     /* - serverPort: server port (pass to WiFiServer) */
-    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT):
-                   DDInputOutput(serialBaud, false, false),
+    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT): DDInputOutput(DD_SERIAL_BAUD, false, false),
                    server(serverPort) {
       this->ssid = ssid;
       this->password = passphrase;
@@ -180,7 +179,7 @@ class DDWiFiServerIO: public DDInputOutput {
           stateMillis = 0;
         } else if (!client.connected()) {
           client.stop();
-          Serial.println("lost connection ... try bind connect again ...");
+          Serial.println("lost connection ... try bind again ...");
           connectionState = 'W';
           stateMillis = 0;
         } else {
@@ -241,7 +240,7 @@ class DDWiFiServerIO: public DDInputOutput {
             client = cli;
             connectionState = 'C';
             stateMillis = 0;
-            Serial.println("client conntected");
+            Serial.println("client connected");
           }
         }  
       }

@@ -2,8 +2,8 @@
 #ifndef atwifidumbdisplay_h
 #define atwifidumbdisplay_h
 
-#ifndef ESP_SERIAL
-  #error Must define the macro ESP_SERIAL ... and must begin() it first thing in setup() block \
+#if !defined(ESP_SERIAL) || !defined(ESP_SERIAL_begin)
+  #error Must define the macro ESP_SERIAL and ESP_SERIAL_begin (a function call) \
     *** \
     e.g. STM32F103: PA3 (RX2) ==> TX; PA2 (TX2) ==> RX \
     #define DD_SERIAL Serial2 \
@@ -13,13 +13,17 @@
     #define DD_SERIAL Serial2
 #endif
 
+#include "Arduino.h"
 #include "dumbdisplay.h"
+
+//#define DEBUG_IT
 
 #define DD_DEBUG_AT
 
-#ifdef DD_DEBUG_AT
-  #define DEBUG_ESP_AT
-#endif
+// #ifdef DD_DEBUG_AT
+//   #define DEBUG_ESP_AT
+//   //#define LOG_DDWIFI_STATUS
+// #endif
 #include "_loespat.h"
 
 
@@ -27,45 +31,78 @@
 class DDATWiFiIO: public DDInputOutput {
   public:
     /* ESP chipset as WIFI with AT commands IO mechanism */
-    /* - ssid: WIFI name (pass to WiFi) */
-    /* - passphrase: WIFI password (pass to WiFi) */
-    /* - serverPort: server port (pass to WiFiServer) */
-    DDATWiFiIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT):
-                   DDInputOutput(serialBaud, false, false) {
+    /* - ssid: WIFI name */
+    /* - passphrase: WIFI password */
+    /* - serverPort: server port */
+    DDATWiFiIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT): DDInputOutput(DD_SERIAL_BAUD, false, false) {
       this->ssid = ssid;
       this->password = passphrase;
       this->port = serverPort;
+      this->ip = "";
+      this->linkId = -1;
+      this->data = "";
+      this->dataIdx = 0;
       Serial.begin(DD_SERIAL_BAUD);
     }
     bool available() {
+// #ifdef DEBUG_IT
+//       return false;
+// #endif      
       return atCheckAvailable();
     }
     char read() {
+// #ifdef DEBUG_IT
+//     return ' ';
+// #endif
       return atRead();
     } 
     void print(const String &s) {
+// #ifdef DEBUG_IT
+//       Serial.print(s);
+//       return;
+// #endif
       atPrint(s);
     }
     void print(const char *p) {
+// #ifdef DEBUG_IT
+//       Serial.print(p);
+//       return;
+// #endif
       atPrint(p);
     }
     void write(uint8_t b) {
+// #ifdef DEBUG_IT
+//       Serial.write(b);
+//       return;
+// #endif
       atWrite(b);
     }
     void write(const uint8_t *buf, size_t size) {
-      atWrite.write(buf, size);
+// #ifdef DEBUG_IT
+//       Serial.write(buf, size);
+//       return;
+// #endif
+      atWrite(buf, size);
     }
     bool preConnect(bool firstCall) {
-      return atConnect();
+      if (firstCall) {
+        ESP_SERIAL_begin;
+      }
+      return atPreConnect(firstCall);
     }
     void flush() {
+// #ifdef DEBUG_IT
+//       return;
+// #endif
       atFlush();
     }
     void validConnection() {
+// #ifdef DEBUG_IT
+//       Serial.println("22222");
+//       return;
+// #endif
 #ifdef LOG_DDWIFI_STATUS
-      if (logToSerial) {
-        Serial.println(" ... validate ...");
-      }
+      Serial.println(" ... validate ...");
 #endif      
       atCheckConnection();
     }
@@ -76,103 +113,187 @@ class DDATWiFiIO: public DDInputOutput {
       return true;
     }
   private:
-    void atCheckConnection() {
-        int state = LOEspAt::CheckState();
-        if (state == 1 || state == 3) {
-          // 1: ESP32 station has connected to an AP, but does not get an IPv4 address yet.
-          // 3: ESP32 station is in Wi-Fi connecting or reconnecting state.
-          return;
+    inline bool atCheckAvailable() {
+      if (dataIdx < data.length()) {
+        return true;
+      }
+      if (linkId != -1) {
+        if (LOEspAt::ReceiveAtData(linkId, data)) {
+          dataIdx = 0;
+          if (dataIdx < data.length()) {
+            return true;
+          }
         }
-        if (state != 2) {
-          // 2: ESP32 station has connected to an AP, and got an IPv4 address.
-          if (logToSerial) Serial.println("lost WiFi ... try bind WiFi again ...");
+      }
+      return false;
+    }
+    inline char atRead() {
+      if (dataIdx < data.length()) {
+        return data.charAt(dataIdx++);
+      }
+      return 0;
+    } 
+    inline void atPrint(const String &s) {
+      if (linkId != -1) {
+        LOEspAt::SendAtData(linkId, s);
+      }
+    }
+    inline void atPrint(const char *p) {
+      if (linkId != -1) {
+        LOEspAt::SendAtData(linkId, p);
+      }
+    }
+    inline void atPrint(uint8_t b) {
+      if (linkId != -1) {
+        LOEspAt::SendAtData(linkId, b);
+      }
+    }
+    inline void atWrite(uint8_t b) {
+      if (linkId != -1) {
+        LOEspAt::SendAtData(linkId, b);
+      }
+    }
+    inline void atWrite(const uint8_t *buf, size_t size) {
+      if (linkId != -1) {
+        LOEspAt::SendAtData(linkId, buf, size);
+      }
+    }
+    inline void atFlush() {
+    }
+    bool atPreConnect(bool firstCall) {
+      if (firstCall) {
+        if (true) {  // since 2023-06-03
           //client.stop();
           //WiFi.disconnect();
+          atDisconnectClient();
+// #ifdef DEBUG_IT
+//   Serial.println("4444");
+//   return true;      
+// #endif
+          LOEspAt::DisconnectAP();
+        }
+        if (!LOEspAt::ConnectAP(ssid, password, ip)) {
+          return false;
+        }
+        if (!LOEspAt::StartServer(port)) {
+          LOEspAt::DisconnectAP();
+          return false;
+        }
+        //WiFi.begin(ssid, password);
+        connectionState = ' ';
+        stateMillis = 0;
+      }
+      //  delay(200);
+      atCheckConnection();
+      return connectionState == 'C';
+    }
+    void atCheckConnection() {
+      int state = LOEspAt::CheckState();
+      if (state == -1) {
+        return;
+      }
+      if (state == 1 || state == 3) {
+        // 1: ESP32 station has connected to an AP, but does not get an IPv4 address yet.
+        // 3: ESP32 station is in Wi-Fi connecting or reconnecting state.
+        return;
+      }
+      if (connectionState == 'C') {
+        if (state != 2) {
+          // 2: ESP32 station has connected to an AP, and got an IPv4 address.
+          Serial.println("lost WiFi ... try bind WiFi again ...");
+          Serial.println(state);
+          // client.stop();
+          // WiFi.disconnect();
+          atDisconnectClient();
+          LOEspAt::DisconnectAP();
           connectionState = ' ';
           stateMillis = 0;
-        } else if (!client.connected()) {
-          client.stop();
-          if (logToSerial) Serial.println("lost connection ... try bind connect again ...");
-          connectionState = 'W';
-          stateMillis = 0;
+        } else if (linkId != -1) {
+          //client.stop();
+          //atDisconnectClient();
+          int checkLinkId = LOEspAt::CheckForClientConnection();
+          if (checkLinkId == -1) {
+            linkId = -1;
+            Serial.println("lost connection ... try connect again ...");
+            connectionState = 'W';
+            stateMillis = 0;
+          } else {
+            return;
+          }
         } else {
           return;
         }
       }
       if (connectionState == ' ') {
         //uint8_t status = WiFi.status();
-        if (status == WL_CONNECTED) {
-          if (logToSerial) {
-            Serial.print("binded WIFI ");
-            Serial.println(ssid);
-          }
-          server.begin();
+        if (state == 2) {
+          Serial.print("binded WIFI ");
+          Serial.println(ssid);
+          //server.begin();
           connectionState = 'W';
           stateMillis = 0;
         } else {
           long diff = millis() - stateMillis;
           if (stateMillis == 0 || diff > 1000) {
-            if (logToSerial) {
-              Serial.print("binding WIFI ");
-              Serial.print(ssid);
+            //LOEspAt::StartServer(port);
+            Serial.print("binding WIFI ");
+            Serial.print(ssid);
 #ifdef LOG_DDWIFI_STATUS
-              Serial.print(" ... ");
-              Serial.print(status);
+            Serial.print(" ... ");
+            Serial.print(state);
 #endif
-              Serial.println(" ...");
-            }
+            Serial.println(" ...");
             stateMillis = millis();
           }
         }
       } else {
-        if (status != WL_CONNECTED) {
+        if (state != 2) {
           connectionState = ' ';
           stateMillis = 0;
         } else {
           long diff = millis() - stateMillis;
           if (diff >= 1000) {
-            IPAddress localIP = WiFi.localIP();
-            uint32_t localIPValue = localIP;
-            if (logToSerial) {
+            //IPAddress localIP = WiFi.localIP();
+            //uint32_t localIPValue = localIP;
 #ifdef LOG_DDWIFI_STATUS
-              Serial.print("via WIFI ... ");
-              Serial.print(WiFi.status());
-              Serial.print(" ... ");
+            Serial.print("via WIFI ... ");
+            Serial.print(LOEspAt::CheckState()/*WiFi.status()*/);
+            Serial.print(" ... ");
 #endif
-              Serial.print("listening on ");
-              Serial.print(localIP);
-              Serial.print(":");
-              Serial.print(port);
-              Serial.println(" ...");
-            }
-            // if (true) {
-            //   // testing for ESP
-            //   Serial.println("*** sleep ...");
-            //   esp_sleep_enable_timer_wakeup(10 * 1000);  // 10ms
-            //   esp_light_sleep_start();
-            //   Serial.println("*** ... up");
-            // }
+            Serial.print("listening on ");
+            Serial.print(ip);
+            Serial.print(":");
+            Serial.print(port);
+            Serial.println(" ...");
             stateMillis = millis();
           }
-          WiFiClient cli = server.available();
-          if (cli) {
-            client = cli;
-            connectionState = 'C';
-            stateMillis = 0;
-            if (logToSerial) Serial.println("client conntected");
+          if (linkId == -1) {
+            linkId = LOEspAt::CheckForClientConnection();
+            if (linkId != -1) {
+              connectionState = 'C';
+              stateMillis = 0;
+              Serial.println("client connected");
+            }
           }
         }  
+      }
+    }
+    void atDisconnectClient() {
+      if (linkId != -1) {
+          LOEspAt::DisconnectClient(linkId);
+          linkId = -1;
       }
     }
   private:
     const char* ssid;
     const char *password;
     int port;
-    //bool logToSerial;
     char connectionState;
     long stateMillis;
-    //WiFiServer server;
-    //WiFiClient client;
+    String ip;
+    int linkId;
+    String data;
+    int dataIdx;
 };
 
 

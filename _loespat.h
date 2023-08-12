@@ -4,6 +4,7 @@
 namespace LOEspAt {
 
   const long DefAtTimeout = 1000;
+  const bool DefSendReceiveDataSilent = true;
 
   class AtResposeInterpreter {
     public:
@@ -118,7 +119,7 @@ namespace LOEspAt {
   inline bool SendAtCommand(String& at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
     return SendAtCommand(at_command.c_str(), response_interpreter, timeout_ms, silent);
   }
-  bool SendAtData(int link_id, const char* data, long timeout_ms, bool silent) {
+  bool SendAtData(int link_id, const char* data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
     int data_len = strlen(data);
     bool ok = false;
     if (SendAtCommand(String("AT+CIPSEND=") + String(link_id) + String(",") + String(data_len), NULL, timeout_ms, silent)) {
@@ -127,7 +128,26 @@ namespace LOEspAt {
     }
     return ok;
   }
-  bool ReceiveAtData(int link_id, String& data, long timeout_ms, bool silent) {
+  bool SendAtData(int link_id, const uint8_t* data, int data_len, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
+    bool ok = false;
+    if (SendAtCommand(String("AT+CIPSEND=") + String(link_id) + String(",") + String(data_len), NULL, timeout_ms, silent)) {
+      ESP_SERIAL.write(data, data_len);
+      ok = ReceiveAtResponse(NULL, timeout_ms, silent);
+    }
+    return ok;
+  }
+  bool SendAtData(int link_id, uint8_t data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
+    bool ok = false;
+    if (SendAtCommand(String("AT+CIPSEND=") + String(link_id) + String(",1"), NULL, timeout_ms, silent)) {
+      ESP_SERIAL.write(data);
+      ok = ReceiveAtResponse(NULL, timeout_ms, silent);
+    }
+    return ok;
+  }
+  bool SendAtData(int link_id, const String& data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
+    return SendAtData(link_id, data.c_str(), timeout_ms, silent);
+  }
+  bool ReceiveAtData(int link_id, String& data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
     ReceiveAtDataInterpreter interpreter(data);
     if (SendAtCommand(String("AT+CIPRECVDATA=") + String(link_id) + String(",102400"), &interpreter, timeout_ms, silent)) {
       return data.length() > 0;
