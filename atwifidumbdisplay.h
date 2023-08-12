@@ -38,7 +38,6 @@ class DDATWiFiIO: public DDInputOutput {
       this->linkId = -1;
       this->data = "";
       this->dataIdx = 0;
-      //Serial.begin(DD_SERIAL_BAUD);
     }
     bool available() {
 // #ifdef DEBUG_IT
@@ -82,6 +81,7 @@ class DDATWiFiIO: public DDInputOutput {
     }
     bool preConnect(bool firstCall) {
       if (firstCall) {
+        Serial.begin(DD_SERIAL_BAUD);
         ESP_SERIAL_begin;
       }
       return atPreConnect(firstCall);

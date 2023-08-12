@@ -50,6 +50,9 @@ class DDWiFiServerIO: public DDInputOutput {
       client.write(buf, size);
     }
     bool preConnect(bool firstCall) {
+      if (firstCall) {  // since 2023-08-10
+        Serial.begin(DD_SERIAL_BAUD);
+      }
       if (true) {  // since 2023-06-05
         if (firstCall) {
           if (true) {  // since 2023-06-03
