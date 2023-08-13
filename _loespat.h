@@ -1,6 +1,6 @@
 
-#define DEBUG_ESP_AT
-#define FORCE_DEBUG_NO_SILENT
+// #define DEBUG_ESP_AT
+// #define FORCE_DEBUG_NO_SILENT
 
 
 namespace LOEspAt {
@@ -56,13 +56,13 @@ namespace LOEspAt {
       int total_len;
       String& data;
   };
-  bool _ReceiveAtResponse(AtResposeInterpreter *response_interpreter, long timeout_ms, bool silent) {
+  bool _ReceiveAtResponse(const char* at_command, AtResposeInterpreter *response_interpreter, long timeout_ms, bool silent) {
 #if defined(FORCE_DEBUG_NO_SILENT)
       silent = false;
 #endif
       long start_ms = millis();
       bool ok = false;
-      int response_idx = 0;
+      int response_idx = at_command != NULL ? 0 : 1;
       while (true) {
         String response;
         response = ESP_SERIAL.readStringUntil('\n');
@@ -72,7 +72,7 @@ namespace LOEspAt {
           len -= 1;
         }
         if (true) {
-          if (response_idx == 0 && len > 0 && (len < 2 || !response.startsWith("AT"))) {
+          if (response_idx == 0 && len > 0 && (len < 2 || strcmp(response.c_str(), at_command) != 0/*!response.startsWith("AT")*/)) {
 #ifdef DEBUG_ESP_AT
             if (!silent) {
               Serial.print("<x");
@@ -137,38 +137,44 @@ namespace LOEspAt {
 #endif
       return ok;
   }
-  inline bool ReceiveAtResponse(AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
-    return _ReceiveAtResponse(response_interpreter, timeout_ms, silent);
+  inline bool ReceiveAtResponse(const char* at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
+    return _ReceiveAtResponse(at_command, response_interpreter, timeout_ms, silent);
+  }
+  inline bool ReceiveAtResponse(String& at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
+    return _ReceiveAtResponse(at_command.c_str(), response_interpreter, timeout_ms, silent);
   }
   inline bool SendAtCommand(const char* at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
       ESP_SERIAL.println(at_command);
-      return ReceiveAtResponse(response_interpreter, timeout_ms, silent);
+      return ReceiveAtResponse(at_command, response_interpreter, timeout_ms, silent);
   }
   inline bool SendAtCommand(String& at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
     return SendAtCommand(at_command.c_str(), response_interpreter, timeout_ms, silent);
   }
   bool SendAtData(int link_id, const char* data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
     int data_len = strlen(data);
+    String at_command = String("AT+CIPSEND=") + String(link_id) + String(",") + String(data_len);
     bool ok = false;
-    if (SendAtCommand(String("AT+CIPSEND=") + String(link_id) + String(",") + String(data_len), NULL, timeout_ms, silent)) {
+    if (SendAtCommand(at_command, NULL, timeout_ms, silent)) {
       ESP_SERIAL.print(data);
-      ok = ReceiveAtResponse(NULL, timeout_ms, silent);
+      ok = ReceiveAtResponse(NULL, NULL, timeout_ms, silent);
     }
     return ok;
   }
   bool SendAtData(int link_id, const uint8_t* data, int data_len, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
+    String at_command = String("AT+CIPSEND=") + String(link_id) + String(",") + String(data_len);
     bool ok = false;
-    if (SendAtCommand(String("AT+CIPSEND=") + String(link_id) + String(",") + String(data_len), NULL, timeout_ms, silent)) {
+    if (SendAtCommand(at_command, NULL, timeout_ms, silent)) {
       ESP_SERIAL.write(data, data_len);
-      ok = ReceiveAtResponse(NULL, timeout_ms, silent);
+      ok = ReceiveAtResponse(NULL, NULL, timeout_ms, silent);
     }
     return ok;
   }
   bool SendAtData(int link_id, uint8_t data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
+    String at_command = String("AT+CIPSEND=") + String(link_id) + String(",1");
     bool ok = false;
-    if (SendAtCommand(String("AT+CIPSEND=") + String(link_id) + String(",1"), NULL, timeout_ms, silent)) {
+    if (SendAtCommand(at_command, NULL, timeout_ms, silent)) {
       ESP_SERIAL.write(data);
-      ok = ReceiveAtResponse(NULL, timeout_ms, silent);
+      ok = ReceiveAtResponse(at_command, NULL, timeout_ms, silent);
     }
     return ok;
   }
