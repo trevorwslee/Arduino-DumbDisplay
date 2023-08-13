@@ -16,10 +16,7 @@
 #include "Arduino.h"
 #include "dumbdisplay.h"
 
-//#define DEBUG_IT
-
 //#define DEBUG_ESP_AT
-// #define LOG_DDWIFI_STATUS
 #include "_loespat.h"
 
 
@@ -39,45 +36,24 @@ class DDATWiFiIO: public DDInputOutput {
       this->data = "";
       this->dataIdx = 0;
       this->lastValidateMs = 0;
+      this->connectionState = '0';
     }
     bool available() {
-// #ifdef DEBUG_IT
-//       return false;
-// #endif      
       return atCheckAvailable();
     }
     char read() {
-// #ifdef DEBUG_IT
-//     return ' ';
-// #endif
       return atRead();
     } 
     void print(const String &s) {
-// #ifdef DEBUG_IT
-//       Serial.print(s);
-//       return;
-// #endif
       atPrint(s);
     }
     void print(const char *p) {
-// #ifdef DEBUG_IT
-//       Serial.print(p);
-//       return;
-// #endif
       atPrint(p);
     }
     void write(uint8_t b) {
-// #ifdef DEBUG_IT
-//       Serial.write(b);
-//       return;
-// #endif
       atWrite(b);
     }
     void write(const uint8_t *buf, size_t size) {
-// #ifdef DEBUG_IT
-//       Serial.write(buf, size);
-//       return;
-// #endif
       atWrite(buf, size);
     }
     bool preConnect(bool firstCall) {
@@ -88,20 +64,12 @@ class DDATWiFiIO: public DDInputOutput {
       return atPreConnect(firstCall);
     }
     void flush() {
-// #ifdef DEBUG_IT
-//       return;
-// #endif
       atFlush();
     }
     void validConnection() {
-///Serial.println("validConnection");
-// #ifdef DEBUG_IT
-//       Serial.println("22222");
-//       return;
-// #endif
-#ifdef LOG_DDWIFI_STATUS
-      Serial.println(" ... validate ...");
-#endif      
+// #ifdef LOG_DDWIFI_STATUS
+//       Serial.println(" ... validate ...");
+// #endif      
       atCheckConnection(false);
     }
     bool canConnectPassive() {
@@ -159,21 +127,29 @@ class DDATWiFiIO: public DDInputOutput {
     inline void atFlush() {
     }
     bool atPreConnect(bool firstCall) {
-      if (firstCall) {
-        if (true) {  // since 2023-06-03
-          //client.stop();
-          //WiFi.disconnect();
-          atDisconnectClient();
-// #ifdef DEBUG_IT
-//   Serial.println("4444");
-//   return true;      
-// #endif
-          LOEspAt::DisconnectAP();
+      if (firstCall/*connectionState == '0'*/) {
+        if (!LOEspAt::Check()) {
+          Serial.println("XXX AT not ready");
+          return false;
         }
+        //LOEspAt::Reset();
+        // if (true) {  // since 2023-06-03
+        //   //client.stop();
+        //   //WiFi.disconnect();
+        //   atDisconnectClient();
+        //   LOEspAt::DisconnectAP();
+        // }
+        if (!LOEspAt::SetStationMode()) {
+          Serial.println("XXX failed to set 'station' mode");
+          return false;
+        }
+        delay(1000); // delay a bit
         if (!LOEspAt::ConnectAP(ssid, password, ip)) {
+          Serial.println("XXX failed to start AP");
           return false;
         }
         if (!LOEspAt::StartServer(port)) {
+          Serial.println("XXX failed to start server");
           LOEspAt::DisconnectAP();
           return false;
         }
@@ -194,9 +170,17 @@ class DDATWiFiIO: public DDInputOutput {
         lastValidateMs = now;
       }
       int state = LOEspAt::CheckState();
+//Serial.println(state);
       if (state == -1) {
         return;
       }
+      // if (state == 0) {
+      //   // 0: ESP32 station has not started any Wi-Fi connection.
+      //   if (!LOEspAt::Reset() || !LOEspAt::ConnectAP(ssid, password, ip)) {
+      //     Serial.println("XXX failed to start AP during connection check");
+      //   }
+      //   return;
+      // }
       if (state == 1 || state == 3) {
         // 1: ESP32 station has connected to an AP, but does not get an IPv4 address yet.
         // 3: ESP32 station is in Wi-Fi connecting or reconnecting state.
@@ -243,10 +227,10 @@ class DDATWiFiIO: public DDInputOutput {
             //LOEspAt::StartServer(port);
             Serial.print("binding WIFI ");
             Serial.print(ssid);
-#ifdef LOG_DDWIFI_STATUS
-            Serial.print(" ... ");
-            Serial.print(state);
-#endif
+// #ifdef LOG_DDWIFI_STATUS
+//             Serial.print(" ... ");
+//             Serial.print(state);
+// #endif
             Serial.println(" ...");
             stateMillis = millis();
           }
@@ -260,11 +244,11 @@ class DDATWiFiIO: public DDInputOutput {
           if (diff >= 1000) {
             //IPAddress localIP = WiFi.localIP();
             //uint32_t localIPValue = localIP;
-#ifdef LOG_DDWIFI_STATUS
-            Serial.print("via WIFI ... ");
-            Serial.print(LOEspAt::CheckState()/*WiFi.status()*/);
-            Serial.print(" ... ");
-#endif
+// #ifdef LOG_DDWIFI_STATUS
+//             Serial.print("via WIFI ... ");
+//             Serial.print(LOEspAt::CheckState()/*WiFi.status()*/);
+//             Serial.print(" ... ");
+// #endif
             Serial.print("listening on ");
             Serial.print(ip);
             Serial.print(":");

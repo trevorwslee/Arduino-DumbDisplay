@@ -144,6 +144,11 @@ namespace LOEspAt {
     return _ReceiveAtResponse(at_command.c_str(), response_interpreter, timeout_ms, silent);
   }
   inline bool SendAtCommand(const char* at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
+#ifdef DEBUG_ESP_AT
+      Serial.print("<");
+      Serial.print(at_command);
+      Serial.print(">");
+#endif
       ESP_SERIAL.println(at_command);
       return ReceiveAtResponse(at_command, response_interpreter, timeout_ms, silent);
   }
@@ -206,13 +211,46 @@ namespace LOEspAt {
     return -1;
   }
 
+  inline bool Check() {
+    return SendAtCommand("AT");
+  }
+
+  inline bool Restore() {
+    return SendAtCommand("AT+RESTORE");
+    // bool ok = false;
+    // if (SendAtCommand("AT")) {
+    //   if (SendAtCommand("AT+RESTORE")) {
+    //     ok = true;
+    //   }
+    // }
+    // return ok;
+  }
+  inline bool Reset() {
+    return SendAtCommand("AT+RST");
+    // bool ok = false;
+    // if (SendAtCommand("AT")) {
+    //   if (SendAtCommand("AT+RST")) {
+    //     ok = true;
+    //   }
+    // }
+    // return ok;
+  }
+
+  inline bool SetStationMode() {
+    return SendAtCommand("AT+CWMODE=1");
+  }
+
+
   bool ConnectAP(const char* ssid, const char* password, String& ip) {
     bool connected = false;
-    if (SendAtCommand("AT")) {
-      if (SendAtCommand(String("AT+CWJAP=\"") + ssid + String("\",\"") + password + String("\""))) {
-        connected = SendAtCommand("AT+CIPRECVMODE=1");
-      }
+    if (SendAtCommand(String("AT+CWJAP=\"") + ssid + String("\",\"") + password + String("\""))) {
+      connected = SendAtCommand("AT+CIPRECVMODE=1");
     }
+    // if (SendAtCommand("AT")) {
+    //   if (SendAtCommand(String("AT+CWJAP=\"") + ssid + String("\",\"") + password + String("\""))) {
+    //     connected = SendAtCommand("AT+CIPRECVMODE=1");
+    //   }
+    // }
     if (connected) {
       AtResposeInterpreter1 at_response_interpreter(1);
       if (SendAtCommand("AT+CIPSTA?", &at_response_interpreter)) {
