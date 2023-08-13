@@ -1,5 +1,7 @@
 
-//#define DEBUG_ESP_AT
+#define DEBUG_ESP_AT
+#define FORCE_DEBUG_NO_SILENT
+
 
 namespace LOEspAt {
 
@@ -54,7 +56,10 @@ namespace LOEspAt {
       int total_len;
       String& data;
   };
-  bool ReceiveAtResponse(AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
+  bool _ReceiveAtResponse(AtResposeInterpreter *response_interpreter, long timeout_ms, bool silent) {
+#if defined(FORCE_DEBUG_NO_SILENT)
+      silent = false;
+#endif
       long start_ms = millis();
       bool ok = false;
       int response_idx = 0;
@@ -67,7 +72,7 @@ namespace LOEspAt {
           len -= 1;
         }
         if (true) {
-          if (response_idx == 0 && (len < 2 || !response.startsWith("AT"))) {
+          if (response_idx == 0 && len > 0 && (len < 2 || !response.startsWith("AT"))) {
 #ifdef DEBUG_ESP_AT
             if (!silent) {
               Serial.print("<x");
@@ -132,7 +137,10 @@ namespace LOEspAt {
 #endif
       return ok;
   }
-  bool SendAtCommand(const char* at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
+  inline bool ReceiveAtResponse(AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
+    return _ReceiveAtResponse(response_interpreter, timeout_ms, silent);
+  }
+  inline bool SendAtCommand(const char* at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
       ESP_SERIAL.println(at_command);
       return ReceiveAtResponse(response_interpreter, timeout_ms, silent);
   }

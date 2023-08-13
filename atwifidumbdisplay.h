@@ -3,7 +3,7 @@
 #define atwifidumbdisplay_h
 
 #if !defined(ESP_SERIAL) || !defined(ESP_SERIAL_begin)
-  #error Must define the macro ESP_SERIAL and ESP_SERIAL_begin (a function call) \
+  #error Must define the macro ESP_SERIAL and ESP_SERIAL_begin (a function call or a code block) \
     *** \
     e.g. STM32F103: PA3 (RX2) ==> TX; PA2 (TX2) ==> RX \
     #define DD_SERIAL Serial2 \
@@ -38,6 +38,7 @@ class DDATWiFiIO: public DDInputOutput {
       this->linkId = -1;
       this->data = "";
       this->dataIdx = 0;
+      this->lastValidateMs = 0;
     }
     bool available() {
 // #ifdef DEBUG_IT
@@ -81,7 +82,7 @@ class DDATWiFiIO: public DDInputOutput {
     }
     bool preConnect(bool firstCall) {
       if (firstCall) {
-        Serial.begin(DD_SERIAL_BAUD);
+        if (!Serial) Serial.begin(DD_SERIAL_BAUD);
         ESP_SERIAL_begin;
       }
       return atPreConnect(firstCall);
@@ -93,6 +94,7 @@ class DDATWiFiIO: public DDInputOutput {
       atFlush();
     }
     void validConnection() {
+///Serial.println("validConnection");
 // #ifdef DEBUG_IT
 //       Serial.println("22222");
 //       return;
@@ -100,7 +102,7 @@ class DDATWiFiIO: public DDInputOutput {
 #ifdef LOG_DDWIFI_STATUS
       Serial.println(" ... validate ...");
 #endif      
-      atCheckConnection();
+      atCheckConnection(false);
     }
     bool canConnectPassive() {
       return true;
@@ -180,10 +182,17 @@ class DDATWiFiIO: public DDInputOutput {
         stateMillis = 0;
       }
       //  delay(200);
-      atCheckConnection();
+      atCheckConnection(true);
       return connectionState == 'C';
     }
-    void atCheckConnection() {
+    void atCheckConnection(bool forPreConnect) {
+      if (true) {  // don't validate so frequently
+        long now = millis();
+        if ((now - lastValidateMs) < (forPreConnect ? 500 : 2000)) {
+          return;
+        }
+        lastValidateMs = now;
+      }
       int state = LOEspAt::CheckState();
       if (state == -1) {
         return;
@@ -290,6 +299,7 @@ class DDATWiFiIO: public DDInputOutput {
     int linkId;
     String data;
     int dataIdx;
+    long lastValidateMs;
 };
 
 

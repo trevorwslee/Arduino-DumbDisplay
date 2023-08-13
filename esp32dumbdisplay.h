@@ -31,9 +31,9 @@ class DDBluetoothSerialIO: public DDInputOutput {
                         unsigned long serialBaud = DD_SERIAL_BAUD):
                         DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->btLocalName = btLocalName;
-      if (!enableSerial) {
-        Serial.begin(serialBaud);
-      }
+      // if (!enableSerial) {  // disabled since 2023-08-13
+      //   Serial.begin(serialBaud);
+      // }
     }
     bool available() {
       return serialBT.available();
