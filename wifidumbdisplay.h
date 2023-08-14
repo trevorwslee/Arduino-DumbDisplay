@@ -10,6 +10,7 @@
 #endif
 
 
+// after inclusion, can check DD_USING_WIFI to be sure WIFI is used
 #define DD_USING_WIFI
 
 
@@ -55,10 +56,18 @@ class DDWiFiServerIO: public DDInputOutput {
       }
       if (true) {  // since 2023-06-05
         if (firstCall) {
-          if (true) {  // since 2023-06-03
+          if (true) {  // since 2023-08-15
+            if (client.connected()) {
+              Serial.println("stop client for new setup");
+              client.stop();
+              delay(2000);  // wait a bit
+            }
+            WiFi.disconnect();
+          } else  if (true) {  // since 2023-06-03
             client.stop();
             WiFi.disconnect();
           }
+          Serial.println("setup WIFI");
           WiFi.begin(ssid, password);
           connectionState = ' ';
           stateMillis = 0;

@@ -20,6 +20,10 @@
 #include "_loespat.h"
 
 
+// after inclusion, can check DD_USING_WIFI to be sure WIFI is used
+#define DD_USING_WIFI
+
+
 /// Subclass of DDInputOutput
 class DDATWiFiIO: public DDInputOutput {
   public:
@@ -127,30 +131,40 @@ class DDATWiFiIO: public DDInputOutput {
     inline void atFlush() {
     }
     bool atPreConnect(bool firstCall) {
-      if (firstCall/*connectionState == '0'*/) {
+      if (/*firstCall*/connectionState == '0') {
+        //LOEspAt::Reset();
+        //delay(500);
         if (!LOEspAt::Check()) {
           Serial.println("XXX AT not ready");
           return false;
         }
-        //LOEspAt::Reset();
         // if (true) {  // since 2023-06-03
         //   //client.stop();
         //   //WiFi.disconnect();
         //   atDisconnectClient();
         //   LOEspAt::DisconnectAP();
         // }
+        bool failed = false;
         if (!LOEspAt::SetStationMode()) {
           Serial.println("XXX failed to set 'station' mode");
-          return false;
+          failed = true;
+          //return false;
         }
         delay(1000); // delay a bit
         if (!LOEspAt::ConnectAP(ssid, password, ip)) {
           Serial.println("XXX failed to start AP");
-          return false;
+          failed = true;
+          //return false;
         }
         if (!LOEspAt::StartServer(port)) {
           Serial.println("XXX failed to start server");
           LOEspAt::DisconnectAP();
+          failed = true;
+          //return false;
+        }
+        if (failed) {
+          LOEspAt::Reset();
+          delay(1000);
           return false;
         }
         //WiFi.begin(ssid, password);

@@ -1,6 +1,6 @@
 
 
-#if defined (DD_DISABLE_PARAM_ENCODEING)
+#if defined (DD_DISABLE_PARAM_ENCODING)
 
   #define DD_COLOR_red            "red"
   #define DD_COLOR_green          "green"

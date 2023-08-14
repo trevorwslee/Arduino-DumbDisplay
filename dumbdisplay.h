@@ -2,9 +2,9 @@
 
 ============================
 
-if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODEING before includeing dumbdisplay.h, like
+if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODING before including dumbdisplay.h, like
 
-#define DD_DISABLE_PARAM_ENCODEING
+#define DD_DISABLE_PARAM_ENCODING
 
 =============================
 
@@ -43,7 +43,7 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODEING bef
 
 #ifdef DD_CONDENSE_COMMAND
   #define DD_INT_COLOR(color) ("+" + DDIntEncoder(color).encoded())
-  #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO) ||  defined(DD_DISABLE_PARAM_ENCODEING)
+  #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO) ||  defined(DD_DISABLE_PARAM_ENCODING)
     #define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
   #else
     #define DD_RGB_COLOR(r, g, b) ("+" + DDIntEncoder(0xffffff & ((((((int32_t) (r)) << 8) + ((int32_t) (g))) << 8) + ((int32_t) (b)))).encoded())
@@ -52,7 +52,7 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODEING bef
   //   #define DD_RGB_COLOR(r, g, b) (String(r) + "-" + String(g) + "-" + String(b))
   //   //#define DD_RGB_COLOR(r, g, b) (String(r<0?0:(r>255?255:r)) + "-" + String(g<0?0:(g>255?255:g)) + "-" + String(b<0?0:(b>255?255:b)))
   // #else
-  //   #if defined(DD_DISABLE_PARAM_ENCODEING)
+  //   #if defined(DD_DISABLE_PARAM_ENCODING)
   //     #define DD_RGB_COLOR(r, g, b) ("#" + String(0xffffff & ((((((int32_t) (r)) << 8) + ((int32_t) (g))) << 8) + ((int32_t) (b))), 16))
   //   #else  
   //     #define DD_RGB_COLOR(r, g, b) ("+" + DDIntEncoder(0xffffff & ((((((int32_t) (r)) << 8) + ((int32_t) (g))) << 8) + ((int32_t) (b)))).encoded())
@@ -1077,7 +1077,7 @@ inline void DDDebugDisableParamEncoding() { _DDDisableParamEncoding = true; }
 class DumbDisplay {
   public:
     DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE/*, bool enableDoubleClick = true*/) {
-#ifdef DD_DISABLE_PARAM_ENCODEING
+#ifdef DD_DISABLE_PARAM_ENCODING
     DDDebugDisableParamEncoding();
 #endif      
 #ifndef DD_NO_SERIAL      
