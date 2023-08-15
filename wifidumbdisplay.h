@@ -54,9 +54,19 @@ class DDWiFiServerIO: public DDInputOutput {
       if (firstCall) {  // since 2023-08-10
         if (!Serial) Serial.begin(DD_SERIAL_BAUD);
       }
-      if (true) {  // since 2023-06-05
+      if (true) {  // since 2023-08-15
+        if (firstCall && !client.connected()) {
+          Serial.println("setup WIFI");
+          WiFi.disconnect();
+          WiFi.begin(ssid, password);
+          connectionState = ' ';
+          stateMillis = 0;
+        }
+        checkConnection();
+        return connectionState == 'C';
+      } else if (true) {  // since 2023-06-05
         if (firstCall) {
-          if (true) {  // since 2023-08-15
+          if (true) {
             if (client.connected()) {
               Serial.println("stop client for new setup");
               client.stop();

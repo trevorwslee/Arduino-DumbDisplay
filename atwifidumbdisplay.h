@@ -131,19 +131,19 @@ class DDATWiFiIO: public DDInputOutput {
     inline void atFlush() {
     }
     bool atPreConnect(bool firstCall) {
-      if (/*firstCall*/connectionState == '0') {
-        //LOEspAt::Reset();
-        //delay(500);
+      if ((firstCall || connectionState == '0') && linkId == -1) {
+        connectionState == '0';
+        // if (linkId != -1) {
+        //   Serial.println("disconnect client for new setup");
+        //   LOEspAt::DisconnectClient(linkId);
+        //   delay(2000);  // wait a bit
+        // }
+        Serial.println("setup AT WIFI");
+        LOEspAt::DisconnectAP();
         if (!LOEspAt::Check()) {
           Serial.println("XXX AT not ready");
           return false;
         }
-        // if (true) {  // since 2023-06-03
-        //   //client.stop();
-        //   //WiFi.disconnect();
-        //   atDisconnectClient();
-        //   LOEspAt::DisconnectAP();
-        // }
         bool failed = false;
         if (!LOEspAt::SetStationMode()) {
           Serial.println("XXX failed to set 'station' mode");
