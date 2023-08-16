@@ -133,40 +133,40 @@ class DDATWiFiIO: public DDInputOutput {
     bool atPreConnect(bool firstCall) {
       if ((firstCall || connectionState == '0') && linkId == -1) {
         connectionState == '0';
-        // if (linkId != -1) {
-        //   Serial.println("disconnect client for new setup");
-        //   LOEspAt::DisconnectClient(linkId);
-        //   delay(2000);  // wait a bit
-        // }
         Serial.println("setup AT WIFI");
         LOEspAt::DisconnectAP();
+        bool failed = false;
         if (!LOEspAt::Check()) {
           Serial.println("XXX AT not ready");
-          return false;
-        }
-        bool failed = false;
-        if (!LOEspAt::SetStationMode()) {
-          Serial.println("XXX failed to set 'station' mode");
           failed = true;
-          //return false;
         }
-        delay(1000); // delay a bit
-        if (!LOEspAt::ConnectAP(ssid, password, ip)) {
-          Serial.println("XXX failed to start AP");
-          failed = true;
-          //return false;
+        if (!failed) {
+          if (!LOEspAt::SetStationMode()) {
+            Serial.println("XXX failed to set 'station mode'");
+            failed = true;
+          }
         }
-        if (!LOEspAt::StartServer(port)) {
-          Serial.println("XXX failed to start server");
-          LOEspAt::DisconnectAP();
-          failed = true;
-          //return false;
+        if (!failed) {
+          delay(1000); // delay a bit
+          if (!LOEspAt::ConnectAP(ssid, password, ip)) {
+            Serial.println("XXX failed to start AP");
+            failed = true;
+          }
+        if (!failed) {}
+          if (!LOEspAt::StartServer(port)) {
+            Serial.println("XXX failed to start server");
+            LOEspAt::DisconnectAP();
+            failed = true;
+          }
         }
         if (failed) {
+          Serial.println("failed to setup AT WIFI ... reset ...");
           LOEspAt::Reset();
-          delay(1000);
+          delay(2000);
+          Serial.println("... reset DONE");
           return false;
         }
+        Serial.println("DONE setup AT WIFI");
         //WiFi.begin(ssid, password);
         connectionState = ' ';
         stateMillis = 0;
@@ -186,6 +186,7 @@ class DDATWiFiIO: public DDInputOutput {
       int state = LOEspAt::CheckState();
 //Serial.println(state);
       if (state == -1) {
+        Serial.println("failed to check AT WIFI state");
         return;
       }
       // if (state == 0) {
@@ -203,7 +204,7 @@ class DDATWiFiIO: public DDInputOutput {
       if (connectionState == 'C') {
         if (state != 2) {
           // 2: ESP32 station has connected to an AP, and got an IPv4 address.
-          Serial.println("lost WiFi ... try bind WiFi again ...");
+          Serial.println("lost AT WIFI ... try bind AT WIFI again ...");
           Serial.println(state);
           // client.stop();
           // WiFi.disconnect();
@@ -230,7 +231,7 @@ class DDATWiFiIO: public DDInputOutput {
       if (connectionState == ' ') {
         //uint8_t status = WiFi.status();
         if (state == 2) {
-          Serial.print("binded WIFI ");
+          Serial.print("binded AT WIFI ");
           Serial.println(ssid);
           //server.begin();
           connectionState = 'W';
@@ -239,7 +240,7 @@ class DDATWiFiIO: public DDInputOutput {
           long diff = millis() - stateMillis;
           if (stateMillis == 0 || diff > 1000) {
             //LOEspAt::StartServer(port);
-            Serial.print("binding WIFI ");
+            Serial.print("binding AT WIFI ");
             Serial.print(ssid);
 // #ifdef LOG_DDWIFI_STATUS
 //             Serial.print(" ... ");
@@ -289,7 +290,7 @@ class DDATWiFiIO: public DDInputOutput {
     }
   private:
     const char* ssid;
-    const char *password;
+    const char* password;
     int port;
     char connectionState;
     long stateMillis;

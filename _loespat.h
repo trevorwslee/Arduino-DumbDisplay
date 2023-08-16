@@ -34,6 +34,13 @@ namespace LOEspAt {
         this->data = "";
       }
       virtual bool intepret(int response_idx, String& response) {
+// Serial.print("{");        
+// Serial.print(response);        
+// Serial.print(":");        
+// Serial.print(total_len);
+// Serial.print("!");        
+// Serial.print(data);        
+// Serial.print("}");        
         if (response_idx > 0) {
           if (response_idx == 1) {
             if (response.startsWith("+CIPRECVDATA:")) {
@@ -107,6 +114,7 @@ namespace LOEspAt {
         if (response_interpreter != NULL) {
           bool expecting_next = response_interpreter->intepret(response_idx, response);
           if (expecting_next) {
+            response_idx++;
             continue;
           }
         }
@@ -145,9 +153,11 @@ namespace LOEspAt {
   }
   inline bool SendAtCommand(const char* at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
 #ifdef DEBUG_ESP_AT
-      Serial.print("<");
-      Serial.print(at_command);
-      Serial.print(">");
+      if (!silent) {
+        Serial.print("<");
+        Serial.print(at_command);
+        Serial.print(">");
+      }
 #endif
       ESP_SERIAL.println(at_command);
       return ReceiveAtResponse(at_command, response_interpreter, timeout_ms, silent);
@@ -155,7 +165,7 @@ namespace LOEspAt {
   inline bool SendAtCommand(String& at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
     return SendAtCommand(at_command.c_str(), response_interpreter, timeout_ms, silent);
   }
-  bool SendAtData(int link_id, const char* data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
+  bool SendDataToClient(int link_id, const char* data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
     int data_len = strlen(data);
     String at_command = String("AT+CIPSEND=") + String(link_id) + String(",") + String(data_len);
     bool ok = false;
@@ -165,7 +175,7 @@ namespace LOEspAt {
     }
     return ok;
   }
-  bool SendAtData(int link_id, const uint8_t* data, int data_len, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
+  bool SendDataToClient(int link_id, const uint8_t* data, int data_len, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
     String at_command = String("AT+CIPSEND=") + String(link_id) + String(",") + String(data_len);
     bool ok = false;
     if (SendAtCommand(at_command, NULL, timeout_ms, silent)) {
@@ -174,7 +184,7 @@ namespace LOEspAt {
     }
     return ok;
   }
-  bool SendAtData(int link_id, uint8_t data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
+  bool SendDataToClient(int link_id, uint8_t data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
     String at_command = String("AT+CIPSEND=") + String(link_id) + String(",1");
     bool ok = false;
     if (SendAtCommand(at_command, NULL, timeout_ms, silent)) {
@@ -183,10 +193,10 @@ namespace LOEspAt {
     }
     return ok;
   }
-  bool SendAtData(int link_id, const String& data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
-    return SendAtData(link_id, data.c_str(), timeout_ms, silent);
+  bool SendDataToClient(int link_id, const String& data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
+    return SendDataToClient(link_id, data.c_str(), timeout_ms, silent);
   }
-  bool ReceiveAtData(int link_id, String& data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
+  bool ReceiveDataFromClient(int link_id, String& data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
     ReceiveAtDataInterpreter interpreter(data);
     if (SendAtCommand(String("AT+CIPRECVDATA=") + String(link_id) + String(",102400"), &interpreter, timeout_ms, silent)) {
       return data.length() > 0;
