@@ -41,7 +41,7 @@ class DDATWiFiIO: public DDInputOutput {
       this->data = "";
       this->dataIdx = 0;
       this->lastValidateMs = 0;
-      this->connectionState = '0';
+      //this->connectionState = '0';
     }
     bool available() {
       return atCheckAvailable();
@@ -132,47 +132,60 @@ class DDATWiFiIO: public DDInputOutput {
     inline void atFlush() {
     }
     bool atPreConnect(bool firstCall) {
-      if ((firstCall || connectionState == '0') && linkId == -1) {
-        connectionState = '0';
-        Serial.println("setup AT WIFI");
-        LOEspAt::DisconnectAP();
-        bool failed = false;
-        if (!LOEspAt::Check()) {
-          Serial.println("XXX AT not ready");
-          failed = true;
+      if (true) {
+        if ((firstCall || connectionState == '0') && linkId == -1) {
+          connectionState = '0';
+          if (!atSetupWIFI()) {
+            Serial.println("failed to initially setup WIFI");
+            return false;
+          }
+          connectionState = ' ';
         }
-        if (!failed) {
-          if (!LOEspAt::SetStationMode()) {
-            Serial.println("XXX failed to set 'station mode'");
+        atCheckConnection(true);
+        return connectionState == 'C';
+      } else {
+        if ((firstCall || connectionState == '0') && linkId == -1) {
+          connectionState = '0';
+          Serial.println("setup AT WIFI");
+          LOEspAt::DisconnectAP();
+          bool failed = false;
+          if (!LOEspAt::Check()) {
+            Serial.println("XXX AT not ready");
             failed = true;
           }
-        }
-        if (!failed) {
-          delay(1000); // delay a bit
-          if (!LOEspAt::ConnectAP(ssid, password, ip)) {
-            Serial.println("XXX failed to start AP");
-            failed = true;
+          if (!failed) {
+            if (!LOEspAt::SetStationMode()) {
+              Serial.println("XXX failed to set 'station mode'");
+              failed = true;
+            }
           }
-        if (!failed) {}
-          if (!LOEspAt::StartServer(port)) {
-            Serial.println("XXX failed to start server");
-            LOEspAt::DisconnectAP();
-            failed = true;
+          if (!failed) {
+            delay(1000); // delay a bit
+            if (!LOEspAt::ConnectAP(ssid, password, ip)) {
+              Serial.println("XXX failed to start AP");
+              failed = true;
+            }
+          if (!failed) {}
+            if (!LOEspAt::StartServer(port)) {
+              Serial.println("XXX failed to start server");
+              LOEspAt::DisconnectAP();
+              failed = true;
+            }
           }
+          if (failed) {
+            Serial.println("failed to setup AT WIFI");
+            atReset();
+            return false;
+          }
+          Serial.println("DONE setup AT WIFI");
+          //WiFi.begin(ssid, password);
+          connectionState = ' ';
+          //stateMillis = 0;
         }
-        if (failed) {
-          Serial.println("failed to setup AT WIFI");
-          atReset();
-          return false;
-        }
-        Serial.println("DONE setup AT WIFI");
-        //WiFi.begin(ssid, password);
-        connectionState = ' ';
-        //stateMillis = 0;
+        //  delay(200);
+        atCheckConnection(true);
+        return connectionState == 'C';
       }
-      //  delay(200);
-      atCheckConnection(true);
-      return connectionState == 'C';
     }
     void atReset() {
       Serial.println("reseting ...");
@@ -183,6 +196,7 @@ class DDATWiFiIO: public DDInputOutput {
     }
     void atCheckConnection(bool forPreConnect) {
       if (true) {  // don't validate so frequently
+        // don't validate so frequently
         long now = millis();
         if ((now - lastValidateMs) < (forPreConnect ? 500 : 2000)) {
           return;
@@ -199,6 +213,8 @@ class DDATWiFiIO: public DDInputOutput {
       if (state == -1) {
         Serial.println("failed to check AT WIFI state");
         atReset();
+        //LOEspAt::DisconnectAP();
+        //connectionState = ' ';
         return;
       }
       // if (state == 0) {
@@ -218,10 +234,18 @@ class DDATWiFiIO: public DDInputOutput {
           // 2: ESP32 station has connected to an AP, and got an IPv4 address.
           Serial.println("lost AT WIFI ... try bind AT WIFI again ...");
           Serial.println(state);
-          // client.stop();
-          // WiFi.disconnect();
-          atDisconnectClient();
-          LOEspAt::DisconnectAP();
+          if (true) {
+            if (!atSetupWIFI()) {
+              Serial.println("failed to setup WIFI again");
+              atReset();
+              return;
+            }
+          } else {
+            // client.stop();
+            // WiFi.disconnect();
+            atDisconnectClient();
+            LOEspAt::DisconnectAP();
+          }
           connectionState = ' ';
           //stateMillis = 0;
         } else if (linkId != -1) {
@@ -303,6 +327,41 @@ class DDATWiFiIO: public DDInputOutput {
           }
         }  
       }
+    }
+    bool atSetupWIFI() {
+      Serial.println("setup AT WIFI");
+      LOEspAt::DisconnectAP();
+      bool failed = false;
+      if (!LOEspAt::Check()) {
+        Serial.println("XXX AT not ready");
+        failed = true;
+      }
+      if (!failed) {
+        if (!LOEspAt::SetStationMode()) {
+          Serial.println("XXX failed to set 'station mode'");
+          failed = true;
+        }
+      }
+      if (!failed) {
+        delay(1000); // delay a bit
+        if (!LOEspAt::ConnectAP(ssid, password, ip)) {
+          Serial.println("XXX failed to start AP");
+          failed = true;
+        }
+      if (!failed) {}
+        if (!LOEspAt::StartServer(port)) {
+          Serial.println("XXX failed to start server");
+          LOEspAt::DisconnectAP();
+          failed = true;
+        }
+      }
+      if (failed) {
+        Serial.println("failed to setup AT WIFI");
+        atReset();
+        return false;
+      }
+      Serial.println("DONE setup AT WIFI");
+      return true;
     }
     void atDisconnectClient() {
       if (linkId != -1) {
