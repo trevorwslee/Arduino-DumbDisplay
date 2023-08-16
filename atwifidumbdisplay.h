@@ -16,6 +16,7 @@
 #include "Arduino.h"
 #include "dumbdisplay.h"
 
+//#define DEGUG_SHOW_STATE
 //#define DEBUG_ESP_AT
 #include "_loespat.h"
 
@@ -88,7 +89,7 @@ class DDATWiFiIO: public DDInputOutput {
         return true;
       }
       if (linkId != -1) {
-        if (LOEspAt::ReceiveAtData(linkId, data)) {
+        if (LOEspAt::ReceiveDataFromClient(linkId, data)) {
           dataIdx = 0;
           if (dataIdx < data.length()) {
             return true;
@@ -105,34 +106,34 @@ class DDATWiFiIO: public DDInputOutput {
     } 
     inline void atPrint(const String &s) {
       if (linkId != -1) {
-        LOEspAt::SendAtData(linkId, s);
+        LOEspAt::SendDataToClient(linkId, s);
       }
     }
     inline void atPrint(const char *p) {
       if (linkId != -1) {
-        LOEspAt::SendAtData(linkId, p);
+        LOEspAt::SendDataToClient(linkId, p);
       }
     }
     inline void atPrint(uint8_t b) {
       if (linkId != -1) {
-        LOEspAt::SendAtData(linkId, b);
+        LOEspAt::SendDataToClient(linkId, b);
       }
     }
     inline void atWrite(uint8_t b) {
       if (linkId != -1) {
-        LOEspAt::SendAtData(linkId, b);
+        LOEspAt::SendDataToClient(linkId, b);
       }
     }
     inline void atWrite(const uint8_t *buf, size_t size) {
       if (linkId != -1) {
-        LOEspAt::SendAtData(linkId, buf, size);
+        LOEspAt::SendDataToClient(linkId, buf, size);
       }
     }
     inline void atFlush() {
     }
     bool atPreConnect(bool firstCall) {
       if ((firstCall || connectionState == '0') && linkId == -1) {
-        connectionState == '0';
+        connectionState = '0';
         Serial.println("setup AT WIFI");
         LOEspAt::DisconnectAP();
         bool failed = false;
@@ -160,20 +161,25 @@ class DDATWiFiIO: public DDInputOutput {
           }
         }
         if (failed) {
-          Serial.println("failed to setup AT WIFI ... reset ...");
-          LOEspAt::Reset();
-          delay(2000);
-          Serial.println("... reset DONE");
+          Serial.println("failed to setup AT WIFI");
+          atReset();
           return false;
         }
         Serial.println("DONE setup AT WIFI");
         //WiFi.begin(ssid, password);
         connectionState = ' ';
-        stateMillis = 0;
+        //stateMillis = 0;
       }
       //  delay(200);
       atCheckConnection(true);
       return connectionState == 'C';
+    }
+    void atReset() {
+      Serial.println("reseting ...");
+      LOEspAt::Reset();
+      delay(2000);
+      Serial.println("... done reset");
+
     }
     void atCheckConnection(bool forPreConnect) {
       if (true) {  // don't validate so frequently
@@ -184,9 +190,15 @@ class DDATWiFiIO: public DDInputOutput {
         lastValidateMs = now;
       }
       int state = LOEspAt::CheckState();
-//Serial.println(state);
+#if defined(DEGUG_SHOW_STATE)
+      Serial.print("[");
+      Serial.print(connectionState);
+      Serial.print("]: ");
+      Serial.println(state);
+#endif
       if (state == -1) {
         Serial.println("failed to check AT WIFI state");
+        atReset();
         return;
       }
       // if (state == 0) {
@@ -211,7 +223,7 @@ class DDATWiFiIO: public DDInputOutput {
           atDisconnectClient();
           LOEspAt::DisconnectAP();
           connectionState = ' ';
-          stateMillis = 0;
+          //stateMillis = 0;
         } else if (linkId != -1) {
           //client.stop();
           //atDisconnectClient();
@@ -220,7 +232,7 @@ class DDATWiFiIO: public DDInputOutput {
             linkId = -1;
             Serial.println("lost connection ... try connect again ...");
             connectionState = 'W';
-            stateMillis = 0;
+            //stateMillis = 0;
           } else {
             return;
           }
@@ -235,10 +247,10 @@ class DDATWiFiIO: public DDInputOutput {
           Serial.println(ssid);
           //server.begin();
           connectionState = 'W';
-          stateMillis = 0;
+          //stateMillis = 0;
         } else {
-          long diff = millis() - stateMillis;
-          if (stateMillis == 0 || diff > 1000) {
+          //long diff = millis() - stateMillis;
+          //if (stateMillis == 0 || diff > 1000) {
             //LOEspAt::StartServer(port);
             Serial.print("binding AT WIFI ");
             Serial.print(ssid);
@@ -247,16 +259,16 @@ class DDATWiFiIO: public DDInputOutput {
 //             Serial.print(state);
 // #endif
             Serial.println(" ...");
-            stateMillis = millis();
-          }
+            //stateMillis = millis();
+          //}
         }
       } else {
         if (state != 2) {
           connectionState = ' ';
-          stateMillis = 0;
+          //stateMillis = 0;
         } else {
-          long diff = millis() - stateMillis;
-          if (diff >= 1000) {
+          //long diff = millis() - stateMillis;
+          //if (diff >= 1000) {
             //IPAddress localIP = WiFi.localIP();
             //uint32_t localIPValue = localIP;
 // #ifdef LOG_DDWIFI_STATUS
@@ -269,14 +281,24 @@ class DDATWiFiIO: public DDInputOutput {
             Serial.print(":");
             Serial.print(port);
             Serial.println(" ...");
-            stateMillis = millis();
-          }
-          if (linkId == -1) {
-            linkId = LOEspAt::CheckForClientConnection();
-            if (linkId != -1) {
+            //stateMillis = millis();
+          //}
+          if (true) {
+            int checkLinkId = LOEspAt::CheckForClientConnection();
+            if (checkLinkId != -1) {
+              linkId = checkLinkId;
               connectionState = 'C';
-              stateMillis = 0;
+              //stateMillis = 0;
               Serial.println("client connected");
+            } 
+          } else {
+            if (linkId == -1) {
+              linkId = LOEspAt::CheckForClientConnection();
+              if (linkId != -1) {
+                connectionState = 'C';
+                //stateMillis = 0;
+                Serial.println("client connected");
+              }
             }
           }
         }  
@@ -293,7 +315,7 @@ class DDATWiFiIO: public DDInputOutput {
     const char* password;
     int port;
     char connectionState;
-    long stateMillis;
+    //long stateMillis;
     String ip;
     int linkId;
     String data;
