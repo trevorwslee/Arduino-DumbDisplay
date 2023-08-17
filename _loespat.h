@@ -204,12 +204,17 @@ namespace LOEspAt {
     return false;
   }
 
-  // 0: ESP32 station has not started any Wi-Fi connection.
-  // 1: ESP32 station has connected to an AP, but does not get an IPv4 address yet.
-  // 2: ESP32 station has connected to an AP, and got an IPv4 address.
-  // 3: ESP32 station is in Wi-Fi connecting or reconnecting state.
-  // 4: ESP32 station is in Wi-Fi disconnected state.
-  // -1 ... not checked
+  inline bool Check() {
+    return SendAtCommand("AT");
+  }
+
+
+  //  0: ESP32 station has not started any Wi-Fi connection.
+  //  1: ESP32 station has connected to an AP, but does not get an IPv4 address yet.
+  //  2: ESP32 station has connected to an AP, and got an IPv4 address.
+  //  3: ESP32 station is in Wi-Fi connecting or reconnecting state.
+  //  4: ESP32 station is in Wi-Fi disconnected state.
+  // -1: filed to check
   int CheckState() {
     AtResposeInterpreter1 at_response_interpreter(1);
     if (SendAtCommand("AT+CWSTATE?", &at_response_interpreter)) {
@@ -221,20 +226,31 @@ namespace LOEspAt {
     return -1;
   }
 
-  inline bool Check() {
-    return SendAtCommand("AT");
+
+  //  0: not running
+  //  1: running
+  // -1: filed to check
+  int CheckServerState() {
+    AtResposeInterpreter1 at_response_interpreter(1);
+    if (SendAtCommand("AT+CIPSERVER?", &at_response_interpreter)) {
+      if (at_response_interpreter.response.startsWith("+CIPSERVER:")) {
+        int state = at_response_interpreter.response.substring(11, at_response_interpreter.response.indexOf(',')).toInt();
+        return state;
+      }
+    }
+    return -1;
   }
 
-  inline bool Restore() {
-    return SendAtCommand("AT+RESTORE");
-    // bool ok = false;
-    // if (SendAtCommand("AT")) {
-    //   if (SendAtCommand("AT+RESTORE")) {
-    //     ok = true;
-    //   }
-    // }
-    // return ok;
-  }
+  // inline bool Restore() {
+  //   return SendAtCommand("AT+RESTORE");
+  //   // bool ok = false;
+  //   // if (SendAtCommand("AT")) {
+  //   //   if (SendAtCommand("AT+RESTORE")) {
+  //   //     ok = true;
+  //   //   }
+  //   // }
+  //   // return ok;
+  // }
   inline bool Reset() {
     return SendAtCommand("AT+RST");
     // bool ok = false;

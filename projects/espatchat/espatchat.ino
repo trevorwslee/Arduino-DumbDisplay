@@ -119,6 +119,7 @@ void loop() {
           link_id = check_link_id;
           Serial.print("*** Client connected with 'link id' ");
           Serial.println(link_id);
+          LOEspAt::SendDataToClient(link_id, "<hi there>");
         }
       } else {
         if (check_link_id == -1) {
@@ -127,8 +128,10 @@ void loop() {
         }
       }
       if (link_id == -1) {
-        Serial.print("AP IP: ");
-        Serial.println(ap_ip);
+        Serial.print("END POINT: ");
+        Serial.print(ap_ip);
+        Serial.print(':');
+        Serial.println(WIFI_PORT);
       }
     }
   }

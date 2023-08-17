@@ -2,8 +2,8 @@
 #ifndef atwifidumbdisplay_h
 #define atwifidumbdisplay_h
 
-#if !defined(ESP_SERIAL) || !defined(ESP_SERIAL_begin)
-  #error Must define the macro ESP_SERIAL and ESP_SERIAL_begin (a function call or a code block) \
+#if !defined(ESP_SERIAL)
+  #error Must define the macro ESP_SERIAL and optionally ESP_SERIAL_begin (a function call or a code block) \
     *** \
     e.g. STM32F103: PA3 (RX2) ==> TX; PA2 (TX2) ==> RX \
     #define DD_SERIAL Serial2 \
@@ -64,7 +64,11 @@ class DDATWiFiIO: public DDInputOutput {
     bool preConnect(bool firstCall) {
       if (firstCall) {
         if (!Serial) Serial.begin(DD_SERIAL_BAUD);
+#if defined(ESP_SERIAL_begin)        
         ESP_SERIAL_begin;
+#else
+        ESP_SERIAL.begin(115200);
+#endif        
       }
       return atPreConnect(firstCall);
     }
@@ -214,7 +218,7 @@ class DDATWiFiIO: public DDInputOutput {
         Serial.println("failed to check AT WIFI state");
         atReset();
         //LOEspAt::DisconnectAP();
-        //connectionState = ' ';
+        connectionState = ' ';
         return;
       }
       // if (state == 0) {
@@ -300,6 +304,16 @@ class DDATWiFiIO: public DDInputOutput {
 //             Serial.print(LOEspAt::CheckState()/*WiFi.status()*/);
 //             Serial.print(" ... ");
 // #endif
+            if (true) {
+              int clientState = LOEspAt::CheckServerState();
+              //Serial.println(clientState);
+              if (clientState != 1) {
+                Serial.println("server not running");
+                atReset();
+                connectionState == ' ';
+                 return;
+              }
+            }
             Serial.print("listening on ");
             Serial.print(ip);
             Serial.print(":");
