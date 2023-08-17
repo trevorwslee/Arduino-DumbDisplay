@@ -30,7 +30,7 @@ namespace LOEspAt {
   class ReceiveAtDataInterpreter: public AtResposeInterpreter {
     public:
       ReceiveAtDataInterpreter(String& data): data(data) {
-        this->total_len = 0;
+        this->total_len = -1;
         this->data = "";
       }
       virtual bool intepret(int response_idx, String& response) {
@@ -42,7 +42,7 @@ namespace LOEspAt {
 // Serial.print(data);        
 // Serial.print("}");        
         if (response_idx > 0) {
-          if (response_idx == 1) {
+          if (total_len == -1) {
             if (response.startsWith("+CIPRECVDATA:")) {
               int idx = response.indexOf(',');
               total_len = response.substring(13, idx).toInt();
@@ -55,11 +55,13 @@ namespace LOEspAt {
               data += "\n";
             }
           }
-          return (total_len - data.length()) > 0;
+          if (total_len != -1) {
+            return (total_len - data.length()) > 0;
+          }
         }
         return false;
       }
-    public:
+    private:
       int total_len;
       String& data;
   };
@@ -96,7 +98,7 @@ namespace LOEspAt {
           if (diff > timeout_ms) {
 #ifdef DEBUG_ESP_AT
             if (!silent) {
-              Serial.println("TO");
+              Serial.println("TIMEOUT1");
             }  
 #endif
             ok = false;
@@ -131,7 +133,7 @@ namespace LOEspAt {
         if (diff_ms > timeout_ms) {
 #ifdef DEBUG_ESP_AT
           if (!silent) {
-            Serial.println("TO");
+            Serial.println("TIMEOUT2");
           }  
 #endif
           ok = false;
