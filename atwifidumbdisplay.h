@@ -68,7 +68,8 @@ class DDATWiFiIO: public DDInputOutput {
         ESP_SERIAL_begin;
 #else
         ESP_SERIAL.begin(115200);
-#endif        
+#endif  
+        LOEspAt::InitAt();      
       }
       return atPreConnect(firstCall);
     }
@@ -153,7 +154,7 @@ class DDATWiFiIO: public DDInputOutput {
           Serial.println("setup AT WIFI");
           LOEspAt::DisconnectAP();
           bool failed = false;
-          if (!LOEspAt::Check()) {
+          if (!LOEspAt::CheckAt()) {
             Serial.println("XXX AT not ready");
             failed = true;
           }
@@ -166,7 +167,7 @@ class DDATWiFiIO: public DDInputOutput {
           if (!failed) {
             delay(1000); // delay a bit
             if (!LOEspAt::ConnectAP(ssid, password, ip)) {
-              Serial.println("XXX failed to start AP");
+              Serial.println("XXX failed to start AP???");
               failed = true;
             }
           if (!failed) {}
@@ -346,7 +347,7 @@ class DDATWiFiIO: public DDInputOutput {
       Serial.println("setup AT WIFI");
       LOEspAt::DisconnectAP();
       bool failed = false;
-      if (!LOEspAt::Check()) {
+      if (!LOEspAt::CheckAt()) {
         Serial.println("XXX AT not ready");
         failed = true;
       }
@@ -359,7 +360,7 @@ class DDATWiFiIO: public DDInputOutput {
       if (!failed) {
         delay(1000); // delay a bit
         if (!LOEspAt::ConnectAP(ssid, password, ip)) {
-          Serial.println("XXX failed to start AP");
+          Serial.println("XXX failed to start AP when");
           failed = true;
         }
       if (!failed) {}

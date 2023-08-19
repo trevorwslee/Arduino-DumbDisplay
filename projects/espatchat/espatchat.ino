@@ -51,6 +51,8 @@
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
   ESP_SERIAL.begin(ESP_BAUD_RATE);
+  LOEspAt::InitAt();
+  Serial.println("*** ready ***");
 }
 
 long last_tick_ms = millis();
