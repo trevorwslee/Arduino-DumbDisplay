@@ -11,7 +11,7 @@
 #define DEBUG_ACTIVE_BUFFER         false
 #define ACTIVE_RECEIVE_BUFFER_LEN   (DEBUG_ACTIVE_BUFFER ? 64 : 5 * 1025)
 
-#define CHECK_CLIENT_CHECK_STATUS true
+#define CHECK_CLIENT_FALLBACK
 
 namespace LOEspAt {
 
@@ -521,30 +521,32 @@ namespace LOEspAt {
 
   int CheckForClientConnection() {
     int link_id = -1;
-    if (CHECK_CLIENT_CHECK_STATUS) {
-      AtResposeInterpreter2 at_response_interpreter(1);
-      if (SendAtCommand("AT+CIPSTATUS", &at_response_interpreter)) {
+    AtResposeInterpreter1 at_response_interpreter(1);
+    if (SendAtCommand("AT+CIPSTATE?", &at_response_interpreter)) {
+      if (at_response_interpreter.response.startsWith("+CIPSTATE:")) {
+        int idx = at_response_interpreter.response.indexOf(",");
+        if (idx != -1) {
+          link_id = at_response_interpreter.response.substring(10, idx).toInt();
+        }
+      }
+    } else {
+#if defined(CHECK_CLIENT_FALLBACK)
+      AtResposeInterpreter2 at_response2_interpreter(1);
+      if (SendAtCommand("AT+CIPSTATUS", &at_response2_interpreter)) {
         // 1. STATUS:3
         // 2. +CIPSTATUS:0,"TCP","192.168.0.98",38774,10201,1
-        if (at_response_interpreter.response1 == "STATUS:3") {
-          if (at_response_interpreter.response2.startsWith("+CIPSTATUS:")) {
-            int idx = at_response_interpreter.response2.indexOf(",");
+        if (at_response2_interpreter.response1 == "STATUS:3") {
+          if (at_response2_interpreter.response2.startsWith("+CIPSTATUS:")) {
+            int idx = at_response2_interpreter.response2.indexOf(",");
+// Serial.print("***");
+// Serial.print(idx);            
             if (idx != -1) {
-              link_id = at_response_interpreter.response2.substring(11, idx).toInt();
+              link_id = at_response2_interpreter.response2.substring(11, idx).toInt();
             }
           }
         }
       }
-    } else {  
-      AtResposeInterpreter1 at_response_interpreter(1);
-      if (SendAtCommand("AT+CIPSTATE?", &at_response_interpreter)) {
-        if (at_response_interpreter.response.startsWith("+CIPSTATE:")) {
-          int idx = at_response_interpreter.response.indexOf(",");
-          if (idx != -1) {
-            link_id = at_response_interpreter.response.substring(10, idx).toInt();
-          }
-        }
-      }
+#endif
     }
     return link_id;
   }
