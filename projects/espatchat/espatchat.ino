@@ -29,13 +29,16 @@
   UART Serial2(8, 9, 0, 0);
   #define ESP_SERIAL Serial2
 #else
-  // // can use Serial2 for STM32
-  // // e.g. STM32F103: PA3 (RX2) ==> ESP TX (GPIO1) ; PA2 (TX2) ==> ESP RX (GPIO3)
-  // #error unexpected board
-  #include "SoftwareSerial.h"
-  //  4 => TX; 5 => RX
-  SoftwareSerial ss(4/*2*/, 5/*3*/);
-  #define ESP_SERIAL ss
+  // can use Serial2 for STM32
+  // e.g. STM32F103: PA3 (RX2) ==> ESP TX (GPIO1) ; PA2 (TX2) ==> ESP RX (GPIO3)
+  // STM32:PA3 RX2 => ESP32:GPIO22 TX
+  // STM32:PA2 TX2 => ESP32:GPIO19 RX
+  HardwareSerial Serial2(PA3, PA2);
+  #define ESP_SERIAL Serial2 
+  // #include "SoftwareSerial.h"
+  // //  4 => TX; 5 => RX
+  // SoftwareSerial ss(4/*2*/, 5/*3*/);
+  // #define ESP_SERIAL ss
 #endif  
 
 

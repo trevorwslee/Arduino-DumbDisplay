@@ -5,18 +5,30 @@
 // NO echo at seems cause more unexpected AT responses, and therefore more error-prone
 //#define NO_AT_ECHO
 
-#define DEBUG_ACTIVE_BUFFER         false
-#define ACTIVE_RECEIVE_BUFFER_LEN   (DEBUG_ACTIVE_BUFFER ? 64 : 5 * 1025)
+//#define DEBUG_ACTIVE_BUFFER         true
+
+#if defined(DEBUG_ACTIVE_BUFFER)
+  #define ACTIVE_RECEIVE_BUFFER_LEN   64
+#else
+  #define ACTIVE_RECEIVE_BUFFER_LEN   (5 * 1025)
+#endif
 
 #define CHECK_STATE_FALLBACK
+#define CHECK_SERVER_FALLBACK
 #define CHECK_CLIENT_FALLBACK
 
 namespace LOEspAt {
 
 #if defined(ACTIVE_RECEIVE_BUFFER_LEN)
-  char ReceiveBuffer[ACTIVE_RECEIVE_BUFFER_LEN];
+  char ReceiveBuffer[ACTIVE_RECEIVE_BUFFER_LEN + 1];
   int ReceiveBufferStartIdx = 0;
   int ReceiveBufferEndIdx= 0;
+  void _Concat(String& data, char* p, int len) {
+    char c = *(p + len);
+    *(p + len) = 0;
+    data.concat(p);
+    *(p + len) = c;
+  }
   bool RetrieveReceivedData(String& data) {
     if (ReceiveBufferStartIdx == ReceiveBufferEndIdx) {
       return false;
@@ -24,11 +36,14 @@ namespace LOEspAt {
     data = "";
     if (ReceiveBufferStartIdx > ReceiveBufferEndIdx) {
       int part_len = ACTIVE_RECEIVE_BUFFER_LEN - ReceiveBufferStartIdx;
-      data.concat(ReceiveBuffer + ReceiveBufferStartIdx, part_len);  
-      data.concat(ReceiveBuffer, ReceiveBufferEndIdx);  
+      _Concat(data, ReceiveBuffer + ReceiveBufferStartIdx, part_len);  
+      _Concat(data, ReceiveBuffer, ReceiveBufferEndIdx);  
+      // data.concat(ReceiveBuffer + ReceiveBufferStartIdx, part_len);  
+      // data.concat(ReceiveBuffer, ReceiveBufferEndIdx);  
     } else {
       int part_len = ReceiveBufferEndIdx - ReceiveBufferStartIdx;
-      data.concat(ReceiveBuffer + ReceiveBufferStartIdx, part_len);  
+      _Concat(data, ReceiveBuffer + ReceiveBufferStartIdx, part_len);  
+      //data.concat(ReceiveBuffer + ReceiveBufferStartIdx, part_len);  
     }
     if (true) {
       ReceiveBufferStartIdx = ReceiveBufferEndIdx;
@@ -382,26 +397,24 @@ namespace LOEspAt {
   }
 
   bool InitAt() {
-#if defined(ACTIVE_RECEIVE_BUFFER_LEN) 
-    if (DEBUG_ACTIVE_BUFFER) {
-      // ***** debugging code
-      String src_data = "0123456789abcdef";
-      for (int i = 0; i < 100; i++) {
-        String data;
-        bool retrieved = RetrieveReceivedData(data);
-        if (retrieved) {
-          Serial.print("- [");
-          Serial.print(data);
-          Serial.println({"]"});
-        }
-        AppendDataToBeReceived(src_data);
-        AppendDataToBeReceived(src_data);
-        AppendDataToBeReceived(src_data);
+#if defined(ACTIVE_RECEIVE_BUFFER_LEN) && defined(DEBUG_ACTIVE_BUFFER)
+    // ***** debugging code
+    String src_data = "0123456789abcdef";
+    for (int i = 0; i < 100; i++) {
+      String data;
+      bool retrieved = RetrieveReceivedData(data);
+      if (retrieved) {
+        Serial.print("- [");
+        Serial.print(data);
+        Serial.println({"]"});
       }
-      for (int i = 0; i < 10; i++) {
-        Serial.println("... check debug data ...");
-        delay(3000);
-      }
+      AppendDataToBeReceived(src_data);
+      AppendDataToBeReceived(src_data);
+      AppendDataToBeReceived(src_data);
+    }
+    for (int i = 0; i < 10; i++) {
+      Serial.println("... check debug data ...");
+      delay(3000);
     }
 #endif
 
@@ -472,6 +485,10 @@ namespace LOEspAt {
         int state = at_response_interpreter.response.substring(11, at_response_interpreter.response.indexOf(',')).toInt();
         return state;
       }
+    } else {
+#if defined(CHECK_SERVER_FALLBACK)   
+      return 1;  // assume server is running   
+#endif
     }
     return -1;
   }
