@@ -3,12 +3,76 @@
 // #define FORCE_DEBUG_NO_SILENT
 
 #define NO_AT_ECHO
-#define ACTIVE_RECEIVE_BUFFER_LEN 5 * 1024
 
-//#define CONNECT_CHECK_AP true
+// seems SUPPORT_CHECK_STATE not for ESP8266 
+//#define SUPPORT_CHECK_STATE
+
+
+#define DEBUG_ACTIVE_BUFFER         false
+#define ACTIVE_RECEIVE_BUFFER_LEN   (DEBUG_ACTIVE_BUFFER ? 64 : 5 * 1025)
+
 #define CHECK_CLIENT_CHECK_STATUS true
 
 namespace LOEspAt {
+
+#if defined(ACTIVE_RECEIVE_BUFFER_LEN)
+  char ReceiveBuffer[ACTIVE_RECEIVE_BUFFER_LEN];
+  int ReceiveBufferStartIdx = 0;
+  int ReceiveBufferEndIdx= 0;
+  bool RetrieveReceivedData(String& data) {
+    if (ReceiveBufferStartIdx == ReceiveBufferEndIdx) {
+      return false;
+    }
+    data = "";
+    if (ReceiveBufferStartIdx > ReceiveBufferEndIdx) {
+      int part_len = ACTIVE_RECEIVE_BUFFER_LEN - ReceiveBufferStartIdx;
+      data.concat(ReceiveBuffer + ReceiveBufferStartIdx, part_len);  
+      data.concat(ReceiveBuffer, ReceiveBufferEndIdx);  
+    } else {
+      int part_len = ReceiveBufferEndIdx - ReceiveBufferStartIdx;
+      data.concat(ReceiveBuffer + ReceiveBufferStartIdx, part_len);  
+    }
+    if (true) {
+      ReceiveBufferStartIdx = ReceiveBufferEndIdx;
+    } else {
+      ReceiveBufferStartIdx = 0;
+      ReceiveBufferEndIdx = 0;
+    }
+    return true;
+  }
+  void AppendDataToBeReceived(String data) {
+    int data_len = data.length();
+    if ((ReceiveBufferEndIdx + data_len) <= ACTIVE_RECEIVE_BUFFER_LEN) {
+      strncpy(ReceiveBuffer + ReceiveBufferEndIdx, data.c_str(), data_len);
+      ReceiveBufferEndIdx += data_len;
+      // Serial.print("11111 ");
+      // Serial.print("ReceiveBufferEndIdx=");
+      // Serial.println(ReceiveBufferEndIdx);
+    } else {
+      int part1_len = ACTIVE_RECEIVE_BUFFER_LEN - ReceiveBufferEndIdx;
+      int part2_len = data_len - part1_len;
+      if (part2_len >= ReceiveBufferStartIdx) {
+        part2_len = ReceiveBufferStartIdx - 1;  // may cause data lost
+      }
+      strncpy(ReceiveBuffer + ReceiveBufferEndIdx, data.c_str(), part1_len);
+      strncpy(ReceiveBuffer, data.c_str() + part1_len, part2_len);
+      ReceiveBufferEndIdx = part2_len;
+      // Serial.print("22222 ");
+      // Serial.print("ReceiveBufferEndIdx=");
+      // Serial.println(ReceiveBufferEndIdx);
+    }
+    // Serial.print(ACTIVE_RECEIVE_BUFFER_LEN);
+    // Serial.print(" : ");      
+    // Serial.print("ReceiveBufferStartIdx=");
+    // Serial.print(ReceiveBufferStartIdx);
+    // Serial.print(" / ");      
+    // Serial.print("ReceiveBufferEndIdx=");
+    // Serial.print(ReceiveBufferEndIdx);
+    // Serial.println();      
+  }
+#endif  
+
+
 
   const long DefAtTimeout = 15000;
   const bool DefSendReceiveDataSilent = true;
@@ -108,6 +172,54 @@ namespace LOEspAt {
           response = response.substring(0, len - 1);
           len -= 1;
         }
+#if defined(ACTIVE_RECEIVE_BUFFER_LEN)
+        if (response.startsWith("+IPD,")) {
+          int idx1 = response.indexOf(',', 5);
+          int idx2 = idx1 != -1 ? response.indexOf(':', idx1) : -1;
+#ifdef DEBUG_ESP_AT
+          Serial.print("$");
+          Serial.print("IPD"/*response*/);
+          Serial.print(".");
+          Serial.print(idx1);
+          Serial.print(".");
+          Serial.print(idx2);
+          Serial.print(".");
+#endif
+          String data = response.substring(idx2 + 1) + "\n"; 
+          if (idx1 != -1 && idx2 != -1) {
+            int len = response.substring(idx1 + 1, idx2).toInt();
+#ifdef DEBUG_ESP_AT
+            Serial.print("(");
+            Serial.print(len);
+            Serial.print("):");
+#endif
+            while ((len - data.length()) > 0) {
+              long diff = millis() - start_ms;
+              if (diff > timeout_ms) {
+#ifdef DEBUG_ESP_AT
+                if (!silent) {
+                  Serial.println("TIMEOUT3");
+                }  
+#endif
+                ok = false;
+                return false;
+              }  
+              if (ESP_SERIAL.available()) {
+                int c = ESP_SERIAL.read();
+                if (c >= 0) {
+                  data += (char) c;
+                }
+              }
+            }
+            AppendDataToBeReceived(data);
+          }
+#ifdef DEBUG_ESP_AT
+          Serial.print("=");
+          Serial.print(data.length());
+          Serial.print("$");
+#endif
+        }
+#endif        
         if (true) {
           if (response_idx == 0 && len > 0 && (len < 2 || strcmp(response.c_str(), at_command) != 0/*!response.startsWith("AT")*/)) {
 #ifdef DEBUG_ESP_AT
@@ -236,11 +348,15 @@ namespace LOEspAt {
     return SendDataToClient(link_id, data.c_str(), timeout_ms, silent);
   }
   bool ReceiveDataFromClient(int link_id, String& data, long timeout_ms = DefAtTimeout, bool silent = DefSendReceiveDataSilent) {
-    ReceiveAtDataInterpreter interpreter(data);
+#if defined(ACTIVE_RECEIVE_BUFFER_LEN)
+    return RetrieveReceivedData(data);
+#else
+   ReceiveAtDataInterpreter interpreter(data);
     if (SendAtCommand(String("AT+CIPRECVDATA=") + String(link_id) + String(",102400"), &interpreter, timeout_ms, silent)) {
       return data.length() > 0;
     }
     return false;
+#endif    
   }
 
   inline bool CheckAt() {
@@ -248,6 +364,29 @@ namespace LOEspAt {
   }
 
   bool InitAt() {
+#if defined(ACTIVE_RECEIVE_BUFFER_LEN)
+    if (DEBUG_ACTIVE_BUFFER) {
+      // ***** debugging code
+      String src_data = "0123456789abcdef";
+      for (int i = 0; i < 100; i++) {
+        String data;
+        bool retrieved = RetrieveReceivedData(data);
+        if (retrieved) {
+          Serial.print("- [");
+          Serial.print(data);
+          Serial.println({"]"});
+        }
+        AppendDataToBeReceived(src_data);
+        AppendDataToBeReceived(src_data);
+        AppendDataToBeReceived(src_data);
+      }
+      for (int i = 0; i < 10; i++) {
+        Serial.println("... check debug data ...");
+        delay(3000);
+      }
+    }
+#endif
+
 #if defined(NO_AT_ECHO)    
     SendAtCommand("ATE0");
 #else
@@ -261,6 +400,7 @@ namespace LOEspAt {
     return CheckAt();
   }
 
+#if defined(SUPPORT_CHECK_STATE)
   //  0: ESP32 station has not started any Wi-Fi connection.
   //  1: ESP32 station has connected to an AP, but does not get an IPv4 address yet.
   //  2: ESP32 station has connected to an AP, and got an IPv4 address.
@@ -277,6 +417,7 @@ namespace LOEspAt {
     }
     return -1;
   }
+#endif  
 
   //  0: no AP
   //  1: AP checked
@@ -337,10 +478,12 @@ namespace LOEspAt {
   bool ConnectAP(const char* ssid, const char* password, String& ip) {
     bool connected = false;
     if (SendAtCommand(String("AT+CWJAP=\"") + ssid + String("\",\"") + password + String("\""))) {
-      if (true) {
-        connected = CheckAP() == 1;
-      }
+      connected = CheckAP() == 1;
+#if defined(ACTIVE_RECEIVE_BUFFER_LEN)
+      SendAtCommand("AT+CIPRECVMODE=0");
+#else
       connected = connected && SendAtCommand("AT+CIPRECVMODE=1");
+#endif
     }
     // if (SendAtCommand("AT")) {
     //   if (SendAtCommand(String("AT+CWJAP=\"") + ssid + String("\",\"") + password + String("\""))) {
