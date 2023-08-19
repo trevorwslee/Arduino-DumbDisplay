@@ -2,10 +2,15 @@
 // #define DEBUG_ESP_AT
 // #define FORCE_DEBUG_NO_SILENT
 
+#define NO_AT_ECHO
+#define ACTIVE_RECEIVE_BUFFER_LEN 5 * 1024
+
+//#define CONNECT_CHECK_AP true
+#define CHECK_CLIENT_CHECK_STATUS true
 
 namespace LOEspAt {
 
-  const long DefAtTimeout = 1000;
+  const long DefAtTimeout = 15000;
   const bool DefSendReceiveDataSilent = true;
 
   class AtResposeInterpreter {
@@ -26,6 +31,25 @@ namespace LOEspAt {
     public:
       int want_response_idx;
       String response;
+  };
+  class AtResposeInterpreter2: public AtResposeInterpreter {
+    public:
+      AtResposeInterpreter2(int want_response_idx) {
+        this->want_response_idx = want_response_idx;
+      }
+      virtual bool intepret(int response_idx, String& response) {
+        if (response_idx == want_response_idx) {
+          this->response1 = response;
+        }
+        if (response_idx == (want_response_idx + 1)) {
+          this->response2 = response;
+        }
+        return false;
+      }
+    public:
+      int want_response_idx;
+      String response1;
+      String response2;
   };
   class ReceiveAtDataInterpreter: public AtResposeInterpreter {
     public:
@@ -71,7 +95,11 @@ namespace LOEspAt {
 #endif
       long start_ms = millis();
       bool ok = false;
+#if defined(NO_AT_ECHO)    
+      int response_idx = 1;
+#else
       int response_idx = at_command != NULL ? 0 : 1;
+#endif
       while (true) {
         String response;
         response = ESP_SERIAL.readStringUntil('\n');
@@ -85,7 +113,11 @@ namespace LOEspAt {
 #ifdef DEBUG_ESP_AT
             if (!silent) {
               Serial.print("<x");
-              Serial.print(response);
+              Serial.print(response.c_str());
+              //Serial.print(strlen(response.c_str()));
+              //Serial.print("/");
+              //Serial.print(at_command);
+              //Serial.print(strlen(at_command));
               Serial.print("x>");
             }
 #endif          
@@ -156,12 +188,17 @@ namespace LOEspAt {
   inline bool SendAtCommand(const char* at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
 #ifdef DEBUG_ESP_AT
       if (!silent) {
-        Serial.print("<");
+        Serial.print("{");
         Serial.print(at_command);
-        Serial.print(">");
+        Serial.print("}");
       }
 #endif
-      ESP_SERIAL.println(at_command);
+      if (true) {
+        ESP_SERIAL.print(at_command);
+        ESP_SERIAL.print("\r\n");
+      } else {
+        ESP_SERIAL.println(at_command);
+      }
       return ReceiveAtResponse(at_command, response_interpreter, timeout_ms, silent);
   }
   inline bool SendAtCommand(String& at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
@@ -206,10 +243,23 @@ namespace LOEspAt {
     return false;
   }
 
-  inline bool Check() {
+  inline bool CheckAt() {
     return SendAtCommand("AT");
   }
 
+  bool InitAt() {
+#if defined(NO_AT_ECHO)    
+    SendAtCommand("ATE0");
+#else
+    SendAtCommand("ATE1");
+#endif    
+    // if (true) {
+    //   SendAtCommand("AT+CWQAP");
+    //   // no auto reconnect
+    //   SendAtCommand("AT+CWRECONNCFG=0,1");
+    // }
+    return CheckAt();
+  }
 
   //  0: ESP32 station has not started any Wi-Fi connection.
   //  1: ESP32 station has connected to an AP, but does not get an IPv4 address yet.
@@ -224,6 +274,21 @@ namespace LOEspAt {
         int state = at_response_interpreter.response.substring(9, at_response_interpreter.response.indexOf(',')).toInt();
         return state;
       }
+    }
+    return -1;
+  }
+
+  //  0: no AP
+  //  1: AP checked
+  // -1: failed to check
+  int CheckAP() {
+    AtResposeInterpreter1 at_response_interpreter(1);
+    if (SendAtCommand("AT+CWJAP?", &at_response_interpreter)) {
+      // No AP or +CWJAP:"TrevorWireless","c0:c9:e3:ac:92:f3",7,-40
+      if (at_response_interpreter.response.startsWith("+CWJAP:")) {
+        return 1;
+      }
+      return 0;
     }
     return -1;
   }
@@ -272,7 +337,10 @@ namespace LOEspAt {
   bool ConnectAP(const char* ssid, const char* password, String& ip) {
     bool connected = false;
     if (SendAtCommand(String("AT+CWJAP=\"") + ssid + String("\",\"") + password + String("\""))) {
-      connected = SendAtCommand("AT+CIPRECVMODE=1");
+      if (true) {
+        connected = CheckAP() == 1;
+      }
+      connected = connected && SendAtCommand("AT+CIPRECVMODE=1");
     }
     // if (SendAtCommand("AT")) {
     //   if (SendAtCommand(String("AT+CWJAP=\"") + ssid + String("\",\"") + password + String("\""))) {
@@ -310,12 +378,28 @@ namespace LOEspAt {
 
   int CheckForClientConnection() {
     int link_id = -1;
-    AtResposeInterpreter1 at_response_interpreter(1);
-    if (SendAtCommand("AT+CIPSTATE?", &at_response_interpreter)) {
-      if (at_response_interpreter.response.startsWith("+CIPSTATE:")) {
-        int idx = at_response_interpreter.response.indexOf(",");
-        if (idx != -1) {
-          link_id = at_response_interpreter.response.substring(10, idx).toInt();
+    if (CHECK_CLIENT_CHECK_STATUS) {
+      AtResposeInterpreter2 at_response_interpreter(1);
+      if (SendAtCommand("AT+CIPSTATUS", &at_response_interpreter)) {
+        // 1. STATUS:3
+        // 2. +CIPSTATUS:0,"TCP","192.168.0.98",38774,10201,1
+        if (at_response_interpreter.response1 == "STATUS:3") {
+          if (at_response_interpreter.response2.startsWith("+CIPSTATUS:")) {
+            int idx = at_response_interpreter.response2.indexOf(",");
+            if (idx != -1) {
+              link_id = at_response_interpreter.response2.substring(11, idx).toInt();
+            }
+          }
+        }
+      }
+    } else {  
+      AtResposeInterpreter1 at_response_interpreter(1);
+      if (SendAtCommand("AT+CIPSTATE?", &at_response_interpreter)) {
+        if (at_response_interpreter.response.startsWith("+CIPSTATE:")) {
+          int idx = at_response_interpreter.response.indexOf(",");
+          if (idx != -1) {
+            link_id = at_response_interpreter.response.substring(10, idx).toInt();
+          }
         }
       }
     }

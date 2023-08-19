@@ -29,10 +29,16 @@
   UART Serial2(8, 9, 0, 0);
   #define ESP_SERIAL Serial2
 #else
-  // can use Serial2 for STM32
-  // e.g. STM32F103: PA3 (RX2) ==> ESP TX (GPIO1) ; PA2 (TX2) ==> ESP RX (GPIO3)
-  #error unexpected board
+  // // can use Serial2 for STM32
+  // // e.g. STM32F103: PA3 (RX2) ==> ESP TX (GPIO1) ; PA2 (TX2) ==> ESP RX (GPIO3)
+  // #error unexpected board
+  #include "SoftwareSerial.h"
+  //  4 => TX; 5 => RX
+  SoftwareSerial ss(4/*2*/, 5/*3*/);
+  #define ESP_SERIAL ss
 #endif  
+
+
 
 // by default, use 115200 to communicate to ESP
 #define ESP_BAUD_RATE    115200
@@ -119,11 +125,11 @@ void loop() {
           link_id = check_link_id;
           Serial.print("*** Client connected with 'link id' ");
           Serial.println(link_id);
-          LOEspAt::SendDataToClient(link_id, "<hi there>");
+          LOEspAt::SendDataToClient(link_id, "<hi there>\n");
         }
       } else {
         if (check_link_id == -1) {
-          Serial.print("XXX client disconnected");
+          Serial.println("XXX client disconnected");
           link_id = -1;
         }
       }
@@ -138,10 +144,9 @@ void loop() {
   if (Serial.available()) {
     String msg = Serial.readStringUntil('\n');
     if (link_id != -1) {
-      msg += '\n';
-      if (LOEspAt::SendDataToClient(link_id, msg)) {
-        Serial.print("> LOCAL: ");
-        Serial.print(msg);
+      if (LOEspAt::SendDataToClient(link_id, msg + "\n")) {
+        Serial.print(">>> ");
+        Serial.println(msg);
       } else {
         Serial.println("XXX failed to forward message to client");
       }
@@ -152,7 +157,7 @@ void loop() {
   if (link_id != -1) {
     String msg;
     if (LOEspAt::ReceiveDataFromClient(link_id, msg)) {
-      Serial.print("> REMOTE: ");
+      Serial.print("<<< ");
       Serial.print(msg);
     }
   }
