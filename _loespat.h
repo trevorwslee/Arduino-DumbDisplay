@@ -1,3 +1,10 @@
+#ifndef DEF_TIMEOUT_MS
+  #define DEF_TIMEOUT_MS 10000
+#endif
+#ifndef RECEIVE_BUFFER_LEN
+  #define RECEIVE_BUFFER_LEN 128
+#endif
+
 
 // #define DEBUG_ESP_AT
 // #define FORCE_DEBUG_NO_SILENT
@@ -10,9 +17,11 @@
 #if defined(DEBUG_ACTIVE_BUFFER)
   #define ACTIVE_RECEIVE_BUFFER_LEN   64
 #else
-  #define ACTIVE_RECEIVE_BUFFER_LEN   (5 * 1025)
+  #define ACTIVE_RECEIVE_BUFFER_LEN   RECEIVE_BUFFER_LEN
 #endif
 
+
+//#define YIELD_WHEN_LOOP
 #define CHECK_STATE_FALLBACK
 #define CHECK_SERVER_FALLBACK
 #define CHECK_CLIENT_FALLBACK
@@ -87,7 +96,7 @@ namespace LOEspAt {
 
 
 
-  const long DefAtTimeout = 15000;
+  const long DefAtTimeout = DEF_TIMEOUT_MS;
   const bool DefSendReceiveDataSilent = true;
 
   class AtResposeInterpreter {
@@ -178,7 +187,35 @@ namespace LOEspAt {
       int response_idx = at_command != NULL ? 0 : 1;
 #endif
       while (true) {
+#if defined(YIELD_WHEN_LOOP)
+        String response;
+        while (true) {
+          long diff = millis() - start_ms;
+          if (diff > timeout_ms) {
+#ifdef DEBUG_ESP_AT
+            if (!silent) {
+              Serial.println("TIMEOUT4");
+            }  
+#endif
+            ok = false;
+            return false;
+          }  
+          yield();
+          if (ESP_SERIAL.available()) {
+            int c = ESP_SERIAL.read();
+            // Serial.print(c);
+            // Serial.print("[");
+            // Serial.print((char) c);
+            // Serial.print("]");
+            if (c == '\n') {
+              break;
+            }
+            response += c;
+          }
+        }
+#else
         String response = ESP_SERIAL.readStringUntil('\n');
+#endif
 #if defined(ACTIVE_RECEIVE_BUFFER_LEN)
         if (response.startsWith("+IPD,")) {
           int idx1 = response.indexOf(',', 5);
@@ -211,6 +248,12 @@ namespace LOEspAt {
                 ok = false;
                 return false;
               }  
+#if defined(YIELD_WHEN_LOOP)
+              yield();
+              if (!ESP_SERIAL.available()) {
+                continue;
+              }
+#endif
               int c = ESP_SERIAL.read();
               if (c >= 0) {
                 data += (char) c;
@@ -227,20 +270,15 @@ namespace LOEspAt {
         }
 #endif        
         int len = response.length();
-        if (true) {
-          while (len > 0) {
-            if (response.charAt(len - 1) == '\r') {
-              response = response.substring(0, len - 1);
-              len -= 1;
-            } else {
-              break;
-            }
-          }
-
-        } else {
-          if (len > 0 && response.charAt(len - 1) == '\r') {
+        while (len > 0) {
+          if (response.charAt(0) == '\r') {
+            response = response.substring(1);
+            len -= 1;
+          } else if (response.charAt(len - 1) == '\r') {
             response = response.substring(0, len - 1);
             len -= 1;
+          } else {
+            break;
           }
         }
         if (len > 0 && response.charAt(len - 1) == '\r') {
@@ -341,6 +379,9 @@ namespace LOEspAt {
       } else {
         ESP_SERIAL.println(at_command);
       }
+// #if defined(YIELD_WHEN_LOOP)
+//       delay(100);
+// #endif
       return ReceiveAtResponse(at_command, response_interpreter, timeout_ms, silent);
   }
   inline bool SendAtCommand(String& at_command, AtResposeInterpreter *response_interpreter = NULL, long timeout_ms = DefAtTimeout, bool silent = false) {
@@ -423,11 +464,12 @@ namespace LOEspAt {
 #else
     SendAtCommand("ATE1");
 #endif    
-    // if (true) {
-    //   SendAtCommand("AT+CWQAP");
-    //   // no auto reconnect
-    //   SendAtCommand("AT+CWRECONNCFG=0,1");
-    // }
+    if (false) {
+      // disconnect AP
+      SendAtCommand("AT+CWQAP");
+      // no auto reconnect
+      SendAtCommand("AT+CWRECONNCFG=0,0");
+    }
     return CheckAt();
   }
 
