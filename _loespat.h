@@ -185,7 +185,7 @@ namespace LOEspAt {
       String& data;
   };
   String ReceiveResponse;
-  bool _ReceiveAtResponse(bool check_once_only, const char* at_command, AtResposeInterpreter *response_interpreter, long timeout_ms, bool silent) {
+  bool _ReceiveAtResponse(bool for_receive_data, const char* at_command, AtResposeInterpreter *response_interpreter, long timeout_ms, bool silent) {
 #if defined(FORCE_DEBUG_NO_SILENT)
       silent = false;
 #endif
@@ -289,10 +289,21 @@ namespace LOEspAt {
             Serial.print(data.length());
             Serial.print("$");
 #endif
+            if (for_receive_data) {
+              return true;
+            }
           }
           continue;
         }
 #endif        
+        if (for_receive_data) {
+#ifdef DEBUG_ESP_AT
+          Serial.print("UNEXPECTED AT response [");
+          Serial.print(response);
+          Serial.println("]");
+#endif        
+          return false;  // not expected
+        }
         int len = response.length();
         while (len > 0) {
           if (response.charAt(0) == '\r') {
@@ -334,9 +345,9 @@ namespace LOEspAt {
             len = 0;
           }
         }
-        if (check_once_only) {
-          break;
-        }
+        // if (check_once_only) {
+        //   break;
+        // }
         if (len/*response.length()*/ == 0) {
           long diff = millis() - start_ms;
           if (diff > timeout_ms) {
