@@ -21,10 +21,12 @@
 #endif
 
 
-//#define YIELD_WHEN_LOOP
 #define CHECK_STATE_FALLBACK
 #define CHECK_SERVER_FALLBACK
 #define CHECK_CLIENT_FALLBACK
+
+#define SHARED_RECEIVE_RESPONSE
+//#define YIELD_WHEN_LOOP
 
 namespace LOEspAt {
 
@@ -62,7 +64,7 @@ namespace LOEspAt {
     }
     return true;
   }
-  void AppendDataToBeReceived(String data) {
+  void AppendDataToBeReceived(String& data) {
     int data_len = data.length();
     if ((ReceiveBufferEndIdx + data_len) <= ACTIVE_RECEIVE_BUFFER_LEN) {
       strncpy(ReceiveBuffer + ReceiveBufferEndIdx, data.c_str(), data_len);
@@ -108,6 +110,9 @@ namespace LOEspAt {
       AtResposeInterpreter1(int want_response_idx) {
         this->want_response_idx = want_response_idx;
       }
+      void reset() {
+        this->response = "";
+      }
       virtual bool intepret(int response_idx, String& response) {
         if (response_idx == want_response_idx) {
           this->response = response;
@@ -122,6 +127,10 @@ namespace LOEspAt {
     public:
       AtResposeInterpreter2(int want_response_idx) {
         this->want_response_idx = want_response_idx;
+      }
+      void reset() {
+        this->response1 = "";
+        this->response2 = "";
       }
       virtual bool intepret(int response_idx, String& response) {
         if (response_idx == want_response_idx) {
@@ -175,6 +184,7 @@ namespace LOEspAt {
       int total_len;
       String& data;
   };
+  String ReceiveResponse;
   bool _ReceiveAtResponse(bool check_once_only, const char* at_command, AtResposeInterpreter *response_interpreter, long timeout_ms, bool silent) {
 #if defined(FORCE_DEBUG_NO_SILENT)
       silent = false;
@@ -187,32 +197,34 @@ namespace LOEspAt {
       int response_idx = at_command != NULL ? 0 : 1;
 #endif
       while (true) {
-#if defined(YIELD_WHEN_LOOP)
-        String response;
+#if defined(SHARED_RECEIVE_RESPONSE)
+        ReceiveResponse = "";
         while (true) {
           long diff = millis() - start_ms;
           if (diff > timeout_ms) {
 #ifdef DEBUG_ESP_AT
             if (!silent) {
-              Serial.println("TIMEOUT4");
+              Serial.println("TIMEOUT_READ");
             }  
 #endif
             ok = false;
             return false;
           }  
+#if defined(YIELD_WHEN_LOOP)
           yield();
+#endif
           if (ESP_SERIAL.available()) {
-            int c = ESP_SERIAL.read();
-            // Serial.print(c);
+            char c = ESP_SERIAL.read();
             // Serial.print("[");
-            // Serial.print((char) c);
+            // Serial.print(c);
             // Serial.print("]");
             if (c == '\n') {
               break;
             }
-            response += c;
+            ReceiveResponse += c;
           }
         }
+        String& response = ReceiveResponse;
 #else
         String response = ESP_SERIAL.readStringUntil('\n');
 #endif
@@ -229,20 +241,32 @@ namespace LOEspAt {
           Serial.print(idx2);
           Serial.print(".");
 #endif
-          String data = response.substring(idx2 + 1) + "\n"; 
+#if defined(SHARED_RECEIVE_RESPONSE)
+          int len = -1;  
           if (idx1 != -1 && idx2 != -1) {
+            len = response.substring(idx1 + 1, idx2).toInt();
+            //String data = response.substring(idx2 + 1) + "\n"; 
+            String& data = response;
+            data.remove(0, idx2 + 1);
+            data += "\n";
+#else
+          if (idx1 != -1 && idx2 != -1) {
+            String data = response.substring(idx2 + 1) + "\n"; 
             int len = response.substring(idx1 + 1, idx2).toInt();
+#endif
 #ifdef DEBUG_ESP_AT
             Serial.print("(");
             Serial.print(len);
             Serial.print("):");
+            Serial.print(data);
+            Serial.print(":");
 #endif
             while ((len - data.length()) > 0) {
               long diff = millis() - start_ms;
               if (diff > timeout_ms) {
 #ifdef DEBUG_ESP_AT
                 if (!silent) {
-                  Serial.println("TIMEOUT3");
+                  Serial.println("TIMEOUT_RECV");
                 }  
 #endif
                 ok = false;
@@ -260,31 +284,39 @@ namespace LOEspAt {
               }
             }
             AppendDataToBeReceived(data);
-          }
 #ifdef DEBUG_ESP_AT
-          Serial.print("=");
-          Serial.print(data.length());
-          Serial.print("$");
+            Serial.print("=");
+            Serial.print(data.length());
+            Serial.print("$");
 #endif
+          }
           continue;
         }
 #endif        
         int len = response.length();
         while (len > 0) {
           if (response.charAt(0) == '\r') {
+#if defined(SHARED_RECEIVE_RESPONSE)
+            response.remove(0, 1);
+#else
             response = response.substring(1);
+#endif            
             len -= 1;
           } else if (response.charAt(len - 1) == '\r') {
+#if defined(SHARED_RECEIVE_RESPONSE)
+            response.remove(len - 1, 1);
+#else
             response = response.substring(0, len - 1);
+#endif
             len -= 1;
           } else {
             break;
           }
         }
-        if (len > 0 && response.charAt(len - 1) == '\r') {
-          response = response.substring(0, len - 1);
-          len -= 1;
-        }
+        // if (len > 0 && response.charAt(len - 1) == '\r') {
+        //   response = response.substring(0, len - 1);
+        //   len -= 1;
+        // }
         if (true) {
           if (response_idx == 0 && len > 0 && (len < 2 || strcmp(response.c_str(), at_command) != 0/*!response.startsWith("AT")*/)) {
 #ifdef DEBUG_ESP_AT
@@ -310,7 +342,7 @@ namespace LOEspAt {
           if (diff > timeout_ms) {
 #ifdef DEBUG_ESP_AT
             if (!silent) {
-              Serial.println("TIMEOUT1");
+              Serial.println("TIMEOUT_1");
             }  
 #endif
             ok = false;
@@ -345,7 +377,7 @@ namespace LOEspAt {
         if (diff_ms > timeout_ms) {
 #ifdef DEBUG_ESP_AT
           if (!silent) {
-            Serial.println("TIMEOUT2");
+            Serial.println("TIMEOUT");
           }  
 #endif
           ok = false;
@@ -473,11 +505,21 @@ namespace LOEspAt {
     return CheckAt();
   }
 
+#if defined(SHARED_RECEIVE_RESPONSE)
+    AtResposeInterpreter1 AtResponseInterpreter1(1);
+    AtResposeInterpreter2 AtResponseInterpreter2(1);
+#endif
+
   //  0: no AP
   //  1: AP checked
   // -1: failed to check
   int CheckAP() {
+#if defined(SHARED_RECEIVE_RESPONSE)
+    AtResposeInterpreter1& at_response_interpreter = AtResponseInterpreter1;
+    at_response_interpreter.reset();
+#else
     AtResposeInterpreter1 at_response_interpreter(1);
+#endif    
     if (SendAtCommand("AT+CWJAP?", &at_response_interpreter)) {
       // No AP or +CWJAP:"TrevorWireless","c0:c9:e3:ac:92:f3",7,-40
       if (at_response_interpreter.response.startsWith("+CWJAP:")) {
@@ -496,7 +538,12 @@ namespace LOEspAt {
   //  4: ESP32 station is in Wi-Fi disconnected state.
   // -1: filed to check
   int CheckState() {
+#if defined(SHARED_RECEIVE_RESPONSE)
+    AtResposeInterpreter1& at_response_interpreter = AtResponseInterpreter1;
+    at_response_interpreter.reset();
+#else
     AtResposeInterpreter1 at_response_interpreter(1);
+#endif    
     if (SendAtCommand("AT+CWSTATE?", &at_response_interpreter)) {
       if (at_response_interpreter.response.startsWith("+CWSTATE:")) {
         int state = at_response_interpreter.response.substring(9, at_response_interpreter.response.indexOf(',')).toInt();
@@ -521,7 +568,12 @@ namespace LOEspAt {
   //  1: running
   // -1: filed to check
   int CheckServerState() {
+#if defined(SHARED_RECEIVE_RESPONSE)
+    AtResposeInterpreter1& at_response_interpreter = AtResponseInterpreter1;
+    at_response_interpreter.reset();
+#else
     AtResposeInterpreter1 at_response_interpreter(1);
+#endif    
     if (SendAtCommand("AT+CIPSERVER?", &at_response_interpreter)) {
       if (at_response_interpreter.response.startsWith("+CIPSERVER:")) {
         int state = at_response_interpreter.response.substring(11, at_response_interpreter.response.indexOf(',')).toInt();
@@ -577,7 +629,12 @@ namespace LOEspAt {
     //   }
     // }
     if (connected) {
+#if defined(SHARED_RECEIVE_RESPONSE)
+      AtResposeInterpreter1& at_response_interpreter = AtResponseInterpreter1;
+      at_response_interpreter.reset();
+#else
       AtResposeInterpreter1 at_response_interpreter(1);
+#endif      
       if (SendAtCommand("AT+CIPSTA?", &at_response_interpreter)) {
         int idx1 = at_response_interpreter.response.indexOf(":ip:\"");
         int idx2 = at_response_interpreter.response.lastIndexOf("\"");
@@ -607,7 +664,12 @@ namespace LOEspAt {
 
   int CheckForClientConnection() {
     int link_id = -1;
+#if defined(SHARED_RECEIVE_RESPONSE)
+    AtResposeInterpreter1& at_response_interpreter = AtResponseInterpreter1;
+    at_response_interpreter.reset();
+#else
     AtResposeInterpreter1 at_response_interpreter(1);
+#endif    
     if (SendAtCommand("AT+CIPSTATE?", &at_response_interpreter)) {
       if (at_response_interpreter.response.startsWith("+CIPSTATE:")) {
         int idx = at_response_interpreter.response.indexOf(",");
@@ -617,17 +679,22 @@ namespace LOEspAt {
       }
     } else {
 #if defined(CHECK_CLIENT_FALLBACK)
-      AtResposeInterpreter2 at_response2_interpreter(1);
-      if (SendAtCommand("AT+CIPSTATUS", &at_response2_interpreter)) {
+#if defined(SHARED_RECEIVE_RESPONSE)
+      AtResposeInterpreter2& at_response_interpreter_2 = AtResponseInterpreter2;
+      at_response_interpreter_2.reset();
+#else
+      AtResposeInterpreter2 at_response_interpreter_2(1);
+#endif      
+      if (SendAtCommand("AT+CIPSTATUS", &at_response_interpreter_2)) {
         // 1. STATUS:3
         // 2. +CIPSTATUS:0,"TCP","192.168.0.98",38774,10201,1
-        if (at_response2_interpreter.response1 == "STATUS:3") {
-          if (at_response2_interpreter.response2.startsWith("+CIPSTATUS:")) {
-            int idx = at_response2_interpreter.response2.indexOf(",");
+        if (at_response_interpreter_2.response1 == "STATUS:3") {
+          if (at_response_interpreter_2.response2.startsWith("+CIPSTATUS:")) {
+            int idx = at_response_interpreter_2.response2.indexOf(",");
 // Serial.print("***");
 // Serial.print(idx);            
             if (idx != -1) {
-              link_id = at_response2_interpreter.response2.substring(11, idx).toInt();
+              link_id = at_response_interpreter_2.response2.substring(11, idx).toInt();
             }
           }
         }
