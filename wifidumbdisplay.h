@@ -3,13 +3,14 @@
 
 #include "dumbdisplay.h"
 
-#ifdef ESP8266
-#include <ESP8266WiFi.h>
+#if defined(ESP8266)
+  #include <ESP8266WiFi.h>
 #else
-#include <WiFi.h>
+  #include <WiFi.h>
 #endif
 
 
+// after inclusion, can check DD_USING_WIFI to be sure WIFI is used
 #define DD_USING_WIFI
 
 
@@ -23,20 +24,13 @@ class DDWiFiServerIO: public DDInputOutput {
     /* - ssid: WIFI name (pass to WiFi) */
     /* - passphrase: WIFI password (pass to WiFi) */
     /* - serverPort: server port (pass to WiFiServer) */
-    /* - logToSerial: log to Serial (default will log toSerial) */
-    /* - serialBaud: Serial baud rate, if logToSerial (default is 115200) */
-    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT/*,
-                   bool logToSerial = true, unsigned long serialBaud = DD_SERIAL_BAUD*/):
-                   DDInputOutput(serialBaud, false, false),
+    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT): DDInputOutput(DD_SERIAL_BAUD, false, false),
                    server(serverPort) {
       this->ssid = ssid;
       this->password = passphrase;
       this->port = serverPort;
-      this->logToSerial = logToSerial;
-      // if (logToSerial) {
-      //   Serial.begin(serialBaud);
-      // }
-      Serial.begin(DD_SERIAL_BAUD);
+      //this->logToSerial = logToSerial;
+      //Serial.begin(DD_SERIAL_BAUD);
     }
     bool available() {
       return client.available() > 0;
@@ -57,12 +51,39 @@ class DDWiFiServerIO: public DDInputOutput {
       client.write(buf, size);
     }
     bool preConnect(bool firstCall) {
-      if (true) {  // since 2023-06-05
+      if (firstCall) {  // since 2023-08-10
+        if (!Serial) Serial.begin(DD_SERIAL_BAUD);
+      }
+      if (true) {  // since 2023-08-16
+        if (firstCall && !client.connected()) {
+          connectionState = '0';
+        }
+        checkConnection();
+        return connectionState == 'C';
+      } else if (true) {  // since 2023-08-15
+        if (firstCall && !client.connected()) {
+          Serial.println("setup WIFI");
+          WiFi.disconnect();
+          WiFi.begin(ssid, password);
+          connectionState = ' ';
+          stateMillis = 0;
+        }
+        checkConnection();
+        return connectionState == 'C';
+      } else if (true) {  // since 2023-06-05
         if (firstCall) {
-          if (true) {  // since 2023-06-03
+          if (true) {
+            if (client.connected()) {
+              Serial.println("stop client for new setup");
+              client.stop();
+              delay(2000);  // wait a bit
+            }
+            WiFi.disconnect();
+          } else  if (true) {  // since 2023-06-03
             client.stop();
             WiFi.disconnect();
           }
+          Serial.println("setup WIFI");
           WiFi.begin(ssid, password);
           connectionState = ' ';
           stateMillis = 0;
@@ -70,7 +91,7 @@ class DDWiFiServerIO: public DDInputOutput {
         //  delay(200);
         checkConnection();
         return connectionState == 'C';
-    } else {  
+      } else {  
         if (firstCall) {
           // if (logToSerial)
           //   Serial.begin(serialBaud);
@@ -86,16 +107,14 @@ class DDWiFiServerIO: public DDInputOutput {
           delay(200);
         }
         return connectionState == 'C';
-    }
+      }
     }
     void flush() {
       client.flush();
     }
     void validConnection() {
 #ifdef LOG_DDWIFI_STATUS
-      if (logToSerial) {
-        Serial.println(" ... validate ...");
-      }
+      Serial.println(" ... validate ...");
 #endif      
       checkConnection();
     }
@@ -178,17 +197,20 @@ class DDWiFiServerIO: public DDInputOutput {
 //       return true;
 //     }
     void checkConnection() {
-      uint8_t status = WiFi.status();
-      if (connectionState == 'C') {
-        if (status != WL_CONNECTED) {
-          if (logToSerial) Serial.println("lost WiFi ... try bind WiFi again ...");
-          client.stop();
+      if (connectionState == '0' || connectionState == 'C') {  // since 2023-08-16 added check connectionState == '0'
+        if (connectionState == '0' || WiFi.status() != WL_CONNECTED) {
+          if (connectionState == 'C') {
+            Serial.println("lost WiFi ... try bind WiFi again ...");
+            client.stop();
+          }
           WiFi.disconnect();
+          Serial.println("setup WIFI");
+          WiFi.begin(ssid, password);
           connectionState = ' ';
           stateMillis = 0;
         } else if (!client.connected()) {
           client.stop();
-          if (logToSerial) Serial.println("lost connection ... try bind connect again ...");
+          Serial.println("lost connection ... try bind again ...");
           connectionState = 'W';
           stateMillis = 0;
         } else {
@@ -196,31 +218,28 @@ class DDWiFiServerIO: public DDInputOutput {
         }
       }
       if (connectionState == ' ') {
-        //uint8_t status = WiFi.status();
+        uint8_t status = WiFi.status();
         if (status == WL_CONNECTED) {
-          if (logToSerial) {
-            Serial.print("binded WIFI ");
-            Serial.println(ssid);
-          }
+          Serial.print("binded WIFI ");
+          Serial.println(ssid);
           server.begin();
           connectionState = 'W';
           stateMillis = 0;
         } else {
           long diff = millis() - stateMillis;
           if (stateMillis == 0 || diff > 1000) {
-            if (logToSerial) {
-              Serial.print("binding WIFI ");
-              Serial.print(ssid);
+            Serial.print("binding WIFI ");
+            Serial.print(ssid);
 #ifdef LOG_DDWIFI_STATUS
-              Serial.print(" ... ");
-              Serial.print(status);
+            Serial.print(" ... ");
+            Serial.print(status);
 #endif
-              Serial.println(" ...");
-            }
+            Serial.println(" ...");
             stateMillis = millis();
           }
         }
       } else {
+        uint8_t status = WiFi.status();
         if (status != WL_CONNECTED) {
           connectionState = ' ';
           stateMillis = 0;
@@ -229,18 +248,16 @@ class DDWiFiServerIO: public DDInputOutput {
           if (diff >= 1000) {
             IPAddress localIP = WiFi.localIP();
             uint32_t localIPValue = localIP;
-            if (logToSerial) {
 #ifdef LOG_DDWIFI_STATUS
-              Serial.print("via WIFI ... ");
-              Serial.print(WiFi.status());
-              Serial.print(" ... ");
+            Serial.print("via WIFI ... ");
+            Serial.print(WiFi.status());
+            Serial.print(" ... ");
 #endif
-              Serial.print("listening on ");
-              Serial.print(localIP);
-              Serial.print(":");
-              Serial.print(port);
-              Serial.println(" ...");
-            }
+            Serial.print("listening on ");
+            Serial.print(localIP);
+            Serial.print(":");
+            Serial.print(port);
+            Serial.println(" ...");
             // if (true) {
             //   // testing for ESP
             //   Serial.println("*** sleep ...");
@@ -255,7 +272,7 @@ class DDWiFiServerIO: public DDInputOutput {
             client = cli;
             connectionState = 'C';
             stateMillis = 0;
-            if (logToSerial) Serial.println("client conntected");
+            Serial.println("client connected");
           }
         }  
       }
@@ -264,9 +281,9 @@ class DDWiFiServerIO: public DDInputOutput {
     const char* ssid;
     const char *password;
     int port;
-    bool logToSerial;
-   char connectionState;
-   long stateMillis;
+    //bool logToSerial;
+    char connectionState;
+    long stateMillis;
     WiFiServer server;
     WiFiClient client;
 };

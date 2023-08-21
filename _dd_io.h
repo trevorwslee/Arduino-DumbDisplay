@@ -48,9 +48,19 @@ class DDInputOutput {
     virtual void validConnection() {
     }
     virtual bool preConnect(bool firstCall) {
-      if (setupForSerial) {
-        if (_The_DD_Serial != NULL) _The_DD_Serial->begin(serialBaud);
-        //Serial.begin(serialBaud);
+      if (true) {
+        if (firstCall) {
+          // since 2023-08-13
+          if (setupForSerial) {
+            if (_The_DD_Serial != NULL) _The_DD_Serial->begin(serialBaud);
+            //Serial.begin(serialBaud);
+          }
+        }
+      } else {
+        if (setupForSerial) {
+          if (_The_DD_Serial != NULL) _The_DD_Serial->begin(serialBaud);
+          //Serial.begin(serialBaud);
+        }
       }
       return true;
     }

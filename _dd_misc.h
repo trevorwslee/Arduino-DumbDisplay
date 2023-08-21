@@ -1,6 +1,46 @@
 #ifndef _dd_misc_h
 #define _dd_misc_h
 
+class DrawTextDDDebugInterface: public DDDebugInterface {
+  // public:
+  //   OledDDDebugInterface(Adafruit_SSD1306& display, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1, */, bool indicateSendCommand = false): display(display) {
+  //     this->x = x;
+  //     this->y = y;
+  //     //this->fontSize = fontSize;
+  //     //this->font = font;
+  //     this->indicateSendCommand = indicateSendCommand;
+  //   }
+  public:
+    virtual void logConnectionState(DDDebugConnectionState connectionState) {
+      const char* state = NULL;
+      switch (connectionState) {
+        case DDDebugConnectionState::DEBUG_NOT_CONNECTED:
+          state = "NCed";
+          break;
+        case DDDebugConnectionState::DEBUG_CONNECTING:
+          state = "Cing ";
+          break;
+        case DDDebugConnectionState::DEBUG_CONNECTED:
+          state = "Ced  ";
+          break;
+        case DDDebugConnectionState::DEBUG_RECONNECTING:
+          state = "RCing";
+          break;
+        case DDDebugConnectionState::DEBUG_RECONNECTED:
+          state = "RCed ";
+          break;
+      }
+      if (state != NULL) {
+        drawText(state, false);
+      }
+    }
+    virtual void logError(const String& errMsg) {
+        drawText("Err", true);
+    }
+  protected:  
+    virtual void drawText(const char* text, bool isError) {
+    }
+};
 class ToSerialDDDebugInterface: public DDDebugInterface {
   public:
     virtual void logConnectionState(DDDebugConnectionState connectionState) {

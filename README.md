@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.8-r3)
+# DumbDisplay Arduino Library (v0.9.8-r4)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -1821,10 +1821,10 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 
 # DumbDisplay App Hints
 
-* Many command parameters sent will be encoded for compression, and will look a bit cryptic (when shown on DumbDisplay app terminal view). If you want to disable parameter encoding, define `DD_DISABLE_PARAM_ENCODEING` before including `dumbdisplay.h`, like
+* Many command parameters sent will be encoded for compression, and will look a bit cryptic (when shown on DumbDisplay app terminal view). If you want to disable parameter encoding, define `DD_DISABLE_PARAM_ENCODING` before including `dumbdisplay.h`, like
 
   ```
-  #define DD_DISABLE_PARAM_ENCODEING
+  #define DD_DISABLE_PARAM_ENCODING
   #include "dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDInputOutput());
   ```

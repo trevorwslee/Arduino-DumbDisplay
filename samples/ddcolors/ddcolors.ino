@@ -1,5 +1,5 @@
 
-//#define DD_DISABLE_PARAM_ENCODEING
+//#define DD_DISABLE_PARAM_ENCODING
 
 
 #if defined(BLUETOOTH)
@@ -113,7 +113,7 @@ void setup() {
   height = width;
 
   graphicalLayer = dumbdisplay.createGraphicalLayer(width, height);
-#if defined(DD_DISABLE_PARAM_ENCODEING)
+#if defined(DD_DISABLE_PARAM_ENCODING)
   graphicalLayer->border(5, DD_COLOR_black, "round");
 #else
   graphicalLayer->border(5, DD_COLOR_blue, "round");
