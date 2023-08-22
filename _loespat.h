@@ -9,11 +9,10 @@
 // #define DEBUG_ESP_AT
 // #define FORCE_DEBUG_NO_SILENT
 
-// NO echo at seems cause more unexpected AT responses, and therefore more error-prone
-//#define NO_AT_ECHO
 
 //#define DEBUG_ACTIVE_BUFFER         true
 
+// *** if ACTIVE_RECEIVE_BUFFER_LEN is defined, assume a single client
 #if defined(DEBUG_ACTIVE_BUFFER)
   #define ACTIVE_RECEIVE_BUFFER_LEN   64
 #else
@@ -25,7 +24,11 @@
 #define CHECK_SERVER_FALLBACK
 #define CHECK_CLIENT_FALLBACK
 
+// *** if SHARED_RECEIVE_RESPONSE, assume called in serial
 #define SHARED_RECEIVE_RESPONSE
+
+// NO echo AT seems cause more unexpected AT responses, and therefore more error-prone
+//#define NO_AT_ECHO
 //#define YIELD_WHEN_LOOP
 
 namespace LOEspAt {
@@ -665,7 +668,7 @@ namespace LOEspAt {
 
   bool StartServer(int port) {
     bool started = false;
-    if (SendAtCommand("AT+CIPMUX=1")) {
+    if (SendAtCommand("AT+CIPMUX=1")) {  // *** must accept multiple connections to start a server; and as a result, cannot use pass through send data mode (AT+CIPMODE=1) 
       if (SendAtCommand(String("AT+CIPSERVER=1,") + String(port))) {
         started = true;
       }
