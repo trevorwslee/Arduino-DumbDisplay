@@ -1865,6 +1865,10 @@ MIT
 
 # Change History
 
+v0.9.8-r4
+  - added support for ESP board (as WIFI module using AT commands) 
+  - bug fix
+
 v0.9.8-r3
   - bug fix
 

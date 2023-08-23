@@ -17,7 +17,9 @@
 #include "dumbdisplay.h"
 
 //#define DEGUG_SHOW_STATE
+
 //#define DEBUG_ESP_AT
+//#define FORCE_DEBUG_NO_SILENT
 #include "_loespat.h"
 
 
