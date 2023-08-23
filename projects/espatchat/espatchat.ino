@@ -25,20 +25,22 @@
 
 
 #if defined(PICO_SDK_VERSION_MAJOR)
-  // Raspberry Pi Pico ... TX: 8 ==> ESP RX (GPIO3) ; RX: 9  ==> ESP TX (GPIO1)
+  // Raspberry Pi Pico
+  // . TX: 8 ==> ESP01 RX (GPIO3) ; RX: 9  ==> ESP01 TX (GPIO1)
   UART Serial2(8, 9, 0, 0);
   #define ESP_SERIAL Serial2
+#elif defined(ARDUINO_AVR_UNO)
+  // Arduino UNO
+  // 4 => TX; 5 => RX
+  #include "SoftwareSerial.h"
+  SoftwareSerial ss(4, 5);
+  #define ESP_SERIAL ss
 #else
-  // can use Serial2 for STM32
-  // e.g. STM32F103: PA3 (RX2) ==> ESP TX (GPIO1) ; PA2 (TX2) ==> ESP RX (GPIO3)
-  // STM32:PA3 RX2 => ESP32:GPIO22 TX
-  // STM32:PA2 TX2 => ESP32:GPIO19 RX
+  // STM32
+  // . STM32 PA3 (RX2) => ESP01 TX
+  // . STM32 PA2 (TX2) => ESP01 RX
   HardwareSerial Serial2(PA3, PA2);
   #define ESP_SERIAL Serial2 
-  // #include "SoftwareSerial.h"
-  // //  4 => TX; 5 => RX
-  // SoftwareSerial ss(4/*2*/, 5/*3*/);
-  // #define ESP_SERIAL ss
 #endif  
 
 

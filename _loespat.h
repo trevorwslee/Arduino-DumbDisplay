@@ -510,11 +510,12 @@ namespace LOEspAt {
 #else
     SendAtCommand("ATE1");
 #endif    
-    if (false) {
+    if (true) {
       // disconnect AP
-      SendAtCommand("AT+CWQAP");
+      //SendAtCommand("AT+CWQAP");
       // no auto reconnect
-      SendAtCommand("AT+CWRECONNCFG=0,0");
+      SendAtCommand("AT+CWAUTOCONN=0");
+      //SendAtCommand("AT+CWRECONNCFG=0,0");
     }
     return CheckAt();
   }
