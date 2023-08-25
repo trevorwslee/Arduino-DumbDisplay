@@ -41,7 +41,7 @@ class DDGenericIO: public DDInputOutput {
       //DD_SERIAL.begin(baud);
       if (firstCall) {
         DD_SERIAL_begin;
-      }
+      } 
       return true;
     }
     void flush() {
