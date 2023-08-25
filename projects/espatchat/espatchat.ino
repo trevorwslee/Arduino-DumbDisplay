@@ -24,29 +24,28 @@
 
 
 
-#if defined(PICO_SDK_VERSION_MAJOR)
-  // Raspberry Pi Pico
-  // . TX: 8 ==> ESP01 RX (GPIO3) ; RX: 9  ==> ESP01 TX (GPIO1)
-  UART Serial2(8, 9, 0, 0);
-  #define ESP_SERIAL Serial2
-#elif defined(ARDUINO_AVR_UNO)
+#if defined(ARDUINO_AVR_UNO)
   // Arduino UNO
-  // 4 => TX; 5 => RX
+  // . 4 => TX; 5 => RX
   #include "SoftwareSerial.h"
   SoftwareSerial ss(4, 5);
   #define ESP_SERIAL ss
-#else
+#elif defined(ARDUINO_ARCH_RP2040)
+  // Raspberry Pi Pico
+  // . TX: 8 ==> ESP01 RX (GPIO3) ; RX: 9 ==> ESP01 TX (GPIO1)
+  UART Serial2(8, 9, 0, 0);
+  #define ESP_SERIAL Serial2
+#elif defined(ARDUINO_ARCH_STM32)
   // STM32
   // . STM32 PA3 (RX2) => ESP01 TX
   // . STM32 PA2 (TX2) => ESP01 RX
   HardwareSerial Serial2(PA3, PA2);
   #define ESP_SERIAL Serial2 
+#else
+  #error "Unsupported board"
 #endif  
 
 
-
-// by default, use 115200 to communicate to ESP
-#define ESP_BAUD_RATE    115200
 
 
 //#define DEBUG_ESP_AT
@@ -55,7 +54,16 @@
 
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
-  ESP_SERIAL.begin(ESP_BAUD_RATE);
+  ESP_SERIAL.begin(115200);
+
+
+  Serial.println("*** initializing ***");
+
+#if defined(ARDUINO_AVR_UNO)  
+  LOEspAt::SetBaudRate(14400);
+  ESP_SERIAL.begin(14400);
+#endif
+
   LOEspAt::InitAt();
   Serial.println("*** ready ***");
 }

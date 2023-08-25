@@ -35,8 +35,8 @@ namespace LOEspAt {
 
 #if defined(ACTIVE_RECEIVE_BUFFER_LEN)
   char ReceiveBuffer[ACTIVE_RECEIVE_BUFFER_LEN + 1];
-  int ReceiveBufferStartIdx = 0;
-  int ReceiveBufferEndIdx= 0;
+  uint16_t ReceiveBufferStartIdx = 0;
+  uint16_t ReceiveBufferEndIdx= 0;
   void _Concat(String& data, char* p, int len) {
     char c = *(p + len);
     *(p + len) = 0;
@@ -520,6 +520,17 @@ namespace LOEspAt {
     return CheckAt();
   }
 
+  // IMPORTANT: afterward, please set baud rate of ESP_SERIAL
+  void SetBaudRate(uint32_t baud_rate) {
+    if (true) {
+      String at_command = String("AT+UART_CUR=") + String(baud_rate) + String(",8,1,0,0");
+      ESP_SERIAL.print(at_command);
+      ESP_SERIAL.print("\r\n");
+    } else {
+      SendAtCommand(String("AT+UART_CUR=") + String(baud_rate) + String(",8,1,0,0"));
+    }
+  }
+
 #if defined(SHARED_RECEIVE_RESPONSE)
     AtResposeInterpreter1 AtResponseInterpreter1(1);
     AtResposeInterpreter2 AtResponseInterpreter2(1);
@@ -667,7 +678,7 @@ namespace LOEspAt {
     return SendAtCommand("AT+CWQAP");
   }
 
-  bool StartServer(int port) {
+  bool StartServer(uint16_t port) {
     bool started = false;
     if (SendAtCommand("AT+CIPMUX=1")) {  // *** must accept multiple connections to start a server; and as a result, cannot use pass through send data mode (AT+CIPMODE=1) 
       if (SendAtCommand(String("AT+CIPSERVER=1,") + String(port))) {
