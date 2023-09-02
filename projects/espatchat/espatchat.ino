@@ -28,8 +28,8 @@
   // Arduino UNO
   // . 4 => TX; 5 => RX
   #include "SoftwareSerial.h"
-  SoftwareSerial ss(4, 5);
-  #define ESP_SERIAL ss
+  SoftwareSerial SS(4, 5);
+  #define ESP_SERIAL SS
 #elif defined(ARDUINO_ARCH_RP2040)
   // Raspberry Pi Pico
   // . TX: 8 ==> ESP01 RX (GPIO3) ; RX: 9 ==> ESP01 TX (GPIO1)
@@ -40,7 +40,7 @@
   // . STM32 PA3 (RX2) => ESP01 TX
   // . STM32 PA2 (TX2) => ESP01 RX
   HardwareSerial Serial2(PA3, PA2);
-  #define ESP_SERIAL Serial2 
+  #define ESP_SERIAL serial2 
 #else
   #error "Unsupported board"
 #endif  
@@ -60,6 +60,7 @@ void setup() {
   Serial.println("*** initializing ***");
 
 #if defined(ARDUINO_AVR_UNO)  
+  // adjust the baud rate, temporarily, between Arduino UNO and ESP01
   LOEspAt::SetBaudRate(14400);
   ESP_SERIAL.begin(14400);
 #endif

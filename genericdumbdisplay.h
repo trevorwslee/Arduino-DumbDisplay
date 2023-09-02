@@ -1,8 +1,8 @@
 #ifndef genericdumbdisplay_h
 #define genericdumbdisplay_h
 
-#if !defined(DD_SERIAL) || !defined(DD_SERIAL_begin)
-  #error Must define the macro DD_SERIAL and DD_SERIAL_begin (a function call or a code block) \
+#if !defined(DD_SERIAL)
+  #error Must define the macro DD_SERIAL and optional DD_SERIAL_begin (a function call or a code block) \
     *** \
     e.g. STM32F103: PA3 (RX2) ==> TX; PA2 (TX2) ==> RX \
     #define DD_SERIAL Serial2 \
@@ -18,6 +18,9 @@
 class DDGenericIO: public DDInputOutput {
   public:
     DDGenericIO(bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, enableSerial, enableSerial) {
+    }
+    const char* getWhat() {
+      return "GENERIC";
     }
     bool available() {
       return DD_SERIAL.available();
@@ -38,9 +41,13 @@ class DDGenericIO: public DDInputOutput {
       DD_SERIAL.write(buf, size); 
     }
     bool preConnect(bool firstCall) {
-      //DD_SERIAL.begin(baud);
+      DDInputOutput::preConnect(firstCall);
       if (firstCall) {
+#if defined(DD_SERIAL_begin)        
         DD_SERIAL_begin;
+#else
+        DD_SERIAL.begin(115200);
+#endif  
       } 
       return true;
     }

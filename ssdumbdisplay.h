@@ -19,6 +19,9 @@ class DDSoftwareSerialIO: public DDInputOutput {
       this->baud = baud;
       this->pSS = pSS;
     }
+    const char* getWhat() {
+      return "SS";
+    }
     bool available() {
       return pSS->available();
     }
@@ -39,10 +42,13 @@ class DDSoftwareSerialIO: public DDInputOutput {
     }
     bool preConnect(bool firstCall) {
       DDInputOutput::preConnect(firstCall);
-      if (!setupForSerial) {
-        Serial.begin(serialBaud);
+      // if (!setupForSerial) {
+      //   Serial.begin(serialBaud);
+      // }
+      if (firstCall) {
+        pSS->begin(baud);
       }
-      pSS->begin(baud/*DUMBDISPLAY_BAUD*/);
+      //pSS->begin(baud/*DUMBDISPLAY_BAUD*/);
       return true;
     }
     void flush() {

@@ -54,6 +54,9 @@ class DDBLESerialIO: public DDInputOutput {
       //   Serial.begin(serialBaud);
       // }
     }
+    const char* getWhat() {
+      return "ESP32BLE";
+    }
     bool available() {
       return pCallbacks->available();
     }

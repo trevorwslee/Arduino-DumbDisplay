@@ -208,12 +208,25 @@ class IOProxy {
 #endif
       this->reconnecting = false;
     }
+    const char* getWhat() {
+      return pIO->getWhat();
+    }
     bool available();
-    const String& get();
-    void clear();
-    void print(const String &s);
-    void print(const char *p);
-    void write(uint8_t b);
+    inline const String& get() {
+        return data;
+    }
+    inline void clear() {
+      data = "";
+    }
+    inline void print(const String &s) {
+      pIO->print(s);
+    }
+    inline void print(const char *p) {
+      pIO->print(p);
+    }
+    inline void write(uint8_t b) {
+      pIO->write(b);
+    }
     void keepAlive();
     void validConnection();
     void setReconnectRCId(const String& rcId) {
@@ -266,22 +279,22 @@ bool IOProxy::available() {
   }
   return done;
 }
-const String& IOProxy::get() {
-  return data;
-}
-void IOProxy::clear() {
-  //data.remove(0, data.length());
-  data = "";
-}
-void IOProxy::print(const String &s) {
-  pIO->print(s);
-}
-void IOProxy::print(const char *p) {
-  pIO->print(p);
-}
-void IOProxy::write(uint8_t b) {
-  pIO->write(b);
-}
+// const String& IOProxy::get() {
+//   return data;
+// }
+// void IOProxy::clear() {
+//   //data.remove(0, data.length());
+//   data = "";
+// }
+// void IOProxy::print(const String &s) {
+//   pIO->print(s);
+// }
+// void IOProxy::print(const char *p) {
+//   pIO->print(p);
+// }
+// void IOProxy::write(uint8_t b) {
+//   pIO->write(b);
+// }
 void IOProxy::keepAlive() {
 #if defined (SHOW_KEEP_ALIVE) || defined(DEBUG_RECONNECT_WITH_COMMENT)
   this->print("// KEEP ALIVE\n");
@@ -571,7 +584,17 @@ bool __Connect(/*bool calledPassive = false*/) {
         }
         _C_state.pIOProxy->print("ddhello\n");
         if (_C_state.pBUSerialIOProxy != NULL) {
+#if defined(DD_EXPERIMENTAL)
+          _C_state.pBUSerialIOProxy->print("ddhello");
+          const char* viaWhat = _C_state.pIOProxy->getWhat();
+          if (viaWhat != NULL) {
+            _C_state.pBUSerialIOProxy->print("__via:");
+            _C_state.pBUSerialIOProxy->print(viaWhat);
+          }
+          _C_state.pBUSerialIOProxy->print("\n");
+#else
           _C_state.pBUSerialIOProxy->print("ddhello\n");
+#endif
         }
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:ddhello");

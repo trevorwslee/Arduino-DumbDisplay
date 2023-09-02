@@ -104,10 +104,10 @@ The app is itself a USB serial monitor, and certainly can also accept DumbDispla
 * SoftwareSerial (e.g. Bluetooth by HC-05 / HC-06; even HC-08)
 * BluetoothSerial (for ESP32)
 * Bluetooth LE (for ESP32, ESP32C3 and ESP32S3)
-* WIFI (e.g. ESP01, ESP8266, ESP32 and PicoW)
+* WIFI (e.g. ESP01, ESP8266 and ESP32)
 * Serial (USB connected via OTG adapter)
 * Serial <-> WIFI via the simple included tool -- [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge)
-* Serial2 (hardware serial, like for Raspberry Pi Pico)
+* Serial2 (hardware serial, like for Arduino Mega / STM32)
 
 Notes:
 * Out of so many microcontroller boards, I have only tested DumbDisplay with the microcontroller boards that I have access to. Nevertheless, I am hopeful that using Serial for other microcontroller boards should work just fine [in general].
@@ -199,28 +199,28 @@ Here is the list of all connection IO objects that you can use:
     - in this example, 2 and 3 are the pins used by `SoftwareSerial`
     - the default baud rate is 115200, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially true for HC-08, which connects via BLE. 
   - you **should not** be using that `SoftwareSerial` for other purposes
-* Via `Serial2` -- for STM32, connected to Bluetooth module like HC-06 -- [DDSerial2IO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_serial2_i_o.html)
+* Via `Serial2` -- for Arduino Mega / STM32, connected to Bluetooth module like HC-06 -- [DDSerial2IO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_serial2_i_o.html)
   ```
     #include "serial2dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSerial2IO(115200));
   ```
   - need to include `serial2dumbdisplay.h` -- `#include "serial2dumbdisplay.h"`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSerial2IO(115200))`
+  - e.g. for Arduino Mega2560: connect D17 (RX2) to TX of HC-06 and connect D16 (TX2) to RX of HC-06 
   - e.g. for STM32F103: connect PA3 (RX2) to TX of HC-06 and connect PA2 (TX2) to RX of HC-06
-* Via `Serial2` -- for Raspberry Pi Pico, connected to Bluetooth module like HC-06 -- [DDPicoUart1IO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_pico_uart1_i_o.html)
+* Via `UART` -- for Raspberry Pi Pico, connected to Bluetooth module like HC-06 -- [DDPicoSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_pico_uart1_i_o.html)
   ```
     #include <picodumbdisplay.h>
-    DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
+    DumbDisplay dumbdisplay(new DDPicoSerialIO(8, 9, 115200));
   ```
   - need to include `picodumbdisplay.h` -- `#include "picodumbdisplay.h"`
-  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDPicoUart1IO(115200))`
-  - **MUST** define DD_4_PICO_TX and DD_4_PICO_RX before including `picodumbdisplay.h`, like
-  ```
-    #define DD_4_PICO_TX 8
-    #define DD_4_PICO_RX 9
-    #include "picodumbdisplay.h"
-    DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
-  ```
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDPicoSerialIO(8, 9, 115200))`
+    - 8 is Pico's UART1 TX
+    - 9 is Pico's UART1 RX
+  - `UART` is basically declared like
+    ```
+    UART serial(8, 9, 0, 0)
+    ```  
 * Via **ESP32** `BluetoothSerial` -- [DDBluetoothSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_bluetooth_serial_i_o.html)
   ```
     #include "esp32dumbdisplay.h"

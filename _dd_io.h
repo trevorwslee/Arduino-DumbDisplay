@@ -15,6 +15,9 @@ class DDInputOutput {
     }
     virtual ~DDInputOutput() {
     }
+    virtual const char* getWhat() {
+      return NULL;
+    }
     virtual bool available() {
       //return Serial.available();
       return _The_DD_Serial != NULL && _The_DD_Serial->available(); 
@@ -56,12 +59,12 @@ class DDInputOutput {
             //Serial.begin(serialBaud);
           }
         }
-      } else {
+      }/* else {  since 2023-09-02, do not begin if not firstCall
         if (setupForSerial) {
           if (_The_DD_Serial != NULL) _The_DD_Serial->begin(serialBaud);
           //Serial.begin(serialBaud);
         }
-      }
+      }*/
       return true;
     }
     virtual bool canConnectPassive() {

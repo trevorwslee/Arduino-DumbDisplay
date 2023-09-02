@@ -32,6 +32,9 @@ class DDWiFiServerIO: public DDInputOutput {
       //this->logToSerial = logToSerial;
       //Serial.begin(DD_SERIAL_BAUD);
     }
+    const char* getWhat() {
+      return "WIFI";
+    }
     bool available() {
       return client.available() > 0;
     }
