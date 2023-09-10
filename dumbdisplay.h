@@ -169,7 +169,7 @@ class DDLayer: public DDObject {
     /// set whether layer transparent
     void transparent(bool transparent);
     /// set layer disabled or not; if disabled, layer will not have "feedback", and its appearance will be like disabled 
-    void disabled(bool disabled);
+    void disabled(bool disabled = true);
     /// set layer opacity percentage
     /// @param opacity 0 - 100
     void opacity(int opacity);
@@ -182,17 +182,11 @@ class DDLayer: public DDObject {
     void flashArea(int x, int y);
     const String& getLayerId() const { return layerId; }
     /// set explicit (and more responsive) "feedback" handler (and enable feedback)
-    /// autoFeedbackMethod:
-    /// - "" -- no auto feedback
-    /// - "f" -- flash the default way (layer + border)
-    /// - "fl" -- flash the layer
-    /// - "fa" -- flash the area where the layer is clicked
-    /// - "fas" -- flash the area (as a spot) where the layer is clicked
-    /// - "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
     /// @param handler "feedback" handler; see DDFeedbackHandler
+    /// @param autoFeedbackMethod see DDLayer::enableFeedback()
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     /// rely on getFeedback() being called
-    /// autoFeedbackMethod:
+    /// acceptable value for autoFeedbackMethod:
     /// - "" -- no auto feedback (the default)
     /// - "f" -- flash the standard way (layer + border)
     /// - "fl" -- flash the layer
@@ -205,6 +199,7 @@ class DDLayer: public DDObject {
     /// get "feedback" DDFeedback
     /// @return NULL if no pending "feedback"
     const DDFeedback* getFeedback();
+    /// for debug use
     void debugOnly(int i);
   public:
     /// @attention used internally

@@ -45,9 +45,9 @@ int ToNoteIdx(char noteName, char halfNote) {
     case 'B': noteIdx = 11; break;
   }
   if (halfNote == '#') {
-    noteName = noteIdx + 1; 
+    noteIdx = noteIdx + 1; 
   } else if (halfNote == 'b') {
-    noteName = noteIdx - 1;
+    noteIdx = noteIdx - 1;
   }
   return noteIdx;
 }
@@ -152,7 +152,7 @@ void IdleCallback(long idleForMillis, DDIdleConnectionState connectionState) {
 }
 
 
-GraphicalDDLayer* SetupKey(int octiveOffset, int noteIdx) {
+GraphicalDDLayer* SetupKey(int octaveOffset, int noteIdx) {
   int width = WIDTH - 2 * BORDER;
   int xOffset = noteIdx * WIDTH / 2;
   int height;
@@ -174,7 +174,7 @@ GraphicalDDLayer* SetupKey(int octiveOffset, int noteIdx) {
     xOffset += WIDTH / 2;
   }
   char customData[3];
-  customData[0] = '0' + octiveOffset;
+  customData[0] = '0' + octaveOffset;
   customData[1] = '0' + noteIdx;
   customData[2] = 0;
   GraphicalDDLayer* keyLayer = dumbdisplay.createGraphicalLayer(width, height);
@@ -190,7 +190,7 @@ GraphicalDDLayer* SetupKey(int octiveOffset, int noteIdx) {
       keyLayer->drawStr(2, HEIGHT - 15, "C", "blue");
     }
   }
-  int l = WIDTH + octiveOffset * 7 * WIDTH + xOffset;
+  int l = WIDTH + octaveOffset * 7 * WIDTH + xOffset;
   int t  = TOP_HEIGHT;
   int w = width + 2 * BORDER;
   int h = height + 2 * BORDER;
