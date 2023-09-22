@@ -1135,7 +1135,7 @@ class DumbDisplay {
     /// - initial position is (0, 0)
     /// @param maxStickValue the max value of the stick; e.g. 255 or 1023 (the default); min is 15
     /// @param directions "lr" or "hori": left-to-right; "tb" or "vert": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
-    ///                   use "+" combines the above like "lr+tb" to mearn both directions; "" the same as "lr+tb" 
+    ///                   use "+" combines the above like "lr+tb" to mean both directions; "" the same as "lr+tb" 
     /// @param stickLookScaleFactor the scaling factor of the stick (UI); 1 by default 
     /// @see JoystickDDLayer
     JoystickDDLayer* createJoystickLayer(int maxStickValue = 1023, const String& directions = "", float stickLookScaleFactor = 1.0);
