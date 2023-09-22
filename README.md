@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.8-r4)
+# DumbDisplay Arduino Library (v0.9.8-r5)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -1865,8 +1865,12 @@ MIT
 
 # Change History
 
+v0.9.8-r5
+  - added background color opacity support
+  - bug fix
+
 v0.9.8-r4
-  - added support for ESP board (as WIFI module using AT commands) 
+  - added support for ESP board as WIFI module using AT commands
   - bug fix
 
 v0.9.8-r3
