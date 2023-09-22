@@ -1891,8 +1891,12 @@ void DDLayer::clear() {
 // void DDLayer::backgroundColor(long color) {
 //   _sendCommand1(layerId, "bgcolor", HEX_COLOR(color));
 // }
-void DDLayer::backgroundColor(const String& color) {
-  _sendCommand1(layerId, C_bgcolor, color);
+void DDLayer::backgroundColor(const String& color, int opacity) {
+  if (opacity < 100) {
+    _sendCommand2(layerId, C_bgcolor, color, String(opacity));
+  } else {
+    _sendCommand1(layerId, C_bgcolor, color);
+  }
 }
 void DDLayer::noBackgroundColor() {
   _sendCommand0(layerId, C_nobgcolor);

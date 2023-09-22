@@ -161,7 +161,8 @@ class DDLayer: public DDObject {
     void clear();
     /// set layer background color
     /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
-    void backgroundColor(const String& color);
+    /// @param opacity background opacity (0 - 100)
+    void backgroundColor(const String& color, int opacity = 100);
     /// set no layer background color
     void noBackgroundColor();
     /// set whether layer visible (not visible means hidden)
