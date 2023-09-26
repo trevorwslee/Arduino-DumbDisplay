@@ -35,6 +35,17 @@ class DDWiFiServerIO: public DDInputOutput {
     const char* getWhat() {
       return "WIFI";
     }
+    // experimental
+    bool availableAdditionalClient(WiFiClient& additionalClient) {
+      if (client.connected()) {
+          WiFiClient cli = server.available();
+          if (cli) {
+            additionalClient = cli;
+            return true;
+          }
+      }
+      return false;
+    }
     bool available() {
       return client.available() > 0;
     }

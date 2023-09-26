@@ -1530,8 +1530,11 @@ void _HandleFeedback() {
         }
         else {
 #ifdef SUPPORT_TUNNEL
-//Serial.println("LT-[" + *pFeedback + "]");
+//Serial.println("//LT-[" + *pFeedback + "]");
           if (pFeedback->startsWith("<lt.")) {
+#if defined(DEBUG_TUNNEL_RESPONSE_C)               
+__SendComment("LT++++fb--" + *pFeedback);
+#endif
             int idx = pFeedback->indexOf('<', 4);
             //Serial.println("LT+" + String(idx));
             if (idx != -1) {
@@ -1565,7 +1568,6 @@ Serial.println("LT-command:[" + command + "]");
               DDTunnel* pTunnel = (DDTunnel*) _DDLayerArray[lid];
               if (pTunnel != NULL) {
 #ifdef DEBUG_TUNNEL_RESPONSE                
-//Serial.println(String("// ") + (final ? "F" : "."));
 Serial.println("LT++++" + data + " - final:" + String(final));
 #endif
 #ifdef DEBUG_TUNNEL_RESPONSE_C                
@@ -2620,12 +2622,12 @@ bool DDTunnel::_eof(long timeoutMillis) {
     timeoutMillis = DD_DEF_TUNNEL_TIMEOUT;
   }
   if (done) {
-#ifdef DEBUG_TUNNEL_RESPONSE
-Serial.println("_EOF: DONE");
-#endif                
-#ifdef DEBUG_TUNNEL_RESPONSE_C                
-__SendComment("_EOF: DONE");
-#endif
+// #ifdef DEBUG_TUNNEL_RESPONSE
+// Serial.println("_EOF: DONE");
+// #endif                
+// #ifdef DEBUG_TUNNEL_RESPONSE_C                
+// __SendComment("_EOF: DONE");
+// #endif
       return true;
     }
     long diff = millis() - connectMillis;

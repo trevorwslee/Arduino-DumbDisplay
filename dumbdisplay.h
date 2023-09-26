@@ -91,8 +91,11 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODING befo
 #define DD_PROGRAM_SPACE_COMPRESS_BA_0 '!'
 #define DD_COMPRESS_BA_0 '0'
 
-#define DD_TUNNEL_DEF_BUFFER_SIZE 3
-
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+  #define DD_TUNNEL_DEF_BUFFER_SIZE 2
+#else
+  #define DD_TUNNEL_DEF_BUFFER_SIZE 4
+#endif
 
 #include "_dd_serial.h"
 #include "_dd_io.h"
