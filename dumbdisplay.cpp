@@ -3409,13 +3409,14 @@ GpsServiceDDTunnel* DumbDisplay::createGpsServiceTunnel() {
   return pTunnel;
 }
 
-ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel(int scaleToWidth, int scaleToHeight) {
+ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel(int scaleToWidth, int scaleToHeight, int maxNumObjs) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
   String params;
   if (scaleToWidth > 0 && scaleToHeight > 0) {
-    params = String(scaleToWidth) + "," + String(scaleToHeight);
+    params = String(scaleToWidth) + "," + String(scaleToHeight) + ",";
   }
+  params = params + "mno=" + String(maxNumObjs);
   ObjectDetetDemoServiceDDTunnel* pTunnel = new ObjectDetetDemoServiceDDTunnel("objectdetectdemo", tid, params, ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;

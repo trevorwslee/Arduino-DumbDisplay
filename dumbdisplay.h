@@ -1186,7 +1186,7 @@ class DumbDisplay {
     GpsServiceDDTunnel* createGpsServiceTunnel();
     /// create a "service tunnel" for getting object detection info from phone; model used is the demo model `mobilenetv1.tflite`
     /// @see ObjectDetetDemoServiceDDTunnel
-    ObjectDetetDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0);
+    ObjectDetetDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 3);
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
     /// set DD background color
