@@ -28,10 +28,17 @@ void setup() {
   web_image_tunnel = dumbdisplay.createImageDownloadTunnel("", "downloaded.png");
 
   // create a tunnel for object detection demo via TensorFlow Lite running on phone side
-  object_detect_tunnel = dumbdisplay.createObjectDetectDemoServiceTunnel();
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+  int maxNumObjs = 1;
+#else
+  int maxNumObjs = 3;
+#endif
+  object_detect_tunnel = dumbdisplay.createObjectDetectDemoServiceTunnel(0, 0, maxNumObjs);
 }
 
-const char* getDownloadImageURL() {
+inline const char* getDownloadImageURL() {
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+#else
   // randomly pick an image source URL from a list
   int idx = random(5);
   switch(idx) {
@@ -40,15 +47,16 @@ const char* getDownloadImageURL() {
     case 2: return "https://picsum.photos/640/480";
     case 3: return "https://loremflickr.com/640/480";
   }
+#endif
   return "https://placedog.net/640/480?r";
 }
 
 void loop() {
     // set the URL to download web image ... using a bit different size so that web image will be different 
     String url = getDownloadImageURL();
-    //String url = "https://placekitten.com/640/480";
     web_image_tunnel->reconnectTo(url);
 
+    dumbdisplay.writeComment("...");
     while (true) {
       int result = web_image_tunnel->checkResult();
       if (result == 1) {
@@ -68,7 +76,7 @@ void loop() {
     graphical->backgroundColor("gray");   // set background color to gray, to indicate loaded and detecting
     graphical->enableFeedback("f") ;      // enable "auto feedback" 
     bool detected = false;
-    while (true) {                        // loop and wait for object detection result, or grapical layer click for switching image
+    while (true) {                        // loop and wait for object detection result, or graphical layer click for switching image
       if (object_detect_tunnel->eof()) {
         if (!detected) {
           dumbdisplay.writeComment("Click image to switch!");

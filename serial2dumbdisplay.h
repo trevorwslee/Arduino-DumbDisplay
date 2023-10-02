@@ -13,6 +13,9 @@ class DDSerial2IO: public DDInputOutput {
                 DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->baud = baud;
     }
+    const char* getWhat() {
+      return "S2";
+    }
     bool available() {
       return Serial2.available();
     }
@@ -32,7 +35,10 @@ class DDSerial2IO: public DDInputOutput {
       Serial2.write(buf, size); 
     }
     bool preConnect(bool firstCall) {
-      Serial2.begin(baud);
+      DDInputOutput::preConnect(firstCall);
+      if (firstCall) {
+        Serial2.begin(baud);
+      }
       return true;
     }
     void flush() {

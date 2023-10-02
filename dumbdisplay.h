@@ -91,8 +91,11 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODING befo
 #define DD_PROGRAM_SPACE_COMPRESS_BA_0 '!'
 #define DD_COMPRESS_BA_0 '0'
 
-#define DD_TUNNEL_DEF_BUFFER_SIZE 3
-
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+  #define DD_TUNNEL_DEF_BUFFER_SIZE 2
+#else
+  #define DD_TUNNEL_DEF_BUFFER_SIZE 4
+#endif
 
 #include "_dd_serial.h"
 #include "_dd_io.h"
@@ -161,7 +164,8 @@ class DDLayer: public DDObject {
     void clear();
     /// set layer background color
     /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
-    void backgroundColor(const String& color);
+    /// @param opacity background opacity (0 - 100)
+    void backgroundColor(const String& color, int opacity = 100);
     /// set no layer background color
     void noBackgroundColor();
     /// set whether layer visible (not visible means hidden)
@@ -169,7 +173,7 @@ class DDLayer: public DDObject {
     /// set whether layer transparent
     void transparent(bool transparent);
     /// set layer disabled or not; if disabled, layer will not have "feedback", and its appearance will be like disabled 
-    void disabled(bool disabled);
+    void disabled(bool disabled = true);
     /// set layer opacity percentage
     /// @param opacity 0 - 100
     void opacity(int opacity);
@@ -182,17 +186,11 @@ class DDLayer: public DDObject {
     void flashArea(int x, int y);
     const String& getLayerId() const { return layerId; }
     /// set explicit (and more responsive) "feedback" handler (and enable feedback)
-    /// autoFeedbackMethod:
-    /// - "" -- no auto feedback
-    /// - "f" -- flash the default way (layer + border)
-    /// - "fl" -- flash the layer
-    /// - "fa" -- flash the area where the layer is clicked
-    /// - "fas" -- flash the area (as a spot) where the layer is clicked
-    /// - "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
     /// @param handler "feedback" handler; see DDFeedbackHandler
+    /// @param autoFeedbackMethod see DDLayer::enableFeedback()
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     /// rely on getFeedback() being called
-    /// autoFeedbackMethod:
+    /// acceptable value for autoFeedbackMethod:
     /// - "" -- no auto feedback (the default)
     /// - "f" -- flash the standard way (layer + border)
     /// - "fl" -- flash the layer
@@ -205,6 +203,7 @@ class DDLayer: public DDObject {
     /// get "feedback" DDFeedback
     /// @return NULL if no pending "feedback"
     const DDFeedback* getFeedback();
+    /// for debug use
     void debugOnly(int i);
   public:
     /// @attention used internally
@@ -1140,7 +1139,7 @@ class DumbDisplay {
     /// - initial position is (0, 0)
     /// @param maxStickValue the max value of the stick; e.g. 255 or 1023 (the default); min is 15
     /// @param directions "lr" or "hori": left-to-right; "tb" or "vert": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
-    ///                   use "+" combines the above like "lr+tb" to mearn both directions; "" the same as "lr+tb" 
+    ///                   use "+" combines the above like "lr+tb" to mean both directions; "" the same as "lr+tb" 
     /// @param stickLookScaleFactor the scaling factor of the stick (UI); 1 by default 
     /// @see JoystickDDLayer
     JoystickDDLayer* createJoystickLayer(int maxStickValue = 1023, const String& directions = "", float stickLookScaleFactor = 1.0);
@@ -1187,7 +1186,7 @@ class DumbDisplay {
     GpsServiceDDTunnel* createGpsServiceTunnel();
     /// create a "service tunnel" for getting object detection info from phone; model used is the demo model `mobilenetv1.tflite`
     /// @see ObjectDetetDemoServiceDDTunnel
-    ObjectDetetDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0);
+    ObjectDetetDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 3);
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
     /// set DD background color

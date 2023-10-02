@@ -208,12 +208,25 @@ class IOProxy {
 #endif
       this->reconnecting = false;
     }
+    const char* getWhat() {
+      return pIO->getWhat();
+    }
     bool available();
-    const String& get();
-    void clear();
-    void print(const String &s);
-    void print(const char *p);
-    void write(uint8_t b);
+    inline const String& get() {
+        return data;
+    }
+    inline void clear() {
+      data = "";
+    }
+    inline void print(const String &s) {
+      pIO->print(s);
+    }
+    inline void print(const char *p) {
+      pIO->print(p);
+    }
+    inline void write(uint8_t b) {
+      pIO->write(b);
+    }
     void keepAlive();
     void validConnection();
     void setReconnectRCId(const String& rcId) {
@@ -266,22 +279,22 @@ bool IOProxy::available() {
   }
   return done;
 }
-const String& IOProxy::get() {
-  return data;
-}
-void IOProxy::clear() {
-  //data.remove(0, data.length());
-  data = "";
-}
-void IOProxy::print(const String &s) {
-  pIO->print(s);
-}
-void IOProxy::print(const char *p) {
-  pIO->print(p);
-}
-void IOProxy::write(uint8_t b) {
-  pIO->write(b);
-}
+// const String& IOProxy::get() {
+//   return data;
+// }
+// void IOProxy::clear() {
+//   //data.remove(0, data.length());
+//   data = "";
+// }
+// void IOProxy::print(const String &s) {
+//   pIO->print(s);
+// }
+// void IOProxy::print(const char *p) {
+//   pIO->print(p);
+// }
+// void IOProxy::write(uint8_t b) {
+//   pIO->write(b);
+// }
 void IOProxy::keepAlive() {
 #if defined (SHOW_KEEP_ALIVE) || defined(DEBUG_RECONNECT_WITH_COMMENT)
   this->print("// KEEP ALIVE\n");
@@ -571,7 +584,17 @@ bool __Connect(/*bool calledPassive = false*/) {
         }
         _C_state.pIOProxy->print("ddhello\n");
         if (_C_state.pBUSerialIOProxy != NULL) {
+#if defined(DD_EXPERIMENTAL)
+          _C_state.pBUSerialIOProxy->print("ddhello");
+          const char* viaWhat = _C_state.pIOProxy->getWhat();
+          if (viaWhat != NULL) {
+            _C_state.pBUSerialIOProxy->print("__via:");
+            _C_state.pBUSerialIOProxy->print(viaWhat);
+          }
+          _C_state.pBUSerialIOProxy->print("\n");
+#else
           _C_state.pBUSerialIOProxy->print("ddhello\n");
+#endif
         }
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:ddhello");
@@ -1509,6 +1532,9 @@ void _HandleFeedback() {
 #ifdef SUPPORT_TUNNEL
 //Serial.println("LT-[" + *pFeedback + "]");
           if (pFeedback->startsWith("<lt.")) {
+#if defined(DEBUG_TUNNEL_RESPONSE_C)               
+__SendComment("LT++++fb--" + *pFeedback);
+#endif
             int idx = pFeedback->indexOf('<', 4);
             //Serial.println("LT+" + String(idx));
             if (idx != -1) {
@@ -1542,7 +1568,6 @@ Serial.println("LT-command:[" + command + "]");
               DDTunnel* pTunnel = (DDTunnel*) _DDLayerArray[lid];
               if (pTunnel != NULL) {
 #ifdef DEBUG_TUNNEL_RESPONSE                
-//Serial.println(String("// ") + (final ? "F" : "."));
 Serial.println("LT++++" + data + " - final:" + String(final));
 #endif
 #ifdef DEBUG_TUNNEL_RESPONSE_C                
@@ -1868,8 +1893,12 @@ void DDLayer::clear() {
 // void DDLayer::backgroundColor(long color) {
 //   _sendCommand1(layerId, "bgcolor", HEX_COLOR(color));
 // }
-void DDLayer::backgroundColor(const String& color) {
-  _sendCommand1(layerId, C_bgcolor, color);
+void DDLayer::backgroundColor(const String& color, int opacity) {
+  if (opacity < 100) {
+    _sendCommand2(layerId, C_bgcolor, color, String(opacity));
+  } else {
+    _sendCommand1(layerId, C_bgcolor, color);
+  }
 }
 void DDLayer::noBackgroundColor() {
   _sendCommand0(layerId, C_nobgcolor);
@@ -2593,12 +2622,12 @@ bool DDTunnel::_eof(long timeoutMillis) {
     timeoutMillis = DD_DEF_TUNNEL_TIMEOUT;
   }
   if (done) {
-#ifdef DEBUG_TUNNEL_RESPONSE
-Serial.println("_EOF: DONE");
-#endif                
-#ifdef DEBUG_TUNNEL_RESPONSE_C                
-__SendComment("_EOF: DONE");
-#endif
+// #ifdef DEBUG_TUNNEL_RESPONSE
+// Serial.println("_EOF: DONE");
+// #endif                
+// #ifdef DEBUG_TUNNEL_RESPONSE_C                
+// __SendComment("_EOF: DONE");
+// #endif
       return true;
     }
     long diff = millis() - connectMillis;
@@ -2607,6 +2636,10 @@ __SendComment("_EOF: DONE");
       Serial.println("_EOF: XXX TIMEOUT XXX");
 #endif                
       __SendComment("*** TUNNEL TIMEOUT ***", true);
+      if (true) {
+        // since 2023-10-02
+        done = true;
+      }
       return true;
     }
     return false;
@@ -3380,13 +3413,14 @@ GpsServiceDDTunnel* DumbDisplay::createGpsServiceTunnel() {
   return pTunnel;
 }
 
-ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel(int scaleToWidth, int scaleToHeight) {
+ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel(int scaleToWidth, int scaleToHeight, int maxNumObjs) {
   int tid = _AllocTid();
   String tunnelId = String(tid);
   String params;
   if (scaleToWidth > 0 && scaleToHeight > 0) {
-    params = String(scaleToWidth) + "," + String(scaleToHeight);
+    params = String(scaleToWidth) + "," + String(scaleToHeight) + ",";
   }
+  params = params + "mno=" + String(maxNumObjs);
   ObjectDetetDemoServiceDDTunnel* pTunnel = new ObjectDetetDemoServiceDDTunnel("objectdetectdemo", tid, params, ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;

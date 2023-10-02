@@ -45,6 +45,9 @@ class DDATWiFiIO: public DDInputOutput {
       this->lastValidateMs = 0;
       //this->connectionState = '0';
     }
+    const char* getWhat() {
+      return "ATWIFI";
+    }
     bool available() {
       return atCheckAvailable();
     }

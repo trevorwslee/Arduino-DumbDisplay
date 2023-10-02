@@ -35,6 +35,9 @@ class DDBluetoothSerialIO: public DDInputOutput {
       //   Serial.begin(serialBaud);
       // }
     }
+    const char* getWhat() {
+      return "ESP32BT";
+    }
     bool available() {
       return serialBT.available();
     }
