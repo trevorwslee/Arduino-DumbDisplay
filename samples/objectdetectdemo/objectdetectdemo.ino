@@ -56,6 +56,7 @@ void loop() {
     String url = getDownloadImageURL();
     web_image_tunnel->reconnectTo(url);
 
+    dumbdisplay.writeComment("...");
     while (true) {
       int result = web_image_tunnel->checkResult();
       if (result == 1) {
@@ -75,7 +76,7 @@ void loop() {
     graphical->backgroundColor("gray");   // set background color to gray, to indicate loaded and detecting
     graphical->enableFeedback("f") ;      // enable "auto feedback" 
     bool detected = false;
-    while (true) {                        // loop and wait for object detection result, or grapical layer click for switching image
+    while (true) {                        // loop and wait for object detection result, or graphical layer click for switching image
       if (object_detect_tunnel->eof()) {
         if (!detected) {
           dumbdisplay.writeComment("Click image to switch!");

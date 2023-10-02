@@ -2636,6 +2636,10 @@ bool DDTunnel::_eof(long timeoutMillis) {
       Serial.println("_EOF: XXX TIMEOUT XXX");
 #endif                
       __SendComment("*** TUNNEL TIMEOUT ***", true);
+      if (true) {
+        // since 2023-10-02
+        done = true;
+      }
       return true;
     }
     return false;
