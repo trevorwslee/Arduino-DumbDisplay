@@ -31,6 +31,15 @@
   #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
   #define I2S_PORT             I2S_NUM_0
+#elif defined(FOR_LILYGO_TWATCH_LIB)
+  // experimental
+  #define I2S_WS               0
+  #define I2S_SD               2
+  #define I2S_SCK              I2S_PIN_NO_CHANGE
+  #define I2S_SAMPLE_BIT_COUNT 16
+  #define SOUND_SAMPLE_RATE    16000
+  #define SOUND_CHANNEL_COUNT  1
+  #define I2S_PORT             I2S_NUM_0
 #else
   #define I2S_WS               25
   #define I2S_SD               33
@@ -371,8 +380,12 @@ void loop() {
 
 
 esp_err_t i2s_install() {
+  uint32_t mode = I2S_MODE_MASTER | I2S_MODE_RX;
+#if I2S_SCK == I2S_PIN_NO_CHANGE
+    mode |= I2S_MODE_PDM;
+#endif    
   const i2s_config_t i2s_config = {
-    .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
+    .mode = i2s_mode_t(mode/*I2S_MODE_MASTER | I2S_MODE_RX*/),
     .sample_rate = SOUND_SAMPLE_RATE,
     .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BIT_COUNT),
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
@@ -389,7 +402,7 @@ esp_err_t i2s_setpin() {
   const i2s_pin_config_t pin_config = {
     .bck_io_num = I2S_SCK,
     .ws_io_num = I2S_WS,   
-    .data_out_num = -1,
+    .data_out_num = I2S_PIN_NO_CHANGE/*-1*/,
     .data_in_num = I2S_SD
   };
   return i2s_set_pin(I2S_PORT, &pin_config);
