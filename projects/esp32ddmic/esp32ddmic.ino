@@ -21,6 +21,7 @@
   #define I2S_SAMPLE_BIT_COUNT 32
   #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
+  #define I2S_PORT             I2S_NUM_0
 #elif defined(FOR_LILYGO_TSIMCAM)
   // for the mic built-in to LiLyGO TSimCam
   #define I2S_WS               42
@@ -29,6 +30,7 @@
   #define I2S_SAMPLE_BIT_COUNT 16
   #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
+  #define I2S_PORT             I2S_NUM_0
 #else
   #define I2S_WS               25
   #define I2S_SD               33
@@ -36,9 +38,9 @@
   #define I2S_SAMPLE_BIT_COUNT 16
   #define SOUND_SAMPLE_RATE    8000
   #define SOUND_CHANNEL_COUNT  1
+  #define I2S_PORT             I2S_NUM_0
 #endif
 
-#define I2S_PORT  I2S_NUM_0
 
 
 
@@ -82,8 +84,8 @@ const int MaxAmplifyFactor = 20;
 const int DefAmplifyFactor = 10;
 
 
-void i2s_install();
-void i2s_setpin();
+esp_err_t i2s_install();
+esp_err_t i2s_setpin();
  
 
 DDConnectVersionTracker cvTracker;  // it is for tracking [new] DD connection established 
@@ -102,10 +104,18 @@ void setup() {
   Serial.println("SETUP MIC ...");
 
   // set up I2S
-  i2s_install();
-  i2s_setpin();
-  i2s_zero_dma_buffer(I2S_PORT);
-  i2s_start(I2S_PORT);
+  if (i2s_install() != ESP_OK) {
+    Serial.println("XXX failed to install I2S");
+  }
+  if (i2s_setpin() != ESP_OK) {
+    Serial.println("XXX failed to set I2S pins");
+  }
+  if (i2s_zero_dma_buffer(I2S_PORT) != ESP_OK) {
+    Serial.println("XXX failed to zero I2S DMA buffer");
+  }
+  if (i2s_start(I2S_PORT) != ESP_OK) {
+    Serial.println("XXX failed to start I2S");
+  }
 
   Serial.println("... DONE SETUP MIC");
 
@@ -360,7 +370,7 @@ void loop() {
 
 
 
-void i2s_install() {
+esp_err_t i2s_install() {
   const i2s_config_t i2s_config = {
     .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
     .sample_rate = SOUND_SAMPLE_RATE,
@@ -372,16 +382,16 @@ void i2s_install() {
     .dma_buf_len = I2S_DMA_BUF_LEN/*1024*/,
     .use_apll = false
   };
-  i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
+  return i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
 }
  
-void i2s_setpin() {
+esp_err_t i2s_setpin() {
   const i2s_pin_config_t pin_config = {
     .bck_io_num = I2S_SCK,
     .ws_io_num = I2S_WS,   
     .data_out_num = -1,
     .data_in_num = I2S_SD
   };
-  i2s_set_pin(I2S_PORT, &pin_config);
+  return i2s_set_pin(I2S_PORT, &pin_config);
 }
 
