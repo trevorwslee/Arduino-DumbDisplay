@@ -31,7 +31,7 @@
   #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
   #define I2S_PORT             I2S_NUM_0
-#elif defined(FOR_LILYGO_TWATCH_LIB)
+#elif defined(FOR_LILYGO_TWATCH)
   // experimental
   #define I2S_WS               0
   #define I2S_SD               2

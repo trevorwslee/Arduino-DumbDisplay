@@ -1852,10 +1852,10 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 
 Greeting from the author Trevor Lee:
 
-> Be good! Be happy!
 > Peace be with you!
 > May God bless you!
 > Jesus loves you!
+> Amazing Grace!
 
 
 # License
