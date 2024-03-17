@@ -3,7 +3,7 @@
 
 // if want Bluetooth, uncomment the following line
 // #define BLUETOOTH "ESP32BT"
-#if defined(BLUETOOTH) 
+#if defined(ESP32) && defined(BLUETOOTH) 
   #include "esp32dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true, 115200));
 #else
