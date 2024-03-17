@@ -3,7 +3,9 @@
 
 #include "dumbdisplay.h"
 
-#if defined(ESP8266)
+#if defined(ARDUINO_UNOR4_WIFI)
+  #include <WiFiS3.h>
+#elif defined(ESP8266)
   #include <ESP8266WiFi.h>
 #else
   #include <WiFi.h>

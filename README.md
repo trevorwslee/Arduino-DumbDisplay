@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.8-r5)
+# DumbDisplay Arduino Library (v0.9.8-r6)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -104,7 +104,7 @@ The app is itself a USB serial monitor, and certainly can also accept DumbDispla
 * SoftwareSerial (e.g. Bluetooth by HC-05 / HC-06; even HC-08)
 * BluetoothSerial (for ESP32)
 * Bluetooth LE (for ESP32, ESP32C3 and ESP32S3)
-* WIFI (e.g. ESP01, ESP8266 and ESP32)
+* WIFI (e.g. ESP32, ESP8266, PicoW and Arduino UNO R4 Wifi)
 * Serial (USB connected via OTG adapter)
 * Serial <-> WIFI via the simple included tool -- [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge)
 * Serial2 (hardware serial, like for Arduino Mega / STM32)
@@ -240,7 +240,7 @@ Here is the list of all connection IO objects that you can use:
     - in the sample, "ESP32BLE" is the name used by BLE
   - you **should not** be using ESP32's BLE for other purposes
   - be **warned** that `DDBLESerialIO` is slow; if classic Bluetooth is supported by microcontroller (like ESP32), choose `DDBluetoothSerialIO` instead 
-* Via WIFI as a [`WiFiServer`](https://www.arduino.cc/en/Reference/WiFi) -- for ESP01/ESP8266/ESP32/PicoW -- [DDWiFiServerIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_wi_fi_server_i_o.html)  
+* Via WIFI as a [`WiFiServer`](https://www.arduino.cc/en/Reference/WiFi) -- for ESP32 / ESP8266 / PicoW / Arduino UNO R4 Wifi -- [DDWiFiServerIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_wi_fi_server_i_o.html)  
   ```
     #include "wifidumbdisplay.h"
     const char* ssid = "wifiname";
@@ -1864,6 +1864,10 @@ MIT
 
 
 # Change History
+
+v0.9.8-r6
+  - verified support for Arduino UNO R4 WiFi
+  - bug fix
 
 v0.9.8-r5
   - added background color opacity support
