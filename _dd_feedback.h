@@ -6,7 +6,7 @@
 /// @struct DDFeedbackType
 /// @brief
 /// The enum indicating the type of "feedback". See DDFeedback
-enum DDFeedbackType { CLICK, LONGPRESS, DOUBLECLICK, MOVE };  // DOUBLECLICK needs special option for DumbDisplay
+enum DDFeedbackType { CLICK, LONGPRESS, DOUBLECLICK, MOVE, UP, DOWN };  // DOUBLECLICK needs special option for DumbDisplay
 
 /// @struct DDFeedback
 /// @brief

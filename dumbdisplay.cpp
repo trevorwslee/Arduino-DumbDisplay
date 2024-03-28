@@ -1616,6 +1616,10 @@ __SendComment("LT++++" + data + " - final:" + String(final));
           type = DOUBLECLICK;
         } else if (strcmp(token, "move") == 0) {
           type = MOVE;
+        } else if (strcmp(token, "up") == 0) {
+          type = UP;
+        } else if (strcmp(token, "down") == 0) {
+          type = DOWN;
         }
         token = strtok(NULL, ",");
       }
