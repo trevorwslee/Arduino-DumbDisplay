@@ -33,6 +33,6 @@ class DDSerial {
     }
 };
 
-extern DDSerial* _The_DD_Serial;
+//extern DDSerial* _The_DD_Serial;
 
 #endif

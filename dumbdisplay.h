@@ -10,6 +10,11 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODING befo
 
 */
 
+#ifdef DD_DISABLE_PARAM_ENCODING
+  #pragma "message ***** DD_DISABLE_PARAM_ENCODING *****"
+#endif
+
+
 
 
 #ifndef dumbdisplay_h
@@ -97,7 +102,14 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODING befo
   #define DD_TUNNEL_DEF_BUFFER_SIZE 4
 #endif
 
+
+#define DDIO_USE_DD_SERIAL
+
 #include "_dd_serial.h"
+#ifdef DDIO_USE_DD_SERIAL
+  extern DDSerial* _The_DD_Serial;
+#endif
+
 #include "_dd_io.h"
 #include "_dd_feedback.h"
 #include "_dd_colors.h"
@@ -206,10 +218,12 @@ class DDLayer: public DDObject {
     /// for debug use
     void debugOnly(int i);
   public:
+#ifndef DD_NO_FEEDBACK
     /// @attention used internally
     DDFeedbackManager* getFeedbackManager() const { return pFeedbackManager; }
     /// @attention used internally
     DDFeedbackHandler getFeedbackHandler() const { return feedbackHandler; }
+#endif    
   protected:
     DDLayer(int8_t layerId);
   public:
@@ -219,8 +233,10 @@ class DDLayer: public DDObject {
     void _enableFeedback();
   protected:
     String layerId;  
+#ifndef DD_NO_FEEDBACK
     DDFeedbackManager *pFeedbackManager;
     DDFeedbackHandler feedbackHandler;
+#endif    
 };
 
 
@@ -1038,11 +1054,11 @@ typedef void (*DDIdleCallback)(long idleForMillis, DDIdleConnectionState connect
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
 
 
+#ifndef DD_NO_DEBUG_INTERFACE
 /// @struct DDDebugConnectionState
 /// @brief
 /// See DDDebugInterface
 enum DDDebugConnectionState { DEBUG_NOT_CONNECTED, DEBUG_CONNECTING, DEBUG_CONNECTED, DEBUG_RECONNECTING, DEBUG_RECONNECTED };
-
 /// Base class for debug callback set by calling DumbDisplay::debugSetup()
 class DDDebugInterface {
   public:
@@ -1052,8 +1068,10 @@ class DDDebugInterface {
     virtual void logSendCommand(int state) {}
     virtual void logError(const String& errMsg) {}
 };
+#endif
 
 
+#ifndef DD_NO_PASSIVE_CONNECT
 /// Struct for the status values of calling DumbDisplay::connectPassive()
 struct DDConnectPassiveStatus {
   /// connection made or not -- same as the return value of DumbDisplay::connectPassive() 
@@ -1063,7 +1081,7 @@ struct DDConnectPassiveStatus {
   /// reconnecting: when connected; detected reconnecting (after lost of connection) 
   bool reconnecting;
 };
-
+#endif
 
 
 extern bool _DDDisableParamEncoding;
@@ -1079,10 +1097,14 @@ class DumbDisplay {
 #ifdef DD_DISABLE_PARAM_ENCODING
     DDDebugDisableParamEncoding();
 #endif      
-#ifndef DD_NO_SERIAL      
+#ifdef DD_NO_SERIAL      
+  #warning ***** DD_NO_SERIAL defined *****
+#else
+  #ifdef DDIO_USE_DD_SERIAL
       if (pIO->isForSerial() || pIO->isBackupBySerial()) {
         _The_DD_Serial = new DDSerial();
       }
+  #endif    
 #endif      
       initialize(pIO, sendBufferSize/*, enableDoubleClick*/);
     }
@@ -1300,32 +1322,25 @@ class DumbDisplay {
     /// like to Serial (if safe to do so); and if connected,  will log as comment to DD as well  
     void log(const String& logLine, boolean isError = false);
  public:
-    /// @brief
+ #ifndef DD_NO_PASSIVE_CONNECT
+   /// @brief
     /// make connection passively; i.e. will not block, but will require continuous calling for making connection
     /// @return connection made or not (note that even if connection lost and requires reconnecting, it is still considered connected)
     /// @since 0.9.8-r1
     bool connectPassive(DDConnectPassiveStatus* pStatus = NULL);
-    // // EXPERIMENTAL
-    // void savePassiveConnectState(DDSavedConnectPassiveState& state);
-    // // EXPERIMENTAL
-    // void restorePassiveConnectState(DDSavedConnectPassiveState& state);
-    /// EXPERIMENTAL; "master reset" to be just like uninitialized;
     /// "master reset" will:
     /// . disconnect from DD app (if connected)
     /// . delete all created layers and tunnels; hence, DO NOT use the pointers to them after "master reset"
     /// . DumbDisplay object will be just like at initial state; it will *not* be deleted
     /// @since 0.9.8-r1
     void masterReset();  
-    // /// EXPERIMENTAL; like connectPassive();
-    // /// if detected reconnecting, will "master reset", which ...
-    // /// . disconnect from DD app (if connected)
-    // /// . delete all created layers and tunnels (hence, DO NOT use the pointer to them)
-    // /// . DumbDisplay object will be just like at initial state
-    // bool connectPassiveReset();
+#endif 
   public:
     /// set debug use callback
     /// @param debugInterface a concrete implementation of DDDebugInterface 
+#ifndef DD_NO_DEBUG_INTERFACE
     void debugSetup(DDDebugInterface *debugInterface);
+#endif    
     void debugOnly(int i);
   private:
     void initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, bool enableDoubleClick*/);

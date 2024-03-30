@@ -1,6 +1,7 @@
 #ifndef _dd_misc_h
 #define _dd_misc_h
 
+#ifndef DD_NO_DEBUG_INTERFACE
 class DrawTextDDDebugInterface: public DDDebugInterface {
   // public:
   //   OledDDDebugInterface(Adafruit_SSD1306& display, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1, */, bool indicateSendCommand = false): display(display) {
@@ -101,6 +102,7 @@ class CompositDDDebugIntreface: public DDDebugInterface {
     DDDebugInterface* debug1;
     DDDebugInterface* debug2;    
 };
+#endif
 
 /// the same usage as standard delay(), but it gives DD a chance to handle "feedbacks"
 void DDDelay(unsigned long ms);

@@ -19,23 +19,39 @@ class DDInputOutput {
       return NULL;
     }
     virtual bool available() {
-      //return Serial.available();
+#ifdef DDIO_USE_DD_SERIAL      
       return _The_DD_Serial != NULL && _The_DD_Serial->available(); 
+#else
+      return Serial.available();
+#endif
     }
     virtual char read() {
-      //return Serial.read();
+#ifdef DDIO_USE_DD_SERIAL      
       return _The_DD_Serial != NULL ? _The_DD_Serial->read() : 0;
+#else
+      return Serial.read();
+#endif
     }
     virtual void print(const String &s) {
-      //Serial.print(s);
+#ifdef DDIO_USE_DD_SERIAL      
       if (_The_DD_Serial != NULL) _The_DD_Serial->print(s);
+#else
+      Serial.print(s);
+#endif
     }
     virtual void print(const char *p) {
-      //Serial.print(p);
+#ifdef DDIO_USE_DD_SERIAL      
       if (_The_DD_Serial != NULL) _The_DD_Serial->print(p);
+#else
+      Serial.print(p);
+#endif      
     }
     virtual void write(uint8_t b) {
+#ifdef DDIO_USE_DD_SERIAL      
       if (_The_DD_Serial != NULL) _The_DD_Serial->write(b);
+#else
+      Serial.write(b);
+#endif
     }
     virtual void write(const uint8_t *buf, size_t size) {
       for (size_t i = 0; i < size; i++) {
@@ -43,8 +59,11 @@ class DDInputOutput {
       }
     }    
     virtual void flush() {
-      //Serial.flush();
+#ifdef DDIO_USE_DD_SERIAL      
       if (_The_DD_Serial != NULL) _The_DD_Serial->flush();
+#else
+      Serial.flush();
+#endif      
     }
     virtual void keepAlive() {
     }
@@ -55,16 +74,14 @@ class DDInputOutput {
         if (firstCall) {
           // since 2023-08-13
           if (setupForSerial) {
+#ifdef DDIO_USE_DD_SERIAL      
             if (_The_DD_Serial != NULL) _The_DD_Serial->begin(serialBaud);
-            //Serial.begin(serialBaud);
+#else
+            Serial.begin(serialBaud);
+#endif            
           }
         }
-      }/* else {  since 2023-09-02, do not begin if not firstCall
-        if (setupForSerial) {
-          if (_The_DD_Serial != NULL) _The_DD_Serial->begin(serialBaud);
-          //Serial.begin(serialBaud);
-        }
-      }*/
+      }
       return true;
     }
     virtual bool canConnectPassive() {
