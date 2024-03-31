@@ -205,6 +205,7 @@ class DDLayer: public DDObject {
     /// set explicit (and more responsive) "feedback" handler (and enable feedback)
     /// @param handler "feedback" handler; see DDFeedbackHandler
     /// @param autoFeedbackMethod see DDLayer::enableFeedback()
+    /// @note if you will not be making use of "feedback", you can disable it by defining DD_NO_FEEDBACK in order to reduce footprint 
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     /// rely on getFeedback() being called
     /// acceptable value for autoFeedbackMethod:
@@ -214,6 +215,7 @@ class DDLayer: public DDObject {
     /// - "fa" -- flash the area where the layer is clicked
     /// - "fas" -- flash the area (as a spot) where the layer is clicked
     /// - "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
+    /// @note if you will not be making use of "feedback", you can disable it by defining DD_NO_FEEDBACK in order to reduce footprint 
     void enableFeedback(const String& autoFeedbackMethod = "");
     /// disable "feedback"
     void disableFeedback();
@@ -1338,6 +1340,7 @@ class DumbDisplay {
     /// make connection passively; i.e. will not block, but will require continuous calling for making connection
     /// @return connection made or not (note that even if connection lost and requires reconnecting, it is still considered connected)
     /// @since 0.9.8-r1
+    /// @note if you will not be making use of "passive" connection, you can disable it by defining DD_NO_PASSIVE_CONNECT in order to reduce footprint 
     bool connectPassive(DDConnectPassiveStatus* pStatus = NULL);
     /// "master reset" will:
     /// . disconnect from DD app (if connected)
