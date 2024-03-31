@@ -2235,17 +2235,17 @@ void LedGridDDLayer::toggle(int x, int y) {
 void LedGridDDLayer::turnOnEx(int x, int y, const String& onColor) {
   _sendCommand3(layerId, C_ledonex, String(x), String(y), onColor);
 }
-void LedGridDDLayer::bitwise(unsigned long bits, int y) {
-  _sendCommand2(layerId, C_bitwise, String(y), String(bits));
+void LedGridDDLayer::bitwise(unsigned int bits, int y, bool reverse) {
+  _sendCommand2(layerId, reverse ? C_bitbybit : C_bitwise, String(y), String(bits));
 }
-void LedGridDDLayer::bitwise2(unsigned long bits_0, unsigned long bits_1, int y) {
-  _sendCommand3(layerId, C_bitwise, String(y), String(bits_0), String(bits_1));
+void LedGridDDLayer::bitwise2(unsigned int bits_0, unsigned int bits_1, int y, bool reverse) {
+  _sendCommand3(layerId, reverse ? C_bitbybit : C_bitwise, String(y), String(bits_0), String(bits_1));
 }
-void LedGridDDLayer::bitwise3(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, int y) {
-  _sendCommand4(layerId, C_bitwise, String(y), String(bits_0), String(bits_1), String(bits_2));
+void LedGridDDLayer::bitwise3(unsigned int bits_0, unsigned int bits_1, unsigned int bits_2, int y, bool reverse) {
+  _sendCommand4(layerId, reverse ? C_bitbybit : C_bitwise, String(y), String(bits_0), String(bits_1), String(bits_2));
 }
-void LedGridDDLayer::bitwise4(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, unsigned long bits_3, int y) {
-  _sendCommand5(layerId, C_bitwise, String(y), String(bits_0), String(bits_1), String(bits_2), String(bits_3));
+void LedGridDDLayer::bitwise4(unsigned int bits_0, unsigned int bits_1, unsigned int bits_2, unsigned int bits_3, int y, bool reverse) {
+  _sendCommand5(layerId, reverse ? C_bitbybit : C_bitwise, String(y), String(bits_0), String(bits_1), String(bits_2), String(bits_3));
 }
 void LedGridDDLayer::horizontalBar(int count, bool rightToLeft) {
   _sendCommand2(layerId, C_ledhoribar, String(count), TO_BOOL(rightToLeft));

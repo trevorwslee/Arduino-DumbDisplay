@@ -68,6 +68,7 @@
 #define C_showhex          "#57"
 #define C_bitwise          "#58"
 #define C_ledtoggle        "#59"
+#define C_bitbybit         "#5a"
 #define C_autoscroll       "#60"
 #define C_display          "#61"
 #define C_scrollleft       "#62"

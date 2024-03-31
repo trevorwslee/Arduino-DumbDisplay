@@ -386,16 +386,16 @@ class LedGridDDLayer: public DDLayer {
     /// turn on/off LEDs based on bits
     /// @param bits least significant bit maps to right-most LED
     /// @param y row
-    void bitwise(unsigned long bits, int y = 0);
+    void bitwise(unsigned int bits, int y = 0, bool reverse = false);
     /// turn on/off two rows of LEDs by bits
     /// @param y starting row
-    void bitwise2(unsigned long bits_0, unsigned long bits_1, int y = 0);
+    void bitwise2(unsigned int bits_0, unsigned int bits_1, int y = 0, bool reverse = false);
     /// turn on/off three rows of LEDs by bits
     /// @param y starting row
-    void bitwise3(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, int y = 0);
+    void bitwise3(unsigned int bits_0, unsigned int bits_1, unsigned int bits_2, int y = 0, bool reverse = false);
     /// turn on/off four rows of LEDs by bits
     /// @param y starting row
-    void bitwise4(unsigned long bits_0, unsigned long bits_1, unsigned long bits_2, unsigned long bits_3, int y = 0);
+    void bitwise4(unsigned int bits_0, unsigned int bits_1, unsigned int bits_2, unsigned int bits_3, int y = 0, bool reverse = false);
     /// turn on LEDs to form a horizontal "bar"
     /// @param rightToLeft true means right to left
     void horizontalBar(int count, bool rightToLeft = false);
