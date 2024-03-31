@@ -23,20 +23,28 @@
 // create the DumbDisplay object; assuming USB connection with the default 115200 baud
 DumbDisplay dumbdisplay(new DDInputOutput());
 
-// declare a LED layer object, to be created in setup()
-LedGridDDLayer *led;
+// declare a Microbit-like layer object, to be created in setup()
+MbDDLayer* mb;
+
+
+
+// "feedback" handler ... to be referred to in setup()
+void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
+    // got a click on (x, y) ... toggle it
+    mb->toggle(feedback.x, feedback.y);
+}
 
 
 void setup() {
-    // create the LED layer object, with only a single LED
-    led = dumbdisplay.createLedGridLayer();
+    // create the Microbit-like layer with size 10x10
+    mb = dumbdisplay.createMicrobitLayer(10, 10);
+    
+    // setup "callback" function to handle "feedback" event-driven -- auto flashing the clicked area
+    mb->setFeedbackHandler(FeedbackHandler, "fa");
 }
-
 
 void loop() {
-    // toggle the LED
-    led->toggle();
-
-    // delay for a second
-    delay(1000);
+    // give DD a chance to capture "feedback" ... needed for event-driven "feedback" handling
+    DDYield();
 }
+
