@@ -8,17 +8,28 @@
 
 
 
-#define SUPPORT_PASSIVE
-#define SUPPORT_MASTER_RESET 
+#ifdef DD_NO_PASSIVE_CONNECT
+  #warning ??? DD_NO_PASSIVE_CONNECT set ???
+#else
+  #define SUPPORT_PASSIVE
+  #define SUPPORT_MASTER_RESET 
+#endif
 
-#define ENABLE_FEEDBACK
+
+
+#ifdef DD_NO_FEEDBACK
+  #warning ??? DD_NO_FEEDBACK set ???
+#else
+  #define ENABLE_FEEDBACK
+#endif
+
+#ifdef ENABLE_FEEDBACK
+  //#define FEEDBACK_BUFFER_SIZE 4
+  #define HANDLE_FEEDBACK_DURING_DELAY
+  #define READ_BUFFER_USE_BUFFER
+#endif
+
 #define STORE_LAYERS
-#define HANDLE_FEEDBACK_DURING_DELAY
-
-#define FEEDBACK_BUFFER_SIZE 4
-
-#define READ_BUFFER_USE_BUFFER
-
 #define MORE_KEEP_ALIVE
 
 
@@ -58,16 +69,30 @@
 
 //#define SUPPORT_LONG_PRESS_FEEDBACK
 
-#define SUPPORT_IDLE_CALLBACK
-#define SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
-#define FIRST_CONNECT_VERSION_CONSIDER_CHANGED
+#ifdef DD_NO_IDLE_CALLBACK
+  #warning ??? DD_NO_IDLE_CALLBACK set ???
+#else
+  #define SUPPORT_IDLE_CALLBACK
+#endif
 
-#define SUPPORT_TUNNEL
+#ifdef DD_NO_CONNECT_VERSION_CHANGED_CALLBACK
+  #warning ??? DD_NO_CONNECT_VERSION_CHANGED_CALLBACK set ???
+#else
+  #define SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
+  #define FIRST_CONNECT_VERSION_CONSIDER_CHANGED
+#endif
+
+#ifdef DD_NO_TUNNEL
+  #warning ??? DD_NO_TUNNEL set ???
+#else
+  #define SUPPORT_TUNNEL
+#endif
+
 #define TUNNEL_TIMEOUT_MILLIS 30000
 
 
 #define VALIDATE_CONNECTION
-#define DEBUG_WITH_LED
+//#define DEBUG_WITH_LED
 
 #define SUPPORT_RECONNECT
 #define RECONNECT_NO_KEEP_ALIVE_MILLIS 5000
@@ -83,6 +108,26 @@
 #define FLUSH_AFTER_SENT_COMMAND true
 #define YIELD_AFTER_SEND_COMMAND false
 #define YIELD_AFTER_HANDLE_FEEDBACK true
+
+#ifdef DD_NO_DEBUG_INTERFACE
+  #warning ??? DD_NO_DEBUG_INTERFACE set ???
+#else
+  #define SUPPORT_DEBUG_INTERFACE
+#endif
+
+// #ifdef DD_DEBUG_LESS_MEMORY_FOOTPRINT
+//   #warning ??? DD_DEBUG_LESS_MEMORY_FOOTPRINT set ???
+// #undef SUPPORT_USE_WOIO
+// // #undef SUPPORT_IDLE_CALLBACK
+// // #undef SUPPORT_RECONNECT
+//   #undef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
+//   #undef FIRST_CONNECT_VERSION_CONSIDER_CHANGED
+//   #undef SUPPORT_TUNNEL
+//   #undef SUPPORT_DEBUG_INTERFACE
+// #endif
+
+
+
 
 // see nobody.trevorlee.dumbdisplay.DDActivity#ddSourceCompatibility
 #define DD_SID "Arduino-c7"
@@ -190,7 +235,9 @@ private:
 #define YIELD() delay(1)
 
 
-DDSerial* _The_DD_Serial = NULL;  // TODO: remove it's use
+#ifdef DDIO_USE_DD_SERIAL
+DDSerial* _The_DD_Serial = NULL;
+#endif
 
 namespace DDImpl {
 
@@ -259,12 +306,15 @@ class IOProxy {
 //bool _Reconnecting = false;
 
 #ifdef SUPPORT_IDLE_CALLBACK
-/*volatile */DDIdleCallback _IdleCallback = NULL; 
+  /*volatile */DDIdleCallback _IdleCallback = NULL; 
 #endif
 #ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
-/*volatile */DDConnectVersionChangedCallback _ConnectVersionChangedCallback = NULL; 
+  /*volatile */DDConnectVersionChangedCallback _ConnectVersionChangedCallback = NULL; 
 #endif
-DDDebugInterface *_DebugInterface;
+
+#ifdef SUPPORT_DEBUG_INTERFACE
+  DDDebugInterface *_DebugInterface;
+#endif
 
 bool IOProxy::available() {
   bool done = false;
@@ -344,9 +394,11 @@ void IOProxy::validConnection() {
 #ifdef SUPPORT_RECONNECT
     if (this->reconnectEnabled && needReconnect) {
       this->reconnecting = true;
+#ifdef SUPPORT_DEBUG_INTERFACE
       if (_DebugInterface != NULL) {
         _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_RECONNECTING);
       }
+#endif
       YIELD();
 #ifdef DEBUG_RECONNECT_WITH_COMMENT 
 this->print("// NEED TO RECONNECT\n");
@@ -383,9 +435,11 @@ this->print("// NEED TO RECONNECT\n");
 #ifdef RECONNECTED_RESET_KEEP_ALIVE
       this->lastKeepAliveMillis = millis();
 #endif
+#ifdef SUPPORT_DEBUG_INTERFACE
       if (_DebugInterface != NULL) {
         _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_RECONNECTED);
       }
+#endif
      }
 #endif
   }
@@ -409,11 +463,11 @@ int _MaxDDLayerCount = 0;
 DDLayer** _DDLayerArray = NULL;
 #endif
 
-DDInputOutput* volatile _IO = NULL;
+DDInputOutput* /*volatile */_IO = NULL;
 
 #ifdef SUPPORT_USE_WOIO
-DDInputOutput* volatile _WOIO = NULL;
-volatile uint16_t _SendBufferSize = 0;//DD_DEF_SEND_BUFFER_SIZE;
+DDInputOutput* /*volatile */_WOIO = NULL;
+/*volatile */uint16_t _SendBufferSize = 0;//DD_DEF_SEND_BUFFER_SIZE;
 #else
 #define _WOIO _IO
 #endif
@@ -477,6 +531,7 @@ bool _CanLogToSerial() {
 #define TO_C_NUM(num) IS_FLOAT_WHOLE(num) ? TO_C_INT((int) num) : String(num, DD_FLOAT_DP) 
 
 
+void __SendErrorComment(const char* comment);
 
 volatile bool _SendingCommand = false;
 volatile bool _HandlingFeedback = false;
@@ -523,9 +578,11 @@ bool __Connect(/*bool calledPassive = false*/) {
     _C_state.hsStartMillis = 0;
     _C_state.firstCall = true;
     _C_state.step = _C_PRECONNECTING/*1*/;
-    if (_DebugInterface != NULL) {
+ #ifdef SUPPORT_DEBUG_INTERFACE
+   if (_DebugInterface != NULL) {
       _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_NOT_CONNECTED);
     }
+#endif
   }
   if (_C_state.step == _C_PRECONNECTING/*1*/) {
     if (!_IO->preConnect(_C_state.firstCall)) {
@@ -545,9 +602,11 @@ bool __Connect(/*bool calledPassive = false*/) {
       return false;
     }
     _C_state.step = _C_PRECONNECTED/*3*//*2*/;
+#ifdef SUPPORT_DEBUG_INTERFACE
     if (_DebugInterface != NULL) {
       _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
     }
+#endif
   }
   if (_C_state.step == _C_PRECONNECTED/*3*/) {
     _C_state.hsNextMillis = millis();
@@ -579,9 +638,11 @@ bool __Connect(/*bool calledPassive = false*/) {
       if (mustLoop) YIELD();
       long now = millis();
       if (now > _C_state.hsNextMillis) {
+#ifdef SUPPORT_DEBUG_INTERFACE
         if (_DebugInterface != NULL) {
           _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTING);
         }
+#endif
         _C_state.pIOProxy->print("ddhello\n");
         if (_C_state.pBUSerialIOProxy != NULL) {
 #if defined(DD_EXPERIMENTAL)
@@ -792,7 +853,7 @@ bool __Connect(/*bool calledPassive = false*/) {
 #ifdef DD_DEBUG_HS          
     Serial.println("// *** DONE MAKE CONNECTION");
 #endif
-#ifdef FIRST_CONNECT_VERSION_CONSIDER_CHANGED
+#if defined(SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK) && defined(FIRST_CONNECT_VERSION_CONSIDER_CHANGED)
     if (_ConnectVersionChangedCallback != NULL) {
       _ConnectVersionChangedCallback(_ConnectVersion);  // will be 1
     }
@@ -808,9 +869,11 @@ bool _Connect(bool calledPassive = false) {
   while (true) {
     YIELD();
     if (__Connect()) {
+#ifdef SUPPORT_DEBUG_INTERFACE
       if (_DebugInterface != NULL) {
         _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_CONNECTED);
       }
+#endif
       return true;
     }
     if (calledPassive) {
@@ -1071,7 +1134,7 @@ void _PreDeleteLayer(DDLayer* pLayer) {
 }
 
 #ifdef SUPPORT_TUNNEL
-int _AllocTid() {
+inline int _AllocTid() {
   return _AllocLid();
 }
 void _PostCreateTunnel(DDTunnel* pTunnel, bool connectNow) {
@@ -1234,9 +1297,11 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
 }  
 void __SendComment(const char* comment, bool isError = false) {
   if (isError) {
+#ifdef SUPPORT_DEBUG_INTERFACE
       if (_DebugInterface != NULL) {
         _DebugInterface->logError(comment);
       }
+#endif
   }
   _WOIO->print("//");
   if (isError) {
@@ -1251,6 +1316,9 @@ void __SendComment(const char* comment, bool isError = false) {
   if (YIELD_AFTER_SEND_COMMAND) {
     yield();
   }
+}
+void __SendErrorComment(const char* comment) {
+  __SendComment(comment, true);
 }
 #ifdef DEBUG_MISSING_ENDPOINT_C  
 void __SendComment(const String& comment, bool isError = false) {
@@ -1285,9 +1353,11 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   bool alreadySendingCommand = _SendingCommand;  // not very accurate
   _SendingCommand = true;
 
+#ifdef SUPPORT_DEBUG_INTERFACE
   if (_DebugInterface != NULL) {
     _DebugInterface->logSendCommand(1);
   }
+#endif
 // #ifdef DEBUG_WITH_LED
 //   int debugLedPin = _DebugLedPin;
 //   if (debugLedPin != -1) {
@@ -1305,9 +1375,11 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
   }
 #endif
 
+#ifdef SUPPORT_DEBUG_INTERFACE
   if (_DebugInterface != NULL) {
     _DebugInterface->logSendCommand(0);
   }
+#endif  
 // #ifdef DEBUG_WITH_LED
 //   if (debugLedPin != -1) {
 //     digitalWrite(debugLedPin, LOW);
@@ -1507,6 +1579,9 @@ void _HandleFeedback() {
     _HandlingFeedback = true;
 #ifdef READ_BUFFER_USE_BUFFER
     String* pFeedback = _ReadFeedback(_ReadFeedbackBuffer);
+#else
+    String buffer;
+    String* pFeedback = _ReadFeedback(buffer);
 #endif
 // #ifdef READ_BUFFER_USE_BUFFER
 //     String buffer;
@@ -1616,6 +1691,10 @@ __SendComment("LT++++" + data + " - final:" + String(final));
           type = DOUBLECLICK;
         } else if (strcmp(token, "move") == 0) {
           type = MOVE;
+        } else if (strcmp(token, "up") == 0) {
+          type = UP;
+        } else if (strcmp(token, "down") == 0) {
+          type = DOWN;
         }
         token = strtok(NULL, ",");
       }
@@ -1643,6 +1722,7 @@ __SendComment("LT++++" + data + " - final:" + String(final));
         DDLayer* pLayer = _DDLayerArray[lid];
 #endif
         if (pLayer != NULL) {
+#ifdef ENABLE_FEEDBACK          
           DDFeedbackHandler handler = pLayer->getFeedbackHandler();
           if (handler != NULL) {
             DDFeedback feedback;
@@ -1659,6 +1739,7 @@ __SendComment("LT++++" + data + " - final:" + String(final));
               pFeedbackManager->pushFeedback(type, x, y, pText);
             }
           }
+#endif
         }
       }
 #endif  
@@ -1756,11 +1837,13 @@ inline void _sendCommand8(const String& layerId, const char *command, const Stri
 inline void _sendCommand9(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8, const String& param9) {
   _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8, &param9);
 }
-#ifdef SUPPORT_TUNNEL
 inline void _sendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
+#ifdef SUPPORT_TUNNEL
   _SendSpecialCommand(specialType, specialId, specialCommand, specialData);
+#endif
 }
 void _setLTBufferCommand(const String& data) {
+#ifdef SUPPORT_TUNNEL
   if (true) {
     int dataLen = data.length();
     int i = 0;
@@ -1777,8 +1860,8 @@ void _setLTBufferCommand(const String& data) {
   } else {
     _sendSpecialCommand("ltbuf", "", NULL, data);
   }
-}
 #endif
+}
 void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount, char compressMethod = 0) {
   __SendByteArrayPortion(NULL, bytes, byteCount, compressMethod);
   _sendCommand0("", C_KAL);  // send a "keep alive" command to make sure and new-line is sent
@@ -1802,17 +1885,38 @@ void _sendByteArrayAfterCommandChunked(const String& bytesId, const uint8_t *byt
 using namespace DDImpl;
 
 
-DDFeedbackManager::DDFeedbackManager(int8_t bufferSize) {
+#ifndef ENABLE_FEEDBACK
+void _sendFeedbackDisableComment() {
+#if defined(DD_NO_FEEDBACK)
+  __SendErrorComment("\"feedback\" disabled due to DD_NO_FEEDBACK");
+#endif
+}
+#endif
+#ifndef SUPPORT_TUNNEL
+void _sendTunnelDisabledComment() {
+#ifdef DD_NO_TUNNEL
+  __SendErrorComment("\"tunnel\" disabled due to DD_NO_TUNNEL");
+#endif  
+}
+#endif
+
+
+DDFeedbackManager::DDFeedbackManager(/*int8_t bufferSize*/) {
   this->nextArrayIdx = 0;
   this->validArrayIdx = 0;
 }
 const DDFeedback* DDFeedbackManager::getFeedback() {
+#ifdef ENABLE_FEEDBACK
   if (nextArrayIdx == validArrayIdx) return NULL;
   const DDFeedback* pFeedback = &feedbackArray[validArrayIdx];
   validArrayIdx = (validArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
   return pFeedback;
+#else
+  return NULL;
+#endif    
 }
 void DDFeedbackManager::pushFeedback(DDFeedbackType type, int16_t x, int16_t y, const char* pText) {
+#ifdef ENABLE_FEEDBACK
   feedbackArray[nextArrayIdx].type = type;
   feedbackArray[nextArrayIdx].x = x;
   feedbackArray[nextArrayIdx].y = y;
@@ -1820,22 +1924,27 @@ void DDFeedbackManager::pushFeedback(DDFeedbackType type, int16_t x, int16_t y, 
   nextArrayIdx = (nextArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
   if (nextArrayIdx == validArrayIdx)
     validArrayIdx = (validArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
+#endif
 }
 
 
 DDLayer::DDLayer(int8_t layerId)/*: DDObject(DD_OBJECT_TYPE_LAYER)*/ {
   this->objectType = DD_OBJECT_TYPE_LAYER;
   this->layerId = String(layerId);
+#ifdef ENABLE_FEEDBACK          
   this->pFeedbackManager = NULL;
   this->feedbackHandler = NULL;
+#endif
 }
 DDLayer::~DDLayer() {
 #ifdef DEBUG_BASIC  
   if (_CanLogToSerial()) Serial.println("--- delete DDLayer");
 #endif
   _PreDeleteLayer(this);
+#ifdef ENABLE_FEEDBACK          
   if (pFeedbackManager != NULL)
     delete pFeedbackManager;
+#endif
 } 
 void DDLayer::visible(bool visible) {
   _sendCommand1(layerId, C_visible, TO_BOOL(visible));
@@ -1916,32 +2025,47 @@ void DDLayer::flashArea(int x, int y) {
 //   _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
 // }
 void DDLayer::_enableFeedback() {
+#ifdef ENABLE_FEEDBACK  
   if (pFeedbackManager != NULL)
     delete pFeedbackManager;
-  pFeedbackManager = new DDFeedbackManager(FEEDBACK_BUFFER_SIZE + 1);  // need 1 more slot
+  pFeedbackManager = new DDFeedbackManager(/*FEEDBACK_BUFFER_SIZE + 1*/);
+#else
+  _sendFeedbackDisableComment();
+#endif
 }
 void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
+#ifdef ENABLE_FEEDBACK  
   _sendCommand2(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod);
   feedbackHandler = NULL;
   _enableFeedback();
   // if (pFeedbackManager != NULL)
   //   delete pFeedbackManager;
   // pFeedbackManager = new DDFeedbackManager(FEEDBACK_BUFFER_SIZE + 1);  // need 1 more slot
+#else
+  _sendFeedbackDisableComment();
+#endif
 }
 void DDLayer::disableFeedback() {
+#ifdef ENABLE_FEEDBACK          
   _sendCommand1(layerId, C_feedback, TO_BOOL(false));
   feedbackHandler = NULL;
   if (pFeedbackManager != NULL) {
     delete pFeedbackManager;
     pFeedbackManager = NULL;
   }
+#endif
 }
 const DDFeedback* DDLayer::getFeedback() {
+#ifdef ENABLE_FEEDBACK          
   //yield();
   _HandleFeedback();
   return pFeedbackManager != NULL ? pFeedbackManager->getFeedback() : NULL;
+#else
+  return NULL;
+#endif
 }
 void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod) {
+#ifdef ENABLE_FEEDBACK          
   bool enable = handler != NULL;
   _sendCommand2(layerId, C_feedback, TO_BOOL(enable), autoFeedbackMethod);
   feedbackHandler = handler;
@@ -1949,6 +2073,9 @@ void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFe
     delete pFeedbackManager;
     pFeedbackManager = NULL;
   }
+#else
+  _sendFeedbackDisableComment();
+#endif
 }
 
 
@@ -2001,7 +2128,6 @@ void MbDDLayer::showImage(MbImage *pImage, int xOff) {
 void MbDDLayer::scrollImage(MbImage *pImage, int xOff, long interval) {
   _sendCommand3(layerId, "sclimg", pImage->getImageId(), String(xOff), String(interval));
 }
-
 
 void TurtleDDLayer::forward(int distance, bool withPen) {
   _sendCommand1(layerId, withPen ? "fd" : "dlfd", String(distance));
@@ -2096,6 +2222,7 @@ void TurtleDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
 void TurtleDDLayer::write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? C_drawtext : C_write, text);
 }
+
 void LedGridDDLayer::turnOn(int x, int y) {
   _sendCommand2(layerId, C_ledon, String(x), String(y));
 }
@@ -2451,7 +2578,7 @@ void PlotterDDLayer::set(const String& key1, float value1, const String& key2, f
   _sendCommand8(layerId, "", key1, TO_C_NUM(value1), key2, TO_C_NUM(value2), key3, TO_C_NUM(value3), key4, TO_C_NUM(value4));
 }  
 
-void TomTomMapDDLayer::goTo(float latitude, float longitude, const String& label) {
+ void TomTomMapDDLayer::goTo(float latitude, float longitude, const String& label) {
   _sendCommand3(layerId, C_goto, TO_NUM(latitude), TO_NUM(longitude), label);
 }
 void TomTomMapDDLayer::zoomTo(float latitude, float longitude, float zoomLevel, const String& label) {
@@ -2489,7 +2616,7 @@ void TerminalDDLayer::println(const String& val) {
 //     Serial.begin(serialBaud);
 // }
 
-#ifdef SUPPORT_TUNNEL
+//#ifdef SUPPORT_TUNNEL
 DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& paramsParam, const String& endPointParam/*, bool connectNow*/):
   /*DDObject(DD_OBJECT_TYPE_TUNNEL), */type(type), tunnelId(String(tunnelId)), endPoint(endPointParam), params(paramsParam) {
     this->objectType = DD_OBJECT_TYPE_TUNNEL;
@@ -2527,17 +2654,19 @@ void DDTunnel::afterConstruct(bool connectNow) {
   }
 }
 DDTunnel::~DDTunnel() {
+#ifdef SUPPORT_TUNNEL	
 #ifdef DEBUG_BASIC  
   if (_CanLogToSerial()) Serial.println("--- delete DDTunnel");
 #endif
   _PreDeleteTunnel(this);
   //delete this->dataArray;
+#endif
 } 
 void DDTunnel::reconnect() {
   if (true) {
     if (endPoint.c_str() == NULL) {
       //__SendComment("DDTunnel::reconnect() - invalid tunnel endpoint", true);
-      __SendComment("invalid tunnel endpoint", true);
+      __SendErrorComment("invalid tunnel endpoint");
       return;
     }
   }
@@ -2635,7 +2764,7 @@ bool DDTunnel::_eof(long timeoutMillis) {
 #ifdef DEBUG_TUNNEL_RESPONSE
       Serial.println("_EOF: XXX TIMEOUT XXX");
 #endif                
-      __SendComment("*** TUNNEL TIMEOUT ***", true);
+      __SendErrorComment("*** TUNNEL TIMEOUT ***");
       if (true) {
         // since 2023-10-02
         done = true;
@@ -2897,7 +3026,6 @@ bool GpsServiceDDTunnel::readLocation(DDLocation& location) {
   location.latitude = latitude.toFloat();
   location.longitude = longitude.toFloat();
   return true;
-
 }
 
 void ObjectDetetDemoServiceDDTunnel::reconnectForObjectDetect(const String& imageName) {
@@ -2982,7 +3110,7 @@ void JsonDDTunnelMultiplexer::reconnect() {
     }
   }
 }
-#endif
+//#endif
 
 
 void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, boolean enableDoubleClick*/) {
@@ -3018,7 +3146,7 @@ void DumbDisplay::configAutoPin(const String& layoutSpec) {
   _Connect();
   if (true) {
     if (layoutSpec.c_str() == NULL) {
-      __SendComment("invalid autopin config", true);
+      __SendErrorComment("invalid autopin config");
       return;
     }
   }
@@ -3354,9 +3482,8 @@ void DumbDisplay::debugOnly(int i) {
   }
   _sendByteArrayAfterCommand(bytes, i);
 }
-
-#ifdef SUPPORT_TUNNEL
 BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool connectNow, int8_t bufferSize) {
+#ifdef SUPPORT_TUNNEL
   int tid = _AllocTid();
   String tunnelId = String(tid);
   // if (connectNow) {
@@ -3365,8 +3492,13 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool conne
   BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", tid, "", endPoint/*, connectNow*/, bufferSize);
   _PostCreateTunnel(pTunnel, connectNow);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connectNow, int8_t bufferSize) {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   // if (connectNow) {
@@ -3375,15 +3507,25 @@ JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connect
   JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, "", endPoint/*, connectNow*/, bufferSize);
   _PostCreateTunnel(pTunnel, connectNow);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, const String& fieldNames, bool connectNow, int8_t bufferSize) {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, fieldNames, endPoint/*, connectNow*/, bufferSize);
   _PostCreateTunnel(pTunnel, connectNow);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload) {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   String params = imageName;
@@ -3396,24 +3538,39 @@ _sendCommand0("", ("// CreateEP -- " + endPoint).c_str());
   SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, params, endPoint/*, true*/, 1);
   _PostCreateTunnel(pTunnel, true);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 BasicDDTunnel* DumbDisplay::createDateTimeServiceTunnel() {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   BasicDDTunnel* pTunnel = new BasicDDTunnel("datetimeservice", tid, "", ""/*, false*/, 1);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 
 GpsServiceDDTunnel* DumbDisplay::createGpsServiceTunnel() {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   GpsServiceDDTunnel* pTunnel = new GpsServiceDDTunnel("gpsservice", tid, "", ""/*, false*/, 1);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 
 ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel(int scaleToWidth, int scaleToHeight, int maxNumObjs) {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   String params;
@@ -3424,12 +3581,17 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
   ObjectDetetDemoServiceDDTunnel* pTunnel = new ObjectDetetDemoServiceDDTunnel("objectdetectdemo", tid, params, ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
+#ifdef SUPPORT_TUNNEL	
   pTunnel->release();
   delete pTunnel;  // will call _PreDeleteTunnel
-}
 #endif
+}
 
 
 // bool DumbDisplay::canLogToSerial() {
@@ -3441,17 +3603,21 @@ void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
 //   _NoEncodeInt = noCompression;
 // }
 //#endif
+#ifndef DD_NO_IDLE_CALLBACK
 void DumbDisplay::setIdleCallback(DDIdleCallback idleCallback) {
 #ifdef SUPPORT_IDLE_CALLBACK
   _IdleCallback = idleCallback;
 #endif
 }
+#endif
+
+#ifndef DD_NO_CONNECT_VERSION_CHANGED_CALLBACK
 void DumbDisplay::setConnectVersionChangedCallback(DDConnectVersionChangedCallback connectVersionChangedCallback) {
 #ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
   _ConnectVersionChangedCallback = connectVersionChangedCallback;
 #endif
 }
-
+#endif
 
 // void DumbDisplay::delay(unsigned long ms) {
 //   _Delay(ms);
@@ -3461,12 +3627,16 @@ bool DumbDisplay::canPrintToSerial() {
 }
 void DumbDisplay::logToSerial(const String& logLine, boolean force) {
   if (_CanLogToSerial()) {
+#ifdef DDIO_USE_DD_SERIAL
     if (_The_DD_Serial != NULL) {
       _The_DD_Serial->print(logLine);
       _The_DD_Serial->print("\n");
     } else {
       Serial.println(logLine);
     }
+#else
+    Serial.println(logLine);
+#endif    
   } else {
     if (_Connected) {
       writeComment(logLine);
@@ -3477,12 +3647,16 @@ void DumbDisplay::logToSerial(const String& logLine, boolean force) {
 }
 void DumbDisplay::log(const String& logLine, boolean isError) {
   if (_CanLogToSerial()) {
+#ifdef DDIO_USE_DD_SERIAL
     if (_The_DD_Serial != NULL) {
       _The_DD_Serial->print(logLine);
       _The_DD_Serial->print("\n");
     } else {
       Serial.println(logLine);
     }
+#else
+    Serial.println(logLine);
+#endif
   }
   if (_Connected) {
     __SendComment(logLine, isError);
@@ -3490,6 +3664,7 @@ void DumbDisplay::log(const String& logLine, boolean isError) {
 }
 
 
+#ifndef DD_NO_PASSIVE_CONNECT
 bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {
 #ifdef SUPPORT_PASSIVE
   bool connected = _Connect(true);
@@ -3512,6 +3687,7 @@ bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {
   return false;
 #endif  
 }
+#endif
 // void DumbDisplay::savePassiveConnectState(DDSavedConnectPassiveState& state) {
 //   state.initialized = 12345;
 //   state.step = _C_state.step;
@@ -3551,6 +3727,7 @@ bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {
 //   return false;
 // #endif  
 // }
+#ifndef DD_NO_PASSIVE_CONNECT
 void DumbDisplay::masterReset() {
 #ifdef SUPPORT_MASTER_RESET
   bool reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
@@ -3581,12 +3758,13 @@ void DumbDisplay::masterReset() {
     }
     delete _DDLayerArray;
     _DDLayerArray = NULL;
+#ifdef SUPPORT_TUNNEL
     _MaxDDLayerCount = 0;
+#endif
   }
   _NextLid = 0;
   _NextImgId = 0;  // allocated image not tracked
   _NextBytesId = 0;
-
   //_IO = NULL;
 // #ifdef SUPPORT_USE_WOIO
 //   if (_WOIO != NULL) {
@@ -3614,10 +3792,14 @@ void DumbDisplay::masterReset() {
   }
 #endif
 }
+#endif
 
 //void DumbDisplay::debugSetup(int debugLedPin/*, bool enableEchoFeedback*/) {
+#ifndef DD_NO_DEBUG_INTERFACE
 void DumbDisplay::debugSetup(DDDebugInterface *debugInterface) {
+#ifdef SUPPORT_DEBUG_INTERFACE
   _DebugInterface = debugInterface;
+#endif
 // #ifdef DEBUG_WITH_LED
 //   if (debugLedPin != -1) {
 //      pinMode(debugLedPin, OUTPUT);
@@ -3628,6 +3810,7 @@ void DumbDisplay::debugSetup(DDDebugInterface *debugInterface) {
   _DebugEnableEchoFeedback = true;//enableEchoFeedback;
 #endif
 }
+#endif
 void DDLayer::debugOnly(int i) {
   _sendCommand2(layerId, "debugonly", String(i), TO_C_INT(i));
   // byte bytes[i];

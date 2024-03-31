@@ -1,6 +1,7 @@
 #ifndef _dd_misc_h
 #define _dd_misc_h
 
+#ifndef DD_NO_DEBUG_INTERFACE
 class DrawTextDDDebugInterface: public DDDebugInterface {
   // public:
   //   OledDDDebugInterface(Adafruit_SSD1306& display, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1, */, bool indicateSendCommand = false): display(display) {
@@ -101,6 +102,7 @@ class CompositDDDebugIntreface: public DDDebugInterface {
     DDDebugInterface* debug1;
     DDDebugInterface* debug2;    
 };
+#endif
 
 /// the same usage as standard delay(), but it gives DD a chance to handle "feedbacks"
 void DDDelay(unsigned long ms);
@@ -422,10 +424,12 @@ class DDLayoutHelper {
     inline void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
       dumbdisplay.pinAutoPinLayers(layoutSpec, uLeft, uTop, uWidth, uHeight, align);
     }
+#ifndef DD_NO_IDLE_CALLBACK
     /// basically DumbDisplay::setIdleCallback()
     inline void setIdleCallback(DDIdleCallback idleCallback) {
       dumbdisplay.setIdleCallback(idleCallback);
     }
+#endif
     // // deprecated
     // inline void setIdleCalback(DDIdleCallback idleCallback) {
     //   dumbdisplay.setIdleCalback(idleCallback);

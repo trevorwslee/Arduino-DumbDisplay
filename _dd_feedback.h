@@ -1,12 +1,23 @@
 #ifndef _dd_feedback_h
 #define _dd_feedback_h
 
-#define DD_FEEDBACK_BUFFER_SIZE 4
+
+#ifndef DD_FEEDBACK_BUFFER_SIZE
+  #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+    #define DD_FEEDBACK_BUFFER_SIZE 2
+  #else
+    #define DD_FEEDBACK_BUFFER_SIZE 4
+  #endif
+#endif
+#if DD_FEEDBACK_BUFFER_SIZE < 2
+  #error "DD_FEEDBACK_BUFFER_SIZE must be at least 2"
+#endif 
+
 
 /// @struct DDFeedbackType
 /// @brief
 /// The enum indicating the type of "feedback". See DDFeedback
-enum DDFeedbackType { CLICK, LONGPRESS, DOUBLECLICK, MOVE };  // DOUBLECLICK needs special option for DumbDisplay
+enum DDFeedbackType { CLICK, LONGPRESS, DOUBLECLICK, MOVE, UP, DOWN };  // DOUBLECLICK needs special option for DumbDisplay
 
 /// @struct DDFeedback
 /// @brief
@@ -25,7 +36,7 @@ struct DDFeedback {
 /// Class for internal use to track "feedbacks".
 class DDFeedbackManager {
   public: 
-    DDFeedbackManager(int8_t bufferSize);
+    DDFeedbackManager(/*int8_t bufferSize*/);
     const DDFeedback* getFeedback();
     void pushFeedback(DDFeedbackType type, int16_t x, int16_t y, const char* pText);
   private:

@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.8-r6)
+# DumbDisplay Arduino Library (v0.9.8-r7)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -188,8 +188,8 @@ Here is the list of all connection IO objects that you can use:
   - need to include `dumbdisplay.h` -- `#include "dumbdisplay.h"`
   - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - you **should not** be using `Serial` for other purposes
-  - the default baud rate is 115200;  a lower baud rate, say 9600, may work better in some cases
-* Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- connected to Bluetooth module like HC-06. For an example, you may want to refer to the post [Setup HC-05 and HC-06, for Wireless 'Number Invaders'](https://www.instructables.com/Setup-HC-05-and-HC-06-for-Wireless-Number-Invaders/) -- [DDSoftwareSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_software_serial_i_o.html)
+  - the default baud rate is 115200;  a lower baud rate, say 9600, may work better in some cases (**be remindered that** DumbDisplay app side also need be set to matching baud rate)
+* Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- attached to a Bluetooth module like HC-06. For an example, you may want to refer to the post [Setup HC-05 and HC-06, for Wireless 'Number Invaders'](https://www.instructables.com/Setup-HC-05-and-HC-06-for-Wireless-Number-Invaders/) -- [DDSoftwareSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_software_serial_i_o.html)
   ```
     #include "ssdumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
@@ -199,7 +199,7 @@ Here is the list of all connection IO objects that you can use:
     - in this example, 2 and 3 are the pins used by `SoftwareSerial`
     - the default baud rate is 115200, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially true for HC-08, which connects via BLE. 
   - you **should not** be using that `SoftwareSerial` for other purposes
-* Via `Serial2` -- for Arduino Mega / STM32, connected to Bluetooth module like HC-06 -- [DDSerial2IO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_serial2_i_o.html)
+* Via `Serial2` -- for Arduino Mega / STM32, attached to a Bluetooth module like HC-06 -- [DDSerial2IO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_serial2_i_o.html)
   ```
     #include "serial2dumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSerial2IO(115200));
@@ -208,7 +208,7 @@ Here is the list of all connection IO objects that you can use:
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSerial2IO(115200))`
   - e.g. for Arduino Mega2560: connect D17 (RX2) to TX of HC-06 and connect D16 (TX2) to RX of HC-06 
   - e.g. for STM32F103: connect PA3 (RX2) to TX of HC-06 and connect PA2 (TX2) to RX of HC-06
-* Via `UART` -- for Raspberry Pi Pico, connected to Bluetooth module like HC-06 -- [DDPicoSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_pico_uart1_i_o.html)
+* Via `UART` -- for Raspberry Pi Pico, attached to a Bluetooth module like HC-06 -- [DDPicoSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_pico_uart1_i_o.html)
   ```
     #include <picodumbdisplay.h>
     DumbDisplay dumbdisplay(new DDPicoSerialIO(8, 9, 115200));
@@ -249,7 +249,7 @@ Here is the list of all connection IO objects that you can use:
   ```
   - ESP01 is basically a ESP8266
   - WIFI credentials are passed to `WiFiServer`
-  - by default, DumbDisplay will setup and log using `Serial` with baud rate 115200; and you should see log lines like:
+  - by default, DumbDisplay will setup and log using `Serial` with baud rate 115200; and you should see serial monitor log lines like:
     ```
       binding WIFI <wifiname>
       binded WIFI <wifiname>
@@ -257,11 +257,20 @@ Here is the list of all connection IO objects that you can use:
     ```  
     where 192.168.1.134 is the IP of your microcontroller and 10201 is the port which is the default port
 
+    if **nothing** is shown to the serial monitor, try calling `Serial.begin(115200)` manually, like
+    ```
+    void setup() {
+      Serial.begin(115200);
+      ...
+    }
+    ```
+    
+
   By making use of DumbDisplay WIFI Bridge, WIFI connection is possible for any microcontroller board (e.g. Arduino UNO) --
   with DumbDisplay WIFI Bridge running on your computer, you can keep the microcontroller connected with USB, and make WIFI connection with DumbDisplay Android app.
   Please refer to [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge) for more description on it.
 
-Note on using of `Serial`. If DumbDisplay will make connection using `Serial`, you certainly should not print to `Serial`. However, if you are sure that DumbDisplay will not make connection with `Serial`, call `Serial.begin(115200)` (115200 is the default baud rate of DumbDisplay) in the beginning of the `setup()` block. In any case, be aware that DumbDisplay itself might be logging to `Serial`.    
+Note on using of `Serial`. If DumbDisplay will make connection using `Serial`, you certainly should not print to `Serial`. However, if DumbDisplay is not set to make connection with `Serial`, you are free to use `Serial` for your logging purposes; but be aware that DumbDisplay itself might be logging to `Serial` in certain cases.    
 
 
 ## Samples
@@ -286,7 +295,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddmb/ddm
 // for connection
 // . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
 // . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
-DumbDisplay dumbdisplay(new DDInputOutput(57600));
+DumbDisplay dumbdisplay(new DDInputOutput());
 
 MbDDLayer *mb;
 int heading;
@@ -375,7 +384,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddgraphi
 // for connection
 // . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
 // . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
-DumbDisplay dumbdisplay(new DDInputOutput(57600));
+DumbDisplay dumbdisplay(new DDInputOutput());
 
 void setup() {
   // create 4 graphical [LCD] layers
@@ -885,7 +894,7 @@ This example should demonstrate how to use "tunnel" to download images from the 
 ```
 #include "dumbdisplay.h"
 
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
+DumbDisplay dumbdisplay(new DDInputOutput());
 
 
 GraphicalDDLayer *graphical;
@@ -1864,6 +1873,11 @@ MIT
 
 
 # Change History
+
+v0.9.8-r7
+  - added some "footprint" options
+  - added "press" "feedback" option
+  - bug fix
 
 v0.9.8-r6
   - verified support for Arduino UNO R4 WiFi

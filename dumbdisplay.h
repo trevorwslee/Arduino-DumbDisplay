@@ -10,6 +10,11 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODING befo
 
 */
 
+#ifdef DD_DISABLE_PARAM_ENCODING
+  #pragma "message ***** DD_DISABLE_PARAM_ENCODING *****"
+#endif
+
+
 
 
 #ifndef dumbdisplay_h
@@ -91,13 +96,25 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODING befo
 #define DD_PROGRAM_SPACE_COMPRESS_BA_0 '!'
 #define DD_COMPRESS_BA_0 '0'
 
-#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
-  #define DD_TUNNEL_DEF_BUFFER_SIZE 2
-#else
-  #define DD_TUNNEL_DEF_BUFFER_SIZE 4
+#ifndef DD_TUNNEL_DEF_BUFFER_SIZE
+  #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+    #define DD_TUNNEL_DEF_BUFFER_SIZE 2
+  #else
+    #define DD_TUNNEL_DEF_BUFFER_SIZE 4
+  #endif
 #endif
+#if DD_TUNNEL_DEF_BUFFER_SIZE < 2
+  #error "DD_TUNNEL_DEF_BUFFER_SIZE must be at least 2"
+#endif 
+
+
+#define DDIO_USE_DD_SERIAL
 
 #include "_dd_serial.h"
+#ifdef DDIO_USE_DD_SERIAL
+  extern DDSerial* _The_DD_Serial;
+#endif
+
 #include "_dd_io.h"
 #include "_dd_feedback.h"
 #include "_dd_colors.h"
@@ -184,10 +201,11 @@ class DDLayer: public DDObject {
     void flash();
     /// normally used for "feedback" -- flash the area (x, y) where the layer is clicked
     void flashArea(int x, int y);
-    const String& getLayerId() const { return layerId; }
+    inline const String& getLayerId() const { return layerId; }
     /// set explicit (and more responsive) "feedback" handler (and enable feedback)
     /// @param handler "feedback" handler; see DDFeedbackHandler
     /// @param autoFeedbackMethod see DDLayer::enableFeedback()
+    /// @note if you will not be making use of "feedback", you can disable it by defining DD_NO_FEEDBACK in order to reduce footprint 
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
     /// rely on getFeedback() being called
     /// acceptable value for autoFeedbackMethod:
@@ -197,6 +215,7 @@ class DDLayer: public DDObject {
     /// - "fa" -- flash the area where the layer is clicked
     /// - "fas" -- flash the area (as a spot) where the layer is clicked
     /// - "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
+    /// @note if you will not be making use of "feedback", you can disable it by defining DD_NO_FEEDBACK in order to reduce footprint 
     void enableFeedback(const String& autoFeedbackMethod = "");
     /// disable "feedback"
     void disableFeedback();
@@ -206,10 +225,12 @@ class DDLayer: public DDObject {
     /// for debug use
     void debugOnly(int i);
   public:
+#ifndef DD_NO_FEEDBACK
     /// @attention used internally
-    DDFeedbackManager* getFeedbackManager() const { return pFeedbackManager; }
+    inline DDFeedbackManager* getFeedbackManager() const { return pFeedbackManager; }
     /// @attention used internally
-    DDFeedbackHandler getFeedbackHandler() const { return feedbackHandler; }
+    inline DDFeedbackHandler getFeedbackHandler() const { return feedbackHandler; }
+#endif    
   protected:
     DDLayer(int8_t layerId);
   public:
@@ -219,8 +240,11 @@ class DDLayer: public DDObject {
     void _enableFeedback();
   protected:
     String layerId;  
+#ifndef DD_NO_FEEDBACK
+    // either feedbackManager or feedbackHandler is used
     DDFeedbackManager *pFeedbackManager;
     DDFeedbackHandler feedbackHandler;
+#endif    
 };
 
 
@@ -239,7 +263,6 @@ class MbImage {
   private:
     String imageId;
 };
-
 
 /// Class for Microbit-like DD layer; created with DumbDisplay::createMicrobitLayer()
 class MbDDLayer: public DDLayer {
@@ -275,7 +298,6 @@ class MbDDLayer: public DDLayer {
     void showImage(MbImage *pImage, int xOff);
     void scrollImage(MbImage *pImage, int xOff, long interval);
 };
-
 
 /// Class for Turtle-like DD layer; created with DumbDisplay::createTurtleLayer()
 class TurtleDDLayer: public DDLayer {
@@ -345,7 +367,6 @@ class TurtleDDLayer: public DDLayer {
     /// write text; draw means draw the text (honor heading)
     void write(const String& text, bool draw = false);
 };
-
 
 /// Class for LED grid layer; created with DumbDisplay::createLedGridLayer()
 class LedGridDDLayer: public DDLayer {
@@ -1022,6 +1043,7 @@ class JsonDDTunnelMultiplexer {
      JsonDDTunnel** tunnels;
 };
 
+#ifndef DD_NO_IDLE_CALLBACK
 /// @struct DDIdleConnectionState
 /// @brief
 /// See DDIdleCallback
@@ -1032,17 +1054,20 @@ enum DDIdleConnectionState { IDLE_NOT_CONNECTED, IDLE_CONNECTING, IDLE_RECONNECT
 /// @param idleForMillis  how long (millis) the connection has been idle
 /// @param connectionState  the connection state
 typedef void (*DDIdleCallback)(long idleForMillis, DDIdleConnectionState connectionState);
+#endif
+
+#ifndef DD_NO_CONNECT_VERSION_CHANGED_CALLBACK
 /// @struct DDConnectVersionChangedCallback
 /// @brief
 /// Type signature for callback function that will be called when connect version (counting up) changed. See DumbDisplay::setConnectVersionChangedCallback()
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
+#endif
 
-
+#ifndef DD_NO_DEBUG_INTERFACE
 /// @struct DDDebugConnectionState
 /// @brief
 /// See DDDebugInterface
 enum DDDebugConnectionState { DEBUG_NOT_CONNECTED, DEBUG_CONNECTING, DEBUG_CONNECTED, DEBUG_RECONNECTING, DEBUG_RECONNECTED };
-
 /// Base class for debug callback set by calling DumbDisplay::debugSetup()
 class DDDebugInterface {
   public:
@@ -1052,8 +1077,10 @@ class DDDebugInterface {
     virtual void logSendCommand(int state) {}
     virtual void logError(const String& errMsg) {}
 };
+#endif
 
 
+#ifndef DD_NO_PASSIVE_CONNECT
 /// Struct for the status values of calling DumbDisplay::connectPassive()
 struct DDConnectPassiveStatus {
   /// connection made or not -- same as the return value of DumbDisplay::connectPassive() 
@@ -1063,7 +1090,7 @@ struct DDConnectPassiveStatus {
   /// reconnecting: when connected; detected reconnecting (after lost of connection) 
   bool reconnecting;
 };
-
+#endif
 
 
 extern bool _DDDisableParamEncoding;
@@ -1079,10 +1106,14 @@ class DumbDisplay {
 #ifdef DD_DISABLE_PARAM_ENCODING
     DDDebugDisableParamEncoding();
 #endif      
-#ifndef DD_NO_SERIAL      
+#ifdef DD_NO_SERIAL      
+  #warning ***** DD_NO_SERIAL defined *****
+#else
+  #ifdef DDIO_USE_DD_SERIAL
       if (pIO->isForSerial() || pIO->isBackupBySerial()) {
         _The_DD_Serial = new DDSerial();
       }
+  #endif    
 #endif      
       initialize(pIO, sendBufferSize/*, enableDoubleClick*/);
     }
@@ -1285,14 +1316,18 @@ class DumbDisplay {
     void deleteLayer(DDLayer *pLayer);
     /// loop through all the existing layers calling the function passed in
     void walkLayers(void (*walker)(DDLayer *));
-    /// set 'idle callback', which will be called repeatedly in 2 situations:
+ #ifndef DD_NO_IDLE_CALLBACK
+   /// set 'idle callback', which will be called repeatedly in 2 situations:
     /// - no connection response while connecting
     /// - detected no 'keep alive' signal (i.e. reconnecting)
     /// @param idleCallback the callback function; see DDIdleCallback
     void setIdleCallback(DDIdleCallback idleCallback); 
+#endif
+#ifndef DD_NO_CONNECT_VERSION_CHANGED_CALLBACK
     /// set callback when version changed (e.g. reconnected after disconnect)
     /// @param connectVersionChangedCallback the callback function; see DDConnectVersionChangedCallback
     void setConnectVersionChangedCallback(DDConnectVersionChangedCallback connectVersionChangedCallback);
+#endif
     /// check if it is safe to print to Serial
     bool canPrintToSerial();
     /// log line to Serial; if it is not safe to output to Serial, will write comment with DumbDisplay::writeComment() instead
@@ -1300,32 +1335,26 @@ class DumbDisplay {
     /// like to Serial (if safe to do so); and if connected,  will log as comment to DD as well  
     void log(const String& logLine, boolean isError = false);
  public:
-    /// @brief
+ #ifndef DD_NO_PASSIVE_CONNECT
+   /// @brief
     /// make connection passively; i.e. will not block, but will require continuous calling for making connection
     /// @return connection made or not (note that even if connection lost and requires reconnecting, it is still considered connected)
     /// @since 0.9.8-r1
+    /// @note if you will not be making use of "passive" connection, you can disable it by defining DD_NO_PASSIVE_CONNECT in order to reduce footprint 
     bool connectPassive(DDConnectPassiveStatus* pStatus = NULL);
-    // // EXPERIMENTAL
-    // void savePassiveConnectState(DDSavedConnectPassiveState& state);
-    // // EXPERIMENTAL
-    // void restorePassiveConnectState(DDSavedConnectPassiveState& state);
-    /// EXPERIMENTAL; "master reset" to be just like uninitialized;
     /// "master reset" will:
     /// . disconnect from DD app (if connected)
     /// . delete all created layers and tunnels; hence, DO NOT use the pointers to them after "master reset"
     /// . DumbDisplay object will be just like at initial state; it will *not* be deleted
     /// @since 0.9.8-r1
     void masterReset();  
-    // /// EXPERIMENTAL; like connectPassive();
-    // /// if detected reconnecting, will "master reset", which ...
-    // /// . disconnect from DD app (if connected)
-    // /// . delete all created layers and tunnels (hence, DO NOT use the pointer to them)
-    // /// . DumbDisplay object will be just like at initial state
-    // bool connectPassiveReset();
+#endif 
   public:
     /// set debug use callback
     /// @param debugInterface a concrete implementation of DDDebugInterface 
+#ifndef DD_NO_DEBUG_INTERFACE
     void debugSetup(DDDebugInterface *debugInterface);
+#endif    
     void debugOnly(int i);
   private:
     void initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, bool enableDoubleClick*/);
