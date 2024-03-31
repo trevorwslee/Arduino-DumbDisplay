@@ -4,6 +4,7 @@
 
 
 //#define TEST_GET_FEEDBACK 
+
 #define MB
 #define TURTLE
 #define GRAPHICAL
@@ -12,6 +13,7 @@
 
 namespace DDTesterImpl {
 
+#ifdef MB
 void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
     int count = stepCount % 10;
     if (count == 0) {
@@ -44,6 +46,9 @@ void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
     
     pLayer->showNumber(count);
 }
+#endif
+
+#ifdef TURTLE
 
 void debugTurtleTestStep(TurtleDDLayer *pLayer, int stepCount) {
   if (stepCount == 0) {
@@ -151,6 +156,8 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
       r = random(0, 255);
   }
 }
+
+#endif
 
 #ifdef GRAPHICAL
 

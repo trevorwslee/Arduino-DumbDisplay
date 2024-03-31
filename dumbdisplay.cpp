@@ -24,7 +24,7 @@
 #endif
 
 #ifdef ENABLE_FEEDBACK
-  #define FEEDBACK_BUFFER_SIZE 4
+  //#define FEEDBACK_BUFFER_SIZE 4
   #define HANDLE_FEEDBACK_DURING_DELAY
   #define READ_BUFFER_USE_BUFFER
 #endif
@@ -82,8 +82,8 @@
   #define FIRST_CONNECT_VERSION_CONSIDER_CHANGED
 #endif
 
-#ifdef DD_NO_SUPPORT_TUNNEL
-  #warning ??? DD_NO_SUPPORT_TUNNEL set ???
+#ifdef DD_NO_TUNNEL
+  #warning ??? DD_NO_TUNNEL set ???
 #else
   #define SUPPORT_TUNNEL
 #endif
@@ -531,6 +531,7 @@ bool _CanLogToSerial() {
 #define TO_C_NUM(num) IS_FLOAT_WHOLE(num) ? TO_C_INT((int) num) : String(num, DD_FLOAT_DP) 
 
 
+void __SendErrorComment(const char* comment);
 
 volatile bool _SendingCommand = false;
 volatile bool _HandlingFeedback = false;
@@ -1133,7 +1134,7 @@ void _PreDeleteLayer(DDLayer* pLayer) {
 }
 
 #ifdef SUPPORT_TUNNEL
-int _AllocTid() {
+inline int _AllocTid() {
   return _AllocLid();
 }
 void _PostCreateTunnel(DDTunnel* pTunnel, bool connectNow) {
@@ -1315,6 +1316,9 @@ void __SendComment(const char* comment, bool isError = false) {
   if (YIELD_AFTER_SEND_COMMAND) {
     yield();
   }
+}
+void __SendErrorComment(const char* comment) {
+  __SendComment(comment, true);
 }
 #ifdef DEBUG_MISSING_ENDPOINT_C  
 void __SendComment(const String& comment, bool isError = false) {
@@ -1833,11 +1837,13 @@ inline void _sendCommand8(const String& layerId, const char *command, const Stri
 inline void _sendCommand9(const String& layerId, const char *command, const String& param1, const String& param2, const String& param3, const String& param4, const String& param5, const String& param6, const String& param7, const String& param8, const String& param9) {
   _SendCommand(layerId, command, &param1, &param2, &param3, &param4, &param5, &param6, &param7, &param8, &param9);
 }
-#ifdef SUPPORT_TUNNEL
 inline void _sendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
+#ifdef SUPPORT_TUNNEL
   _SendSpecialCommand(specialType, specialId, specialCommand, specialData);
+#endif
 }
 void _setLTBufferCommand(const String& data) {
+#ifdef SUPPORT_TUNNEL
   if (true) {
     int dataLen = data.length();
     int i = 0;
@@ -1854,8 +1860,8 @@ void _setLTBufferCommand(const String& data) {
   } else {
     _sendSpecialCommand("ltbuf", "", NULL, data);
   }
-}
 #endif
+}
 void _sendByteArrayAfterCommand(const uint8_t *bytes, int byteCount, char compressMethod = 0) {
   __SendByteArrayPortion(NULL, bytes, byteCount, compressMethod);
   _sendCommand0("", C_KAL);  // send a "keep alive" command to make sure and new-line is sent
@@ -1879,7 +1885,23 @@ void _sendByteArrayAfterCommandChunked(const String& bytesId, const uint8_t *byt
 using namespace DDImpl;
 
 
-DDFeedbackManager::DDFeedbackManager(int8_t bufferSize) {
+#ifndef ENABLE_FEEDBACK
+void _sendFeedbackDisableComment() {
+#if defined(DD_NO_FEEDBACK)
+  __SendErrorComment("\"feedback\" disabled due to DD_NO_FEEDBACK");
+#endif
+}
+#endif
+#ifndef SUPPORT_TUNNEL
+void _sendTunnelDisabledComment() {
+#ifdef DD_NO_TUNNEL
+  __SendErrorComment("\"tunnel\" disabled due to DD_NO_TUNNEL");
+#endif  
+}
+#endif
+
+
+DDFeedbackManager::DDFeedbackManager(/*int8_t bufferSize*/) {
   this->nextArrayIdx = 0;
   this->validArrayIdx = 0;
 }
@@ -2006,7 +2028,9 @@ void DDLayer::_enableFeedback() {
 #ifdef ENABLE_FEEDBACK  
   if (pFeedbackManager != NULL)
     delete pFeedbackManager;
-  pFeedbackManager = new DDFeedbackManager(FEEDBACK_BUFFER_SIZE + 1);  // need 1 more slot
+  pFeedbackManager = new DDFeedbackManager(/*FEEDBACK_BUFFER_SIZE + 1*/);
+#else
+  _sendFeedbackDisableComment();
 #endif
 }
 void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
@@ -2017,6 +2041,8 @@ void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
   // if (pFeedbackManager != NULL)
   //   delete pFeedbackManager;
   // pFeedbackManager = new DDFeedbackManager(FEEDBACK_BUFFER_SIZE + 1);  // need 1 more slot
+#else
+  _sendFeedbackDisableComment();
 #endif
 }
 void DDLayer::disableFeedback() {
@@ -2047,6 +2073,8 @@ void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFe
     delete pFeedbackManager;
     pFeedbackManager = NULL;
   }
+#else
+  _sendFeedbackDisableComment();
 #endif
 }
 
@@ -2100,7 +2128,6 @@ void MbDDLayer::showImage(MbImage *pImage, int xOff) {
 void MbDDLayer::scrollImage(MbImage *pImage, int xOff, long interval) {
   _sendCommand3(layerId, "sclimg", pImage->getImageId(), String(xOff), String(interval));
 }
-
 
 void TurtleDDLayer::forward(int distance, bool withPen) {
   _sendCommand1(layerId, withPen ? "fd" : "dlfd", String(distance));
@@ -2195,6 +2222,7 @@ void TurtleDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
 void TurtleDDLayer::write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? C_drawtext : C_write, text);
 }
+
 void LedGridDDLayer::turnOn(int x, int y) {
   _sendCommand2(layerId, C_ledon, String(x), String(y));
 }
@@ -2588,7 +2616,7 @@ void TerminalDDLayer::println(const String& val) {
 //     Serial.begin(serialBaud);
 // }
 
-#ifdef SUPPORT_TUNNEL
+//#ifdef SUPPORT_TUNNEL
 DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& paramsParam, const String& endPointParam/*, bool connectNow*/):
   /*DDObject(DD_OBJECT_TYPE_TUNNEL), */type(type), tunnelId(String(tunnelId)), endPoint(endPointParam), params(paramsParam) {
     this->objectType = DD_OBJECT_TYPE_TUNNEL;
@@ -2626,17 +2654,19 @@ void DDTunnel::afterConstruct(bool connectNow) {
   }
 }
 DDTunnel::~DDTunnel() {
+#ifdef SUPPORT_TUNNEL	
 #ifdef DEBUG_BASIC  
   if (_CanLogToSerial()) Serial.println("--- delete DDTunnel");
 #endif
   _PreDeleteTunnel(this);
   //delete this->dataArray;
+#endif
 } 
 void DDTunnel::reconnect() {
   if (true) {
     if (endPoint.c_str() == NULL) {
       //__SendComment("DDTunnel::reconnect() - invalid tunnel endpoint", true);
-      __SendComment("invalid tunnel endpoint", true);
+      __SendErrorComment("invalid tunnel endpoint");
       return;
     }
   }
@@ -2734,7 +2764,7 @@ bool DDTunnel::_eof(long timeoutMillis) {
 #ifdef DEBUG_TUNNEL_RESPONSE
       Serial.println("_EOF: XXX TIMEOUT XXX");
 #endif                
-      __SendComment("*** TUNNEL TIMEOUT ***", true);
+      __SendErrorComment("*** TUNNEL TIMEOUT ***");
       if (true) {
         // since 2023-10-02
         done = true;
@@ -3080,7 +3110,7 @@ void JsonDDTunnelMultiplexer::reconnect() {
     }
   }
 }
-#endif
+//#endif
 
 
 void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, boolean enableDoubleClick*/) {
@@ -3116,7 +3146,7 @@ void DumbDisplay::configAutoPin(const String& layoutSpec) {
   _Connect();
   if (true) {
     if (layoutSpec.c_str() == NULL) {
-      __SendComment("invalid autopin config", true);
+      __SendErrorComment("invalid autopin config");
       return;
     }
   }
@@ -3452,9 +3482,8 @@ void DumbDisplay::debugOnly(int i) {
   }
   _sendByteArrayAfterCommand(bytes, i);
 }
-
-#ifdef SUPPORT_TUNNEL
 BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool connectNow, int8_t bufferSize) {
+#ifdef SUPPORT_TUNNEL
   int tid = _AllocTid();
   String tunnelId = String(tid);
   // if (connectNow) {
@@ -3463,8 +3492,13 @@ BasicDDTunnel* DumbDisplay::createBasicTunnel(const String& endPoint, bool conne
   BasicDDTunnel* pTunnel = new BasicDDTunnel("ddbasic", tid, "", endPoint/*, connectNow*/, bufferSize);
   _PostCreateTunnel(pTunnel, connectNow);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connectNow, int8_t bufferSize) {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   // if (connectNow) {
@@ -3473,15 +3507,25 @@ JsonDDTunnel* DumbDisplay::createJsonTunnel(const String& endPoint, bool connect
   JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, "", endPoint/*, connectNow*/, bufferSize);
   _PostCreateTunnel(pTunnel, connectNow);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, const String& fieldNames, bool connectNow, int8_t bufferSize) {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   JsonDDTunnel* pTunnel = new JsonDDTunnel("ddsimplejson", tid, fieldNames, endPoint/*, connectNow*/, bufferSize);
   _PostCreateTunnel(pTunnel, connectNow);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload) {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   String params = imageName;
@@ -3494,24 +3538,39 @@ _sendCommand0("", ("// CreateEP -- " + endPoint).c_str());
   SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, params, endPoint/*, true*/, 1);
   _PostCreateTunnel(pTunnel, true);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 BasicDDTunnel* DumbDisplay::createDateTimeServiceTunnel() {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   BasicDDTunnel* pTunnel = new BasicDDTunnel("datetimeservice", tid, "", ""/*, false*/, 1);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 
 GpsServiceDDTunnel* DumbDisplay::createGpsServiceTunnel() {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   GpsServiceDDTunnel* pTunnel = new GpsServiceDDTunnel("gpsservice", tid, "", ""/*, false*/, 1);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 
 ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel(int scaleToWidth, int scaleToHeight, int maxNumObjs) {
+#ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   String params;
@@ -3522,12 +3581,17 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
   ObjectDetetDemoServiceDDTunnel* pTunnel = new ObjectDetetDemoServiceDDTunnel("objectdetectdemo", tid, params, ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
 }
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
+#ifdef SUPPORT_TUNNEL	
   pTunnel->release();
   delete pTunnel;  // will call _PreDeleteTunnel
-}
 #endif
+}
 
 
 // bool DumbDisplay::canLogToSerial() {
@@ -3539,17 +3603,21 @@ void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
 //   _NoEncodeInt = noCompression;
 // }
 //#endif
+#ifndef DD_NO_IDLE_CALLBACK
 void DumbDisplay::setIdleCallback(DDIdleCallback idleCallback) {
 #ifdef SUPPORT_IDLE_CALLBACK
   _IdleCallback = idleCallback;
 #endif
 }
+#endif
+
+#ifndef DD_NO_CONNECT_VERSION_CHANGED_CALLBACK
 void DumbDisplay::setConnectVersionChangedCallback(DDConnectVersionChangedCallback connectVersionChangedCallback) {
 #ifdef SUPPORT_CONNECT_VERSION_CHANGED_CALLBACK
   _ConnectVersionChangedCallback = connectVersionChangedCallback;
 #endif
 }
-
+#endif
 
 // void DumbDisplay::delay(unsigned long ms) {
 //   _Delay(ms);

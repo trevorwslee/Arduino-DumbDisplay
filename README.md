@@ -1875,6 +1875,7 @@ MIT
 # Change History
 
 v0.9.8-r7
+  - added some "footprint" options
   - added "press" "feedback" option
   - bug fix
 

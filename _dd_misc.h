@@ -424,10 +424,12 @@ class DDLayoutHelper {
     inline void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "") {
       dumbdisplay.pinAutoPinLayers(layoutSpec, uLeft, uTop, uWidth, uHeight, align);
     }
+#ifndef DD_NO_IDLE_CALLBACK
     /// basically DumbDisplay::setIdleCallback()
     inline void setIdleCallback(DDIdleCallback idleCallback) {
       dumbdisplay.setIdleCallback(idleCallback);
     }
+#endif
     // // deprecated
     // inline void setIdleCalback(DDIdleCallback idleCallback) {
     //   dumbdisplay.setIdleCalback(idleCallback);

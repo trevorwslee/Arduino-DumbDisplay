@@ -96,11 +96,16 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODING befo
 #define DD_PROGRAM_SPACE_COMPRESS_BA_0 '!'
 #define DD_COMPRESS_BA_0 '0'
 
-#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
-  #define DD_TUNNEL_DEF_BUFFER_SIZE 2
-#else
-  #define DD_TUNNEL_DEF_BUFFER_SIZE 4
+#ifndef DD_TUNNEL_DEF_BUFFER_SIZE
+  #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+    #define DD_TUNNEL_DEF_BUFFER_SIZE 2
+  #else
+    #define DD_TUNNEL_DEF_BUFFER_SIZE 4
+  #endif
 #endif
+#if DD_TUNNEL_DEF_BUFFER_SIZE < 2
+  #error "DD_TUNNEL_DEF_BUFFER_SIZE must be at least 2"
+#endif 
 
 
 #define DDIO_USE_DD_SERIAL
@@ -196,7 +201,7 @@ class DDLayer: public DDObject {
     void flash();
     /// normally used for "feedback" -- flash the area (x, y) where the layer is clicked
     void flashArea(int x, int y);
-    const String& getLayerId() const { return layerId; }
+    inline const String& getLayerId() const { return layerId; }
     /// set explicit (and more responsive) "feedback" handler (and enable feedback)
     /// @param handler "feedback" handler; see DDFeedbackHandler
     /// @param autoFeedbackMethod see DDLayer::enableFeedback()
@@ -220,9 +225,9 @@ class DDLayer: public DDObject {
   public:
 #ifndef DD_NO_FEEDBACK
     /// @attention used internally
-    DDFeedbackManager* getFeedbackManager() const { return pFeedbackManager; }
+    inline DDFeedbackManager* getFeedbackManager() const { return pFeedbackManager; }
     /// @attention used internally
-    DDFeedbackHandler getFeedbackHandler() const { return feedbackHandler; }
+    inline DDFeedbackHandler getFeedbackHandler() const { return feedbackHandler; }
 #endif    
   protected:
     DDLayer(int8_t layerId);
@@ -234,6 +239,7 @@ class DDLayer: public DDObject {
   protected:
     String layerId;  
 #ifndef DD_NO_FEEDBACK
+    // either feedbackManager or feedbackHandler is used
     DDFeedbackManager *pFeedbackManager;
     DDFeedbackHandler feedbackHandler;
 #endif    
@@ -255,7 +261,6 @@ class MbImage {
   private:
     String imageId;
 };
-
 
 /// Class for Microbit-like DD layer; created with DumbDisplay::createMicrobitLayer()
 class MbDDLayer: public DDLayer {
@@ -291,7 +296,6 @@ class MbDDLayer: public DDLayer {
     void showImage(MbImage *pImage, int xOff);
     void scrollImage(MbImage *pImage, int xOff, long interval);
 };
-
 
 /// Class for Turtle-like DD layer; created with DumbDisplay::createTurtleLayer()
 class TurtleDDLayer: public DDLayer {
@@ -361,7 +365,6 @@ class TurtleDDLayer: public DDLayer {
     /// write text; draw means draw the text (honor heading)
     void write(const String& text, bool draw = false);
 };
-
 
 /// Class for LED grid layer; created with DumbDisplay::createLedGridLayer()
 class LedGridDDLayer: public DDLayer {
@@ -1038,6 +1041,7 @@ class JsonDDTunnelMultiplexer {
      JsonDDTunnel** tunnels;
 };
 
+#ifndef DD_NO_IDLE_CALLBACK
 /// @struct DDIdleConnectionState
 /// @brief
 /// See DDIdleCallback
@@ -1048,11 +1052,14 @@ enum DDIdleConnectionState { IDLE_NOT_CONNECTED, IDLE_CONNECTING, IDLE_RECONNECT
 /// @param idleForMillis  how long (millis) the connection has been idle
 /// @param connectionState  the connection state
 typedef void (*DDIdleCallback)(long idleForMillis, DDIdleConnectionState connectionState);
+#endif
+
+#ifndef DD_NO_CONNECT_VERSION_CHANGED_CALLBACK
 /// @struct DDConnectVersionChangedCallback
 /// @brief
 /// Type signature for callback function that will be called when connect version (counting up) changed. See DumbDisplay::setConnectVersionChangedCallback()
 typedef void (*DDConnectVersionChangedCallback)(int connectVersion);
-
+#endif
 
 #ifndef DD_NO_DEBUG_INTERFACE
 /// @struct DDDebugConnectionState
@@ -1307,14 +1314,18 @@ class DumbDisplay {
     void deleteLayer(DDLayer *pLayer);
     /// loop through all the existing layers calling the function passed in
     void walkLayers(void (*walker)(DDLayer *));
-    /// set 'idle callback', which will be called repeatedly in 2 situations:
+ #ifndef DD_NO_IDLE_CALLBACK
+   /// set 'idle callback', which will be called repeatedly in 2 situations:
     /// - no connection response while connecting
     /// - detected no 'keep alive' signal (i.e. reconnecting)
     /// @param idleCallback the callback function; see DDIdleCallback
     void setIdleCallback(DDIdleCallback idleCallback); 
+#endif
+#ifndef DD_NO_CONNECT_VERSION_CHANGED_CALLBACK
     /// set callback when version changed (e.g. reconnected after disconnect)
     /// @param connectVersionChangedCallback the callback function; see DDConnectVersionChangedCallback
     void setConnectVersionChangedCallback(DDConnectVersionChangedCallback connectVersionChangedCallback);
+#endif
     /// check if it is safe to print to Serial
     bool canPrintToSerial();
     /// log line to Serial; if it is not safe to output to Serial, will write comment with DumbDisplay::writeComment() instead

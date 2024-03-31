@@ -144,39 +144,46 @@ void loop() {
     // detect "bark"
     detectSound = BarkWavFileName;
   }
-  if (detectSound != NULL) {
-    witEndpoint.resetSoundAttachment(detectSound);
-    witTunnel->reconnectToEndpoint(witEndpoint);
-    statusLayer->writeCenteredLine("... detecting ...");
-    String detected = "";
-    while (!witTunnel->eof()) {
-      String fieldId;
-      String fieldValue;
-      if (witTunnel->read(fieldId, fieldValue)) {
-        if (fieldValue != "") {
-          dumbdisplay.writeComment(fieldValue);
-          detected = fieldValue;
-          statusLayer->writeCenteredLine(String("... ") + " [" + detected + "] ...");
+  if (witTunnel != NULL) {
+    if (detectSound != NULL) {
+      witEndpoint.resetSoundAttachment(detectSound);
+      witTunnel->reconnectToEndpoint(witEndpoint);
+      statusLayer->writeCenteredLine("... detecting ...");
+      String detected = "";
+      while (!witTunnel->eof()) {
+        String fieldId;
+        String fieldValue;
+        if (witTunnel->read(fieldId, fieldValue)) {
+          if (fieldValue != "") {
+            dumbdisplay.writeComment(fieldValue);
+            detected = fieldValue;
+            statusLayer->writeCenteredLine(String("... ") + " [" + detected + "] ...");
+          }
         }
       }
+      detectSound = NULL;
+      if (detected == "Yes") {
+        detectSound = YesWavFileName;
+      } else if (detected == "No") {
+        detectSound = NoWavFileName;
+      }
+    
+      if (detectSound == NULL) {
+        statusLayer->writeCenteredLine("Not YES/NO!");
+        dumbdisplay.tone(800, 100);
+      } else {
+        statusLayer->writeCenteredLine(String("Detected") + " " + detected + "!");
+        dumbdisplay.tone(2000, 100);
+        delay(200);
+        dumbdisplay.playSound(detectSound);
+      } 
+      return;
     }
-    detectSound = NULL;
-    if (detected == "Yes") {
-      detectSound = YesWavFileName;
-    } else if (detected == "No") {
-      detectSound = NoWavFileName;
+  } else {
+    if (detectSound != NULL) {
+      statusLayer->writeCenteredLine("No tunnel!");
+      return;
     }
-  
-    if (detectSound == NULL) {
-      statusLayer->writeCenteredLine("Not YES/NO!");
-      dumbdisplay.tone(800, 100);
-    } else {
-      statusLayer->writeCenteredLine(String("Detected") + " " + detected + "!");
-      dumbdisplay.tone(2000, 100);
-      delay(200);
-      dumbdisplay.playSound(detectSound);
-    }
-    return;
   }
 
   String status = "";
