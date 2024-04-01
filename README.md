@@ -93,7 +93,7 @@ lib_deps =
 
 For demo on installing DumbDisplay Arduino Library for PlatformIO project, you may want to watch the video [**Arduino UNO Programming with PlatformIO and DumbDisplay**](https://www.youtube.com/watch?v=PkeFa2ih4EY) 
 
-To upgrade DumbDisplay Arduino Library for that PlatformIO project, you can simply delete the 'depended libraries' directory `.pio/libdeps` to force all to be re-installed.
+To upgrade DumbDisplay Arduino Library for that PlatformIO project, you can simply delete the 'depended libraries' directory `.pio/libdeps/.../DumbDisplay Arduino Library` to force it to be re-installed.
 
 
 # DumbDisplay Android App
@@ -146,6 +146,9 @@ void loop() {
 3) In the `setup` block, create the globally declared layer objects via the DumbDisplay object.
 4) Once created, the layer objects can be used in the `loop()` block. Like in this case, the `toggle()` method of the `led` layer object is called, effectively blinking the virtual LED every second. 
 
+Since the sketch assumes USB connectivity to your Android phone, hence, the final step is to attach your microcontroller board to your Android phone via a OTG adapter. 
+
+You may want to refer to my post [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/) for more description on such connection.
 
 
 |  | |
@@ -186,15 +189,15 @@ Here is the list of all connection IO objects that you can use:
     DumbDisplay dumbdisplay(new DDInputOutput(115200));
   ```
   - need to include `dumbdisplay.h` -- `#include "dumbdisplay.h"`
-  - setup a `dumbdisplay` object-- `DumbDisplay dumbdisplay(new DDInputOutput())`
+  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - you **should not** be using `Serial` for other purposes
-  - the default baud rate is 115200;  a lower baud rate, say 9600, may work better in some cases (**be remindered that** DumbDisplay app side also need be set to matching baud rate)
+  - the default baud rate is 115200;  a lower baud rate, say 9600, may work better in some cases; **be remindered that** DumbDisplay app side also need be set to matching baud rate
 * Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- attached to a Bluetooth module like HC-06. For an example, you may want to refer to the post [Setup HC-05 and HC-06, for Wireless 'Number Invaders'](https://www.instructables.com/Setup-HC-05-and-HC-06-for-Wireless-Number-Invaders/) -- [DDSoftwareSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_software_serial_i_o.html)
   ```
     #include "ssdumbdisplay.h"
     DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200));
   ```
-  - need to include `ssdumbdisplay.h` -- `#include "ssdumbdisplay.h"`
+  - need to include `ssdumbdisplay.h` -- `#include "ssdumbdisplay.h"` -- which internally includes `dumbdisplay.h`
   - setup a `dumbdisplay` object -- e.g. `DumbDisplay dumbdisplay(new DDSoftwareSerialIO(new SoftwareSerial(2, 3), 115200))`  
     - in this example, 2 and 3 are the pins used by `SoftwareSerial`
     - the default baud rate is 115200, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially true for HC-08, which connects via BLE. 
@@ -479,7 +482,7 @@ void loop() {
 
 ### Sample -- *Nested "auto pin" layers*
 
-Auto pinning of layers is not restricted to a single direction. In fact, it can be nested, like
+Auto pinning of layers (more details later) is not restricted to a single direction. In fact, it can be nested, like
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddautopin/ddautopin.ino
 
@@ -653,7 +656,7 @@ void loop() {
 
 ### Sample -- *"Layer feedback"*
 
-This very simple doodle sample shows how the "layer feedback" mechanism can be used to route user interaction (clicking) of layer to Arduino.
+This very simple doodle sample shows how the "layer feedback" mechanism (more details later) can be used to route user interaction (clicking) of layer to Arduino.
 
 https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/dddoodle/dddoodle.ino
 
@@ -767,7 +770,7 @@ Notes:
 
 ### Example -- *RGB "Sliders"*
 
-This example make use of the virtual Joystick layers to realize three "sliders" for selecting the three primiary colors, to be render with a virtual graphical [LCD] layer -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgrgb/otgrgb.ino
+This example make use of the virtual Joystick layers with "feedback" to realize three "sliders" for selecting the three primary colors, to be render with a virtual graphical [LCD] layer -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgrgb/otgrgb.ino
 
 ```
 #include "dumbdisplay.h"
@@ -791,7 +794,7 @@ int b = 0;
 void setup() {
   // create the "selected color" layer
   colorLayer = dumbdisplay.createGraphicalLayer(350, 150);
-    colorLayer->border(5, "black", "round", 2);
+  colorLayer->border(5, "black", "round", 2);
   
   // create the R "slider" layer
   rSliderLayer = dumbdisplay.createJoystickLayer(255, "hori", 0.5);
@@ -842,7 +845,7 @@ void loop() {
 
 ### Example -- *"Tunnel" for RESTful*
 
-This example should demonstrate how to use "tunnel" to access the Internet for simple things, like calling RESTful api -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgrest/otgrest.ino
+This example should demonstrate how to use "tunnel" (more details later) to access the Internet for simple things, like calling RESTful api -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgrest/otgrest.ino
 
 ```
 #include "dumbdisplay.h"
@@ -1069,19 +1072,19 @@ In case a "tunnel" reaches EOF, and needs be reinvoked:
 restTunnel->reconnect();
 ```
 
-In case a "tunnel" finishes all its tasks in the middle of the sketch, it should be released in order for Arduino to claim back resources:
+In case a "tunnel" finishes all its tasks in the middle of the sketch, it can be released in order for Arduino to claim back resources:
 
 ```
 dumbdisplay.deleteTunnel(restTunnel);
 ```
 
-Here is some description on the how JSON response to JSON data is converted, and how to loop getting the JSON data:
+Here is some description on how JSON response to JSON data is converted and how to loop getting the JSON data:
 
 * you construct `JsonDDTunnel` "tunnel" and make REST request like:
   ```
   pTunnel = dumbdisplay.createJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong"); 
   ```
-* you read JSON data from the "tunnel" a piece at a time;
+* you [asynchronously] read JSON data from the "tunnel" a piece at a time;
   e.g. if the JSON is
   ```
   { 
@@ -1253,7 +1256,7 @@ DumbDisplay app supports the use of  selective downloadable font open sourced by
 
 In order to ensure that these Google's fonts are ready for DumbDisplay app when they are used, please check ***Settings | Pre-Download Fonts***
 
-For a complete sample sketch of using downloadable font, please refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddfonts/ddfonts.ino
+For a complete sample sketch of using downloadable font, please refer to https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgfonts/otgfonts.ino
 
 
 ## Positioning of Layers
@@ -1519,6 +1522,30 @@ pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag-9999");
 |For a complete example, please refer to the sketch as shown in the YouTube -- [Building a DL model for the Mnist Dataset, to building an Arduino Sketch for ESP32S3 (also ESP32)](https://www.youtube.com/watch?v=cL1-5BKJu30) The drawing of the hand-written digit is basically triggered by "drag" "feedbacks" |![](screenshots/esp32_mnist.gif)|
 
 
+If you prefer to detect pressing of layer, rather than clicking, you can do so like:
+
+```
+void setup() {
+  ...
+  pLayer->enableFeedback(":press");  // can be like "fs:press"
+  ...
+}
+void loop() {
+  ...
+  fb = pLayer->getFeedback();
+  if (fb != NULL) {
+    if (fb->type == UP) {
+      dumbdisplay.writeComment("UP");
+    } else if (fb->type == DOWN) {
+      dumbdisplay.writeComment("DOWN");
+    }
+  }
+  ...
+}
+```
+
+
+
 
 ## Idle Callback and ESP32 Deep Sleep
 
@@ -1561,9 +1588,11 @@ pTunnel = dumbdisplay.createImageDownloadTunnel("https://placekitten.com/680/480
 
 As preparation, you will need to grant DumbDisplay app permission to access your phone's storage.
 
-Select the menu item ***settings*** and click the button ***access images***. This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.
+Select the menu item ***settings*** and click the button ***media storage***. This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.
 
-Once permission granted, DumbDisplay app will create a private folder, and write a small sample image `dumbdisplay.png` there. From now on, DumbDisplay will access the folder for any image files that it will need to read / write.
+Once permission granted, DumbDisplay app will create a private folder, and write some little sample resources there, like image `dumbdisplay.png`. From now on, DumbDisplay will access the folder for any image files that it will need to read / write.
+
+You can browse the private folder using some "File Manager" app (with proper permission) -- `Android/data/nobody.trevorlee.dumbdisplay/files/`
 
 Since it takes a bit of time to download image file from the Web, you will need to check it's download status asyncrhonously like
 
@@ -1629,12 +1658,12 @@ const unsigned char phoneBitmap [] PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 ...
-  void setup() {
-    ...
-    unsigned char buffer[240];
-    display->cachePixelImage("phone.png", PgmCopyBytes(phoneBitmap, sizeof(phoneBitmap), buffer), 24, 24, COLOR_1);
-    ...
-  }
+void setup() {
+  ...
+  unsigned char buffer[240];
+  display->cachePixelImage("phone.png", PgmCopyBytes(phoneBitmap, sizeof(phoneBitmap), buffer), 24, 24, COLOR_1);
+  ...
+}
 ```
 Notes:
 * If *PROGMEM* is used to mark the byte array, `PgmCopyBytes()` reads the bytes view `pgm_read_byte`
@@ -1791,6 +1820,7 @@ Notice:
 |--|--|
 |For a complete program / sketch that demonstrates how "passive" connetion is used, you may want to refer to the post [Extending a TFT_eSPI Example With TTGO T-Display Using PlatformIO, With DumbDisplay](https://www.instructables.com/Extending-a-TFTeSPI-Example-With-TTGO-T-Display-Us/)|![](screenshots/tdisplayclock.png)|
 
+
 # Reference
 
 For reference, you may want to resort to the headers of the different related classes. To better display the headers, [Doxygen](https://www.doxygen.nl/index.html) is used to generate doc HTML pages autmoatically -- https://trevorwslee.github.io/ArduinoDumbDisplay/html/
@@ -1842,6 +1872,9 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 
 * In fact, showing commands on DumbDisplay app may slow things down, even makes your DumbDisplay app non-responsive (like freeze), especially when commands are sent in fast succession. Hence, suggest to disable DumbDisplay app's `Show Commands` option.
 
+* On the contrary, if you do have some info, like that logged with `writeComment()`, that you have to jog down for whatever reason,
+  you can share the Terminal's text with the command "Share Terminal Text"
+
 * Setting DumbDisplay app's `Pixel Density` to **Medium** will make the layer's text and other aspects look better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text but don't want to pay the price, try setting it to **Over**. Hopefully, **Over** is less taxing, since the text rendering is "native to your device", resulting in rendered text sligtly "over" the boundary where it should be, but looks better 
 
 |**Normal**|**Medium**|**High**|**Fine**|**Over**|
@@ -1852,7 +1885,7 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 * You can drag the bottom left/right side of the DumbDisplay canvas to have it resized.
 * You can pinch-zoom the DumbDisplay canvas to resize it as well, if `Zoom Mode` is set to *ZOOM*. BTW, with `Zoom Mode` set to *ZOOM*, pinch-zooming the DumbDisplay canvas will zoom it (the layers). When it is zoomed, it will not produce any "feedback". You double-click the canvas to return it to normal size.
 * You may want to set `Zoom Mode` to *DISABLED*. If disabled, action like moving virtual joystick "feedback" can be simultaneous with other "feedback" like clicking (like using both hands for dragging and clicking).
-* You can long press the terminal view to disable it's autoscrolling. BTW, terminal view has the `Keep Lines` limit, which you set with the `Setting` page. And this `Keep Lines` can certainly affect how much memory DumbDisplay will be used, should you have so much lines to be display by the terminal view.
+* You can long press the terminal view to disable it's autoscrolling. BTW, terminal view has the `Keep Lines` limit, which you set with the `Setting` page. And this `Keep Lines` can certainly affect how much memory DumbDisplay will be used, should you have so many lines to be display by the terminal view.
 * When DumbDisplay app is connected and is in the foreground, your phone will not go to sleep. If DumbDisplay is put to the background, connection will still be kept.
 
 
