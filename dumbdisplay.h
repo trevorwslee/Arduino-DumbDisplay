@@ -384,20 +384,21 @@ class LedGridDDLayer: public DDLayer {
     /// @param onColor LED on color (common color name); empty string means what already set
     void turnOnEx(int x = 0, int y = 0, const String& onColor = "");
     /// turn on/off LEDs based on bits
-    /// @param bits least significant bit maps to right-most LED
+    /// @param bits most significant bit (bit 0) maps to left-most LED
     /// @param y row
+    /// @param reverse true means reversed ... i.e. least significant bit (bit 31) maps to left-most LED
     void bitwise(unsigned int bits, int y = 0, bool reverse = false);
     /// turn on/off two rows of LEDs by bits
-    /// @param y starting row
+    /// @see bitwise()
     void bitwise2(unsigned int bits_0, unsigned int bits_1, int y = 0, bool reverse = false);
     /// turn on/off three rows of LEDs by bits
-    /// @param y starting row
+    /// @see bitwise()
     void bitwise3(unsigned int bits_0, unsigned int bits_1, unsigned int bits_2, int y = 0, bool reverse = false);
     /// turn on/off four rows of LEDs by bits
-    /// @param y starting row
+    /// @see bitwise()
     void bitwise4(unsigned int bits_0, unsigned int bits_1, unsigned int bits_2, unsigned int bits_3, int y = 0, bool reverse = false);
     /// turn on LEDs to form a horizontal "bar"
-    /// @param rightToLeft true means right to left
+    /// @see bitwise()
     void horizontalBar(int count, bool rightToLeft = false);
     /// turn on LEDs to form a vertical "bar" 
     /// @param bottomToTop true means bottom to top
