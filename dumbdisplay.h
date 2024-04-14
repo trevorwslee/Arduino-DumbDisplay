@@ -139,10 +139,14 @@ const int8_t DD_OBJECT_TYPE_TUNNEL = 1;
 struct DDObject {
     /// object type -- DD_OBJECT_TYPE_LAYER or DD_OBJECT_TYPE_TUNNEL
     int8_t objectType;
+#ifdef DD_NO_CUSTOM_DATA
+  #warning ??? DD_NO_CUSTOM_DATA set ???
+#else
     /// custom data
     String customData;
+#endif
 public:
-   // since 20230601
+    // since 20230601
     virtual ~DDObject() {}
 };
 
@@ -1136,7 +1140,7 @@ class DumbDisplay {
     /// - vertical: V(*)
     /// - or nested, like H(0+V(1+2)+3);  where 0/1/2/3 are the layer ids
     /// - consider using the macros DD_AP_XXX
-    void configAutoPin(const String& layoutSpec);
+    void configAutoPin(const String& layoutSpec = DD_AP_VERT);
     /// add the "auto pin" config for layers not included in "auto pin" set by configAutoPin()
     /// @param remainingLayoutSpec 
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);

@@ -268,7 +268,8 @@ template<int MAX_DEPTH> class DDAutoPinConfigBuilder {  // MAX_DEPTH: depth of [
 class DDAutoPinConfig {
   public:
     /// @param dir directory of layers at the top level; can be 'H' for horizontal,  'V' for vertical and 'S' for stacked
-    DDAutoPinConfig(char dir, int nestedDepth = 3) {
+    /// @param nestedDepth maximum depth of nesting; default is 5
+    DDAutoPinConfig(char dir, int nestedDepth = 5) {
       
       config = String(dir) + "(";
       depth = 0;
@@ -284,6 +285,11 @@ class DDAutoPinConfig {
     DDAutoPinConfig& beginGroup(char dir) {
       addConfig(String(dir) + "(");
       depth += 1;
+      int maxDepth = sizeof(started) / sizeof(bool) - 1;
+      if (depth > maxDepth) {
+        // not expected
+        depth = maxDepth;
+      }
       started[depth] = false;
       return *this;
     }  
@@ -291,6 +297,10 @@ class DDAutoPinConfig {
     DDAutoPinConfig& endGroup() {
       config.concat(')');
       depth -= 1;
+      if (depth < 0) {
+        // not expected
+        depth = 0;
+      }
       return *this;
     }
     /// begin a layer group, with specified padding
@@ -302,6 +312,11 @@ class DDAutoPinConfig {
     DDAutoPinConfig& beginPaddedGroup(char dir, int left, int top, int right, int bottom) {
       addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
       depth += 1;
+      int maxDepth = sizeof(started) / sizeof(bool) - 1;
+      if (depth > maxDepth) {
+        // not expected
+        depth = maxDepth;
+      }
       started[depth] = false;
       return beginGroup(dir);
     }  
@@ -358,6 +373,7 @@ class DDAutoPinConfig {
 
 
 
+/// @brief
 /// Helper class for tracking connection "version" change.
 /// - initial connection will have version 1
 /// - when reconnected (after disconnect) version will be incremented every such event
@@ -483,6 +499,52 @@ class DDFadingLayers {
 };
 
 
-
+#if __GNUC__ >= 8
+  #include <functional>
+#endif  
+/// @brief
+/// Helper class to manage passive connection to DumbDisplay.
+/// The only method that should be called in `void loop() {}` is DDPassiveConnectionHelper::loop(), 
+/// passing to it some callbacks
+/// @since v0.9.8-r8
+class DDPassiveConnectionHelper {
+  public:
+    DDPassiveConnectionHelper(DumbDisplay& dumbdisplay) : dumbdisplay(dumbdisplay) {
+      this-> initialized = false;
+    }
+  public:
+    /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
+    /// @param updateCallback called to update DumbDisplay components
+    /// @param masterResetCallback called after "master reset" DumbDisplay, i.e. lost previous connection
+#if defined(DD_PASSIVE_CONNECTION_HELPER) || __GNUC__ >= 8
+    bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback, std::function<void()> masterResetCallback = NULL) {
+#else
+    bool loop(void (*initializeCallback)(), void (*updateCallback)(), void (*masterResetCallback)() = NULL) {
+#endif
+      DDConnectPassiveStatus connectStatus;
+      dumbdisplay.connectPassive(&connectStatus);
+      if (connectStatus.connected) {
+        if (connectStatus.reconnecting) {
+          // if reconnecting (i.e. lost previous connection, "master reset" DumbDisplay)
+          dumbdisplay.masterReset();
+          this->initialized = false;
+          if (masterResetCallback != NULL) masterResetCallback();
+          return false;
+        }
+        if (!this->initialized) {
+          this->initialized = true;
+          if (initializeCallback != NULL) initializeCallback();
+        }
+        if (updateCallback != NULL) updateCallback();
+        return true;
+      }
+      return false;
+    }
+    inline bool is_initialized() { return this->initialized; }
+  public:
+    DumbDisplay& dumbdisplay;  
+  private:
+    bool initialized;  
+};
 
 #endif

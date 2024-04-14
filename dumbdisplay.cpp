@@ -94,8 +94,13 @@
 #define VALIDATE_CONNECTION
 //#define DEBUG_WITH_LED
 
-#define SUPPORT_RECONNECT
-#define RECONNECT_NO_KEEP_ALIVE_MILLIS 5000
+#ifdef DD_NO_RECONNECT
+  #warning ??? DD_NO_RECONNECT set ???
+#else
+  #define SUPPORT_RECONNECT
+  #define RECONNECT_NO_KEEP_ALIVE_MILLIS 5000
+#endif
+
 #define VALIDATE_GAP 1000
 #define RECONNECTING_VALIDATE_GAP 500
 
@@ -290,8 +295,10 @@ class IOProxy {
     DDInputOutput *pIO;
     bool fromSerial;
     String data;  
-#ifdef SUPPORT_RECONNECT      
+#if defined (SUPPORT_IDLE_CALLBACK) || defined (SUPPORT_RECONNECT)
     unsigned long lastKeepAliveMillis;
+#endif
+#ifdef SUPPORT_RECONNECT      
     bool reconnectEnabled;
     String reconnectRCId;
     long reconnectKeepAliveMillis;
