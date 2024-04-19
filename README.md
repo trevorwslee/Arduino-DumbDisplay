@@ -37,6 +37,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 * [Reference](#reference)
 * [DumbDisplay WIFI Bridge](#dumbdisplay-wifi-bridge)
 * [DumbDisplay App Hints](#dumbdisplay-app-hints)
+* [Startup DumbDisplay App from Another Android App](#startup-dumbdisplay-app-from-another-android-app)
 * [Thank You!](#thank-you)
 * [License](#license)
 * [Change History](#change-history)
@@ -1888,8 +1889,70 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 * You can long press the terminal view to disable it's autoscrolling. BTW, terminal view has the `Keep Lines` limit, which you set with the `Setting` page. And this `Keep Lines` can certainly affect how much memory DumbDisplay will be used, should you have so many lines to be display by the terminal view.
 * When DumbDisplay app is connected and is in the foreground, your phone will not go to sleep. If DumbDisplay is put to the background, connection will still be kept.
 
-* Startup from another Android app
-<div class="snack-player" data-snack-name="Hello World" data-snack-description="Example usage" data-snack-files="%7B%22App.tsx%22%3A%7B%22type%22%3A%22CODE%22%2C%22contents%22%3A%22import%20React%20from%20'react'%3B%5Cnimport%20%7BText%2C%20View%7D%20from%20'react-native'%3B%5Cn%5Cnconst%20YourApp%20%3D%20()%20%3D%3E%20%7B%5Cn%20%20return%20(%5Cn%20%20%20%20%3CView%5Cn%20%20%20%20%20%20style%3D%7B%7B%5Cn%20%20%20%20%20%20%20%20flex%3A%201%2C%5Cn%20%20%20%20%20%20%20%20justifyContent%3A%20'center'%2C%5Cn%20%20%20%20%20%20%20%20alignItems%3A%20'center'%2C%5Cn%20%20%20%20%20%20%7D%7D%3E%5Cn%20%20%20%20%20%20%3CText%3ETry%20editing%20me!%20%F0%9F%8E%89%3C%2FText%3E%5Cn%20%20%20%20%3C%2FView%3E%5Cn%20%20)%3B%5Cn%7D%3B%5Cn%5Cnexport%20default%20YourApp%3B%22%7D%7D" data-snack-dependencies="" data-snack-platform="web" data-snack-supported-platforms="ios,android,web" data-snack-theme="light" data-snack-preview="true" data-snack-loading="lazy" data-snack-device-frame="false"><iframe loading="lazy" src="https://snack.expo.dev/embedded?iframeId=6k4b37qaqe&amp;preview=true&amp;platform=web&amp;supportedPlatforms=ios,android,web&amp;name=Hello World&amp;description=Example usage&amp;theme=light&amp;deviceFrame=false&amp;waitForData=true" height="100%" width="100%" frameborder="0" data-snack-iframe="true" style="display: block;"></iframe></div>
+
+# Startup DumbDisplay App from Another Android App
+
+
+Due mostly to technical considerations, DumbDisplay Android app can be started from another Android app, triggering some customizations that best fit different microcontroller program use cases, without having to manually select the options from the UI of the app.
+
+The customizations are
+- Name of the app, in various places, like
+  * media storage
+  * app title
+- Hide the terminal view all together -- `noTerminal`
+- Start in **full screen** mode -- `fullScreen`
+- Must make connection without needing user to click the **connect** icon -- `mustConnect`
+- Do not use storage -- `noStorage`
+- Specify what **device types** can be selected -- `deviceTypes`
+  * `WIFI` -- WIFI
+  * `BT` -- Bluetooth
+  * `LE` -- BLE
+  * `USB` -- USB
+  * `DEMO`
+
+Starting DumbDisplay app from another app can be as simple as starting an `Activity` with some special URL, like
+
+```
+val intent = Intent(Intent.ACTION_VIEW)
+val data = Uri.parse("nb.tl.dd://MyApp?mustConnect&noTerminal&deviceTypes=WIFI,BT")
+intent.setData(data)
+startActivity(intent)
+```
+
+The same can be done with React Native, like
+
+```
+import { Button, Linking, StyleSheet, Text, View } from 'react-native';
+export default function App() {
+  const handleMCNT = () => {
+    console.log('* handleMCNT');
+    Linking.openURL('nb.tl.dd://MyApp?mustConnect&noTerminal&deviceTypes=DEMO')    
+  }
+  return (
+    <View style={styles.container}>
+      <Button
+        title="must connect with no terminal"
+        onPress={handleMCNT}/>
+    </View>
+  );
+}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+```
+
+Try the above React Native code out with your Android phone, with the help of [Snack Expo](https://snack.expo.dev/):
+
+* Assuming you have [Expo](https://play.google.com/store/apps/details?id=host.exp.exponent&hl=en_US) Android app installed
+* Head to [Snack Expo](https://snack.expo.dev/) -- web-based React Native development platform
+* Replace the content of the file `App.js` there, with the React Native code above
+* Select `My Device` (Android phone)
+* Scan the QR code displayed, with the installed **Expo** Android app
 
 
 # Thank You!
