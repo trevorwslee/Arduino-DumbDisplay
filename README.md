@@ -1895,7 +1895,8 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 Due mostly to some technical considerations, DumbDisplay Android app supports starting from another Android app, enabling some *not-so-convenient* customizations that best fit different microcontroller program use cases.
 
 Starting DumbDisplay app from another app can be as simple as starting an `Activity` with some special URL like 
-[`nb.tl.dd://MyApp?maximized&noTerminal`](nb.tl.dd://MyApp?maximized&noTerminal)
+<a href="nb.tl.dd://MyApp?maximized&noTerminal">`nb.tl.dd://MyApp?maximized&noTerminal`</a>
+
 
 The customizations are
 - Name of the app, in various places -- `MyApp` as in the above URL; can be other values
