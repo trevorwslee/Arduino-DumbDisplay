@@ -1894,8 +1894,8 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 
 Due mostly to technical considerations, DumbDisplay Android app supports starting from another Android app, enabling some ***preferred*** customizations that best fit different microcontroller programming use cases.
 
-Starting DumbDisplay app from another app can be as simple as starting an `Activity` with some special URL like `nb.tl.dd://MyApp?maximized&noTerminal` 
-(check *indirectly* <a href="https://trevorwslee.github.io/DumbDisplay?maximized&noTerminal">here</a>)
+Starting DumbDisplay app from another app can be as simple as starting an `Activity` with some special URL like `nb.tl.dd://MyApp?maximized&noTerminal`
+(try starting DumbDisplay app *indirectly* <a href="https://trevorwslee.github.io/DumbDisplay?maximized&noTerminal">here</a>)
 
 The customizations are
 - Name of the app, in various places -- `MyApp` as in the above URL; can be other values
@@ -1904,6 +1904,9 @@ The customizations are
   - title on title bar
 - Maximize the display -- `maximized`
 - Hide the terminal view altogether -- `noTerminal`
+- Fix orientation -- `orientation`
+  - `PORTRAIT`
+  - `LANDSCAPE`
 - Automatially hide status bar once connected to *device* -- `autoHideStatus`
 - Must make connection without needing user to click the *connect* icon -- `mustConnect` -- always `true` if `maximized`
 - Do not use storage for media (and hence do not ask for permission) -- `noStorage`
@@ -1919,6 +1922,17 @@ The customizations are
   - `LE` -- BLE
   - `USB` -- USB
   - `DEMO`
+- Display canvas alignment -- `alignment`
+  - `CENTER`
+  - `LEFT`
+  - `TOP`
+  - `LEFT_TOP`
+- Display canvas *pixel density* -- `pixelDensity`
+  - `NORMAL`
+  - `MEDIUM`
+  - `HIGH`
+  - `FINE`
+  - `OVER`    
 
 
 For example, in Kotlin
@@ -1930,7 +1944,7 @@ intent.setData(data)
 startActivity(context, intent, null)
 ```
 
-A complete sample React Native app can be like
+A complete sample React Native app
 
 ```
 import { Button, Linking, StyleSheet, Text, View } from 'react-native';
@@ -1957,8 +1971,8 @@ const styles = StyleSheet.create({
 });
 ```
 
-If you want to, you can try the above React Native code out with your Android phone, with the help of [Snack Expo](https://snack.expo.dev/)
-* Assume you have [Expo](https://play.google.com/store/apps/details?id=host.exp.exponent&hl=en_US) Android app installed
+If you want to, you can try the above React Native code with the help of [Snack Expo](https://snack.expo.dev/)
+* Assume you have [Expo](https://play.google.com/store/apps/details?id=host.exp.exponent&hl=en_US) and [DumbDisplay](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay) Android apps installed
 * Click <a href="https://snack.expo.dev/?code=import%20%7B%20Button%2C%20Linking%2C%20StyleSheet%2C%20Text%2C%20View%20%7D%20from%20%27react-native%27%3B%0Aexport%20default%20function%20App%28%29%20%7B%0A%20%20const%20handleMCNT%20%3D%20%28%29%20%3D%3E%20%7B%0A%20%20%20%20console.log%28%27%2A%20handleMCNT%27%29%3B%0A%20%20%20%20Linking.openURL%28%27nb.tl.dd%3A%2F%2FMyApp%3FmustConnect%26noTerminal%26deviceTypes%3DDEMO%27%29%20%20%20%20%0A%20%20%7D%0A%20%20return%20%28%0A%20%20%20%20%3CView%20style%3D%7Bstyles.container%7D%3E%0A%20%20%20%20%20%20%3CButton%0A%20%20%20%20%20%20%20%20title%3D%22must%20connect%20with%20no%20terminal%22%0A%20%20%20%20%20%20%20%20onPress%3D%7BhandleMCNT%7D%2F%3E%0A%20%20%20%20%3C%2FView%3E%0A%20%20%29%3B%0A%7D%0Aconst%20styles%20%3D%20StyleSheet.create%28%7B%0A%20%20container%3A%20%7B%0A%20%20%20%20flex%3A%201%2C%0A%20%20%20%20backgroundColor%3A%20%27%23fff%27%2C%0A%20%20%20%20alignItems%3A%20%27center%27%2C%0A%20%20%20%20justifyContent%3A%20%27center%27%2C%0A%20%20%7D%2C%0A%7D%29%3B">here</a> to head to Snack Expo with the React Native code.
 Alternatively, you can directly go to [Snack Expo](https://snack.expo.dev/) and replace the content of the file `App.js` there with the above React Native code
 * Select `My Device`
