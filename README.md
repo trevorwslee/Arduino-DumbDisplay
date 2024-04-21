@@ -1896,7 +1896,7 @@ Due mostly to technical considerations, DumbDisplay Android app supports startin
 
 Starting DumbDisplay app from another app can be as simple as starting an `Activity` with some special URL like `nb.tl.dd://MyApp?maximized&noTerminal` 
 (
-check
+check starting
 <a href="https://trevorwslee.github.io/DumbDisplay?maximized&noTerminal">here</a>
 or 
 <a href="nb.tl.dd://MyApp?maximized&noTerminal">directly</a>
