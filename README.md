@@ -1905,7 +1905,7 @@ The customizations are
   - title on title bar
 - Maximize the display -- `maximized`
 - Hide the terminal view all together -- `noTerminal`
-- No status bar (no input as well) -- `noStatus`
+- Automatially hide status bar -- `autoHideStatus`
 - Must make connection without needing user to click the *connect* icon -- `mustConnect` -- always `true` if `maximized`
 - Do not use storage for media (and hence do not ask for permission) -- `noStorage`
 - Register a WIFI *device* -- `registerDeviceInfo`
@@ -1913,6 +1913,7 @@ The customizations are
   e.g. `registerDeviceInfo=ESP32@192.168.0.10`
   - `ESP32` is the *device* name
   - `192.168.0.10` is the *device* IP
+- Automatically select the registered *device* (`registerDeviceInfo`) -- `autoSelectRegisteredDevice`  
 - Specify what *device types* can be selected -- `deviceTypes`
   - `WIFI` -- WIFI
   - `BT` -- Bluetooth
@@ -1957,13 +1958,21 @@ const styles = StyleSheet.create({
 });
 ```
 
-If you want to, you can try the above React Native code out with your Android phone, with the help of [Snack Expo](https://snack.expo.dev/):
-
+If you want to, you can try the above React Native code out with your Android phone, with the help of [Snack Expo](https://snack.expo.dev/)
 * Assume you have [Expo](https://play.google.com/store/apps/details?id=host.exp.exponent&hl=en_US) Android app installed
-* Head to [Snack Expo](https://snack.expo.dev/) -- web-based React Native development platform
-* Replace the content of the file `App.js` there, with the React Native code above
+
+Copy the above code to Snack Expo -- web-based React Native development platform
+  - Head to [Snack Expo](https://snack.expo.dev/)
+  - Replace the content of the file `App.js` there, with the React Native code above
+
+Or, simply 
+  - Click <a href="https://snack.expo.dev/?code=console.log(%27hello%20world%27)%3B">here</a> to head to Snack Expo with similar code as above
+
+In Snack Expo
 * Select `My Device`
 * Scan the QR code displayed with the installed **Expo** Android app
+
+Once the React app is running
 * Click the button `must connect with no terminal` shown
 
 
