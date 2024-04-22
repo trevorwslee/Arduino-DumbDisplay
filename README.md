@@ -1898,7 +1898,7 @@ Starting DumbDisplay app from another app can be as simple as starting an `Activ
 (try starting DumbDisplay app
 "indirectly" <a href="https://trevorwslee.github.io/DumbDisplay?maximized&noTerminal">here</a>
 or
-directly <a href="nb.tl.dd://MyApp">here</a>
+directly <a href="nbtldd://MyApp?maximized&noTerminal">here</a>
 )
 
 The customizations are
