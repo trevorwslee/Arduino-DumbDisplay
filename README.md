@@ -1234,7 +1234,7 @@ The above sketch assumes using OTG USB adaptor for connection to Android DumbDis
 
 ### WebView Layer
 
-You can use the Android WebView to display HTML code that render the layer's content as a HTML page, using `WebViewDDLayer`.
+You can use the Android WebView to display HTML code that renders the layer's content as a HTML page, using `WebViewDDLayer`.
 
 ```
 #include "dumbdisplay.h"
@@ -1247,8 +1247,11 @@ void setup() {
 void loop() {
 }
 ```
+ 
+|||
+|--|--|
+|![](screenshots/ddwebcalc.png)|Note that the URL https://trevorwslee.github.io/DumbCalculator/ is live WASM calculator implemented using Rust|
 
-Note that the URL https://trevorwslee.github.io/DumbCalculator/ is live WASM calculator implemented using Rust 
 
 Other than loading from URL, WebView can load HTML code as well; e.g.
 ```
@@ -1292,9 +1295,12 @@ And such interfacing is bridged by DumbDisplay with the followings
   ```     
   > Please refer to Android's [evaluateJavascript()](https://developer.android.com/reference/android/webkit/WebView)
 
-Sorry! Very likely, `WebViewDDLayer` will not work correctly for less-capable boards like Arduino Uno, Nano, etc, mostly due to limitations on connection channels, like `Serial`.
+Sorry! Very likely, `WebViewDDLayer` will not work correctly for less-capable boards like Arduino Uno, Nano, etc, mostly due to limit on connection channel, like `Serial`.
 
-You may want to refer to the example `otgblink_ex` -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink_ex/otgblink_ex.ino
+
+|||
+|--|--|
+|You may want to refer to the example `otgblink_ex` -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink_ex/otgblink_ex.ino|![](screenshots/ddwebblink.png)|
 
 
 
