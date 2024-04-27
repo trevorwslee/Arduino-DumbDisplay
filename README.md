@@ -1188,7 +1188,7 @@ Nevertheless, do note that:
 * The "device dependent view" DD Layer size -- of the "opening" for the Android view -- is just like graphical LCD layer,
   but be warned that it will ***not*** be scaled, like other DD Layers.
 
-There are two "device dependent view" layer available.
+There are three "device dependent view" layer available.
 
 ### Terminal Layer
 
@@ -1232,10 +1232,76 @@ to a ```TerminalDDLayer```:
 The above sketch assumes using OTG USB adaptor for connection to Android DumbDisplay app. And as a result, bringing the above GPS experiment outdoor should be easier. Not only the microcontroller board can be powered by your Android phone, you can observe running traces of the sketch with your phone as well.
 
 
+### WebView Layer
+
+You can use the Android WebView to display HTML code that render the layer's content as a HTML page, using `WebViewDDLayer`.
+
+```
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput());
+WebViewDDLayer *webView;
+void setup() {
+    webView = dumbdisplay.createWebViewLayer(300, 300);
+    webView->loadUrl("https://trevorwslee.github.io/DumbCalculator/");
+}
+void loop() {
+}
+```
+
+Note that the URL https://trevorwslee.github.io/DumbCalculator/ is live WASM calculator implemented using Rust 
+
+Other than loading from URL, WebView can load HTML code as well; e.g.
+```
+...
+    webView = dumbdisplay.createWebViewLayer(300, 300);
+
+    String html = 
+        "<html>"
+          "<h1>My Web Page</h1>"
+          "<p>This is a paragraph.</p>"
+          "<p>This is another paragraph.</p>"
+        "</html>";
+
+    // it is IMPORTANT to remove any newline characters from the html
+    html.replace("\n", "");   
+
+    // load the html into the WebView layer
+    webView->loadHtml(html); 
+...
+```
+***IMPORTANT: before calling `loadHtml()`, remove any newline characters from the HTML code first***
+
+Android WebView also provides some interfacing capabilities between the Android app (DumbDisplay) and the HTML code.
+> Please refer to Android's [WebAppInterface](https://developer.android.com/develop/ui/views/layout/webapps/webview)
+And such interfacing is bridged by DumbDisplay with the followings
+* A special JavaScript object, default is `DD`, that enables sending, from the HTML code, "feedback" as other layers
+  - `DD.feedback(type, x, y)`; supported `type` are
+    - `click`
+    - `double_click`
+    - `long_press`
+    - `move`
+    - `up`
+    - `down`
+  - `DD.feedbackWithText(type, x, y, text)`; e.g.
+    ```
+    <button onclick='javascript:DD.feedbackWithText("click",0,0,"Hi, there!")'/>
+    ```
+* The `WebViewDDLayer` has a method `execJs()` that you can use to call JavaScript function defined in the HTML code; e.g.
+  ```
+  webView->execJs("turnOnOff(true)");  // turnOnOff() is a JavaScript function defined in the HTML code
+  ```     
+  > Please refer to Android's [evaluateJavascript()](https://developer.android.com/reference/android/webkit/WebView)
+
+Sorry! Very likely, `WebViewDDLayer` will not work correctly for less-capable boards like Arduino Uno, Nano, etc, mostly due to limitations on connection channels, like `Serial`.
+
+You may want to refer to the example `otgblink_ex` -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink_ex/otgblink_ex.ino
+
+
+
 ### TomTom Map Layer
 
 
-The only "device dependent view" layer is [```TomTomMapDDLayer```](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html).
+Another "device dependent view" layer is [`TomTomMapDDLayer`](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html).
 
 |  | |
 |--|--|
@@ -1244,7 +1310,7 @@ The only "device dependent view" layer is [```TomTomMapDDLayer```](https://trevo
 
 ## Downloadable Font Support
 
-Layers like [```GraphicalDDLayer```](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) can use specified font for rendering text; however, there are not many fonts in normal Android installments.
+Layers like [`GraphicalDDLayer`](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) can use specified font for rendering text; however, there are not many fonts in normal Android installments.
 DumbDisplay app supports the use of  selective downloadable font open sourced by Google, namely, B612, Cutive, Noto Sans, Oxygen, Roboto, Share Tech, Spline Sans and Ubuntu.
 
 ```

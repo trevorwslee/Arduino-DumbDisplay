@@ -1,4 +1,8 @@
 /**
+ * Sorry! Very likely, this sketch will not work for less-capable boards like Arduino Uno, Nano, etc. 
+ */
+
+/**
  * to run and see the result of this sketch, you will need two addition things:
  * . you will need to install Android DumbDisplay app from Play store
  *   https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
@@ -31,7 +35,7 @@
   #include "wifidumbdisplay.h"
   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
 #else
-  // for direct USB connecction to phone
+  // for direct USB connection to phone
   // . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
   // . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
   #include "dumbdisplay.h"
@@ -50,17 +54,22 @@ void setup() {
 
     // code the html
     String html = 
-"<div style='width:100%;height:100%;display:flex;justify-content:center;align-items:center'>"    
-  "<svg width='80vw' height='80vw' onclick='javascript:DD.feedbackWithText(\"click\",0,0,\"Hi, there!\")'>"
-    "<defs>"
-      "<radialGradient id='grad' cx='50%' cy='50%' r='50%' fx='50%' fy='50%'>"
-        "<stop offset='0%' style='stop-color:rgb(0,255,0);stop-opacity:1' />"
-        "<stop offset='100%' style='stop-color:rgb(255,0,0);stop-opacity:1' />"
-      "</radialGradient>"
-    "</defs>"
-    "<circle cx='40vw' cy='40vw' r='40vw' fill='url(#grad)' />"
-  "</svg>"
-"</div>";
+      "<script>"
+      "function turnOnOff(on) {"
+        "document.getElementById('startStop').setAttribute('offset', on ? '80%' : '0%');"
+      "}"
+      "</script>"    
+      "<div style='width:100%;height:100%;display:flex;justify-content:center;align-items:center'>"    
+        "<svg width='80vw' height='80vw' onclick='javascript:DD.feedbackWithText(\"click\",0,0,\"Hi, there!\")'>"
+          "<defs>"
+            "<radialGradient id='grad' cx='50%' cy='50%' r='50%' fx='50%' fy='50%'>"
+              "<stop id='startStop' offset='80%' style='stop-color:rgb(255,0,0);stop-opacity:1' />"
+              "<stop offset='100%' style='stop-color:rgb(200,200,200);stop-opacity:1' />"
+            "</radialGradient>"
+          "</defs>"
+          "<circle cx='40vw' cy='40vw' r='40vw' fill='url(#grad)' />"
+        "</svg>"
+      "</div>";
 
     // it is IMPORTANT to remove any newline characters from the html
     html.replace("\n", "");   
@@ -70,9 +79,20 @@ void setup() {
 }
 
 
+int lastS = 0;
 void loop() {
   const DDFeedback* feedback = webView->getFeedback();
   if (feedback != NULL) {
     dumbdisplay.writeComment("* '" + feedback->text + "'");
+  }
+  int s = millis() / 1000;
+  if (s != lastS) {
+    bool on = s % 2 == 0;
+    if (on) {
+      webView->execJs("turnOnOff(true)");   // turnOnOff() is a javascript function defined by the above html
+    } else {
+      webView->execJs("turnOnOff(false)");
+    }
+    lastS = s;
   }
 }
