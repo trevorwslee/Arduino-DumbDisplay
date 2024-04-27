@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.8-r7)
+# DumbDisplay Arduino Library (v0.9.9)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -37,6 +37,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 * [Reference](#reference)
 * [DumbDisplay WIFI Bridge](#dumbdisplay-wifi-bridge)
 * [DumbDisplay App Hints](#dumbdisplay-app-hints)
+* [Startup DumbDisplay App from Another Android App](#startup-dumbdisplay-app-from-another-android-app)
 * [Thank You!](#thank-you)
 * [License](#license)
 * [Change History](#change-history)
@@ -1187,7 +1188,7 @@ Nevertheless, do note that:
 * The "device dependent view" DD Layer size -- of the "opening" for the Android view -- is just like graphical LCD layer,
   but be warned that it will ***not*** be scaled, like other DD Layers.
 
-There are two "device dependent view" layer available.
+There are three "device dependent view" layer available.
 
 ### Terminal Layer
 
@@ -1231,10 +1232,76 @@ to a ```TerminalDDLayer```:
 The above sketch assumes using OTG USB adaptor for connection to Android DumbDisplay app. And as a result, bringing the above GPS experiment outdoor should be easier. Not only the microcontroller board can be powered by your Android phone, you can observe running traces of the sketch with your phone as well.
 
 
+### WebView Layer
+
+You can use the Android WebView to display HTML code that render the layer's content as a HTML page, using `WebViewDDLayer`.
+
+```
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput());
+WebViewDDLayer *webView;
+void setup() {
+    webView = dumbdisplay.createWebViewLayer(300, 300);
+    webView->loadUrl("https://trevorwslee.github.io/DumbCalculator/");
+}
+void loop() {
+}
+```
+
+Note that the URL https://trevorwslee.github.io/DumbCalculator/ is live WASM calculator implemented using Rust 
+
+Other than loading from URL, WebView can load HTML code as well; e.g.
+```
+...
+    webView = dumbdisplay.createWebViewLayer(300, 300);
+
+    String html = 
+        "<html>"
+          "<h1>My Web Page</h1>"
+          "<p>This is a paragraph.</p>"
+          "<p>This is another paragraph.</p>"
+        "</html>";
+
+    // it is IMPORTANT to remove any newline characters from the html
+    html.replace("\n", "");   
+
+    // load the html into the WebView layer
+    webView->loadHtml(html); 
+...
+```
+***IMPORTANT: before calling `loadHtml()`, remove any newline characters from the HTML code first***
+
+Android WebView also provides some interfacing capabilities between the Android app (DumbDisplay) and the HTML code.
+> Please refer to Android's [WebAppInterface](https://developer.android.com/develop/ui/views/layout/webapps/webview)
+And such interfacing is bridged by DumbDisplay with the followings
+* A special JavaScript object, default is `DD`, that enables sending, from the HTML code, "feedback" as other layers
+  - `DD.feedback(type, x, y)`; supported `type` are
+    - `click`
+    - `double_click`
+    - `long_press`
+    - `move`
+    - `up`
+    - `down`
+  - `DD.feedbackWithText(type, x, y, text)`; e.g.
+    ```
+    <button onclick='javascript:DD.feedbackWithText("click",0,0,"Hi, there!")'/>
+    ```
+* The `WebViewDDLayer` has a method `execJs()` that you can use to call JavaScript function defined in the HTML code; e.g.
+  ```
+  webView->execJs("turnOnOff(true)");  // turnOnOff() is a JavaScript function defined in the HTML code
+  ```     
+  > Please refer to Android's [evaluateJavascript()](https://developer.android.com/reference/android/webkit/WebView)
+
+Sorry! Very likely, `WebViewDDLayer` will not work correctly for less-capable boards like Arduino Uno, Nano, etc, mostly due to limitations on connection channels, like `Serial`.
+
+You may want to refer to the example `otgblink_ex` -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink_ex/otgblink_ex.ino
+
+
+
 ### TomTom Map Layer
 
 
-The only "device dependent view" layer is [```TomTomMapDDLayer```](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html).
+Another "device dependent view" layer is [`TomTomMapDDLayer`](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html).
 
 |  | |
 |--|--|
@@ -1243,7 +1310,7 @@ The only "device dependent view" layer is [```TomTomMapDDLayer```](https://trevo
 
 ## Downloadable Font Support
 
-Layers like [```GraphicalDDLayer```](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) can use specified font for rendering text; however, there are not many fonts in normal Android installments.
+Layers like [`GraphicalDDLayer`](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) can use specified font for rendering text; however, there are not many fonts in normal Android installments.
 DumbDisplay app supports the use of  selective downloadable font open sourced by Google, namely, B612, Cutive, Noto Sans, Oxygen, Roboto, Share Tech, Spline Sans and Ubuntu.
 
 ```
@@ -1788,6 +1855,43 @@ Notice:
 * After giving a chance for DumbDisplay to make connection "passively", blink `LED_BUILTIN` -- turn it ON then OFF.
 * ***Do notice that the delay here is 250!*** The delay needs be brief since `connectPassive()` should not be called too infrequently -- at least 1 or 2 times a second   
 
+There is a *helper* `DDReconnectPassiveConnectionHelper` class that can aid programming such *reconnecting* "passive" connection.
+Say, the above can be written as
+```
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput());
+DDReconnectPassiveConnectionHelper pdd(dumbdisplay, "blink");
+LedGridDDLayer *led = NULL;
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+void loop() {
+  pdd.loop([](){
+    led = dumbdisplay.createLedGridLayer();
+  }, [](){
+    led->toggle();
+  });
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(250);                     
+  digitalWrite(LED_BUILTIN, LOW); 
+  delay(250);                     
+}
+```
+Notice the pattern of calling `pdd.loop()`:
+```
+  pdd.loop([](){
+    // **********
+    // *** initializeCallback ***
+    // **********
+    ...
+  }, [](){
+    // **********
+    // *** updateCallback ***
+    // **********
+    ...
+  });
+```
+
 Instead of relying on reconnection, you may choose to "master reset" DumbDisplay to ground-zero, and "passively" wait for connection afresh. To do so, the above sketch need be modified like
 
 ```
@@ -1815,6 +1919,47 @@ Notice:
 * Note that after "master reset", the layers / tunnels created will not be valid anymore. See that `led` is set be to `NULL` to indicate that `led` need be created up on connected again
 * Sorry, "master reset" doesn't work in case the IO object is [DDBLESerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_b_l_e_serial_i_o.html)
 
+
+Again, there is a *helper* `DDMasterResetPassiveConnectionHelper` class that can aid programming such *master reset* "passive" connection.
+Say, the above can be written as
+```
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput());
+DDMasterResetPassiveConnectionHelper pdd(dumbdisplay);
+LedGridDDLayer *led = NULL;
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+void loop() {
+  pdd.loop([](){
+    led = dumbdisplay.createLedGridLayer();
+  }, [](){
+    led->toggle();
+  });
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(250);                     
+  digitalWrite(LED_BUILTIN, LOW); 
+  delay(250);                     
+}
+```
+Note that of calling `pdd.loop()` is similar, but with one addition `NULL`-able `disconnectedCallback`
+```
+  pdd.loop([](){
+    // **********
+    // *** initializeCallback ***
+    // **********
+    ...
+  }, [](){
+    // **********
+    // *** updateCallback ***
+    // **********
+    ...
+  }, [](){
+    // **********
+    // *** disconnectedCallback ***
+    // **********
+  });
+```
 
 | | |
 |--|--|
@@ -1889,6 +2034,95 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 * When DumbDisplay app is connected and is in the foreground, your phone will not go to sleep. If DumbDisplay is put to the background, connection will still be kept.
 
 
+# Startup DumbDisplay App from Another Android App
+
+Due mostly to technical considerations, DumbDisplay Android app supports starting from another Android app, enabling some ***preferred*** customizations that best fit different microcontroller programming use cases.
+
+Starting DumbDisplay app from another app can be as simple as starting an `Activity` with some special URL like `nb.tl.dd://MyApp?maximized&noTerminal`
+(Try starting DumbDisplay app from your Android phone browser "indirectly" <a href="https://trevorwslee.github.io/DumbDisplay?altName=MyApp&maximized&noTerminal">here</a>)
+
+The customizations are
+- Name of the app, in various places -- `MyApp` as in the above URL; can be other values
+  - *preference* name for saving settings
+  - media storage folder name
+  - title on title bar
+- Maximize the display -- `maximized`
+- Hide the terminal view altogether -- `noTerminal`
+- Fix orientation -- `orientation`
+  - `PORTRAIT`
+  - `LANDSCAPE`
+- Automatially hide status bar once connected to *device* -- `autoHideStatus`
+- Must make connection without needing user to click the *connect* icon -- `mustConnect` -- always `true` if `maximized`
+- Do not use storage for media (and hence do not ask for permission) -- `noStorage`
+- Register a WIFI *device* -- `registerDeviceInfo`
+  <br>
+  e.g. `registerDeviceInfo=ESP32@192.168.0.10`
+  - `ESP32` is the *device* name
+  - `192.168.0.10` is the *device* IP
+- Automatically select the registered *device* (`registerDeviceInfo`) -- `autoSelectRegisteredDevice`  
+- Specify what *device types* can be selected (if not `autoSelectRegisteredDevice`) -- `deviceTypes`
+  - `WIFI` -- WIFI
+  - `BT` -- Bluetooth
+  - `LE` -- BLE
+  - `USB` -- USB
+  - `DEMO`
+- Display canvas alignment -- `alignment`
+  - `CENTER`
+  - `LEFT`
+  - `TOP`
+  - `LEFT_TOP`
+- Display canvas *pixel density* -- `pixelDensity`
+  - `NORMAL`
+  - `MEDIUM`
+  - `HIGH`
+  - `FINE`
+  - `OVER`    
+
+
+For example, in Kotlin
+
+```
+val intent = Intent(Intent.ACTION_VIEW)
+val data = Uri.parse("nb.tl.dd://MyApp?mustConnect&noTerminal&registerDeviceInfo=ESP32@192.168.0.10&deviceTypes=WIFI")
+intent.setData(data)
+startActivity(context, intent, null)
+```
+
+A complete sample React Native app
+
+```
+import { Button, Linking, StyleSheet, Text, View } from 'react-native';
+export default function App() {
+  const handleMCNT = () => {
+    console.log('* handleMCNT');
+    Linking.openURL('nb.tl.dd://MyApp?mustConnect&noTerminal&deviceTypes=DEMO')    
+  }
+  return (
+    <View style={styles.container}>
+      <Button
+        title="must connect with no terminal"
+        onPress={handleMCNT}/>
+    </View>
+  );
+}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+```
+
+If you want to, you can try the above React Native code with the help of [Snack Expo](https://snack.expo.dev/)
+* Assume you have [Expo](https://play.google.com/store/apps/details?id=host.exp.exponent&hl=en_US) and [DumbDisplay](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay) Android apps installed
+* Click <a href="https://snack.expo.dev/?code=import%20%7B%20Button%2C%20Linking%2C%20StyleSheet%2C%20Text%2C%20View%20%7D%20from%20%27react-native%27%3B%0Aexport%20default%20function%20App%28%29%20%7B%0A%20%20const%20handleMCNT%20%3D%20%28%29%20%3D%3E%20%7B%0A%20%20%20%20console.log%28%27%2A%20handleMCNT%27%29%3B%0A%20%20%20%20Linking.openURL%28%27nb.tl.dd%3A%2F%2FMyApp%3FmustConnect%26noTerminal%26deviceTypes%3DDEMO%27%29%20%20%20%20%0A%20%20%7D%0A%20%20return%20%28%0A%20%20%20%20%3CView%20style%3D%7Bstyles.container%7D%3E%0A%20%20%20%20%20%20%3CButton%0A%20%20%20%20%20%20%20%20title%3D%22must%20connect%20with%20no%20terminal%22%0A%20%20%20%20%20%20%20%20onPress%3D%7BhandleMCNT%7D%2F%3E%0A%20%20%20%20%3C%2FView%3E%0A%20%20%29%3B%0A%7D%0Aconst%20styles%20%3D%20StyleSheet.create%28%7B%0A%20%20container%3A%20%7B%0A%20%20%20%20flex%3A%201%2C%0A%20%20%20%20backgroundColor%3A%20%27%23fff%27%2C%0A%20%20%20%20alignItems%3A%20%27center%27%2C%0A%20%20%20%20justifyContent%3A%20%27center%27%2C%0A%20%20%7D%2C%0A%7D%29%3B">here</a> to head to Snack Expo with the React Native code.
+Alternatively, you can directly go to [Snack Expo](https://snack.expo.dev/) and replace the content of the file `App.js` there with the above React Native code
+* Select `My Device`
+
+* Click the button `must connect with no terminal` shown
+
 
 # Thank You!
 
@@ -1906,6 +2140,10 @@ MIT
 
 
 # Change History
+
+v0.9.9
+  - added WebViewDDLayer
+  - bug fix
 
 v0.9.8-r7
   - added some "footprint" options

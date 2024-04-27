@@ -139,10 +139,14 @@ const int8_t DD_OBJECT_TYPE_TUNNEL = 1;
 struct DDObject {
     /// object type -- DD_OBJECT_TYPE_LAYER or DD_OBJECT_TYPE_TUNNEL
     int8_t objectType;
+#ifdef DD_NO_CUSTOM_DATA
+  #warning ??? DD_NO_CUSTOM_DATA set ???
+#else
     /// custom data
     String customData;
+#endif
 public:
-   // since 20230601
+    // since 20230601
     virtual ~DDObject() {}
 };
 
@@ -764,6 +768,18 @@ class TerminalDDLayer: public DDLayer {
     }
 };
 
+/// Class for a WebView "device dependent view" layer
+class WebViewDDLayer: public DDLayer {
+  public:
+    /// for internal use only
+    WebViewDDLayer(int8_t layerId): DDLayer(layerId) {
+    }
+    void loadUrl(const String& url);
+    void loadHtml(const String& html);
+    void execJs(const String& js);
+};
+
+
 
 /// Helper class for constructing "tunnel" endpoint, if the endpoint is not a simple URL. Can be used for DDTunnel::reconnectToEndpoint()
 class DDTunnelEndpoint {
@@ -1136,7 +1152,7 @@ class DumbDisplay {
     /// - vertical: V(*)
     /// - or nested, like H(0+V(1+2)+3);  where 0/1/2/3 are the layer ids
     /// - consider using the macros DD_AP_XXX
-    void configAutoPin(const String& layoutSpec);
+    void configAutoPin(const String& layoutSpec = DD_AP_VERT);
     /// add the "auto pin" config for layers not included in "auto pin" set by configAutoPin()
     /// @param remainingLayoutSpec 
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
@@ -1189,6 +1205,9 @@ class DumbDisplay {
     /// create a terminal layer
     /// @see TerminalDDLayer
     TerminalDDLayer* createTerminalLayer(int width, int height);
+    /// create a WebView layer
+    /// @see WebViewDDLayer
+    WebViewDDLayer* createWebViewLayer(int width, int height, const String& jsObjectName = "DD");
     /// create a "tunnel" for accessing the Web
     /// @note if not connect now, need to connect via reconnect()
     /// @see BasicDDTunnel
