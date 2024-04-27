@@ -2602,6 +2602,17 @@ void TerminalDDLayer::println(const String& val) {
   _sendCommand1(layerId, C_println, val);
 }
 
+void WebViewDDLayer::loadUrl(const String& url) {
+  _sendCommand1(layerId, C_loadurl, url);
+}
+void WebViewDDLayer::loadHtml(const String& html) {
+  _sendCommand1(layerId, C_loadhtml, html);
+}
+void WebViewDDLayer::execJs(const String& js) {
+  _sendCommand1(layerId, C_execjs, js);
+}
+
+
 
 // bool DDInputOutput::available() {
 //   return Serial.available();
@@ -3260,6 +3271,16 @@ TerminalDDLayer* DumbDisplay::createTerminalLayer(int width, int height) {
   _PostCreateLayer(pLayer);
   return pLayer;
 }
+
+WebViewDDLayer* DumbDisplay::createWebViewLayer(int width, int height, const String& jsObjectName ) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand4(layerId, "SU", String("webview"), String(width), String(height), jsObjectName);
+  WebViewDDLayer* pLayer = new WebViewDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
+}
+
 
 void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand5(pLayer->getLayerId(), "PIN", String(uLeft), String(uTop), String(uWidth), String(uHeight), align);

@@ -1789,6 +1789,43 @@ Notice:
 * After giving a chance for DumbDisplay to make connection "passively", blink `LED_BUILTIN` -- turn it ON then OFF.
 * ***Do notice that the delay here is 250!*** The delay needs be brief since `connectPassive()` should not be called too infrequently -- at least 1 or 2 times a second   
 
+There is a *helper* `DDReconnectPassiveConnectionHelper` class that can aid programming such *reconnecting* "passive" connection.
+Say, the above can be written as
+```
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput());
+DDReconnectPassiveConnectionHelper pdd(dumbdisplay, "blink");
+LedGridDDLayer *led = NULL;
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+void loop() {
+  pdd.loop([](){
+    led = dumbdisplay.createLedGridLayer();
+  }, [](){
+    led->toggle();
+  });
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(250);                     
+  digitalWrite(LED_BUILTIN, LOW); 
+  delay(250);                     
+}
+```
+Notice the pattern of calling `pdd.loop()`:
+```
+  pdd.loop([](){
+    // **********
+    // *** initializeCallback ***
+    // **********
+    ...
+  }, [](){
+    // **********
+    // *** updateCallback ***
+    // **********
+    ...
+  });
+```
+
 Instead of relying on reconnection, you may choose to "master reset" DumbDisplay to ground-zero, and "passively" wait for connection afresh. To do so, the above sketch need be modified like
 
 ```
@@ -1816,6 +1853,47 @@ Notice:
 * Note that after "master reset", the layers / tunnels created will not be valid anymore. See that `led` is set be to `NULL` to indicate that `led` need be created up on connected again
 * Sorry, "master reset" doesn't work in case the IO object is [DDBLESerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_b_l_e_serial_i_o.html)
 
+
+Again, there is a *helper* `DDMasterResetPassiveConnectionHelper` class that can aid programming such *master reset* "passive" connection.
+Say, the above can be written as
+```
+#include "dumbdisplay.h"
+DumbDisplay dumbdisplay(new DDInputOutput());
+DDMasterResetPassiveConnectionHelper pdd(dumbdisplay);
+LedGridDDLayer *led = NULL;
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+void loop() {
+  pdd.loop([](){
+    led = dumbdisplay.createLedGridLayer();
+  }, [](){
+    led->toggle();
+  });
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(250);                     
+  digitalWrite(LED_BUILTIN, LOW); 
+  delay(250);                     
+}
+```
+Note that of calling `pdd.loop()` is similar, but with one addition `NULL`-able `disconnectedCallback`
+```
+  pdd.loop([](){
+    // **********
+    // *** initializeCallback ***
+    // **********
+    ...
+  }, [](){
+    // **********
+    // *** updateCallback ***
+    // **********
+    ...
+  }, [](){
+    // **********
+    // *** disconnectedCallback ***
+    // **********
+  });
+```
 
 | | |
 |--|--|

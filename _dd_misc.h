@@ -502,24 +502,26 @@ class DDFadingLayers {
 #if __GNUC__ >= 8
   #include <functional>
 #endif  
+
 /// @brief
 /// Helper class to manage passive connection to DumbDisplay.
 /// The only method that should be called in `void loop() {}` is DDPassiveConnectionHelper::loop(), 
 /// passing to it some callbacks
-/// @since v0.9.8-r8
-class DDPassiveConnectionHelper {
+/// Note that it will call DumbDisplay::masterReset() when reconnected (i.e. lost previous connection)
+/// @since v0.9.9
+class DDMasterResetPassiveConnectionHelper {
   public:
-    DDPassiveConnectionHelper(DumbDisplay& dumbdisplay) : dumbdisplay(dumbdisplay) {
+    DDMasterResetPassiveConnectionHelper(DumbDisplay& dumbdisplay) : dumbdisplay(dumbdisplay) {
       this-> initialized = false;
     }
   public:
     /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
     /// @param updateCallback called to update DumbDisplay components
-    /// @param masterResetCallback called after "master reset" DumbDisplay, i.e. lost previous connection
+    /// @param disconnectedCallback called after "master reset" DumbDisplay, i.e. lost previous connection
 #if defined(DD_PASSIVE_CONNECTION_HELPER) || __GNUC__ >= 8
-    bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback, std::function<void()> masterResetCallback = NULL) {
+    bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback, std::function<void()> disconnectedCallback = NULL) {
 #else
-    bool loop(void (*initializeCallback)(), void (*updateCallback)(), void (*masterResetCallback)() = NULL) {
+    bool loop(void (*initializeCallback)(), void (*updateCallback)(), void (*disconnectedCallback)() = NULL) {
 #endif
       DDConnectPassiveStatus connectStatus;
       dumbdisplay.connectPassive(&connectStatus);
@@ -528,7 +530,7 @@ class DDPassiveConnectionHelper {
           // if reconnecting (i.e. lost previous connection, "master reset" DumbDisplay)
           dumbdisplay.masterReset();
           this->initialized = false;
-          if (masterResetCallback != NULL) masterResetCallback();
+          if (disconnectedCallback != NULL) disconnectedCallback();
           return false;
         }
         if (!this->initialized) {
@@ -544,6 +546,48 @@ class DDPassiveConnectionHelper {
   public:
     DumbDisplay& dumbdisplay;  
   private:
+    bool initialized;  
+};
+
+/// @brief
+/// Helper class to manage passive connection to DumbDisplay.
+/// The only method that should be called in `void loop() {}` is DDPassiveConnectionHelper::loop(), 
+/// passing to it some callbacks
+/// Note that it will surround call to `initializeCallback` with calls to DumbDisplay::recordLayerSetupCommands() and DumbDisplay::playbackLayerSetupCommands() 
+/// @since v0.9.9
+class DDReconnectPassiveConnectionHelper {
+  public:
+    /// @param layerSetupPersistId used when calling DumbDisplay::playbackLayerSetupCommands()
+    DDReconnectPassiveConnectionHelper(DumbDisplay& dumbdisplay, const String& layerSetupPersistId) : dumbdisplay(dumbdisplay) {
+      this->layerSetupPersistId = layerSetupPersistId;
+      this-> initialized = false;
+    }
+  public:
+    /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
+    /// @param updateCallback called to update DumbDisplay components
+    /// @param disconnectedCallback called after "master reset" DumbDisplay, i.e. lost previous connection
+#if defined(DD_PASSIVE_CONNECTION_HELPER) || __GNUC__ >= 8
+    bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback) {
+#else
+    bool loop(void (*initializeCallback)(), void (*updateCallback)()) {
+#endif
+      if (dumbdisplay.connectPassive()) {
+        if (!this->initialized) {
+          this->initialized = true;
+          this->dumbdisplay.recordLayerSetupCommands();
+          if (initializeCallback != NULL) initializeCallback();
+          this->dumbdisplay.playbackLayerSetupCommands(this->layerSetupPersistId);
+        }
+        if (updateCallback != NULL) updateCallback();
+        return true;
+      }
+      return false;
+    }
+    inline bool is_initialized() { return this->initialized; }
+  public:
+    DumbDisplay& dumbdisplay;  
+  private:
+    String layerSetupPersistId;
     bool initialized;  
 };
 

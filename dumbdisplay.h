@@ -768,6 +768,18 @@ class TerminalDDLayer: public DDLayer {
     }
 };
 
+/// Class for a WebView "device dependent view" layer
+class WebViewDDLayer: public DDLayer {
+  public:
+    /// for internal use only
+    WebViewDDLayer(int8_t layerId): DDLayer(layerId) {
+    }
+    void loadUrl(const String& url);
+    void loadHtml(const String& html);
+    void execJs(const String& js);
+};
+
+
 
 /// Helper class for constructing "tunnel" endpoint, if the endpoint is not a simple URL. Can be used for DDTunnel::reconnectToEndpoint()
 class DDTunnelEndpoint {
@@ -1193,6 +1205,9 @@ class DumbDisplay {
     /// create a terminal layer
     /// @see TerminalDDLayer
     TerminalDDLayer* createTerminalLayer(int width, int height);
+    /// create a WebView layer
+    /// @see WebViewDDLayer
+    WebViewDDLayer* createWebViewLayer(int width, int height, const String& jsObjectName = "DD");
     /// create a "tunnel" for accessing the Web
     /// @note if not connect now, need to connect via reconnect()
     /// @see BasicDDTunnel

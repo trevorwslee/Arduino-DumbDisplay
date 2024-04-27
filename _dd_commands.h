@@ -121,11 +121,14 @@
 #define c_drawoval             "#a9"
 #define c_drawarc              "#aa"
 
-#define C_autorecenter         "#ab"
-#define C_colors               "#ac"
-#define C_movetocenter         "#ad"
-#define C_movetopos            "#ae" 
+#define C_autorecenter     "#ab"
+#define C_colors           "#ac"
+#define C_movetocenter     "#ad"
+#define C_movetopos        "#ae" 
 
+#define C_loadurl          "#ba"
+#define C_loadhtml         "#bb"
+#define C_execjs           "#bc"
 
 #define C_fd               "fd"
 #define C_lt               "lt"
