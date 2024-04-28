@@ -81,7 +81,7 @@ void setup() {
 
 int lastS = 0;
 void loop() {
-  const DDFeedback* feedback = webView->getFeedback();
+  const DDFeedback* feedback = webView->getFeedback();  // get any "feedback" from the HTML code calling DD.feedbackWithText()
   if (feedback != NULL) {
     dumbdisplay.writeComment("* '" + feedback->text + "'");
   }
