@@ -1192,12 +1192,12 @@ There are three "device dependent view" layer available.
 
 ### Terminal Layer
 
-```TerminalDDLayer``` is a simple "device dependent view" layer that simulates the function of a simple serial terminal (monitor) like DumbDisplay app itself. You create such layer like
+[`TerminalDDLayer`](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html) is a simple "device dependent view" layer that simulates the function of a simple serial terminal (monitor) like DumbDisplay app itself. You create such layer like
 
 A sample use is: https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/projects/ddgpsmap/ddgpsmap.ino
 
 The sample demonstrates how to read simple GPS location data from module like NEO-7M U-BLOX, formats and output the data
-to a ```TerminalDDLayer```:
+to a `TerminalDDLayer`:
 
 ```
   ...
@@ -1234,7 +1234,7 @@ The above sketch assumes using OTG USB adaptor for connection to Android DumbDis
 
 ### WebView Layer
 
-You can use the Android WebView to display HTML code that renders the layer's content as a HTML page, using `WebViewDDLayer`.
+You can use the Android WebView to display HTML code that renders the layer's content as a HTML page by using [`WebViewDDLayer`](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_web_view_d_d_layer.html).
 
 ```
 #include "dumbdisplay.h"
@@ -1250,7 +1250,7 @@ void loop() {
  
 |||
 |--|--|
-|![](screenshots/ddwebcalc.png)|Note that https://trevorwslee.github.io/DumbCalculator/ is live WASM calculator implemented using Rust|
+|![](screenshots/ddwebcalc.png)|Note that https://trevorwslee.github.io/DumbCalculator/ is a live simple WASM calculator implemented using Rust|
 
 
 Other than loading from URL, WebView can load HTML code as well; e.g.
