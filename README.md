@@ -1250,7 +1250,7 @@ void loop() {
  
 |||
 |--|--|
-|![](screenshots/ddwebcalc.png)|Note that the URL https://trevorwslee.github.io/DumbCalculator/ is live WASM calculator implemented using Rust|
+|![](screenshots/ddwebcalc.png)|Note that https://trevorwslee.github.io/DumbCalculator/ is live WASM calculator implemented using Rust|
 
 
 Other than loading from URL, WebView can load HTML code as well; e.g.
@@ -1278,14 +1278,14 @@ Android WebView also provides some interfacing capabilities between the Android 
 > Please refer to Android's [WebAppInterface](https://developer.android.com/develop/ui/views/layout/webapps/webview)
 And such interfacing is bridged by DumbDisplay with the followings
 * A special JavaScript object, default is `DD`, that enables sending, from the HTML code, "feedback" as other layers
-  - `DD.feedback(type, x, y)`; supported `type` are
+  - `DD.feedback(type, x, y)` -- as "feedback" from regular DD layers, `x` and `y` are Integers that you can use however you like; `type` can be
     - `click`
     - `double_click`
     - `long_press`
     - `move`
     - `up`
     - `down`
-  - `DD.feedbackWithText(type, x, y, text)`; e.g.
+  - `DD.feedbackWithText(type, x, y, text)` -- like `DD.feedback()` but additionally with "feedback" `text` that you can use however you like; e.g.
     ```
     <button onclick='javascript:DD.feedbackWithText("click",0,0,"Hi, there!")'/>
     ```

@@ -52,7 +52,7 @@ void setup() {
     // create the WebView layer object
     webView = dumbdisplay.createWebViewLayer(300, 300);
 
-    // code the html
+    // code the html ... with the help of AI / LLM :-)
     String html = 
       "<script>"
       "function turnOnOff(on) {"
