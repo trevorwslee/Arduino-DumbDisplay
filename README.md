@@ -1185,10 +1185,9 @@ A "device dependent view" layer is a layer that embeds a specific kind of Androi
 
 Nevertheless, do note that:
 * DDLayer's margin, border, padding, as well as visibility, will work as expected.
-* The "device dependent view" DD Layer size -- of the "opening" for the Android view -- is just like graphical LCD layer,
-  but be warned that it will ***not*** be scaled, like other DD Layers.
+* The "device dependent view" DD Layer size -- of the "opening" for the Android view -- is just like graphical LCD layer that requires explicit width-height specification; but note that the width-height specified basically only dictates the aspect-ratio of the "opening", it's actual size is adjusted according to where it will be placed.
 
-There are three "device dependent view" layer available.
+There are three "device dependent view" layers available.
 
 ### Terminal Layer
 
