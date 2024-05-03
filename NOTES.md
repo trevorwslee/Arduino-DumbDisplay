@@ -1,10 +1,12 @@
 Notes:
 
-* GitHub repository for DumbDisplay Arduino Library is https://github.com/trevorwslee/Arduino-DumbDisplay
+* The doc here is updated for v0.9.9
 
-* The doc here is updated for v0.9.8-r8
+* The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object
 
-* Other than reading the [README](https://github.com/trevorwslee/Arduino-DumbDisplay#readme) of the GitHub project, you might be kick-started with what described in [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
+* The *README* of the [GitHub repository for DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) should provide more details
+
+* Other than reading the [*README*](https://github.com/trevorwslee/Arduino-DumbDisplay#readme), you might be kick-started with what described in [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
 
 * Some little tips for reducing the library's footprint
   - if you will not be making use of "tunnel", define the compile-time macro `DD_NO_TUNNEL`

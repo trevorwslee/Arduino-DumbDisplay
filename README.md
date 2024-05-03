@@ -60,7 +60,8 @@ On it, a few types of layers can be created mixed-and-matched:
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot -- [SevenSegmentRowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_seven_segment_row_d_d_layer.html)
 * Joystick, which can be used for getting virtual joystick movement input, and can also be used for horizontal/vertical "slider" input -- [JoystickDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_joystick_d_d_layer.html)
 * Plotter, which works similar to the plotter of DumbDisplay [when it is acting as serial monitor], but plotting data are sent by calling the layer's method -- [PlotterDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_plotter_d_d_layer.html)
-* Terminal "device dependent view" layer, for logging sketch traces -- [TerminalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html)
+* Terminal "device dependent view" layer, for showing sketch traces -- [TerminalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html)
+* WebView "device dependent view" layer, that allows you to use Android WebView as a DD layer -- [WebViewDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_web_view_d_d_layer.html)
 * TomTom map "device dependent view" layer, for showing location (latitude/longitude) -- [TomTomMapDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html)
 
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected microcontroller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism) for more on "layer feedback" mechanism.
@@ -1896,6 +1897,8 @@ Notice the pattern of calling `pdd.loop()`:
     ...
   });
 ```
+Also note that `[](){...}` is simply a C++ lambda expression that accepts no parameters and return no value.
+If you need it to acess local variables, you can try "capturing" like `[&](){...}`
 
 Instead of relying on reconnection, you may choose to "master reset" DumbDisplay to ground-zero, and "passively" wait for connection afresh. To do so, the above sketch need be modified like
 
@@ -1947,7 +1950,7 @@ void loop() {
   delay(250);                     
 }
 ```
-Note that of calling `pdd.loop()` is similar, but with one addition `NULL`-able `disconnectedCallback`
+Note that of calling `pdd.loop()` is similar, but with one addition optional `NULL`-able `disconnectedCallback`
 ```
   pdd.loop([](){
     // **********
