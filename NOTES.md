@@ -1,7 +1,5 @@
 Notes:
 
-* The doc here is updated for v0.9.9
-
 * The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object
 
 * The *README* of the [GitHub repository for DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) should provide more details

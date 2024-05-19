@@ -40,6 +40,14 @@
   #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
   #define I2S_PORT             I2S_NUM_0
+#elif defined(FOR_VCC_S3WHO)
+  #define I2S_WS               42 //0
+  #define I2S_SD               2 //2
+  #define I2S_SCK              41 //I2S_PIN_NO_CHANGE
+  #define I2S_SAMPLE_BIT_COUNT 16
+  #define SOUND_SAMPLE_RATE    16000
+  #define SOUND_CHANNEL_COUNT  1
+  #define I2S_PORT             I2S_NUM_0
 #else
   #define I2S_WS               25
   #define I2S_SD               33

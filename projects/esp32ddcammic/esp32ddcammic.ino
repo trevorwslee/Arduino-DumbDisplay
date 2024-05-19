@@ -57,6 +57,17 @@
   #define I2S_SAMPLE_BIT_COUNT       32
   #define I2S_SAMPLE_RATE            8000
   #define I2S_PORT                   I2S_NUM_0
+#elif defined(FOR_VCC_S3WHO)
+  #define I2S_WS                     42 //0
+  #define I2S_SD                     2 //2
+  #define I2S_SCK                    41 //I2S_PIN_NO_CHANGE
+  #define SIMULTANEOUS_CAM_MIC_RATE  4
+  #define ENABLE_FACE_DETECTION
+  #define I2S_SAMPLE_BIT_COUNT       32
+  #define I2S_SAMPLE_RATE            8000
+  #define I2S_PORT                   I2S_NUM_0
+#else
+  #error "Board not supported"
 #endif
 
 
@@ -773,6 +784,24 @@ void loop() {
   #define VSYNC_GPIO_NUM    27      // vsync_pin
   #define HREF_GPIO_NUM     25      // href_pin
   #define PCLK_GPIO_NUM     19      // pixel_clock_pin
+#elif defined(FOR_VCC_S3WHO)
+  #define PWDN_GPIO_NUM     -1
+  #define RESET_GPIO_NUM    -1      // -1 = not used
+  #define XCLK_GPIO_NUM     15
+  #define SIOD_GPIO_NUM      4      // i2c sda
+  #define SIOC_GPIO_NUM      5      // i2c scl
+  #define Y9_GPIO_NUM       16
+  #define Y8_GPIO_NUM       17
+  #define Y7_GPIO_NUM       18
+  #define Y6_GPIO_NUM       12
+  #define Y5_GPIO_NUM       10
+  #define Y4_GPIO_NUM        8
+  #define Y3_GPIO_NUM        9
+  #define Y2_GPIO_NUM       11
+  #define VSYNC_GPIO_NUM     6      // vsync_pin
+  #define HREF_GPIO_NUM      7      // href_pin
+  #define PCLK_GPIO_NUM     13      // pixel_clock_pin
+  #define VFLIP
 #else
   #error board not supported
 #endif
@@ -792,6 +821,9 @@ bool cameraImageSettings() {
   s->set_exposure_ctrl(s, 1);                   // auto exposure on
   s->set_awb_gain(s, 1);                        // Auto White Balance enable (0 or 1)
   s->set_brightness(s, 0);                      // (-2 to 2) - set brightness
+#ifdef VFLIP  
+  s->set_vflip(s, true);
+#endif
 
    return 1;
 }
