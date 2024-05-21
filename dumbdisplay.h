@@ -773,6 +773,7 @@ class WebViewDDLayer: public DDLayer {
   public:
     /// for internal use only
     WebViewDDLayer(int8_t layerId): DDLayer(layerId) {
+      _enableFeedback();
     }
     void loadUrl(const String& url);
     void loadHtml(const String& html);

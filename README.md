@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9)
+# DumbDisplay Arduino Library (v0.9.9-r01)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,40 +7,54 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-* [Description](#description)
-* [Installation](#installation)
-  * [Arduino IDE](#arduino-ide)
-  * [PlatformIO](#platformio)
-* [DumbDisplay Android App](#dumbDisplay-android-app)
-* [Kickstart](#Kickstart)
-  * [Samples](#samples)
-  * [More Samples](#more-samples)
-  * [More OTG Examples](#more-otg-examples)
-* [Features](#features)  
-  * [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism)
-  * [DumbDisplay "Tunnel"](#dumbDisplay-tunnel)
-  * [Service "Tunnels"](#service-tunnels)
-  * ["Device Dependent View" Layers](#device-dependent-view-layers)
-  * [Downloadable Font Support](#downloadable-font-support)
-  * [Positioning of Layers](#positioning-of-layers)
-  * [Record and Playback Commands](#record-and-playback-commands)
-  * [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
-  * [More "Feedback" Options](#more-feedback-options)
-  * [Idle Callback and ESP32 Deep Sleep](#idle-callback-and-esp32-deep-sleep)
-  * [Using "Tunnel" to Download Images from the Web](#using-tunnel-to-download-images-from-the-web)
-  * [Save Pictures to Phone Captured with ESP32 Cam](#save-pictures-to-phone-captured-with-esp32-cam)
-  * [Caching Single-bit Bitmap to Phone](#caching-single-bit-bitmap-to-phone)
-  * [Caching 16-bit Colored Bitmap to Phone](#caching-16-bit-colored-bitmap-to-phone)
-  * [Saving Images for DumbDisplay](#saving-images-for-dumbdisplay)
-  * [Audio Supports](#audio-supports)
-  * ["Passive" Connection](#passive-connection)
-* [Reference](#reference)
-* [DumbDisplay WIFI Bridge](#dumbdisplay-wifi-bridge)
-* [DumbDisplay App Hints](#dumbdisplay-app-hints)
-* [Startup DumbDisplay App from Another Android App](#startup-dumbdisplay-app-from-another-android-app)
-* [Thank You!](#thank-you)
-* [License](#license)
-* [Change History](#change-history)
+- [DumbDisplay Arduino Library (v0.9.9-r01)](#dumbdisplay-arduino-library-v099-r01)
+  - [Enjoy](#enjoy)
+- [Description](#description)
+- [Installation](#installation)
+  - [Arduino IDE](#arduino-ide)
+  - [PlatformIO](#platformio)
+- [DumbDisplay Android App](#dumbdisplay-android-app)
+- [Kickstart](#kickstart)
+  - [Samples](#samples)
+    - [Sample -- *Micro:bit*](#sample----microbit)
+    - [Sample -- *LEDs + "Bar Meter" + LCD*](#sample----leds--bar-meter--lcd)
+    - [Sample -- *Graphical \[LCD\]*](#sample----graphical-lcd)
+  - [More Samples](#more-samples)
+    - [Sample -- *Nested "auto pin" layers*](#sample----nested-auto-pin-layers)
+    - [Sample -- *Manual "pin" layers (LEDs + Turtle)*](#sample----manual-pin-layers-leds--turtle)
+    - [Sample -- *"Layer feedback"*](#sample----layer-feedback)
+  - [More OTG Examples](#more-otg-examples)
+    - [Example -- *RGB "Sliders"*](#example----rgb-sliders)
+    - [Example -- *"Tunnel" for RESTful*](#example----tunnel-for-restful)
+    - [Example -- *"Tunnel" for Web Image*](#example----tunnel-for-web-image)
+- [Features](#features)
+  - [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism)
+  - [DumbDisplay "Tunnel"](#dumbdisplay-tunnel)
+  - [Service "Tunnels"](#service-tunnels)
+  - ["Device Dependent View" Layers](#device-dependent-view-layers)
+    - [Terminal Layer](#terminal-layer)
+    - [WebView Layer](#webview-layer)
+    - [TomTom Map Layer](#tomtom-map-layer)
+  - [Downloadable Font Support](#downloadable-font-support)
+  - [Positioning of Layers](#positioning-of-layers)
+  - [Record and Playback Commands](#record-and-playback-commands)
+  - [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
+  - [More "Feedback" Options](#more-feedback-options)
+  - [Idle Callback and ESP32 Deep Sleep](#idle-callback-and-esp32-deep-sleep)
+  - [Using "Tunnel" to Download Images from the Web](#using-tunnel-to-download-images-from-the-web)
+  - [Save Pictures to Phone Captured with ESP32 Cam](#save-pictures-to-phone-captured-with-esp32-cam)
+  - [Caching Single-bit Bitmap to Phone](#caching-single-bit-bitmap-to-phone)
+  - [Caching 16-bit Colored Bitmap to Phone](#caching-16-bit-colored-bitmap-to-phone)
+  - [Saving Images for DumbDisplay](#saving-images-for-dumbdisplay)
+  - [Audio Supports](#audio-supports)
+  - ["Passive" Connection](#passive-connection)
+- [Reference](#reference)
+- [DumbDisplay WIFI Bridge](#dumbdisplay-wifi-bridge)
+- [DumbDisplay App Hints](#dumbdisplay-app-hints)
+- [Startup DumbDisplay App from Another Android App](#startup-dumbdisplay-app-from-another-android-app)
+- [Thank You!](#thank-you)
+- [License](#license)
+- [Change History](#change-history)
 
 
 
@@ -2148,6 +2162,9 @@ MIT
 
 
 # Change History
+
+v0.9.9-r01
+  - bug fix
 
 v0.9.9
   - added WebViewDDLayer
