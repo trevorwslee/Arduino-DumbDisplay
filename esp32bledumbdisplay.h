@@ -31,11 +31,14 @@
 #define DD_RECEIVE_BUFFER_SIZE 256
 #define DD_SEND_BUFFER_SIZE 20
 
-// using INDICATE is more reliable, but slower
-#define DD_LE_INDICATE
+// using INDICATE is more reliable, but much slower
+#ifndef DD_BLE_NO_INDICATE
+  #define DD_LE_INDICATE
+#endif
 
 //#define DD_DEBUG_BLE 
-//#define DD_DEBUG_BLE_NOT_SEND
+//#define DD_DEBUG_BLE_SEND
+//#define DD_DEBUG_BLE_RECEIVE
 
 
 
@@ -50,6 +53,7 @@ class DDBLESerialIO: public DDInputOutput {
                   unsigned long serialBaud = DD_SERIAL_BAUD):
                   DDInputOutput(serialBaud, enableSerial, enableSerial) {
       this->deviceName = deviceName;
+      this->initialized = false;
       // if (!enableSerial) {
       //   Serial.begin(serialBaud);
       // }
@@ -79,7 +83,20 @@ class DDBLESerialIO: public DDInputOutput {
       }
 #endif
       DDInputOutput::preConnect(firstCall);
-      initBLE();
+      if (!initialized) {
+        initBLE();
+      } else {
+// #ifdef DD_DEBUG_BLE
+//         if (firstCall) {
+//           Serial.println("FIRST preConnect() called, but already initialized");   
+//         } else {
+//           Serial.println("preConnect() called, but already initialized");   
+//         }     
+// #endif
+        if (pServerCallbacks->isDisconnected()) {
+          pServerCallbacks->restartAdvertising();
+        }
+      }
       return true;
     }
     void flush() {
@@ -94,7 +111,7 @@ class DDBLESerialIO: public DDInputOutput {
       }
     }  
     bool canConnectPassive() {
-      return false;
+      return true;
     }
     bool canUseBuffer() {
       return false;
@@ -110,6 +127,9 @@ class DDBLESerialIO: public DDInputOutput {
         void restartAdvertising() {
           pServer->startAdvertising();
           connectionState = 0;
+#ifdef DD_DEBUG_BLE
+          Serial.println("restarted advertising");
+#endif
         }
         bool isDisconnected() { return connectionState == -1; }
         bool isConnected() { return connectionState == 1; }  
@@ -188,11 +208,6 @@ class DDBLESerialIO: public DDInputOutput {
               if (++bufferStart >= DD_RECEIVE_BUFFER_SIZE) {
                 bufferStart = 0;
               }
-// #ifdef DD_DEBUG_BLE
-//               Serial.print('<');
-//               Serial.print(c);
-//               Serial.print('>');
-// #endif
               return c;
             }
             yield();
@@ -209,6 +224,17 @@ class DDBLESerialIO: public DDInputOutput {
         }
 #endif
         void _print(std::string s) {
+#if defined(DD_DEBUG_BLE_SEND)
+          if (pServerCallbacks->isConnected()) {
+          } else if (pServerCallbacks->isConnecting()) {
+            Serial.print("[connecting] ");
+          } else {
+            Serial.print("[not connected] ");
+          }
+          Serial.print("BLE sent ... [");
+          Serial.print(s.c_str());
+          Serial.println("]");
+#endif
           int len = s.length();
           while (len > 0) {
             if (len <= 20) {  // 20 is the BLE limit
@@ -230,18 +256,6 @@ class DDBLESerialIO: public DDInputOutput {
               len -= 20;
             }
           }
-#if defined(DD_DEBUG_BLE) && !defined(DD_DEBUG_BLE_NOT_SEND)
-          if (pServerCallbacks->isConnected()) {
-          } else if (pServerCallbacks->isConnecting()) {
-            Serial.print("[connecting] ");
-          } else {
-            Serial.print("[not connected] ");
-          }
-          Serial.print("BLE sent ... ");
-          Serial.print(" ... [");
-          Serial.print(s.c_str());
-          Serial.println("]");
-#endif
         }
       public:
         void onWrite(BLECharacteristic *pCharacteristic) {
@@ -259,7 +273,7 @@ class DDBLESerialIO: public DDInputOutput {
             buffer[bufferEnd] = rxValue[i];
             bufferEnd = nextBufferEnd;
           }
-#ifdef DD_DEBUG_BLE
+#ifdef DD_DEBUG_BLE_RECEIVE
           Serial.print("BLE received ... ");
           Serial.print(count);
           Serial.print(" ... [");
@@ -313,12 +327,14 @@ class DDBLESerialIO: public DDInputOutput {
       pRx->setCallbacks(pCallbacks);
       pService->start();
       pServer->getAdvertising()->start();
+      initialized = true;
 #ifdef DD_DEBUG_BLE
       Serial.println("... done initialized BLE ... waiting for connection ...");
 #endif      
     }
   private:
     String deviceName;
+    bool initialized;
     ServerCallbacks* pServerCallbacks;
     Callbacks* pCallbacks;
 };
