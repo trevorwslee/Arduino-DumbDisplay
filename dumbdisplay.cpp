@@ -135,7 +135,7 @@
 
 
 // see nobody.trevorlee.dumbdisplay.DDActivity#ddSourceCompatibility
-#define DD_SID "Arduino-c7"
+#define DD_SID "Arduino-c8"  // DD library version (compatibility)
 
 
 #include "_dd_commands.h"
@@ -1683,8 +1683,8 @@ __SendComment("LT++++" + data + " - final:" + String(final));
       bool ok = false;
       int lid = -1;
       DDFeedbackType type = CLICK;
-      int16_t x = -1;
-      int16_t y = -1;
+      int16_t x = 0;
+      int16_t y = 0;
       char* pText = NULL;      
       char* token = strtok(buf, ".");
       if (token != NULL) {
@@ -1692,27 +1692,40 @@ __SendComment("LT++++" + data + " - final:" + String(final));
         token = strtok(NULL, ":");
       }
       if (token != NULL) {
-        if (strcmp(token, "longpress") == 0) {
-          type = LONGPRESS;
-        } else if (strcmp(token, "doubleclick") == 0) {
-          type = DOUBLECLICK;
-        } else if (strcmp(token, "move") == 0) {
-          type = MOVE;
-        } else if (strcmp(token, "up") == 0) {
-          type = UP;
-        } else if (strcmp(token, "down") == 0) {
-          type = DOWN;
+        //Serial.println("FBT:[" + String(token) + "]");
+        if (*token >= '0' && *token <= '9' && *(token + 1) == 0) {
+          x = *token - '0';
+          y = 0;
+          ok = true;  // got x and y
+          token = strtok(NULL, "");  // want the rest
+        } else {
+          if (strcmp(token, "longpress") == 0 || strcmp(token, "L") == 0) {
+            type = LONGPRESS;
+          } else if (strcmp(token, "doubleclick") == 0 || strcmp(token, "D") == 0) {
+            type = DOUBLECLICK;
+          } else if (strcmp(token, "move") == 0 || strcmp(token, "M") == 0) {
+            type = MOVE;
+          } else if (strcmp(token, "up") == 0 || strcmp(token, "u") == 0) {
+            type = UP;
+          } else if (strcmp(token, "down") == 0 || strcmp(token, "d") == 0) {
+            type = DOWN;
+          } 
+          token = strtok(NULL, ",");
         }
-        token = strtok(NULL, ",");
-      }
-      if (token != NULL) {
-        x = atoi(token);
-        token = strtok(NULL, ",");
-      }
-      if (token != NULL) {
-        y = atoi(token);
+      } else {
         ok = true;
-        token = strtok(NULL, "");  // want the rest
+      }
+      if (!ok) {
+        // getting x and y
+        if (token != NULL) {
+          x = atoi(token);
+          token = strtok(NULL, ",");
+        }
+        if (token != NULL) {
+          y = atoi(token);
+          ok = true;
+          token = strtok(NULL, "");  // want the rest
+        }
       }
       if (token != NULL) {
         pText = token;
