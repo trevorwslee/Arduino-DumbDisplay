@@ -17,7 +17,7 @@
 #define DD_4_PICO_TX 8
 #define DD_4_PICO_RX 9
 #include <picodumbdisplay.h>
-DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
+DumbDisplay dumbdisplay(new DDPicoSerialIO(DD_4_PICO_TX, DD_4_PICO_RX));
 
 #else
 

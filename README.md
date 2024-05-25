@@ -230,7 +230,7 @@ Here is the list of all connection IO objects that you can use:
 * Via `UART` -- for Raspberry Pi Pico, attached to a Bluetooth module like HC-06 -- [DDPicoSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_pico_uart1_i_o.html)
   ```
     #include <picodumbdisplay.h>
-    DumbDisplay dumbdisplay(new DDPicoSerialIO(8, 9, 115200));
+    DumbDisplay dumbdisplay(new DDPicoSerialIO(8, 9));
   ```
   - need to include `picodumbdisplay.h` -- `#include "picodumbdisplay.h"`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDPicoSerialIO(8, 9, 115200))`
