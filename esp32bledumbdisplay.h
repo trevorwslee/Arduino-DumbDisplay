@@ -31,10 +31,8 @@
 #define DD_RECEIVE_BUFFER_SIZE 256
 #define DD_SEND_BUFFER_SIZE 20
 
-// using INDICATE is more reliable, but much slower
-#ifndef DD_BLE_NO_INDICATE
-  #define DD_LE_INDICATE
-#endif
+// using DD_BLE_NOTIFY is faster, but not as reliable
+// #define DD_BLE_NOTIFY
 
 //#define DD_DEBUG_BLE 
 //#define DD_DEBUG_BLE_SEND
@@ -187,10 +185,10 @@ class DDBLESerialIO: public DDInputOutput {
         void write(uint8_t b) {
           int s = b;
           pTx->setValue(s);
-#ifdef DD_LE_INDICATE          
-          pTx->indicate();
-#else          
+#ifdef DD_BLE_NOTIFY          
           pTx->notify();
+#else          
+          pTx->indicate();
 #endif
         }
         bool available() {
@@ -239,18 +237,18 @@ class DDBLESerialIO: public DDInputOutput {
           while (len > 0) {
             if (len <= 20) {  // 20 is the BLE limit
               pTx->setValue(s);
-#ifdef DD_LE_INDICATE          
-              pTx->indicate();
-#else          
+#ifdef DD_BLE_NOTIFY          
               pTx->notify();
+#else          
+              pTx->indicate();
 #endif
               break;
             } else {
               pTx->setValue(s.substr(0, 20));
-#ifdef DD_LE_INDICATE          
-              pTx->indicate();
-#else          
+#ifdef DD_BLE_NOTIFY          
               pTx->notify();
+#else          
+              pTx->indicate();
 #endif
               s = s.substr(20);
               len -= 20;
@@ -312,10 +310,10 @@ class DDBLESerialIO: public DDInputOutput {
       BLEService *pService = pServer->createService(DD_SERVICE_UUID);
       BLECharacteristic *pTx = pService->createCharacteristic(
 										DD_CHARACTERISTIC_UUID_TX,
-#ifdef DD_LE_INDICATE          
-                    BLECharacteristic::PROPERTY_INDICATE
-#else                    
+#ifdef DD_BLE_NOTIFY          
 										BLECharacteristic::PROPERTY_NOTIFY
+#else                    
+                    BLECharacteristic::PROPERTY_INDICATE
 #endif                    
 									  );
       pTx->addDescriptor(new BLE2902());

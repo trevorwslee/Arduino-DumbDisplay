@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r01)
+# DumbDisplay Arduino Library (v0.9.9-r02)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r01)](#dumbdisplay-arduino-library-v099-r01)
+- [DumbDisplay Arduino Library (v0.9.9-r02)](#dumbdisplay-arduino-library-v099-r02)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -1818,6 +1818,7 @@ Notes:
 ## "Passive" Connection
 
 What has been mentioned previously is more or less "active" in that DumbDisplay will need to establish connection with DumbDisplay app before the sketch flow can proceed.
+
 Say, when you create a layer in the `setup()` block, it blocks implicitly until an connection is established. Moreover in some cases, you may even want to deliberately call DumbDisplay object's `connect()` method to explicitly block for connection.
 
 After a connection is established however, DumbDisplay is "coorporative" in that only certain calls, like sending layer commands or checking for "feedbacks", will "steal" some time slices for DumbDisplay's internal working. Note that you explicitly give DumbDisplay time slices by calling `DDDelay()` / `DDYield()`.
@@ -1875,7 +1876,7 @@ Notice:
 * After giving a chance for DumbDisplay to make connection "passively", blink `LED_BUILTIN` -- turn it ON then OFF.
 * ***Do notice that the delay here is 250!*** The delay needs be brief since `connectPassive()` should not be called too infrequently -- at least 1 or 2 times a second   
 
-There is a *helper* `DDReconnectPassiveConnectionHelper` class that can aid programming such *reconnecting* "passive" connection.
+There is a *helper* class `DDReconnectPassiveConnectionHelper` that can aid programming such *reconnecting* "passive" connection.
 Say, the above can be written as
 ```
 #include "dumbdisplay.h"
@@ -1939,10 +1940,9 @@ Notice:
 * A `connectStatus` structure is passed to `connectPassive()` in order to receive more info about the connection status.
 * In case the connection status is reconnecting (i.e. connection lost), "master reset" `dumpdisplay` by calling `masterReset()`
 * Note that after "master reset", the layers / tunnels created will not be valid anymore. See that `led` is set be to `NULL` to indicate that `led` need be created up on connected again
-* Sorry, "master reset" doesn't work in case the IO object is [DDBLESerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_b_l_e_serial_i_o.html)
 
 
-Again, there is a *helper* `DDMasterResetPassiveConnectionHelper` class that can aid programming such *master reset* "passive" connection.
+Again, there is a *helper* class `DDMasterResetPassiveConnectionHelper` that can aid programming such *master reset* "passive" connection.
 Say, the above can be written as
 ```
 #include "dumbdisplay.h"
@@ -1964,7 +1964,7 @@ void loop() {
   delay(250);                     
 }
 ```
-Note that of calling `pdd.loop()` is similar, but with one addition optional `NULL`-able `disconnectedCallback`
+Notice that calling of `pdd.loop()` is similar, but with one addition optional `NULL`-able `disconnectedCallback`
 ```
   pdd.loop([](){
     // **********
@@ -2061,9 +2061,8 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 Due mostly to technical considerations, DumbDisplay Android app supports starting from another Android app, enabling some ***preferred*** customizations that best fit different microcontroller programming use cases.
 
 Starting DumbDisplay app from another app can be as simple as starting an `Activity` with some special URL like `nb.tl.dd://MyApp?maximized&noTerminal`
-(Try starting DumbDisplay app from your Android phone browser "indirectly" <a href="https://trevorwslee.github.io/DumbDisplay?altName=MyApp&maximized&noTerminal">here</a>)
 
-The customizations are
+Moreover, there are certain customizations possible
 - Name of the app, in various places -- `MyApp` as in the above URL; can be other values
   - *preference* name for saving settings
   - media storage folder name
@@ -2162,6 +2161,11 @@ MIT
 
 
 # Change History
+
+v0.9.9-r02
+  - enhanced reading of "feedback"
+  - enabled "passive" connection
+  - bug fix
 
 v0.9.9-r01
   - bug fix
