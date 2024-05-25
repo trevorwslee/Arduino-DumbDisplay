@@ -888,7 +888,7 @@ class DDTunnel: public DDObject {
     const String& getTunnelId() const { return tunnelId; }
   protected:
     //int _count();
-    inline bool _timedOut() { return timedOut; }
+    inline bool _timedOut() { return /*timedOut*/doneState == -1; }
     virtual bool _eof(long timeoutMillis);
     //void _readLine(String &buffer);
     void _writeLine(const String& data);
@@ -902,14 +902,15 @@ class DDTunnel: public DDObject {
     String headers;
     String attachmentId;
     String params;
-    long connectMillis;
+    unsigned long connectMillis;
     // int arraySize;
     // String* dataArray;
     // int nextArrayIdx;
     // int validArrayIdx;
   private:
-    bool done;
-    bool timedOut;
+    //bool done;
+    //bool timedOut;
+    int8_t doneState;  // 0 not done; 1 done; -1 timed out
 };
 
 

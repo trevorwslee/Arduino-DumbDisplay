@@ -328,16 +328,16 @@ void loop() {
       int diffS = (now - countdownStartMs) / 1000;
       if (diffS < 9) {
 #if defined(TFT_BL_PIN)
-      String inMsg = String("... in ") + String(9 - diffS);
-      //tft.fillScreen(TFT_LIGHTGREY);
-      tft.setTextColor(TFT_BLUE, TFT_LIGHTGREY);
-      tft.setTextSize(3);
-      tft.drawString("OFF ...", 20, 40, 1);
-      tft.drawString(inMsg, 20, 75, 1);
-      digitalWrite(TFT_BL_PIN, HIGH);
+        String inMsg = String("... in ") + String(9 - diffS);
+        //tft.fillScreen(TFT_LIGHTGREY);
+        tft.setTextColor(TFT_BLUE, TFT_LIGHTGREY);
+        tft.setTextSize(3);
+        tft.drawString("OFF ...", 20, 40, 1);
+        tft.drawString(inMsg, 20, 75, 1);
+        digitalWrite(TFT_BL_PIN, HIGH);
 #endif
       } else {
-        dumbdisplay.log("*** OFF ***");
+        dumbdisplay.log("*** TFT OFF ***");
 #if defined(TFT_BL_PIN)
         digitalWrite(TFT_BL_PIN, LOW);
 #endif
@@ -356,6 +356,9 @@ void loop() {
     if (micReady) {
       micState = MIC_OFF;
     } else {
+      if (imageLayer != NULL) {
+        dumbdisplay.log("*** LOST CONNECTION MASTER RESET ***");
+      }
       dumbdisplay.masterReset();
       imageLayer = NULL;
       if (cameraReady) {
@@ -384,7 +387,7 @@ void loop() {
     tft.fillScreen(TFT_BLACK);
     digitalWrite(TFT_BL_PIN, LOW);
 #endif
-    dumbdisplay.log("*** ON ***");
+    dumbdisplay.log("*** TFT ON ***");
     // just connected ==> set things up like freshly initialized
     setupDumbdisplay();
     cameraState = CAM_TURNING_ON;

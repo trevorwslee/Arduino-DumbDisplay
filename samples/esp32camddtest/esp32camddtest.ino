@@ -198,6 +198,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
   #define VSYNC_GPIO_NUM    27      // vsync_pin
   #define HREF_GPIO_NUM     25      // href_pin
   #define PCLK_GPIO_NUM     19      // pixel_clock_pin
+  #define VFLIP
 #elif defined(FOR_LILYGO_TCAMERAPLUS)
   // for T-CAMERA PLUS
   #define PWDN_GPIO_NUM     -1

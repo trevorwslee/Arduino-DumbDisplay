@@ -2655,8 +2655,9 @@ DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& paramsPara
   // this->nextArrayIdx = 0;
   // this->validArrayIdx = 0;
 //  this->done = false;
-  this->done = true;
-  this->timedOut = false;
+  //this->done = true;
+  //this->timedOut = false;
+  this->doneState = 1;
   // if (connectNow) {
   //   reconnect();
   // }
@@ -2760,15 +2761,19 @@ _sendCommand0("", ("// EP -- " + endPoint).c_str());
       _sendSpecialCommand("lt", tunnelId, "reconnect", data);
     }
     connectMillis = millis();
-    done = false;
-    timedOut = false;
+    //done = false;
+    //timedOut = false;
+    doneState = 0;
   }
 }
 void DDTunnel::release() {
-  if (!done) {
+  if (doneState == 0/*!done*/) {
     _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");
   }
-  done = true;
+  //done = true;
+  if (doneState == 0) {
+    doneState = 1;
+  }
 }
 // int DDTunnel::_count() {
 //   return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
@@ -2784,14 +2789,14 @@ bool DDTunnel::_eof(long timeoutMillis) {
   // if (timeoutMillis <= 0) {
   //   //timeoutMillis = DD_DEF_TUNNEL_TIMEOUT;
   // }
-  if (done || timeoutMillis <= 0) {
+  if (/*done*/doneState != 0 || timeoutMillis <= 0) {
 // #ifdef DEBUG_TUNNEL_RESPONSE
 // Serial.println("_EOF: " + (done ? "DONE" : "NOT DONE"));
 // #endif                
 // #ifdef DEBUG_TUNNEL_RESPONSE_C                
 // __SendComment("_EOF: " + (done ? "DONE" : "NOT DONE"));
 // #endif
-      return done;
+      return doneState != 0/*done*/;
   }
   long diff = millis() - connectMillis;
   if (diff > timeoutMillis/*diff > TUNNEL_TIMEOUT_MILLIS*/) {
@@ -2799,9 +2804,10 @@ bool DDTunnel::_eof(long timeoutMillis) {
     Serial.println("_EOF: XXX TIMEOUT XXX");
 #endif                
     __SendErrorComment("*** TUNNEL TIMEOUT ***");
-    timedOut = true;
+    doneState = -1;
+    //timedOut = true;
     _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");  // disconnect since 2024-05-25 ... if reconnected, might have residual data from previous connection for slow protocol like BLE
-    done = true;  // treat as done
+    //done = true;  // treat as done
     return true;
   }
   return false;
@@ -2833,8 +2839,12 @@ void DDTunnel::handleInput(const String& data, bool final) {
   //   if (nextArrayIdx == validArrayIdx)
   //     validArrayIdx = (validArrayIdx + 1) % arraySize;
   // }
-  if (final)
-    this->done = true;
+  if (final) {
+    //this->done = true;
+    if (doneState == 0) {
+      doneState = 1;
+    }
+  }
 //Serial.println(String("// ") + (final ? "f" : "."));
 }
 DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize):
