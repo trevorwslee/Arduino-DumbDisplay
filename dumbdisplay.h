@@ -871,7 +871,7 @@ class DDTunnel: public DDObject {
     }
     /// reconnect to specified endpoint with parameters
     /// @param endPoint endpoint to connect to
-    /// @param params parameters to to end point; empty if nont
+    /// @param params parameters to to end point; empty if none
     void reconnectToSetParams(const String& endPoint, const String& params) {
       this->endPoint = endPoint;
       this->params = params;
@@ -888,6 +888,7 @@ class DDTunnel: public DDObject {
     const String& getTunnelId() const { return tunnelId; }
   protected:
     //int _count();
+    inline bool _timedOut() { return timedOut; }
     virtual bool _eof(long timeoutMillis);
     //void _readLine(String &buffer);
     void _writeLine(const String& data);
@@ -908,6 +909,7 @@ class DDTunnel: public DDObject {
     // int validArrayIdx;
   private:
     bool done;
+    bool timedOut;
 };
 
 
@@ -940,7 +942,11 @@ class DDBufferedTunnel: public DDTunnel {
     /// count buffer ready  read
     inline int count() { return _count(); }
     /// reached EOF?
+    /// @param timeoutMillis timeout in millis; see DDTunnel::timedOut()
+    /// @return true if EOF (or timed out)
     inline bool eof(long timeoutMillis = DD_DEF_TUNNEL_TIMEOUT) { return _eof(timeoutMillis); }
+    /// check whether EOF caused by timeout or not; note that timeout is only due to check of EOF with DDBufferedTunnel::eof() with timeoutMillis set
+    inline bool timedOut() { return _timedOut(); }
     /// read a line from buffer
     String readLine();
     /// read a line from buffer, in to the buffer passed in

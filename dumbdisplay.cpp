@@ -88,8 +88,7 @@
   #define SUPPORT_TUNNEL
 #endif
 
-#define TUNNEL_TIMEOUT_MILLIS 30000
-
+//#define TUNNEL_TIMEOUT_MILLIS 30000
 
 #define VALIDATE_CONNECTION
 //#define DEBUG_WITH_LED
@@ -2657,6 +2656,7 @@ DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& paramsPara
   // this->validArrayIdx = 0;
 //  this->done = false;
   this->done = true;
+  this->timedOut = false;
   // if (connectNow) {
   //   reconnect();
   // }
@@ -2707,7 +2707,8 @@ _sendCommand0("", ("// EP -- " + endPoint).c_str());
   if (endPoint != "") {
     //nextArrayIdx = 0;
     //validArrayIdx = 0;
-    done = false;
+//    done = false;
+//    timedOut = false;
     //for (int i = 0; i < arraySize; i++) {
       //dataArray[i] = "";
     //}
@@ -2759,6 +2760,8 @@ _sendCommand0("", ("// EP -- " + endPoint).c_str());
       _sendSpecialCommand("lt", tunnelId, "reconnect", data);
     }
     connectMillis = millis();
+    done = false;
+    timedOut = false;
   }
 }
 void DDTunnel::release() {
@@ -2777,35 +2780,34 @@ bool DDTunnel::_eof(long timeoutMillis) {
   //   yield();
   // }
   _HandleFeedback();
-#ifdef DD_DEF_TUNNEL_TIMEOUT
-  if (timeoutMillis <= 0) {
-    timeoutMillis = DD_DEF_TUNNEL_TIMEOUT;
-  }
-  if (done) {
+//#ifdef DD_DEF_TUNNEL_TIMEOUT
+  // if (timeoutMillis <= 0) {
+  //   //timeoutMillis = DD_DEF_TUNNEL_TIMEOUT;
+  // }
+  if (done || timeoutMillis <= 0) {
 // #ifdef DEBUG_TUNNEL_RESPONSE
-// Serial.println("_EOF: DONE");
+// Serial.println("_EOF: " + (done ? "DONE" : "NOT DONE"));
 // #endif                
 // #ifdef DEBUG_TUNNEL_RESPONSE_C                
-// __SendComment("_EOF: DONE");
+// __SendComment("_EOF: " + (done ? "DONE" : "NOT DONE"));
 // #endif
-      return true;
-    }
-    long diff = millis() - connectMillis;
-    if (diff > TUNNEL_TIMEOUT_MILLIS) {
+      return done;
+  }
+  long diff = millis() - connectMillis;
+  if (diff > timeoutMillis/*diff > TUNNEL_TIMEOUT_MILLIS*/) {
 #ifdef DEBUG_TUNNEL_RESPONSE
-      Serial.println("_EOF: XXX TIMEOUT XXX");
+    Serial.println("_EOF: XXX TIMEOUT XXX");
 #endif                
-      __SendErrorComment("*** TUNNEL TIMEOUT ***");
-      if (true) {
-        // since 2023-10-02
-        done = true;
-      }
-      return true;
-    }
-    return false;
-#else
-    return /*nextArrayIdx == validArrayIdx && */done;
-#endif    
+    __SendErrorComment("*** TUNNEL TIMEOUT ***");
+    timedOut = true;
+    _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");  // disconnect since 2024-05-25 ... if reconnected, might have residual data from previous connection for slow protocol like BLE
+    done = true;  // treat as done
+    return true;
+  }
+  return false;
+// #else
+//     return /*nextArrayIdx == validArrayIdx && */done;
+// #endif    
 }
 // void DDTunnel::_readLine(String &buffer) {
 //   if (nextArrayIdx == validArrayIdx) {
@@ -2881,6 +2883,9 @@ bool DDBufferedTunnel::_eof(long timeoutMillis) {
   }
   if (!this->DDTunnel::_eof(timeoutMillis)) {
     return false;
+  }
+  if (this->_timedOut()) {
+    return true;
   }
 // #ifdef DEBUG_TUNNEL_RESPONSE                
 // Serial.print("CHECK EOF ...");
