@@ -218,27 +218,34 @@ Here is the list of all connection IO objects that you can use:
     - in this example, 2 and 3 are the pins used by `SoftwareSerial`
     - the default baud rate is 115200, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially true for HC-08, which connects via BLE. 
   - you **should not** be using that `SoftwareSerial` for other purposes
-* Via `Serial2` -- for Arduino Mega / STM32, attached to a Bluetooth module like HC-06 -- [DDSerial2IO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_serial2_i_o.html)
-  ```
-    #include "serial2dumbdisplay.h"
-    DumbDisplay dumbdisplay(new DDSerial2IO(115200));
-  ```
-  - need to include `serial2dumbdisplay.h` -- `#include "serial2dumbdisplay.h"`
-  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSerial2IO(115200))`
-  - e.g. for Arduino Mega2560: connect D17 (RX2) to TX of HC-06 and connect D16 (TX2) to RX of HC-06 
-  - e.g. for STM32F103: connect PA3 (RX2) to TX of HC-06 and connect PA2 (TX2) to RX of HC-06
-* Via `UART` -- for Raspberry Pi Pico, attached to a Bluetooth module like HC-06 -- [DDPicoSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_pico_uart1_i_o.html)
-  ```
-    #include <picodumbdisplay.h>
-    DumbDisplay dumbdisplay(new DDPicoSerialIO(8, 9));
-  ```
-  - need to include `picodumbdisplay.h` -- `#include "picodumbdisplay.h"`
-  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDPicoSerialIO(8, 9, 115200))`
-    - 8 is Pico's UART1 TX
-    - 9 is Pico's UART1 RX
-  - `UART` is basically declared like
+* Via *generic* `DD_SERIAL`-- for Raspberry Pi Pico / Arduino Mega / STM32 -- [DDGenericIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_generic_i_o.html)
+  <br>The essence is, you define the *generic* `DD_SERIAL` object before including `genericdumbdisplay.h`;  for examples:
+  - `Raspberry Pi Pico` -- 8 ==> TX ; 9 ==> RX
     ```
-    UART serial(8, 9, 0, 0)
+    UART uart(8, 9, 0, 0);
+    #define DD_SERIAL uart
+    #include "genericdumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDGenericIO());
+    ```  
+  - `Arduino Mega` -- 17 ==> TX ; 16 ==> RX
+    ```
+    #define DD_SERIAL Serial2
+    #include "genericdumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDGenericIO());
+    ```
+  - `STM32` -- PA3 (RX2) ==> TX ; PA2 (TX2) ==> RX
+    ```
+    #define DD_SERIAL Serial2
+    #include "genericdumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDGenericIO());
+    ```
+  - `SoftwareSerial` -- 2 ==> TX ; 3 ==> RX
+    ```
+    #include <SoftwareSerial.h>
+    SoftwareSerial ss(2, 3);
+    #define DD_SERIAL ss
+    #include "genericdumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDGenericIO());
     ```  
 * Via **ESP32** `BluetoothSerial` -- [DDBluetoothSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_bluetooth_serial_i_o.html)
   ```

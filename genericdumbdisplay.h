@@ -2,7 +2,7 @@
 #define genericdumbdisplay_h
 
 #if !defined(DD_SERIAL)
-  #error Must define the macro DD_SERIAL and optional DD_SERIAL_begin (a function call or a code block) \
+  #error Before #include, must define the macro DD_SERIAL and optional DD_SERIAL_begin (a function call or a code block) \
     *** \
     e.g. STM32F103: PA3 (RX2) ==> TX; PA2 (TX2) ==> RX \
     #define DD_SERIAL Serial2 \
@@ -15,6 +15,23 @@
 #include "dumbdisplay.h"
 
 /// Subclass of DDInputOutput
+/// <br>IMPORTANT:
+/// - Before `#include`, must define `DD_SERIAL`
+/// - and optionally define `DD_SERIAL_begin` if necessary
+/// - `DD_SERIAL_begin` is a function call or a code block
+/// - if `DD_SERIAL_begin` not defined, will call `DD_SERIAL.begin(115200)` instead
+/// - e.g. SoftwareSerial -- 2 => TX; 3 => RX
+///   <br>`#include <SoftwareSerial.h>`
+///   <br>`SoftwareSerial ss(2, 3);`
+///   <br>`#define DD_SERIAL ss`
+/// - e.g. Pico -- 8: PICO_TX; 9: PICO_RX
+///   <br>`UART uart(8, 9, 0, 0);`
+///   <br>`#define DD_SERIAL uart`
+/// - e.g. Arduino Mega -- 17 ==> TX; 16 ==> RX
+///   <br>`#define DD_SERIAL Serial2`
+/// - e.g. STM32F103 --  PA3 (RX2) ==> TX; PA2 (TX2) ==> RX
+///   <br>`HardwareSerial Serial2(USART2);`
+///   <br>`#define DD_SERIAL Serial2`
 class DDGenericIO: public DDInputOutput {
   public:
     DDGenericIO(bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, enableSerial, enableSerial) {
