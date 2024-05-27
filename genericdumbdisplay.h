@@ -30,8 +30,8 @@
 /// - e.g. Arduino Mega -- 17 ==> TX; 16 ==> RX
 ///   <br>`#define DD_SERIAL Serial2`
 /// - e.g. STM32F103 --  PA3 (RX2) ==> TX; PA2 (TX2) ==> RX
-///   <br>`HardwareSerial Serial2(USART2);`
-///   <br>`#define DD_SERIAL Serial2`
+///   <br>`HardwareSerial hs(USART2);`
+///   <br>`#define DD_SERIAL hs`
 class DDGenericIO: public DDInputOutput {
   public:
     DDGenericIO(bool enableSerial = false, unsigned long serialBaud = DD_SERIAL_BAUD): DDInputOutput(serialBaud, enableSerial, enableSerial) {
