@@ -139,7 +139,7 @@ Notes:
 The starting point is a DumbDisplay object,
 which requires an IO object for communicating with your DumbDisplay Android app.
 
-|  | |
+|  |  |
 |--|--|
 |A kickstart virtual blink test example would be like https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink/otgblink.ino|![](screenshots/otgblink.png)|
 
@@ -171,7 +171,7 @@ Since the sketch assumes USB connectivity to your Android phone, hence, the fina
 You may want to refer to my post [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/) for more description on such connection.
 
 
-|  | |
+|  |  |
 |--|--|
 |![](screenshots/otg7segment.png)|Another simple example is making use of virtual 7-segment display for counting (from 0 to 9) like https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otg7segment/otg7segment.ino|
 
@@ -284,7 +284,8 @@ Here is the list of all connection IO objects that you can use:
     ```
   - `STM32` -- PA3 (RX2) ==> TX ; PA2 (TX2) ==> RX
     ```
-    #define DD_SERIAL Serial2
+    HardwareSerial hs(USART2);
+    #define DD_SERIAL hs
     #include "genericdumbdisplay.h"
     DumbDisplay dumbdisplay(new DDGenericIO());
     ```
@@ -1196,7 +1197,7 @@ The two service "tunnels" are:
       graphical->drawStr(x, y, objectDetectResult.label, "yellow", "a70%darkgreen", 32);
     }
   ```
-|  | |
+|  |  |
 |--|--|
 |For the complete demo, please refer to [Arduino AI Fun With TensorFlow Lite, Via DumbDisplay](https://www.instructables.com/Arduino-AI-Fun-With-TensorFlow-Lite-Via-DumbDispla/).|![](screenshots/esp32camobjectdetect.gif)|
   
@@ -1270,7 +1271,7 @@ void loop() {
 }
 ```
  
-|||
+|  |  |
 |--|--|
 |![](screenshots/ddwebcalc.png)|Note that https://trevorwslee.github.io/DumbCalculator/ is a live simple WASM calculator implemented using Rust|
 
@@ -1320,7 +1321,7 @@ And such interfacing is bridged by DumbDisplay with the followings
 Sorry! Very likely, `WebViewDDLayer` will not work correctly for less-capable boards like Arduino Uno, Nano, etc, mostly due to limit on connection channel, like `Serial`.
 
 
-|||
+|  |  |
 |--|--|
 |You may want to refer to the example `otgblink_ex` -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink_ex/otgblink_ex.ino|![](screenshots/ddwebblink.png)|
 
@@ -1331,7 +1332,7 @@ Sorry! Very likely, `WebViewDDLayer` will not work correctly for less-capable bo
 
 Another "device dependent view" layer is [`TomTomMapDDLayer`](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html).
 
-|  | |
+|  |  |
 |--|--|
 |![](screenshots/ddnowhere.jpg)|For demonstration, the above "now/here" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. The complete "nowhere" sample is https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddnowhere/ddnowhere.ino|
 
@@ -1408,7 +1409,7 @@ As a matter of fact, the "auto pin" mechanism can be used in conjunction with th
 
 To get a feel, you may want to refer to the video [**Raspberry Pi Pico playing song melody tones, with DumbDisplay control and keyboard input**](https://www.youtube.com/watch?v=l-HrsJXIwBY) 
 
-|  | |
+|  |  |
 |--|--|
 |![](screenshots/pico-speaker_connection.png)|![](screenshots/ddmelody.jpg)|
 
@@ -1612,7 +1613,7 @@ In case you want to specify the "end" X/Y value, say as -9999, you can do so by 
 pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag-9999");
 ```
 
-|||
+|  |  |
 |--|--|
 |For a complete example, please refer to the sketch as shown in the YouTube -- [Building a DL model for the Mnist Dataset, to building an Arduino Sketch for ESP32S3 (also ESP32)](https://www.youtube.com/watch?v=cL1-5BKJu30) The drawing of the hand-written digit is basically triggered by "drag" "feedbacks" |![](screenshots/esp32_mnist.gif)|
 
@@ -1776,7 +1777,7 @@ Under the hook, the pixel image is actually converted to, say in this case, PNG 
 Notice how the previously mentioned display image file command is used here.
 
 
-| |  |
+|  |  |
 |--|--|
 |For a complete example, and much more than just displaying bitmap image, please refer to my adaption of the "Pocket Computer" Arduino Nano project I found in YouTube -- [Arduino Pocket Computer featuring calculator, stopwatch, calendar, game and phone book](https://www.youtube.com/watch?v=NTaq6f7NV5U) by Volos Projects|![](screenshots/ddpocketcomputer.png)|
 
@@ -1801,7 +1802,7 @@ The cached 16-bit pixel image is displayed to graphical layer as needed, like
   ...
 ```
 
-| | |
+|  |  |
 |--|--|
 |In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by my post [Adaptation of "Space Wars" Game with DumbDisplay](https://www.instructables.com/Adaptation-of-Space-Wars-Game-With-DumbDisplay/).|![](screenshots/ddspacewars.gif)|
 
@@ -1809,7 +1810,7 @@ The cached 16-bit pixel image is displayed to graphical layer as needed, like
 ## Saving Images for DumbDisplay
 
 Better than sending image data from microcontroller to DumbDisplay app every time, you may want to save the images to DumbDisplay app image storage, for the use by your sketch. As hinted by the post, the steps can be like
-| | |
+|  |  |
 |--|--|
 |1) use your phone's Chrome browser to open the image page; <br>2) long press the image to bring up the available options; <br>3) select to share the image with DumbDisplay app|![](screenshots/ddsaveimages.gif)|
 
@@ -1821,7 +1822,7 @@ Notes:
 
 ## Audio Supports 
 
-| | |
+|  |  |
 |--|--|
 |![](screenshots/esp32-mic.png)|DumbDisplay has certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports. Additionally, you may also be interested in a more extensive application -- [Demo of ESP-Now Voice Commander Fun With Wit.ai and DumbDisplay](https://www.youtube.com/watch?v=dhlLU7gmmbE)|
 
@@ -1993,7 +1994,7 @@ Notice that calling of `pdd.loop()` is similar, but with one addition optional `
   });
 ```
 
-| | |
+|  |  |
 |--|--|
 |For a complete program / sketch that demonstrates how "passive" connetion is used, you may want to refer to the post [Extending a TFT_eSPI Example With TTGO T-Display Using PlatformIO, With DumbDisplay](https://www.instructables.com/Extending-a-TFTeSPI-Example-With-TTGO-T-Display-Us/)|![](screenshots/tdisplayclock.png)|
 
