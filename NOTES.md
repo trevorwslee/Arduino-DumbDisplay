@@ -1,7 +1,5 @@
 Notes:
 
-* The doc here is updated for v0.9.9
-
 * The starting point is a [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html) object
 
 * The *README* of the [GitHub repository for DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) should provide more details
@@ -13,6 +11,6 @@ Notes:
   - if you will not be making use of "feedback", define the compile-time macro `DD_NO_FEEDBACK`
   - if you will not be making use of "passive" connection, define the compile-time macro `DD_NO_PASSIVE_CONNECT` 
 
-* ***Have Fun! Peace be with you! May God bless you! Jesus loves you!***  
+* ***Have Fun! Peace be with you! May God bless you! Jesus loves you! Amazing Grace!***  
 
 

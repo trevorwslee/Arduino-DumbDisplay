@@ -140,7 +140,7 @@ void setup() {
 
 
 void loop() {
-  if (interpreter == NULL) {
+  if (!cameraReady || interpreter == NULL) {
     error_reporter->Report("Not Initialized!");
     delay(2000);
     return;
@@ -150,6 +150,7 @@ void loop() {
   camera_fb_t* capturedImage = captureImage(false);
   if (capturedImage == NULL) {
     error_reporter->Report("Error: Camera capture failed");
+    delay(2000);
     return;
   }
 
@@ -285,6 +286,24 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
   #define VSYNC_GPIO_NUM     6      // vsync_pin
   #define HREF_GPIO_NUM      7      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
+#elif defined(FOR_VCC_S3EYE)
+  #define PWDN_GPIO_NUM     -1
+  #define RESET_GPIO_NUM    -1      // -1 = not used
+  #define XCLK_GPIO_NUM     15
+  #define SIOD_GPIO_NUM      4      // i2c sda
+  #define SIOC_GPIO_NUM      5      // i2c scl
+  #define Y9_GPIO_NUM       16
+  #define Y8_GPIO_NUM       17
+  #define Y7_GPIO_NUM       18
+  #define Y6_GPIO_NUM       12
+  #define Y5_GPIO_NUM       10
+  #define Y4_GPIO_NUM        8
+  #define Y3_GPIO_NUM        9
+  #define Y2_GPIO_NUM       11
+  #define VSYNC_GPIO_NUM     6      // vsync_pin
+  #define HREF_GPIO_NUM      7      // href_pin
+  #define PCLK_GPIO_NUM     13      // pixel_clock_pin
+  #define VFLIP
 #else
   // for CAMERA_MODEL_AI_THINKER
   #define PWDN_GPIO_NUM     32      // power to camera (on/off)
@@ -331,6 +350,9 @@ bool cameraImageSettings() {
   s->set_exposure_ctrl(s, 1);                   // auto exposure on
   s->set_awb_gain(s, 1);                        // Auto White Balance enable (0 or 1)
   s->set_brightness(s, cameraImageBrightness);  // (-2 to 2) - set brightness
+#ifdef VFLIP  
+  s->set_vflip(s, true);
+#endif
 
   return 1;
 }
@@ -339,7 +361,9 @@ bool cameraImageSettings() {
 bool initialiseCamera() {
   esp_camera_deinit();     // disable camera
   delay(50);
+#ifdef WITH_FLASH  
   setupFlashPWM();         // configure PWM for the illumination LED
+#endif  
 
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;

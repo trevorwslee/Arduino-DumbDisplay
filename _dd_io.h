@@ -4,7 +4,7 @@
 /// @brief
 /// Class for DD input/output; you explicitly constructed it, pass in when instantiate DumbDisplay,
 /// then it will be use by DD internally for communication with DumbDisplay app.
-/// There are several derived class like DDSoftwareSerialIO, DDWiFiServerIO, DDBluetoothSerialIO, DDBLESerialIO, DDPicoUart1IO etc
+/// There are several derived class like DDSoftwareSerialIO, DDWiFiServerIO, DDBluetoothSerialIO, DDBLESerialIO, DDPicoSerialIO etc
 /// @since v0.9.8
 class DDInputOutput {
   public:

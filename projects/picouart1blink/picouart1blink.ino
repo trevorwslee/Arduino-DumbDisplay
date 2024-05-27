@@ -4,7 +4,7 @@
 #include "picodumbdisplay.h"
 
 /* HC-06 connectivity */
-DumbDisplay dumbdisplay(new DDPicoUart1IO(115200));
+DumbDisplay dumbdisplay(new DDPicoSerialIO(DD_4_PICO_TX, DD_4_PICO_RX));
 LedGridDDLayer *led;
 
 void setup() {

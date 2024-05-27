@@ -88,8 +88,7 @@
   #define SUPPORT_TUNNEL
 #endif
 
-#define TUNNEL_TIMEOUT_MILLIS 30000
-
+//#define TUNNEL_TIMEOUT_MILLIS 30000
 
 #define VALIDATE_CONNECTION
 //#define DEBUG_WITH_LED
@@ -135,7 +134,7 @@
 
 
 // see nobody.trevorlee.dumbdisplay.DDActivity#ddSourceCompatibility
-#define DD_SID "Arduino-c7"
+#define DD_SID "Arduino-c8"  // DD library version (compatibility)
 
 
 #include "_dd_commands.h"
@@ -1683,8 +1682,8 @@ __SendComment("LT++++" + data + " - final:" + String(final));
       bool ok = false;
       int lid = -1;
       DDFeedbackType type = CLICK;
-      int16_t x = -1;
-      int16_t y = -1;
+      int16_t x = 0;
+      int16_t y = 0;
       char* pText = NULL;      
       char* token = strtok(buf, ".");
       if (token != NULL) {
@@ -1692,27 +1691,40 @@ __SendComment("LT++++" + data + " - final:" + String(final));
         token = strtok(NULL, ":");
       }
       if (token != NULL) {
-        if (strcmp(token, "longpress") == 0) {
-          type = LONGPRESS;
-        } else if (strcmp(token, "doubleclick") == 0) {
-          type = DOUBLECLICK;
-        } else if (strcmp(token, "move") == 0) {
-          type = MOVE;
-        } else if (strcmp(token, "up") == 0) {
-          type = UP;
-        } else if (strcmp(token, "down") == 0) {
-          type = DOWN;
+        //Serial.println("FBT:[" + String(token) + "]");
+        if (*token >= '0' && *token <= '9' && *(token + 1) == 0) {
+          x = *token - '0';
+          y = 0;
+          ok = true;  // got x and y
+          token = strtok(NULL, "");  // want the rest
+        } else {
+          if (strcmp(token, "longpress") == 0 || strcmp(token, "L") == 0) {
+            type = LONGPRESS;
+          } else if (strcmp(token, "doubleclick") == 0 || strcmp(token, "D") == 0) {
+            type = DOUBLECLICK;
+          } else if (strcmp(token, "move") == 0 || strcmp(token, "M") == 0) {
+            type = MOVE;
+          } else if (strcmp(token, "up") == 0 || strcmp(token, "u") == 0) {
+            type = UP;
+          } else if (strcmp(token, "down") == 0 || strcmp(token, "d") == 0) {
+            type = DOWN;
+          } 
+          token = strtok(NULL, ",");
         }
-        token = strtok(NULL, ",");
-      }
-      if (token != NULL) {
-        x = atoi(token);
-        token = strtok(NULL, ",");
-      }
-      if (token != NULL) {
-        y = atoi(token);
+      } else {
         ok = true;
-        token = strtok(NULL, "");  // want the rest
+      }
+      if (!ok) {
+        // getting x and y
+        if (token != NULL) {
+          x = atoi(token);
+          token = strtok(NULL, ",");
+        }
+        if (token != NULL) {
+          y = atoi(token);
+          ok = true;
+          token = strtok(NULL, "");  // want the rest
+        }
       }
       if (token != NULL) {
         pText = token;
@@ -2643,7 +2655,9 @@ DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& paramsPara
   // this->nextArrayIdx = 0;
   // this->validArrayIdx = 0;
 //  this->done = false;
-  this->done = true;
+  //this->done = true;
+  //this->timedOut = false;
+  this->doneState = 1;
   // if (connectNow) {
   //   reconnect();
   // }
@@ -2694,7 +2708,8 @@ _sendCommand0("", ("// EP -- " + endPoint).c_str());
   if (endPoint != "") {
     //nextArrayIdx = 0;
     //validArrayIdx = 0;
-    done = false;
+//    done = false;
+//    timedOut = false;
     //for (int i = 0; i < arraySize; i++) {
       //dataArray[i] = "";
     //}
@@ -2746,13 +2761,19 @@ _sendCommand0("", ("// EP -- " + endPoint).c_str());
       _sendSpecialCommand("lt", tunnelId, "reconnect", data);
     }
     connectMillis = millis();
+    //done = false;
+    //timedOut = false;
+    doneState = 0;
   }
 }
 void DDTunnel::release() {
-  if (!done) {
+  if (doneState == 0/*!done*/) {
     _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");
   }
-  done = true;
+  //done = true;
+  if (doneState == 0) {
+    doneState = 1;
+  }
 }
 // int DDTunnel::_count() {
 //   return (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
@@ -2764,35 +2785,35 @@ bool DDTunnel::_eof(long timeoutMillis) {
   //   yield();
   // }
   _HandleFeedback();
-#ifdef DD_DEF_TUNNEL_TIMEOUT
-  if (timeoutMillis <= 0) {
-    timeoutMillis = DD_DEF_TUNNEL_TIMEOUT;
-  }
-  if (done) {
+//#ifdef DD_DEF_TUNNEL_TIMEOUT
+  // if (timeoutMillis <= 0) {
+  //   //timeoutMillis = DD_DEF_TUNNEL_TIMEOUT;
+  // }
+  if (/*done*/doneState != 0 || timeoutMillis <= 0) {
 // #ifdef DEBUG_TUNNEL_RESPONSE
-// Serial.println("_EOF: DONE");
+// Serial.println("_EOF: " + (done ? "DONE" : "NOT DONE"));
 // #endif                
 // #ifdef DEBUG_TUNNEL_RESPONSE_C                
-// __SendComment("_EOF: DONE");
+// __SendComment("_EOF: " + (done ? "DONE" : "NOT DONE"));
 // #endif
-      return true;
-    }
-    long diff = millis() - connectMillis;
-    if (diff > TUNNEL_TIMEOUT_MILLIS) {
+      return doneState != 0/*done*/;
+  }
+  long diff = millis() - connectMillis;
+  if (diff > timeoutMillis/*diff > TUNNEL_TIMEOUT_MILLIS*/) {
 #ifdef DEBUG_TUNNEL_RESPONSE
-      Serial.println("_EOF: XXX TIMEOUT XXX");
+    Serial.println("_EOF: XXX TIMEOUT XXX");
 #endif                
-      __SendErrorComment("*** TUNNEL TIMEOUT ***");
-      if (true) {
-        // since 2023-10-02
-        done = true;
-      }
-      return true;
-    }
-    return false;
-#else
-    return /*nextArrayIdx == validArrayIdx && */done;
-#endif    
+    __SendErrorComment("*** TUNNEL TIMEOUT ***");
+    doneState = -1;
+    //timedOut = true;
+    _sendSpecialCommand("lt", this->tunnelId, "disconnect", "");  // disconnect since 2024-05-25 ... if reconnected, might have residual data from previous connection for slow protocol like BLE
+    //done = true;  // treat as done
+    return true;
+  }
+  return false;
+// #else
+//     return /*nextArrayIdx == validArrayIdx && */done;
+// #endif    
 }
 // void DDTunnel::_readLine(String &buffer) {
 //   if (nextArrayIdx == validArrayIdx) {
@@ -2818,8 +2839,12 @@ void DDTunnel::handleInput(const String& data, bool final) {
   //   if (nextArrayIdx == validArrayIdx)
   //     validArrayIdx = (validArrayIdx + 1) % arraySize;
   // }
-  if (final)
-    this->done = true;
+  if (final) {
+    //this->done = true;
+    if (doneState == 0) {
+      doneState = 1;
+    }
+  }
 //Serial.println(String("// ") + (final ? "f" : "."));
 }
 DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize):
@@ -2868,6 +2893,9 @@ bool DDBufferedTunnel::_eof(long timeoutMillis) {
   }
   if (!this->DDTunnel::_eof(timeoutMillis)) {
     return false;
+  }
+  if (this->_timedOut()) {
+    return true;
   }
 // #ifdef DEBUG_TUNNEL_RESPONSE                
 // Serial.print("CHECK EOF ...");

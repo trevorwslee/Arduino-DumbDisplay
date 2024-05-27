@@ -5,7 +5,7 @@
 
 #include "dumbdisplay.h"
 
-/// Subclass of DDInputOutput
+/// Deprecated. Use DDGenericIO (in genericdumbdisplay.h) instead.
 class DDSerial2IO: public DDInputOutput {
   public:
     DDSerial2IO(unsigned long baud,

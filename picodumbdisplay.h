@@ -14,7 +14,7 @@
 
 
 
-/// Subclass of DDInputOutput
+/// Deprecated. Use DDGenericIO (in genericdumbdisplay.h) instead.
 class DDPicoSerialIO: public DDInputOutput {
   public:
     DDPicoSerialIO(int tx = 8, int rx = 9,

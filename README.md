@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9)
+# DumbDisplay Arduino Library (v0.9.9-r02)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,40 +7,55 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-* [Description](#description)
-* [Installation](#installation)
-  * [Arduino IDE](#arduino-ide)
-  * [PlatformIO](#platformio)
-* [DumbDisplay Android App](#dumbDisplay-android-app)
-* [Kickstart](#Kickstart)
-  * [Samples](#samples)
-  * [More Samples](#more-samples)
-  * [More OTG Examples](#more-otg-examples)
-* [Features](#features)  
-  * [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism)
-  * [DumbDisplay "Tunnel"](#dumbDisplay-tunnel)
-  * [Service "Tunnels"](#service-tunnels)
-  * ["Device Dependent View" Layers](#device-dependent-view-layers)
-  * [Downloadable Font Support](#downloadable-font-support)
-  * [Positioning of Layers](#positioning-of-layers)
-  * [Record and Playback Commands](#record-and-playback-commands)
-  * [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
-  * [More "Feedback" Options](#more-feedback-options)
-  * [Idle Callback and ESP32 Deep Sleep](#idle-callback-and-esp32-deep-sleep)
-  * [Using "Tunnel" to Download Images from the Web](#using-tunnel-to-download-images-from-the-web)
-  * [Save Pictures to Phone Captured with ESP32 Cam](#save-pictures-to-phone-captured-with-esp32-cam)
-  * [Caching Single-bit Bitmap to Phone](#caching-single-bit-bitmap-to-phone)
-  * [Caching 16-bit Colored Bitmap to Phone](#caching-16-bit-colored-bitmap-to-phone)
-  * [Saving Images for DumbDisplay](#saving-images-for-dumbdisplay)
-  * [Audio Supports](#audio-supports)
-  * ["Passive" Connection](#passive-connection)
-* [Reference](#reference)
-* [DumbDisplay WIFI Bridge](#dumbdisplay-wifi-bridge)
-* [DumbDisplay App Hints](#dumbdisplay-app-hints)
-* [Startup DumbDisplay App from Another Android App](#startup-dumbdisplay-app-from-another-android-app)
-* [Thank You!](#thank-you)
-* [License](#license)
-* [Change History](#change-history)
+- [DumbDisplay Arduino Library (v0.9.9-r02)](#dumbdisplay-arduino-library-v099-r02)
+  - [Enjoy](#enjoy)
+- [Description](#description)
+- [Installation](#installation)
+  - [Arduino IDE](#arduino-ide)
+  - [PlatformIO](#platformio)
+- [DumbDisplay Android App](#dumbdisplay-android-app)
+- [Kickstart](#kickstart)
+  - [Connectivity](#connectivity)
+  - [Samples](#samples)
+    - [Sample -- *Micro:bit*](#sample----microbit)
+    - [Sample -- *LEDs + "Bar Meter" + LCD*](#sample----leds--bar-meter--lcd)
+    - [Sample -- *Graphical \[LCD\]*](#sample----graphical-lcd)
+  - [More Samples](#more-samples)
+    - [Sample -- *Nested "auto pin" layers*](#sample----nested-auto-pin-layers)
+    - [Sample -- *Manual "pin" layers (LEDs + Turtle)*](#sample----manual-pin-layers-leds--turtle)
+    - [Sample -- *"Layer feedback"*](#sample----layer-feedback)
+  - [More OTG Examples](#more-otg-examples)
+    - [Example -- *RGB "Sliders"*](#example----rgb-sliders)
+    - [Example -- *"Tunnel" for RESTful*](#example----tunnel-for-restful)
+    - [Example -- *"Tunnel" for Web Image*](#example----tunnel-for-web-image)
+- [Features](#features)
+  - [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism)
+  - [DumbDisplay "Tunnel"](#dumbdisplay-tunnel)
+  - [Service "Tunnels"](#service-tunnels)
+  - ["Device Dependent View" Layers](#device-dependent-view-layers)
+    - [Terminal Layer](#terminal-layer)
+    - [WebView Layer](#webview-layer)
+    - [TomTom Map Layer](#tomtom-map-layer)
+  - [Downloadable Font Support](#downloadable-font-support)
+  - [Positioning of Layers](#positioning-of-layers)
+  - [Record and Playback Commands](#record-and-playback-commands)
+  - [Survive DumbDisplay App Reconnection](#survive-dumbdisplay-app-reconnection)
+  - [More "Feedback" Options](#more-feedback-options)
+  - [Idle Callback and ESP32 Deep Sleep](#idle-callback-and-esp32-deep-sleep)
+  - [Using "Tunnel" to Download Images from the Web](#using-tunnel-to-download-images-from-the-web)
+  - [Save Pictures to Phone Captured with ESP32 Cam](#save-pictures-to-phone-captured-with-esp32-cam)
+  - [Caching Single-bit Bitmap to Phone](#caching-single-bit-bitmap-to-phone)
+  - [Caching 16-bit Colored Bitmap to Phone](#caching-16-bit-colored-bitmap-to-phone)
+  - [Saving Images for DumbDisplay](#saving-images-for-dumbdisplay)
+  - [Audio Supports](#audio-supports)
+  - ["Passive" Connection](#passive-connection)
+- [Reference](#reference)
+- [DumbDisplay WIFI Bridge](#dumbdisplay-wifi-bridge)
+- [DumbDisplay App Hints](#dumbdisplay-app-hints)
+- [Startup DumbDisplay App from Another Android App](#startup-dumbdisplay-app-from-another-android-app)
+- [Thank You!](#thank-you)
+- [License](#license)
+- [Change History](#change-history)
 
 
 
@@ -88,8 +103,7 @@ If you have an Arduino framework PlatformIO project that you want to make use of
 
 ```
 [env]
-lib_deps =
-    https://github.com/trevorwslee/Arduino-DumbDisplay
+lib_deps = https://github.com/trevorwslee/Arduino-DumbDisplay
 ```
 
 
@@ -103,17 +117,21 @@ To upgrade DumbDisplay Arduino Library for that PlatformIO project, you can simp
 Obviously, you will need to install an app on your Android phone. Indeed, for Arduino DumbDisplay to work, you will need to install the free [DumbDisplay Android app](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay) from Android Play Store
 
 The app is itself a USB serial monitor, and certainly can also accept DumbDisplay connection via
-* SoftwareSerial (e.g. Bluetooth by HC-05 / HC-06; even HC-08)
+* Serial (USB connected via OTG adapter)
+* SoftwareSerial (like for Bluetooth by HC-05 / HC-06; even HC-08)
+* Other Serial-like object like `Serial2` (hardware serial, like for Arduino Mega / STM32)
 * BluetoothSerial (for ESP32)
 * Bluetooth LE (for ESP32, ESP32C3 and ESP32S3)
 * WIFI (e.g. ESP32, ESP8266, PicoW and Arduino UNO R4 Wifi)
-* Serial (USB connected via OTG adapter)
 * Serial <-> WIFI via the simple included tool -- [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge)
-* Serial2 (hardware serial, like for Arduino Mega / STM32)
+
+Please refer to the section [Connectivity](#connectivity) for more details
 
 Notes:
 * Out of so many microcontroller boards, I have only tested DumbDisplay with the microcontroller boards that I have access to. Nevertheless, I am hopeful that using Serial for other microcontroller boards should work just fine [in general].
 * In case DumbDisplay does not handshake with your microcontroller board correctly, you can try resetting the board, say, by pressing the "reset" button on it.
+
+
 
  
 # Kickstart
@@ -183,6 +201,8 @@ void loop() {
 ```
 
 
+## Connectivity
+
 Here is the list of all connection IO objects that you can use:
 
 * Via Serial -- via OTG; you may want to refer to [Blink Test with Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/) -- [DDInputOutput](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_input_output.html)
@@ -193,7 +213,7 @@ Here is the list of all connection IO objects that you can use:
   - need to include `dumbdisplay.h` -- `#include "dumbdisplay.h"`
   - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDInputOutput())`
   - you **should not** be using `Serial` for other purposes
-  - the default baud rate is 115200;  a lower baud rate, say 9600, may work better in some cases; **be remindered that** DumbDisplay app side also need be set to matching baud rate
+  - the default baud rate is 115200;  a lower baud rate, say 9600, may work better in some cases; **be reminded that** DumbDisplay app side also need be set to matching baud rate
 * Via [`SoftwareSerial`](https://www.arduino.cc/en/Reference/softwareSerial) -- attached to a Bluetooth module like HC-06. For an example, you may want to refer to the post [Setup HC-05 and HC-06, for Wireless 'Number Invaders'](https://www.instructables.com/Setup-HC-05-and-HC-06-for-Wireless-Number-Invaders/) -- [DDSoftwareSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_software_serial_i_o.html)
   ```
     #include "ssdumbdisplay.h"
@@ -204,28 +224,6 @@ Here is the list of all connection IO objects that you can use:
     - in this example, 2 and 3 are the pins used by `SoftwareSerial`
     - the default baud rate is 115200, which seems to work better from my own testing with HC-06; however, you may want to test using lower baud rate in case connection is not stable; this is especially true for HC-08, which connects via BLE. 
   - you **should not** be using that `SoftwareSerial` for other purposes
-* Via `Serial2` -- for Arduino Mega / STM32, attached to a Bluetooth module like HC-06 -- [DDSerial2IO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_serial2_i_o.html)
-  ```
-    #include "serial2dumbdisplay.h"
-    DumbDisplay dumbdisplay(new DDSerial2IO(115200));
-  ```
-  - need to include `serial2dumbdisplay.h` -- `#include "serial2dumbdisplay.h"`
-  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDSerial2IO(115200))`
-  - e.g. for Arduino Mega2560: connect D17 (RX2) to TX of HC-06 and connect D16 (TX2) to RX of HC-06 
-  - e.g. for STM32F103: connect PA3 (RX2) to TX of HC-06 and connect PA2 (TX2) to RX of HC-06
-* Via `UART` -- for Raspberry Pi Pico, attached to a Bluetooth module like HC-06 -- [DDPicoSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_pico_uart1_i_o.html)
-  ```
-    #include <picodumbdisplay.h>
-    DumbDisplay dumbdisplay(new DDPicoSerialIO(8, 9, 115200));
-  ```
-  - need to include `picodumbdisplay.h` -- `#include "picodumbdisplay.h"`
-  - setup a `dumbdisplay` object -- `DumbDisplay dumbdisplay(new DDPicoSerialIO(8, 9, 115200))`
-    - 8 is Pico's UART1 TX
-    - 9 is Pico's UART1 RX
-  - `UART` is basically declared like
-    ```
-    UART serial(8, 9, 0, 0)
-    ```  
 * Via **ESP32** `BluetoothSerial` -- [DDBluetoothSerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_bluetooth_serial_i_o.html)
   ```
     #include "esp32dumbdisplay.h"
@@ -269,13 +267,37 @@ Here is the list of all connection IO objects that you can use:
       ...
     }
     ```
-    
+* Via *generic* `DD_SERIAL` -- possibly connected with Bluetooth module like HC-06 -- for Raspberry Pi Pico / Arduino Mega / STM32 -- [DDGenericIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_generic_i_o.html)
+  <br>The essence is, you define the *generic* `DD_SERIAL` object before including `genericdumbdisplay.h`;  for examples:
+  - `Raspberry Pi Pico` -- 8 ==> TX ; 9 ==> RX
+    ```
+    UART uart(8, 9, 0, 0);
+    #define DD_SERIAL uart
+    #include "genericdumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDGenericIO());
+    ```  
+  - `Arduino Mega` -- 17 ==> TX ; 16 ==> RX
+    ```
+    #define DD_SERIAL Serial2
+    #include "genericdumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDGenericIO());
+    ```
+  - `STM32` -- PA3 (RX2) ==> TX ; PA2 (TX2) ==> RX
+    ```
+    #define DD_SERIAL Serial2
+    #include "genericdumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDGenericIO());
+    ```
+  - `SoftwareSerial` -- 2 ==> TX ; 3 ==> RX
+    ```
+    #include <SoftwareSerial.h>
+    SoftwareSerial ss(2, 3);
+    #define DD_SERIAL ss
+    #include "genericdumbdisplay.h"
+    DumbDisplay dumbdisplay(new DDGenericIO());
+    ```  
 
-  By making use of DumbDisplay WIFI Bridge, WIFI connection is possible for any microcontroller board (e.g. Arduino UNO) --
-  with DumbDisplay WIFI Bridge running on your computer, you can keep the microcontroller connected with USB, and make WIFI connection with DumbDisplay Android app.
-  Please refer to [DumbDisplay WIFI Bridge](#dumbDispaly-wifi-bridge) for more description on it.
-
-Note on using of `Serial`. If DumbDisplay will make connection using `Serial`, you certainly should not print to `Serial`. However, if DumbDisplay is not set to make connection with `Serial`, you are free to use `Serial` for your logging purposes; but be aware that DumbDisplay itself might be logging to `Serial` in certain cases.    
+Note on using of `Serial`. If DumbDisplay will make connection using `Serial`, you certainly should not print to `Serial`. Nevertheless, if DumbDisplay is not set to make connection with `Serial`, you are free to use `Serial` for your logging purposes; but be aware that DumbDisplay itself might be logging to `Serial` in certain cases.    
 
 
 ## Samples
@@ -1038,7 +1060,7 @@ Please note that DumbDisplay library will check for "feedback" in several occasi
 ## DumbDisplay "Tunnel"
 
 
-By using DumbDisplay "tunnels", even Arduino UNO can get simple data from the Internet via DumbDisplay app. The above "Tunnel" for RESTful example should already show-case this feature.
+By using DumbDisplay "tunnels", even Arduino UNO can get simple data from the Internet via DumbDisplay app. The above "tunnel" for RESTful example should already show-case this feature.
 
 ```
 #include "dumbdisplay.h"
@@ -1595,7 +1617,7 @@ pTurtleLayer->setFeedbackHandler(FeedbackHandler, "fs:drag-9999");
 |For a complete example, please refer to the sketch as shown in the YouTube -- [Building a DL model for the Mnist Dataset, to building an Arduino Sketch for ESP32S3 (also ESP32)](https://www.youtube.com/watch?v=cL1-5BKJu30) The drawing of the hand-written digit is basically triggered by "drag" "feedbacks" |![](screenshots/esp32_mnist.gif)|
 
 
-If you prefer to detect pressing of layer, rather than clicking, you can do so like:
+If you prefer to detect pressing of layer over clicking, you can do so like:
 
 ```
 void setup() {
@@ -1616,6 +1638,8 @@ void loop() {
   ...
 }
 ```
+
+This "feedback" setup will keep you informed when layer pressing starts ("DOWN") and ends ("UP"), and it is useful if your UI design calls for more complicated user behavior like -- click one layer when another layer is pressed.
 
 
 
@@ -1698,7 +1722,7 @@ For a complete sample, please refer to the sample sketch https://github.com/trev
 
 ## Save Pictures to Phone Captured with ESP32 Cam
 
-DumbDisplay Arduino Library provides a mechanism to save pictures captured, like with ESP32 Cam, to you Android phone's internal storage, like
+DumbDisplay Arduino Library provides a mechanism to save pictures captured, like with ESP32 Cam, to your Android phone's internal storage, like
 
 ```
   camera_fb_t *fb = esp_camera_fb_get();
@@ -1803,10 +1827,11 @@ Notes:
 
 ## "Passive" Connection
 
-What has been mentioned previously is more or less "active" in that DumbDisplay will need to establish connection with DumbDisplay app before the sketch flow can proceed.
+What has been described previously is more or less "active" in that DumbDisplay will need to establish connection with DumbDisplay app before the sketch flow can proceed.
+
 Say, when you create a layer in the `setup()` block, it blocks implicitly until an connection is established. Moreover in some cases, you may even want to deliberately call DumbDisplay object's `connect()` method to explicitly block for connection.
 
-After a connection is established however, DumbDisplay is "coorporative" in that only certain calls, like sending layer commands or checking for "feedbacks", will "steal" some time slices for DumbDisplay's internal working. Note that you explicitly give DumbDisplay time slices by calling `DDDelay()` / `DDYield()`.
+After a connection is established however, DumbDisplay is "coorporative" in that only certain calls, like sending layer commands or checking for "feedbacks", will steal some time slices for DumbDisplay's internal working. Note that you explicitly give DumbDisplay time slices by calling `DDDelay()` / `DDYield()`.
 
 Nevertheless, in some use cases, you may not want this "active" behavior. In deed, you can "passively" drive DumbDisplay to make connection with DumbDisplay app.
 
@@ -1861,7 +1886,7 @@ Notice:
 * After giving a chance for DumbDisplay to make connection "passively", blink `LED_BUILTIN` -- turn it ON then OFF.
 * ***Do notice that the delay here is 250!*** The delay needs be brief since `connectPassive()` should not be called too infrequently -- at least 1 or 2 times a second   
 
-There is a *helper* `DDReconnectPassiveConnectionHelper` class that can aid programming such *reconnecting* "passive" connection.
+There is a *helper* class `DDReconnectPassiveConnectionHelper` that can aid programming such *reconnecting* "passive" connection.
 Say, the above can be written as
 ```
 #include "dumbdisplay.h"
@@ -1925,10 +1950,9 @@ Notice:
 * A `connectStatus` structure is passed to `connectPassive()` in order to receive more info about the connection status.
 * In case the connection status is reconnecting (i.e. connection lost), "master reset" `dumpdisplay` by calling `masterReset()`
 * Note that after "master reset", the layers / tunnels created will not be valid anymore. See that `led` is set be to `NULL` to indicate that `led` need be created up on connected again
-* Sorry, "master reset" doesn't work in case the IO object is [DDBLESerialIO](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_d_d_b_l_e_serial_i_o.html)
 
 
-Again, there is a *helper* `DDMasterResetPassiveConnectionHelper` class that can aid programming such *master reset* "passive" connection.
+Again, there is a *helper* class `DDMasterResetPassiveConnectionHelper` that can aid programming such *master reset* "passive" connection.
 Say, the above can be written as
 ```
 #include "dumbdisplay.h"
@@ -1950,7 +1974,7 @@ void loop() {
   delay(250);                     
 }
 ```
-Note that of calling `pdd.loop()` is similar, but with one addition optional `NULL`-able `disconnectedCallback`
+Notice that calling of `pdd.loop()` is similar, but with one addition optional `NULL`-able `disconnectedCallback`
 ```
   pdd.loop([](){
     // **********
@@ -2047,9 +2071,17 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 Due mostly to technical considerations, DumbDisplay Android app supports starting from another Android app, enabling some ***preferred*** customizations that best fit different microcontroller programming use cases.
 
 Starting DumbDisplay app from another app can be as simple as starting an `Activity` with some special URL like `nb.tl.dd://MyApp?maximized&noTerminal`
-(Try starting DumbDisplay app from your Android phone browser "indirectly" <a href="https://trevorwslee.github.io/DumbDisplay?altName=MyApp&maximized&noTerminal">here</a>)
 
-The customizations are
+For example, in Kotlin
+
+```
+val intent = Intent(Intent.ACTION_VIEW)
+val data = Uri.parse("nb.tl.dd://MyApp?mustConnect&noTerminal&registerDeviceInfo=ESP32@192.168.0.10&deviceTypes=WIFI")
+intent.setData(data)
+startActivity(context, intent, null)
+```
+
+Notice the customization options as the parameters to the URL:
 - Name of the app, in various places -- `MyApp` as in the above URL; can be other values
   - *preference* name for saving settings
   - media storage folder name
@@ -2087,16 +2119,7 @@ The customizations are
   - `OVER`    
 
 
-For example, in Kotlin
-
-```
-val intent = Intent(Intent.ACTION_VIEW)
-val data = Uri.parse("nb.tl.dd://MyApp?mustConnect&noTerminal&registerDeviceInfo=ESP32@192.168.0.10&deviceTypes=WIFI")
-intent.setData(data)
-startActivity(context, intent, null)
-```
-
-A complete sample React Native app
+A complete sample React Native app can be like
 
 ```
 import { Button, Linking, StyleSheet, Text, View } from 'react-native';
@@ -2148,6 +2171,14 @@ MIT
 
 
 # Change History
+
+v0.9.9-r02
+  - enhanced reading of "feedback"
+  - enabled "passive" connection
+  - bug fix
+
+v0.9.9-r01
+  - bug fix
 
 v0.9.9
   - added WebViewDDLayer
