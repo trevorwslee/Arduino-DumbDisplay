@@ -11,6 +11,6 @@ Notes:
   - if you will not be making use of "feedback", define the compile-time macro `DD_NO_FEEDBACK`
   - if you will not be making use of "passive" connection, define the compile-time macro `DD_NO_PASSIVE_CONNECT` 
 
-* ***Have Fun! Peace be with you! May God bless you! Jesus loves you!***  
+* ***Have Fun! Peace be with you! May God bless you! Jesus loves you! Amazing Grace!***  
 
 
