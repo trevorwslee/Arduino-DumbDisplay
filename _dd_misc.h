@@ -104,6 +104,8 @@ class CompositDDDebugIntreface: public DDDebugInterface {
 };
 #endif
 
+/// check if dumbdisplay is connected
+bool DDConnected();
 /// the same usage as standard delay(), but it gives DD a chance to handle "feedbacks"
 void DDDelay(unsigned long ms);
 /// give DD a chance to handle "feedbacks"

@@ -3881,6 +3881,9 @@ void DDLayer::debugOnly(int i) {
 // void DDLogToSerial(const String& logLine) {
 //    _LogToSerial(logLine);
 // }
+bool DDConnected() {
+  return _Connected;
+}
 void DDDelay(unsigned long ms) {
 #ifdef HANDLE_FEEDBACK_DURING_DELAY
   _Delay(ms);

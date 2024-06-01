@@ -4,7 +4,7 @@
 #include "dumbdisplay.h"
 
 
-void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging = false);
+void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect = false, int builtinLEDPin = -1);
 
 
 #endif
