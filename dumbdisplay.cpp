@@ -3074,15 +3074,15 @@ bool GpsServiceDDTunnel::readLocation(DDLocation& location) {
   return true;
 }
 
-void ObjectDetetDemoServiceDDTunnel::reconnectForObjectDetect(const String& imageName) {
+void ObjectDetectDemoServiceDDTunnel::reconnectForObjectDetect(const String& imageName) {
   reconnectTo("detect?imageName=" + imageName);
 }
-void ObjectDetetDemoServiceDDTunnel::reconnectForObjectDetectFrom(GraphicalDDLayer* pGraphicalLayer, const String& imageName) {
+void ObjectDetectDemoServiceDDTunnel::reconnectForObjectDetectFrom(GraphicalDDLayer* pGraphicalLayer, const String& imageName) {
   reconnectTo("detectfrom?layerId=" + pGraphicalLayer->getLayerId() + "?imageName=" + imageName);
 }
 
 
-bool ObjectDetetDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult) {
+bool ObjectDetectDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult) {
   String value;
   if (!_readLine(value)) {
     return false;
@@ -3099,6 +3099,48 @@ bool ObjectDetetDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoRe
   objectDetectResult.right = value.substring(sepIdx2 + 1, sepIdx3).toInt();
   objectDetectResult.bottom = value.substring(sepIdx3 + 1, sepIdx4).toInt();
   objectDetectResult.label = value.substring(sepIdx4 + 1);
+  return true;
+}
+
+void PixelImage16RetrieverDDTunnel::reconnectForPixelImage16(const String& imageName, int width, int height, bool fit) {
+  reconnectTo("pixImg16?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit));
+}
+
+bool PixelImage16RetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
+  String value;
+  if (!_readLine(value)) {
+    return false;
+  }
+  int widthSepIdx = value.indexOf('/');
+  int heightSepIdx = value.indexOf('/', widthSepIdx + 1);
+  if (widthSepIdx == -1 || heightSepIdx == -1) {
+      return false;
+  }
+  int count = value.length();
+  pixelImage16.width = value.substring(0, widthSepIdx).toInt();
+  pixelImage16.height = value.substring(widthSepIdx + 1, heightSepIdx).toInt();
+  uint8_t* data = new uint8_t[2 * pixelImage16.width * pixelImage16.height];
+  int i = 0;
+  for (int vi = heightSepIdx + 1; vi < count; vi += 1) {
+    char c = value.charAt(vi);
+    uint8_t b;
+    if (c == '_') {
+      char nc = value.charAt(++vi);
+      if (nc == 'n') {
+        b = 10;
+      } else {
+        b = nc;
+      }
+    } else {
+      if (c == '0') {
+        b = 0;
+      } else {
+        b = c;
+      }
+    }
+    data[i++] = b;
+  }
+  pixelImage16.data = (uint16_t*) data;
   return true;
 }
 
@@ -3625,7 +3667,7 @@ GpsServiceDDTunnel* DumbDisplay::createGpsServiceTunnel() {
 #endif
 }
 
-ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel(int scaleToWidth, int scaleToHeight, int maxNumObjs) {
+ObjectDetectDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel(int scaleToWidth, int scaleToHeight, int maxNumObjs) {
 #ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
@@ -3634,7 +3676,7 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
     params = String(scaleToWidth) + "," + String(scaleToHeight) + ",";
   }
   params = params + "mno=" + String(maxNumObjs);
-  ObjectDetetDemoServiceDDTunnel* pTunnel = new ObjectDetetDemoServiceDDTunnel("objectdetectdemo", tid, params, ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
+  ObjectDetectDemoServiceDDTunnel* pTunnel = new ObjectDetectDemoServiceDDTunnel("objectdetectdemo", tid, params, ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;
 #else
@@ -3642,6 +3684,21 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
   return NULL;
 #endif
 }
+
+PixelImage16RetrieverDDTunnel* DumbDisplay::createPixelImage16RetrieverTunnel() {
+
+#ifdef SUPPORT_TUNNEL	
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  PixelImage16RetrieverDDTunnel* pTunnel = new PixelImage16RetrieverDDTunnel("pixelimageretriever", tid, TO_EDIAN(), ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
+  _PostCreateTunnel(pTunnel, false);
+  return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
+}
+
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
 #ifdef SUPPORT_TUNNEL	
   pTunnel->release();

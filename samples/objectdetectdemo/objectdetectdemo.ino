@@ -14,7 +14,7 @@
 
 GraphicalDDLayer *graphical;
 SimpleToolDDTunnel *web_image_tunnel;
-ObjectDetetDemoServiceDDTunnel *object_detect_tunnel;
+ObjectDetectDemoServiceDDTunnel *object_detect_tunnel;
 
 void setup() {
   // create a graphical layer for drawing the web image to
