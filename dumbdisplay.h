@@ -1049,7 +1049,7 @@ class ObjectDetectDemoServiceDDTunnel: public BasicDDTunnel {
 };
 
 struct DDPixelImage16 {
-  DDPixelImage16(uint8_t* bytes): data((uint16_t*) bytes) {};
+  DDPixelImage16(): data(NULL) {};
   ~DDPixelImage16() { if (data != NULL) delete data;}
   int width;
   int height;
