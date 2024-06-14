@@ -3104,11 +3104,11 @@ bool ObjectDetectDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoR
   return true;
 }
 
-void PixelImage16RetrieverDDTunnel::reconnectForPixelImage16(const String& imageName, int width, int height, bool fit) {
+void ImageRetrieverDDTunnel::reconnectForPixelImage16(const String& imageName, int width, int height, bool fit) {
   reconnectTo("pixImg16?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit));
 }
 
-bool PixelImage16RetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
+bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
   String value;
   if (!_readLine(value)) {
     return false;
@@ -3781,11 +3781,11 @@ ObjectDetectDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunne
 #endif
 }
 
-PixelImage16RetrieverDDTunnel* DumbDisplay::createPixelImage16RetrieverTunnel() {
+ImageRetrieverDDTunnel* DumbDisplay::createImageRetrieverTunnel() {
 #ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
-  PixelImage16RetrieverDDTunnel* pTunnel = new PixelImage16RetrieverDDTunnel("pixelimageretriever", tid, TO_EDIAN(), ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
+  ImageRetrieverDDTunnel* pTunnel = new ImageRetrieverDDTunnel("imageretriever", tid, TO_EDIAN(), ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;
 #else

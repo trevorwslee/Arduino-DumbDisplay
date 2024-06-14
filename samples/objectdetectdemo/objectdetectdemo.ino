@@ -12,17 +12,17 @@
 #endif
 
 
-GraphicalDDLayer *graphical;
+GraphicalDDLayer *imageLayer;
 SimpleToolDDTunnel *web_image_tunnel;
 ObjectDetectDemoServiceDDTunnel *object_detect_tunnel;
 
 void setup() {
   // create a graphical layer for drawing the web image to
-  graphical = dumbdisplay.createGraphicalLayer(640, 480);
-  graphical->border(10, "blue", "round");  
-  graphical->padding(15);
-  graphical->backgroundColor("white");
-  graphical->penSize(2);
+  imageLayer = dumbdisplay.createGraphicalLayer(640, 480);
+  imageLayer->border(10, "blue", "round");  
+  imageLayer->padding(15);
+  imageLayer->backgroundColor("white");
+  imageLayer->penSize(2);
 
   // create a tunnel for downloading web image ... initially, no URL yet ... downloaded.png is the name of the image to save
   web_image_tunnel = dumbdisplay.createImageDownloadTunnel("", "downloaded.png");
@@ -61,7 +61,7 @@ void loop() {
       int result = web_image_tunnel->checkResult();
       if (result == 1) {
         // web image downloaded and saved successfully
-        graphical->drawImageFile("downloaded.png");
+        imageLayer->drawImageFile("downloaded.png");
         // detect objects in the image
         object_detect_tunnel->reconnectForObjectDetect("downloaded.png");
       } else if (result == -1) {
@@ -73,14 +73,14 @@ void loop() {
       }
     }
 
-    graphical->backgroundColor("gray");   // set background color to gray, to indicate loaded and detecting
-    graphical->enableFeedback("f") ;      // enable "auto feedback" 
+    imageLayer->backgroundColor("gray");   // set background color to gray, to indicate loaded and detecting
+    imageLayer->enableFeedback("f") ;      // enable "auto feedback" 
     bool detected = false;
     while (true) {                        // loop and wait for object detection result, or graphical layer click for switching image
       if (object_detect_tunnel->eof()) {
         if (!detected) {
           dumbdisplay.writeComment("Click image to switch!");
-          graphical->backgroundColor("blue");   // set background color to blue, to indicate all done
+          imageLayer->backgroundColor("blue");   // set background color to blue, to indicate all done
         }
         detected = true;
       } else {
@@ -91,14 +91,14 @@ void loop() {
           int y = objectDetectResult.top;
           int w = objectDetectResult.right - objectDetectResult.left;
           int h = objectDetectResult.bottom - objectDetectResult.top;
-          graphical->drawRect(x, y, w, h, "green");
-          graphical->drawStr(x, y, objectDetectResult.label, "yellow", "a70%darkgreen", 32);
+          imageLayer->drawRect(x, y, w, h, "green");
+          imageLayer->drawStr(x, y, objectDetectResult.label, "yellow", "a70%darkgreen", 32);
         }
       }
-      if (graphical->getFeedback() != NULL) {
+      if (imageLayer->getFeedback() != NULL) {
         break;
       }
     }
-    graphical->backgroundColor("white");  // set background color to white, to indicate loading 
-    graphical->disableFeedback();         // disable "feedback"
+    imageLayer->backgroundColor("white");  // set background color to white, to indicate loading 
+    imageLayer->disableFeedback();         // disable "feedback"
 }

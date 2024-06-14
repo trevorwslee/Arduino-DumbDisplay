@@ -1055,10 +1055,10 @@ struct DDPixelImage16 {
   int height;
   uint16_t* data;
 };
-class PixelImage16RetrieverDDTunnel: public BasicDDTunnel {
+class ImageRetrieverDDTunnel: public BasicDDTunnel {
   public:
     /// @attention constructed via DumbDisplay object
-    PixelImage16RetrieverDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize):
+    ImageRetrieverDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize):
         BasicDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {
     }
   public:
@@ -1264,7 +1264,7 @@ class DumbDisplay {
     /// create a "service tunnel" for getting object detection info from phone; model used is the demo model `mobilenetv1.tflite`
     /// @see ObjectDetectDemoServiceDDTunnel
     ObjectDetectDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 3);
-    PixelImage16RetrieverDDTunnel* createPixelImage16RetrieverTunnel();
+    ImageRetrieverDDTunnel* createImageRetrieverTunnel();
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
     /// set DD background color
