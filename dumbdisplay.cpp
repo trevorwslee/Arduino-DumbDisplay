@@ -3281,9 +3281,10 @@ bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
     for (int w = 0; w < width; w++) {
       //uint8_t d = data[h * width + w];
       uint8_t d = data[i_d++];
-      uint8_t c = 0b11111 & ((int) ((double) 0b11111 * (double) d / (double) 0xff)); 
-      uint8_t lower = (c << 5) + c;
-      uint8_t higher = (c << 2) + (c >> 3);
+      uint8_t c5 = 0b11111 & ((int) ((double) 0b11111 * (double) d / (double) 0xff)); 
+      uint8_t c6 = 0b111111 & ((int) ((double) 0b111111 * (double) d / (double) 0xff)); 
+      uint8_t lower = (c6 << 5) + c5;
+      uint8_t higher = (c5 << 3) + (c6 >> 3);
       if (bigEdian) {
         uint8_t temp = lower;
         lower = higher;
@@ -3296,10 +3297,10 @@ bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
 //       Serial.print(higher);
 //       Serial.print("]");
 // #endif
-      // new_data[2 * (h * width + w)] = lower;
-      // new_data[2 * (h * width + w) + 1] = higher;
-      newData[i_nd++] = lower;
+      // newData[i_nd++] = lower;
+      // newData[i_nd++] = higher;
       newData[i_nd++] = higher;
+      newData[i_nd++] = lower;
     }
   }
   pixelImage16.width = width;
