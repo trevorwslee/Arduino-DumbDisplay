@@ -11,7 +11,7 @@
 
 #define ASCII_ONLY false
 
-namespace DDTesterImpl {
+namespace DDTester0Impl {
 
 #ifdef MB
 void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
@@ -598,7 +598,7 @@ void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 
 }
 
-using namespace DDTesterImpl;
+using namespace DDTester0Impl;
 
 
 

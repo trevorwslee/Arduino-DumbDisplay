@@ -673,18 +673,18 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinL
           if (builtinLEDPin >= 0) {
             digitalWrite(builtinLEDPin, HIGH);
           }
-          Serial.println("not connected ...");
+          Serial.println("// not connected ...");  // TODO: use other way for indication
           delay(500);
-          Serial.println("... not connected");
+          Serial.println("// ... not connected");
           if (builtinLEDPin >= 0) {
             digitalWrite(builtinLEDPin, LOW);
           }
           continue;
         }
         if (connectStatus.reconnecting) {
-          Serial.println("... reconnecting ...");
+          Serial.println("// ... reconnecting ...");  // TODO: use other way for indication
           dumbdisplay.masterReset();
-          Serial.println("... reconnecting ...");
+          Serial.println("// ... reconnecting ...");
           pMbLayer = NULL;
           pTurtleLayer = NULL;
           pLedGridLayer = NULL;

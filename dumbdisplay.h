@@ -1350,7 +1350,7 @@ class DumbDisplay {
     void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressMethod = 0);
     // save 16-bit "pixel" image with the given image data
     void savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
-    // save greyscale "pixel" image with the given image data
+    // save grayscale "pixel" image with the given image data
     void savePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// stitch images together
     /// @param imageNames '+' delimited
