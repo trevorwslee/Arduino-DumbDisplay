@@ -66,7 +66,7 @@
 //#define DEBUG_MISSING_ENDPOINT_C
 //#define DEBUG_TUNNEL_RESPONSE_C
 
-//#define DEBUG_READ_PIXEL_IMAGE16
+#define DEBUG_READ_PIXEL_IMAGE
 
 
 //#define SUPPORT_LONG_PRESS_FEEDBACK
@@ -2491,7 +2491,8 @@ void GraphicalDDLayer::cacheImage(const String& imageName, const uint8_t *bytes,
   _sendByteArrayAfterCommand(bytes, byteCount, compressMethod);
 }
 void GraphicalDDLayer::cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color, char compressMethod) {
-  int byteCount = width * height / 8; 
+  //int byteCount = width * height / 8; 
+  int byteCount = (width + 7) * height / 8; 
   _sendCommand5("", C_CACHEPIXIMG, layerId, imageName, String(width), String(height), color);
   _sendByteArrayAfterCommand(bytes, byteCount, compressMethod);
 }
@@ -3104,40 +3105,34 @@ bool ObjectDetectDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoR
   return true;
 }
 
-void ImageRetrieverDDTunnel::reconnectForPixelImage16(const String& imageName, int width, int height, bool fit) {
-  reconnectTo("pixImg16?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit));
+void ImageRetrieverDDTunnel::reconnectForPixelImage(const String& imageName, int width, int height, bool fit) {
+  reconnectTo("pixImg?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit));
+}
+void ImageRetrieverDDTunnel::reconnectForPixelImage16(const String& imageName, int width, int height, bool fit, bool grayscale) {
+  reconnectTo("pixImg16?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit) + "&grayscale=" + TO_BOOL(grayscale));
+}
+void ImageRetrieverDDTunnel::reconnectForPixelImageGS(const String& imageName, int width, int height, bool fit) {
+  reconnectTo("pixImgGS?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit));
 }
 
-bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
+bool ImageRetrieverDDTunnel::_readPixelImage(DDPixelImage& pixelImage, short type) {
   String value;
   if (!_readLine(value)) {
     return false;
   }
-// #ifdef DEBUG_READ_PIXEL_IMAGE16
-//   if (true) {
-//     Serial.println("*** OVERWRITE ***");
-//     value = String("20/20/:0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000ûÞûÞ0ø0øûÞ0øûÞûÞûÞ0ø0øûÞ0øûÞûÞûÞ00000000ûÞûÞ0ø0øûÞ0øûÞûÞûÞ0ø0øûÞ0øûÞûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞ0ø0ø0ø0øûÞûÞûÞ0ø0ø0ø0øûÞûÞûÞ00000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000000000000000000000000000000000000000000000000000000000ÿÿÿÿ000000000000000000000000000000000000ÿÿÿÿ000000000000000000000000000000000000000000000000000000000000000000000000ÿÿÿÿÿÿÿÿÿÿÿÿ000000000000000000000000000000000000000000000000000000");
-//   } else {
-//    Serial.println("*** SHOW ***");
-//     Serial.print(value.length());
-//     Serial.print(":[");
-//     Serial.print(value);
-//     Serial.println("]");
-//   }
-// #endif
   int widthSepIdx = value.indexOf("/");
   int heightSepIdx = value.indexOf("/:", widthSepIdx + 1);  // image bytes starts with ':'
-// #ifdef DEBUG_READ_PIXEL_IMAGE16
-//   Serial.print("*** widthSepIdx=");
-//   Serial.print(widthSepIdx);
-//   Serial.print(" / heightSepIdx=");
-//   Serial.println(heightSepIdx);
-// #endif
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  Serial.print("*** widthSepIdx=");
+  Serial.print(widthSepIdx);
+  Serial.print(" / heightSepIdx=");
+  Serial.println(heightSepIdx);
+#endif
   if (widthSepIdx == -1 || heightSepIdx == -1) {
-      return false;
+      return NULL;
   }
   //int count = value.length();
-// #ifdef DEBUG_READ_PIXEL_IMAGE16
+// #ifdef DEBUG_READ_PIXEL_IMAGE
 //   if (value.length() < 1024) {
 //     Serial.print(value.length());
 //     Serial.print(":[");
@@ -3145,24 +3140,33 @@ bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
 //     Serial.println("]");
 //   }
 // #endif
-  pixelImage16.width = value.substring(0, widthSepIdx).toInt();
-  pixelImage16.height = value.substring(widthSepIdx + 1, heightSepIdx).toInt();
-#ifdef DEBUG_READ_PIXEL_IMAGE16
+  int width = value.substring(0, widthSepIdx).toInt();
+  int height = value.substring(widthSepIdx + 1, heightSepIdx).toInt();
+#ifdef DEBUG_READ_PIXEL_IMAGE
   Serial.print("*** width=");
-  Serial.print(pixelImage16.width);
+  Serial.print(width);
   Serial.print(" / height=");
-  Serial.println(pixelImage16.height);
+  Serial.println(height);
 #endif
-  int byteCount = 2 * pixelImage16.width * pixelImage16.height;
+  int byteCount;
+  if (type == 0) {
+    // BW
+    byteCount = (width + 7) * height / 8;
+  } else if (type == 1) {
+    // GS
+    byteCount = width * height;
+  } else {
+    byteCount = 2 * width * height;
+  }
   uint8_t* data = new uint8_t[byteCount];
   const char* p = value.c_str() + heightSepIdx + 2;
-#ifdef DEBUG_READ_PIXEL_IMAGE16
+#ifdef DEBUG_READ_PIXEL_IMAGE
   Serial.println(*(p - 1));  // should be :
 #endif
   int i = 0;
   while (i < byteCount) {
     char c = *p++;
-// #ifdef DEBUG_READ_PIXEL_IMAGE16
+// #ifdef DEBUG_READ_PIXEL_IMAGE
 //     if (i <= 100) {
 //       char pc = c;
 //       if (pc == '\r') {
@@ -3194,7 +3198,7 @@ bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
     if (i >= byteCount) {
       break;
     }
-#ifdef DEBUG_READ_PIXEL_IMAGE16
+#ifdef DEBUG_READ_PIXEL_IMAGE
     if (i <= 100) {
       Serial.print("|");
       Serial.print(i);
@@ -3214,19 +3218,38 @@ bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
     }
     data[i++] = b;
   }
-#ifdef DEBUG_READ_PIXEL_IMAGE16
+#ifdef DEBUG_READ_PIXEL_IMAGE
   Serial.print("*** byteCount=");
   Serial.print(byteCount);
   Serial.print(" / i=");
   Serial.println(i);
 #endif
-  pixelImage16.data = (uint16_t*) data;
-#ifdef DEBUG_READ_PIXEL_IMAGE16
+  //pixelImage16.data = (uint16_t*) data;
+  pixelImage.width = width;
+  pixelImage.height = height;
+  pixelImage.data = data;
+  return true;
+}
+
+bool ImageRetrieverDDTunnel::readPixelImage(DDPixelImage& pixelImage) {
+  return _readPixelImage(pixelImage, 0);
+}
+bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
+  DDPixelImage pixelImage;
+  if (!_readPixelImage(pixelImage, 2)) {
+    return false;
+  }
+  pixelImage16.width = pixelImage.width;
+  pixelImage16.height = pixelImage.height;
+  pixelImage16.data = (uint16_t* ) pixelImage.data;
+  pixelImage.data = NULL;
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  int byteCount = 2 * pixelImage16.width * pixelImage16.height;
   int maxI = byteCount / 2;
   if (maxI > 100) {
     maxI = 100;
   }
-  for (i = 0; i < maxI; i++) {
+  for (int i = 0; i < maxI; i++) {
     uint16_t v = pixelImage16.data[i];
     if (v != 0) {
       Serial.print("/");
@@ -3239,6 +3262,201 @@ bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
 #endif
   return true;
 }
+bool ImageRetrieverDDTunnel::readPixelImageGS(DDPixelImage& pixelImage) {
+  return _readPixelImage(pixelImage, 1);
+}
+bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
+  DDPixelImage pixelImage;
+  if (!_readPixelImage(pixelImage, 1)) {
+    return false;
+  }
+  int width = pixelImage.width;
+  int height = pixelImage.height;
+  uint8_t* data = pixelImage.data;
+  bool bigEdian = TO_EDIAN();
+  uint8_t* newData = new uint8_t[2 * width * height];
+  int i_d = 0;
+  int i_nd = 0;
+  for (int h = 0; h < height; h++) {
+    for (int w = 0; w < width; w++) {
+      //uint8_t d = data[h * width + w];
+      uint8_t d = data[i_d++];
+      uint8_t c = 0b11111 & ((int) ((double) 0b11111 * (double) d / (double) 0xff)); 
+      uint8_t lower = (c << 5) + c;
+      uint8_t higher = (c << 2) + (c >> 3);
+      if (bigEdian) {
+        uint8_t temp = lower;
+        lower = higher;
+        higher = temp;
+      }
+// #ifdef DEBUG_READ_PIXEL_IMAGE
+//       Serial.print("[");
+//       Serial.print(lower);
+//       Serial.print("+");
+//       Serial.print(higher);
+//       Serial.print("]");
+// #endif
+      // new_data[2 * (h * width + w)] = lower;
+      // new_data[2 * (h * width + w) + 1] = higher;
+      newData[i_nd++] = lower;
+      newData[i_nd++] = higher;
+    }
+  }
+  pixelImage16.width = width;
+  pixelImage16.height = height;
+  pixelImage16.data = (uint16_t*) newData;
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  int byteCount = 2 * pixelImage16.width * pixelImage16.height;
+  int maxI = byteCount / 2;
+  if (maxI > 100) {
+    maxI = 100;
+  }
+  for (int i = 0; i < maxI; i++) {
+    uint16_t v = pixelImage16.data[i];
+    if (v != 0) {
+      Serial.print("/");
+      Serial.print(i);
+      Serial.print(":");
+      Serial.print(v, HEX);
+    }
+  }
+  Serial.println();
+#endif
+  return true;
+}
+
+
+// bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
+//   String value;
+//   if (!_readLine(value)) {
+//     return false;
+//   }
+// // #ifdef DEBUG_READ_PIXEL_IMAGE
+// //   if (true) {
+// //     Serial.println("*** OVERWRITE ***");
+// //     value = String("20/20/:0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000ûÞûÞ0ø0øûÞ0øûÞûÞûÞ0ø0øûÞ0øûÞûÞûÞ00000000ûÞûÞ0ø0øûÞ0øûÞûÞûÞ0ø0øûÞ0øûÞûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞ0ø0ø0ø0øûÞûÞûÞ0ø0ø0ø0øûÞûÞûÞ00000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000000000000000000000000000000000000000000000000000000000ÿÿÿÿ000000000000000000000000000000000000ÿÿÿÿ000000000000000000000000000000000000000000000000000000000000000000000000ÿÿÿÿÿÿÿÿÿÿÿÿ000000000000000000000000000000000000000000000000000000");
+// //   } else {
+// //    Serial.println("*** SHOW ***");
+// //     Serial.print(value.length());
+// //     Serial.print(":[");
+// //     Serial.print(value);
+// //     Serial.println("]");
+// //   }
+// // #endif
+//   int widthSepIdx = value.indexOf("/");
+//   int heightSepIdx = value.indexOf("/:", widthSepIdx + 1);  // image bytes starts with ':'
+// // #ifdef DEBUG_READ_PIXEL_IMAGE
+// //   Serial.print("*** widthSepIdx=");
+// //   Serial.print(widthSepIdx);
+// //   Serial.print(" / heightSepIdx=");
+// //   Serial.println(heightSepIdx);
+// // #endif
+//   if (widthSepIdx == -1 || heightSepIdx == -1) {
+//       return false;
+//   }
+//   //int count = value.length();
+// // #ifdef DEBUG_READ_PIXEL_IMAGE
+// //   if (value.length() < 1024) {
+// //     Serial.print(value.length());
+// //     Serial.print(":[");
+// //     Serial.print(value);
+// //     Serial.println("]");
+// //   }
+// // #endif
+//   pixelImage16.width = value.substring(0, widthSepIdx).toInt();
+//   pixelImage16.height = value.substring(widthSepIdx + 1, heightSepIdx).toInt();
+// #ifdef DEBUG_READ_PIXEL_IMAGE
+//   Serial.print("*** width=");
+//   Serial.print(pixelImage16.width);
+//   Serial.print(" / height=");
+//   Serial.println(pixelImage16.height);
+// #endif
+//   int byteCount = 2 * pixelImage16.width * pixelImage16.height;
+//   uint8_t* data = new uint8_t[byteCount];
+//   const char* p = value.c_str() + heightSepIdx + 2;
+// #ifdef DEBUG_READ_PIXEL_IMAGE
+//   Serial.println(*(p - 1));  // should be :
+// #endif
+//   int i = 0;
+//   while (i < byteCount) {
+//     char c = *p++;
+// // #ifdef DEBUG_READ_PIXEL_IMAGE
+// //     if (i <= 100) {
+// //       char pc = c;
+// //       if (pc == '\r') {
+// //         pc = '␍';
+// //       }
+// //       Serial.print(pc);
+// //       if (i == 100) {
+// //         Serial.println();
+// //       }
+// //     }
+// // #endif
+//     char b;
+//     if (c == '\\') {
+//       char nc = *p++;
+//       if (nc == 'n') {
+//         b = 10;
+//       } else if (nc == '_') {
+//         b = '\\';
+//       } else {
+//         b = nc;
+//       }
+//     } else {
+//       if (c == '0') {
+//         b = 0;
+//       } else {
+//         b = c;
+//       }
+//     }
+//     if (i >= byteCount) {
+//       break;
+//     }
+// #ifdef DEBUG_READ_PIXEL_IMAGE
+//     if (i <= 100) {
+//       Serial.print("|");
+//       Serial.print(i);
+//       Serial.print(":");
+//       Serial.print(b, HEX);
+//       if (i == 100) {
+//         Serial.println();
+//       }
+//     }
+// #endif
+//     if (true) {  // UTF-8
+//       if (b & 0b10000000) {
+//         // 2 chars
+//         char nc = *p++;
+//         b = ((b & 0b11) << 6) + (nc & 0b111111);
+//       }
+//     }
+//     data[i++] = b;
+//   }
+// #ifdef DEBUG_READ_PIXEL_IMAGE
+//   Serial.print("*** byteCount=");
+//   Serial.print(byteCount);
+//   Serial.print(" / i=");
+//   Serial.println(i);
+// #endif
+//   pixelImage16.data = (uint16_t*) data;
+// #ifdef DEBUG_READ_PIXEL_IMAGE
+//   int maxI = byteCount / 2;
+//   if (maxI > 100) {
+//     maxI = 100;
+//   }
+//   for (i = 0; i < maxI; i++) {
+//     uint16_t v = pixelImage16.data[i];
+//     if (v != 0) {
+//       Serial.print("/");
+//       Serial.print(i);
+//       Serial.print(":");
+//       Serial.print(v, HEX);
+//     }
+//   }
+//   Serial.println();
+// #endif
+//   return true;
+// }
 
 
 JsonDDTunnelMultiplexer::JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int8_t tunnelCount) {
@@ -3646,7 +3864,8 @@ void DumbDisplay::saveImage(const String& imageName, const uint8_t *bytes, int b
   _sendByteArrayAfterCommand((uint8_t*) bytes, byteCount);
 }
 void DumbDisplay::savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color, char compressMethod) {
-  int byteCount = width * height / 8; 
+  //int byteCount = width * height / 8; 
+  int byteCount = (width + 7) * height / 8; 
   _sendCommand4("", C_SAVEPIXIMG, imageName, String(width), String(height), color);
   _sendByteArrayAfterCommand(bytes, byteCount, compressMethod);
 }
