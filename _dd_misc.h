@@ -514,7 +514,7 @@ class DDFadingLayers {
 class DDMasterResetPassiveConnectionHelper {
   public:
     DDMasterResetPassiveConnectionHelper(DumbDisplay& dumbdisplay) : dumbdisplay(dumbdisplay) {
-      this-> initialized = false;
+      this->init_state = 0;
     }
   public:
     /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
@@ -531,24 +531,26 @@ class DDMasterResetPassiveConnectionHelper {
         if (connectStatus.reconnecting) {
           // if reconnecting (i.e. lost previous connection, "master reset" DumbDisplay)
           dumbdisplay.masterReset();
-          this->initialized = false;
+          this->init_state = 0;
           if (disconnectedCallback != NULL) disconnectedCallback();
           return false;
         }
-        if (!this->initialized) {
-          this->initialized = true;
+        if (this->init_state == 0) {
           if (initializeCallback != NULL) initializeCallback();
+          this->init_state = 1;
         }
         if (updateCallback != NULL) updateCallback();
+        this->init_state = 2;
         return true;
       }
       return false;
     }
-    inline bool is_initialized() { return this->initialized; }
+    inline bool initialized() { return this->init_state > 0; }
+    inline bool firstUpdated() { return this->init_state > 1; }
   public:
     DumbDisplay& dumbdisplay;  
   private:
-    bool initialized;  
+    uint8_t init_state;  // 0: not initialized
 };
 
 /// @brief
@@ -562,7 +564,7 @@ class DDReconnectPassiveConnectionHelper {
     /// @param layerSetupPersistId used when calling DumbDisplay::playbackLayerSetupCommands()
     DDReconnectPassiveConnectionHelper(DumbDisplay& dumbdisplay, const String& layerSetupPersistId) : dumbdisplay(dumbdisplay) {
       this->layerSetupPersistId = layerSetupPersistId;
-      this-> initialized = false;
+      this->init = false;
     }
   public:
     /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
@@ -574,23 +576,23 @@ class DDReconnectPassiveConnectionHelper {
     bool loop(void (*initializeCallback)(), void (*updateCallback)()) {
 #endif
       if (dumbdisplay.connectPassive()) {
-        if (!this->initialized) {
-          this->initialized = true;
+        if (!this->init) {
           this->dumbdisplay.recordLayerSetupCommands();
           if (initializeCallback != NULL) initializeCallback();
           this->dumbdisplay.playbackLayerSetupCommands(this->layerSetupPersistId);
+          this->init = true;
         }
         if (updateCallback != NULL) updateCallback();
         return true;
       }
       return false;
     }
-    inline bool is_initialized() { return this->initialized; }
+    inline bool initialized() { return this->init; }
   public:
     DumbDisplay& dumbdisplay;  
   private:
     String layerSetupPersistId;
-    bool initialized;  
+    bool init;  
 };
 
 #endif

@@ -66,7 +66,7 @@
 //#define DEBUG_MISSING_ENDPOINT_C
 //#define DEBUG_TUNNEL_RESPONSE_C
 
-#define DEBUG_READ_PIXEL_IMAGE
+//#define DEBUG_READ_PIXEL_IMAGE
 
 
 //#define SUPPORT_LONG_PRESS_FEEDBACK
@@ -3115,7 +3115,7 @@ void ImageRetrieverDDTunnel::reconnectForPixelImageGS(const String& imageName, i
   reconnectTo("pixImgGS?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit));
 }
 
-bool ImageRetrieverDDTunnel::_readPixelImage(DDPixelImage& pixelImage, short type) {
+bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) {
   String value;
   if (!_readLine(value)) {
     return false;
@@ -3225,24 +3225,24 @@ bool ImageRetrieverDDTunnel::_readPixelImage(DDPixelImage& pixelImage, short typ
   Serial.println(i);
 #endif
   //pixelImage16.data = (uint16_t*) data;
-  pixelImage.width = width;
-  pixelImage.height = height;
-  pixelImage.data = data;
+  imageData.width = width;
+  imageData.height = height;
+  imageData.data = data;
   return true;
 }
 
 bool ImageRetrieverDDTunnel::readPixelImage(DDPixelImage& pixelImage) {
-  return _readPixelImage(pixelImage, 0);
+  return _readImageData(pixelImage, 0);
 }
 bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
-  DDPixelImage pixelImage;
-  if (!_readPixelImage(pixelImage, 2)) {
+  ImageData imageData;
+  if (!_readImageData(imageData, 2)) {
     return false;
   }
-  pixelImage16.width = pixelImage.width;
-  pixelImage16.height = pixelImage.height;
-  pixelImage16.data = (uint16_t* ) pixelImage.data;
-  pixelImage.data = NULL;
+  pixelImage16.width = imageData.width;
+  pixelImage16.height = imageData.height;
+  pixelImage16.data = (uint16_t* ) imageData.data;
+  imageData.data = NULL;
 #ifdef DEBUG_READ_PIXEL_IMAGE
   int byteCount = 2 * pixelImage16.width * pixelImage16.height;
   int maxI = byteCount / 2;
@@ -3263,16 +3263,17 @@ bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
   return true;
 }
 bool ImageRetrieverDDTunnel::readPixelImageGS(DDPixelImage& pixelImage) {
-  return _readPixelImage(pixelImage, 1);
+  return _readImageData(pixelImage, 1);
 }
 bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
-  DDPixelImage pixelImage;
-  if (!_readPixelImage(pixelImage, 1)) {
+  ImageData imageData;
+  if (!_readImageData(imageData, 1)) {
     return false;
   }
-  int width = pixelImage.width;
-  int height = pixelImage.height;
-  uint8_t* data = pixelImage.data;
+  int width = imageData.width;
+  int height = imageData.height;
+  uint8_t* data = imageData.data;
+  imageData.data = NULL;
   bool bigEdian = TO_EDIAN();
   uint8_t* newData = new uint8_t[2 * width * height];
   int i_d = 0;

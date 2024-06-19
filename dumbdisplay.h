@@ -1048,12 +1048,14 @@ class ObjectDetectDemoServiceDDTunnel: public BasicDDTunnel {
     bool readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult);  
 };
 
-struct DDPixelImage {
-  DDPixelImage(): data(NULL) {};
-  ~DDPixelImage() { if (data != NULL) delete data;}
+struct ImageData {
+  ImageData(): data(NULL) {};
+  ~ImageData() { if (data != NULL) delete data;}
   int width;
   int height;
   uint8_t* data;
+};
+struct DDPixelImage: public ImageData {
 };
 struct DDPixelImage16 {
   DDPixelImage16(): data(NULL) {};
@@ -1069,15 +1071,15 @@ class ImageRetrieverDDTunnel: public BasicDDTunnel {
         BasicDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {
     }
   public:
-    void reconnectForPixelImage(const String& imageName, int width, int height, bool fit = true);
-    void reconnectForPixelImage16(const String& imageName, int width, int height, bool fit = true, bool grayscale = false);
-    void reconnectForPixelImageGS(const String& imageName, int width, int height, bool fit = true);
+    void reconnectForPixelImage(const String& imageName, int width, int height, bool fit = false);
+    void reconnectForPixelImage16(const String& imageName, int width, int height, bool fit = false, bool grayscale = false);
+    void reconnectForPixelImageGS(const String& imageName, int width, int height, bool fit = false);
     bool readPixelImage(DDPixelImage& pixelImage);  
     bool readPixelImage16(DDPixelImage16& pixelImage16);  
     bool readPixelImageGS(DDPixelImage& pixelImage);  
     bool readPixelImageGS16(DDPixelImage16& pixelImage16);  
   private:  
-    bool _readPixelImage(DDPixelImage& pixelImage, short type);  
+    bool _readImageData(ImageData& imageData, short type);  
 };
 
 
