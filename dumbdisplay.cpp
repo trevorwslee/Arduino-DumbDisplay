@@ -3114,52 +3114,74 @@ void ImageRetrieverDDTunnel::reconnectForPixelImage16(const String& imageName, i
 void ImageRetrieverDDTunnel::reconnectForPixelImageGS(const String& imageName, int width, int height, bool fit) {
   reconnectTo("pixImgGS?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit));
 }
+void ImageRetrieverDDTunnel::reconnectForJpegImage(const String& imageName, int width, int height, int quality, bool fit) {
+  reconnectTo("jpeg?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&quality=" + quality + "&fit=" + TO_BOOL(fit));
+}
 
-bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) {
+bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) {  // type: 0=BW, 1=8, 2=16, 3:JPEG
   String value;
   if (!_readLine(value)) {
     return false;
   }
-  int widthSepIdx = value.indexOf("/");
-  int heightSepIdx = value.indexOf("/:", widthSepIdx + 1);  // image bytes starts with ':'
+  int widthSepIdx = value.indexOf("x");
+  int heightSepIdx = value.indexOf("|", widthSepIdx + 1);
+  int byteCountSepIdx = value.indexOf("|:", heightSepIdx + 1);  // image bytes starts with ':'
 #ifdef DEBUG_READ_PIXEL_IMAGE
+  Serial.print("=== _readImageData (");
+  Serial.print(type);
+  Serial.println(") ===");
   Serial.print("*** widthSepIdx=");
   Serial.print(widthSepIdx);
   Serial.print(" / heightSepIdx=");
-  Serial.println(heightSepIdx);
+  Serial.print(heightSepIdx);
+  Serial.print(" / byteCountSepIdx=");
+  Serial.println(byteCountSepIdx);
 #endif
-  if (widthSepIdx == -1 || heightSepIdx == -1) {
-      return NULL;
+  if (widthSepIdx == -1 || heightSepIdx == -1 || byteCountSepIdx == -1) {
+    __SendErrorComment("invalid delimiters");
+    return NULL;
   }
-  //int count = value.length();
-// #ifdef DEBUG_READ_PIXEL_IMAGE
-//   if (value.length() < 1024) {
-//     Serial.print(value.length());
-//     Serial.print(":[");
-//     Serial.print(value);
-//     Serial.println("]");
-//   }
-// #endif
   int width = value.substring(0, widthSepIdx).toInt();
   int height = value.substring(widthSepIdx + 1, heightSepIdx).toInt();
+  int byteCount = value.substring(heightSepIdx + 1, byteCountSepIdx).toInt();
 #ifdef DEBUG_READ_PIXEL_IMAGE
   Serial.print("*** width=");
   Serial.print(width);
   Serial.print(" / height=");
-  Serial.println(height);
+  Serial.print(height);
+  Serial.print(" / byteCount=");
+  Serial.println(byteCount);
 #endif
-  int byteCount;
+  if (width <= 0 || height <= 0 || byteCount <= 0) {
+    __SendErrorComment("invalid width/height/byteCount");
+    return NULL;
+  }
+  int expectedByteCount = 0;
   if (type == 0) {
     // BW
-    byteCount = (width + 7) * height / 8;
+    expectedByteCount = (width + 7) * height / 8;
   } else if (type == 1) {
-    // GS
-    byteCount = width * height;
-  } else {
-    byteCount = 2 * width * height;
+    // 8
+    expectedByteCount = width * height;
+  } else if (type == 2) {
+    // 16
+    expectedByteCount = 2 * width * height;
   }
-  uint8_t* data = new uint8_t[byteCount];
-  const char* p = value.c_str() + heightSepIdx + 2;
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  if (expectedByteCount > 0) {
+    Serial.print("byteCount=");
+    Serial.print(byteCount);
+    Serial.print(" vs ");
+    Serial.print("expectedByteCount=");
+    Serial.println(expectedByteCount);
+  }
+#endif
+  if (expectedByteCount > 0 && byteCount != expectedByteCount) {
+    __SendErrorComment("byteCount mismatch");
+    return NULL;
+  }
+  uint8_t* bytes = new uint8_t[byteCount];
+  const char* p = value.c_str() + byteCountSepIdx + 2;
 #ifdef DEBUG_READ_PIXEL_IMAGE
   Serial.println(*(p - 1));  // should be :
 #endif
@@ -3196,6 +3218,7 @@ bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) {
       }
     }
     if (i >= byteCount) {
+      __SendErrorComment("bytes overflow");
       break;
     }
 #ifdef DEBUG_READ_PIXEL_IMAGE
@@ -3216,7 +3239,12 @@ bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) {
         b = ((b & 0b11) << 6) + (nc & 0b111111);
       }
     }
-    data[i++] = b;
+    // if (i >= byteCount) {
+    //   __SendErrorComment("bytes overflow");
+    //   delete bytes;
+    //   return NULL;
+    // }
+    bytes[i++] = b;
   }
 #ifdef DEBUG_READ_PIXEL_IMAGE
   Serial.print("*** byteCount=");
@@ -3227,7 +3255,8 @@ bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) {
   //pixelImage16.data = (uint16_t*) data;
   imageData.width = width;
   imageData.height = height;
-  imageData.data = data;
+  imageData.byteCount = byteCount;
+  imageData.bytes = bytes;
   return true;
 }
 
@@ -3241,8 +3270,8 @@ bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
   }
   pixelImage16.width = imageData.width;
   pixelImage16.height = imageData.height;
-  pixelImage16.data = (uint16_t* ) imageData.data;
-  imageData.data = NULL;
+  pixelImage16.data = (uint16_t* ) imageData.bytes;
+  imageData.bytes = NULL;
 #ifdef DEBUG_READ_PIXEL_IMAGE
   int byteCount = 2 * pixelImage16.width * pixelImage16.height;
   int maxI = byteCount / 2;
@@ -3272,8 +3301,8 @@ bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
   }
   int width = imageData.width;
   int height = imageData.height;
-  uint8_t* data = imageData.data;
-  imageData.data = NULL;
+  uint8_t* bytes = imageData.bytes;
+  imageData.bytes = NULL;
   bool bigEdian = TO_EDIAN();
   uint8_t* newData = new uint8_t[2 * width * height];
   int i_d = 0;
@@ -3281,7 +3310,7 @@ bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
   for (int h = 0; h < height; h++) {
     for (int w = 0; w < width; w++) {
       //uint8_t d = data[h * width + w];
-      uint8_t d = data[i_d++];
+      uint8_t d = bytes[i_d++];
       uint8_t c5 = 0b11111 & ((int) ((double) 0b11111 * (double) d / (double) 0xff)); 
       uint8_t c6 = 0b111111 & ((int) ((double) 0b111111 * (double) d / (double) 0xff)); 
       uint8_t lower = (c6 << 5) + c5;
@@ -3326,139 +3355,10 @@ bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
 #endif
   return true;
 }
+bool ImageRetrieverDDTunnel::readJpegImage(DDJpegImage& jpeg) {
+  return _readImageData(jpeg, 3);
+}
 
-
-// bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
-//   String value;
-//   if (!_readLine(value)) {
-//     return false;
-//   }
-// // #ifdef DEBUG_READ_PIXEL_IMAGE
-// //   if (true) {
-// //     Serial.println("*** OVERWRITE ***");
-// //     value = String("20/20/:0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000ûÞûÞ0ø0øûÞ0øûÞûÞûÞ0ø0øûÞ0øûÞûÞûÞ00000000ûÞûÞ0ø0øûÞ0øûÞûÞûÞ0ø0øûÞ0øûÞûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞ0øûÞûÞûÞ0øûÞûÞ0øûÞûÞûÞ0øûÞûÞ00000000ûÞûÞ0ø0ø0ø0øûÞûÞûÞ0ø0ø0ø0øûÞûÞûÞ00000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000ûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞûÞ00000000000000000000000000000000000000000000000000000000000000ÿÿÿÿ000000000000000000000000000000000000ÿÿÿÿ000000000000000000000000000000000000000000000000000000000000000000000000ÿÿÿÿÿÿÿÿÿÿÿÿ000000000000000000000000000000000000000000000000000000");
-// //   } else {
-// //    Serial.println("*** SHOW ***");
-// //     Serial.print(value.length());
-// //     Serial.print(":[");
-// //     Serial.print(value);
-// //     Serial.println("]");
-// //   }
-// // #endif
-//   int widthSepIdx = value.indexOf("/");
-//   int heightSepIdx = value.indexOf("/:", widthSepIdx + 1);  // image bytes starts with ':'
-// // #ifdef DEBUG_READ_PIXEL_IMAGE
-// //   Serial.print("*** widthSepIdx=");
-// //   Serial.print(widthSepIdx);
-// //   Serial.print(" / heightSepIdx=");
-// //   Serial.println(heightSepIdx);
-// // #endif
-//   if (widthSepIdx == -1 || heightSepIdx == -1) {
-//       return false;
-//   }
-//   //int count = value.length();
-// // #ifdef DEBUG_READ_PIXEL_IMAGE
-// //   if (value.length() < 1024) {
-// //     Serial.print(value.length());
-// //     Serial.print(":[");
-// //     Serial.print(value);
-// //     Serial.println("]");
-// //   }
-// // #endif
-//   pixelImage16.width = value.substring(0, widthSepIdx).toInt();
-//   pixelImage16.height = value.substring(widthSepIdx + 1, heightSepIdx).toInt();
-// #ifdef DEBUG_READ_PIXEL_IMAGE
-//   Serial.print("*** width=");
-//   Serial.print(pixelImage16.width);
-//   Serial.print(" / height=");
-//   Serial.println(pixelImage16.height);
-// #endif
-//   int byteCount = 2 * pixelImage16.width * pixelImage16.height;
-//   uint8_t* data = new uint8_t[byteCount];
-//   const char* p = value.c_str() + heightSepIdx + 2;
-// #ifdef DEBUG_READ_PIXEL_IMAGE
-//   Serial.println(*(p - 1));  // should be :
-// #endif
-//   int i = 0;
-//   while (i < byteCount) {
-//     char c = *p++;
-// // #ifdef DEBUG_READ_PIXEL_IMAGE
-// //     if (i <= 100) {
-// //       char pc = c;
-// //       if (pc == '\r') {
-// //         pc = '␍';
-// //       }
-// //       Serial.print(pc);
-// //       if (i == 100) {
-// //         Serial.println();
-// //       }
-// //     }
-// // #endif
-//     char b;
-//     if (c == '\\') {
-//       char nc = *p++;
-//       if (nc == 'n') {
-//         b = 10;
-//       } else if (nc == '_') {
-//         b = '\\';
-//       } else {
-//         b = nc;
-//       }
-//     } else {
-//       if (c == '0') {
-//         b = 0;
-//       } else {
-//         b = c;
-//       }
-//     }
-//     if (i >= byteCount) {
-//       break;
-//     }
-// #ifdef DEBUG_READ_PIXEL_IMAGE
-//     if (i <= 100) {
-//       Serial.print("|");
-//       Serial.print(i);
-//       Serial.print(":");
-//       Serial.print(b, HEX);
-//       if (i == 100) {
-//         Serial.println();
-//       }
-//     }
-// #endif
-//     if (true) {  // UTF-8
-//       if (b & 0b10000000) {
-//         // 2 chars
-//         char nc = *p++;
-//         b = ((b & 0b11) << 6) + (nc & 0b111111);
-//       }
-//     }
-//     data[i++] = b;
-//   }
-// #ifdef DEBUG_READ_PIXEL_IMAGE
-//   Serial.print("*** byteCount=");
-//   Serial.print(byteCount);
-//   Serial.print(" / i=");
-//   Serial.println(i);
-// #endif
-//   pixelImage16.data = (uint16_t*) data;
-// #ifdef DEBUG_READ_PIXEL_IMAGE
-//   int maxI = byteCount / 2;
-//   if (maxI > 100) {
-//     maxI = 100;
-//   }
-//   for (i = 0; i < maxI; i++) {
-//     uint16_t v = pixelImage16.data[i];
-//     if (v != 0) {
-//       Serial.print("/");
-//       Serial.print(i);
-//       Serial.print(":");
-//       Serial.print(v, HEX);
-//     }
-//   }
-//   Serial.println();
-// #endif
-//   return true;
-// }
 
 
 JsonDDTunnelMultiplexer::JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int8_t tunnelCount) {
