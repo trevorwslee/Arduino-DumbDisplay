@@ -3273,6 +3273,7 @@ bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
   }
   pixelImage16.width = imageData.width;
   pixelImage16.height = imageData.height;
+  pixelImage16.byteCount = imageData.byteCount;
   pixelImage16.data = (uint16_t* ) imageData.bytes;
   imageData.bytes = NULL;
 #ifdef DEBUG_READ_PIXEL_IMAGE
@@ -3307,7 +3308,8 @@ bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
   uint8_t* bytes = imageData.bytes;
   imageData.bytes = NULL;
   bool bigEdian = TO_EDIAN();
-  uint8_t* newData = new uint8_t[2 * width * height];
+  int newByteCount = 2 * width * height;
+  uint8_t* newData = new uint8_t[newByteCount];
   int i_d = 0;
   int i_nd = 0;
   for (int h = 0; h < height; h++) {
@@ -3338,6 +3340,7 @@ bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
   }
   pixelImage16.width = width;
   pixelImage16.height = height;
+  pixelImage16.byteCount = newByteCount;
   pixelImage16.data = (uint16_t*) newData;
 #ifdef DEBUG_READ_PIXEL_IMAGE
   int byteCount = 2 * pixelImage16.width * pixelImage16.height;
@@ -3970,10 +3973,16 @@ void DumbDisplay::logToSerial(const String& logLine, boolean force) {
     Serial.println(logLine);
 #endif    
   } else {
-    if (_Connected) {
-      writeComment(logLine);
-    } else if (force) {
-      Serial.println(logLine);
+    if (true) { 
+      if (force) {
+        Serial.println(logLine);
+      }
+    } else {
+      if (_Connected) {
+        writeComment(logLine);
+      } else if (force) {
+        Serial.println(logLine);
+      }
     }
   }
 }

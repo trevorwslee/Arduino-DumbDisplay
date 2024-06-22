@@ -1064,6 +1064,7 @@ struct DDPixelImage16 {
   ~DDPixelImage16() { if (data != NULL) delete data;}
   int width;
   int height;
+  int byteCount;
   uint16_t* data;
 };
 struct DDJpegImage: public ImageData {
