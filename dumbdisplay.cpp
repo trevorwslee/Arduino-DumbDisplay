@@ -3,7 +3,8 @@
 #include "dumbdisplay.h"
 
 
-#define HAND_SHAKE_GAP 1000
+// HAND_SHAKE_GAP changed from 1000 to 500 since 2024-06-22
+#define HAND_SHAKE_GAP 500
 //#define VALIDATE_GAP 2000
 
 
@@ -53,7 +54,7 @@
 #define TO_EDIAN() String(DDCheckEndian())
 
 
-//#define DEBUG_BASIC
+//#define DD_DEBUG_BASIC
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
@@ -99,7 +100,7 @@
   #warning ??? DD_NO_RECONNECT set ???
 #else
   #define SUPPORT_RECONNECT
-  #define RECONNECT_NO_KEEP_ALIVE_MILLIS 5000
+  //#define RECONNECT_NO_KEEP_ALIVE_MILLIS 5000
 #endif
 
 #define VALIDATE_GAP 1000
@@ -142,6 +143,7 @@
 #include "_dd_commands.h"
 
 
+long _DDIdleTimeoutMillis = DD_DEF_IDLE_TIMEOUT;
 bool _DDDisableParamEncoding = false;
 
 
@@ -382,16 +384,16 @@ void IOProxy::validConnection() {
   if (this->lastKeepAliveMillis > 0) {
     long now = millis();
     long notKeptAliveMillis = now - this->lastKeepAliveMillis; 
-    if (notKeptAliveMillis > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
+    if (notKeptAliveMillis > _DDIdleTimeoutMillis) {
       needReconnect = true;
 #ifdef SUPPORT_IDLE_CALLBACK      
       if (_IdleCallback != NULL) {
-        long idleForMillis = notKeptAliveMillis - RECONNECT_NO_KEEP_ALIVE_MILLIS;
+        long idleForMillis = notKeptAliveMillis - _DDIdleTimeoutMillis;
         _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_RECONNECTING);
       }
 #endif      
-#ifdef DEBUG_BASIC  
-      if (_CanLogToSerial()) Serial.println("--- no 'keep alive' ==> reconnect");
+#ifdef DD_DEBUG_BASIC  
+      if (_CanLogToSerial()) Serial.println("!!! 'keep alive' message not received for too long ==> reconnect");
 #endif
     }
 #ifdef SUPPORT_MASTER_RESET
@@ -481,7 +483,7 @@ DDInputOutput* /*volatile */_WOIO = NULL;
 #endif
 
 
-inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize) {
+inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize, long idleTimeout) {
   _IO = io;
 #ifdef SUPPORT_USE_WOIO  
   if (_WOIO != NULL) delete _WOIO;
@@ -493,6 +495,7 @@ inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize) {
     _WOIO = io;
   }
 #endif
+  _DDIdleTimeoutMillis = idleTimeout;
 }
 
 
@@ -572,7 +575,7 @@ bool __Connect(/*bool calledPassive = false*/) {
   bool mustLoop = !_IO->canConnectPassive();
   if (_C_state.step > 0 && _C_state.hsStartMillis > 0) {
     long diffMillis = millis() - _C_state.hsStartMillis;
-    if (diffMillis > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
+    if (diffMillis > _DDIdleTimeoutMillis) {
       // start over
       _C_state.step = 0;
       return false;
@@ -692,7 +695,7 @@ bool __Connect(/*bool calledPassive = false*/) {
 #endif        
         if (data == "ddhello") {
           if (fromBUSerial) {
-            _SetIO(_C_state.pBUSIO, DD_DEF_SEND_BUFFER_SIZE);
+            _SetIO(_C_state.pBUSIO, DD_DEF_SEND_BUFFER_SIZE, DD_DEF_IDLE_TIMEOUT);
             //_IO = pSIO;
             _C_state.pBUSIO = NULL;
           }
@@ -703,12 +706,12 @@ bool __Connect(/*bool calledPassive = false*/) {
 //          _ConnectedFromSerial = fromSerial;
           //_ConnectedFromSerial = _IO->isSerial();
           _ConnectedFromSerial =  fromBUSerial || _IO->isSerial();
-#ifdef DEBUG_BASIC  
+#ifdef DD_DEBUG_BASIC  
           if (_CanLogToSerial()) Serial.println("--- connection established");
 #endif
           if (_CanLogToSerial()) {
             Serial.println("**********");
-#ifdef DEBUG_BASIC  
+#ifdef DD_DEBUG_BASIC  
             Serial.print("* _IO.isSerial()=");
             Serial.println(_IO->isSerial());
             Serial.print("* _IO.isForSerial()=");
@@ -1958,7 +1961,7 @@ DDLayer::DDLayer(int8_t layerId)/*: DDObject(DD_OBJECT_TYPE_LAYER)*/ {
 #endif
 }
 DDLayer::~DDLayer() {
-#ifdef DEBUG_BASIC  
+#ifdef DD_DEBUG_BASIC  
   if (_CanLogToSerial()) Serial.println("--- delete DDLayer");
 #endif
   _PreDeleteLayer(this);
@@ -2690,7 +2693,7 @@ void DDTunnel::afterConstruct(bool connectNow) {
 }
 DDTunnel::~DDTunnel() {
 #ifdef SUPPORT_TUNNEL	
-#ifdef DEBUG_BASIC  
+#ifdef DD_DEBUG_BASIC  
   if (_CanLogToSerial()) Serial.println("--- delete DDTunnel");
 #endif
   _PreDeleteTunnel(this);
@@ -3417,8 +3420,8 @@ void JsonDDTunnelMultiplexer::reconnect() {
 //#endif
 
 
-void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, boolean enableDoubleClick*/) {
-  _SetIO(pIO, sendBufferSize);
+void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize, long idleTimeout/*, boolean enableDoubleClick*/) {
+  _SetIO(pIO, sendBufferSize, idleTimeout);
   //_IO = pIO;
   //_EnableDoubleClick = enableDoubleClick;
 }

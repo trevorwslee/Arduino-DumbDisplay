@@ -18,7 +18,7 @@
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
 #else
   #include "wifidumbdisplay.h"
-  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD), DD_DEF_SEND_BUFFER_SIZE, 2 * DD_DEF_IDLE_TIMEOUT);
 #endif
 
 #if defined(FOR_ESP32CAM)
@@ -70,6 +70,7 @@
   #error "Board not supported"
 #endif
 
+#define OFF_TFT_IDLE_S 30
 
 #if defined(ENABLE_FACE_DETECTION)
   #include "human_face_detect_msr01.hpp"
@@ -326,9 +327,9 @@ void loop() {
     if ((now - countdownNextMs) > 0) {
       countdownNextMs = now + 1000;
       int diffS = (now - countdownStartMs) / 1000;
-      if (diffS < 9) {
+      if (diffS < OFF_TFT_IDLE_S/*9*/) {
 #if defined(TFT_BL_PIN)
-        String inMsg = String("... in ") + String(9 - diffS);
+        String inMsg = String("... in ") + String(OFF_TFT_IDLE_S/*9*/ - diffS);
         //tft.fillScreen(TFT_LIGHTGREY);
         tft.setTextColor(TFT_BLUE, TFT_LIGHTGREY);
         tft.setTextSize(3);

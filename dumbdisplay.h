@@ -34,6 +34,7 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODING befo
 
 
 #define DD_DEF_SEND_BUFFER_SIZE 128
+#define DD_DEF_IDLE_TIMEOUT     5000
 #define DD_DEF_TUNNEL_TIMEOUT   150000
 
 
@@ -1180,7 +1181,7 @@ inline void DDDebugDisableParamEncoding() { _DDDisableParamEncoding = true; }
 /// For an example, please refer to [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
 class DumbDisplay {
   public:
-    DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE/*, bool enableDoubleClick = true*/) {
+    DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE, long idleTimeout = DD_DEF_IDLE_TIMEOUT/*, bool enableDoubleClick = true*/) {
 #ifdef DD_DISABLE_PARAM_ENCODING
     DDDebugDisableParamEncoding();
 #endif      
@@ -1193,7 +1194,7 @@ class DumbDisplay {
       }
   #endif    
 #endif      
-      initialize(pIO, sendBufferSize/*, enableDoubleClick*/);
+      initialize(pIO, sendBufferSize, idleTimeout/*, enableDoubleClick*/);
     }
     /// explicitly make connection (blocking);
     /// implicitly called in situations like create a layer
@@ -1439,7 +1440,7 @@ class DumbDisplay {
 #endif    
     void debugOnly(int i);
   private:
-    void initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, bool enableDoubleClick*/);
+    void initialize(DDInputOutput* pIO, uint16_t sendBufferSize, long idleTimeout/*, bool enableDoubleClick*/);
     //bool canLogToSerial();
 };
 
