@@ -626,9 +626,9 @@ class GraphicalDDLayer: public DDLayer {
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /// cache image; not saved
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
-    /// cache single-bit "pixel" image; not saved
+    /// cache single-bit "pixel" image (i.e. B&W image); not saved
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
-    /// cache 16-bit "pixel" image; not saved
+    /// cache 16-bit "pixel" image (i.e. 565 RGB image); not saved
     void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// cache grayscale "pixel" image; as if image saved and loaded
     void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
@@ -1067,6 +1067,10 @@ struct DDPixelImage16 {
 };
 struct DDJpegImage: public ImageData {
 };
+/// Class service "tunnel" for retrieving image data (in format like JPEG / 565RGB) saved in DumbDisplay app storage via DumbDisplay::saveCachedImageFile(), DDLayer::saveImage() etc.
+/// When "reconnect" to retrieve image data, the dimension, say the TFT screen dimension, will be passed as parameters.
+/// Note that the image will be scaled down when needed.
+/// @since v0.9.9-r3
 class ImageRetrieverDDTunnel: public BasicDDTunnel {
   public:
     /// @attention constructed via DumbDisplay object
@@ -1074,14 +1078,24 @@ class ImageRetrieverDDTunnel: public BasicDDTunnel {
         BasicDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {
     }
   public:
+    /// reconnect to retrieve single-bit "pixel" image (i.e. B&W image)
+    /// @param fit whether to fit the image to the given width and height, scaling up if necessary
     void reconnectForPixelImage(const String& imageName, int width, int height, bool fit = false);
+    /// reconnect to retrieve 16-bit "pixel" image (i.e. 565 RGB image)
+    /// @param grayscale whether to convert the image to to grayscale
     void reconnectForPixelImage16(const String& imageName, int width, int height, bool fit = false, bool grayscale = false);
     void reconnectForPixelImageGS(const String& imageName, int width, int height, bool fit = false);
+    /// reconnect to retrieve JPEG image
+    /// @param quality 0-100
     void reconnectForJpegImage(const String& imageName, int width, int height, int quality=100, bool fit = false);
+    /// get single-bit image data retrieved with reconnectForPixelImage
     bool readPixelImage(DDPixelImage& pixelImage);  
+    /// get 16-bit image data retrieved with reconnectForPixelImage16  
     bool readPixelImage16(DDPixelImage16& pixelImage16);  
-    bool readPixelImageGS(DDPixelImage& pixelImage);  
-    bool readPixelImageGS16(DDPixelImage16& pixelImage16);  
+    bool readPixelImageGS(DDPixelImage& pixelImage);
+    /// get grayscale 16-bit image data retrieved with reconnectForPixelImageGS  
+    bool readPixelImageGS16(DDPixelImage16& pixelImage16); 
+    /// get JPEG image data retrieved with reconnectForJpegImage
     bool readJpegImage(DDJpegImage& jpeg);  
   private:  
     bool _readImageData(ImageData& imageData, short type);  
@@ -1367,11 +1381,11 @@ class DumbDisplay {
     void sendSoundChunk16(int chunkId, const int16_t *data, int sampleCount, bool isFinal = false);
     /// svae image with the given image data
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
-    // save single-bit "pixel" image with the given image data
+    /// save single-bit "pixel" image (i.e. B&W image) with the given image data
     void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressMethod = 0);
-    // save 16-bit "pixel" image with the given image data
+    /// save 16-bit "pixel" image (i.e. 565 RGB image) with the given image data
     void savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
-    // save grayscale "pixel" image with the given image data
+    /// save grayscale "pixel" image with the given image data
     void savePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// stitch images together
     /// @param imageNames '+' delimited

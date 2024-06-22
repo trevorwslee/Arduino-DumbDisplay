@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r02)
+# DumbDisplay Arduino Library (v0.9.9-r03)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r02)](#dumbdisplay-arduino-library-v099-r02)
+- [DumbDisplay Arduino Library (v0.9.9-r03)](#dumbdisplay-arduino-library-v099-r03)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -48,6 +48,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   - [Caching 16-bit Colored Bitmap to Phone](#caching-16-bit-colored-bitmap-to-phone)
   - [Saving Images for DumbDisplay](#saving-images-for-dumbdisplay)
   - [Audio Supports](#audio-supports)
+    - [Retrieving Image Data](#retrieving-image-data)
   - ["Passive" Connection](#passive-connection)
 - [Reference](#reference)
 - [DumbDisplay WIFI Bridge](#dumbdisplay-wifi-bridge)
@@ -1826,6 +1827,26 @@ Notes:
 |--|--|
 |![](screenshots/esp32-mic.png)|DumbDisplay has certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports. Additionally, you may also be interested in a more extensive application -- [Demo of ESP-Now Voice Commander Fun With Wit.ai and DumbDisplay](https://www.youtube.com/watch?v=dhlLU7gmmbE)|
 
+
+### Retrieving Image Data
+
+The "tunne" `ImageRetrieverDDTunnel` can be used to retrieve image, saved to DumbDisplay app storage, to you microcontroller, like
+
+```
+ImageRetrieverDDTunnel* imageRetrieverDDTunnel = NULL;
+void setup() {
+    imageRetrieverDDTunnel = dumbdisplay.createImageRetrieverTunnel();
+    imageRetrieverDDTunnel->reconnectForJpegImage("test.jpg", 240, 240);
+}
+void loop() {
+  DDJpegImage jpegImage;
+  if (imageRetrieverDDTunnel->readJpegImage(jpegImage)) {
+    ... e.g. ...
+    drawArrayJpeg(dumbdisplay, jpegImage.bytes, jpegImage.byteCount, 0, 0);
+  }
+}
+```
+
 ## "Passive" Connection
 
 What has been described previously is more or less "active" in that DumbDisplay will need to establish connection with DumbDisplay app before the sketch flow can proceed.
@@ -2172,6 +2193,11 @@ MIT
 
 
 # Change History
+
+
+v0.9.9-r03
+  - add ImageRetrieverDDTunnel
+  - bug fix
 
 v0.9.9-r02
   - enhanced reading of "feedback"
