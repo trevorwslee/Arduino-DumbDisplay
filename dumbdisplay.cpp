@@ -3121,11 +3121,15 @@ void ImageRetrieverDDTunnel::reconnectForJpegImage(const String& imageName, int 
   reconnectTo("jpeg?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&quality=" + quality + "&fit=" + TO_BOOL(fit));
 }
 
-bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) {  // type: 0=BW, 1=8, 2=16, 3:JPEG
+bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) {  // type: 0=BW, 1=8, 2=16, 3:JPEG
   String value;
   if (!_readLine(value)) {
     return false;
   }
+  imageData.width = 0;
+  imageData.height = 0;
+  imageData.byteCount = 0;
+  imageData.bytes = NULL;
   int widthSepIdx = value.indexOf("x");
   int heightSepIdx = value.indexOf("|", widthSepIdx + 1);
   int byteCountSepIdx = value.indexOf("|:", heightSepIdx + 1);  // image bytes starts with ':'
@@ -3142,7 +3146,7 @@ bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) { 
 #endif
   if (widthSepIdx == -1 || heightSepIdx == -1 || byteCountSepIdx == -1) {
     __SendErrorComment("invalid delimiters");
-    return NULL;
+    return true;
   }
   int width = value.substring(0, widthSepIdx).toInt();
   int height = value.substring(widthSepIdx + 1, heightSepIdx).toInt();
@@ -3157,7 +3161,7 @@ bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) { 
 #endif
   if (width <= 0 || height <= 0 || byteCount <= 0) {
     __SendErrorComment("invalid width/height/byteCount");
-    return NULL;
+    return true;
   }
   int expectedByteCount = 0;
   if (type == 0) {
@@ -3181,7 +3185,7 @@ bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) { 
 #endif
   if (expectedByteCount > 0 && byteCount != expectedByteCount) {
     __SendErrorComment("byteCount mismatch");
-    return NULL;
+    return true;
   }
   uint8_t* bytes = new uint8_t[byteCount];
   const char* p = value.c_str() + byteCountSepIdx + 2;
@@ -3191,18 +3195,6 @@ bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) { 
   int i = 0;
   while (i < byteCount) {
     char c = *p++;
-// #ifdef DEBUG_READ_PIXEL_IMAGE
-//     if (i <= 100) {
-//       char pc = c;
-//       if (pc == '\r') {
-//         pc = '␍';
-//       }
-//       Serial.print(pc);
-//       if (i == 100) {
-//         Serial.println();
-//       }
-//     }
-// #endif
     char b;
     if (c == '\\') {
       char nc = *p++;
@@ -3222,7 +3214,7 @@ bool ImageRetrieverDDTunnel::_readImageData(ImageData& imageData, short type) { 
     }
     if (i >= byteCount) {
       __SendErrorComment("bytes overflow");
-      break;
+      return true;
     }
 #ifdef DEBUG_READ_PIXEL_IMAGE
     if (i <= 100) {
@@ -3267,7 +3259,7 @@ bool ImageRetrieverDDTunnel::readPixelImage(DDPixelImage& pixelImage) {
   return _readImageData(pixelImage, 0);
 }
 bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
-  ImageData imageData;
+  DDImageData imageData;
   if (!_readImageData(imageData, 2)) {
     return false;
   }
@@ -3299,7 +3291,7 @@ bool ImageRetrieverDDTunnel::readPixelImageGS(DDPixelImage& pixelImage) {
   return _readImageData(pixelImage, 1);
 }
 bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
-  ImageData imageData;
+  DDImageData imageData;
   if (!_readImageData(imageData, 1)) {
     return false;
   }
@@ -3309,33 +3301,36 @@ bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
   imageData.bytes = NULL;
   bool bigEdian = TO_EDIAN();
   int newByteCount = 2 * width * height;
-  uint8_t* newData = new uint8_t[newByteCount];
-  int i_d = 0;
-  int i_nd = 0;
-  for (int h = 0; h < height; h++) {
-    for (int w = 0; w < width; w++) {
-      //uint8_t d = data[h * width + w];
-      uint8_t d = bytes[i_d++];
-      uint8_t c5 = 0b11111 & ((int) ((double) 0b11111 * (double) d / (double) 0xff)); 
-      uint8_t c6 = 0b111111 & ((int) ((double) 0b111111 * (double) d / (double) 0xff)); 
-      uint8_t lower = (c6 << 5) + c5;
-      uint8_t higher = (c5 << 3) + (c6 >> 3);
-      if (bigEdian) {
-        uint8_t temp = lower;
-        lower = higher;
-        higher = temp;
+  uint8_t* newData = NULL;
+  if (newByteCount > 0) {
+    newData = new uint8_t[newByteCount];
+    int i_d = 0;
+    int i_nd = 0;
+    for (int h = 0; h < height; h++) {
+      for (int w = 0; w < width; w++) {
+        //uint8_t d = data[h * width + w];
+        uint8_t d = bytes[i_d++];
+        uint8_t c5 = 0b11111 & ((int) ((double) 0b11111 * (double) d / (double) 0xff)); 
+        uint8_t c6 = 0b111111 & ((int) ((double) 0b111111 * (double) d / (double) 0xff)); 
+        uint8_t lower = (c6 << 5) + c5;
+        uint8_t higher = (c5 << 3) + (c6 >> 3);
+        if (bigEdian) {
+          uint8_t temp = lower;
+          lower = higher;
+          higher = temp;
+        }
+  // #ifdef DEBUG_READ_PIXEL_IMAGE
+  //       Serial.print("[");
+  //       Serial.print(lower);
+  //       Serial.print("+");
+  //       Serial.print(higher);
+  //       Serial.print("]");
+  // #endif
+        // newData[i_nd++] = lower;
+        // newData[i_nd++] = higher;
+        newData[i_nd++] = higher;
+        newData[i_nd++] = lower;
       }
-// #ifdef DEBUG_READ_PIXEL_IMAGE
-//       Serial.print("[");
-//       Serial.print(lower);
-//       Serial.print("+");
-//       Serial.print(higher);
-//       Serial.print("]");
-// #endif
-      // newData[i_nd++] = lower;
-      // newData[i_nd++] = higher;
-      newData[i_nd++] = higher;
-      newData[i_nd++] = lower;
     }
   }
   pixelImage16.width = width;

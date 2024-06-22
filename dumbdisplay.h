@@ -1049,15 +1049,15 @@ class ObjectDetectDemoServiceDDTunnel: public BasicDDTunnel {
     bool readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult);  
 };
 
-struct ImageData {
-  ImageData(): bytes(NULL) {};
-  ~ImageData() { if (bytes != NULL) delete bytes;}
+struct DDImageData {
+  DDImageData(): bytes(NULL) {};
+  ~DDImageData() { if (bytes != NULL) delete bytes;}
   int width;
   int height;
   int byteCount;
   uint8_t* bytes;
 };
-struct DDPixelImage: public ImageData {
+struct DDPixelImage: public DDImageData {
 };
 struct DDPixelImage16 {
   DDPixelImage16(): data(NULL) {};
@@ -1067,11 +1067,13 @@ struct DDPixelImage16 {
   int byteCount;
   uint16_t* data;
 };
-struct DDJpegImage: public ImageData {
+struct DDJpegImage: public DDImageData {
 };
 /// Class service "tunnel" for retrieving image data (in format like JPEG / 565RGB) saved in DumbDisplay app storage via DumbDisplay::saveCachedImageFile(), DDLayer::saveImage() etc.
 /// When "reconnect" to retrieve image data, the dimension, say the TFT screen dimension, will be passed as parameters.
 /// Note that the image will be scaled down when needed.
+/// To read the mage data retrieved, call readPixelImage(), readPixelImage16(), readJpegImage() etc; in case of detected corruption of the
+/// data, the image width and height will be zeros.
 /// @since v0.9.9-r3
 class ImageRetrieverDDTunnel: public BasicDDTunnel {
   public:
@@ -1100,7 +1102,7 @@ class ImageRetrieverDDTunnel: public BasicDDTunnel {
     /// get JPEG image data retrieved with reconnectForJpegImage
     bool readJpegImage(DDJpegImage& jpeg);  
   private:  
-    bool _readImageData(ImageData& imageData, short type);  
+    bool _readImageData(DDImageData& imageData, short type);  
 };
 
 
