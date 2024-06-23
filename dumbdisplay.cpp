@@ -2863,9 +2863,14 @@ DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const St
   //this->done = false;
 }
 DDBufferedTunnel::~DDBufferedTunnel() {
-#ifndef ESP32
-    delete this->dataArray;  // there seems to be issue delete it with ESP32
-#endif
+  for (int i = 0; i < arraySize; i++) {
+    dataArray[i] = "";
+  }
+  // TODO: check ... there seems to be issue (hang) delete it 
+  //delete dataArray;
+// #ifndef ESP32
+//     delete this->dataArray;  // there seems to be issue delete it with ESP32
+// #endif
 } 
 void DDBufferedTunnel::reconnect() {
   nextArrayIdx = 0;
