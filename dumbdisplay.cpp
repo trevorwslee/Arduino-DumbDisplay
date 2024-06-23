@@ -3121,15 +3121,29 @@ void ImageRetrieverDDTunnel::reconnectForJpegImage(const String& imageName, int 
   reconnectTo("jpeg?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&quality=" + quality + "&fit=" + TO_BOOL(fit));
 }
 
+bool _returnFailedReadImageData(DDImageData& imageData, uint8_t* bytesBuffer) {
+  if (bytesBuffer != NULL) {
+    delete bytesBuffer;
+  }
+  imageData.width = 0;
+  imageData.height = 0;
+  imageData.byteCount = 0;
+  if (imageData.bytes != NULL) {
+    delete imageData.bytes;
+  }
+  imageData.bytes = new uint8_t[0];
+  return true;
+}
+
 bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) {  // type: 0=BW, 1=8, 2=16, 3:JPEG
   String value;
   if (!_readLine(value)) {
     return false;
   }
-  imageData.width = 0;
-  imageData.height = 0;
-  imageData.byteCount = 0;
-  imageData.bytes = NULL;
+  // imageData.width = 0;
+  // imageData.height = 0;
+  // imageData.byteCount = 0;
+  // imageData.bytes = NULL;
   int widthSepIdx = value.indexOf("x");
   int heightSepIdx = value.indexOf("|", widthSepIdx + 1);
   int byteCountSepIdx = value.indexOf("|:", heightSepIdx + 1);  // image bytes starts with ':'
@@ -3146,7 +3160,7 @@ bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) 
 #endif
   if (widthSepIdx == -1 || heightSepIdx == -1 || byteCountSepIdx == -1) {
     __SendErrorComment("invalid delimiters");
-    return true;
+    return _returnFailedReadImageData(imageData, NULL);
   }
   int width = value.substring(0, widthSepIdx).toInt();
   int height = value.substring(widthSepIdx + 1, heightSepIdx).toInt();
@@ -3161,7 +3175,7 @@ bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) 
 #endif
   if (width <= 0 || height <= 0 || byteCount <= 0) {
     __SendErrorComment("invalid width/height/byteCount");
-    return true;
+    return _returnFailedReadImageData(imageData, NULL);
   }
   int expectedByteCount = 0;
   if (type == 0) {
@@ -3214,7 +3228,7 @@ bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) 
     }
     if (i >= byteCount) {
       __SendErrorComment("bytes overflow");
-      return true;
+      return _returnFailedReadImageData(imageData, bytes);
     }
 #ifdef DEBUG_READ_PIXEL_IMAGE
     if (i <= 100) {
@@ -3251,6 +3265,9 @@ bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) 
   imageData.width = width;
   imageData.height = height;
   imageData.byteCount = byteCount;
+  if (imageData.bytes != NULL) {
+    delete imageData.bytes;
+  }
   imageData.bytes = bytes;
   return true;
 }
@@ -3266,6 +3283,9 @@ bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
   pixelImage16.width = imageData.width;
   pixelImage16.height = imageData.height;
   pixelImage16.byteCount = imageData.byteCount;
+  if (pixelImage16.data != NULL) {
+    delete pixelImage16.data;
+  }
   pixelImage16.data = (uint16_t* ) imageData.bytes;
   imageData.bytes = NULL;
 #ifdef DEBUG_READ_PIXEL_IMAGE
@@ -3336,6 +3356,9 @@ bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
   pixelImage16.width = width;
   pixelImage16.height = height;
   pixelImage16.byteCount = newByteCount;
+  if (pixelImage16.data != NULL) {
+    delete pixelImage16.data;
+  }
   pixelImage16.data = (uint16_t*) newData;
 #ifdef DEBUG_READ_PIXEL_IMAGE
   int byteCount = 2 * pixelImage16.width * pixelImage16.height;
