@@ -34,6 +34,7 @@ if want to disable int parameter encoding, define DD_DISABLE_PARAM_ENCODING befo
 
 
 #define DD_DEF_SEND_BUFFER_SIZE 128
+#define DD_DEF_IDLE_TIMEOUT     5000
 #define DD_DEF_TUNNEL_TIMEOUT   150000
 
 
@@ -626,9 +627,9 @@ class GraphicalDDLayer: public DDLayer {
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /// cache image; not saved
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
-    /// cache single-bit "pixel" image; not saved
+    /// cache single-bit "pixel" image (i.e. B&W image); not saved
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
-    /// cache 16-bit "pixel" image; not saved
+    /// cache 16-bit "pixel" image (i.e. 565 RGB image); not saved
     void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// cache grayscale "pixel" image; as if image saved and loaded
     void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
@@ -1027,7 +1028,7 @@ class GpsServiceDDTunnel: public BasicDDTunnel {
 };
 
 
-/// Output struct of ObjectDetetDemoServiceDDTunnel
+/// Output struct of ObjectDetectDemoServiceDDTunnel
 struct DDObjectDetectDemoResult {
   int left;
   int top;
@@ -1036,16 +1037,72 @@ struct DDObjectDetectDemoResult {
   String label;
 };
 /// Class for "object detection demo" service "tunnel"
-class ObjectDetetDemoServiceDDTunnel: public BasicDDTunnel {
+class ObjectDetectDemoServiceDDTunnel: public BasicDDTunnel {
   public:
     /// @attention constructed via DumbDisplay object
-    ObjectDetetDemoServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize):
+    ObjectDetectDemoServiceDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize):
         BasicDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {
     }
   public:
     void reconnectForObjectDetect(const String& imageName);
     void reconnectForObjectDetectFrom(GraphicalDDLayer* pGraphicalLayer, const String& imageName);
     bool readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult);  
+};
+
+struct DDImageData {
+  DDImageData(): bytes(NULL) {};
+  ~DDImageData() { if (bytes != NULL) delete bytes;}
+  int width;
+  int height;
+  int byteCount;
+  uint8_t* bytes;
+};
+struct DDPixelImage: public DDImageData {
+};
+struct DDPixelImage16 {
+  DDPixelImage16(): data(NULL) {};
+  ~DDPixelImage16() { if (data != NULL) delete data;}
+  int width;
+  int height;
+  int byteCount;
+  uint16_t* data;
+};
+struct DDJpegImage: public DDImageData {
+};
+/// Class service "tunnel" for retrieving image data (in format like JPEG / 565RGB) saved in DumbDisplay app storage via DumbDisplay::saveCachedImageFile(), DDLayer::saveImage() etc.
+/// When "reconnect" to retrieve image data, the dimension, say the TFT screen dimension, will be passed as parameters.
+/// Note that the image will be scaled down when needed.
+/// To read the mage data retrieved, call readPixelImage(), readPixelImage16(), readJpegImage() etc; in case of detected corruption of the
+/// data, the image width and height will be zeros.
+/// @since v0.9.9-r3
+class ImageRetrieverDDTunnel: public BasicDDTunnel {
+  public:
+    /// @attention constructed via DumbDisplay object
+    ImageRetrieverDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize):
+        BasicDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {
+    }
+  public:
+    /// reconnect to retrieve single-bit "pixel" image (i.e. B&W image)
+    /// @param fit whether to fit the image to the given width and height, scaling up if necessary
+    void reconnectForPixelImage(const String& imageName, int width, int height, bool fit = false);
+    /// reconnect to retrieve 16-bit "pixel" image (i.e. 565 RGB image)
+    /// @param grayscale whether to convert the image to to grayscale
+    void reconnectForPixelImage16(const String& imageName, int width, int height, bool fit = false, bool grayscale = false);
+    void reconnectForPixelImageGS(const String& imageName, int width, int height, bool fit = false);
+    /// reconnect to retrieve JPEG image
+    /// @param quality 0-100
+    void reconnectForJpegImage(const String& imageName, int width, int height, int quality=100, bool fit = false);
+    /// get single-bit image data retrieved with reconnectForPixelImage
+    bool readPixelImage(DDPixelImage& pixelImage);  
+    /// get 16-bit image data retrieved with reconnectForPixelImage16  
+    bool readPixelImage16(DDPixelImage16& pixelImage16);  
+    bool readPixelImageGS(DDPixelImage& pixelImage);
+    /// get grayscale 16-bit image data retrieved with reconnectForPixelImageGS  
+    bool readPixelImageGS16(DDPixelImage16& pixelImage16); 
+    /// get JPEG image data retrieved with reconnectForJpegImage
+    bool readJpegImage(DDJpegImage& jpeg);  
+  private:  
+    bool _readImageData(DDImageData& imageData, short type);  
 };
 
 
@@ -1127,7 +1184,7 @@ inline void DDDebugDisableParamEncoding() { _DDDisableParamEncoding = true; }
 /// For an example, please refer to [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/)
 class DumbDisplay {
   public:
-    DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE/*, bool enableDoubleClick = true*/) {
+    DumbDisplay(DDInputOutput* pIO, uint16_t sendBufferSize = DD_DEF_SEND_BUFFER_SIZE, long idleTimeout = DD_DEF_IDLE_TIMEOUT/*, bool enableDoubleClick = true*/) {
 #ifdef DD_DISABLE_PARAM_ENCODING
     DDDebugDisableParamEncoding();
 #endif      
@@ -1140,7 +1197,7 @@ class DumbDisplay {
       }
   #endif    
 #endif      
-      initialize(pIO, sendBufferSize/*, enableDoubleClick*/);
+      initialize(pIO, sendBufferSize, idleTimeout/*, enableDoubleClick*/);
     }
     /// explicitly make connection (blocking);
     /// implicitly called in situations like create a layer
@@ -1244,8 +1301,9 @@ class DumbDisplay {
     /// @see GpsServiceDDTunnel
     GpsServiceDDTunnel* createGpsServiceTunnel();
     /// create a "service tunnel" for getting object detection info from phone; model used is the demo model `mobilenetv1.tflite`
-    /// @see ObjectDetetDemoServiceDDTunnel
-    ObjectDetetDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 3);
+    /// @see ObjectDetectDemoServiceDDTunnel
+    ObjectDetectDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 3);
+    ImageRetrieverDDTunnel* createImageRetrieverTunnel();
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
     /// set DD background color
@@ -1255,7 +1313,7 @@ class DumbDisplay {
     void recordLayerSetupCommands();
     /// basically, functions the same as playbackLayerCommands().
     /// additionally:
-    /// - save and persiste the layer commands
+    /// - save and persist the layer commands
     /// - enable DumbDisplay reconnect feature -- tells the layer setup commands to use when DumbDisplay reconnects
     void playbackLayerSetupCommands(const String& persist_id);
     /// start recording layer commands (of any layers);
@@ -1327,11 +1385,11 @@ class DumbDisplay {
     void sendSoundChunk16(int chunkId, const int16_t *data, int sampleCount, bool isFinal = false);
     /// svae image with the given image data
     void saveImage(const String& imageName, const uint8_t *bytes, int byteCount);
-    // save single-bit "pixel" image with the given image data
+    /// save single-bit "pixel" image (i.e. B&W image) with the given image data
     void savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressMethod = 0);
-    // save 16-bit "pixel" image with the given image data
+    /// save 16-bit "pixel" image (i.e. 565 RGB image) with the given image data
     void savePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
-    // save greyscale "pixel" image with the given image data
+    /// save grayscale "pixel" image with the given image data
     void savePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// stitch images together
     /// @param imageNames '+' delimited
@@ -1385,7 +1443,7 @@ class DumbDisplay {
 #endif    
     void debugOnly(int i);
   private:
-    void initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, bool enableDoubleClick*/);
+    void initialize(DDInputOutput* pIO, uint16_t sendBufferSize, long idleTimeout/*, bool enableDoubleClick*/);
     //bool canLogToSerial();
 };
 

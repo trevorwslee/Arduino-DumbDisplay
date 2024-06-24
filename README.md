@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r02)
+# DumbDisplay Arduino Library (v0.9.9-r03)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r02)](#dumbdisplay-arduino-library-v099-r02)
+- [DumbDisplay Arduino Library (v0.9.9-r03)](#dumbdisplay-arduino-library-v099-r03)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -46,8 +46,9 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   - [Save Pictures to Phone Captured with ESP32 Cam](#save-pictures-to-phone-captured-with-esp32-cam)
   - [Caching Single-bit Bitmap to Phone](#caching-single-bit-bitmap-to-phone)
   - [Caching 16-bit Colored Bitmap to Phone](#caching-16-bit-colored-bitmap-to-phone)
-  - [Saving Images for DumbDisplay](#saving-images-for-dumbdisplay)
+  - [Saving Images to DumbDisplay App](#saving-images-to-dumbdisplay-app)
   - [Audio Supports](#audio-supports)
+  - [Retrieving Image Data to Microcontroller](#retrieving-image-data-to-microcontroller)
   - ["Passive" Connection](#passive-connection)
 - [Reference](#reference)
 - [DumbDisplay WIFI Bridge](#dumbdisplay-wifi-bridge)
@@ -1807,7 +1808,7 @@ The cached 16-bit pixel image is displayed to graphical layer as needed, like
 |In fact, I guess a better strategy will be to download the needed images, and use it in your sketch, as demonstrated by my post [Adaptation of "Space Wars" Game with DumbDisplay](https://www.instructables.com/Adaptation-of-Space-Wars-Game-With-DumbDisplay/).|![](screenshots/ddspacewars.gif)|
 
 
-## Saving Images for DumbDisplay
+## Saving Images to DumbDisplay App
 
 Better than sending image data from microcontroller to DumbDisplay app every time, you may want to save the images to DumbDisplay app image storage, for the use by your sketch. As hinted by the post, the steps can be like
 |  |  |
@@ -1825,6 +1826,29 @@ Notes:
 |  |  |
 |--|--|
 |![](screenshots/esp32-mic.png)|DumbDisplay has certain supports of Audio as well. You may want to refer to [ESP32 Mic Testing With INMP441 and DumbDisplay](https://www.instructables.com/ESP32-Mic-Testing-With-INMP441-and-DumbDisplay/) for samples on DumbDisplay audio supports. Additionally, you may also be interested in a more extensive application -- [Demo of ESP-Now Voice Commander Fun With Wit.ai and DumbDisplay](https://www.youtube.com/watch?v=dhlLU7gmmbE)|
+
+
+## Retrieving Image Data to Microcontroller
+
+The "tunne" `ImageRetrieverDDTunnel` can be used to retrieve image, saved to DumbDisplay app storage, to you microcontroller, like
+
+```
+ImageRetrieverDDTunnel* imageRetrieverDDTunnel = NULL;
+void setup() {
+    imageRetrieverDDTunnel = dumbdisplay.createImageRetrieverTunnel();
+    imageRetrieverDDTunnel->reconnectForJpegImage("test.jpg", 240, 240);
+}
+void loop() {
+  DDJpegImage jpegImage;
+  if (imageRetrieverDDTunnel->readJpegImage(jpegImage)) {
+    ... e.g. ...
+    drawArrayJpeg(dumbdisplay, jpegImage.bytes, jpegImage.byteCount, 0, 0);
+  }
+}
+```
+
+Note that retrieving image using `ImageRetrieverDDTunnel` is fesible if the connect is fast and stable enough, like using WIFI, or Serial connect of certain microcontroller board like Raspberry Pi Pico. 
+
 
 ## "Passive" Connection
 
@@ -2172,6 +2196,11 @@ MIT
 
 
 # Change History
+
+
+v0.9.9-r03
+  - add ImageRetrieverDDTunnel
+  - bug fix
 
 v0.9.9-r02
   - enhanced reading of "feedback"

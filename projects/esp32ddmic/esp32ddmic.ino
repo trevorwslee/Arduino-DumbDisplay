@@ -3,9 +3,15 @@
 #if defined(BLUETOOTH)
   #include "esp32dumbdisplay.h"
   DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
-#else
+#elif defined(WIFI_SSID)
   #include "wifidumbdisplay.h"
   DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+#else
+  // for direct USB connection to phone
+  // . via OTG -- see https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
+  // . via DumbDisplayWifiBridge -- see https://www.youtube.com/watch?v=0UhRmXXBQi8/
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput());
 #endif
 
 

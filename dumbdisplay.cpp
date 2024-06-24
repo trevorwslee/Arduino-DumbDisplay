@@ -3,7 +3,8 @@
 #include "dumbdisplay.h"
 
 
-#define HAND_SHAKE_GAP 1000
+// HAND_SHAKE_GAP changed from 1000 to 500 since 2024-06-22
+#define HAND_SHAKE_GAP 500
 //#define VALIDATE_GAP 2000
 
 
@@ -53,7 +54,7 @@
 #define TO_EDIAN() String(DDCheckEndian())
 
 
-//#define DEBUG_BASIC
+//#define DD_DEBUG_BASIC
 //#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
@@ -65,6 +66,8 @@
 
 //#define DEBUG_MISSING_ENDPOINT_C
 //#define DEBUG_TUNNEL_RESPONSE_C
+
+//#define DEBUG_READ_PIXEL_IMAGE
 
 
 //#define SUPPORT_LONG_PRESS_FEEDBACK
@@ -97,7 +100,7 @@
   #warning ??? DD_NO_RECONNECT set ???
 #else
   #define SUPPORT_RECONNECT
-  #define RECONNECT_NO_KEEP_ALIVE_MILLIS 5000
+  //#define RECONNECT_NO_KEEP_ALIVE_MILLIS 5000
 #endif
 
 #define VALIDATE_GAP 1000
@@ -140,6 +143,7 @@
 #include "_dd_commands.h"
 
 
+long _DDIdleTimeoutMillis = DD_DEF_IDLE_TIMEOUT;
 bool _DDDisableParamEncoding = false;
 
 
@@ -380,16 +384,16 @@ void IOProxy::validConnection() {
   if (this->lastKeepAliveMillis > 0) {
     long now = millis();
     long notKeptAliveMillis = now - this->lastKeepAliveMillis; 
-    if (notKeptAliveMillis > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
+    if (notKeptAliveMillis > _DDIdleTimeoutMillis) {
       needReconnect = true;
 #ifdef SUPPORT_IDLE_CALLBACK      
       if (_IdleCallback != NULL) {
-        long idleForMillis = notKeptAliveMillis - RECONNECT_NO_KEEP_ALIVE_MILLIS;
+        long idleForMillis = notKeptAliveMillis - _DDIdleTimeoutMillis;
         _IdleCallback(idleForMillis, DDIdleConnectionState::IDLE_RECONNECTING);
       }
 #endif      
-#ifdef DEBUG_BASIC  
-      if (_CanLogToSerial()) Serial.println("--- no 'keep alive' ==> reconnect");
+#ifdef DD_DEBUG_BASIC  
+      if (_CanLogToSerial()) Serial.println("!!! 'keep alive' message not received for too long ==> reconnect");
 #endif
     }
 #ifdef SUPPORT_MASTER_RESET
@@ -479,7 +483,7 @@ DDInputOutput* /*volatile */_WOIO = NULL;
 #endif
 
 
-inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize) {
+inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize, long idleTimeout) {
   _IO = io;
 #ifdef SUPPORT_USE_WOIO  
   if (_WOIO != NULL) delete _WOIO;
@@ -491,6 +495,7 @@ inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize) {
     _WOIO = io;
   }
 #endif
+  _DDIdleTimeoutMillis = idleTimeout;
 }
 
 
@@ -570,7 +575,7 @@ bool __Connect(/*bool calledPassive = false*/) {
   bool mustLoop = !_IO->canConnectPassive();
   if (_C_state.step > 0 && _C_state.hsStartMillis > 0) {
     long diffMillis = millis() - _C_state.hsStartMillis;
-    if (diffMillis > RECONNECT_NO_KEEP_ALIVE_MILLIS) {
+    if (diffMillis > _DDIdleTimeoutMillis) {
       // start over
       _C_state.step = 0;
       return false;
@@ -690,7 +695,7 @@ bool __Connect(/*bool calledPassive = false*/) {
 #endif        
         if (data == "ddhello") {
           if (fromBUSerial) {
-            _SetIO(_C_state.pBUSIO, DD_DEF_SEND_BUFFER_SIZE);
+            _SetIO(_C_state.pBUSIO, DD_DEF_SEND_BUFFER_SIZE, DD_DEF_IDLE_TIMEOUT);
             //_IO = pSIO;
             _C_state.pBUSIO = NULL;
           }
@@ -701,12 +706,12 @@ bool __Connect(/*bool calledPassive = false*/) {
 //          _ConnectedFromSerial = fromSerial;
           //_ConnectedFromSerial = _IO->isSerial();
           _ConnectedFromSerial =  fromBUSerial || _IO->isSerial();
-#ifdef DEBUG_BASIC  
+#ifdef DD_DEBUG_BASIC  
           if (_CanLogToSerial()) Serial.println("--- connection established");
 #endif
           if (_CanLogToSerial()) {
             Serial.println("**********");
-#ifdef DEBUG_BASIC  
+#ifdef DD_DEBUG_BASIC  
             Serial.print("* _IO.isSerial()=");
             Serial.println(_IO->isSerial());
             Serial.print("* _IO.isForSerial()=");
@@ -1611,7 +1616,7 @@ void _HandleFeedback() {
         }
         else {
 #ifdef SUPPORT_TUNNEL
-//Serial.println("LT-[" + *pFeedback + "]");
+// Serial.println("LT-[" + *pFeedback + "] (" + pFeedback->length() + ")");
           if (pFeedback->startsWith("<lt.")) {
 #if defined(DEBUG_TUNNEL_RESPONSE_C)               
 __SendComment("LT++++fb--" + *pFeedback);
@@ -1649,7 +1654,7 @@ Serial.println("LT-command:[" + command + "]");
               DDTunnel* pTunnel = (DDTunnel*) _DDLayerArray[lid];
               if (pTunnel != NULL) {
 #ifdef DEBUG_TUNNEL_RESPONSE                
-Serial.println("LT++++" + data + " - final:" + String(final));
+Serial.println("LT++++ [" + data + "] (" + data.length() + ") - final:" + String(final));
 #endif
 #ifdef DEBUG_TUNNEL_RESPONSE_C                
 __SendComment("LT++++" + data + " - final:" + String(final));
@@ -1956,7 +1961,7 @@ DDLayer::DDLayer(int8_t layerId)/*: DDObject(DD_OBJECT_TYPE_LAYER)*/ {
 #endif
 }
 DDLayer::~DDLayer() {
-#ifdef DEBUG_BASIC  
+#ifdef DD_DEBUG_BASIC  
   if (_CanLogToSerial()) Serial.println("--- delete DDLayer");
 #endif
   _PreDeleteLayer(this);
@@ -2489,7 +2494,8 @@ void GraphicalDDLayer::cacheImage(const String& imageName, const uint8_t *bytes,
   _sendByteArrayAfterCommand(bytes, byteCount, compressMethod);
 }
 void GraphicalDDLayer::cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color, char compressMethod) {
-  int byteCount = width * height / 8; 
+  //int byteCount = width * height / 8; 
+  int byteCount = (width + 7) * height / 8; 
   _sendCommand5("", C_CACHEPIXIMG, layerId, imageName, String(width), String(height), color);
   _sendByteArrayAfterCommand(bytes, byteCount, compressMethod);
 }
@@ -2687,7 +2693,7 @@ void DDTunnel::afterConstruct(bool connectNow) {
 }
 DDTunnel::~DDTunnel() {
 #ifdef SUPPORT_TUNNEL	
-#ifdef DEBUG_BASIC  
+#ifdef DD_DEBUG_BASIC  
   if (_CanLogToSerial()) Serial.println("--- delete DDTunnel");
 #endif
   _PreDeleteTunnel(this);
@@ -2857,9 +2863,14 @@ DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const St
   //this->done = false;
 }
 DDBufferedTunnel::~DDBufferedTunnel() {
-#ifndef ESP32
-    delete this->dataArray;  // there seems to be issue delete it with ESP32
-#endif
+  for (int i = 0; i < arraySize; i++) {
+    dataArray[i] = "";
+  }
+  // TODO: check ... there seems to be issue (hang) delete it 
+  //delete dataArray;
+// #ifndef ESP32
+//     delete this->dataArray;  // there seems to be issue delete it with ESP32
+// #endif
 } 
 void DDBufferedTunnel::reconnect() {
   nextArrayIdx = 0;
@@ -3074,15 +3085,15 @@ bool GpsServiceDDTunnel::readLocation(DDLocation& location) {
   return true;
 }
 
-void ObjectDetetDemoServiceDDTunnel::reconnectForObjectDetect(const String& imageName) {
+void ObjectDetectDemoServiceDDTunnel::reconnectForObjectDetect(const String& imageName) {
   reconnectTo("detect?imageName=" + imageName);
 }
-void ObjectDetetDemoServiceDDTunnel::reconnectForObjectDetectFrom(GraphicalDDLayer* pGraphicalLayer, const String& imageName) {
+void ObjectDetectDemoServiceDDTunnel::reconnectForObjectDetectFrom(GraphicalDDLayer* pGraphicalLayer, const String& imageName) {
   reconnectTo("detectfrom?layerId=" + pGraphicalLayer->getLayerId() + "?imageName=" + imageName);
 }
 
 
-bool ObjectDetetDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult) {
+bool ObjectDetectDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoResult& objectDetectResult) {
   String value;
   if (!_readLine(value)) {
     return false;
@@ -3101,6 +3112,282 @@ bool ObjectDetetDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoRe
   objectDetectResult.label = value.substring(sepIdx4 + 1);
   return true;
 }
+
+void ImageRetrieverDDTunnel::reconnectForPixelImage(const String& imageName, int width, int height, bool fit) {
+  reconnectTo("pixImg?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit));
+}
+void ImageRetrieverDDTunnel::reconnectForPixelImage16(const String& imageName, int width, int height, bool fit, bool grayscale) {
+  reconnectTo("pixImg16?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit) + "&grayscale=" + TO_BOOL(grayscale));
+}
+void ImageRetrieverDDTunnel::reconnectForPixelImageGS(const String& imageName, int width, int height, bool fit) {
+  reconnectTo("pixImgGS?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit));
+}
+void ImageRetrieverDDTunnel::reconnectForJpegImage(const String& imageName, int width, int height, int quality, bool fit) {
+  reconnectTo("jpeg?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&quality=" + quality + "&fit=" + TO_BOOL(fit));
+}
+
+bool _returnFailedReadImageData(DDImageData& imageData, uint8_t* bytesBuffer) {
+  if (bytesBuffer != NULL) {
+    delete bytesBuffer;
+  }
+  imageData.width = 0;
+  imageData.height = 0;
+  imageData.byteCount = 0;
+  if (imageData.bytes != NULL) {
+    delete imageData.bytes;
+  }
+  imageData.bytes = new uint8_t[0];
+  return true;
+}
+
+bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) {  // type: 0=BW, 1=8, 2=16, 3:JPEG
+  String value;
+  if (!_readLine(value)) {
+    return false;
+  }
+  // imageData.width = 0;
+  // imageData.height = 0;
+  // imageData.byteCount = 0;
+  // imageData.bytes = NULL;
+  int widthSepIdx = value.indexOf("x");
+  int heightSepIdx = value.indexOf("|", widthSepIdx + 1);
+  int byteCountSepIdx = value.indexOf("|:", heightSepIdx + 1);  // image bytes starts with ':'
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  Serial.print("=== _readImageData (");
+  Serial.print(type);
+  Serial.println(") ===");
+  Serial.print("*** widthSepIdx=");
+  Serial.print(widthSepIdx);
+  Serial.print(" / heightSepIdx=");
+  Serial.print(heightSepIdx);
+  Serial.print(" / byteCountSepIdx=");
+  Serial.println(byteCountSepIdx);
+#endif
+  if (widthSepIdx == -1 || heightSepIdx == -1 || byteCountSepIdx == -1) {
+    __SendErrorComment("invalid delimiters");
+    return _returnFailedReadImageData(imageData, NULL);
+  }
+  int width = value.substring(0, widthSepIdx).toInt();
+  int height = value.substring(widthSepIdx + 1, heightSepIdx).toInt();
+  int byteCount = value.substring(heightSepIdx + 1, byteCountSepIdx).toInt();
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  Serial.print("*** width=");
+  Serial.print(width);
+  Serial.print(" / height=");
+  Serial.print(height);
+  Serial.print(" / byteCount=");
+  Serial.println(byteCount);
+#endif
+  if (width <= 0 || height <= 0 || byteCount <= 0) {
+    __SendErrorComment("invalid width/height/byteCount");
+    return _returnFailedReadImageData(imageData, NULL);
+  }
+  int expectedByteCount = 0;
+  if (type == 0) {
+    // BW
+    expectedByteCount = (width + 7) * height / 8;
+  } else if (type == 1) {
+    // 8
+    expectedByteCount = width * height;
+  } else if (type == 2) {
+    // 16
+    expectedByteCount = 2 * width * height;
+  }
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  if (expectedByteCount > 0) {
+    Serial.print("byteCount=");
+    Serial.print(byteCount);
+    Serial.print(" vs ");
+    Serial.print("expectedByteCount=");
+    Serial.println(expectedByteCount);
+  }
+#endif
+  if (expectedByteCount > 0 && byteCount != expectedByteCount) {
+    __SendErrorComment("byteCount mismatch");
+    return true;
+  }
+  uint8_t* bytes = new uint8_t[byteCount];
+  const char* p = value.c_str() + byteCountSepIdx + 2;
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  Serial.println(*(p - 1));  // should be :
+#endif
+  int i = 0;
+  while (i < byteCount) {
+    char c = *p++;
+    char b;
+    if (c == '\\') {
+      char nc = *p++;
+      if (nc == 'n') {
+        b = 10;
+      } else if (nc == '_') {
+        b = '\\';
+      } else {
+        b = nc;
+      }
+    } else {
+      if (c == '0') {
+        b = 0;
+      } else {
+        b = c;
+      }
+    }
+    if (i >= byteCount) {
+      __SendErrorComment("bytes overflow");
+      return _returnFailedReadImageData(imageData, bytes);
+    }
+#ifdef DEBUG_READ_PIXEL_IMAGE
+    if (i <= 100) {
+      Serial.print("|");
+      Serial.print(i);
+      Serial.print(":");
+      Serial.print(b, HEX);
+      if (i == 100) {
+        Serial.println();
+      }
+    }
+#endif
+    if (true) {  // UTF-8
+      if (b & 0b10000000) {
+        // 2 chars
+        char nc = *p++;
+        b = ((b & 0b11) << 6) + (nc & 0b111111);
+      }
+    }
+    // if (i >= byteCount) {
+    //   __SendErrorComment("bytes overflow");
+    //   delete bytes;
+    //   return NULL;
+    // }
+    bytes[i++] = b;
+  }
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  Serial.print("*** byteCount=");
+  Serial.print(byteCount);
+  Serial.print(" / i=");
+  Serial.println(i);
+#endif
+  //pixelImage16.data = (uint16_t*) data;
+  imageData.width = width;
+  imageData.height = height;
+  imageData.byteCount = byteCount;
+  if (imageData.bytes != NULL) {
+    delete imageData.bytes;
+  }
+  imageData.bytes = bytes;
+  return true;
+}
+
+bool ImageRetrieverDDTunnel::readPixelImage(DDPixelImage& pixelImage) {
+  return _readImageData(pixelImage, 0);
+}
+bool ImageRetrieverDDTunnel::readPixelImage16(DDPixelImage16& pixelImage16) {
+  DDImageData imageData;
+  if (!_readImageData(imageData, 2)) {
+    return false;
+  }
+  pixelImage16.width = imageData.width;
+  pixelImage16.height = imageData.height;
+  pixelImage16.byteCount = imageData.byteCount;
+  if (pixelImage16.data != NULL) {
+    delete pixelImage16.data;
+  }
+  pixelImage16.data = (uint16_t* ) imageData.bytes;
+  imageData.bytes = NULL;
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  int byteCount = 2 * pixelImage16.width * pixelImage16.height;
+  int maxI = byteCount / 2;
+  if (maxI > 100) {
+    maxI = 100;
+  }
+  for (int i = 0; i < maxI; i++) {
+    uint16_t v = pixelImage16.data[i];
+    if (v != 0) {
+      Serial.print("/");
+      Serial.print(i);
+      Serial.print(":");
+      Serial.print(v, HEX);
+    }
+  }
+  Serial.println();
+#endif
+  return true;
+}
+bool ImageRetrieverDDTunnel::readPixelImageGS(DDPixelImage& pixelImage) {
+  return _readImageData(pixelImage, 1);
+}
+bool ImageRetrieverDDTunnel::readPixelImageGS16(DDPixelImage16& pixelImage16) {
+  DDImageData imageData;
+  if (!_readImageData(imageData, 1)) {
+    return false;
+  }
+  int width = imageData.width;
+  int height = imageData.height;
+  uint8_t* bytes = imageData.bytes;
+  imageData.bytes = NULL;
+  bool bigEdian = TO_EDIAN();
+  int newByteCount = 2 * width * height;
+  uint8_t* newData = NULL;
+  if (newByteCount > 0) {
+    newData = new uint8_t[newByteCount];
+    int i_d = 0;
+    int i_nd = 0;
+    for (int h = 0; h < height; h++) {
+      for (int w = 0; w < width; w++) {
+        //uint8_t d = data[h * width + w];
+        uint8_t d = bytes[i_d++];
+        uint8_t c5 = 0b11111 & ((int) ((double) 0b11111 * (double) d / (double) 0xff)); 
+        uint8_t c6 = 0b111111 & ((int) ((double) 0b111111 * (double) d / (double) 0xff)); 
+        uint8_t lower = (c6 << 5) + c5;
+        uint8_t higher = (c5 << 3) + (c6 >> 3);
+        if (bigEdian) {
+          uint8_t temp = lower;
+          lower = higher;
+          higher = temp;
+        }
+  // #ifdef DEBUG_READ_PIXEL_IMAGE
+  //       Serial.print("[");
+  //       Serial.print(lower);
+  //       Serial.print("+");
+  //       Serial.print(higher);
+  //       Serial.print("]");
+  // #endif
+        // newData[i_nd++] = lower;
+        // newData[i_nd++] = higher;
+        newData[i_nd++] = higher;
+        newData[i_nd++] = lower;
+      }
+    }
+  }
+  pixelImage16.width = width;
+  pixelImage16.height = height;
+  pixelImage16.byteCount = newByteCount;
+  if (pixelImage16.data != NULL) {
+    delete pixelImage16.data;
+  }
+  pixelImage16.data = (uint16_t*) newData;
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  int byteCount = 2 * pixelImage16.width * pixelImage16.height;
+  int maxI = byteCount / 2;
+  if (maxI > 100) {
+    maxI = 100;
+  }
+  for (int i = 0; i < maxI; i++) {
+    uint16_t v = pixelImage16.data[i];
+    if (v != 0) {
+      Serial.print("/");
+      Serial.print(i);
+      Serial.print(":");
+      Serial.print(v, HEX);
+    }
+  }
+  Serial.println();
+#endif
+  return true;
+}
+bool ImageRetrieverDDTunnel::readJpegImage(DDJpegImage& jpeg) {
+  return _readImageData(jpeg, 3);
+}
+
 
 
 JsonDDTunnelMultiplexer::JsonDDTunnelMultiplexer(JsonDDTunnel** tunnels, int8_t tunnelCount) {
@@ -3159,8 +3446,8 @@ void JsonDDTunnelMultiplexer::reconnect() {
 //#endif
 
 
-void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize/*, boolean enableDoubleClick*/) {
-  _SetIO(pIO, sendBufferSize);
+void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize, long idleTimeout/*, boolean enableDoubleClick*/) {
+  _SetIO(pIO, sendBufferSize, idleTimeout);
   //_IO = pIO;
   //_EnableDoubleClick = enableDoubleClick;
 }
@@ -3508,7 +3795,8 @@ void DumbDisplay::saveImage(const String& imageName, const uint8_t *bytes, int b
   _sendByteArrayAfterCommand((uint8_t*) bytes, byteCount);
 }
 void DumbDisplay::savePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color, char compressMethod) {
-  int byteCount = width * height / 8; 
+  //int byteCount = width * height / 8; 
+  int byteCount = (width + 7) * height / 8; 
   _sendCommand4("", C_SAVEPIXIMG, imageName, String(width), String(height), color);
   _sendByteArrayAfterCommand(bytes, byteCount, compressMethod);
 }
@@ -3625,7 +3913,7 @@ GpsServiceDDTunnel* DumbDisplay::createGpsServiceTunnel() {
 #endif
 }
 
-ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel(int scaleToWidth, int scaleToHeight, int maxNumObjs) {
+ObjectDetectDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel(int scaleToWidth, int scaleToHeight, int maxNumObjs) {
 #ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
@@ -3634,7 +3922,7 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
     params = String(scaleToWidth) + "," + String(scaleToHeight) + ",";
   }
   params = params + "mno=" + String(maxNumObjs);
-  ObjectDetetDemoServiceDDTunnel* pTunnel = new ObjectDetetDemoServiceDDTunnel("objectdetectdemo", tid, params, ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
+  ObjectDetectDemoServiceDDTunnel* pTunnel = new ObjectDetectDemoServiceDDTunnel("objectdetectdemo", tid, params, ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;
 #else
@@ -3642,6 +3930,20 @@ ObjectDetetDemoServiceDDTunnel* DumbDisplay::createObjectDetectDemoServiceTunnel
   return NULL;
 #endif
 }
+
+ImageRetrieverDDTunnel* DumbDisplay::createImageRetrieverTunnel() {
+#ifdef SUPPORT_TUNNEL	
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  ImageRetrieverDDTunnel* pTunnel = new ImageRetrieverDDTunnel("imageretriever", tid, TO_EDIAN(), ""/*, false*/, DD_TUNNEL_DEF_BUFFER_SIZE);
+  _PostCreateTunnel(pTunnel, false);
+  return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
+}
+
 void DumbDisplay::deleteTunnel(DDTunnel *pTunnel) {
 #ifdef SUPPORT_TUNNEL	
   pTunnel->release();
@@ -3694,10 +3996,16 @@ void DumbDisplay::logToSerial(const String& logLine, boolean force) {
     Serial.println(logLine);
 #endif    
   } else {
-    if (_Connected) {
-      writeComment(logLine);
-    } else if (force) {
-      Serial.println(logLine);
+    if (true) { 
+      if (force) {
+        Serial.println(logLine);
+      }
+    } else {
+      if (_Connected) {
+        writeComment(logLine);
+      } else if (force) {
+        Serial.println(logLine);
+      }
     }
   }
 }
@@ -3881,6 +4189,9 @@ void DDLayer::debugOnly(int i) {
 // void DDLogToSerial(const String& logLine) {
 //    _LogToSerial(logLine);
 // }
+bool DDConnected() {
+  return _Connected;
+}
 void DDDelay(unsigned long ms) {
 #ifdef HANDLE_FEEDBACK_DURING_DELAY
   _Delay(ms);

@@ -11,10 +11,10 @@
 
 #define ASCII_ONLY false
 
-namespace DDTesterImpl {
+namespace DDTester0Impl {
 
 #ifdef MB
- void debugMbTestStep(bool passiveConnect, MbDDLayer *pLayer, int stepCount) {
+void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
     int count = stepCount % 10;
     if (count == 0) {
       pLayer->clear();
@@ -24,33 +24,26 @@ namespace DDTesterImpl {
 
       pLayer->showLeds("|.#.#|####");
       DDDelay(2000);
-      if (passiveConnect) if (!DDConnected()) return;
 
       pLayer->backgroundColor("lightyellow");
       pLayer->ledColor("green");
 
       pLayer->toggle(1, 2);
       DDDelay(1000);
-      if (passiveConnect) if (!DDConnected()) return;
       pLayer->unplot(1, 2);
       DDDelay(1000);
-      if (passiveConnect) if (!DDConnected()) return;
       pLayer->plot(1, 2);
       DDDelay(1000);
-      if (passiveConnect) if (!DDConnected()) return;
 
       pLayer->noBackgroundColor();
       pLayer->showIcon(SmallDiamond);
       DDDelay(1000);
-      if (passiveConnect) if (!DDConnected()) return;
       pLayer->showNumber(8);
       DDDelay(1000);
-      if (passiveConnect) if (!DDConnected()) return;
       pLayer->showString("a,B,c,D");
       DDDelay(5000);
-      if (passiveConnect) if (!DDConnected()) return;
     }
-   
+    
     pLayer->showNumber(count);
 }
 #endif
@@ -74,7 +67,7 @@ void debugTurtleTestStep(TurtleDDLayer *pLayer, int stepCount) {
   }
 }
 
-void shapeTurtleTestStep(bool passiveConnect, TurtleDDLayer *pLayer, int stepCount) {
+void shapeTurtleTestStep(TurtleDDLayer *pLayer, int stepCount) {
     pLayer->clear();
     pLayer->home(false);
     pLayer->setHeading(0);
@@ -126,12 +119,10 @@ void shapeTurtleTestStep(bool passiveConnect, TurtleDDLayer *pLayer, int stepCou
         break;
       case 11:
         for (int size = 3; size <= 10; size++) {
-          if (passiveConnect) if (!DDConnected()) return;
-          pLayer->clear();
-          pLayer->centeredPolygon(40, size, false);   
-          pLayer->circle(40, true);
-          DDDelay(500);
-          if (passiveConnect) if (!DDConnected()) return;
+            pLayer->clear();
+            pLayer->centeredPolygon(40, size, false);   
+            pLayer->circle(40, true);
+            DDDelay(500);
         }
         break;
     }
@@ -170,12 +161,11 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
 
 #ifdef GRAPHICAL
 
-void standardGraphicalTestStep(bool passiveConnect, GraphicalDDLayer *pLayer, int stepCount) {
+void standardGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
   int step = stepCount;
   if (step-- == 0) {
     if (true) {
       for (int i = 0; i < 4; i++) {
-        if (passiveConnect) if (!DDConnected()) return;
         if (i == 0) {
           pLayer->backgroundColor("aliceblue");
           pLayer->drawRect(2, 2, 32, 42, "black");
@@ -193,7 +183,6 @@ void standardGraphicalTestStep(bool passiveConnect, GraphicalDDLayer *pLayer, in
           pLayer->fillRect(2, 2, 20, 30, "red");
         }
         DDDelay(2000);
-        if (passiveConnect) if (!DDConnected()) return;
         pLayer->clear();
       }
     }
@@ -201,12 +190,10 @@ void standardGraphicalTestStep(bool passiveConnect, GraphicalDDLayer *pLayer, in
     pLayer->drawLine(40, 50, 60, 100, "darkgreen");
     pLayer->drawChar(20, 30, '@', "red", "blue", 32);
     DDDelay(2000);
-    if (passiveConnect) if (!DDConnected()) return;
     pLayer->backgroundColor("black");
     pLayer->fillScreen("lightgreen");
     pLayer->write("AA");
     DDDelay(500);
-    if (passiveConnect) if (!DDConnected()) return;
     pLayer->setCursor(20, 0);
     if (ASCII_ONLY) {
       pLayer->println("FRIEND");
@@ -251,7 +238,7 @@ void standardGraphicalTestStep(bool passiveConnect, GraphicalDDLayer *pLayer, in
   }
 }
 
-void shapeGraphicalTestStep(bool passiveConnect, GraphicalDDLayer *pLayer, int stepCount) {
+void shapeGraphicalTestStep(GraphicalDDLayer *pLayer, int stepCount) {
     pLayer->backgroundColor("beige");
     pLayer->clear();
     pLayer->setCursor(100,100);
@@ -261,7 +248,7 @@ void shapeGraphicalTestStep(bool passiveConnect, GraphicalDDLayer *pLayer, int s
 
     bool filled = stepCount > 10;
     if (filled) {
-      pLayer->fillColor("green");
+        pLayer->fillColor("green");
     }
 
     pLayer->leftTurn(20);
@@ -304,12 +291,10 @@ void shapeGraphicalTestStep(bool passiveConnect, GraphicalDDLayer *pLayer, int s
         break;
       case 11:
         for (int size = 3; size <= 10; size++) {
-            if (passiveConnect) if (!DDConnected()) return;
             pLayer->clear();
             pLayer->centeredPolygon(40, size, false);   
             pLayer->circle(40, true);
             DDDelay(500);
-            if (passiveConnect) if (!DDConnected()) return;
         }
         break;
     }
@@ -393,7 +378,7 @@ void DDTester_autoPinLayers(DumbDisplay& dumbdisplay) {
 
 #ifdef MB
 
-void MbDDTester_testStep(bool passiveConnect, DumbDisplay& dumbdisplay, int stepCount) {
+void MbDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pMbLayer = dumbdisplay.createMicrobitLayer(9, 7);
 #ifdef TEST_GET_FEEDBACK    
@@ -414,14 +399,14 @@ void MbDDTester_testStep(bool passiveConnect, DumbDisplay& dumbdisplay, int step
     pMbLayer->writeComment("MB @ (" + String(pFeedback->x) + "," + String(pFeedback->y) + ")");
   }
 #endif
-  debugMbTestStep(passiveConnect, pMbLayer, stepCount);
+  debugMbTestStep(pMbLayer, stepCount);
 }
 
 #endif
 
 #ifdef TURTLE
 
-void TurtleDDTester_testStep(bool passiveConnect, DumbDisplay& dumbdisplay, int stepCount) {
+void TurtleDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pTurtleLayer = dumbdisplay.createTurtleLayer(215, 215);
     pTurtleLayer->setFeedbackHandler(FeedbackHandler);
@@ -438,7 +423,7 @@ void TurtleDDTester_testStep(bool passiveConnect, DumbDisplay& dumbdisplay, int 
     if (stepCount >= 24) {
       standardTurtleTestStep(pTurtleLayer, stepCount == 24);
     } else {
-      shapeTurtleTestStep(passiveConnect, pTurtleLayer, stepCount);
+      shapeTurtleTestStep(pTurtleLayer, stepCount);
     }
   } else {
     debugTurtleTestStep(pTurtleLayer, stepCount);
@@ -576,7 +561,7 @@ void SevenSegmentRowDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
 
 #ifdef GRAPHICAL
 
-void GraphicalDDTester_testStep(bool passiveConnect, DumbDisplay& dumbdisplay, int stepCount) {
+void GraphicalDDTester_testStep(DumbDisplay& dumbdisplay, int stepCount) {
   if (stepCount == 0) {
     pGraphicalLayer = dumbdisplay.createGraphicalLayer(215, 215);
 #ifdef TEST_GET_FEEDBACK
@@ -603,9 +588,9 @@ void GraphicalDDTester_testStep(bool passiveConnect, DumbDisplay& dumbdisplay, i
   }
 #endif  
   if (stepCount <= 14) {
-    standardGraphicalTestStep(passiveConnect, pGraphicalLayer, stepCount);
+    standardGraphicalTestStep(pGraphicalLayer, stepCount);
   } else {
-    shapeGraphicalTestStep(passiveConnect, pGraphicalLayer, stepCount);
+    shapeGraphicalTestStep(pGraphicalLayer, stepCount);
   }
 }
 
@@ -613,44 +598,40 @@ void GraphicalDDTester_testStep(bool passiveConnect, DumbDisplay& dumbdisplay, i
 
 }
 
-using namespace DDTesterImpl;
+using namespace DDTester0Impl;
 
 
 
-void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinLEDPin) {
+void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool forDebugging) {
 
-  if (passiveConnect && builtinLEDPin >= 0) {
-    pinMode(builtinLEDPin, OUTPUT);
+  if (forDebugging) {
+    const char* log_msg = "!!! start test loop !!!";
+    dumbdisplay.writeComment(log_msg);
+    dumbdisplay.logToSerial(log_msg);
   }
 
-  // if (forDebugging) {
-  //   const char* log_msg = "!!! start test loop !!!";
-  //   dumbdisplay.writeComment(log_msg);
-  //   dumbdisplay.logToSerial(log_msg);
-  // }
+  if (false) {
+    int size = 16;
+#if defined(ESP32)
+    //size = 2048;
+    size = 4096; 
+#endif
+    dumbdisplay.writeComment("DEBUG ONLY >>>");
+    long startMs = millis();
+    dumbdisplay.debugOnly(size);
+    long takenMs = millis() - startMs;
+    dumbdisplay.writeComment(">>> " + String((float) takenMs / 1000.0) + "s >>> (" + String(size) + ") DEBUG ONLY");
+  }
 
-//   if (false) {
-//     int size = 16;
-// #if defined(ESP32)
-//     //size = 2048;
-//     size = 4096; 
-// #endif
-//     dumbdisplay.writeComment("DEBUG ONLY >>>");
-//     long startMs = millis();
-//     dumbdisplay.debugOnly(size);
-//     long takenMs = millis() - startMs;
-//     dumbdisplay.writeComment(">>> " + String((float) takenMs / 1000.0) + "s >>> (" + String(size) + ") DEBUG ONLY");
-//   }
+  if (true) {
+    dumbdisplay.backgroundColor(DD_HEX_COLOR(0xE0FFFF));
+  }
 
-  // if (true) {
-  //   dumbdisplay.backgroundColor(DD_HEX_COLOR(0xE0FFFF));
-  // }
-
-  bool mb = true/*!forDebugging*/;
-  bool turtle = true/*!forDebugging*/;
-  bool ledGrid = true/*!forDebugging*/;
-  bool lcd = true/*!forDebugging*/;
-  bool graphical = true/*!forDebugging*/;
+  bool mb = !forDebugging;
+  bool turtle = !forDebugging;
+  bool ledGrid = !forDebugging;
+  bool lcd = !forDebugging;
+  bool graphical = !forDebugging;
   bool sevenSegmentRow = true;
 
   int testCount = 0;
@@ -667,58 +648,30 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinL
 
   int stepCount = 0;
   while (true) {
-    if (passiveConnect) {
-        DDConnectPassiveStatus connectStatus;
-        if (!dumbdisplay.connectPassive(&connectStatus)) {
-          if (builtinLEDPin >= 0) {
-            digitalWrite(builtinLEDPin, HIGH);
-          }
-          Serial.println("// not connected ...");  // TODO: use other way for indication
-          delay(500);
-          Serial.println("// ... not connected");
-          if (builtinLEDPin >= 0) {
-            digitalWrite(builtinLEDPin, LOW);
-          }
-          continue;
-        }
-        if (connectStatus.reconnecting) {
-          Serial.println("// ... reconnecting ...");  // TODO: use other way for indication
-          dumbdisplay.masterReset();
-          Serial.println("// ... reconnecting ...");
-          pMbLayer = NULL;
-          pTurtleLayer = NULL;
-          pLedGridLayer = NULL;
-          pLcdLayer = NULL;
-          pGraphicalLayer = NULL;
-          p7SegmentRowLayer = NULL;
-          stepCount = 0;
-          continue;
-        }
-    }
-
 #ifdef GRAPHICAL
-    if (passiveConnect) if (!dumbdisplay.connected()) break;  
-    if (graphical) GraphicalDDTester_testStep(passiveConnect, dumbdisplay, stepCount);
+    if (graphical)
+      GraphicalDDTester_testStep(dumbdisplay, stepCount);
 #endif
-    if (passiveConnect) if (!dumbdisplay.connected()) break;  
-    if (sevenSegmentRow) SevenSegmentRowDDTester_testStep(dumbdisplay, stepCount);
+    if (sevenSegmentRow)
+      SevenSegmentRowDDTester_testStep(dumbdisplay, stepCount);
 #ifdef MB
-    if (passiveConnect) if (!dumbdisplay.connected()) break;  
-    if (mb) MbDDTester_testStep(passiveConnect, dumbdisplay, stepCount);
+    if (mb)
+      MbDDTester_testStep(dumbdisplay, stepCount);
 #endif
 #ifdef TURTLE
-    if (passiveConnect) if (!dumbdisplay.connected()) break;  
-    if (turtle) TurtleDDTester_testStep(passiveConnect, dumbdisplay, stepCount);
+    if (turtle)  
+      TurtleDDTester_testStep(dumbdisplay, stepCount);
 #endif
-    if (passiveConnect) if (!dumbdisplay.connected()) break;  
-    if (ledGrid) LedGridDDTester_testStep(dumbdisplay, stepCount);  
-    if (passiveConnect) if (!dumbdisplay.connected()) break;  
-    if (lcd) LcdDDTester_testStep(dumbdisplay, stepCount);
-    if (passiveConnect) if (!dumbdisplay.connected()) break;  
+    if (ledGrid)
+      LedGridDDTester_testStep(dumbdisplay, stepCount);  
+    if (lcd)
+      LcdDDTester_testStep(dumbdisplay, stepCount);
 
     stepCount++;
 
-    dumbdisplay.logToSerial("DDTest Step: " + String(stepCount));
+    if (true) {
+      dumbdisplay.logToSerial("DDTest Step: " + String(stepCount));
+    }
 
     DDDelay(1000);
   }
