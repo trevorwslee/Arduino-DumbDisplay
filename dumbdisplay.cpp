@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <math.h>
 
 #include "dumbdisplay.h"
 
@@ -67,6 +68,7 @@
 //#define DEBUG_MISSING_ENDPOINT_C
 //#define DEBUG_TUNNEL_RESPONSE_C
 
+#define DEBUG_SHOW_IN_LINE_CHARS
 //#define DEBUG_READ_PIXEL_IMAGE
 
 
@@ -333,6 +335,14 @@ bool IOProxy::available() {
     if (c == '\n') {
       done = true;
     } else {
+#ifdef DEBUG_SHOW_IN_LINE_CHARS
+      int dataLen = data.length();
+      if ((dataLen == 0 && c != '<') || (dataLen > 0 && dataLen < 30)) {
+        Serial.print(". in:[");
+        Serial.print(c);
+        Serial.println("]");
+      }
+#endif      
       data += c;
 //         data = data + c;
     }
@@ -3113,6 +3123,39 @@ bool ObjectDetectDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoR
   return true;
 }
 
+DDImageData::~DDImageData()
+{
+  if (bytes != NULL) delete bytes;
+}
+
+void DDImageData::transferDataTo(DDImageData& imageData) {
+  if (imageData.bytes != NULL) {
+    if (bytes != NULL) delete bytes;
+  }
+  imageData.width = this->width;
+  imageData.height = this->height;
+  imageData.byteCount = this->byteCount;
+  imageData.bytes = this->bytes;
+  this->bytes = NULL;
+}
+
+
+DDPixelImage16::~DDPixelImage16() {
+  if (data != NULL) delete data;
+}
+void DDPixelImage16::transferDataTo(DDPixelImage16& imageData) {
+  if (imageData.data != NULL) {
+    if (data != NULL) delete data;
+  }
+  imageData.width = this->width;
+  imageData.height = this->height;
+  imageData.data = this->data;
+  this->data = NULL;
+}
+
+
+
+
 void ImageRetrieverDDTunnel::reconnectForPixelImage(const String& imageName, int width, int height, bool fit) {
   reconnectTo("pixImg?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit));
 }
@@ -3164,6 +3207,10 @@ bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) 
   Serial.println(byteCountSepIdx);
 #endif
   if (widthSepIdx == -1 || heightSepIdx == -1 || byteCountSepIdx == -1) {
+    if (_CanLogToSerial()) {
+      int count = fmin(value.length(), 15);
+      Serial.print(String("XXX invalid (") + String(value.length()) + ")[" + value.substring(0, count) + "] ... XXX");
+    }
     __SendErrorComment("invalid delimiters");
     return _returnFailedReadImageData(imageData, NULL);
   }

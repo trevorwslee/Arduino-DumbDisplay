@@ -1051,23 +1051,28 @@ class ObjectDetectDemoServiceDDTunnel: public BasicDDTunnel {
 
 struct DDImageData {
   DDImageData(): bytes(NULL) {};
-  ~DDImageData() { if (bytes != NULL) delete bytes;}
+  ~DDImageData();
   int width;
   int height;
   int byteCount;
   uint8_t* bytes;
+protected:
+  void transferDataTo(DDImageData& imageData);
 };
 struct DDPixelImage: public DDImageData {
+  void transferDataTo(DDPixelImage& pixelImage) { DDImageData::transferDataTo(pixelImage); }
 };
 struct DDPixelImage16 {
   DDPixelImage16(): data(NULL) {};
-  ~DDPixelImage16() { if (data != NULL) delete data;}
+  ~DDPixelImage16();
+  void transferDataTo(DDPixelImage16& pixelImage16);
   int width;
   int height;
   int byteCount;
   uint16_t* data;
 };
 struct DDJpegImage: public DDImageData {
+  void transferDataTo(DDJpegImage& jpegImage) { DDImageData::transferDataTo(jpegImage); }
 };
 /// Class service "tunnel" for retrieving image data (in format like JPEG / 565RGB) saved in DumbDisplay app storage via DumbDisplay::saveCachedImageFile(), DDLayer::saveImage() etc.
 /// When "reconnect" to retrieve image data, the dimension, say the TFT screen dimension, will be passed as parameters.
