@@ -29,6 +29,7 @@
   //#define FEEDBACK_BUFFER_SIZE 4
   #define HANDLE_FEEDBACK_DURING_DELAY
   #define READ_BUFFER_USE_BUFFER
+  #define FEEDBACK_SUPPORT_BYTES 
 #endif
 
 #define STORE_LAYERS
@@ -68,7 +69,8 @@
 //#define DEBUG_MISSING_ENDPOINT_C
 //#define DEBUG_TUNNEL_RESPONSE_C
 
-#define DEBUG_SHOW_IN_LINE_CHARS
+//#define DEBUG_SHOW_IN_LINE_CHARS
+#define DEBUG_READ_FEEDBACK_BYTES
 //#define DEBUG_READ_PIXEL_IMAGE
 
 
@@ -296,6 +298,14 @@ class IOProxy {
     bool isReconnecting() {
       return this->reconnecting;
     }
+#ifdef FEEDBACK_SUPPORT_BYTES
+    inline bool charAvailable() {
+      return pIO->available();
+    }
+    char getChar() {
+      return pIO->read();
+    }
+#endif    
   private:
     DDInputOutput *pIO;
     bool fromSerial;
@@ -1189,7 +1199,33 @@ void _ValidateConnection() {
     }
 #endif
 }
+
+#ifdef READ_BUFFER_USE_BUFFER
+String _ReadFeedbackBuffer;
+#endif
+#ifdef FEEDBACK_SUPPORT_BYTES
+struct FeedbackDataBuffer {
+  FeedbackDataBuffer(): pendingByteCount(-1), totalByteCount(0), pFeedback(NULL), pBytes(NULL) {}
+  // inline const uint8_t* getFeedbackBytes() const {
+  //   if (pendingByteCount == 0) {
+  //     return pBytes;
+  //   } else {
+  //     return NULL;
+  //   }
+  // }
+  int32_t pendingByteCount;  // -1 means no bytes; 0 means just used
+  int32_t totalByteCount;
+  String* pFeedback;
+  uint8_t* pBytes;
+};
+FeedbackDataBuffer _ReadFeedbackDataBuffer;
+#endif
+
+// #ifdef FEEDBACK_SUPPORT_BYTES
+// String* _ReadFeedback(String& buffer, uint8_t*& pFeedbackBytes) {
+// #else
 String* _ReadFeedback(String& buffer) {
+//#endif
 #ifdef VALIDATE_CONNECTION
     // long now = millis();
     // long diff = now - _LastValidateConnectionMillis;
@@ -1198,6 +1234,55 @@ String* _ReadFeedback(String& buffer) {
     //   _LastValidateConnectionMillis = now;
     // }
     _ValidateConnection();
+#endif
+#ifdef FEEDBACK_SUPPORT_BYTES
+  if (_ConnectedIOProxy != NULL) {
+    if (_ReadFeedbackDataBuffer.pendingByteCount > 0)  {
+      while (_ConnectedIOProxy->charAvailable()) {
+        char c = _ConnectedIOProxy->getChar();
+        int byteIdx = _ReadFeedbackDataBuffer.totalByteCount - _ReadFeedbackDataBuffer.pendingByteCount;
+#ifdef DEBUG_READ_FEEDBACK_BYTES
+        if (byteIdx < 20) {
+          Serial.print(". FBb[");
+          Serial.print(byteIdx);
+          Serial.print("]:[");
+          Serial.print(c);
+          Serial.print("](");
+          Serial.print((int) c);
+          Serial.println(")");
+        }
+#endif        
+        _ReadFeedbackDataBuffer.pBytes[byteIdx] = c;
+        if (--_ReadFeedbackDataBuffer.pendingByteCount == 0) {
+          //pFeedbackBytes = _ReadFeedbackDataBuffer.pBytes;
+#ifdef DEBUG_READ_FEEDBACK_BYTES
+          Serial.print("*** done reading ");
+          Serial.print(_ReadFeedbackDataBuffer.totalByteCount);
+          Serial.print(" FB bytes for [");
+         if (_ReadFeedbackDataBuffer.pFeedback->length() < 20) {
+            Serial.print(*_ReadFeedbackDataBuffer.pFeedback);
+         }
+          Serial.println("]");
+#endif
+          return _ReadFeedbackDataBuffer.pFeedback;  
+        }
+      }
+      return NULL;
+    }
+    if (_ReadFeedbackDataBuffer.pendingByteCount == 0)  {
+      if (_ReadFeedbackDataBuffer.pBytes != NULL) {
+        delete _ReadFeedbackDataBuffer.pBytes;
+        _ReadFeedbackDataBuffer.pBytes = NULL;
+#ifdef DEBUG_READ_FEEDBACK_BYTES
+        Serial.println("*** deleted FB bytes");
+#endif
+      }
+      _ReadFeedbackDataBuffer.pendingByteCount = -1;
+#ifdef DEBUG_READ_FEEDBACK_BYTES
+        Serial.println("*** done with FB bytes");
+#endif
+    }
+  }
 #endif
   if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
     return NULL;
@@ -1208,7 +1293,34 @@ String* _ReadFeedback(String& buffer) {
   Serial.println(data);
 #endif
 #ifdef READ_BUFFER_USE_BUFFER
+#ifdef FEEDBACK_SUPPORT_BYTES
+    int sepIdx = data.indexOf(">>bytes>>");
+    if (sepIdx != -1) {
+      if (data.endsWith(":")) {
+        long byteCount = data.substring(sepIdx + 9, data.length() - 1).toInt();
+        buffer = data.substring(0, sepIdx);
+#ifdef DEBUG_READ_FEEDBACK_BYTES
+        Serial.print("*** start reading ");
+        Serial.print(byteCount);
+        Serial.print(" FB bytes for ["); 
+        if (buffer.length() < 20) {
+          Serial.print(buffer);
+        }
+        Serial.println("]"); 
+#endif
+        _ReadFeedbackDataBuffer.pFeedback = &buffer;
+        _ReadFeedbackDataBuffer.pendingByteCount = byteCount;
+        _ReadFeedbackDataBuffer.totalByteCount = byteCount;
+        _ReadFeedbackDataBuffer.pBytes = new uint8_t[byteCount];
+        _ConnectedIOProxy->clear();
+        return NULL;
+      }
+    } else {
+      buffer = data;
+    }
+#else
     buffer = data;
+#endif
     _ConnectedIOProxy->clear();
     return &buffer;
 #else    
@@ -1592,14 +1704,16 @@ void _SendSpecialCommand(const char* specialType, const String& specialId, const
 //   }
 // }
 
-#ifdef READ_BUFFER_USE_BUFFER
-String _ReadFeedbackBuffer;
-#endif
+
+// #ifdef READ_BUFFER_USE_BUFFER
+// String _ReadFeedbackBuffer;
+// #endif
+
 void _HandleFeedback() {
   if (!_HandlingFeedback) {
     _HandlingFeedback = true;
 #ifdef READ_BUFFER_USE_BUFFER
-    String* pFeedback = _ReadFeedback(_ReadFeedbackBuffer);
+  String* pFeedback = _ReadFeedback(_ReadFeedbackBuffer);
 #else
     String buffer;
     String* pFeedback = _ReadFeedback(buffer);
@@ -3296,8 +3410,8 @@ bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) 
     if (true) {  // UTF-8
       if (b & 0b10000000) {
         // 2 chars
-        char nc = *p++;
-        b = ((b & 0b11) << 6) + (nc & 0b111111);
+        char nc0 = *p++;
+        b = ((b & 0b11) << 6) + (nc0 & 0b111111);
       }
     }
     // if (i >= byteCount) {
