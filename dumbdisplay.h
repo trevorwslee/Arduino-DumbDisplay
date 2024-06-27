@@ -895,7 +895,9 @@ class DDTunnel: public DDObject {
     void _writeLine(const String& data);
     void _writeSound(const String& soundName);
   public:
-    virtual void handleInput(const String& data, bool final);
+    virtual void handleInput(const String& data, uint8_t* fbBytes, bool final) { doneHandleInput(final); }
+  protected:
+    void doneHandleInput(bool final);   
   protected:
     String type;
     String tunnelId;
@@ -927,16 +929,17 @@ class DDBufferedTunnel: public DDTunnel {
   protected:
     int _count();
     virtual bool _eof(long timeoutMillis);
-    bool _readLine(String &buffer);
+    bool _readLine(String &buffer, uint8_t** pFBBytes = NULL);
     //void _writeLine(const String& data);
   public:
     /// @attention for internal use only
-    virtual void handleInput(const String& data, bool final);
+    virtual void handleInput(const String& data, uint8_t* fbBytes, bool final);
   private:
     // String endPoint;
     // String tunnelId;
     int8_t arraySize;
     String* dataArray;
+    uint8_t** fbByesArray;
     int8_t nextArrayIdx;
     int8_t validArrayIdx;
     //bool done;

@@ -70,7 +70,7 @@
 //#define DEBUG_TUNNEL_RESPONSE_C
 
 //#define DEBUG_SHOW_IN_LINE_CHARS
-#define DEBUG_READ_FEEDBACK_BYTES
+//#define DEBUG_READ_FEEDBACK_BYTES
 //#define DEBUG_READ_PIXEL_IMAGE
 
 
@@ -1259,7 +1259,7 @@ String* _ReadFeedback(String& buffer) {
           Serial.print("*** done reading ");
           Serial.print(_ReadFeedbackDataBuffer.totalByteCount);
           Serial.print(" FB bytes for [");
-         if (_ReadFeedbackDataBuffer.pFeedback->length() < 20) {
+         if (_ReadFeedbackDataBuffer.pFeedback->length() < 100) {
             Serial.print(*_ReadFeedbackDataBuffer.pFeedback);
          }
           Serial.println("]");
@@ -1271,11 +1271,11 @@ String* _ReadFeedback(String& buffer) {
     }
     if (_ReadFeedbackDataBuffer.pendingByteCount == 0)  {
       if (_ReadFeedbackDataBuffer.pBytes != NULL) {
+#ifdef DEBUG_READ_FEEDBACK_BYTES
+        Serial.println("*** delete FB bytes");
+#endif
         delete _ReadFeedbackDataBuffer.pBytes;
         _ReadFeedbackDataBuffer.pBytes = NULL;
-#ifdef DEBUG_READ_FEEDBACK_BYTES
-        Serial.println("*** deleted FB bytes");
-#endif
       }
       _ReadFeedbackDataBuffer.pendingByteCount = -1;
 #ifdef DEBUG_READ_FEEDBACK_BYTES
@@ -1294,16 +1294,16 @@ String* _ReadFeedback(String& buffer) {
 #endif
 #ifdef READ_BUFFER_USE_BUFFER
 #ifdef FEEDBACK_SUPPORT_BYTES
-    int sepIdx = data.indexOf(">>bytes>>");
+    int sepIdx = data.indexOf(">`bYtEs`>");
     if (sepIdx != -1) {
-      if (data.endsWith(":")) {
+      if (data.endsWith("@")) {
         long byteCount = data.substring(sepIdx + 9, data.length() - 1).toInt();
         buffer = data.substring(0, sepIdx);
 #ifdef DEBUG_READ_FEEDBACK_BYTES
         Serial.print("*** start reading ");
         Serial.print(byteCount);
         Serial.print(" FB bytes for ["); 
-        if (buffer.length() < 20) {
+        if (buffer.length() < 100) {
           Serial.print(buffer);
         }
         Serial.println("]"); 
@@ -1783,7 +1783,13 @@ Serial.println("LT++++ [" + data + "] (" + data.length() + ") - final:" + String
 #ifdef DEBUG_TUNNEL_RESPONSE_C                
 __SendComment("LT++++" + data + " - final:" + String(final));
 #endif
-                pTunnel->handleInput(data, final);
+#ifdef FEEDBACK_SUPPORT_BYTES
+                uint8_t* fbBytes = _ReadFeedbackDataBuffer.pBytes;
+                pTunnel->handleInput(data, fbBytes, final);
+                _ReadFeedbackDataBuffer.pBytes = NULL;
+#else
+                pTunnel->handleInput(data, NULL, final);
+#endif                
               }
             }
           }
@@ -2961,7 +2967,8 @@ void DDTunnel::_writeLine(const String& data) {
 void DDTunnel::_writeSound(const String& soundName) {
   _sendSpecialCommand("lt", tunnelId, "send_sound", soundName);
 }
-void DDTunnel::handleInput(const String& data, bool final) {
+//void DDTunnel::handleInput(const String& data, bool final) {
+void DDTunnel::doneHandleInput(bool final) {
 //if (final) Serial.println("//final:" + data);
   // if (!final || data != "") {
   //   dataArray[nextArrayIdx] = data;
@@ -2982,6 +2989,12 @@ DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const St
   bufferSize = bufferSize + 1;  // need one more
   this->arraySize = bufferSize;
   this->dataArray = new String[bufferSize];
+#ifdef FEEDBACK_SUPPORT_BYTES
+  this->fbByesArray = new uint8_t*[bufferSize];
+  for (int i = 0; i < arraySize; i++) {
+    fbByesArray[i] = NULL;
+  }
+#endif
   this->nextArrayIdx = 0;
   this->validArrayIdx = 0;
   //this->done = false;
@@ -2989,12 +3002,15 @@ DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const St
 DDBufferedTunnel::~DDBufferedTunnel() {
   for (int i = 0; i < arraySize; i++) {
     dataArray[i] = "";
+#ifdef FEEDBACK_SUPPORT_BYTES
+    if (fbByesArray[i] != NULL) {
+      delete fbByesArray[i];
+    }
+#endif
   }
-  // TODO: check ... there seems to be issue (hang) delete it 
+  // TODO: check ... there seems to be issue (hang) delete dataArray
   //delete dataArray;
-// #ifndef ESP32
-//     delete this->dataArray;  // there seems to be issue delete it with ESP32
-// #endif
+  //delete fbByesArray;
 } 
 void DDBufferedTunnel::reconnect() {
   nextArrayIdx = 0;
@@ -3003,6 +3019,14 @@ void DDBufferedTunnel::reconnect() {
   for (int i = 0; i < arraySize; i++) {
     dataArray[i] = "";
   }
+#ifdef FEEDBACK_SUPPORT_BYTES
+  for (int i = 0; i < arraySize; i++) {
+    if (fbByesArray[i] != NULL) {
+      delete fbByesArray[i];
+    }
+    fbByesArray[i] = NULL;
+  }
+#endif
   //_sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
   this->DDTunnel::reconnect();
 }
@@ -3047,13 +3071,26 @@ bool DDBufferedTunnel::_eof(long timeoutMillis) {
 // #endif
 //  return eof;
 }
-bool DDBufferedTunnel::_readLine(String &buffer) {
+bool DDBufferedTunnel::_readLine(String &buffer, uint8_t** pFBBytes) {
   if (nextArrayIdx == validArrayIdx) {
     buffer = "";
+    if (pFBBytes != NULL) {
+      *pFBBytes = NULL;
+    }
     return false;
   } else {
     buffer = dataArray[validArrayIdx];
     dataArray[validArrayIdx] = "";
+#ifdef FEEDBACK_SUPPORT_BYTES
+    if (pFBBytes != NULL) {
+      *pFBBytes = fbByesArray[validArrayIdx];
+    } else {
+      if (fbByesArray[validArrayIdx] != NULL) {
+        delete fbByesArray[validArrayIdx];
+      }
+    }
+    fbByesArray[validArrayIdx] = NULL;
+#endif
     validArrayIdx = (validArrayIdx + 1) % arraySize;
     return true;
   }
@@ -3063,7 +3100,7 @@ bool DDBufferedTunnel::_readLine(String &buffer) {
 // //Serial.println("//--");
 //   _sendSpecialCommand("lt", tunnelId, NULL, data);
 // }
-void DDBufferedTunnel::handleInput(const String& data, bool final) {
+void DDBufferedTunnel::handleInput(const String& data, uint8_t* fbBytes, bool final) {
 #ifdef DEBUG_TUNNEL_RESPONSE
 Serial.print("DATA:");
 Serial.print(data);
@@ -3075,11 +3112,18 @@ Serial.print(nextArrayIdx);
 //if (final) Serial.println("//final:" + data);
   if (!final || data != "") {
     dataArray[nextArrayIdx] = data;
+#ifdef FEEDBACK_SUPPORT_BYTES
+    if (fbByesArray[nextArrayIdx] != NULL) {  // overflow???
+      delete fbByesArray[nextArrayIdx];
+    }
+    fbByesArray[nextArrayIdx] = fbBytes;
+#endif
     nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
     if (nextArrayIdx == validArrayIdx)
       validArrayIdx = (validArrayIdx + 1) % arraySize;
   }
-  this->DDTunnel::handleInput(data, final);
+  //this->DDTunnel::handleInput(data, fbBytes, final);
+  doneHandleInput(final);
   //if (final)
     //this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
@@ -3299,7 +3343,8 @@ bool _returnFailedReadImageData(DDImageData& imageData, uint8_t* bytesBuffer) {
 
 bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) {  // type: 0=BW, 1=8, 2=16, 3:JPEG
   String value;
-  if (!_readLine(value)) {
+  uint8_t* fbBytes;
+  if (!_readLine(value, &fbBytes)) {
     return false;
   }
   // imageData.width = 0;
@@ -3367,66 +3412,76 @@ bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) 
     __SendErrorComment("byteCount mismatch");
     return true;
   }
-  uint8_t* bytes = new uint8_t[byteCount];
-  const char* p = value.c_str() + byteCountSepIdx + 2;
+  uint8_t* bytes;
+  if (fbBytes != NULL) {
+    bytes = fbBytes;
 #ifdef DEBUG_READ_PIXEL_IMAGE
-  Serial.println(*(p - 1));  // should be :
+    Serial.print("***");
+    Serial.print(byteCount);
+    Serial.println(" bytes from FB bytes *****");
 #endif
-  int i = 0;
-  while (i < byteCount) {
-    char c = *p++;
-    char b;
-    if (c == '\\') {
-      char nc = *p++;
-      if (nc == 'n') {
-        b = 10;
-      } else if (nc == '_') {
-        b = '\\';
-      } else {
-        b = nc;
-      }
-    } else {
-      if (c == '0') {
-        b = 0;
-      } else {
-        b = c;
-      }
-    }
-    if (i >= byteCount) {
-      __SendErrorComment("bytes overflow");
-      return _returnFailedReadImageData(imageData, bytes);
-    }
+  } else {
+    bytes = new uint8_t[byteCount];
+    const char* p = value.c_str() + byteCountSepIdx + 2;
 #ifdef DEBUG_READ_PIXEL_IMAGE
-    if (i <= 100) {
-      Serial.print("|");
-      Serial.print(i);
-      Serial.print(":");
-      Serial.print(b, HEX);
-      if (i == 100) {
-        Serial.println();
-      }
-    }
+    Serial.println(*(p - 1));  // should be :
 #endif
-    if (true) {  // UTF-8
-      if (b & 0b10000000) {
-        // 2 chars
-        char nc0 = *p++;
-        b = ((b & 0b11) << 6) + (nc0 & 0b111111);
+    int i = 0;
+    while (i < byteCount) {
+      char c = *p++;
+      char b;
+      if (c == '\\') {
+        char nc = *p++;
+        if (nc == 'n') {
+          b = 10;
+        } else if (nc == '_') {
+          b = '\\';
+        } else {
+          b = nc;
+        }
+      } else {
+        if (c == '0') {
+          b = 0;
+        } else {
+          b = c;
+        }
       }
-    }
-    // if (i >= byteCount) {
-    //   __SendErrorComment("bytes overflow");
-    //   delete bytes;
-    //   return NULL;
-    // }
-    bytes[i++] = b;
-  }
+      if (i >= byteCount) {
+        __SendErrorComment("bytes overflow");
+        return _returnFailedReadImageData(imageData, bytes);
+      }
 #ifdef DEBUG_READ_PIXEL_IMAGE
-  Serial.print("*** byteCount=");
+      if (i <= 100) {
+        Serial.print("|");
+        Serial.print(i);
+        Serial.print(":");
+        Serial.print(b, HEX);
+        if (i == 100) {
+          Serial.println();
+        }
+      }
+#endif
+      if (true) {  // UTF-8
+        if (b & 0b10000000) {
+          // 2 chars
+          char nc0 = *p++;
+          b = ((b & 0b11) << 6) + (nc0 & 0b111111);
+        }
+      }
+      // if (i >= byteCount) {
+      //   __SendErrorComment("bytes overflow");
+      //   delete bytes;
+      //   return NULL;
+      // }
+      bytes[i++] = b;
+    }
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  Serial.print("*** interpreted byteCount=");
   Serial.print(byteCount);
   Serial.print(" / i=");
   Serial.println(i);
 #endif
+  }  
   //pixelImage16.data = (uint16_t*) data;
   imageData.width = width;
   imageData.height = height;
