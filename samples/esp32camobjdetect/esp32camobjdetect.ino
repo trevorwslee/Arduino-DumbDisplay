@@ -21,7 +21,7 @@ const char* imageName = "esp32camobjdetect.jpg";
 
 GraphicalDDLayer* imageLayer;
 GraphicalDDLayer* objectLayer;
-ObjectDetetDemoServiceDDTunnel* objectTunnel;
+ObjectDetectDemoServiceDDTunnel* objectTunnel;
 bool cameraReady = false;
 
 

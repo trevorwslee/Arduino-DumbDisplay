@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <math.h>
 
 #include "dumbdisplay.h"
 
@@ -28,6 +29,7 @@
   //#define FEEDBACK_BUFFER_SIZE 4
   #define HANDLE_FEEDBACK_DURING_DELAY
   #define READ_BUFFER_USE_BUFFER
+  #define FEEDBACK_SUPPORT_BYTES 
 #endif
 
 #define STORE_LAYERS
@@ -67,6 +69,8 @@
 //#define DEBUG_MISSING_ENDPOINT_C
 //#define DEBUG_TUNNEL_RESPONSE_C
 
+//#define DEBUG_SHOW_IN_LINE_CHARS
+//#define DEBUG_READ_FEEDBACK_BYTES
 //#define DEBUG_READ_PIXEL_IMAGE
 
 
@@ -294,6 +298,14 @@ class IOProxy {
     bool isReconnecting() {
       return this->reconnecting;
     }
+#ifdef FEEDBACK_SUPPORT_BYTES
+    inline bool charAvailable() {
+      return pIO->available();
+    }
+    char getChar() {
+      return pIO->read();
+    }
+#endif    
   private:
     DDInputOutput *pIO;
     bool fromSerial;
@@ -333,6 +345,14 @@ bool IOProxy::available() {
     if (c == '\n') {
       done = true;
     } else {
+#ifdef DEBUG_SHOW_IN_LINE_CHARS
+      int dataLen = data.length();
+      if ((dataLen == 0 && c != '<') || (dataLen > 0 && dataLen < 30)) {
+        Serial.print(". in:[");
+        Serial.print(c);
+        Serial.println("]");
+      }
+#endif      
       data += c;
 //         data = data + c;
     }
@@ -1179,7 +1199,33 @@ void _ValidateConnection() {
     }
 #endif
 }
+
+#ifdef READ_BUFFER_USE_BUFFER
+String _ReadFeedbackBuffer;
+#endif
+#ifdef FEEDBACK_SUPPORT_BYTES
+struct FeedbackDataBuffer {
+  FeedbackDataBuffer(): pendingByteCount(-1), totalByteCount(0), pFeedback(NULL), pBytes(NULL) {}
+  // inline const uint8_t* getFeedbackBytes() const {
+  //   if (pendingByteCount == 0) {
+  //     return pBytes;
+  //   } else {
+  //     return NULL;
+  //   }
+  // }
+  int32_t pendingByteCount;  // -1 means no bytes; 0 means just used
+  int32_t totalByteCount;
+  String* pFeedback;
+  uint8_t* pBytes;
+};
+FeedbackDataBuffer _ReadFeedbackDataBuffer;
+#endif
+
+// #ifdef FEEDBACK_SUPPORT_BYTES
+// String* _ReadFeedback(String& buffer, uint8_t*& pFeedbackBytes) {
+// #else
 String* _ReadFeedback(String& buffer) {
+//#endif
 #ifdef VALIDATE_CONNECTION
     // long now = millis();
     // long diff = now - _LastValidateConnectionMillis;
@@ -1188,6 +1234,55 @@ String* _ReadFeedback(String& buffer) {
     //   _LastValidateConnectionMillis = now;
     // }
     _ValidateConnection();
+#endif
+#ifdef FEEDBACK_SUPPORT_BYTES
+  if (_ConnectedIOProxy != NULL) {
+    if (_ReadFeedbackDataBuffer.pendingByteCount > 0)  {
+      while (_ConnectedIOProxy->charAvailable()) {
+        char c = _ConnectedIOProxy->getChar();
+        int byteIdx = _ReadFeedbackDataBuffer.totalByteCount - _ReadFeedbackDataBuffer.pendingByteCount;
+#ifdef DEBUG_READ_FEEDBACK_BYTES
+        if (byteIdx < 20) {
+          Serial.print(". FBb[");
+          Serial.print(byteIdx);
+          Serial.print("]:[");
+          Serial.print(c);
+          Serial.print("](");
+          Serial.print((int) c);
+          Serial.println(")");
+        }
+#endif        
+        _ReadFeedbackDataBuffer.pBytes[byteIdx] = c;
+        if (--_ReadFeedbackDataBuffer.pendingByteCount == 0) {
+          //pFeedbackBytes = _ReadFeedbackDataBuffer.pBytes;
+#ifdef DEBUG_READ_FEEDBACK_BYTES
+          Serial.print("*** done reading ");
+          Serial.print(_ReadFeedbackDataBuffer.totalByteCount);
+          Serial.print(" FB bytes for [");
+         if (_ReadFeedbackDataBuffer.pFeedback->length() < 100) {
+            Serial.print(*_ReadFeedbackDataBuffer.pFeedback);
+         }
+          Serial.println("]");
+#endif
+          return _ReadFeedbackDataBuffer.pFeedback;  
+        }
+      }
+      return NULL;
+    }
+    if (_ReadFeedbackDataBuffer.pendingByteCount == 0)  {
+      if (_ReadFeedbackDataBuffer.pBytes != NULL) {
+#ifdef DEBUG_READ_FEEDBACK_BYTES
+        Serial.println("*** delete FB bytes");
+#endif
+        delete _ReadFeedbackDataBuffer.pBytes;
+        _ReadFeedbackDataBuffer.pBytes = NULL;
+      }
+      _ReadFeedbackDataBuffer.pendingByteCount = -1;
+#ifdef DEBUG_READ_FEEDBACK_BYTES
+        Serial.println("*** done with FB bytes");
+#endif
+    }
+  }
 #endif
   if (_ConnectedIOProxy == NULL || !_ConnectedIOProxy->available()) {
     return NULL;
@@ -1198,7 +1293,34 @@ String* _ReadFeedback(String& buffer) {
   Serial.println(data);
 #endif
 #ifdef READ_BUFFER_USE_BUFFER
+#ifdef FEEDBACK_SUPPORT_BYTES
+    int sepIdx = data.indexOf(">`bYtEs`>");
+    if (sepIdx != -1) {
+      if (data.endsWith("@")) {
+        long byteCount = data.substring(sepIdx + 9, data.length() - 1).toInt();
+        buffer = data.substring(0, sepIdx);
+#ifdef DEBUG_READ_FEEDBACK_BYTES
+        Serial.print("*** start reading ");
+        Serial.print(byteCount);
+        Serial.print(" FB bytes for ["); 
+        if (buffer.length() < 100) {
+          Serial.print(buffer);
+        }
+        Serial.println("]"); 
+#endif
+        _ReadFeedbackDataBuffer.pFeedback = &buffer;
+        _ReadFeedbackDataBuffer.pendingByteCount = byteCount;
+        _ReadFeedbackDataBuffer.totalByteCount = byteCount;
+        _ReadFeedbackDataBuffer.pBytes = new uint8_t[byteCount];
+        _ConnectedIOProxy->clear();
+        return NULL;
+      }
+    } else {
+      buffer = data;
+    }
+#else
     buffer = data;
+#endif
     _ConnectedIOProxy->clear();
     return &buffer;
 #else    
@@ -1582,14 +1704,16 @@ void _SendSpecialCommand(const char* specialType, const String& specialId, const
 //   }
 // }
 
-#ifdef READ_BUFFER_USE_BUFFER
-String _ReadFeedbackBuffer;
-#endif
+
+// #ifdef READ_BUFFER_USE_BUFFER
+// String _ReadFeedbackBuffer;
+// #endif
+
 void _HandleFeedback() {
   if (!_HandlingFeedback) {
     _HandlingFeedback = true;
 #ifdef READ_BUFFER_USE_BUFFER
-    String* pFeedback = _ReadFeedback(_ReadFeedbackBuffer);
+  String* pFeedback = _ReadFeedback(_ReadFeedbackBuffer);
 #else
     String buffer;
     String* pFeedback = _ReadFeedback(buffer);
@@ -1659,7 +1783,13 @@ Serial.println("LT++++ [" + data + "] (" + data.length() + ") - final:" + String
 #ifdef DEBUG_TUNNEL_RESPONSE_C                
 __SendComment("LT++++" + data + " - final:" + String(final));
 #endif
-                pTunnel->handleInput(data, final);
+#ifdef FEEDBACK_SUPPORT_BYTES
+                uint8_t* fbBytes = _ReadFeedbackDataBuffer.pBytes;
+                pTunnel->handleInput(data, fbBytes, final);
+                _ReadFeedbackDataBuffer.pBytes = NULL;
+#else
+                pTunnel->handleInput(data, NULL, final);
+#endif                
               }
             }
           }
@@ -2336,6 +2466,9 @@ void LcdDDLayer::scrollDisplayRight() {
 void LcdDDLayer::writeLine(const String& text, int y, const String& align) {
   _sendCommand3(layerId, C_writeline, String(y), align, text);
 }
+void LcdDDLayer::writeRightAlignedLine(const String& text, int y) {
+  _sendCommand3(layerId, C_writeline, String(y),"R", text);
+}
 void LcdDDLayer::writeCenteredLine(const String& text, int y) {
   _sendCommand3(layerId, C_writeline, String(y), "C", text);
 } 
@@ -2837,7 +2970,8 @@ void DDTunnel::_writeLine(const String& data) {
 void DDTunnel::_writeSound(const String& soundName) {
   _sendSpecialCommand("lt", tunnelId, "send_sound", soundName);
 }
-void DDTunnel::handleInput(const String& data, bool final) {
+//void DDTunnel::handleInput(const String& data, bool final) {
+void DDTunnel::doneHandleInput(bool final) {
 //if (final) Serial.println("//final:" + data);
   // if (!final || data != "") {
   //   dataArray[nextArrayIdx] = data;
@@ -2858,6 +2992,12 @@ DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const St
   bufferSize = bufferSize + 1;  // need one more
   this->arraySize = bufferSize;
   this->dataArray = new String[bufferSize];
+#ifdef FEEDBACK_SUPPORT_BYTES
+  this->fbByesArray = new uint8_t*[bufferSize];
+  for (int i = 0; i < arraySize; i++) {
+    fbByesArray[i] = NULL;
+  }
+#endif
   this->nextArrayIdx = 0;
   this->validArrayIdx = 0;
   //this->done = false;
@@ -2865,12 +3005,15 @@ DDBufferedTunnel::DDBufferedTunnel(const String& type, int8_t tunnelId, const St
 DDBufferedTunnel::~DDBufferedTunnel() {
   for (int i = 0; i < arraySize; i++) {
     dataArray[i] = "";
+#ifdef FEEDBACK_SUPPORT_BYTES
+    if (fbByesArray[i] != NULL) {
+      delete fbByesArray[i];
+    }
+#endif
   }
-  // TODO: check ... there seems to be issue (hang) delete it 
+  // TODO: check ... there seems to be issue (hang) delete dataArray
   //delete dataArray;
-// #ifndef ESP32
-//     delete this->dataArray;  // there seems to be issue delete it with ESP32
-// #endif
+  //delete fbByesArray;
 } 
 void DDBufferedTunnel::reconnect() {
   nextArrayIdx = 0;
@@ -2879,6 +3022,14 @@ void DDBufferedTunnel::reconnect() {
   for (int i = 0; i < arraySize; i++) {
     dataArray[i] = "";
   }
+#ifdef FEEDBACK_SUPPORT_BYTES
+  for (int i = 0; i < arraySize; i++) {
+    if (fbByesArray[i] != NULL) {
+      delete fbByesArray[i];
+    }
+    fbByesArray[i] = NULL;
+  }
+#endif
   //_sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
   this->DDTunnel::reconnect();
 }
@@ -2923,13 +3074,26 @@ bool DDBufferedTunnel::_eof(long timeoutMillis) {
 // #endif
 //  return eof;
 }
-bool DDBufferedTunnel::_readLine(String &buffer) {
+bool DDBufferedTunnel::_readLine(String &buffer, uint8_t** pFBBytes) {
   if (nextArrayIdx == validArrayIdx) {
     buffer = "";
+    if (pFBBytes != NULL) {
+      *pFBBytes = NULL;
+    }
     return false;
   } else {
     buffer = dataArray[validArrayIdx];
     dataArray[validArrayIdx] = "";
+#ifdef FEEDBACK_SUPPORT_BYTES
+    if (pFBBytes != NULL) {
+      *pFBBytes = fbByesArray[validArrayIdx];
+    } else {
+      if (fbByesArray[validArrayIdx] != NULL) {
+        delete fbByesArray[validArrayIdx];
+      }
+    }
+    fbByesArray[validArrayIdx] = NULL;
+#endif
     validArrayIdx = (validArrayIdx + 1) % arraySize;
     return true;
   }
@@ -2939,7 +3103,7 @@ bool DDBufferedTunnel::_readLine(String &buffer) {
 // //Serial.println("//--");
 //   _sendSpecialCommand("lt", tunnelId, NULL, data);
 // }
-void DDBufferedTunnel::handleInput(const String& data, bool final) {
+void DDBufferedTunnel::handleInput(const String& data, uint8_t* fbBytes, bool final) {
 #ifdef DEBUG_TUNNEL_RESPONSE
 Serial.print("DATA:");
 Serial.print(data);
@@ -2951,11 +3115,18 @@ Serial.print(nextArrayIdx);
 //if (final) Serial.println("//final:" + data);
   if (!final || data != "") {
     dataArray[nextArrayIdx] = data;
+#ifdef FEEDBACK_SUPPORT_BYTES
+    if (fbByesArray[nextArrayIdx] != NULL) {  // overflow???
+      delete fbByesArray[nextArrayIdx];
+    }
+    fbByesArray[nextArrayIdx] = fbBytes;
+#endif
     nextArrayIdx  = (nextArrayIdx + 1) % arraySize;
     if (nextArrayIdx == validArrayIdx)
       validArrayIdx = (validArrayIdx + 1) % arraySize;
   }
-  this->DDTunnel::handleInput(data, final);
+  //this->DDTunnel::handleInput(data, fbBytes, final);
+  doneHandleInput(final);
   //if (final)
     //this->done = true;
 //Serial.println(String("// ") + (final ? "f" : "."));
@@ -3113,6 +3284,55 @@ bool ObjectDetectDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoR
   return true;
 }
 
+DDImageData::~DDImageData()
+{
+  if (bytes != NULL) delete bytes;
+}
+
+void DDImageData::transferTo(DDImageData& imageData) {
+  if (imageData.bytes != NULL) {
+    delete imageData.bytes;
+  }
+  imageData.width = this->width;
+  imageData.height = this->height;
+  imageData.byteCount = this->byteCount;
+  imageData.bytes = this->bytes;
+  this->bytes = NULL;
+}
+void DDImageData::release() {
+  if (bytes != NULL) {
+    delete bytes;
+    bytes = NULL;
+  }
+  width = 0;
+  height = 0;
+}
+
+
+DDPixelImage16::~DDPixelImage16() {
+  if (data != NULL) delete data;
+}
+void DDPixelImage16::transferTo(DDPixelImage16& imageData) {
+  if (imageData.data != NULL) {
+    delete imageData.data;
+  }
+  imageData.width = this->width;
+  imageData.height = this->height;
+  imageData.data = this->data;
+  this->data = NULL;
+}
+void DDPixelImage16::release() {
+  if (data != NULL) {
+    delete data;
+    data = NULL;
+  }
+  width = 0;
+  height = 0;
+}
+
+
+
+
 void ImageRetrieverDDTunnel::reconnectForPixelImage(const String& imageName, int width, int height, bool fit) {
   reconnectTo("pixImg?name=" + imageName + "&width=" + String(width) + "&height=" + String(height) + "&fit=" + TO_BOOL(fit));
 }
@@ -3142,7 +3362,8 @@ bool _returnFailedReadImageData(DDImageData& imageData, uint8_t* bytesBuffer) {
 
 bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) {  // type: 0=BW, 1=8, 2=16, 3:JPEG
   String value;
-  if (!_readLine(value)) {
+  uint8_t* fbBytes;
+  if (!_readLine(value, &fbBytes)) {
     return false;
   }
   // imageData.width = 0;
@@ -3164,6 +3385,10 @@ bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) 
   Serial.println(byteCountSepIdx);
 #endif
   if (widthSepIdx == -1 || heightSepIdx == -1 || byteCountSepIdx == -1) {
+    if (_CanLogToSerial()) {
+      int count = fmin(value.length(), 15);
+      Serial.print(String("XXX invalid (") + String(value.length()) + ")[" + value.substring(0, count) + "] ... XXX");
+    }
     __SendErrorComment("invalid delimiters");
     return _returnFailedReadImageData(imageData, NULL);
   }
@@ -3206,66 +3431,76 @@ bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) 
     __SendErrorComment("byteCount mismatch");
     return true;
   }
-  uint8_t* bytes = new uint8_t[byteCount];
-  const char* p = value.c_str() + byteCountSepIdx + 2;
+  uint8_t* bytes;
+  if (fbBytes != NULL) {
+    bytes = fbBytes;
 #ifdef DEBUG_READ_PIXEL_IMAGE
-  Serial.println(*(p - 1));  // should be :
+    Serial.print("***");
+    Serial.print(byteCount);
+    Serial.println(" bytes from FB bytes *****");
 #endif
-  int i = 0;
-  while (i < byteCount) {
-    char c = *p++;
-    char b;
-    if (c == '\\') {
-      char nc = *p++;
-      if (nc == 'n') {
-        b = 10;
-      } else if (nc == '_') {
-        b = '\\';
-      } else {
-        b = nc;
-      }
-    } else {
-      if (c == '0') {
-        b = 0;
-      } else {
-        b = c;
-      }
-    }
-    if (i >= byteCount) {
-      __SendErrorComment("bytes overflow");
-      return _returnFailedReadImageData(imageData, bytes);
-    }
+  } else {
+    bytes = new uint8_t[byteCount];
+    const char* p = value.c_str() + byteCountSepIdx + 2;
 #ifdef DEBUG_READ_PIXEL_IMAGE
-    if (i <= 100) {
-      Serial.print("|");
-      Serial.print(i);
-      Serial.print(":");
-      Serial.print(b, HEX);
-      if (i == 100) {
-        Serial.println();
-      }
-    }
+    Serial.println(*(p - 1));  // should be :
 #endif
-    if (true) {  // UTF-8
-      if (b & 0b10000000) {
-        // 2 chars
+    int i = 0;
+    while (i < byteCount) {
+      char c = *p++;
+      char b;
+      if (c == '\\') {
         char nc = *p++;
-        b = ((b & 0b11) << 6) + (nc & 0b111111);
+        if (nc == 'n') {
+          b = 10;
+        } else if (nc == '_') {
+          b = '\\';
+        } else {
+          b = nc;
+        }
+      } else {
+        if (c == '0') {
+          b = 0;
+        } else {
+          b = c;
+        }
       }
-    }
-    // if (i >= byteCount) {
-    //   __SendErrorComment("bytes overflow");
-    //   delete bytes;
-    //   return NULL;
-    // }
-    bytes[i++] = b;
-  }
+      if (i >= byteCount) {
+        __SendErrorComment("bytes overflow");
+        return _returnFailedReadImageData(imageData, bytes);
+      }
 #ifdef DEBUG_READ_PIXEL_IMAGE
-  Serial.print("*** byteCount=");
+      if (i <= 100) {
+        Serial.print("|");
+        Serial.print(i);
+        Serial.print(":");
+        Serial.print(b, HEX);
+        if (i == 100) {
+          Serial.println();
+        }
+      }
+#endif
+      if (true) {  // UTF-8
+        if (b & 0b10000000) {
+          // 2 chars
+          char nc0 = *p++;
+          b = ((b & 0b11) << 6) + (nc0 & 0b111111);
+        }
+      }
+      // if (i >= byteCount) {
+      //   __SendErrorComment("bytes overflow");
+      //   delete bytes;
+      //   return NULL;
+      // }
+      bytes[i++] = b;
+    }
+#ifdef DEBUG_READ_PIXEL_IMAGE
+  Serial.print("*** interpreted byteCount=");
   Serial.print(byteCount);
   Serial.print(" / i=");
   Serial.println(i);
 #endif
+  }  
   //pixelImage16.data = (uint16_t*) data;
   imageData.width = width;
   imageData.height = height;

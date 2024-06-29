@@ -185,7 +185,7 @@ void setup() {
   amplifyMeterLayer->border(0.2, "blue");
   amplifyMeterLayer->enableFeedback("fa:rpt50");  // rep50 means auto repeat every 50 milli-seconds
 
-  DDAutoPinConfigBuilder<1> builder('V');  // vertical
+  DDAutoPinConfig builder('V');  // vertical
   builder
     .addLayer(plotterLayer)
     .beginGroup('H')  // horizontal

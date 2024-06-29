@@ -458,9 +458,11 @@ class LcdDDLayer: public DDLayer {
     void noDisplay();
     void scrollDisplayLeft();
     void scrollDisplayRight();
-    /// write text as a line
+    /// write text as a line (by default, left-aligned)
     /// @param align 'L', 'C', or 'R'
     void writeLine(const String& text, int y = 0, const String& align = "L");
+    /// write text as a right-aligned line
+    void writeRightAlignedLine(const String& text, int y = 0);
     /// write text as a line, with align "centered"
     void writeCenteredLine(const String& text, int y = 0);
     /// set pixel color
@@ -895,7 +897,9 @@ class DDTunnel: public DDObject {
     void _writeLine(const String& data);
     void _writeSound(const String& soundName);
   public:
-    virtual void handleInput(const String& data, bool final);
+    virtual void handleInput(const String& data, uint8_t* fbBytes, bool final) { doneHandleInput(final); }
+  protected:
+    void doneHandleInput(bool final);   
   protected:
     String type;
     String tunnelId;
@@ -927,16 +931,17 @@ class DDBufferedTunnel: public DDTunnel {
   protected:
     int _count();
     virtual bool _eof(long timeoutMillis);
-    bool _readLine(String &buffer);
+    bool _readLine(String &buffer, uint8_t** pFBBytes = NULL);
     //void _writeLine(const String& data);
   public:
     /// @attention for internal use only
-    virtual void handleInput(const String& data, bool final);
+    virtual void handleInput(const String& data, uint8_t* fbBytes, bool final);
   private:
     // String endPoint;
     // String tunnelId;
     int8_t arraySize;
     String* dataArray;
+    uint8_t** fbByesArray;
     int8_t nextArrayIdx;
     int8_t validArrayIdx;
     //bool done;
@@ -1051,23 +1056,32 @@ class ObjectDetectDemoServiceDDTunnel: public BasicDDTunnel {
 
 struct DDImageData {
   DDImageData(): bytes(NULL) {};
-  ~DDImageData() { if (bytes != NULL) delete bytes;}
+  ~DDImageData();
+  boolean isValid() { return width > 0 && height > 0; }
+  void release();
   int width;
   int height;
   int byteCount;
   uint8_t* bytes;
+protected:
+  void transferTo(DDImageData& imageData);
 };
 struct DDPixelImage: public DDImageData {
+  void transferDataTo(DDPixelImage& pixelImage) { DDImageData::transferTo(pixelImage); }
 };
 struct DDPixelImage16 {
   DDPixelImage16(): data(NULL) {};
-  ~DDPixelImage16() { if (data != NULL) delete data;}
+  ~DDPixelImage16();
+  boolean isValid() { return width > 0 && height > 0; }
+  void transferTo(DDPixelImage16& pixelImage16);
+  void release();
   int width;
   int height;
   int byteCount;
   uint16_t* data;
 };
 struct DDJpegImage: public DDImageData {
+  void transferTo(DDJpegImage& jpegImage) { DDImageData::transferTo(jpegImage); }
 };
 /// Class service "tunnel" for retrieving image data (in format like JPEG / 565RGB) saved in DumbDisplay app storage via DumbDisplay::saveCachedImageFile(), DDLayer::saveImage() etc.
 /// When "reconnect" to retrieve image data, the dimension, say the TFT screen dimension, will be passed as parameters.
