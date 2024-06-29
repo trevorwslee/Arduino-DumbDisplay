@@ -2466,6 +2466,9 @@ void LcdDDLayer::scrollDisplayRight() {
 void LcdDDLayer::writeLine(const String& text, int y, const String& align) {
   _sendCommand3(layerId, C_writeline, String(y), align, text);
 }
+void LcdDDLayer::writeRightAlignedLine(const String& text, int y) {
+  _sendCommand3(layerId, C_writeline, String(y),"R", text);
+}
 void LcdDDLayer::writeCenteredLine(const String& text, int y) {
   _sendCommand3(layerId, C_writeline, String(y), "C", text);
 } 

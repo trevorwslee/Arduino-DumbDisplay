@@ -458,9 +458,11 @@ class LcdDDLayer: public DDLayer {
     void noDisplay();
     void scrollDisplayLeft();
     void scrollDisplayRight();
-    /// write text as a line
+    /// write text as a line (by default, left-aligned)
     /// @param align 'L', 'C', or 'R'
     void writeLine(const String& text, int y = 0, const String& align = "L");
+    /// write text as a right-aligned line
+    void writeRightAlignedLine(const String& text, int y = 0);
     /// write text as a line, with align "centered"
     void writeCenteredLine(const String& text, int y = 0);
     /// set pixel color
