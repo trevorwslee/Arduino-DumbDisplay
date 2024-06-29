@@ -514,7 +514,7 @@ class DDFadingLayers {
 class DDMasterResetPassiveConnectionHelper {
   public:
     DDMasterResetPassiveConnectionHelper(DumbDisplay& dumbdisplay) : dumbdisplay(dumbdisplay) {
-      this->init_state = 0;
+      this->init_state = -2;
     }
   public:
     /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
@@ -535,22 +535,30 @@ class DDMasterResetPassiveConnectionHelper {
           if (disconnectedCallback != NULL) disconnectedCallback();
           return false;
         }
-        if (this->init_state == 0) {
+        if (this->init_state <= 0) {
           if (initializeCallback != NULL) initializeCallback();
           this->init_state = 1;
         }
         if (updateCallback != NULL) updateCallback();
         this->init_state = 2;
         return true;
+      } else {
+        if (this->init_state == -2) {
+          this->init_state = 0;  // so initially will go to 0 first
+        } else if (this->init_state == 0) {
+          this->init_state = -1;
+        }
       }
       return false;
     }
     inline bool initialized() { return this->init_state > 0; }
     inline bool firstUpdated() { return this->init_state > 1; }
+    inline bool isIdle() { return this->init_state <= 0; }
+    inline bool justBecameIdle() { return this->init_state == 0; }
   public:
     DumbDisplay& dumbdisplay;  
   private:
-    uint8_t init_state;  // 0: not initialized
+    int8_t init_state;
 };
 
 /// @brief

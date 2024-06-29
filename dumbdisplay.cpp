@@ -3286,9 +3286,9 @@ DDImageData::~DDImageData()
   if (bytes != NULL) delete bytes;
 }
 
-void DDImageData::transferDataTo(DDImageData& imageData) {
+void DDImageData::transferTo(DDImageData& imageData) {
   if (imageData.bytes != NULL) {
-    if (bytes != NULL) delete bytes;
+    delete imageData.bytes;
   }
   imageData.width = this->width;
   imageData.height = this->height;
@@ -3296,19 +3296,35 @@ void DDImageData::transferDataTo(DDImageData& imageData) {
   imageData.bytes = this->bytes;
   this->bytes = NULL;
 }
+void DDImageData::release() {
+  if (bytes != NULL) {
+    delete bytes;
+    bytes = NULL;
+  }
+  width = 0;
+  height = 0;
+}
 
 
 DDPixelImage16::~DDPixelImage16() {
   if (data != NULL) delete data;
 }
-void DDPixelImage16::transferDataTo(DDPixelImage16& imageData) {
+void DDPixelImage16::transferTo(DDPixelImage16& imageData) {
   if (imageData.data != NULL) {
-    if (data != NULL) delete data;
+    delete imageData.data;
   }
   imageData.width = this->width;
   imageData.height = this->height;
   imageData.data = this->data;
   this->data = NULL;
+}
+void DDPixelImage16::release() {
+  if (data != NULL) {
+    delete data;
+    data = NULL;
+  }
+  width = 0;
+  height = 0;
 }
 
 
