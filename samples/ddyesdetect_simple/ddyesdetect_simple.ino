@@ -76,7 +76,7 @@ void setup() {
   witEndpoint.addParam("text");
 
   // auto pin the layers in the desired way
-  DDAutoPinConfigBuilder<1> autoPinBuilder('V');
+  DDAutoPinConfig autoPinBuilder('V');
   autoPinBuilder.
     beginGroup('H').
       addLayer(yesLayer).
