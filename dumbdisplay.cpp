@@ -3287,23 +3287,23 @@ bool ObjectDetectDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoR
   return true;
 }
 
-DDImageData::~DDImageData()
-{
+DDImageData::~DDImageData() {
   if (bytes != NULL) delete bytes;
 }
 
 void DDImageData::transferTo(DDImageData& imageData) {
-  if (imageData.bytes != NULL) {
-    delete imageData.bytes;
-  }
-  imageData.width = this->width;
-  imageData.height = this->height;
-  imageData.byteCount = this->byteCount;
-  imageData.bytes = this->bytes;
-  this->width = 0;
-  this->height = 0;
-  this->byteCount = 0;
-  this->bytes = NULL;
+  imageData.release();
+  // if (imageData.bytes != NULL) {
+  //   delete imageData.bytes;
+  // }
+  imageData.width = width;
+  imageData.height = height;
+  imageData.byteCount = byteCount;
+  imageData.bytes = bytes;
+  width = 0;
+  height = 0;
+  byteCount = 0;
+  bytes = NULL;
 }
 void DDImageData::release() {
   if (bytes != NULL) {
@@ -3319,17 +3319,18 @@ DDPixelImage16::~DDPixelImage16() {
   if (data != NULL) delete data;
 }
 void DDPixelImage16::transferTo(DDPixelImage16& imageData) {
-  if (imageData.data != NULL) {
-    delete imageData.data;
-  }
-  imageData.width = this->width;
-  imageData.height = this->height;
-  imageData.byteCount = this->byteCount;
-  imageData.data = this->data;
-  this->width = 0;
-  this->height = 0;
-  this->byteCount = 0;
-  this->data = NULL;
+  imageData.release();
+  // if (imageData.data != NULL) {
+  //   delete imageData.data;
+  // }
+  imageData.width = width;
+  imageData.height = height;
+  imageData.byteCount = byteCount;
+  imageData.data = data;
+  width = 0;
+  height = 0;
+  byteCount = 0;
+  data = NULL;
 }
 void DDPixelImage16::release() {
   if (data != NULL) {
