@@ -2642,14 +2642,17 @@ void GraphicalDDLayer::cachePixelImageGS(const String& imageName, const uint8_t 
   _sendCommand5("", C_CACHEPIXIMGGS, layerId, imageName, String(width), String(height), options);
   _sendByteArrayAfterCommand(data, byteCount, compressMethod);
 }
-void GraphicalDDLayer::saveCachedImageFile(const String& imageName) {
-  _sendCommand2("", C_SAVECACHEDIMG, layerId, imageName);
+void GraphicalDDLayer::saveCachedImageFile(const String& imageName, const String& asImageName) {
+  _sendCommand3("", C_SAVECACHEDIMG, layerId, imageName, asImageName);
 }
 void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
   _sendCommand2("", C_SAVECACHEDIMGS, layerId, stitchAsImageName);
 }
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
+}
+void GraphicalDDLayer::unloadAllImageFiles() {
+  _sendCommand0(layerId, C_unloadallimagefiles);
 }
 void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h, const String& options) {
   if (w == 0 && h == 0 && options == "") {
@@ -3297,6 +3300,9 @@ void DDImageData::transferTo(DDImageData& imageData) {
   imageData.height = this->height;
   imageData.byteCount = this->byteCount;
   imageData.bytes = this->bytes;
+  this->width = 0;
+  this->height = 0;
+  this->byteCount = 0;
   this->bytes = NULL;
 }
 void DDImageData::release() {
@@ -3318,7 +3324,11 @@ void DDPixelImage16::transferTo(DDPixelImage16& imageData) {
   }
   imageData.width = this->width;
   imageData.height = this->height;
+  imageData.byteCount = this->byteCount;
   imageData.data = this->data;
+  this->width = 0;
+  this->height = 0;
+  this->byteCount = 0;
   this->data = NULL;
 }
 void DDPixelImage16::release() {

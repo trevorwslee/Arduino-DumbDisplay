@@ -106,7 +106,7 @@
 #define C_ledvertbarex     "#94"
 #define C_ledonex          "#95"
 #define C_loadimagefile    "#96"
-#define C_unloadimagefile  "#97"
+//#define C_unloadimagefile  "#97"
 #define C_drawimagefile    "#98"
 #define C_drawimagefilefit "#99"
 
@@ -115,7 +115,7 @@
 #define C_zoom                 "#a2"
 #define C_showdigit            "#a4"
 #define C_setrot               "#a5"
-#define C_loadimagefilecropped "#a6"
+//#define C_loadimagefilecropped "#a6"
 #define C_carc                 "#a7"
 #define C_arc                  "#a8"
 #define c_drawoval             "#a9"
@@ -133,6 +133,11 @@
 #define C_fd               "fd"
 #define C_lt               "lt"
 #define C_rt               "rt"
+
+#define C_loadimagefilecropped "loadimagefilecropped"  // since 2024-07-02
+#define C_unloadimagefile      "unloadimagefile"
+#define C_unloadallimagefiles  "unloadallimagefiles"
+
 
 
 

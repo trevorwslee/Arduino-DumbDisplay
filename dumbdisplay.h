@@ -619,6 +619,8 @@ class GraphicalDDLayer: public DDLayer {
     void loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName = "");
     /// unload image file from cache
     void unloadImageFile(const String& imageFileName);
+    /// unload all image files from cache
+    void unloadAllImageFiles();
     /// draw image file in cache (if not already loaded to cache, load it) 
     /// - x / y: position of the left-top corner
     /// - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
@@ -637,7 +639,7 @@ class GraphicalDDLayer: public DDLayer {
     void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// saved cached image
     /// @param imageName cachedImageName
-    void saveCachedImageFile(const String& imageName);
+    void saveCachedImageFile(const String& imageName, const String& asImageName = "");
     /// saved cached image
     /// @param stitchAsImageName if not empty, will stitch all cached images to one image file of the given name
     void saveCachedImageFiles(const String& stitchAsImageName = "");
