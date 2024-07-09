@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r03)
+# DumbDisplay Arduino Library (v0.9.9-r04)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r03)](#dumbdisplay-arduino-library-v099-r03)
+- [DumbDisplay Arduino Library (v0.9.9-r04)](#dumbdisplay-arduino-library-v099-r04)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -1849,6 +1849,10 @@ void loop() {
 
 Note that retrieving image using `ImageRetrieverDDTunnel` is fesible if the connect is fast and stable enough, like using WIFI, or Serial connect of certain microcontroller board like Raspberry Pi Pico. 
 
+|  |  |
+|--|--|
+|As a reference, you may want to refer to the post -- [Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|![](screenshots/tft_image_show.gif)|
+
 
 ## "Passive" Connection
 
@@ -2021,6 +2025,8 @@ Notice that calling of `pdd.loop()` is similar, but with one addition optional `
 |  |  |
 |--|--|
 |For a complete program / sketch that demonstrates how "passive" connetion is used, you may want to refer to the post [Extending a TFT_eSPI Example With TTGO T-Display Using PlatformIO, With DumbDisplay](https://www.instructables.com/Extending-a-TFTeSPI-Example-With-TTGO-T-Display-Us/)|![](screenshots/tdisplayclock.png)|
+
+The above mentioned post -- [Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/) -- also demonstrates the use of `DDMasterResetPassiveConnectionHelper` for managing connection, disconnection and re-connecting of DumbDisplay Android app.
 
 
 # Reference
@@ -2196,6 +2202,10 @@ MIT
 
 
 # Change History
+
+
+v0.9.9-r04
+  - bug fix
 
 
 v0.9.9-r03

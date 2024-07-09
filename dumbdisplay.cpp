@@ -3312,6 +3312,7 @@ void DDImageData::release() {
   }
   width = 0;
   height = 0;
+  byteCount = 0;
 }
 
 
@@ -3339,6 +3340,7 @@ void DDPixelImage16::release() {
   }
   width = 0;
   height = 0;
+  byteCount = 0;
 }
 
 
