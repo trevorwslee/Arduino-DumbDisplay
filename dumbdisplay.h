@@ -1299,9 +1299,10 @@ class DumbDisplay {
     /// @param maxStickValue the max value of the stick; e.g. 255 or 1023 (the default); min is 15
     /// @param directions "lr" or "hori": left-to-right; "tb" or "vert": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
     ///                   use "+" combines the above like "lr+tb" to mean both directions; "" the same as "lr+tb" 
-    /// @param stickLookScaleFactor the scaling factor of the stick (UI); 1 by default 
+    /// @param stickSizeFactor the size factor of the stick (UI); 1 by default 
+    /// @param stickValueDivider the divider of the stick value; 1 by default
     /// @see JoystickDDLayer
-    JoystickDDLayer* createJoystickLayer(int maxStickValue = 1023, const String& directions = "", float stickLookScaleFactor = 1.0);
+    JoystickDDLayer* createJoystickLayer(int maxStickValue = 1023, const String& directions = "", float stickSizeFactor = 1.0, int stickValueDivider = 1);
     /// create a plotter layer
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     /// create a fixed-rate plotter layer
