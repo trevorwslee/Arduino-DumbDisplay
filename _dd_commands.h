@@ -79,6 +79,10 @@
 #define C_movecursorby     "#67"
 #define C_settextwrap      "#68"
 #define C_drawtext         "#69"
+#define C_text             "#6a"
+#define C_select           "#6b"
+#define C_deselect         "#6c"
+#define C_highlighborder   "#6d"
 #define C_write            "#70"	
 #define C_cpoly            "#71"
 #define C_cpolyin          "#72"
@@ -134,9 +138,10 @@
 #define C_lt               "lt"
 #define C_rt               "rt"
 
-#define C_loadimagefilecropped "loadimagefilecropped"  // since 2024-07-02
-#define C_unloadimagefile      "unloadimagefile"
-#define C_unloadallimagefiles  "unloadallimagefiles"
+#define C_loadimagefilecropped "#a6"
+#define C_unloadimagefile      "#97"
+#define C_unloadallimagefiles  "#9a"
+
 
 
 

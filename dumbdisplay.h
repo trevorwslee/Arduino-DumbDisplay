@@ -458,7 +458,7 @@ class LcdDDLayer: public DDLayer {
     void noDisplay();
     void scrollDisplayLeft();
     void scrollDisplayRight();
-    /// write text as a line (by default, left-aligned)
+    /// write text as a line (of y-th row)
     /// @param align 'L', 'C', or 'R'
     void writeLine(const String& text, int y = 0, const String& align = "L");
     /// write text as a right-aligned line
@@ -474,6 +474,31 @@ class LcdDDLayer: public DDLayer {
     /// set no "background" (off) pixel color
     void noBgPixelColor();
 };
+
+/// @brief
+/// Class for "selection" layer of multiple LCD-like "selection" units; created with DumbDisplay::createSelectionLayer()
+/// @note by default, it has "feedback" enabled to indicate which "selection" unit is clicked
+/// @since v0.9.9-r10
+class SelectionDDLayer: public DDLayer {
+  public:
+    /// for internal use only
+    SelectionDDLayer(int8_t layerId): DDLayer(layerId) {
+    }
+    /// set pixel color
+    /// @param color DD_RGB_COLOR(...) or common color name
+    void pixelColor(const String &color);
+    /// set a "selection" unit text (of y-th row)
+    /// @param align 'L', 'C', or 'R'
+    void text(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
+    /// select a "selection" unit
+    void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
+    /// deselect a "selection" unit
+    void deselect(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool selectTheOthers = false);
+    /// set selected / unselected "selection" unit border characteristics 
+    /// @param borderColor DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"; "" means default
+    /// @param borderShape can be "flat", "hair", "round", "raised" or "sunken"; "" means default  
+    void highlightBorder(bool forSelected, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& borderColor = "", const String& borderShape = "");
+ };
 
 /// Class for graphical LCD layer; created with DumbDisplay::createGraphicalLayer()
 class GraphicalDDLayer: public DDLayer {
@@ -1256,6 +1281,11 @@ class DumbDisplay {
     LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
     /// create a LCD layer
     LcdDDLayer* createLcdLayer(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
+    /// create a "selection" layer
+    SelectionDDLayer* createSelectionLayer(int colCount = 16, int rowCount = 2,
+                                           int horiSelectionCount = 1, int vertSelectionCount = 1,
+                                           int charHeight = 0, const String& fontName = "",
+                                           float selectionBorderSizeCharHeightFactor = 0.3);
     /// create a graphical LCD layer
     /// @see GraphicalDDLayer
     GraphicalDDLayer* createGraphicalLayer(int width, int height);

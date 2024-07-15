@@ -2483,6 +2483,23 @@ void LcdDDLayer::noBgPixelColor() {
 }
 
 
+void SelectionDDLayer::pixelColor(const String &color) {
+  _sendCommand1(layerId, C_pixelcolor, color);
+}
+void SelectionDDLayer::text(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx, const String& align) {
+  _sendCommand4(layerId, C_text, String(y), String(horiSelectionIdx), String(vertSelectionIdx), align);
+}
+void SelectionDDLayer::select(int horiSelectionIdx, int vertSelectionIdx, bool deselectTheOthers) {
+  _sendCommand3(layerId, C_select, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(deselectTheOthers));
+}
+void SelectionDDLayer::deselect(int horiSelectionIdx, int vertSelectionIdx, bool selectTheOthers) {
+  _sendCommand3(layerId, C_deselect, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(selectTheOthers));
+}
+void SelectionDDLayer::highlightBorder(bool forSelected, int horiSelectionIdx, int vertSelectionIdx, const String& borderColor, const String& borderShape) {
+  _sendCommand5(layerId, C_highlighborder, TO_BOOL(forSelected), String(horiSelectionIdx), String(vertSelectionIdx), borderColor, borderShape);
+}
+
+
 void GraphicalDDLayer::setRotation(int8_t rotationType) {
   _sendCommand1(layerId, C_setrot, String(rotationType));
 }
@@ -3775,6 +3792,17 @@ LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeig
   String layerId = String(lid);
   _sendCommand5(layerId, "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
   LcdDDLayer* pLayer = new LcdDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
+}
+SelectionDDLayer* DumbDisplay::createSelectionLayer(int colCount, int rowCount,
+                                                    int horiSelectionCount, int vertSelectionCount,
+                                                    int charHeight, const String& fontName,
+                                                    float selectionBorderSizeCharHeightFactor) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand8(layerId, "SU", String("selection"), String(colCount), String(rowCount), String(horiSelectionCount), String(vertSelectionCount), String(charHeight), fontName, String(selectionBorderSizeCharHeightFactor));
+  SelectionDDLayer* pLayer = new SelectionDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
 }

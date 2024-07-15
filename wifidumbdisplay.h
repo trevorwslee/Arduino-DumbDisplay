@@ -289,6 +289,8 @@ class DDWiFiServerIO: public DDInputOutput {
             connectionState = 'C';
             stateMillis = 0;
             Serial.println("client connected");
+          } else {
+            //Serial.print("~");
           }
         }  
       }
