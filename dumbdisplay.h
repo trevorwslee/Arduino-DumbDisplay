@@ -483,6 +483,7 @@ class SelectionDDLayer: public DDLayer {
   public:
     /// for internal use only
     SelectionDDLayer(int8_t layerId): DDLayer(layerId) {
+      _enableFeedback();
     }
     /// set pixel color
     /// @param color DD_RGB_COLOR(...) or common color name
@@ -497,7 +498,7 @@ class SelectionDDLayer: public DDLayer {
     /// set selected / unselected "selection" unit border characteristics 
     /// @param borderColor DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"; "" means default
     /// @param borderShape can be "flat", "hair", "round", "raised" or "sunken"; "" means default  
-    void highlightBorder(bool forSelected, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& borderColor = "", const String& borderShape = "");
+    void highlightBorder(bool forSelected, const String& borderColor = "", const String& borderShape = "");
  };
 
 /// Class for graphical LCD layer; created with DumbDisplay::createGraphicalLayer()
