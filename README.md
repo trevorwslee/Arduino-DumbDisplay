@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r03)
+# DumbDisplay Arduino Library (v0.9.9-r10)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r03)](#dumbdisplay-arduino-library-v099-r03)
+- [DumbDisplay Arduino Library (v0.9.9-r10)](#dumbdisplay-arduino-library-v099-r10)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -74,6 +74,7 @@ On it, a few types of layers can be created mixed-and-matched:
 * Turtle-like canvas -- [TurtleDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_turtle_d_d_layer.html)
 * Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general features of graphical LCD, it also has certain Turtle-like features) -- [GraphicalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) 
 * 7-Segment-row, which can be used to display a series of digits, plus a decimal dot -- [SevenSegmentRowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_seven_segment_row_d_d_layer.html)
+* Selection, which is composed of a row / a column / a grid of LCD-look-alikes for the purpose of selection -- [SelectionDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_selection_d_d_layer.html) (https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_joystick_d_d_layer.html)
 * Joystick, which can be used for getting virtual joystick movement input, and can also be used for horizontal/vertical "slider" input -- [JoystickDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_joystick_d_d_layer.html)
 * Plotter, which works similar to the plotter of DumbDisplay [when it is acting as serial monitor], but plotting data are sent by calling the layer's method -- [PlotterDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_plotter_d_d_layer.html)
 * Terminal "device dependent view" layer, for showing sketch traces -- [TerminalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html)
@@ -1849,6 +1850,10 @@ void loop() {
 
 Note that retrieving image using `ImageRetrieverDDTunnel` is fesible if the connect is fast and stable enough, like using WIFI, or Serial connect of certain microcontroller board like Raspberry Pi Pico. 
 
+|  |  |
+|--|--|
+|As a reference, you may want to refer to the post -- [Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|![](screenshots/tft_image_show.gif)|
+
 
 ## "Passive" Connection
 
@@ -2021,6 +2026,8 @@ Notice that calling of `pdd.loop()` is similar, but with one addition optional `
 |  |  |
 |--|--|
 |For a complete program / sketch that demonstrates how "passive" connetion is used, you may want to refer to the post [Extending a TFT_eSPI Example With TTGO T-Display Using PlatformIO, With DumbDisplay](https://www.instructables.com/Extending-a-TFTeSPI-Example-With-TTGO-T-Display-Us/)|![](screenshots/tdisplayclock.png)|
+
+The above mentioned post -- [Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/) -- also demonstrates the use of `DDMasterResetPassiveConnectionHelper` for managing connection, disconnection and re-connecting of DumbDisplay Android app.
 
 
 # Reference
@@ -2196,6 +2203,14 @@ MIT
 
 
 # Change History
+
+v0.9.9-r10
+  - added SelectionDDLayer
+  - bug fix
+
+
+v0.9.9-r04
+  - bug fix
 
 
 v0.9.9-r03

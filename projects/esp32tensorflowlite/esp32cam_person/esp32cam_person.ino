@@ -68,6 +68,8 @@ bool cameraReady;
 
 
 void setup() {
+  Serial.begin(115200);
+
   // create and setup [top] graphical layer for showing candidate image for person detection;
   // clicking it will invoke person detection
   detectImageLayer = dumbdisplay.createGraphicalLayer(imageWidth, imageHeight);

@@ -458,7 +458,7 @@ class LcdDDLayer: public DDLayer {
     void noDisplay();
     void scrollDisplayLeft();
     void scrollDisplayRight();
-    /// write text as a line (by default, left-aligned)
+    /// write text as a line (of y-th row)
     /// @param align 'L', 'C', or 'R'
     void writeLine(const String& text, int y = 0, const String& align = "L");
     /// write text as a right-aligned line
@@ -474,6 +474,32 @@ class LcdDDLayer: public DDLayer {
     /// set no "background" (off) pixel color
     void noBgPixelColor();
 };
+
+/// @brief
+/// Class for "selection" layer of multiple LCD-like "selection" units; created with DumbDisplay::createSelectionLayer()
+/// @note by default, it has "feedback" enabled to indicate which "selection" unit is clicked
+/// @since v0.9.9-r10
+class SelectionDDLayer: public DDLayer {
+  public:
+    /// for internal use only
+    SelectionDDLayer(int8_t layerId): DDLayer(layerId) {
+      _enableFeedback();
+    }
+    /// set pixel color
+    /// @param color DD_RGB_COLOR(...) or common color name
+    void pixelColor(const String &color);
+    /// set a "selection" unit text (of y-th row)
+    /// @param align 'L', 'C', or 'R'
+    void text(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
+    /// select a "selection" unit
+    void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
+    /// deselect a "selection" unit
+    void deselect(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool selectTheOthers = false);
+    /// set selected / unselected "selection" unit border characteristics 
+    /// @param borderColor DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"; "" means default
+    /// @param borderShape can be "flat", "hair", "round", "raised" or "sunken"; "" means default  
+    void highlightBorder(bool forSelected, const String& borderColor = "", const String& borderShape = "");
+ };
 
 /// Class for graphical LCD layer; created with DumbDisplay::createGraphicalLayer()
 class GraphicalDDLayer: public DDLayer {
@@ -619,6 +645,8 @@ class GraphicalDDLayer: public DDLayer {
     void loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName = "");
     /// unload image file from cache
     void unloadImageFile(const String& imageFileName);
+    /// unload all image files from cache
+    void unloadAllImageFiles();
     /// draw image file in cache (if not already loaded to cache, load it) 
     /// - x / y: position of the left-top corner
     /// - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
@@ -637,7 +665,7 @@ class GraphicalDDLayer: public DDLayer {
     void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// saved cached image
     /// @param imageName cachedImageName
-    void saveCachedImageFile(const String& imageName);
+    void saveCachedImageFile(const String& imageName, const String& asImageName = "");
     /// saved cached image
     /// @param stitchAsImageName if not empty, will stitch all cached images to one image file of the given name
     void saveCachedImageFiles(const String& stitchAsImageName = "");
@@ -1254,6 +1282,11 @@ class DumbDisplay {
     LedGridDDLayer* createLedGridLayer(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
     /// create a LCD layer
     LcdDDLayer* createLcdLayer(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
+    /// create a "selection" layer
+    SelectionDDLayer* createSelectionLayer(int colCount = 16, int rowCount = 2,
+                                           int horiSelectionCount = 1, int vertSelectionCount = 1,
+                                           int charHeight = 0, const String& fontName = "",
+                                           float selectionBorderSizeCharHeightFactor = 0.3);
     /// create a graphical LCD layer
     /// @see GraphicalDDLayer
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
@@ -1267,9 +1300,10 @@ class DumbDisplay {
     /// @param maxStickValue the max value of the stick; e.g. 255 or 1023 (the default); min is 15
     /// @param directions "lr" or "hori": left-to-right; "tb" or "vert": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
     ///                   use "+" combines the above like "lr+tb" to mean both directions; "" the same as "lr+tb" 
-    /// @param stickLookScaleFactor the scaling factor of the stick (UI); 1 by default 
+    /// @param stickSizeFactor the size factor of the stick (UI); 1 by default 
+    /// @param stickValueDivider the divider of the stick value; 1 by default
     /// @see JoystickDDLayer
-    JoystickDDLayer* createJoystickLayer(int maxStickValue = 1023, const String& directions = "", float stickLookScaleFactor = 1.0);
+    JoystickDDLayer* createJoystickLayer(int maxStickValue = 1023, const String& directions = "", float stickSizeFactor = 1.0, int stickValueDivider = 1);
     /// create a plotter layer
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     /// create a fixed-rate plotter layer

@@ -69,6 +69,17 @@ class DDWiFiServerIO: public DDInputOutput {
     bool preConnect(bool firstCall) {
       if (firstCall) {  // since 2023-08-10
         if (!Serial) Serial.begin(DD_SERIAL_BAUD);
+#if defined(ARDUINO_UNOR4_WIFI)
+        if (WiFi.status() == WL_NO_MODULE) {
+          Serial.println("XXX communication with WiFi module failed");
+        }
+        String fv = WiFi.firmwareVersion();
+        if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
+          Serial.println("XXX please upgrade the firmware");
+        } else {
+          Serial.println("* WIFI_FIRMWARE_LATEST_VERSION=" + String(WIFI_FIRMWARE_LATEST_VERSION));
+        }
+#endif
       }
       if (true) {  // since 2023-08-16
         if (firstCall && !client.connected()) {
@@ -289,6 +300,8 @@ class DDWiFiServerIO: public DDInputOutput {
             connectionState = 'C';
             stateMillis = 0;
             Serial.println("client connected");
+          } else {
+            //Serial.print("~");
           }
         }  
       }

@@ -79,6 +79,10 @@
 #define C_movecursorby     "#67"
 #define C_settextwrap      "#68"
 #define C_drawtext         "#69"
+#define C_text             "#6a"
+#define C_select           "#6b"
+#define C_deselect         "#6c"
+#define C_highlighborder   "#6d"
 #define C_write            "#70"	
 #define C_cpoly            "#71"
 #define C_cpolyin          "#72"
@@ -106,7 +110,7 @@
 #define C_ledvertbarex     "#94"
 #define C_ledonex          "#95"
 #define C_loadimagefile    "#96"
-#define C_unloadimagefile  "#97"
+//#define C_unloadimagefile  "#97"
 #define C_drawimagefile    "#98"
 #define C_drawimagefilefit "#99"
 
@@ -115,7 +119,7 @@
 #define C_zoom                 "#a2"
 #define C_showdigit            "#a4"
 #define C_setrot               "#a5"
-#define C_loadimagefilecropped "#a6"
+//#define C_loadimagefilecropped "#a6"
 #define C_carc                 "#a7"
 #define C_arc                  "#a8"
 #define c_drawoval             "#a9"
@@ -133,6 +137,12 @@
 #define C_fd               "fd"
 #define C_lt               "lt"
 #define C_rt               "rt"
+
+#define C_loadimagefilecropped "#a6"
+#define C_unloadimagefile      "#97"
+#define C_unloadallimagefiles  "#9a"
+
+
 
 
 

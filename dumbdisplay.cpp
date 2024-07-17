@@ -2483,6 +2483,23 @@ void LcdDDLayer::noBgPixelColor() {
 }
 
 
+void SelectionDDLayer::pixelColor(const String &color) {
+  _sendCommand1(layerId, C_pixelcolor, color);
+}
+void SelectionDDLayer::text(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx, const String& align) {
+  _sendCommand5(layerId, C_text, String(y), String(horiSelectionIdx), String(vertSelectionIdx), align, text);
+}
+void SelectionDDLayer::select(int horiSelectionIdx, int vertSelectionIdx, bool deselectTheOthers) {
+  _sendCommand3(layerId, C_select, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(deselectTheOthers));
+}
+void SelectionDDLayer::deselect(int horiSelectionIdx, int vertSelectionIdx, bool selectTheOthers) {
+  _sendCommand3(layerId, C_deselect, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(selectTheOthers));
+}
+void SelectionDDLayer::highlightBorder(bool forSelected, const String& borderColor, const String& borderShape) {
+  _sendCommand3(layerId, C_highlighborder, TO_BOOL(forSelected), borderColor, borderShape);
+}
+
+
 void GraphicalDDLayer::setRotation(int8_t rotationType) {
   _sendCommand1(layerId, C_setrot, String(rotationType));
 }
@@ -2642,14 +2659,17 @@ void GraphicalDDLayer::cachePixelImageGS(const String& imageName, const uint8_t 
   _sendCommand5("", C_CACHEPIXIMGGS, layerId, imageName, String(width), String(height), options);
   _sendByteArrayAfterCommand(data, byteCount, compressMethod);
 }
-void GraphicalDDLayer::saveCachedImageFile(const String& imageName) {
-  _sendCommand2("", C_SAVECACHEDIMG, layerId, imageName);
+void GraphicalDDLayer::saveCachedImageFile(const String& imageName, const String& asImageName) {
+  _sendCommand3("", C_SAVECACHEDIMG, layerId, imageName, asImageName);
 }
 void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
   _sendCommand2("", C_SAVECACHEDIMGS, layerId, stitchAsImageName);
 }
 void GraphicalDDLayer::unloadImageFile(const String& imageFileName) {
   _sendCommand1(layerId, C_unloadimagefile, imageFileName);
+}
+void GraphicalDDLayer::unloadAllImageFiles() {
+  _sendCommand0(layerId, C_unloadallimagefiles);
 }
 void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h, const String& options) {
   if (w == 0 && h == 0 && options == "") {
@@ -3284,20 +3304,23 @@ bool ObjectDetectDemoServiceDDTunnel::readObjectDetectResult(DDObjectDetectDemoR
   return true;
 }
 
-DDImageData::~DDImageData()
-{
+DDImageData::~DDImageData() {
   if (bytes != NULL) delete bytes;
 }
 
 void DDImageData::transferTo(DDImageData& imageData) {
-  if (imageData.bytes != NULL) {
-    delete imageData.bytes;
-  }
-  imageData.width = this->width;
-  imageData.height = this->height;
-  imageData.byteCount = this->byteCount;
-  imageData.bytes = this->bytes;
-  this->bytes = NULL;
+  imageData.release();
+  // if (imageData.bytes != NULL) {
+  //   delete imageData.bytes;
+  // }
+  imageData.width = width;
+  imageData.height = height;
+  imageData.byteCount = byteCount;
+  imageData.bytes = bytes;
+  width = 0;
+  height = 0;
+  byteCount = 0;
+  bytes = NULL;
 }
 void DDImageData::release() {
   if (bytes != NULL) {
@@ -3306,6 +3329,7 @@ void DDImageData::release() {
   }
   width = 0;
   height = 0;
+  byteCount = 0;
 }
 
 
@@ -3313,13 +3337,18 @@ DDPixelImage16::~DDPixelImage16() {
   if (data != NULL) delete data;
 }
 void DDPixelImage16::transferTo(DDPixelImage16& imageData) {
-  if (imageData.data != NULL) {
-    delete imageData.data;
-  }
-  imageData.width = this->width;
-  imageData.height = this->height;
-  imageData.data = this->data;
-  this->data = NULL;
+  imageData.release();
+  // if (imageData.data != NULL) {
+  //   delete imageData.data;
+  // }
+  imageData.width = width;
+  imageData.height = height;
+  imageData.byteCount = byteCount;
+  imageData.data = data;
+  width = 0;
+  height = 0;
+  byteCount = 0;
+  data = NULL;
 }
 void DDPixelImage16::release() {
   if (data != NULL) {
@@ -3328,6 +3357,7 @@ void DDPixelImage16::release() {
   }
   width = 0;
   height = 0;
+  byteCount = 0;
 }
 
 
@@ -3765,6 +3795,17 @@ LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeig
   _PostCreateLayer(pLayer);
   return pLayer;
 }
+SelectionDDLayer* DumbDisplay::createSelectionLayer(int colCount, int rowCount,
+                                                    int horiSelectionCount, int vertSelectionCount,
+                                                    int charHeight, const String& fontName,
+                                                    float selectionBorderSizeCharHeightFactor) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand8(layerId, "SU", String("selection"), String(colCount), String(rowCount), String(horiSelectionCount), String(vertSelectionCount), String(charHeight), fontName, TO_NUM(selectionBorderSizeCharHeightFactor));
+  SelectionDDLayer* pLayer = new SelectionDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
+}
 GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
   int lid = _AllocLid();
   String layerId = String(lid);
@@ -3781,10 +3822,10 @@ SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   _PostCreateLayer(pLayer);
   return pLayer;
 }
-JoystickDDLayer* DumbDisplay::createJoystickLayer(int maxStickValue, const String& directions, float stickLookScaleFactor) {
+JoystickDDLayer* DumbDisplay::createJoystickLayer(int maxStickValue, const String& directions, float stickSizeFactor, int stickValueDivider) {
   int lid = _AllocLid();
   String layerId = String(lid);
-  _sendCommand4(layerId, "SU", String("joystick"), String(maxStickValue),  directions, TO_NUM(stickLookScaleFactor));
+  _sendCommand5(layerId, "SU", String("joystick"), String(maxStickValue),  directions, TO_NUM(stickSizeFactor), String(stickValueDivider));
   JoystickDDLayer* pLayer = new JoystickDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;

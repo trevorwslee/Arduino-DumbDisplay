@@ -181,7 +181,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
   #define HREF_GPIO_NUM      7      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
   #define VFLIP
-#else
+#elif defined(FOR_ESP32CAM)
   // for CAMERA_MODEL_AI_THINKER
   #define PWDN_GPIO_NUM     32      // power to camera (on/off)
   #define RESET_GPIO_NUM    -1      // -1 = not used
@@ -199,6 +199,8 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
   #define VSYNC_GPIO_NUM    25      // vsync_pin
   #define HREF_GPIO_NUM     23      // href_pin
   #define PCLK_GPIO_NUM     22      // pixel_clock_pin
+#else
+  #error board not supported
 #endif
 
 
@@ -222,7 +224,7 @@ bool cameraImageSettings() {
   s->set_vflip(s, true);
 #endif
 
-   return 1;
+  return 1;
 }  // cameraImageSettings
 
 
