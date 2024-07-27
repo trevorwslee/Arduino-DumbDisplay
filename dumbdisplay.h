@@ -728,7 +728,7 @@ class JoystickDDLayer: public DDLayer {
     /// note that it will not affect the current position; use moveToCenter() to move to the center
     void autoRecenter(bool autoRecenter = true);
     /// set the colors of the stick UI
-    void colors(const String& stickColor, const String& stickOutlineColor, const String& socketColor, const String& socketOutlineColor);
+    void colors(const String& stickColor, const String& stickOutlineColor, const String& socketColor = "", const String& socketOutlineColor = "");
     /// move joystick position (if joystick is single directional, will only move in the movable direction)
     /// @param x x to move to
     /// @param x y to move to
@@ -737,6 +737,13 @@ class JoystickDDLayer: public DDLayer {
     /// move joystick to the center
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
     void moveToCenter(bool sendFeedback = false);
+    /// set stick scale; will also move the joystick position to "home" -- center if auto-recenter else (0, 0)
+    /// @param maxStickValue the max value of the stick; 0 means no change
+    /// @param stickValueDivider the divider of the stick value; 0 means no change
+    /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
+    void stickScale(int maxStickValue, int stickValueDivider = 0, bool sendFeedback = false);
+    /// set 'snappy' makes stick snaps to closest value when moved
+    void snappy(bool snappy = true);
 };
 
 /// Class for plotter layer; created with DumbDisplay::createPlotterLayer() or DumbDisplay::createFixedRatePlotterLayer()

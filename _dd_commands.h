@@ -130,6 +130,8 @@
 #define C_colors           "#ac"
 #define C_movetocenter     "#ad"
 #define C_movetopos        "#ae" 
+#define C_stickscale       "#af" 
+#define C_snappy           "#b0" 
 
 #define C_loadurl          "#ba"
 #define C_loadhtml         "#bb"
