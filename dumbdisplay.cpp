@@ -2489,6 +2489,9 @@ void SelectionDDLayer::pixelColor(const String &color) {
 void SelectionDDLayer::text(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx, const String& align) {
   _sendCommand5(layerId, C_text, String(y), String(horiSelectionIdx), String(vertSelectionIdx), align, text);
 }
+void SelectionDDLayer::unselectedText(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx, const String& align) {
+  _sendCommand5(layerId, C_unselectedtext, String(y), String(horiSelectionIdx), String(vertSelectionIdx), align, text);
+}
 void SelectionDDLayer::select(int horiSelectionIdx, int vertSelectionIdx, bool deselectTheOthers) {
   _sendCommand3(layerId, C_select, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(deselectTheOthers));
 }
@@ -2661,6 +2664,9 @@ void GraphicalDDLayer::cachePixelImageGS(const String& imageName, const uint8_t 
 }
 void GraphicalDDLayer::saveCachedImageFile(const String& imageName, const String& asImageName) {
   _sendCommand3("", C_SAVECACHEDIMG, layerId, imageName, asImageName);
+}
+void GraphicalDDLayer::saveCachedImageFileAsync(const String& imageName, const String& asImageName) {
+  _sendCommand4("", C_SAVECACHEDIMG, layerId, imageName, asImageName, TO_BOOL(true));
 }
 void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
   _sendCommand2("", C_SAVECACHEDIMGS, layerId, stitchAsImageName);
@@ -3740,7 +3746,7 @@ void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
     _sendCommand2("", "CFGPF", String(xUnitCount), String(yUnitCount));
   }
 }
-void DumbDisplay::configAutoPin(const String& layoutSpec) {
+void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoShowHideLayers) {
   _Connect();
   if (true) {
     if (layoutSpec.c_str() == NULL) {
@@ -3748,7 +3754,11 @@ void DumbDisplay::configAutoPin(const String& layoutSpec) {
       return;
     }
   }
-  _sendCommand1("", "CFGAP", layoutSpec);
+  if (_DDCompatibility >= 7) {
+    _sendCommand2("", "CFGAP", layoutSpec, TO_BOOL(autoShowHideLayers));
+  } else {
+    _sendCommand1("", "CFGAP", layoutSpec);
+  }
 }
 void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
   _Connect();

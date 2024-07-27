@@ -617,7 +617,8 @@ using namespace DDTesterImpl;
 
 
 
-void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinLEDPin, std::function<void(bool connected)> notConnectedCallback) {
+//void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinLEDPin, std::function<void(bool connected)> notConnectedCallback) {
+void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinLEDPin, void (*notConnectedCallback)(bool)) {
 
   if (passiveConnect && builtinLEDPin >= 0) {
     pinMode(builtinLEDPin, OUTPUT);

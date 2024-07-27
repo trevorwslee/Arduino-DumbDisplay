@@ -491,6 +491,9 @@ class SelectionDDLayer: public DDLayer {
     /// set a "selection" unit text (of y-th row)
     /// @param align 'L', 'C', or 'R'
     void text(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
+    /// set a "selection" unit text (of y-th row) when unselected (it defaults to the same text as selected)
+    /// @param align 'L', 'C', or 'R'
+    void unselectedText(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
     /// select a "selection" unit
     void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
     /// deselect a "selection" unit
@@ -666,6 +669,9 @@ class GraphicalDDLayer: public DDLayer {
     /// saved cached image
     /// @param imageName cachedImageName
     void saveCachedImageFile(const String& imageName, const String& asImageName = "");
+    /// saved cached image (async / non-blocking)
+    /// @param imageName cachedImageName
+    void saveCachedImageFileAsync(const String& imageName, const String& asImageName = "");
     /// saved cached image
     /// @param stitchAsImageName if not empty, will stitch all cached images to one image file of the given name
     void saveCachedImageFiles(const String& stitchAsImageName = "");
@@ -1259,7 +1265,9 @@ class DumbDisplay {
     /// - vertical: V(*)
     /// - or nested, like H(0+V(1+2)+3);  where 0/1/2/3 are the layer ids
     /// - consider using the macros DD_AP_XXX
-    void configAutoPin(const String& layoutSpec = DD_AP_VERT);
+    /// @param layoutSpec the layout specification
+    /// @param autoShowHideLayers auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
+    void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoShowHideLayers = false);
     /// add the "auto pin" config for layers not included in "auto pin" set by configAutoPin()
     /// @param remainingLayoutSpec 
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);

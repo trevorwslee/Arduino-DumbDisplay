@@ -2204,6 +2204,11 @@ MIT
 
 # Change History
 
+v0.9.9-r11
+  - enhanced SelectionDDLayer
+  - enhanced 'auto pin' layers
+  - bug fix
+
 v0.9.9-r10
   - added SelectionDDLayer
   - bug fix

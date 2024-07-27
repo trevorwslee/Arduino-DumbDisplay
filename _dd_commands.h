@@ -83,6 +83,7 @@
 #define C_select           "#6b"
 #define C_deselect         "#6c"
 #define C_highlighborder   "#6d"
+#define C_unselectedtext   "#6e"
 #define C_write            "#70"	
 #define C_cpoly            "#71"
 #define C_cpolyin          "#72"

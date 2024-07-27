@@ -64,7 +64,15 @@ class DDWiFiServerIO: public DDInputOutput {
       client.write(b);
     }
     void write(const uint8_t *buf, size_t size) {
-      client.write(buf, size);
+      if (false) {
+        Serial.print("*** write ");
+        Serial.print(size);
+        Serial.print(" ... ");
+        size_t written = client.write(buf, size);
+        Serial.println(written);
+      } else {
+        client.write(buf, size);
+      }
     }
     bool preConnect(bool firstCall) {
       if (firstCall) {  // since 2023-08-10
