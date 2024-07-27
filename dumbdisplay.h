@@ -737,11 +737,10 @@ class JoystickDDLayer: public DDLayer {
     /// move joystick to the center
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
     void moveToCenter(bool sendFeedback = false);
-    /// set stick scale; will also move the joystick position to "home" -- center if auto-recenter else (0, 0)
+    /// set stick max value; will also move the joystick position to "home" -- center if auto-recenter else (0, 0)
     /// @param maxStickValue the max value of the stick; 0 means no change
-    /// @param stickValueDivider the divider of the stick value; 0 means no change
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
-    void stickScale(int maxStickValue, int stickValueDivider = 0, bool sendFeedback = false);
+    void maxValue(int maxValue, bool sendFeedback = false);
     /// set 'snappy' makes stick snaps to closest value when moved
     void snappy(bool snappy = true);
 };

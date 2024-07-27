@@ -2743,8 +2743,8 @@ void JoystickDDLayer::moveToPos(int x, int y, bool sendFeedback) {
 void JoystickDDLayer::moveToCenter(bool sendFeedback) {
   _sendCommand1(layerId, C_movetocenter, TO_BOOL(sendFeedback));
 }
-void JoystickDDLayer::stickScale(int maxStickValue, int stickValueDivider, bool sendFeedback) {
-  _sendCommand3(layerId, C_stickscale, String(maxStickValue), String(stickValueDivider), TO_BOOL(sendFeedback));
+void JoystickDDLayer::maxValue(int maxValue, bool sendFeedback) {
+  _sendCommand2(layerId, C_maxvalue, String(maxValue), TO_BOOL(sendFeedback));
 }
 void JoystickDDLayer::snappy(bool snappy) {
   _sendCommand1(layerId, C_snappy, TO_BOOL(snappy));
