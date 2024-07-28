@@ -131,7 +131,7 @@
 #define C_movetocenter     "#ad"
 #define C_movetopos        "#ae" 
 #define C_snappy           "#af" 
-#define C_maxvalue         "#b0" 
+#define C_valuerange       "#b0" 
 
 #define C_loadurl          "#ba"
 #define C_loadhtml         "#bb"

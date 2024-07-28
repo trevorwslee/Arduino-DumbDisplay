@@ -2743,8 +2743,8 @@ void JoystickDDLayer::moveToPos(int x, int y, bool sendFeedback) {
 void JoystickDDLayer::moveToCenter(bool sendFeedback) {
   _sendCommand1(layerId, C_movetocenter, TO_BOOL(sendFeedback));
 }
-void JoystickDDLayer::maxValue(int maxValue, bool sendFeedback) {
-  _sendCommand2(layerId, C_maxvalue, String(maxValue), TO_BOOL(sendFeedback));
+void JoystickDDLayer::valueRange(int minValue, int maxValue, bool sendFeedback) {
+  _sendCommand3(layerId, C_valuerange, String(minValue), String(maxValue), TO_BOOL(sendFeedback));
 }
 void JoystickDDLayer::snappy(bool snappy) {
   _sendCommand1(layerId, C_snappy, TO_BOOL(snappy));
@@ -3838,10 +3838,12 @@ SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   _PostCreateLayer(pLayer);
   return pLayer;
 }
-JoystickDDLayer* DumbDisplay::createJoystickLayer(int maxStickValue, const String& directions, float stickSizeFactor, int stickValueDivider) {
+// @param stickValueDivider the divider of the stick value; 1 by default
+JoystickDDLayer* DumbDisplay::createJoystickLayer(int maxStickValue, const String& directions, float stickSizeFactor/*, int stickValueDivider*/) {
   int lid = _AllocLid();
   String layerId = String(lid);
-  _sendCommand5(layerId, "SU", String("joystick"), String(maxStickValue),  directions, TO_NUM(stickSizeFactor), String(stickValueDivider));
+  _sendCommand4(layerId, "SU", String("joystick"), String(maxStickValue),  directions, TO_NUM(stickSizeFactor));
+  //_sendCommand5(layerId, "SU", String("joystick"), String(maxStickValue),  directions, TO_NUM(stickSizeFactor), String(stickValueDivider));
   JoystickDDLayer* pLayer = new JoystickDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;

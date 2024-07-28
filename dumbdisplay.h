@@ -738,9 +738,10 @@ class JoystickDDLayer: public DDLayer {
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
     void moveToCenter(bool sendFeedback = false);
     /// set stick max value; will also move the joystick position to "home" -- center if auto-recenter else (0, 0)
-    /// @param maxStickValue the max value of the stick; 0 means no change
+    /// @param minValue the min value of the stick
+    /// @param maxValue the max value of the stick
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
-    void maxValue(int maxValue, bool sendFeedback = false);
+    void valueRange(int minValue, int maxValue, bool sendFeedback = false);
     /// set 'snappy' makes stick snaps to closest value when moved
     void snappy(bool snappy = true);
 };
@@ -1315,9 +1316,8 @@ class DumbDisplay {
     /// @param directions "lr" or "hori": left-to-right; "tb" or "vert": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
     ///                   use "+" combines the above like "lr+tb" to mean both directions; "" the same as "lr+tb" 
     /// @param stickSizeFactor the size factor of the stick (UI); 1 by default 
-    /// @param stickValueDivider the divider of the stick value; 1 by default
     /// @see JoystickDDLayer
-    JoystickDDLayer* createJoystickLayer(int maxStickValue = 1023, const String& directions = "", float stickSizeFactor = 1.0, int stickValueDivider = 1);
+    JoystickDDLayer* createJoystickLayer(int maxStickValue = 1023, const String& directions = "", float stickSizeFactor = 1.0/*, int stickValueDivider = 1*/);
     /// create a plotter layer
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     /// create a fixed-rate plotter layer
