@@ -1,6 +1,6 @@
 {
     "name": "DumbDisplay Arduino Library",
-    "version": "0.9.910",
+    "version": "0.9.911",
     "description": "A library for connecting to Android DumbDisplay app (>= this version), for various virtual gadget realizations. By using DumbDisplay, you should be able to more quickly design/prototype your Arduino experiment, and defer connecting real gadgets until later stage of your experiment.",
     "keywords": "Arduino, ESP, Raspberry Pi Pico, Display, Wireless", 
     "license": "MIT",  
