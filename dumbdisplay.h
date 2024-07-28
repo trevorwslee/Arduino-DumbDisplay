@@ -744,6 +744,7 @@ class JoystickDDLayer: public DDLayer {
     void valueRange(int minValue, int maxValue, bool sendFeedback = false);
     /// set 'snappy' makes stick snaps to closest value when moved
     void snappy(bool snappy = true);
+    void showValue(bool show = true, const String& color = "");
 };
 
 /// Class for plotter layer; created with DumbDisplay::createPlotterLayer() or DumbDisplay::createFixedRatePlotterLayer()

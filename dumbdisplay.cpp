@@ -2749,6 +2749,9 @@ void JoystickDDLayer::valueRange(int minValue, int maxValue, bool sendFeedback) 
 void JoystickDDLayer::snappy(bool snappy) {
   _sendCommand1(layerId, C_snappy, TO_BOOL(snappy));
 }
+void JoystickDDLayer::showValue(bool show, const String& color) {
+  _sendCommand2(layerId, C_showvalue, TO_BOOL(show), color);
+}
 
 
 void PlotterDDLayer::label(const String& key, const String& lab) {
