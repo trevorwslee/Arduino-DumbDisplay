@@ -2489,8 +2489,20 @@ void SelectionDDLayer::pixelColor(const String &color) {
 void SelectionDDLayer::text(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx, const String& align) {
   _sendCommand5(layerId, C_text, String(y), String(horiSelectionIdx), String(vertSelectionIdx), align, text);
 }
+void SelectionDDLayer::textCentered(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx) {
+  _sendCommand5(layerId, C_text, String(y), String(horiSelectionIdx), String(vertSelectionIdx), "C", text);
+}
+void SelectionDDLayer::textRightAligned(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx) {
+  _sendCommand5(layerId, C_text, String(y), String(horiSelectionIdx), String(vertSelectionIdx), "R", text);
+}
 void SelectionDDLayer::unselectedText(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx, const String& align) {
   _sendCommand5(layerId, C_unselectedtext, String(y), String(horiSelectionIdx), String(vertSelectionIdx), align, text);
+}
+void SelectionDDLayer::unselectedTextCentered(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx) {
+  _sendCommand5(layerId, C_unselectedtext, String(y), String(horiSelectionIdx), String(vertSelectionIdx), "C", text);
+}
+void SelectionDDLayer::unselectedTextRightAligned(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx) {
+  _sendCommand5(layerId, C_unselectedtext, String(y), String(horiSelectionIdx), String(vertSelectionIdx), "R", text);
 }
 void SelectionDDLayer::select(int horiSelectionIdx, int vertSelectionIdx, bool deselectTheOthers) {
   _sendCommand3(layerId, C_select, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(deselectTheOthers));

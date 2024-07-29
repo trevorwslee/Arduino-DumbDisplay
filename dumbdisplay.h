@@ -491,9 +491,13 @@ class SelectionDDLayer: public DDLayer {
     /// set a "selection" unit text (of y-th row)
     /// @param align 'L', 'C', or 'R'
     void text(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
+    void textCentered(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
+    void textRightAligned(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
     /// set a "selection" unit text (of y-th row) when unselected (it defaults to the same text as selected)
     /// @param align 'L', 'C', or 'R'
     void unselectedText(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
+    void unselectedTextCentered(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
+    void unselectedTextRightAligned(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
     /// select a "selection" unit
     void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
     /// deselect a "selection" unit
