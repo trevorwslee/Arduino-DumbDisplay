@@ -1,6 +1,8 @@
 #ifndef _dd_misc_h
 #define _dd_misc_h
 
+const String DDEmptyString = String();
+
 #ifndef DD_NO_DEBUG_INTERFACE
 class DrawTextDDDebugInterface: public DDDebugInterface {
   // public:
@@ -603,4 +605,36 @@ class DDReconnectPassiveConnectionHelper {
     bool init;  
 };
 
+
+// class GetFeedbackHelper {
+//   public:
+//     GetFeedbackHelper(DDLayer& layer): layer(layer) {}
+//   public:
+//     /// get "feedback" from the layer
+//     bool getFeedback() {
+//       feedback = layer.getFeedback();
+//       return feedback != NULL;
+//     }
+//     /// @return true if the type of the "feedback" got is CLICK
+//     inline bool clicked() {
+//       return feedback != NULL && feedback->type == DDFeedbackType::CLICK;
+//     }
+//     /// @return true if the type of the "feedback" got is DOUBLECLICK
+//     inline bool doubleClicked() {
+//       return feedback != NULL && feedback->type == DDFeedbackType::DOUBLECLICK;
+//     }
+//     /// @return true if the type of the "feedback" got is LONGPRESS
+//     inline bool longPressed() {
+//       return feedback != NULL && feedback->type == DDFeedbackType::LONGPRESS;
+//     }
+//     /// @return true the text of the "feedback" got
+//     inline const String* text() {
+//       return feedback != NULL : feedback->text ? DDEmptyString;
+//     }
+//   private:
+//     DDLayer& layer;
+//     const DDFeedback* feedback;
+// };
+
 #endif
+

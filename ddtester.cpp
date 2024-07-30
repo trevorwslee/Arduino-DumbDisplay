@@ -617,7 +617,8 @@ using namespace DDTesterImpl;
 
 
 
-void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinLEDPin) {
+//void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinLEDPin, std::function<void(bool connected)> notConnectedCallback) {
+void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinLEDPin, void (*notConnectedCallback)(bool)) {
 
   if (passiveConnect && builtinLEDPin >= 0) {
     pinMode(builtinLEDPin, OUTPUT);
@@ -669,22 +670,26 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinL
   while (true) {
     if (passiveConnect) {
         DDConnectPassiveStatus connectStatus;
-        if (!dumbdisplay.connectPassive(&connectStatus)) {
+        bool connected = dumbdisplay.connectPassive(&connectStatus);
+        if (notConnectedCallback != NULL) {
+          notConnectedCallback(connected);
+        }
+        if (!connected) {
           if (builtinLEDPin >= 0) {
             digitalWrite(builtinLEDPin, HIGH);
           }
-          Serial.println("// not connected ...");  // TODO: use other way for indication
+          //Serial.println("// not connected ...");  // TODO: use other way for indication
           delay(500);
-          Serial.println("// ... not connected");
+          //Serial.println("// ... not connected");
           if (builtinLEDPin >= 0) {
             digitalWrite(builtinLEDPin, LOW);
           }
           continue;
         }
         if (connectStatus.reconnecting) {
-          Serial.println("// ... reconnecting ...");  // TODO: use other way for indication
+          //Serial.println("// ... reconnecting ...");  // TODO: use other way for indication
           dumbdisplay.masterReset();
-          Serial.println("// ... reconnecting ...");
+          //Serial.println("// ... reconnecting ...");
           pMbLayer = NULL;
           pTurtleLayer = NULL;
           pLedGridLayer = NULL;

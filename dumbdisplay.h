@@ -491,6 +491,13 @@ class SelectionDDLayer: public DDLayer {
     /// set a "selection" unit text (of y-th row)
     /// @param align 'L', 'C', or 'R'
     void text(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
+    void textCentered(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
+    void textRightAligned(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
+    /// set a "selection" unit text (of y-th row) when unselected (it defaults to the same text as selected)
+    /// @param align 'L', 'C', or 'R'
+    void unselectedText(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
+    void unselectedTextCentered(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
+    void unselectedTextRightAligned(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
     /// select a "selection" unit
     void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
     /// deselect a "selection" unit
@@ -666,6 +673,9 @@ class GraphicalDDLayer: public DDLayer {
     /// saved cached image
     /// @param imageName cachedImageName
     void saveCachedImageFile(const String& imageName, const String& asImageName = "");
+    /// saved cached image (async / non-blocking)
+    /// @param imageName cachedImageName
+    void saveCachedImageFileAsync(const String& imageName, const String& asImageName = "");
     /// saved cached image
     /// @param stitchAsImageName if not empty, will stitch all cached images to one image file of the given name
     void saveCachedImageFiles(const String& stitchAsImageName = "");
@@ -722,7 +732,7 @@ class JoystickDDLayer: public DDLayer {
     /// note that it will not affect the current position; use moveToCenter() to move to the center
     void autoRecenter(bool autoRecenter = true);
     /// set the colors of the stick UI
-    void colors(const String& stickColor, const String& stickOutlineColor, const String& socketColor, const String& socketOutlineColor);
+    void colors(const String& stickColor, const String& stickOutlineColor, const String& socketColor = "", const String& socketOutlineColor = "");
     /// move joystick position (if joystick is single directional, will only move in the movable direction)
     /// @param x x to move to
     /// @param x y to move to
@@ -731,6 +741,14 @@ class JoystickDDLayer: public DDLayer {
     /// move joystick to the center
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
     void moveToCenter(bool sendFeedback = false);
+    /// set stick max value; will also move the joystick position to "home" -- center if auto-recenter else (0, 0)
+    /// @param minValue the min value of the stick
+    /// @param maxValue the max value of the stick
+    /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
+    void valueRange(int minValue, int maxValue, bool sendFeedback = false);
+    /// set 'snappy' makes stick snaps to closest value when moved
+    void snappy(bool snappy = true);
+    void showValue(bool show = true, const String& color = "");
 };
 
 /// Class for plotter layer; created with DumbDisplay::createPlotterLayer() or DumbDisplay::createFixedRatePlotterLayer()
@@ -1259,7 +1277,9 @@ class DumbDisplay {
     /// - vertical: V(*)
     /// - or nested, like H(0+V(1+2)+3);  where 0/1/2/3 are the layer ids
     /// - consider using the macros DD_AP_XXX
-    void configAutoPin(const String& layoutSpec = DD_AP_VERT);
+    /// @param layoutSpec the layout specification
+    /// @param autoShowHideLayers auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
+    void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoShowHideLayers = false);
     /// add the "auto pin" config for layers not included in "auto pin" set by configAutoPin()
     /// @param remainingLayoutSpec 
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
@@ -1301,9 +1321,8 @@ class DumbDisplay {
     /// @param directions "lr" or "hori": left-to-right; "tb" or "vert": top-to-bottom; "rl": right-to-left; "bt": bottom-to-top;
     ///                   use "+" combines the above like "lr+tb" to mean both directions; "" the same as "lr+tb" 
     /// @param stickSizeFactor the size factor of the stick (UI); 1 by default 
-    /// @param stickValueDivider the divider of the stick value; 1 by default
     /// @see JoystickDDLayer
-    JoystickDDLayer* createJoystickLayer(int maxStickValue = 1023, const String& directions = "", float stickSizeFactor = 1.0, int stickValueDivider = 1);
+    JoystickDDLayer* createJoystickLayer(int maxStickValue = 1023, const String& directions = "", float stickSizeFactor = 1.0/*, int stickValueDivider = 1*/);
     /// create a plotter layer
     PlotterDDLayer* createPlotterLayer(int width, int height, int pixelsPerSecond = 10);
     /// create a fixed-rate plotter layer

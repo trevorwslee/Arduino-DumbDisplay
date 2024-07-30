@@ -83,6 +83,7 @@
 #define C_select           "#6b"
 #define C_deselect         "#6c"
 #define C_highlighborder   "#6d"
+#define C_unselectedtext   "#6e"
 #define C_write            "#70"	
 #define C_cpoly            "#71"
 #define C_cpolyin          "#72"
@@ -129,6 +130,10 @@
 #define C_colors           "#ac"
 #define C_movetocenter     "#ad"
 #define C_movetopos        "#ae" 
+#define C_snappy           "#af" 
+
+#define C_valuerange       "#b0" 
+#define C_showvalue        "#b1" 
 
 #define C_loadurl          "#ba"
 #define C_loadhtml         "#bb"

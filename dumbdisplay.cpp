@@ -2489,6 +2489,21 @@ void SelectionDDLayer::pixelColor(const String &color) {
 void SelectionDDLayer::text(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx, const String& align) {
   _sendCommand5(layerId, C_text, String(y), String(horiSelectionIdx), String(vertSelectionIdx), align, text);
 }
+void SelectionDDLayer::textCentered(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx) {
+  _sendCommand5(layerId, C_text, String(y), String(horiSelectionIdx), String(vertSelectionIdx), "C", text);
+}
+void SelectionDDLayer::textRightAligned(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx) {
+  _sendCommand5(layerId, C_text, String(y), String(horiSelectionIdx), String(vertSelectionIdx), "R", text);
+}
+void SelectionDDLayer::unselectedText(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx, const String& align) {
+  _sendCommand5(layerId, C_unselectedtext, String(y), String(horiSelectionIdx), String(vertSelectionIdx), align, text);
+}
+void SelectionDDLayer::unselectedTextCentered(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx) {
+  _sendCommand5(layerId, C_unselectedtext, String(y), String(horiSelectionIdx), String(vertSelectionIdx), "C", text);
+}
+void SelectionDDLayer::unselectedTextRightAligned(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx) {
+  _sendCommand5(layerId, C_unselectedtext, String(y), String(horiSelectionIdx), String(vertSelectionIdx), "R", text);
+}
 void SelectionDDLayer::select(int horiSelectionIdx, int vertSelectionIdx, bool deselectTheOthers) {
   _sendCommand3(layerId, C_select, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(deselectTheOthers));
 }
@@ -2662,6 +2677,9 @@ void GraphicalDDLayer::cachePixelImageGS(const String& imageName, const uint8_t 
 void GraphicalDDLayer::saveCachedImageFile(const String& imageName, const String& asImageName) {
   _sendCommand3("", C_SAVECACHEDIMG, layerId, imageName, asImageName);
 }
+void GraphicalDDLayer::saveCachedImageFileAsync(const String& imageName, const String& asImageName) {
+  _sendCommand4("", C_SAVECACHEDIMG, layerId, imageName, asImageName, TO_BOOL(true));
+}
 void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
   _sendCommand2("", C_SAVECACHEDIMGS, layerId, stitchAsImageName);
 }
@@ -2736,6 +2754,15 @@ void JoystickDDLayer::moveToPos(int x, int y, bool sendFeedback) {
 }
 void JoystickDDLayer::moveToCenter(bool sendFeedback) {
   _sendCommand1(layerId, C_movetocenter, TO_BOOL(sendFeedback));
+}
+void JoystickDDLayer::valueRange(int minValue, int maxValue, bool sendFeedback) {
+  _sendCommand3(layerId, C_valuerange, String(minValue), String(maxValue), TO_BOOL(sendFeedback));
+}
+void JoystickDDLayer::snappy(bool snappy) {
+  _sendCommand1(layerId, C_snappy, TO_BOOL(snappy));
+}
+void JoystickDDLayer::showValue(bool show, const String& color) {
+  _sendCommand2(layerId, C_showvalue, TO_BOOL(show), color);
 }
 
 
@@ -3740,7 +3767,7 @@ void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
     _sendCommand2("", "CFGPF", String(xUnitCount), String(yUnitCount));
   }
 }
-void DumbDisplay::configAutoPin(const String& layoutSpec) {
+void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoShowHideLayers) {
   _Connect();
   if (true) {
     if (layoutSpec.c_str() == NULL) {
@@ -3748,7 +3775,11 @@ void DumbDisplay::configAutoPin(const String& layoutSpec) {
       return;
     }
   }
-  _sendCommand1("", "CFGAP", layoutSpec);
+  if (_DDCompatibility >= 7) {
+    _sendCommand2("", "CFGAP", layoutSpec, TO_BOOL(autoShowHideLayers));
+  } else {
+    _sendCommand1("", "CFGAP", layoutSpec);
+  }
 }
 void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
   _Connect();
@@ -3822,10 +3853,12 @@ SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   _PostCreateLayer(pLayer);
   return pLayer;
 }
-JoystickDDLayer* DumbDisplay::createJoystickLayer(int maxStickValue, const String& directions, float stickSizeFactor, int stickValueDivider) {
+// @param stickValueDivider the divider of the stick value; 1 by default
+JoystickDDLayer* DumbDisplay::createJoystickLayer(int maxStickValue, const String& directions, float stickSizeFactor/*, int stickValueDivider*/) {
   int lid = _AllocLid();
   String layerId = String(lid);
-  _sendCommand5(layerId, "SU", String("joystick"), String(maxStickValue),  directions, TO_NUM(stickSizeFactor), String(stickValueDivider));
+  _sendCommand4(layerId, "SU", String("joystick"), String(maxStickValue),  directions, TO_NUM(stickSizeFactor));
+  //_sendCommand5(layerId, "SU", String("joystick"), String(maxStickValue),  directions, TO_NUM(stickSizeFactor), String(stickValueDivider));
   JoystickDDLayer* pLayer = new JoystickDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;

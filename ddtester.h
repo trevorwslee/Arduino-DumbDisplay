@@ -4,7 +4,10 @@
 #include "dumbdisplay.h"
 
 
-void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect = false, int builtinLEDPin = -1);
-
+// #if  __GNUC__ >= 8
+// void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect = false, int builtinLEDPin = -1, std::function<void(bool connected)> notConnectedCallback = NULL);
+// #else
+void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect = false, int builtinLEDPin = -1, void (*notConnectedCallback)(bool) = NULL);
+//#endif
 
 #endif
