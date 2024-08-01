@@ -491,13 +491,17 @@ class SelectionDDLayer: public DDLayer {
     /// set a "selection" unit text (of y-th row)
     /// @param align 'L', 'C', or 'R'
     void text(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
+    /// set a "selection" unit centered text (of y-th row)
     void textCentered(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
+    /// set a "selection" unit right-aligned text (of y-th row)
     void textRightAligned(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
     /// set a "selection" unit text (of y-th row) when unselected (it defaults to the same text as selected)
     /// @param align 'L', 'C', or 'R'
     void unselectedText(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
+    /// set a "selection" unit centered text (of y-th row) when unselected (it defaults to the same text as selected)
     void unselectedTextCentered(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
-    void unselectedTextRightAligned(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
+     /// set a "selection" unit right-aligned text (of y-th row) when unselected (it defaults to the same text as selected)
+   void unselectedTextRightAligned(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
     /// select a "selection" unit
     void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
     /// deselect a "selection" unit
@@ -748,6 +752,7 @@ class JoystickDDLayer: public DDLayer {
     void valueRange(int minValue, int maxValue, bool sendFeedback = false);
     /// set 'snappy' makes stick snaps to closest value when moved
     void snappy(bool snappy = true);
+    /// show value on top of the stick 
     void showValue(bool show = true, const String& color = "");
 };
 
@@ -757,16 +762,14 @@ class PlotterDDLayer: public DDLayer {
     /// for internal use only
     PlotterDDLayer(int8_t layerId): DDLayer(layerId) {
     }
-    /* set label of value with certain key */
-    /* if key has no label, the key will be the label */
+    /// set label of value with certain key
+    /// if key has no label, the key will be the label
     void label(const String& key, const String& lab);
     inline void label(const String& lab) { label("", lab); }
-    // template<class... Args>
-    // void setEx(Args... keyOrValue);
-    /* set value of certain key */
-    /* note that key can be empty */
+    /// set value of certain key
+    /// note that key can be empty
     void set(const String& key, float value);  
-    /* set value with empty key */
+    /// set value with empty key
     inline void set(float value) { set("", value); }  
     void set(const String& key1, float value1, const String& key2, float value2);  
     void set(const String& key1, float value1, const String& key2, float value2, const String& key3, float value3);  
@@ -1284,8 +1287,9 @@ class DumbDisplay {
     /// @param remainingLayoutSpec 
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
     /// configure "pin frame" to be x-units by y-units (default 100x100)
+    /// @param autoShowHideLayers auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
     /// @see pinLayer()
-    void configPinFrame(int xUnitCount = 100, int yUnitCount = 100);
+    void configPinFrame(int xUnitCount = 100, int yUnitCount = 100, bool autoShowHideLayers = false);
     /// pin a layer @ some position of an imaginary grid of "pin grame"
     /// - the imaginary grid size can be configured when calling connect() -- default is 100x100  
     /// - the input align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align

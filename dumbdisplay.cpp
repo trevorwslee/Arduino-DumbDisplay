@@ -138,6 +138,7 @@
 // #endif
 
 
+#define USE_MALLOC_FOR_LAYER_ARRAY
 
 
 // see nobody.trevorlee.dumbdisplay.DDActivity#ddSourceCompatibility
@@ -485,8 +486,18 @@ this->print("// NEED TO RECONNECT\n");
 /*volatile*/int _NextImgId = 0;
 /*volatile*/int _NextBytesId = 0;
 
+
+#ifndef DD_INIT_LAYER_COUNT
+  #define DD_INIT_LAYER_COUNT  2
+#endif
+
+#ifndef DD_LAYER_COUNT_INC
+  #define DD_LAYER_COUNT_INC   2
+#endif  
+
+
+
 #ifdef SUPPORT_TUNNEL
-#define DD_LAYER_INC   2
 DDObject** _DDLayerArray = NULL;
 int _MaxDDLayerCount = 0;
 #else
@@ -1099,11 +1110,14 @@ int _AllocLid() {
   int lid = _NextLid++;
 #ifdef STORE_LAYERS  
 #ifdef SUPPORT_TUNNEL
-  if (DD_LAYER_INC > 0) {
+  if (DD_LAYER_COUNT_INC > 0) {
     if (lid >= _MaxDDLayerCount) {
       if (true) {
         int oriLayerCount = _MaxDDLayerCount;
-        _MaxDDLayerCount = lid + DD_LAYER_INC;
+        _MaxDDLayerCount = lid + (lid == 0 ? DD_INIT_LAYER_COUNT : DD_LAYER_COUNT_INC);
+#ifdef USE_MALLOC_FOR_LAYER_ARRAY
+        _DDLayerArray = (DDObject**) realloc(_DDLayerArray, _MaxDDLayerCount * sizeof(DDObject*));
+#else
         DDObject** oriLayerArray = _DDLayerArray;
         DDObject** layerArray = new DDObject*[_MaxDDLayerCount];
         if (oriLayerArray != NULL) {
@@ -1114,7 +1128,9 @@ int _AllocLid() {
           delete oriLayerArray;
         }
         _DDLayerArray = layerArray;
+#endif
       } else {
+        assert(false);
         // _MaxDDLayerCount = lid + DD_LAYER_INC;
         // DDObject** oriLayerArray = _DDLayerArray;
         // DDObject** layerArray = (DDObject**) malloc(_MaxDDLayerCount * sizeof(DDObject*));
@@ -1126,15 +1142,17 @@ int _AllocLid() {
       }
     }
   } else {
-    DDObject** oriLayerArray = _DDLayerArray;
-    DDObject** layerArray = (DDObject**) malloc((lid + 1) * sizeof(DDObject*));
-    if (oriLayerArray != NULL) {
-      memcpy(layerArray, oriLayerArray, lid * sizeof(DDObject*));
-      free(oriLayerArray);
-    }
-    _DDLayerArray = layerArray;
+    assert(false);
+    // DDObject** oriLayerArray = _DDLayerArray;
+    // DDObject** layerArray = (DDObject**) malloc((lid + 1) * sizeof(DDObject*));
+    // if (oriLayerArray != NULL) {
+    //   memcpy(layerArray, oriLayerArray, lid * sizeof(DDObject*));
+    //   free(oriLayerArray);
+    // }
+    // _DDLayerArray = layerArray;
   }
 #else  
+  assert(false);
   DDLayer** oriLayerArray = _DDLayerArray;
   DDLayer** layerArray = (DDLayer**) malloc((lid + 1) * sizeof(DDLayer*));
   if (oriLayerArray != NULL) {
@@ -3761,9 +3779,11 @@ int DumbDisplay::getCompatibilityVersion() const {
 //   //return false;
 //   return _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
 // }
-void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount) {
+void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount, bool autoShowHideLayers) {
   _Connect();
-  if (xUnitCount != 100 || yUnitCount != 100) {
+  if (_DDCompatibility >= 7) {
+      _sendCommand3("", "CFGPF", String(xUnitCount), String(yUnitCount), TO_BOOL(autoShowHideLayers));
+  } else {
     _sendCommand2("", "CFGPF", String(xUnitCount), String(yUnitCount));
   }
 }
@@ -4429,7 +4449,11 @@ void DumbDisplay::masterReset() {
         delete pObject;
       }
     }
+#ifdef USE_MALLOC_FOR_LAYER_ARRAY
+    free(_DDLayerArray);
+#else     
     delete _DDLayerArray;
+#endif    
     _DDLayerArray = NULL;
 #ifdef SUPPORT_TUNNEL
     _MaxDDLayerCount = 0;
