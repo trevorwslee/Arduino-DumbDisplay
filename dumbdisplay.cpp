@@ -36,7 +36,9 @@
   //#define FEEDBACK_BUFFER_SIZE 4
   #define HANDLE_FEEDBACK_DURING_DELAY
   #define READ_BUFFER_USE_BUFFER
-  #define FEEDBACK_SUPPORT_BYTES 
+  #ifndef DD_NO_FEEDBACK_BYTES
+    #define FEEDBACK_SUPPORT_BYTES
+  #endif   
 #endif
 
 
