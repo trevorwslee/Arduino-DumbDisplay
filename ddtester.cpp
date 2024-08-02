@@ -668,6 +668,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinL
 
   int stepCount = 0;
   while (true) {
+#ifndef DD_NO_PASSIVE_CONNECT
     if (passiveConnect) {
         DDConnectPassiveStatus connectStatus;
         bool connected = dumbdisplay.connectPassive(&connectStatus);
@@ -700,6 +701,7 @@ void BasicDDTestLoop(DumbDisplay& dumbdisplay, bool passiveConnect, int builtinL
           continue;
         }
     }
+#endif    
 
 #ifdef GRAPHICAL
     if (passiveConnect) if (!dumbdisplay.connected()) break;  

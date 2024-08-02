@@ -917,10 +917,7 @@ class DDTunnel: public DDObject {
   public:
     virtual void release();
     virtual void reconnect();
-    void reconnectTo(const String& endPoint) {
-      this->endPoint = endPoint;
-      reconnect();
-    }
+    void reconnectTo(const String& endPoint);
     /// reconnect to specified endpoint with parameters
     /// @param endPoint endpoint to connect to
     /// @param params parameters to to end point; empty if none
@@ -1373,7 +1370,7 @@ class DumbDisplay {
     GpsServiceDDTunnel* createGpsServiceTunnel();
     /// create a "service tunnel" for getting object detection info from phone; model used is the demo model `mobilenetv1.tflite`
     /// @see ObjectDetectDemoServiceDDTunnel
-    ObjectDetectDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 3);
+    ObjectDetectDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 1);
     ImageRetrieverDDTunnel* createImageRetrieverTunnel();
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);

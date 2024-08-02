@@ -2,16 +2,20 @@
 #define _dd_feedback_h
 
 
-#ifndef DD_FEEDBACK_BUFFER_SIZE
-  #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
-    #define DD_FEEDBACK_BUFFER_SIZE 2
-  #else
-    #define DD_FEEDBACK_BUFFER_SIZE 4
+#ifndef DD_NO_FEEDBACK
+  #ifndef DD_FEEDBACK_BUFFER_SIZE
+    #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
+      #define DD_FEEDBACK_BUFFER_SIZE 2
+    #else
+      #define DD_FEEDBACK_BUFFER_SIZE 4
+    #endif
   #endif
+  #if DD_FEEDBACK_BUFFER_SIZE < 2
+    #error "DD_FEEDBACK_BUFFER_SIZE must be at least 2"
+  #endif 
+#else
+  #define DD_FEEDBACK_BUFFER_SIZE 0
 #endif
-#if DD_FEEDBACK_BUFFER_SIZE < 2
-  #error "DD_FEEDBACK_BUFFER_SIZE must be at least 2"
-#endif 
 
 
 /// @struct DDFeedbackType

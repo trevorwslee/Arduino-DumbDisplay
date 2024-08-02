@@ -4,9 +4,18 @@
 #include "dumbdisplay.h"
 
 
-// HAND_SHAKE_GAP changed from 1000 to 500 since 2024-06-22
-#define HAND_SHAKE_GAP 500
-//#define VALIDATE_GAP 2000
+#ifndef DD_INIT_LAYER_COUNT
+  #define DD_INIT_LAYER_COUNT  5
+#endif
+#ifndef DD_LAYER_COUNT_INC
+  #define DD_LAYER_COUNT_INC   3
+#endif  
+#if DD_INIT_LAYER_COUNT < 1
+  #error "DD_INIT_LAYER_COUNT must be at least 1"
+#endif 
+#if DD_LAYER_COUNT_INC < 2
+  #error "DD_LAYER_COUNT_INC must be at least 2"
+#endif 
 
 
 
@@ -16,8 +25,6 @@
   #define SUPPORT_PASSIVE
   #define SUPPORT_MASTER_RESET 
 #endif
-
-
 
 #ifdef DD_NO_FEEDBACK
   #warning ??? DD_NO_FEEDBACK set ???
@@ -31,6 +38,12 @@
   #define READ_BUFFER_USE_BUFFER
   #define FEEDBACK_SUPPORT_BYTES 
 #endif
+
+
+// HAND_SHAKE_GAP changed from 1000 to 500 since 2024-06-22
+#define HAND_SHAKE_GAP 500
+//#define VALIDATE_GAP 2000
+
 
 #define STORE_LAYERS
 #define MORE_KEEP_ALIVE
@@ -487,22 +500,9 @@ this->print("// NEED TO RECONNECT\n");
 /*volatile*/int _NextBytesId = 0;
 
 
-#ifndef DD_INIT_LAYER_COUNT
-  #define DD_INIT_LAYER_COUNT  2
-#endif
 
-#ifndef DD_LAYER_COUNT_INC
-  #define DD_LAYER_COUNT_INC   2
-#endif  
-
-
-
-#ifdef SUPPORT_TUNNEL
 DDObject** _DDLayerArray = NULL;
 int _MaxDDLayerCount = 0;
-#else
-DDLayer** _DDLayerArray = NULL;
-#endif
 
 DDInputOutput* /*volatile */_IO = NULL;
 
@@ -1007,7 +1007,7 @@ void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
 #endif        
         if (data == "ddhello") {
           if (fromSerial) {
-            _SetIO(pSIO, DD_DEF_SEND_BUFFER_SIZE);
+            _SetIO(pSIO, DD_DEF_SEND_BUFFER_SIZE, DD_DEF_IDLE_TIMEOUT);
             //_IO = pSIO;
             pSIO = NULL;
           }
@@ -1109,7 +1109,6 @@ int _AllocLid() {
   _Connect();
   int lid = _NextLid++;
 #ifdef STORE_LAYERS  
-#ifdef SUPPORT_TUNNEL
   if (DD_LAYER_COUNT_INC > 0) {
     if (lid >= _MaxDDLayerCount) {
       if (true) {
@@ -1130,7 +1129,7 @@ int _AllocLid() {
         _DDLayerArray = layerArray;
 #endif
       } else {
-        assert(false);
+        Serial.println("!!! unexpected");
         // _MaxDDLayerCount = lid + DD_LAYER_INC;
         // DDObject** oriLayerArray = _DDLayerArray;
         // DDObject** layerArray = (DDObject**) malloc(_MaxDDLayerCount * sizeof(DDObject*));
@@ -1142,7 +1141,7 @@ int _AllocLid() {
       }
     }
   } else {
-    assert(false);
+    Serial.println("!!! unexpected");
     // DDObject** oriLayerArray = _DDLayerArray;
     // DDObject** layerArray = (DDObject**) malloc((lid + 1) * sizeof(DDObject*));
     // if (oriLayerArray != NULL) {
@@ -1151,16 +1150,6 @@ int _AllocLid() {
     // }
     // _DDLayerArray = layerArray;
   }
-#else  
-  assert(false);
-  DDLayer** oriLayerArray = _DDLayerArray;
-  DDLayer** layerArray = (DDLayer**) malloc((lid + 1) * sizeof(DDLayer*));
-  if (oriLayerArray != NULL) {
-    memcpy(layerArray, oriLayerArray, lid * sizeof(DDLayer*));
-    free(oriLayerArray);
-  }
-  _DDLayerArray = layerArray;
-#endif  
 #endif
   return lid;
 }
@@ -2852,7 +2841,7 @@ void WebViewDDLayer::execJs(const String& js) {
 
 //#ifdef SUPPORT_TUNNEL
 DDTunnel::DDTunnel(const String& type, int8_t tunnelId, const String& paramsParam, const String& endPointParam/*, bool connectNow*/):
-  /*DDObject(DD_OBJECT_TYPE_TUNNEL), */type(type), tunnelId(String(tunnelId)), endPoint(endPointParam), params(paramsParam) {
+  type(type), tunnelId(String(tunnelId)), endPoint(endPointParam), params(paramsParam) {
     this->objectType = DD_OBJECT_TYPE_TUNNEL;
   // this->arraySize = bufferSize;
   // this->dataArray = new String[bufferSize];
@@ -2969,6 +2958,19 @@ _sendCommand0("", ("// EP -- " + endPoint).c_str());
     //timedOut = false;
     doneState = 0;
   }
+}
+void DDTunnel::reconnectTo(const String& endPoint) {
+  this->endPoint = endPoint;
+//Serial.print("//!! endPoint: ");
+//Serial.print(endPoint);
+//Serial.print(" ==> ");
+//Serial.println(this->endPoint);
+  if (true) {
+    if (this->endPoint.c_str() == NULL) {
+      __SendErrorComment("failed to set endPoint");
+    }
+  }
+  reconnect();
 }
 void DDTunnel::release() {
   if (doneState == 0/*!done*/) {
