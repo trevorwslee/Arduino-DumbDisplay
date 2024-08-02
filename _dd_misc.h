@@ -507,6 +507,9 @@ class DDFadingLayers {
   #include <functional>
 #endif  
 
+
+#ifndef DD_NO_PASSIVE_CONNECT
+
 /// @brief
 /// Helper class to manage passive connection to DumbDisplay.
 /// The only method that should be called in `void loop() {}` is DDPassiveConnectionHelper::loop(), 
@@ -604,6 +607,8 @@ class DDReconnectPassiveConnectionHelper {
     String layerSetupPersistId;
     bool init;  
 };
+
+#endif
 
 
 // class GetFeedbackHelper {
