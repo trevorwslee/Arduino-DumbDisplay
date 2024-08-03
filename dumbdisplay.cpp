@@ -2524,6 +2524,13 @@ void SelectionDDLayer::select(int horiSelectionIdx, int vertSelectionIdx, bool d
 void SelectionDDLayer::deselect(int horiSelectionIdx, int vertSelectionIdx, bool selectTheOthers) {
   _sendCommand3(layerId, C_deselect, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(selectTheOthers));
 }
+void SelectionDDLayer::selected(bool selected, int horiSelectionIdx, int vertSelectionIdx, bool reverseTheOthers) {
+  if (selected) {
+    _sendCommand3(layerId, C_select, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(reverseTheOthers));
+  } else {
+    _sendCommand3(layerId, C_deselect, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(reverseTheOthers));
+  }
+}
 void SelectionDDLayer::highlightBorder(bool forSelected, const String& borderColor, const String& borderShape) {
   _sendCommand3(layerId, C_highlighborder, TO_BOOL(forSelected), borderColor, borderShape);
 }

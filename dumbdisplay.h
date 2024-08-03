@@ -506,6 +506,8 @@ class SelectionDDLayer: public DDLayer {
     void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
     /// deselect a "selection" unit
     void deselect(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool selectTheOthers = false);
+    /// set a "selection" unit selected or not
+    void selected(bool selected, int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool reverseTheOthers = false);
     /// set selected / unselected "selection" unit border characteristics 
     /// @param borderColor DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"; "" means default
     /// @param borderShape can be "flat", "hair", "round", "raised" or "sunken"; "" means default  
