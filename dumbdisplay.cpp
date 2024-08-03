@@ -870,7 +870,12 @@ bool __Connect(/*bool calledPassive = false*/) {
     }
   }
   if (true) {       
-    _IO->print("// connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
+    _IO->print("// Connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
+#ifdef ESP32
+    _IO->print(String("// $ Sketch: ") + String(ESP.getSketchSize() / 1024.0) + "KB" + " / Free: " + String(ESP.getFreeSketchSpace() / 1024.0) + "KB" + "\n");
+    _IO->print(String("// $ Heap: " + String(ESP.getHeapSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreeHeap() / 1024.0) + "KB" + "\n");
+    _IO->print(String("// $ PSRAM: " + String(ESP.getPsramSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreePsram() / 1024.0) + "KB" + "\n");
+#endif    
     //_IO->flush();
     if (false) {
       // *** debug code
