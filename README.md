@@ -990,6 +990,8 @@ Basically, `${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master
 
 # Selected Demos
 
+Before talk about the various "features", here is a couple of selected sizable demos:
+
 |||
 |--|--|
 |[Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|![](screenshots/tft_show_show_ss.png)|
