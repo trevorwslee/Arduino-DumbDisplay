@@ -28,6 +28,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
     - [Example -- *RGB "Sliders"*](#example----rgb-sliders)
     - [Example -- *"Tunnel" for RESTful*](#example----tunnel-for-restful)
     - [Example -- *"Tunnel" for Web Image*](#example----tunnel-for-web-image)
+- [Selected Demos](#selected-demos)
 - [Features](#features)
   - [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism)
   - [DumbDisplay "Tunnel"](#dumbdisplay-tunnel)
@@ -985,6 +986,16 @@ However, in the sketch, the URLs are encoded as
 in order to reduce the total amount of data to send to DumbDisplay app. This encoding is a better choice for microcontroller like Arduino UNO which is not as powerful as others like ESP32.
 
 Basically, `${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots}` not only specifies that portion of URL to be `raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots`. It also tells to set up a mapping from `R` to `raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots` as well. As a result `https://${R}/lock-locked.png` rewrites to `https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png`.
+
+
+# Selected Demos
+
+|||
+|--|--|
+|[Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|![](screenshots/tft_show_show_ss.png)|
+|![](screenshots/pico-radar.png)|[Arduino Experiment of Ultrasonic Sensor, ToF Laser Range Sensor and Servo Motor, With Raspberry Pi Pico and DumbDisplay](https://www.instructables.com/Arduino-Experiment-of-Ultrasonic-Sensor-ToF-Laser-/)|
+|[Mnist Dataset -- From Training to Running With ESP32 / ESP32S3](https://www.instructables.com/Mnist-Dataset-From-Training-to-Running-With-ESP32-/)|![](screenshots/esp32_mnist.gif)|
+|![](screenshots/ddgpsmap_ss.png)|[NEO-7M U-BLOX GPS Module Experiment](https://www.instructables.com/NEO-7M-U-BLOX-GPS-Module-Experiment/)
 
 
 # Features
