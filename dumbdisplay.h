@@ -917,6 +917,8 @@ class DDTunnel: public DDObject {
     void afterConstruct(bool connectNow);
     virtual ~DDTunnel();
   public:
+    const String& getEndpoint() { return endPoint; }   
+  public:
     virtual void release();
     virtual void reconnect();
     void reconnectTo(const String& endPoint);
@@ -938,6 +940,7 @@ class DDTunnel: public DDObject {
     }
     const String& getTunnelId() const { return tunnelId; }
   protected:
+    inline bool _pending() { return doneState == 0; }
     //int _count();
     inline bool _timedOut() { return /*timedOut*/doneState == -1; }
     virtual bool _eof(long timeoutMillis);
@@ -994,7 +997,8 @@ class DDBufferedTunnel: public DDTunnel {
     int8_t validArrayIdx;
     //bool done;
   public:
-    /// count buffer ready  read
+    bool pending();
+    /// count buffer ready read
     inline int count() { return _count(); }
     /// reached EOF?
     /// @param timeoutMillis timeout in millis; see DDTunnel::timedOut()
@@ -1361,12 +1365,14 @@ class DumbDisplay {
     /// for simplicity, use SimpleToolDDTunnel.checkResult() to check the result
     /// @see SimpleToolDDTunnel
     SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload = true);
-    /// create a "service tunnel" for getting date-time info from phone;
+    /// use createGeneralServiceTunnel() instead
+    BasicDDTunnel* createDateTimeServiceTunnel();
+    /// create a general "service tunnel" for purposes like getting date-time info from phone;
     /// use reconnectTo() with commands like
     /// - now
     /// - now-millis
     /// @see BasicDDTunnel
-    BasicDDTunnel* createDateTimeServiceTunnel();
+    BasicDDTunnel* createGeneralServiceTunnel();
     /// create a "service tunnel" for getting GPS info from phone
     /// @see GpsServiceDDTunnel
     GpsServiceDDTunnel* createGpsServiceTunnel();

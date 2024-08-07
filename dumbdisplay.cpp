@@ -3121,6 +3121,9 @@ void DDBufferedTunnel::release() {
   // done = true;
   this->DDTunnel::release();
 }
+bool DDBufferedTunnel::pending() {
+  return DDTunnel::_pending() || nextArrayIdx != validArrayIdx;
+}
 int DDBufferedTunnel::_count() {
   //int count = (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
   int count = (arraySize + nextArrayIdx - validArrayIdx) % arraySize;
@@ -4237,6 +4240,18 @@ BasicDDTunnel* DumbDisplay::createDateTimeServiceTunnel() {
   int tid = _AllocTid();
   String tunnelId = String(tid);
   BasicDDTunnel* pTunnel = new BasicDDTunnel("datetimeservice", tid, "", ""/*, false*/, 1);
+  _PostCreateTunnel(pTunnel, false);
+  return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
+}
+BasicDDTunnel* DumbDisplay::createGeneralServiceTunnel() {
+#ifdef SUPPORT_TUNNEL	
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel("generalservice", tid, "", ""/*, false*/, 1);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;
 #else
