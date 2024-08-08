@@ -870,7 +870,12 @@ bool __Connect(/*bool calledPassive = false*/) {
     }
   }
   if (true) {       
-    _IO->print("// connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
+    _IO->print("// Connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
+#ifdef ESP32
+    _IO->print(String("// $ Sketch: ") + String(ESP.getSketchSize() / 1024.0) + "KB" + " / Free: " + String(ESP.getFreeSketchSpace() / 1024.0) + "KB" + "\n");
+    _IO->print(String("// $ Heap: " + String(ESP.getHeapSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreeHeap() / 1024.0) + "KB" + "\n");
+    _IO->print(String("// $ PSRAM: " + String(ESP.getPsramSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreePsram() / 1024.0) + "KB" + "\n");
+#endif    
     //_IO->flush();
     if (false) {
       // *** debug code
@@ -2519,6 +2524,13 @@ void SelectionDDLayer::select(int horiSelectionIdx, int vertSelectionIdx, bool d
 void SelectionDDLayer::deselect(int horiSelectionIdx, int vertSelectionIdx, bool selectTheOthers) {
   _sendCommand3(layerId, C_deselect, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(selectTheOthers));
 }
+void SelectionDDLayer::selected(bool selected, int horiSelectionIdx, int vertSelectionIdx, bool reverseTheOthers) {
+  if (selected) {
+    _sendCommand3(layerId, C_select, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(reverseTheOthers));
+  } else {
+    _sendCommand3(layerId, C_deselect, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(reverseTheOthers));
+  }
+}
 void SelectionDDLayer::highlightBorder(bool forSelected, const String& borderColor, const String& borderShape) {
   _sendCommand3(layerId, C_highlighborder, TO_BOOL(forSelected), borderColor, borderShape);
 }
@@ -3108,6 +3120,9 @@ void DDBufferedTunnel::release() {
   // }
   // done = true;
   this->DDTunnel::release();
+}
+bool DDBufferedTunnel::pending() {
+  return DDTunnel::_pending() || nextArrayIdx != validArrayIdx;
 }
 int DDBufferedTunnel::_count() {
   //int count = (arraySize + validArrayIdx - nextArrayIdx) % arraySize;
@@ -4225,6 +4240,18 @@ BasicDDTunnel* DumbDisplay::createDateTimeServiceTunnel() {
   int tid = _AllocTid();
   String tunnelId = String(tid);
   BasicDDTunnel* pTunnel = new BasicDDTunnel("datetimeservice", tid, "", ""/*, false*/, 1);
+  _PostCreateTunnel(pTunnel, false);
+  return pTunnel;
+#else
+  _sendTunnelDisabledComment();
+  return NULL;
+#endif
+}
+BasicDDTunnel* DumbDisplay::createGeneralServiceTunnel() {
+#ifdef SUPPORT_TUNNEL	
+  int tid = _AllocTid();
+  String tunnelId = String(tid);
+  BasicDDTunnel* pTunnel = new BasicDDTunnel("generalservice", tid, "", ""/*, false*/, 1);
   _PostCreateTunnel(pTunnel, false);
   return pTunnel;
 #else

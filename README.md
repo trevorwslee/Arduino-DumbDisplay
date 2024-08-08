@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r11)
+# DumbDisplay Arduino Library (v0.9.9-r20)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r11)](#dumbdisplay-arduino-library-v099-r11)
+- [DumbDisplay Arduino Library (v0.9.9-r20)](#dumbdisplay-arduino-library-v099-r20)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -28,6 +28,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
     - [Example -- *RGB "Sliders"*](#example----rgb-sliders)
     - [Example -- *"Tunnel" for RESTful*](#example----tunnel-for-restful)
     - [Example -- *"Tunnel" for Web Image*](#example----tunnel-for-web-image)
+- [Selected Demos](#selected-demos)
 - [Features](#features)
   - [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism)
   - [DumbDisplay "Tunnel"](#dumbdisplay-tunnel)
@@ -68,18 +69,18 @@ By doing so you can defer buying / wiring real gadgets until later stage of your
 
 The core is [DumbDisplay](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display.html).
 On it, a few types of layers can be created mixed-and-matched:
-* LED-grid, which can also be used to simulate "bar-meter" -- [LedGridDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_led_grid_d_d_layer.html)
-* LCD (text based), which is also a good choice for simulating button -- [LcdDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_lcd_d_d_layer.html)
-* Micro:bit-like canvas -- [MbDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_mb_d_d_layer.html)
-* Turtle-like canvas -- [TurtleDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_turtle_d_d_layer.html)
-* Graphical LCD, which is derived from the Turtle layer (i.e. in addition to general features of graphical LCD, it also has certain Turtle-like features) -- [GraphicalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) 
-* 7-Segment-row, which can be used to display a series of digits, plus a decimal dot -- [SevenSegmentRowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_seven_segment_row_d_d_layer.html)
-* Selection, which is composed of a row / a column / a grid of LCD-look-alikes for the purpose of selection -- [SelectionDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_selection_d_d_layer.html)
-* Joystick, which can be used for getting virtual joystick movement input, and can also be used for horizontal/vertical "slider" input -- [JoystickDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_joystick_d_d_layer.html)
-* Plotter, which works similar to the plotter of DumbDisplay [when it is acting as serial monitor], but plotting data are sent by calling the layer's method -- [PlotterDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_plotter_d_d_layer.html)
-* Terminal "device dependent view" layer, for showing sketch traces -- [TerminalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html)
-* WebView "device dependent view" layer, that allows you to use Android WebView as a DD layer -- [WebViewDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_web_view_d_d_layer.html)
-* TomTom map "device dependent view" layer, for showing location (latitude/longitude) -- [TomTomMapDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html)
+* ***LED-grid***, which can also be used to simulate "bar-meter" -- [LedGridDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_led_grid_d_d_layer.html)
+* ***LCD (text based)***, which is also a good choice for simulating button -- [LcdDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_lcd_d_d_layer.html)
+* ***Micro:bit-like canvas*** -- [MbDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_mb_d_d_layer.html)
+* ***Turtle-like canvas*** -- [TurtleDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_turtle_d_d_layer.html)
+* ***Graphical LCD***, which is derived from the Turtle layer (i.e. in addition to general features of graphical LCD, it also has certain Turtle-like features) -- [GraphicalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) 
+* ***7-Segment-row***, which can be used to display a series of digits, plus a decimal dot -- [SevenSegmentRowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_seven_segment_row_d_d_layer.html)
+* ***Selection***, which is composed of a row / a column / a grid of text-based-LCD-lookalikes for the purpose of selection -- [SelectionDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_selection_d_d_layer.html)
+* ***Joystick***, which can be used for getting virtual joystick movement input, and can also be used for horizontal/vertical "slider" input -- [JoystickDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_joystick_d_d_layer.html)
+* ***Plotter***, which works similar to the plotter of DumbDisplay [when it is acting as serial monitor], but plotting data are sent by calling the layer's method -- [PlotterDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_plotter_d_d_layer.html)
+* ***Terminal*** "device dependent view" layer, for showing sketch traces -- [TerminalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html)
+* ***WebView*** "device dependent view" layer, that allows you to use Android WebView as a DD layer -- [WebViewDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_web_view_d_d_layer.html)
+* ***TomTom map*** "device dependent view" layer, for showing location (latitude/longitude) -- [TomTomMapDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html)
 
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected microcontroller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism) for more on "layer feedback" mechanism.
 
@@ -305,7 +306,7 @@ Note on using of `Serial`. If DumbDisplay will make connection using `Serial`, y
 
 ## Samples
 
-Here, several examples are presented demonstrating the basis of DumbDisplay. More samples will be shown when DumbDisplay features are described in a bit more details in later sections.
+Here, several examples are presented demonstrating the basis of DumbDisplay. More samples will be shown when [DumbDisplay features](#features) are described in a bit more details in later sections.
 
 
 | [Micro:bit](#sample----microbit) | [LEDs + "Bar Meter" + LCD](#sample----leds--bar-meter--lcd) | [Graphical [LCD]](#sample----graphical-lcd) |
@@ -987,6 +988,18 @@ in order to reduce the total amount of data to send to DumbDisplay app. This enc
 Basically, `${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots}` not only specifies that portion of URL to be `raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots`. It also tells to set up a mapping from `R` to `raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots` as well. As a result `https://${R}/lock-locked.png` rewrites to `https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png`.
 
 
+# Selected Demos
+
+Before talking about the various [DumbDisplay features](#features), here is a couple of selected demos that might interested you
+
+|||
+|--|--|
+|[Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|![](screenshots/tft_show_show_ss.png)|
+|![](screenshots/pico-radar.png)|[Arduino Experiment of Ultrasonic Sensor, ToF Laser Range Sensor and Servo Motor, With Raspberry Pi Pico and DumbDisplay](https://www.instructables.com/Arduino-Experiment-of-Ultrasonic-Sensor-ToF-Laser-/)|
+|[Mnist Dataset -- From Training to Running With ESP32 / ESP32S3](https://www.instructables.com/Mnist-Dataset-From-Training-to-Running-With-ESP32-/)|![](screenshots/esp32_mnist.gif)|
+|![](screenshots/ddgpsmap_ss.png)|[NEO-7M U-BLOX GPS Module Experiment](https://www.instructables.com/NEO-7M-U-BLOX-GPS-Module-Experiment/)
+
+
 # Features
 
 
@@ -1117,10 +1130,10 @@ Here is some description on how JSON response to JSON data is converted and how 
   { 
     "full_name": "Bruce Lee",
     "name":
-    {
-      "first": "Bruce",
-      "last": "Lee"
-    },
+      {
+        "first": "Bruce",
+        "last": "Lee"
+      },
     "gender": "Male",
     "age": 32
   }
@@ -2204,7 +2217,7 @@ MIT
 
 # Change History
 
-v0.9.9-r11
+v0.9.9-r20
   - enhanced JoystickDDLayer
   - enhanced SelectionDDLayer
   - enhanced 'auto pin' layers
