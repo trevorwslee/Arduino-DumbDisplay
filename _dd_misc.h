@@ -518,8 +518,8 @@ class DDFadingLayers {
 /// @since v0.9.9
 class DDMasterResetPassiveConnectionHelper {
   public:
-    DDMasterResetPassiveConnectionHelper(DumbDisplay& dumbdisplay) : dumbdisplay(dumbdisplay) {
-      this->init_state = -2;
+    DDMasterResetPassiveConnectionHelper(DumbDisplay& dumbdisplay, bool saveAndPlaybackWhenInit = false) : dumbdisplay(dumbdisplay), saveAndPlaybackWhenInit(saveAndPlaybackWhenInit) {
+      this->initState = -2;
     }
   public:
     /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
@@ -536,34 +536,43 @@ class DDMasterResetPassiveConnectionHelper {
         if (connectStatus.reconnecting) {
           // if reconnecting (i.e. lost previous connection, "master reset" DumbDisplay)
           dumbdisplay.masterReset();
-          this->init_state = 0;
+          this->initState = 0;
           if (disconnectedCallback != NULL) disconnectedCallback();
           return false;
         }
-        if (this->init_state <= 0) {
-          if (initializeCallback != NULL) initializeCallback();
-          this->init_state = 1;
+        if (this->initState <= 0) {
+          if (initializeCallback != NULL) {
+            if (this->saveAndPlaybackWhenInit) {
+              dumbdisplay.recordLayerCommands();
+            }
+            initializeCallback();
+            if (this->saveAndPlaybackWhenInit) {
+              dumbdisplay.playbackLayerCommands();
+            }
+          }
+          this->initState = 1;
         }
         if (updateCallback != NULL) updateCallback();
-        this->init_state = 2;
+        this->initState = 2;
         return true;
       } else {
-        if (this->init_state == -2) {
-          this->init_state = 0;  // so initially will go to 0 first
-        } else if (this->init_state == 0) {
-          this->init_state = -1;
+        if (this->initState == -2) {
+          this->initState = 0;  // so initially will go to 0 first
+        } else if (this->initState == 0) {
+          this->initState = -1;
         }
       }
       return false;
     }
-    inline bool initialized() { return this->init_state > 0; }
-    inline bool firstUpdated() { return this->init_state > 1; }
-    inline bool isIdle() { return this->init_state <= 0; }
-    inline bool justBecameIdle() { return this->init_state == 0; }
+    inline bool initialized() { return this->initState > 0; }
+    inline bool firstUpdated() { return this->initState > 1; }
+    inline bool isIdle() { return this->initState <= 0; }
+    inline bool justBecameIdle() { return this->initState == 0; }
   public:
     DumbDisplay& dumbdisplay;  
   private:
-    int8_t init_state;
+    bool saveAndPlaybackWhenInit;
+    int8_t initState;
 };
 
 /// @brief
