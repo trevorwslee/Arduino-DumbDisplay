@@ -518,6 +518,7 @@ class DDFadingLayers {
 /// @since v0.9.9
 class DDMasterResetPassiveConnectionHelper {
   public:
+    /// @param saveAndPlaybackWhenInit if true, will call DumbDisplay::recordLayerCommands() / DumbDisplay::playbackLayerCommands() before and after calling `initializeCallback`
     DDMasterResetPassiveConnectionHelper(DumbDisplay& dumbdisplay, bool saveAndPlaybackWhenInit = false) : dumbdisplay(dumbdisplay), saveAndPlaybackWhenInit(saveAndPlaybackWhenInit) {
       this->initState = -2;
     }

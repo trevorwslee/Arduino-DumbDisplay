@@ -1369,8 +1369,9 @@ class DumbDisplay {
     BasicDDTunnel* createDateTimeServiceTunnel();
     /// create a general "service tunnel" for purposes like getting date-time info from phone;
     /// use reconnectTo() with commands like
-    /// - now
-    /// - now-millis
+    /// - `now` -- e.g `now:yyyy-MM-dd-hh-mm-ss` where `yyyy-MM-dd-hh-mm-ss` is the format
+    /// - `now-millis`
+    /// - `confirm` -- pop up a dialog to confirm; e.g. `confirm?title=Confirm&message=Are%20you%20sure%3F&ok=Yes&cancel=No`
     /// @see BasicDDTunnel
     BasicDDTunnel* createGeneralServiceTunnel();
     /// create a "service tunnel" for getting GPS info from phone
@@ -1471,6 +1472,8 @@ class DumbDisplay {
     /// @param imageNames '+' delimited
     /// @param asImageName name for the stitched image
     void stitchImages(const String& imageNames, const String& asImageName);
+    /// pop up a dialog to alert
+    void alert(const String& message, const String& title = "");
     /// reorder the layer (by moving one layer in the z-order plane)
     /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
     void reorderLayer(DDLayer *pLayer, const String& how);
