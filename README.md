@@ -2218,6 +2218,7 @@ MIT
 # Change History
 
 v0.9.9-r20
+  - enhanced "generalServiceTunnel"
   - enhanced JoystickDDLayer
   - enhanced SelectionDDLayer
   - enhanced 'auto pin' layers

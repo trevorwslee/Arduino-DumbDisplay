@@ -4044,11 +4044,15 @@ void DumbDisplay::writeComment(const String& comment) {
   }
 }
 void DumbDisplay::tone(uint32_t freq, uint32_t duration) {
-  _Connect();
+  if (false) {  // false since 20240810
+    _Connect();
+  }
   _sendCommand2("", C_TONE, TO_C_INT(freq), TO_C_INT(duration));
 }
 void DumbDisplay::notone() {
-  _Connect();
+  if (false) {  // false since 20240810
+    _Connect();
+  }
   _sendCommand0("", C_NOTONE);
 }
 void DumbDisplay::saveSound8(const String& soundName, const int8_t *bytes, int sampleCount, int sampleRate, int numChannels) {
@@ -4160,6 +4164,9 @@ void DumbDisplay::savePixelImageGS(const String& imageName, const uint8_t *data,
 }
 void DumbDisplay::stitchImages(const String& imageNames, const String& asImageName) {
   _sendCommand2("", "STITCHIMGS", imageNames, asImageName);
+}
+void DumbDisplay::alert(const String& message, const String& title) {
+  _sendCommand2("", C_ALERT, title, message);
 }
 void DumbDisplay::debugOnly(int i) {
   _sendCommand2("", "DEBUGONLY", String(i), TO_C_INT(i));

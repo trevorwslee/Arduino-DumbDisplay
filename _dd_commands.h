@@ -21,6 +21,7 @@
 #define C_STREAMSND        "#f4"
 #define C_SAVECACHEDIMG    "#f5"
 #define C_SAVECACHEDIMGS   "#f6"
+#define C_ALERT            "#f7"
 
 #define C_border           "#10"
 #define C_padding          "#11" 
