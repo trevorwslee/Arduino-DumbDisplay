@@ -1365,7 +1365,7 @@ class DumbDisplay {
     /// for simplicity, use SimpleToolDDTunnel.checkResult() to check the result
     /// @see SimpleToolDDTunnel
     SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload = true);
-    /// use createGeneralServiceTunnel() instead
+    /// @deprecated use createGeneralServiceTunnel() instead
     BasicDDTunnel* createDateTimeServiceTunnel();
     /// create a general "service tunnel" for purposes like getting date-time info from phone;
     /// use reconnectTo() with commands like
