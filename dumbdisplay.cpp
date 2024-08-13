@@ -2775,9 +2775,9 @@ void JoystickDDLayer::moveToPos(int x, int y, bool sendFeedback) {
 void JoystickDDLayer::moveToCenter(bool sendFeedback) {
   _sendCommand1(layerId, C_movetocenter, TO_BOOL(sendFeedback));
 }
-void JoystickDDLayer::valueRange(int minValue, int maxValue, int valueMultiplier, bool sendFeedback) {
+void JoystickDDLayer::valueRange(int minValue, int maxValue, int valueStep, bool sendFeedback) {
     if (_DDCompatibility >= 8) {
-      _sendCommand4(layerId, C_valuerange, String(minValue), String(maxValue), String(valueMultiplier), TO_BOOL(sendFeedback));
+      _sendCommand4(layerId, C_valuerange, String(minValue), String(maxValue), String(valueStep), TO_BOOL(sendFeedback));
     } else {
       _sendCommand3(layerId, C_valuerange, String(minValue), String(maxValue), TO_BOOL(sendFeedback));
     }
