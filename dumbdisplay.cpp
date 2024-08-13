@@ -156,8 +156,7 @@
 #define USE_MALLOC_FOR_LAYER_ARRAY
 
 
-// see nobody.trevorlee.dumbdisplay.DDActivity#ddSourceCompatibility
-#define DD_SID "Arduino-c8"  // DD library version (compatibility)
+#define DD_SID "Arduino-c9"  // DD library version (compatibility)
 
 
 #include "_dd_commands.h"
@@ -2776,8 +2775,12 @@ void JoystickDDLayer::moveToPos(int x, int y, bool sendFeedback) {
 void JoystickDDLayer::moveToCenter(bool sendFeedback) {
   _sendCommand1(layerId, C_movetocenter, TO_BOOL(sendFeedback));
 }
-void JoystickDDLayer::valueRange(int minValue, int maxValue, bool sendFeedback) {
-  _sendCommand3(layerId, C_valuerange, String(minValue), String(maxValue), TO_BOOL(sendFeedback));
+void JoystickDDLayer::valueRange(int minValue, int maxValue, int valueMultiplier, bool sendFeedback) {
+    if (_DDCompatibility >= 8) {
+      _sendCommand4(layerId, C_valuerange, String(minValue), String(maxValue), String(valueMultiplier), TO_BOOL(sendFeedback));
+    } else {
+      _sendCommand3(layerId, C_valuerange, String(minValue), String(maxValue), TO_BOOL(sendFeedback));
+    }
 }
 void JoystickDDLayer::snappy(bool snappy) {
   _sendCommand1(layerId, C_snappy, TO_BOOL(snappy));

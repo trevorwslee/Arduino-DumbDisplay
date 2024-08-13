@@ -70,6 +70,10 @@
   #error "Board not supported"
 #endif
 
+#if defined(NO_FACE_DETECTION)
+  #undef ENABLE_FACE_DETECTION
+#endif
+
 #define OFF_TFT_IDLE_S 30
 
 #if defined(ENABLE_FACE_DETECTION)

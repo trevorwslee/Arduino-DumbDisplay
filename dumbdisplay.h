@@ -751,7 +751,7 @@ class JoystickDDLayer: public DDLayer {
     /// @param minValue the min value of the stick
     /// @param maxValue the max value of the stick
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
-    void valueRange(int minValue, int maxValue, bool sendFeedback = false);
+    void valueRange(int minValue, int maxValue, int valueMultiplier = 1, bool sendFeedback = false);
     /// set 'snappy' makes stick snaps to closest value when moved
     void snappy(bool snappy = true);
     /// show value on top of the stick 
