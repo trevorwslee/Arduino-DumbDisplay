@@ -2128,6 +2128,12 @@ void DDLayer::opacity(int opacity) {
 void DDLayer::alpha(int alpha) {
   _sendCommand1(layerId, C_alpha, String(alpha));
 }
+void DDLayer::blend(const String& color, int alpha, const String& mode) {
+  _sendCommand3(layerId, C_blend, color, String(alpha), mode);
+}
+void DDLayer::noblend() {
+  _sendCommand0(layerId, C_noblend);
+}
 // void DDLayer::opacity(int opacity) {
 //   if (_DDCompatibility >= 2) {
 //       setAlpha(opacity);

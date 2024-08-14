@@ -202,7 +202,14 @@ class DDLayer: public DDObject {
     /// set layer's alpha channel
     /// @param alpha 0 - 255
     void alpha(int alpha);
-    /// normally used for "feedback" -- flash the default way (layer + border)
+    /// blending with "film" of color over the layer
+    /// @param color 
+    /// @param alpha 
+    /// @param mode "darken" / "lighten" / "screen" / "overlay"
+    void blend(const String& color, int alpha = 255, const String& mode = "darken");
+    /// no blending
+    void noblend();
+   /// normally used for "feedback" -- flash the default way (layer + border)
     void flash();
     /// normally used for "feedback" -- flash the area (x, y) where the layer is clicked
     void flashArea(int x, int y);
