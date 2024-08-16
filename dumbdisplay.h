@@ -205,7 +205,7 @@ class DDLayer: public DDObject {
     /// blending with "film" of color over the layer
     /// @param color 
     /// @param alpha 
-    /// @param mode "darken" / "lighten" / "screen" / "overlay"
+    /// @param mode xfermode "darken" / "lighten" / "screen" / "overlay" / "" (no xfermode)
     void blend(const String& color, int alpha = 255, const String& mode = "darken");
     /// no blending
     void noblend();

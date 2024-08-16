@@ -162,6 +162,21 @@
 #include "_dd_commands.h"
 
 
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO) || defined(ARDUINO_AVR_MEGA2560)
+// void display_freeram() {
+//   Serial.print(F("- SRAM left: "));
+//   Serial.println(freeRam());
+// }
+
+int freeRam() {  // https://docs.arduino.cc/learn/programming/memory-guide/?_gl=1*1tn4gcs*_gcl_au*MTQwODU3MTY5MS4xNzE4Mzc0MjIy*FPAU*MTQwODU3MTY5MS4xNzE4Mzc0MjIy*_ga*NDU2NzU2Mzg0LjE3MDk2NDIyMTk.*_ga_NEXN8H46L5*MTcyMzcyMzQzNi40NC4xLjE3MjM3MjQyNzUuMC4wLjUyNDIxMTk0MQ..*_fplc*RUtpd2ZNeFBsZXQ5bzhWamxXemRJTFclMkYzRWwzVE1zayUyQko3Nmg1U1htVXJCb3NuS2xLd05pR3h1cGxxZUZPNEZzN1JSeThtSWdBa21SWkVTbG1YcktZY0JTZ0xrRVlWdW1ZakszVjl1OTBZbVRFelFVQkVFY1BiaEZPUEsyQSUzRCUzRA..
+  extern int __heap_start,*__brkval;
+  int v;
+  return (int)&v - (__brkval == 0  
+    ? (int)&__heap_start : (int) __brkval);  
+}
+#endif
+
+
 long _DDIdleTimeoutMillis = DD_DEF_IDLE_TIMEOUT;
 bool _DDDisableParamEncoding = false;
 
@@ -870,7 +885,9 @@ bool __Connect(/*bool calledPassive = false*/) {
   }
   if (true) {       
     _IO->print("// Connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
-#ifdef ESP32
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO) || defined(ARDUINO_AVR_MEGA2560)
+    _IO->print("// $ Free SRAM: " + String(freeRam() / 1024.0) + "KB" + "\n");
+#elif defined(ESP32)
     _IO->print(String("// $ Sketch: ") + String(ESP.getSketchSize() / 1024.0) + "KB" + " / Free: " + String(ESP.getFreeSketchSpace() / 1024.0) + "KB" + "\n");
     _IO->print(String("// $ Heap: " + String(ESP.getHeapSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreeHeap() / 1024.0) + "KB" + "\n");
     _IO->print(String("// $ PSRAM: " + String(ESP.getPsramSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreePsram() / 1024.0) + "KB" + "\n");
