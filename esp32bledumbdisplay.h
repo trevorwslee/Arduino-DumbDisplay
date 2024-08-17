@@ -84,6 +84,12 @@ class DDBLESerialIO: public DDInputOutput {
       if (!initialized) {
         initBLE();
       } else {
+       if (!willUseSerial()) {  // since 2024-08-13
+        if (firstCall) {
+            if (!Serial) Serial.begin(DD_SERIAL_BAUD);
+          }
+          Serial.println("ble address: " + address);
+       }
 // #ifdef DD_DEBUG_BLE
 //         if (firstCall) {
 //           Serial.println("FIRST preConnect() called, but already initialized");   
@@ -326,12 +332,16 @@ class DDBLESerialIO: public DDInputOutput {
       pService->start();
       pServer->getAdvertising()->start();
       initialized = true;
+      address = BLEDevice::getAddress().toString().c_str();
+      address.toUpperCase();
+      //serviceUUID = pService->getUUID().toString().c_str();
 #ifdef DD_DEBUG_BLE
       Serial.println("... done initialized BLE ... waiting for connection ...");
 #endif      
     }
   private:
     String deviceName;
+    String address;
     bool initialized;
     ServerCallbacks* pServerCallbacks;
     Callbacks* pCallbacks;

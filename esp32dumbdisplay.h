@@ -59,6 +59,14 @@ class DDBluetoothSerialIO: public DDInputOutput {
     bool preConnect(bool firstCall) {
       DDInputOutput::preConnect(firstCall);
       serialBT.begin(btLocalName);
+      if (!willUseSerial()) {  // since 2024-08-13
+        if (firstCall) {
+          if (!Serial) Serial.begin(DD_SERIAL_BAUD);
+        }
+        String address = serialBT.getBtAddressString();
+        address.toUpperCase();
+        Serial.println("bluetooth address: " + address);
+      }
       return true;
     }
     void flush() {
