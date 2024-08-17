@@ -2857,6 +2857,14 @@ void WebViewDDLayer::execJs(const String& js) {
   _sendCommand1(layerId, C_execjs, js);
 }
 
+void DumbDisplayDDLayer::connect(const String& deviceType, const String& deviceName, const String& deviceAddress) {
+  _sendCommand3(layerId, C_connect, deviceType, deviceName, deviceAddress);
+}
+void DumbDisplayDDLayer::disconnect() {
+  _sendCommand0(layerId, C_disconnect);
+}
+
+
 
 
 // bool DDInputOutput::available() {
@@ -3969,6 +3977,16 @@ WebViewDDLayer* DumbDisplay::createWebViewLayer(int width, int height, const Str
   _PostCreateLayer(pLayer);
   return pLayer;
 }
+
+DumbDisplayDDLayer* DumbDisplay::createDumbDisplayLayer(int width, int height) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("dumbdisplay"), String(width), String(height));
+  DumbDisplayDDLayer* pLayer = new DumbDisplayDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;  
+}
+
 
 
 void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {

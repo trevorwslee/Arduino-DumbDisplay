@@ -842,6 +842,17 @@ class WebViewDDLayer: public DDLayer {
 };
 
 
+/// Class for an other DumbDisplay "device dependent view" layer, which connects to other device's DumbDisplay
+class DumbDisplayDDLayer: public DDLayer {
+  public:
+    /// for internal use only
+    DumbDisplayDDLayer(int8_t layerId): DDLayer(layerId) {
+    }
+    void connect(const String& deviceType, const String& deviceName, const String& deviceAddress);
+    void disconnect();
+};
+
+
 
 /// Helper class for constructing "tunnel" endpoint, if the endpoint is not a simple URL. Can be used for DDTunnel::reconnectToEndpoint()
 class DDTunnelEndpoint {
@@ -1354,6 +1365,9 @@ class DumbDisplay {
     /// create a WebView layer
     /// @see WebViewDDLayer
     WebViewDDLayer* createWebViewLayer(int width, int height, const String& jsObjectName = "DD");
+    /// create a DumbDisplay layer
+    /// @see DumbDisplayDDLayer
+    DumbDisplayDDLayer* createDumbDisplayLayer(int width, int height);
     /// create a "tunnel" for accessing the Web
     /// @note if not connect now, need to connect via reconnect()
     /// @see BasicDDTunnel

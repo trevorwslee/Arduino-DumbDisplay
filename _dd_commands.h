@@ -142,6 +142,9 @@
 #define C_loadhtml         "#bb"
 #define C_execjs           "#bc"
 
+#define C_connect          "#bd"
+#define C_disconnect       "#be"
+
 #define C_fd               "fd"
 #define C_lt               "lt"
 #define C_rt               "rt"
