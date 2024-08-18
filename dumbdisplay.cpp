@@ -156,7 +156,8 @@
 #define USE_MALLOC_FOR_LAYER_ARRAY
 
 
-#define DD_SID "Arduino-c9"  // DD library version (compatibility)
+//#define DD_SID "Arduino-c9"  // DD library version (compatibility)
+#define DD_SID "Arduino-c10"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v30
 
 
 #include "_dd_commands.h"
@@ -2857,10 +2858,10 @@ void WebViewDDLayer::execJs(const String& js) {
   _sendCommand1(layerId, C_execjs, js);
 }
 
-void DumbDisplayDDLayer::connect(const String& deviceType, const String& deviceName, const String& deviceAddress) {
+void DumbDisplayWindowDDLayer::connect(const String& deviceType, const String& deviceName, const String& deviceAddress) {
   _sendCommand3(layerId, C_connect, deviceType, deviceName, deviceAddress);
 }
-void DumbDisplayDDLayer::disconnect() {
+void DumbDisplayWindowDDLayer::disconnect() {
   _sendCommand0(layerId, C_disconnect);
 }
 
@@ -3902,10 +3903,14 @@ LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeig
 SelectionDDLayer* DumbDisplay::createSelectionLayer(int colCount, int rowCount,
                                                     int horiSelectionCount, int vertSelectionCount,
                                                     int charHeight, const String& fontName,
-                                                    float selectionBorderSizeCharHeightFactor) {
+                                                    bool canDrawDots, float selectionBorderSizeCharHeightFactor) {
   int lid = _AllocLid();
   String layerId = String(lid);
-  _sendCommand8(layerId, "SU", String("selection"), String(colCount), String(rowCount), String(horiSelectionCount), String(vertSelectionCount), String(charHeight), fontName, TO_NUM(selectionBorderSizeCharHeightFactor));
+  if (_DDCompatibility >= 9) {
+    _sendCommand9(layerId, "SU", String("selection"), String(colCount), String(rowCount), String(horiSelectionCount), String(vertSelectionCount), String(charHeight), fontName, TO_BOOL(canDrawDots), TO_NUM(selectionBorderSizeCharHeightFactor));
+  } else {
+    _sendCommand8(layerId, "SU", String("selection"), String(colCount), String(rowCount), String(horiSelectionCount), String(vertSelectionCount), String(charHeight), fontName, TO_NUM(selectionBorderSizeCharHeightFactor));
+  }
   SelectionDDLayer* pLayer = new SelectionDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
@@ -3978,11 +3983,11 @@ WebViewDDLayer* DumbDisplay::createWebViewLayer(int width, int height, const Str
   return pLayer;
 }
 
-DumbDisplayDDLayer* DumbDisplay::createDumbDisplayLayer(int width, int height) {
+DumbDisplayWindowDDLayer* DumbDisplay::createDumbDisplayWindowLayer(int width, int height) {
   int lid = _AllocLid();
   String layerId = String(lid);
-  _sendCommand3(layerId, "SU", String("dumbdisplay"), String(width), String(height));
-  DumbDisplayDDLayer* pLayer = new DumbDisplayDDLayer(lid);
+  _sendCommand3(layerId, "SU", String("dumbdisplaywin"), String(width), String(height));
+  DumbDisplayWindowDDLayer* pLayer = new DumbDisplayWindowDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;  
 }

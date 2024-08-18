@@ -786,9 +786,8 @@ class PlotterDDLayer: public DDLayer {
 };
 
 
-/// @brief
 /// Class for TomTom map "device dependent view" layer, which means that it is solely rendered by the Android view that it hosts; 
-/// created with DumbDisplay::createTomTomMapLayer()
+/// see created with DumbDisplay::createTomTomMapLayer()
 class TomTomMapDDLayer: public DDLayer {
   public:
     /// for internal use only
@@ -829,7 +828,8 @@ class TerminalDDLayer: public DDLayer {
     }
 };
 
-/// Class for a WebView "device dependent view" layer
+/// Class for a WebView "device dependent view" layer;
+/// see created with DumbDisplay::createWebViewLayer()
 class WebViewDDLayer: public DDLayer {
   public:
     /// for internal use only
@@ -842,11 +842,12 @@ class WebViewDDLayer: public DDLayer {
 };
 
 
-/// Class for an other DumbDisplay "device dependent view" layer, which connects to other device's DumbDisplay
-class DumbDisplayDDLayer: public DDLayer {
+/// Class for DumbDisplay "window" "device dependent view" layer, which creates a "window" for connecting to other device's DumbDisplay
+/// see created with DumbDisplay::createDumbDisplayWindowLayer()
+class DumbDisplayWindowDDLayer: public DDLayer {
   public:
     /// for internal use only
-    DumbDisplayDDLayer(int8_t layerId): DDLayer(layerId) {
+    DumbDisplayWindowDDLayer(int8_t layerId): DDLayer(layerId) {
     }
     void connect(const String& deviceType, const String& deviceName, const String& deviceAddress);
     void disconnect();
@@ -1331,7 +1332,7 @@ class DumbDisplay {
     SelectionDDLayer* createSelectionLayer(int colCount = 16, int rowCount = 2,
                                            int horiSelectionCount = 1, int vertSelectionCount = 1,
                                            int charHeight = 0, const String& fontName = "",
-                                           float selectionBorderSizeCharHeightFactor = 0.3);
+                                           bool canDrawDots = true, float selectionBorderSizeCharHeightFactor = 0.3);
     /// create a graphical LCD layer
     /// @see GraphicalDDLayer
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
@@ -1365,9 +1366,9 @@ class DumbDisplay {
     /// create a WebView layer
     /// @see WebViewDDLayer
     WebViewDDLayer* createWebViewLayer(int width, int height, const String& jsObjectName = "DD");
-    /// create a DumbDisplay layer
+    /// create a DumbDisplay "window" layer
     /// @see DumbDisplayDDLayer
-    DumbDisplayDDLayer* createDumbDisplayLayer(int width, int height);
+    DumbDisplayWindowDDLayer* createDumbDisplayWindowLayer(int width, int height);
     /// create a "tunnel" for accessing the Web
     /// @note if not connect now, need to connect via reconnect()
     /// @see BasicDDTunnel

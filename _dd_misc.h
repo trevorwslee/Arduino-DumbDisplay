@@ -5,14 +5,10 @@ const String DDEmptyString = String();
 
 #ifndef DD_NO_DEBUG_INTERFACE
 class DrawTextDDDebugInterface: public DDDebugInterface {
-  // public:
-  //   OledDDDebugInterface(Adafruit_SSD1306& display, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1, */, bool indicateSendCommand = false): display(display) {
-  //     this->x = x;
-  //     this->y = y;
-  //     //this->fontSize = fontSize;
-  //     //this->font = font;
-  //     this->indicateSendCommand = indicateSendCommand;
-  //   }
+  public:
+    void setConnectionType(const char* connectionType) {
+      this->connectionType = connectionType;
+    }
   public:
     virtual void logConnectionState(DDDebugConnectionState connectionState) {
       const char* state = NULL;
@@ -34,7 +30,15 @@ class DrawTextDDDebugInterface: public DDDebugInterface {
           break;
       }
       if (state != NULL) {
-        drawText(state, false);
+        if (true) {
+          String s = state;
+          if (connectionType != NULL) {
+            s = String(connectionType) + ":" + s;
+          }
+          drawText(s.c_str(), false);
+        } else {
+          drawText(state, false);
+        }
       }
     }
     virtual void logError(const String& errMsg) {
@@ -43,6 +47,8 @@ class DrawTextDDDebugInterface: public DDDebugInterface {
   protected:  
     virtual void drawText(const char* text, bool isError) {
     }
+  protected:
+    const char* connectionType;   
 };
 class ToSerialDDDebugInterface: public DDDebugInterface {
   public:
@@ -82,9 +88,9 @@ class LedDDDebugInterface: public DDDebugInterface {
   private:
     uint8_t ledPin;
 };
-class CompositDDDebugIntreface: public DDDebugInterface {
+class CompositeDDDebugInterface: public DDDebugInterface {
   public:
-    CompositDDDebugIntreface(DDDebugInterface* debug1, DDDebugInterface* debug2){
+    CompositeDDDebugInterface(DDDebugInterface* debug1, DDDebugInterface* debug2){
       this->debug1 = debug1;
       this->debug2 = debug2;
     }

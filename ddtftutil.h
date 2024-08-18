@@ -21,18 +21,33 @@ class TftDDDebugInterface: public DrawTextDDDebugInterface {
   public:
     virtual void logSendCommand(int state) {
       if (indicateSendCommand) {
-        tft.fillRect(x + 2, y + 2, x + 12, y + 12, TFT_WHITE);
-        if (state == 1) {
-          tft.fillCircle(x + 7, y + 7, 5, TFT_RED);
+        if (true) {
+          tft.fillRect(x, y, x + 10, y + 10, TFT_WHITE);
+          if (state == 1) {
+            tft.fillCircle(x + 5, y + 5, 5, TFT_RED);
+          }
+        } else {
+          tft.fillRect(x + 2, y + 2, x + 12, y + 12, TFT_WHITE);
+          if (state == 1) {
+            tft.fillCircle(x + 7, y + 7, 5, TFT_RED);
+          }
         }
       }
     }
   protected:  
     virtual void drawText(const char* text, bool isError) {
-      if (isError) {
-        showMsg(text, 80);
+      if (true) {
+        if (isError) {
+          showMsg(text, 80);
+        } else {
+          showMsg(text, 10);
+        }
       } else {
-        showMsg(text, 16);
+        if (isError) {
+          showMsg(text, 80);
+        } else {
+          showMsg(text, 16);
+        }
       }
     }
   private:  
