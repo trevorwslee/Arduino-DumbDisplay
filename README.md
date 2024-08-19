@@ -37,6 +37,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
     - [Terminal Layer](#terminal-layer)
     - [WebView Layer](#webview-layer)
     - [TomTom Map Layer](#tomtom-map-layer)
+    - [DumbDisplay Window Layer](#dumbdisplay-window-layer)
   - [Downloadable Font Support](#downloadable-font-support)
   - [Positioning of Layers](#positioning-of-layers)
   - [Record and Playback Commands](#record-and-playback-commands)
@@ -1352,6 +1353,14 @@ Another "device dependent view" layer is [`TomTomMapDDLayer`](https://trevorwsle
 |![](screenshots/ddnowhere.jpg)|For demonstration, the above "now/here" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. The complete "nowhere" sample is https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddnowhere/ddnowhere.ino|
 
 
+### DumbDisplay Window Layer
+
+An experimental support of connecting to other microcontroller's DumbDisplay in a "window" can be realized with `DumbDisplayWindowDDLayer`.
+
+One use case is -- a microcontroller implementing a remote control for a remote car with DumbDisplay, and additionally, a ESP32Cam put in the front of the remote car for 
+streaming live-pictures to the remote control independently.
+
+
 ## Downloadable Font Support
 
 Layers like [`GraphicalDDLayer`](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) can use specified font for rendering text; however, there are not many fonts in normal Android installments.
@@ -2217,7 +2226,7 @@ MIT
 
 # Change History
 
-v0.9.9-r20
+v0.9.9-r30
   - added DumbDisplayWindowDDLayer
   - added DDLayer "blend"
   - bug fix

@@ -100,18 +100,22 @@ void loop() {
     framesize_t frameSize;
     switch (imageSize) {
       case 1:
+        frameSize = FRAMESIZE_QVGA;
+        resolutionLayer->writeCenteredLine("320x240");
+        break;
+      case 2:
         frameSize = FRAMESIZE_VGA;
         resolutionLayer->writeCenteredLine("640x480");
         break;
-      case 2:
+      case 3:
         frameSize = FRAMESIZE_SVGA;
         resolutionLayer->writeCenteredLine("800x600");
         break;
-      case 3: 
+      case 4: 
         frameSize = FRAMESIZE_XGA;
         resolutionLayer->writeCenteredLine("1024x768");
         break;
-      case 4:  
+      case 5:  
         frameSize = FRAMESIZE_HD;
         resolutionLayer->writeCenteredLine("1280x720");
         break;
@@ -134,7 +138,7 @@ void loop() {
   }
 
   if (resolutionLayer->getFeedback()) {
-    if (imageSize < 4) {
+    if (imageSize < 5) {
       imageSize = imageSize + 1;
     } else {
       imageSize = 1;
