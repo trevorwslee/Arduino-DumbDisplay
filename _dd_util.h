@@ -1,6 +1,14 @@
 #ifndef _dd_util_h
 #define _dd_util_h
 
+#define GENERAL_SERVICE_CONNECT_FOR_GET_DATE_TIME "now:yyyy-MM-dd-HH-mm-ss"
+void ParseGeneralServiceGetDataTimeResponse(const String& response, int& year, int& month, int& day, int& hour, int& minute, int& second);
+
+#if defined(ESP32)
+void Esp32SetDateTime(int year, int month, int day, int hour, int minute, int second);
+bool Esp32GetDateTime(int& year, int& month, int& day, int& hour, int& minute, int& second);
+#endif
+
 
 void DDDebugOnly(int32_t i);
 
