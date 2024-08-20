@@ -1355,9 +1355,34 @@ Another "device dependent view" layer is [`TomTomMapDDLayer`](https://trevorwsle
 
 ### DumbDisplay Window Layer
 
-An experimental support of connecting to other microcontroller's DumbDisplay in a "window" can be realized with `DumbDisplayWindowDDLayer`.
+An experimental support of connecting to other microcontroller's DumbDisplay in a "window" can be realized with `DumbDisplayWindowDDLayer`, like
+```
+...
+DumbDisplayWindowDDLayer *ddwin_layer;
+...
+void setup() {
+  ...
+  ddwin_layer = dumbdisplay.createDumbDisplayWindowLayer(250, 200);
+  ddwin_layer->border(3, "blue", "round", 2);
+  ddwin_layer->padding(3);
+  ddwin_layer->connect("WIFI", "My Device", "192.168.0.155");
+  ...
+}
+...
+```
+where arguments to `connect()` are:
+* 'Device type', like `WIFI`, `BT` or `LE`
+* 'Device name'
+* 'Device address' -- for `WIFI`, the IP address of the target microcontroller to connect to;
+                      for `BT` / `LE`, the target microcontroller Bluetooth module's address like `84:0D:8E:D2:90:EE`
 
-One use case is -- a microcontroller implementing a remote control for a remote car with DumbDisplay, and additionally, a ESP32Cam put in the front of the remote car for 
+Note that the target microcontroller is supposed to be an independent DumbDisplay-enabled sketch that doesn't rely on being "contained", it should be fully connectable like other DumbDisplay sketches.
+For `WIFI`, you should be able to see the WIFI IP address by connecting the target microcontroller to Serial monitor; likewise, you can find the `BT` / `LE` Bluetooth module address by connecting the microcontroller to Serial monitor as well. 
+
+
+
+
+One use case of `DumbDisplayWindowDDLayer` can be like -- a microcontroller implementing a remote control for a remote car with DumbDisplay, and additionally, a ESP32Cam put in the front of the remote car for 
 streaming live-pictures to the remote control independently.
 
 
