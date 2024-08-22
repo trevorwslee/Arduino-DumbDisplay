@@ -677,6 +677,7 @@ class GraphicalDDLayer: public DDLayer {
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /// cache image; not saved
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
+    void cacheImageWithTS(const String& imageName, const uint8_t *bytes, int byteCount, long imageTimestamp, char compressionMethod = 0);
     /// cache single-bit "pixel" image (i.e. B&W image); not saved
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
     /// cache 16-bit "pixel" image (i.e. 565 RGB image); not saved
@@ -686,9 +687,15 @@ class GraphicalDDLayer: public DDLayer {
     /// saved cached image
     /// @param imageName cachedImageName
     void saveCachedImageFile(const String& imageName, const String& asImageName = "");
+    /// saved cached image with timestamp
+    /// @param imageName cachedImageName
+    void saveCachedImageFileWithTS(const String& imageName, const String& asImageName, long imageTimestamp);
     /// saved cached image (async / non-blocking)
     /// @param imageName cachedImageName
     void saveCachedImageFileAsync(const String& imageName, const String& asImageName = "");
+    /// saved cached image (async / non-blocking)
+    /// @param imageName cachedImageName
+    void saveCachedImageFileWithTSAsync(const String& imageName, const String& asImageName, long imageTimestamp);
     /// saved cached image
     /// @param stitchAsImageName if not empty, will stitch all cached images to one image file of the given name
     void saveCachedImageFiles(const String& stitchAsImageName = "");
