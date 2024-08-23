@@ -115,6 +115,9 @@
 #define VALIDATE_CONNECTION
 //#define DEBUG_WITH_LED
 
+
+#define MASTER_RESET_KEEP_CONNECTED
+
 #ifdef DD_NO_RECONNECT
   #warning ??? DD_NO_RECONNECT set ???
 #else
@@ -501,7 +504,7 @@ this->print("// NEED TO RECONNECT\n");
         _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_RECONNECTED);
       }
 #endif
-     }
+    }
 #endif
   }
 #endif  
@@ -603,6 +606,7 @@ volatile bool _HandlingFeedback = false;
 #define _C_PRECONNECTED   3
 #define _C_IOPROXY_SET    4
 #define _C_HANDSHAKE      5
+//#define _C_MASTER_RESET   6
 
 struct _ConnectState {
   _ConnectState(): step(0) {}
@@ -620,6 +624,12 @@ struct _ConnectState {
 _ConnectState _C_state;
 
 bool __Connect(/*bool calledPassive = false*/) {
+// #if defined(MASTER_RESET_KEEP_CONNECTED)
+//   if (_C_state.step == _C_MASTER_RESET) {
+//       _C_state.step = 0;
+//       return false;
+//   }
+// #endif
   bool mustLoop = !_IO->canConnectPassive();
   if (_C_state.step > 0 && _C_state.hsStartMillis > 0) {
     long diffMillis = millis() - _C_state.hsStartMillis;
@@ -1035,6 +1045,11 @@ void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
             //_IO = pSIO;
             pSIO = NULL;
           }
+#ifdef MASTER_RESET_KEEP_CONNECTED
+          if (_ConnectedIOProxy != NULL) {
+            delete _ConnectedIOProxy;
+          }
+#endif          
           _ConnectedIOProxy = new IOProxy(_IO);
           _ConnectedFromSerial = fromSerial;
           //_ConnectedFromSerial = _IO->isSerial();
@@ -4516,23 +4531,45 @@ bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {
 #ifndef DD_NO_PASSIVE_CONNECT
 void DumbDisplay::masterReset() {
 #ifdef SUPPORT_MASTER_RESET
-  bool reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
+  bool reconnecting = _ConnectedIOProxy != NULL && _ConnectedIOProxy->isReconnecting();
   //bool canLogToSerial = !_IO->isSerial();
   bool canLogToSerial = _CanLogToSerial();
 
+#ifdef MASTER_RESET_KEEP_CONNECTED
+  bool canKeepConnected = _Connected && !reconnecting && _DDCompatibility >= 9;
+#endif
+
   if (canLogToSerial) {
     Serial.println();
+#ifdef MASTER_RESET_KEEP_CONNECTED
+    if (canKeepConnected) {
+      Serial.println("***** Keep Connection Master Reset (START) *****");
+    } else {
+      Serial.println("***** Master Reset (START) *****");
+    }
+#else
     Serial.println("***** Master Reset (START) *****");
+#endif    
     if (reconnecting) {
       Serial.println("- during reconnecting");
     }
   }
 
-  // try the best to delete objects tracked
-  if (_Connected && !reconnecting) {
-    if (canLogToSerial) Serial.println(". send command to DD app to disconnect");
-    _sendCommand0("", "DISCONNECT");
+#ifdef MASTER_RESET_KEEP_CONNECTED
+  if (canKeepConnected) {
+    if (canLogToSerial) Serial.println(". still connected ... send command to DD app to master reset");
+    _sendCommand0("", "MASTERRESET");
+  } else {
+      if (canLogToSerial) Serial.println(". send command to DD app to disconnect");
+      _sendCommand0("", "DISCONNECT");
   }
+#else  
+    // try the best to delete objects tracked
+    if (_Connected && !reconnecting) {
+      if (canLogToSerial) Serial.println(". send command to DD app to disconnect");
+      _sendCommand0("", "DISCONNECT");
+    }
+#endif
 
   if (_NextLid > 0) {
     if (canLogToSerial) Serial.println(". cleanup layers / tunnels");
@@ -4563,6 +4600,22 @@ void DumbDisplay::masterReset() {
 //   }  
 // #endif
 
+#ifdef MASTER_RESET_KEEP_CONNECTED
+  if (canLogToSerial) Serial.println(String(". reset states ... canKeepConnected=") + String(canKeepConnected));
+  if (!canKeepConnected) {
+    if (_ConnectedIOProxy != NULL) {
+      delete _ConnectedIOProxy;
+      _ConnectedIOProxy = NULL;
+    }
+    _Connected = false;
+    _ConnectVersion = 0;
+    _C_state.step = 0;
+  }/* else {
+    _C_state.step = _C_MASTER_RESET;
+  }*/
+  _SendingCommand = false;
+  _HandlingFeedback = false;
+#else
   if (canLogToSerial) Serial.println(". reset states");
   if (_ConnectedIOProxy != NULL) {
     delete _ConnectedIOProxy;
@@ -4572,12 +4625,19 @@ void DumbDisplay::masterReset() {
   _HandlingFeedback = false;
   _Connected = false;
   _ConnectVersion = 0;
-  // _IdleCallback = NULL;
-  // _ConnectVersionChangedCallback = NULL;
   _C_state.step = 0;
+#endif  
 
   if (canLogToSerial) {
+#ifdef MASTER_RESET_KEEP_CONNECTED
+    if (canKeepConnected) {
+      Serial.println("***** Keep Connection Master Reset (END) *****");
+    } else {
+      Serial.println("***** Master Reset (END) *****");
+    }
+#else
     Serial.println("***** Master Reset (END) *****");
+#endif    
     Serial.println();
   }
 #endif

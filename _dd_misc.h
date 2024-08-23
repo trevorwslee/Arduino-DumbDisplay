@@ -560,7 +560,12 @@ class DDMasterResetPassiveConnectionHelper {
           this->initState = 1;
         }
         if (updateCallback != NULL) updateCallback();
-        this->initState = 2;
+          if (this->initState == -3) {
+            // just masterReset
+            this->initState = 0;
+          } else {
+            this->initState = 2;
+          }
         return true;
       } else {
         if (this->initState == -2) {
@@ -575,6 +580,13 @@ class DDMasterResetPassiveConnectionHelper {
     inline bool firstUpdated() { return this->initState > 1; }
     inline bool isIdle() { return this->initState <= 0; }
     inline bool justBecameIdle() { return this->initState == 0; }
+    /// normally, "master reset" will be called automatically when lost connection; but can be called explicitly;
+    /// note that if called explicitly, will not call disconnectedCallback;
+    /// IMPORTANT: should only call it in updateCallback, and after calling it, should return immediately
+    void masterReset() {
+      dumbdisplay.masterReset();
+      this->initState = -3;
+    }
   public:
     DumbDisplay& dumbdisplay;  
   private:
