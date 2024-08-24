@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r20)
+# DumbDisplay Arduino Library (v0.9.9-r30)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r20)](#dumbdisplay-arduino-library-v099-r20)
+- [DumbDisplay Arduino Library (v0.9.9-r30)](#dumbdisplay-arduino-library-v099-r30)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -37,6 +37,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
     - [Terminal Layer](#terminal-layer)
     - [WebView Layer](#webview-layer)
     - [TomTom Map Layer](#tomtom-map-layer)
+    - [DumbDisplay Window Layer](#dumbdisplay-window-layer)
   - [Downloadable Font Support](#downloadable-font-support)
   - [Positioning of Layers](#positioning-of-layers)
   - [Record and Playback Commands](#record-and-playback-commands)
@@ -80,6 +81,7 @@ On it, a few types of layers can be created mixed-and-matched:
 * ***Plotter***, which works similar to the plotter of DumbDisplay [when it is acting as serial monitor], but plotting data are sent by calling the layer's method -- [PlotterDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_plotter_d_d_layer.html)
 * ***Terminal*** "device dependent view" layer, for showing sketch traces -- [TerminalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html)
 * ***WebView*** "device dependent view" layer, that allows you to use Android WebView as a DD layer -- [WebViewDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_web_view_d_d_layer.html)
+* ***DumbDisplay window*** "device dependent view" layer, that opens up a window for connecting to other microcontroller's DumbDisplay sketch independently -- [DumbDisplayWindowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display_window_d_d_layer.html)
 * ***TomTom map*** "device dependent view" layer, for showing location (latitude/longitude) -- [TomTomMapDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html)
 
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected microcontroller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism) for more on "layer feedback" mechanism.
@@ -1352,6 +1354,39 @@ Another "device dependent view" layer is [`TomTomMapDDLayer`](https://trevorwsle
 |![](screenshots/ddnowhere.jpg)|For demonstration, the above "now/here" samples are combined into a more "useful" sketch that also makes use of this Android View to show the GPS location retrieved, continuously. The complete "nowhere" sample is https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/ddnowhere/ddnowhere.ino|
 
 
+### DumbDisplay Window Layer
+
+An experimental support of connecting to other microcontroller's DumbDisplay in a "window" can be realized with `DumbDisplayWindowDDLayer`, like
+```
+...
+DumbDisplayWindowDDLayer *ddwin_layer;
+...
+void setup() {
+  ...
+  ddwin_layer = dumbdisplay.createDumbDisplayWindowLayer(250, 200);
+  ddwin_layer->border(3, "blue", "round", 2);
+  ddwin_layer->padding(3);
+  ddwin_layer->connect("WIFI", "My Device", "192.168.0.155");
+  ...
+}
+...
+```
+where arguments to `connect()` are:
+* 'Device type', like `WIFI`, `BT` or `LE`
+* 'Device name'
+* 'Device address' -- for `WIFI`, the IP address of the target microcontroller to connect to;
+                      for `BT` / `LE`, the target microcontroller Bluetooth module's address like `84:0D:8E:D2:90:EE`
+
+Note that the target microcontroller is supposed to be an independent DumbDisplay-enabled sketch that doesn't rely on being "contained", it should be fully connectable like other DumbDisplay sketches.
+For `WIFI`, you should be able to see the WIFI IP address by connecting the target microcontroller to Serial monitor; likewise, you can find the `BT` / `LE` Bluetooth module address by connecting the microcontroller to Serial monitor as well. 
+
+
+
+
+One use case of `DumbDisplayWindowDDLayer` can be like -- a microcontroller implementing a remote control for a remote car with DumbDisplay, and additionally, a ESP32Cam put in the front of the remote car for 
+streaming live-pictures to the remote control independently.
+
+
 ## Downloadable Font Support
 
 Layers like [`GraphicalDDLayer`](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) can use specified font for rendering text; however, there are not many fonts in normal Android installments.
@@ -2216,6 +2251,11 @@ MIT
 
 
 # Change History
+
+v0.9.9-r30
+  - added DumbDisplayWindowDDLayer
+  - added DDLayer "blend"
+  - bug fix
 
 v0.9.9-r20
   - enhanced "generalServiceTunnel"

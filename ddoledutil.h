@@ -26,10 +26,18 @@ class OledDDDebugInterface: public DrawTextDDDebugInterface {
     }
   protected:  
     virtual void drawText(const char* text, bool isError) {
-      if (isError) {
-        showMsg(text, 70);
+      if (true) {
+        if (isError) {
+          showMsg(text, 70);
+        } else {
+          showMsg(text, 8);
+        }
       } else {
-        showMsg(text, 12);
+        if (isError) {
+          showMsg(text, 70);
+        } else {
+          showMsg(text, 12);
+        }
       }
     }
   private:  

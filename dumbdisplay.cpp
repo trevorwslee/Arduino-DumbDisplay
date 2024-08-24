@@ -115,6 +115,9 @@
 #define VALIDATE_CONNECTION
 //#define DEBUG_WITH_LED
 
+
+#define MASTER_RESET_KEEP_CONNECTED
+
 #ifdef DD_NO_RECONNECT
   #warning ??? DD_NO_RECONNECT set ???
 #else
@@ -156,11 +159,26 @@
 #define USE_MALLOC_FOR_LAYER_ARRAY
 
 
-// see nobody.trevorlee.dumbdisplay.DDActivity#ddSourceCompatibility
-#define DD_SID "Arduino-c8"  // DD library version (compatibility)
+//#define DD_SID "Arduino-c9"  // DD library version (compatibility)
+#define DD_SID "Arduino-c10"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v30
 
 
 #include "_dd_commands.h"
+
+
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO) || defined(ARDUINO_AVR_MEGA2560)
+// void display_freeram() {
+//   Serial.print(F("- SRAM left: "));
+//   Serial.println(freeRam());
+// }
+
+int freeRam() {  // https://docs.arduino.cc/learn/programming/memory-guide/?_gl=1*1tn4gcs*_gcl_au*MTQwODU3MTY5MS4xNzE4Mzc0MjIy*FPAU*MTQwODU3MTY5MS4xNzE4Mzc0MjIy*_ga*NDU2NzU2Mzg0LjE3MDk2NDIyMTk.*_ga_NEXN8H46L5*MTcyMzcyMzQzNi40NC4xLjE3MjM3MjQyNzUuMC4wLjUyNDIxMTk0MQ..*_fplc*RUtpd2ZNeFBsZXQ5bzhWamxXemRJTFclMkYzRWwzVE1zayUyQko3Nmg1U1htVXJCb3NuS2xLd05pR3h1cGxxZUZPNEZzN1JSeThtSWdBa21SWkVTbG1YcktZY0JTZ0xrRVlWdW1ZakszVjl1OTBZbVRFelFVQkVFY1BiaEZPUEsyQSUzRCUzRA..
+  extern int __heap_start,*__brkval;
+  int v;
+  return (int)&v - (__brkval == 0  
+    ? (int)&__heap_start : (int) __brkval);  
+}
+#endif
 
 
 long _DDIdleTimeoutMillis = DD_DEF_IDLE_TIMEOUT;
@@ -486,7 +504,7 @@ this->print("// NEED TO RECONNECT\n");
         _DebugInterface->logConnectionState(DDDebugConnectionState::DEBUG_RECONNECTED);
       }
 #endif
-     }
+    }
 #endif
   }
 #endif  
@@ -588,6 +606,7 @@ volatile bool _HandlingFeedback = false;
 #define _C_PRECONNECTED   3
 #define _C_IOPROXY_SET    4
 #define _C_HANDSHAKE      5
+//#define _C_MASTER_RESET   6
 
 struct _ConnectState {
   _ConnectState(): step(0) {}
@@ -605,6 +624,12 @@ struct _ConnectState {
 _ConnectState _C_state;
 
 bool __Connect(/*bool calledPassive = false*/) {
+// #if defined(MASTER_RESET_KEEP_CONNECTED)
+//   if (_C_state.step == _C_MASTER_RESET) {
+//       _C_state.step = 0;
+//       return false;
+//   }
+// #endif
   bool mustLoop = !_IO->canConnectPassive();
   if (_C_state.step > 0 && _C_state.hsStartMillis > 0) {
     long diffMillis = millis() - _C_state.hsStartMillis;
@@ -871,7 +896,9 @@ bool __Connect(/*bool calledPassive = false*/) {
   }
   if (true) {       
     _IO->print("// Connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
-#ifdef ESP32
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO) || defined(ARDUINO_AVR_MEGA2560)
+    _IO->print("// $ Free SRAM: " + String(freeRam() / 1024.0) + "KB" + "\n");
+#elif defined(ESP32)
     _IO->print(String("// $ Sketch: ") + String(ESP.getSketchSize() / 1024.0) + "KB" + " / Free: " + String(ESP.getFreeSketchSpace() / 1024.0) + "KB" + "\n");
     _IO->print(String("// $ Heap: " + String(ESP.getHeapSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreeHeap() / 1024.0) + "KB" + "\n");
     _IO->print(String("// $ PSRAM: " + String(ESP.getPsramSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreePsram() / 1024.0) + "KB" + "\n");
@@ -1018,6 +1045,11 @@ void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
             //_IO = pSIO;
             pSIO = NULL;
           }
+#ifdef MASTER_RESET_KEEP_CONNECTED
+          if (_ConnectedIOProxy != NULL) {
+            delete _ConnectedIOProxy;
+          }
+#endif          
           _ConnectedIOProxy = new IOProxy(_IO);
           _ConnectedFromSerial = fromSerial;
           //_ConnectedFromSerial = _IO->isSerial();
@@ -2129,6 +2161,12 @@ void DDLayer::opacity(int opacity) {
 void DDLayer::alpha(int alpha) {
   _sendCommand1(layerId, C_alpha, String(alpha));
 }
+void DDLayer::blend(const String& color, int alpha, const String& mode) {
+  _sendCommand3(layerId, C_blend, color, String(alpha), mode);
+}
+void DDLayer::noblend() {
+  _sendCommand0(layerId, C_noblend);
+}
 // void DDLayer::opacity(int opacity) {
 //   if (_DDCompatibility >= 2) {
 //       setAlpha(opacity);
@@ -2698,8 +2736,14 @@ void GraphicalDDLayer::cachePixelImageGS(const String& imageName, const uint8_t 
 void GraphicalDDLayer::saveCachedImageFile(const String& imageName, const String& asImageName) {
   _sendCommand3("", C_SAVECACHEDIMG, layerId, imageName, asImageName);
 }
+void GraphicalDDLayer::saveCachedImageFileWithTS(const String& imageName, const String& asImageName, long imageTimestamp) {
+  _sendCommand4("", C_SAVECACHEDIMG, layerId, imageName, asImageName, String(imageTimestamp));
+}
 void GraphicalDDLayer::saveCachedImageFileAsync(const String& imageName, const String& asImageName) {
-  _sendCommand4("", C_SAVECACHEDIMG, layerId, imageName, asImageName, TO_BOOL(true));
+  _sendCommand5("", C_SAVECACHEDIMG, layerId, imageName, asImageName, String(0), TO_BOOL(true));
+}
+void GraphicalDDLayer::saveCachedImageFileWithTSAsync(const String& imageName, const String& asImageName, long imageTimestamp) {
+  _sendCommand5("", C_SAVECACHEDIMG, layerId, imageName, asImageName, String(imageTimestamp), TO_BOOL(true));
 }
 void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {
   _sendCommand2("", C_SAVECACHEDIMGS, layerId, stitchAsImageName);
@@ -2776,8 +2820,12 @@ void JoystickDDLayer::moveToPos(int x, int y, bool sendFeedback) {
 void JoystickDDLayer::moveToCenter(bool sendFeedback) {
   _sendCommand1(layerId, C_movetocenter, TO_BOOL(sendFeedback));
 }
-void JoystickDDLayer::valueRange(int minValue, int maxValue, bool sendFeedback) {
-  _sendCommand3(layerId, C_valuerange, String(minValue), String(maxValue), TO_BOOL(sendFeedback));
+void JoystickDDLayer::valueRange(int minValue, int maxValue, int valueStep, bool sendFeedback) {
+    if (_DDCompatibility >= 8) {
+      _sendCommand4(layerId, C_valuerange, String(minValue), String(maxValue), String(valueStep), TO_BOOL(sendFeedback));
+    } else {
+      _sendCommand3(layerId, C_valuerange, String(minValue), String(maxValue), TO_BOOL(sendFeedback));
+    }
 }
 void JoystickDDLayer::snappy(bool snappy) {
   _sendCommand1(layerId, C_snappy, TO_BOOL(snappy));
@@ -2830,6 +2878,14 @@ void WebViewDDLayer::loadHtml(const String& html) {
 void WebViewDDLayer::execJs(const String& js) {
   _sendCommand1(layerId, C_execjs, js);
 }
+
+void DumbDisplayWindowDDLayer::connect(const String& deviceType, const String& deviceName, const String& deviceAddress) {
+  _sendCommand3(layerId, C_connect, deviceType, deviceName, deviceAddress);
+}
+void DumbDisplayWindowDDLayer::disconnect() {
+  _sendCommand0(layerId, C_disconnect);
+}
+
 
 
 
@@ -3868,10 +3924,14 @@ LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeig
 SelectionDDLayer* DumbDisplay::createSelectionLayer(int colCount, int rowCount,
                                                     int horiSelectionCount, int vertSelectionCount,
                                                     int charHeight, const String& fontName,
-                                                    float selectionBorderSizeCharHeightFactor) {
+                                                    bool canDrawDots, float selectionBorderSizeCharHeightFactor) {
   int lid = _AllocLid();
   String layerId = String(lid);
-  _sendCommand8(layerId, "SU", String("selection"), String(colCount), String(rowCount), String(horiSelectionCount), String(vertSelectionCount), String(charHeight), fontName, TO_NUM(selectionBorderSizeCharHeightFactor));
+  if (_DDCompatibility >= 9) {
+    _sendCommand9(layerId, "SU", String("selection"), String(colCount), String(rowCount), String(horiSelectionCount), String(vertSelectionCount), String(charHeight), fontName, TO_BOOL(canDrawDots), TO_NUM(selectionBorderSizeCharHeightFactor));
+  } else {
+    _sendCommand8(layerId, "SU", String("selection"), String(colCount), String(rowCount), String(horiSelectionCount), String(vertSelectionCount), String(charHeight), fontName, TO_NUM(selectionBorderSizeCharHeightFactor));
+  }
   SelectionDDLayer* pLayer = new SelectionDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
@@ -3943,6 +4003,16 @@ WebViewDDLayer* DumbDisplay::createWebViewLayer(int width, int height, const Str
   _PostCreateLayer(pLayer);
   return pLayer;
 }
+
+DumbDisplayWindowDDLayer* DumbDisplay::createDumbDisplayWindowLayer(int width, int height) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("dumbdisplaywin"), String(width), String(height));
+  DumbDisplayWindowDDLayer* pLayer = new DumbDisplayWindowDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;  
+}
+
 
 
 void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
@@ -4461,23 +4531,45 @@ bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {
 #ifndef DD_NO_PASSIVE_CONNECT
 void DumbDisplay::masterReset() {
 #ifdef SUPPORT_MASTER_RESET
-  bool reconnecting = _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
+  bool reconnecting = _ConnectedIOProxy != NULL && _ConnectedIOProxy->isReconnecting();
   //bool canLogToSerial = !_IO->isSerial();
   bool canLogToSerial = _CanLogToSerial();
 
+#ifdef MASTER_RESET_KEEP_CONNECTED
+  bool canKeepConnected = _Connected && !reconnecting && _DDCompatibility >= 9;
+#endif
+
   if (canLogToSerial) {
     Serial.println();
+#ifdef MASTER_RESET_KEEP_CONNECTED
+    if (canKeepConnected) {
+      Serial.println("***** Keep Connection Master Reset (START) *****");
+    } else {
+      Serial.println("***** Master Reset (START) *****");
+    }
+#else
     Serial.println("***** Master Reset (START) *****");
+#endif    
     if (reconnecting) {
       Serial.println("- during reconnecting");
     }
   }
 
-  // try the best to delete objects tracked
-  if (_Connected && !reconnecting) {
-    if (canLogToSerial) Serial.println(". send command to DD app to disconnect");
-    _sendCommand0("", "DISCONNECT");
+#ifdef MASTER_RESET_KEEP_CONNECTED
+  if (canKeepConnected) {
+    if (canLogToSerial) Serial.println(". still connected ... send command to DD app to master reset");
+    _sendCommand0("", "MASTERRESET");
+  } else {
+      if (canLogToSerial) Serial.println(". send command to DD app to disconnect");
+      _sendCommand0("", "DISCONNECT");
   }
+#else  
+    // try the best to delete objects tracked
+    if (_Connected && !reconnecting) {
+      if (canLogToSerial) Serial.println(". send command to DD app to disconnect");
+      _sendCommand0("", "DISCONNECT");
+    }
+#endif
 
   if (_NextLid > 0) {
     if (canLogToSerial) Serial.println(". cleanup layers / tunnels");
@@ -4508,6 +4600,22 @@ void DumbDisplay::masterReset() {
 //   }  
 // #endif
 
+#ifdef MASTER_RESET_KEEP_CONNECTED
+  if (canLogToSerial) Serial.println(String(". reset states ... canKeepConnected=") + String(canKeepConnected));
+  if (!canKeepConnected) {
+    if (_ConnectedIOProxy != NULL) {
+      delete _ConnectedIOProxy;
+      _ConnectedIOProxy = NULL;
+    }
+    _Connected = false;
+    _ConnectVersion = 0;
+    _C_state.step = 0;
+  }/* else {
+    _C_state.step = _C_MASTER_RESET;
+  }*/
+  _SendingCommand = false;
+  _HandlingFeedback = false;
+#else
   if (canLogToSerial) Serial.println(". reset states");
   if (_ConnectedIOProxy != NULL) {
     delete _ConnectedIOProxy;
@@ -4517,12 +4625,19 @@ void DumbDisplay::masterReset() {
   _HandlingFeedback = false;
   _Connected = false;
   _ConnectVersion = 0;
-  // _IdleCallback = NULL;
-  // _ConnectVersionChangedCallback = NULL;
   _C_state.step = 0;
+#endif  
 
   if (canLogToSerial) {
+#ifdef MASTER_RESET_KEEP_CONNECTED
+    if (canKeepConnected) {
+      Serial.println("***** Keep Connection Master Reset (END) *****");
+    } else {
+      Serial.println("***** Master Reset (END) *****");
+    }
+#else
     Serial.println("***** Master Reset (END) *****");
+#endif    
     Serial.println();
   }
 #endif

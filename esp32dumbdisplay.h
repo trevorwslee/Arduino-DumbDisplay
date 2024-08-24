@@ -5,6 +5,9 @@
 #ifndef esp32dumbdisplay_h
 #define esp32dumbdisplay_h
 
+// after inclusion, can check DD_USING_WIFI to be sure WIFI is used
+#define DD_USING_BT
+
 // #ifndef DD_4_ESP32
 // #error DD_4_ESP32 need be defined in order to use DumbDisplay for ESP32
 // #else
@@ -59,6 +62,14 @@ class DDBluetoothSerialIO: public DDInputOutput {
     bool preConnect(bool firstCall) {
       DDInputOutput::preConnect(firstCall);
       serialBT.begin(btLocalName);
+      if (!willUseSerial()) {  // since 2024-08-13
+        if (firstCall) {
+          if (!Serial) Serial.begin(DD_SERIAL_BAUD);
+        }
+        String address = serialBT.getBtAddressString();
+        address.toUpperCase();
+        Serial.println("bluetooth address: " + address);
+      }
       return true;
     }
     void flush() {

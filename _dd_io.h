@@ -100,6 +100,9 @@ class DDInputOutput {
     inline bool isBackupBySerial() {
       return backupBySerial;
     }
+    inline bool willUseSerial() {
+      return setupForSerial || backupBySerial;
+    }
   protected:
     DDInputOutput(unsigned long serialBaud, bool backupBySerial, bool setupForSerial) {
       this->serialBaud = serialBaud;

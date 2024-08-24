@@ -5,14 +5,10 @@ const String DDEmptyString = String();
 
 #ifndef DD_NO_DEBUG_INTERFACE
 class DrawTextDDDebugInterface: public DDDebugInterface {
-  // public:
-  //   OledDDDebugInterface(Adafruit_SSD1306& display, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1, */, bool indicateSendCommand = false): display(display) {
-  //     this->x = x;
-  //     this->y = y;
-  //     //this->fontSize = fontSize;
-  //     //this->font = font;
-  //     this->indicateSendCommand = indicateSendCommand;
-  //   }
+  public:
+    void setConnectionType(const char* connectionType) {
+      this->connectionType = connectionType;
+    }
   public:
     virtual void logConnectionState(DDDebugConnectionState connectionState) {
       const char* state = NULL;
@@ -34,7 +30,15 @@ class DrawTextDDDebugInterface: public DDDebugInterface {
           break;
       }
       if (state != NULL) {
-        drawText(state, false);
+        if (true) {
+          String s = state;
+          if (connectionType != NULL) {
+            s = String(connectionType) + ":" + s;
+          }
+          drawText(s.c_str(), false);
+        } else {
+          drawText(state, false);
+        }
       }
     }
     virtual void logError(const String& errMsg) {
@@ -43,6 +47,8 @@ class DrawTextDDDebugInterface: public DDDebugInterface {
   protected:  
     virtual void drawText(const char* text, bool isError) {
     }
+  protected:
+    const char* connectionType;   
 };
 class ToSerialDDDebugInterface: public DDDebugInterface {
   public:
@@ -82,9 +88,9 @@ class LedDDDebugInterface: public DDDebugInterface {
   private:
     uint8_t ledPin;
 };
-class CompositDDDebugIntreface: public DDDebugInterface {
+class CompositeDDDebugInterface: public DDDebugInterface {
   public:
-    CompositDDDebugIntreface(DDDebugInterface* debug1, DDDebugInterface* debug2){
+    CompositeDDDebugInterface(DDDebugInterface* debug1, DDDebugInterface* debug2){
       this->debug1 = debug1;
       this->debug2 = debug2;
     }
@@ -554,7 +560,12 @@ class DDMasterResetPassiveConnectionHelper {
           this->initState = 1;
         }
         if (updateCallback != NULL) updateCallback();
-        this->initState = 2;
+          if (this->initState == -3) {
+            // just masterReset
+            this->initState = 0;
+          } else {
+            this->initState = 2;
+          }
         return true;
       } else {
         if (this->initState == -2) {
@@ -569,6 +580,13 @@ class DDMasterResetPassiveConnectionHelper {
     inline bool firstUpdated() { return this->initState > 1; }
     inline bool isIdle() { return this->initState <= 0; }
     inline bool justBecameIdle() { return this->initState == 0; }
+    /// normally, "master reset" will be called automatically when lost connection; but can be called explicitly;
+    /// note that if called explicitly, will not call disconnectedCallback;
+    /// IMPORTANT: should only call it in updateCallback, and after calling it, should return immediately
+    void masterReset() {
+      dumbdisplay.masterReset();
+      this->initState = -3;
+    }
   public:
     DumbDisplay& dumbdisplay;  
   private:
@@ -618,38 +636,8 @@ class DDReconnectPassiveConnectionHelper {
     bool init;  
 };
 
+
 #endif
-
-
-// class GetFeedbackHelper {
-//   public:
-//     GetFeedbackHelper(DDLayer& layer): layer(layer) {}
-//   public:
-//     /// get "feedback" from the layer
-//     bool getFeedback() {
-//       feedback = layer.getFeedback();
-//       return feedback != NULL;
-//     }
-//     /// @return true if the type of the "feedback" got is CLICK
-//     inline bool clicked() {
-//       return feedback != NULL && feedback->type == DDFeedbackType::CLICK;
-//     }
-//     /// @return true if the type of the "feedback" got is DOUBLECLICK
-//     inline bool doubleClicked() {
-//       return feedback != NULL && feedback->type == DDFeedbackType::DOUBLECLICK;
-//     }
-//     /// @return true if the type of the "feedback" got is LONGPRESS
-//     inline bool longPressed() {
-//       return feedback != NULL && feedback->type == DDFeedbackType::LONGPRESS;
-//     }
-//     /// @return true the text of the "feedback" got
-//     inline const String* text() {
-//       return feedback != NULL : feedback->text ? DDEmptyString;
-//     }
-//   private:
-//     DDLayer& layer;
-//     const DDFeedback* feedback;
-// };
 
 #endif
 

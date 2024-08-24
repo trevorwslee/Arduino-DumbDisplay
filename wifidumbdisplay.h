@@ -1,6 +1,9 @@
 #ifndef wifidumbdisplay_h
 #define wifidumbdisplay_h
 
+// after inclusion, can check DD_USING_WIFI to be sure WIFI is used
+#define DD_USING_WIFI
+
 #include "dumbdisplay.h"
 
 #if defined(ARDUINO_UNOR4_WIFI)
@@ -11,9 +14,6 @@
   #include <WiFi.h>
 #endif
 
-
-// after inclusion, can check DD_USING_WIFI to be sure WIFI is used
-#define DD_USING_WIFI
 
 
 //#define LOG_DDWIFI_STATUS

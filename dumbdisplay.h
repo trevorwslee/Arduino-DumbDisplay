@@ -202,7 +202,14 @@ class DDLayer: public DDObject {
     /// set layer's alpha channel
     /// @param alpha 0 - 255
     void alpha(int alpha);
-    /// normally used for "feedback" -- flash the default way (layer + border)
+    /// blending with "film" of color over the layer
+    /// @param color 
+    /// @param alpha 
+    /// @param mode xfermode "darken" / "lighten" / "screen" / "overlay" / "" (no xfermode)
+    void blend(const String& color, int alpha = 255, const String& mode = "darken");
+    /// no blending
+    void noblend();
+   /// normally used for "feedback" -- flash the default way (layer + border)
     void flash();
     /// normally used for "feedback" -- flash the area (x, y) where the layer is clicked
     void flashArea(int x, int y);
@@ -670,6 +677,7 @@ class GraphicalDDLayer: public DDLayer {
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /// cache image; not saved
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
+    void cacheImageWithTS(const String& imageName, const uint8_t *bytes, int byteCount, long imageTimestamp, char compressionMethod = 0);
     /// cache single-bit "pixel" image (i.e. B&W image); not saved
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
     /// cache 16-bit "pixel" image (i.e. 565 RGB image); not saved
@@ -679,9 +687,15 @@ class GraphicalDDLayer: public DDLayer {
     /// saved cached image
     /// @param imageName cachedImageName
     void saveCachedImageFile(const String& imageName, const String& asImageName = "");
+    /// saved cached image with timestamp
+    /// @param imageName cachedImageName
+    void saveCachedImageFileWithTS(const String& imageName, const String& asImageName, long imageTimestamp);
     /// saved cached image (async / non-blocking)
     /// @param imageName cachedImageName
     void saveCachedImageFileAsync(const String& imageName, const String& asImageName = "");
+    /// saved cached image (async / non-blocking)
+    /// @param imageName cachedImageName
+    void saveCachedImageFileWithTSAsync(const String& imageName, const String& asImageName, long imageTimestamp);
     /// saved cached image
     /// @param stitchAsImageName if not empty, will stitch all cached images to one image file of the given name
     void saveCachedImageFiles(const String& stitchAsImageName = "");
@@ -751,7 +765,7 @@ class JoystickDDLayer: public DDLayer {
     /// @param minValue the min value of the stick
     /// @param maxValue the max value of the stick
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
-    void valueRange(int minValue, int maxValue, bool sendFeedback = false);
+    void valueRange(int minValue, int maxValue, int valueStep = 1, bool sendFeedback = false);
     /// set 'snappy' makes stick snaps to closest value when moved
     void snappy(bool snappy = true);
     /// show value on top of the stick 
@@ -779,9 +793,8 @@ class PlotterDDLayer: public DDLayer {
 };
 
 
-/// @brief
 /// Class for TomTom map "device dependent view" layer, which means that it is solely rendered by the Android view that it hosts; 
-/// created with DumbDisplay::createTomTomMapLayer()
+/// see created with DumbDisplay::createTomTomMapLayer()
 class TomTomMapDDLayer: public DDLayer {
   public:
     /// for internal use only
@@ -822,7 +835,8 @@ class TerminalDDLayer: public DDLayer {
     }
 };
 
-/// Class for a WebView "device dependent view" layer
+/// Class for a WebView "device dependent view" layer;
+/// see created with DumbDisplay::createWebViewLayer()
 class WebViewDDLayer: public DDLayer {
   public:
     /// for internal use only
@@ -832,6 +846,18 @@ class WebViewDDLayer: public DDLayer {
     void loadUrl(const String& url);
     void loadHtml(const String& html);
     void execJs(const String& js);
+};
+
+
+/// Class for DumbDisplay "window" "device dependent view" layer, which creates a "window" for connecting to other device's DumbDisplay
+/// see created with DumbDisplay::createDumbDisplayWindowLayer()
+class DumbDisplayWindowDDLayer: public DDLayer {
+  public:
+    /// for internal use only
+    DumbDisplayWindowDDLayer(int8_t layerId): DDLayer(layerId) {
+    }
+    void connect(const String& deviceType, const String& deviceName, const String& deviceAddress);
+    void disconnect();
 };
 
 
@@ -1313,7 +1339,7 @@ class DumbDisplay {
     SelectionDDLayer* createSelectionLayer(int colCount = 16, int rowCount = 2,
                                            int horiSelectionCount = 1, int vertSelectionCount = 1,
                                            int charHeight = 0, const String& fontName = "",
-                                           float selectionBorderSizeCharHeightFactor = 0.3);
+                                           bool canDrawDots = true, float selectionBorderSizeCharHeightFactor = 0.3);
     /// create a graphical LCD layer
     /// @see GraphicalDDLayer
     GraphicalDDLayer* createGraphicalLayer(int width, int height);
@@ -1347,6 +1373,9 @@ class DumbDisplay {
     /// create a WebView layer
     /// @see WebViewDDLayer
     WebViewDDLayer* createWebViewLayer(int width, int height, const String& jsObjectName = "DD");
+    /// create a DumbDisplay "window" layer
+    /// @see DumbDisplayDDLayer
+    DumbDisplayWindowDDLayer* createDumbDisplayWindowLayer(int width, int height);
     /// create a "tunnel" for accessing the Web
     /// @note if not connect now, need to connect via reconnect()
     /// @see BasicDDTunnel

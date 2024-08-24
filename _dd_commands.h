@@ -37,6 +37,8 @@
 #define C_alpha            "#21"
 #define C_margin           "#22" 
 #define C_disabled         "#23"
+#define C_blend            "#25"
+#define C_noblend          "#26"
 
 
 #define C_fillscreen       "#30"
@@ -139,6 +141,9 @@
 #define C_loadurl          "#ba"
 #define C_loadhtml         "#bb"
 #define C_execjs           "#bc"
+
+#define C_connect          "#bd"
+#define C_disconnect       "#be"
 
 #define C_fd               "fd"
 #define C_lt               "lt"

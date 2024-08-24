@@ -5,6 +5,9 @@
 #ifndef esp32bledumbdisplay_h
 #define esp32bledumbdisplay_h
 
+// after inclusion, can check DD_USING_WIFI to be sure WIFI is used
+#define DD_USING_LE
+
 // #ifndef DD_4_ESP32
 // #error DD_4_ESP32 need be defined in order to use DumbDisplay for ESP32 BLE
 // #else
@@ -84,6 +87,12 @@ class DDBLESerialIO: public DDInputOutput {
       if (!initialized) {
         initBLE();
       } else {
+       if (!willUseSerial()) {  // since 2024-08-13
+        if (firstCall) {
+            if (!Serial) Serial.begin(DD_SERIAL_BAUD);
+          }
+          Serial.println("ble address: " + address);
+       }
 // #ifdef DD_DEBUG_BLE
 //         if (firstCall) {
 //           Serial.println("FIRST preConnect() called, but already initialized");   
@@ -326,12 +335,16 @@ class DDBLESerialIO: public DDInputOutput {
       pService->start();
       pServer->getAdvertising()->start();
       initialized = true;
+      address = BLEDevice::getAddress().toString().c_str();
+      address.toUpperCase();
+      //serviceUUID = pService->getUUID().toString().c_str();
 #ifdef DD_DEBUG_BLE
       Serial.println("... done initialized BLE ... waiting for connection ...");
 #endif      
     }
   private:
     String deviceName;
+    String address;
     bool initialized;
     ServerCallbacks* pServerCallbacks;
     Callbacks* pCallbacks;
