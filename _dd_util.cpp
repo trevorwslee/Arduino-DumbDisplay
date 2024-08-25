@@ -72,7 +72,7 @@ void DDParseGetDataTimeResponse(const String& response, DDDateTime& dateTime, in
     dateTime.hour = hh.toInt();
     dateTime.minute = mm.toInt();
     dateTime.second = ss.toInt();
-    if (tz_mins != NULL) {
+    if (pTZMins != NULL) {
       *pTZMins = tz_mins;
     }
 }
