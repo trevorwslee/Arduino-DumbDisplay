@@ -13,7 +13,7 @@ class DDDateTime {
     int minute;
     int second;
 };
-void DDParseGetDataTimeResponse(const String& response, DDDateTime& dateTime, int* pTZMins);
+void DDParseGetDataTimeResponse(const String& response, DDDateTime& dateTime, int* pTZMins = NULL);
 
 #if defined(ESP32)
 void Esp32SetDateTime(const DDDateTime& dateTime, int tz_minuteswest = 0, int tz_dsttime = 0);
