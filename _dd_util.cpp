@@ -60,6 +60,7 @@ void DDParseGetDataTimeResponse(const String& response, DDDateTime& dateTime) {
     res = res.substring(idx + 1);
     idx = res.indexOf('-');
     String mm = res.substring(0, idx);
+    res = res.substring(idx + 1);
     idx = res.indexOf('-');
     String ss = res.substring(0, idx);
     String tz = res.substring(idx + 1);
