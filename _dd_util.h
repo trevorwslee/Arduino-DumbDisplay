@@ -4,7 +4,7 @@
 #define DD_CONNECT_FOR_GET_DATE_TIME "now:yyyy-MM-dd-HH-mm-ss-Z"
 class DDDateTime {
   public:
-    DDDateTime(int year =  0, int month =  0, int day =  0, int hour =  0, int minute =  0, int second =  0, int tz_mins = 0): year(year), month(month), day(day), hour(hour), minute(minute), second(second), tz_mins(tz_mins)   {
+    DDDateTime(int year =  0, int month =  0, int day =  0, int hour =  0, int minute =  0, int second =  0): year(year), month(month), day(day), hour(hour), minute(minute), second(second)   {
     }
     int year;
     int month;
@@ -12,12 +12,11 @@ class DDDateTime {
     int hour;
     int minute;
     int second;
-    int tz_mins;
 };
-void DDParseGetDataTimeResponse(const String& response, DDDateTime& dateTime);
+void DDParseGetDataTimeResponse(const String& response, DDDateTime& dateTime, int* pTZMins = NULL);
 
 #if defined(ESP32)
-void Esp32SetDateTime(const DDDateTime& dateTime);
+void Esp32SetDateTime(const DDDateTime& dateTime, int tz_minuteswest = 0, int tz_dsttime = 0);
 bool Esp32GetDateTime(DDDateTime& dateTime);
 #endif
 

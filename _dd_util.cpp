@@ -44,7 +44,7 @@ char* _DDEncodeInt(int32_t i, char* buffer, int bufferLen) {
   return encoded;
 }
 
-void DDParseGetDataTimeResponse(const String& response, DDDateTime& dateTime) {
+void DDParseGetDataTimeResponse(const String& response, DDDateTime& dateTime, int* pTZMins) {
     String res = response;
     int idx = res.indexOf('-');
     String yyyy = res.substring(0, idx);
@@ -72,13 +72,15 @@ void DDParseGetDataTimeResponse(const String& response, DDDateTime& dateTime) {
     dateTime.hour = hh.toInt();
     dateTime.minute = mm.toInt();
     dateTime.second = ss.toInt();
-    dateTime.tz_mins = tz_mins;
+    if (tz_mins != NULL) {
+      *pTZMins = tz_mins;
+    }
 }
 
 
 #if defined(ESP32)
-void Esp32SetDateTime(const DDDateTime& dateTime/*, int tz_minuteswest*/) {
-  struct tm timeinfo;
+void Esp32SetDateTime(const DDDateTime& dateTime, int tz_minuteswest, int tz_dsttime) {
+  tm timeinfo;
   timeinfo.tm_year = dateTime.year - 1900;
   timeinfo.tm_mon = dateTime.month - 1;
   timeinfo.tm_mday = dateTime.day;
@@ -103,8 +105,8 @@ void Esp32SetDateTime(const DDDateTime& dateTime/*, int tz_minuteswest*/) {
   }
   tv.tv_usec = ms;
   timezone tz;
-  tz.tz_minuteswest = dateTime.tz_mins;  
-  tz.tz_dsttime = 0;
+  tz.tz_minuteswest = tz_minuteswest;  
+  tz.tz_dsttime = tz_dsttime;
   settimeofday(&tv, &tz);  
 }
 bool Esp32GetDateTime(DDDateTime& dateTime) {
