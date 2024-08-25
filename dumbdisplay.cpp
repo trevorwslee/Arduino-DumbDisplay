@@ -2736,13 +2736,13 @@ void GraphicalDDLayer::cachePixelImageGS(const String& imageName, const uint8_t 
 void GraphicalDDLayer::saveCachedImageFile(const String& imageName, const String& asImageName) {
   _sendCommand3("", C_SAVECACHEDIMG, layerId, imageName, asImageName);
 }
-void GraphicalDDLayer::saveCachedImageFileWithTS(const String& imageName, const String& asImageName, long imageTimestamp) {
+void GraphicalDDLayer::saveCachedImageFileWithTS(const String& imageName, const String& asImageName, int64_t imageTimestamp) {
   _sendCommand4("", C_SAVECACHEDIMG, layerId, imageName, asImageName, String(imageTimestamp));
 }
 void GraphicalDDLayer::saveCachedImageFileAsync(const String& imageName, const String& asImageName) {
   _sendCommand5("", C_SAVECACHEDIMG, layerId, imageName, asImageName, String(0), TO_BOOL(true));
 }
-void GraphicalDDLayer::saveCachedImageFileWithTSAsync(const String& imageName, const String& asImageName, long imageTimestamp) {
+void GraphicalDDLayer::saveCachedImageFileWithTSAsync(const String& imageName, const String& asImageName, int64_t imageTimestamp) {
   _sendCommand5("", C_SAVECACHEDIMG, layerId, imageName, asImageName, String(imageTimestamp), TO_BOOL(true));
 }
 void GraphicalDDLayer::saveCachedImageFiles(const String& stitchAsImageName) {

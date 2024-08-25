@@ -689,13 +689,13 @@ class GraphicalDDLayer: public DDLayer {
     void saveCachedImageFile(const String& imageName, const String& asImageName = "");
     /// saved cached image with timestamp
     /// @param imageName cachedImageName
-    void saveCachedImageFileWithTS(const String& imageName, const String& asImageName, long imageTimestamp);
+    void saveCachedImageFileWithTS(const String& imageName, const String& asImageName, int64_t imageTimestamp);
     /// saved cached image (async / non-blocking)
     /// @param imageName cachedImageName
     void saveCachedImageFileAsync(const String& imageName, const String& asImageName = "");
     /// saved cached image (async / non-blocking)
     /// @param imageName cachedImageName
-    void saveCachedImageFileWithTSAsync(const String& imageName, const String& asImageName, long imageTimestamp);
+    void saveCachedImageFileWithTSAsync(const String& imageName, const String& asImageName, int64_t imageTimestamp);
     /// saved cached image
     /// @param stitchAsImageName if not empty, will stitch all cached images to one image file of the given name
     void saveCachedImageFiles(const String& stitchAsImageName = "");
