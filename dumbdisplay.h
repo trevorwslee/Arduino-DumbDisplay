@@ -687,15 +687,19 @@ class GraphicalDDLayer: public DDLayer {
     /// saved cached image
     /// @param imageName cachedImageName
     void saveCachedImageFile(const String& imageName, const String& asImageName = "");
+#ifdef ESP32
     /// saved cached image with timestamp
     /// @param imageName cachedImageName
     void saveCachedImageFileWithTS(const String& imageName, const String& asImageName, int64_t imageTimestamp);
+#endif
     /// saved cached image (async / non-blocking)
     /// @param imageName cachedImageName
     void saveCachedImageFileAsync(const String& imageName, const String& asImageName = "");
+#ifdef ESP32
     /// saved cached image (async / non-blocking)
     /// @param imageName cachedImageName
     void saveCachedImageFileWithTSAsync(const String& imageName, const String& asImageName, int64_t imageTimestamp);
+#endif
     /// saved cached image
     /// @param stitchAsImageName if not empty, will stitch all cached images to one image file of the given name
     void saveCachedImageFiles(const String& stitchAsImageName = "");
