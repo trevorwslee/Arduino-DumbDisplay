@@ -213,12 +213,20 @@ class DDLayer: public DDObject {
     void flash();
     /// normally used for "feedback" -- flash the area (x, y) where the layer is clicked
     void flashArea(int x, int y);
+    /// trigger explicit "feedback" to the layer (similar to implicit "feedback" when layer is clicked) 
+    /// @param type other than CLICK etc, can be CUSTOM (which is only possible with explicit "feedback");
+    /// @param option can be "" or "keys" or "numkeys";
+    ///               in case of "keys" / "numkeys", input box will be popped up for user to enter the "text" of the "feedback";
+    ///               and the "text" in the parameter will be the "hint"
+    /// @note feedback must be enabled for this to work
+    void explicitFeedback(int16_t x = 0, int16_t y = 0, const String& text = "", DDFeedbackType type = CLICK, const String& option = "");
     inline const String& getLayerId() const { return layerId; }
     /// set explicit (and more responsive) "feedback" handler (and enable feedback)
     /// @param handler "feedback" handler; see DDFeedbackHandler
     /// @param autoFeedbackMethod see DDLayer::enableFeedback()
+    /// @param allowedFeedbackType can be comma-delimited list of "CLICK", "LONGPRESS" and "DOUBLECLICK"
     /// @note if you will not be making use of "feedback", you can disable it by defining DD_NO_FEEDBACK in order to reduce footprint 
-    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
+    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "", const String& allowFeedbackTypes = "");
     /// rely on getFeedback() being called
     /// acceptable value for autoFeedbackMethod:
     /// - "" -- no auto feedback (the default)
@@ -227,8 +235,9 @@ class DDLayer: public DDObject {
     /// - "fa" -- flash the area where the layer is clicked
     /// - "fas" -- flash the area (as a spot) where the layer is clicked
     /// - "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
+    /// allowedFeedbackType can be comma-delimited list of "CLICK", "LONGPRESS" and "DOUBLECLICK"
     /// @note if you will not be making use of "feedback", you can disable it by defining DD_NO_FEEDBACK in order to reduce footprint 
-    void enableFeedback(const String& autoFeedbackMethod = "");
+    void enableFeedback(const String& autoFeedbackMethod = "", const String& allowFeedbackTypes = "");
     /// disable "feedback"
     void disableFeedback();
     /// get "feedback" DDFeedback
