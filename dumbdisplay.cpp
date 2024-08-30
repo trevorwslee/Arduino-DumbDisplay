@@ -2247,7 +2247,7 @@ void DDLayer::explicitFeedback(int16_t x, int16_t y, const String& text, DDFeedb
   } else if (type == CUSTOM) {
     tp = "CUSTOM";
   }
-  _sendCommand5(layerId, C_explicitfeedback, String(x), String(y), text, tp, option);
+  _sendCommand5(layerId, C_explicitfeedback, String(x), String(y), tp, option, text);
 }
 
 // void DDLayer::writeComment(const String& comment) {
@@ -2264,7 +2264,7 @@ void DDLayer::_enableFeedback() {
 }
 void DDLayer::enableFeedback(const String& autoFeedbackMethod, const String& allowFeedbackTypes) {
 #ifdef ENABLE_FEEDBACK  
-  if (_DDCompatibility >= 10 && !allowFeedbackTypes.isEmpty()) {
+  if (_DDCompatibility >= 10) {
     _sendCommand3(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod, allowFeedbackTypes);
   } else {
     _sendCommand2(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod);
@@ -2300,7 +2300,7 @@ const DDFeedback* DDLayer::getFeedback() {
 void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod, const String& allowFeedbackTypes) {
 #ifdef ENABLE_FEEDBACK          
   bool enable = handler != NULL;
-  if (_DDCompatibility >= 10 && !allowFeedbackTypes.isEmpty()) {
+  if (_DDCompatibility >= 10) {
     _sendCommand3(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod, allowFeedbackTypes);
   } else {
     _sendCommand2(layerId, C_feedback, TO_BOOL(enable), autoFeedbackMethod);
