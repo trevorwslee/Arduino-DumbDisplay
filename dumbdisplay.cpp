@@ -160,7 +160,8 @@
 
 
 //#define DD_SID "Arduino-c9"  // DD library version (compatibility)
-#define DD_SID "Arduino-c10"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v30
+//#define DD_SID "Arduino-c10"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v30
+#define DD_SID "Arduino-c11"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v31
 
 
 #include "_dd_commands.h"
@@ -1889,6 +1890,8 @@ __SendComment("LT++++" + data + " - final:" + String(final));
             type = UP;
           } else if (strcmp(token, "down") == 0 || strcmp(token, "d") == 0) {
             type = DOWN;
+          } else if (strcmp(token, "custom") == 0 || strcmp(token, "c") == 0) {
+            type = CUSTOM;
           } 
           token = strtok(NULL, ",");
         }
@@ -2227,6 +2230,26 @@ void DDLayer::flash() {
 void DDLayer::flashArea(int x, int y) {
   _sendCommand2(layerId, C_flasharea, String(x), String(y));
 }
+void DDLayer::explicitFeedback(int16_t x, int16_t y, const String& text, DDFeedbackType type, const String& option) {
+  String tp = "";
+  if (type == CLICK) {
+    tp = "CLICK";
+  } else if (type == LONGPRESS) {
+    tp = "LONGPRESS";
+  } else if (type == DOUBLECLICK) {
+    tp = "DOUBLECLICK";
+  } else if (type == MOVE) {
+    tp = "MOVE";
+  } else if (type == UP) {
+    tp = "UP";
+  } else if (type == DOWN) {
+    tp = "DOWN";
+  } else if (type == CUSTOM) {
+    tp = "CUSTOM";
+  }
+  _sendCommand5(layerId, C_explicitfeedback, String(x), String(y), tp, option, text);
+}
+
 // void DDLayer::writeComment(const String& comment) {
 //   _sendCommand0("", ("// " + layerId + ": " + comment).c_str());
 // }
@@ -2239,9 +2262,13 @@ void DDLayer::_enableFeedback() {
   _sendFeedbackDisableComment();
 #endif
 }
-void DDLayer::enableFeedback(const String& autoFeedbackMethod) {
+void DDLayer::enableFeedback(const String& autoFeedbackMethod, const String& allowFeedbackTypes) {
 #ifdef ENABLE_FEEDBACK  
-  _sendCommand2(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod);
+  if (_DDCompatibility >= 10) {
+    _sendCommand3(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod, allowFeedbackTypes);
+  } else {
+    _sendCommand2(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod);
+  }
   feedbackHandler = NULL;
   _enableFeedback();
   // if (pFeedbackManager != NULL)
@@ -2270,10 +2297,14 @@ const DDFeedback* DDLayer::getFeedback() {
   return NULL;
 #endif
 }
-void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod) {
+void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod, const String& allowFeedbackTypes) {
 #ifdef ENABLE_FEEDBACK          
   bool enable = handler != NULL;
-  _sendCommand2(layerId, C_feedback, TO_BOOL(enable), autoFeedbackMethod);
+  if (_DDCompatibility >= 10) {
+    _sendCommand3(layerId, C_feedback, TO_BOOL(true), autoFeedbackMethod, allowFeedbackTypes);
+  } else {
+    _sendCommand2(layerId, C_feedback, TO_BOOL(enable), autoFeedbackMethod);
+  }
   feedbackHandler = handler;
   if (pFeedbackManager != NULL) {
     delete pFeedbackManager;
@@ -2561,6 +2592,12 @@ void SelectionDDLayer::select(int horiSelectionIdx, int vertSelectionIdx, bool d
 }
 void SelectionDDLayer::deselect(int horiSelectionIdx, int vertSelectionIdx, bool selectTheOthers) {
   _sendCommand3(layerId, C_deselect, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(selectTheOthers));
+}
+void SelectionDDLayer::selectAll() {
+  _sendCommand0(layerId, C_select);
+}
+void SelectionDDLayer::deselectAll() {
+  _sendCommand0(layerId, C_deselect);
 }
 void SelectionDDLayer::selected(bool selected, int horiSelectionIdx, int vertSelectionIdx, bool reverseTheOthers) {
   if (selected) {

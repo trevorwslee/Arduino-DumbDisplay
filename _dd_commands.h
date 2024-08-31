@@ -39,6 +39,7 @@
 #define C_disabled         "#23"
 #define C_blend            "#25"
 #define C_noblend          "#26"
+#define C_explicitfeedback "#27"
 
 
 #define C_fillscreen       "#30"

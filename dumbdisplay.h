@@ -152,7 +152,7 @@ public:
 };
 
 
-/// Base class for the different layers support by DumbDisplay; created with various layer creation methods of DumbDispaly, DumbDisplay::createLedGridLayer()
+/// Base class for the different layers support by DumbDisplay; created with various layer creation methods of DumbDisplay, DumbDisplay::createLedGridLayer()
 class DDLayer: public DDObject {
   public:
     /// set border for each size
@@ -213,22 +213,33 @@ class DDLayer: public DDObject {
     void flash();
     /// normally used for "feedback" -- flash the area (x, y) where the layer is clicked
     void flashArea(int x, int y);
+    /// trigger explicit "feedback" to the layer (similar to implicit "feedback" when layer is clicked) 
+    /// @param type other than CLICK etc, can be CUSTOM (which is only possible with explicit "feedback");
+    /// @param option can be "" / "keys" / "numkeys" / "confirm";
+    ///               - in case of "keys" / "numkeys", input box will be popped up for user to enter the "text" of the "feedback";
+    ///                 and the "text" in the parameter will be the "hint"
+    ///               - in case of "confirm", a confirmation dialog will be popped up with "text" as the message,
+    ///                 and the "feedback" "text" will be "Yes" or "No";
+    /// @note feedback must be enabled for this to work
+    void explicitFeedback(int16_t x = 0, int16_t y = 0, const String& text = "", DDFeedbackType type = CLICK, const String& option = "");
     inline const String& getLayerId() const { return layerId; }
     /// set explicit (and more responsive) "feedback" handler (and enable feedback)
     /// @param handler "feedback" handler; see DDFeedbackHandler
     /// @param autoFeedbackMethod see DDLayer::enableFeedback()
+    /// @param allowedFeedbackType can be comma-delimited list of "CLICK", "LONGPRESS" and "DOUBLECLICK"
     /// @note if you will not be making use of "feedback", you can disable it by defining DD_NO_FEEDBACK in order to reduce footprint 
-    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "");
+    void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "", const String& allowFeedbackTypes = "");
     /// rely on getFeedback() being called
-    /// acceptable value for autoFeedbackMethod:
+    /// @param autoFeedbackMethod
     /// - "" -- no auto feedback (the default)
     /// - "f" -- flash the standard way (layer + border)
     /// - "fl" -- flash the layer
     /// - "fa" -- flash the area where the layer is clicked
     /// - "fas" -- flash the area (as a spot) where the layer is clicked
     /// - "fs" -- flash the spot where the layer is clicked (regardless of any area boundary)
+    /// @param allowedFeedbackType can be comma-delimited list of "CLICK", "LONGPRESS" and "DOUBLECLICK"
     /// @note if you will not be making use of "feedback", you can disable it by defining DD_NO_FEEDBACK in order to reduce footprint 
-    void enableFeedback(const String& autoFeedbackMethod = "");
+    void enableFeedback(const String& autoFeedbackMethod = "", const String& allowFeedbackTypes = "");
     /// disable "feedback"
     void disableFeedback();
     /// get "feedback" DDFeedback
@@ -513,6 +524,10 @@ class SelectionDDLayer: public DDLayer {
     void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
     /// deselect a "selection" unit
     void deselect(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool selectTheOthers = false);
+    /// select all "selection" units
+    void selectAll();
+    /// deselect all "selection" units
+    void deselectAll();
     /// set a "selection" unit selected or not
     void selected(bool selected, int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool reverseTheOthers = false);
     /// set selected / unselected "selection" unit border characteristics 
@@ -1047,13 +1062,14 @@ class DDBufferedTunnel: public DDTunnel {
 };
 
 
+/// @struct BasicDDTunnel
 /// support basic "text based line oriented" socket communication ... e.g.
 /// ```
 /// pTunnel = dumbdisplay.createBasicTunnel("djxmmx.net:17")
 /// ```
 typedef DDBufferedTunnel BasicDDTunnel;
 
-
+/// @struct JsonDDTunnel
 /// support simple REST GET api .. e.g.
 /// ```
 ///  pTunnel = dumbdisplay.createJsonTunnel("http://worldtimeapi.org/api/timezone/Asia/Hong_Kong") 
