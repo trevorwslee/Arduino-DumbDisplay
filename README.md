@@ -2252,6 +2252,12 @@ MIT
 
 # Change History
 
+v0.9.9-r31
+  - added "confirmation feedback"
+  - added layer explicit "feedback"
+  - added support for "shared storage" for images
+  - bug fix
+
 v0.9.9-r30
   - added DumbDisplayWindowDDLayer
   - added DDLayer "blend"
