@@ -989,6 +989,8 @@ in order to reduce the total amount of data to send to DumbDisplay app. This enc
 
 Basically, `${R=raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots}` not only specifies that portion of URL to be `raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots`. It also tells to set up a mapping from `R` to `raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots` as well. As a result `https://${R}/lock-locked.png` rewrites to `https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-locked.png`.
 
+Please refer to the section [Using "Tunnel" to Download Images from the Web](#using-tunnel-to-download-images-from-the-web) for more details on saving images to the phone.
+
 
 # Selected Demos
 
@@ -1736,11 +1738,15 @@ pTunnel = dumbdisplay.createImageDownloadTunnel("https://placekitten.com/680/480
 
 As preparation, you will need to grant DumbDisplay app permission to access your phone's storage.
 
-Select the menu item ***settings*** and click the button ***media storage***. This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.
+|  |  |
+|--|--|
+|Select the menu item ***settings*** and click the button ***media storage***. This will trigger Android to ask for permission on behalf of DumbDisplay app, to access your phone's picture storage.|![](screenshots/dd_prepare_storage.gif)|
 
 Once permission granted, DumbDisplay app will create a private folder, and write some little sample resources there, like image `dumbdisplay.png`. From now on, DumbDisplay will access the folder for any image files that it will need to read / write.
 
-You can browse the private folder using some "File Manager" app (with proper permission) -- `Android/data/nobody.trevorlee.dumbdisplay/files/`
+|  |  |
+|--|--|
+|You can browse the private folder using some "File Manager" app (with proper permission) -- `Android/data/nobody.trevorlee.dumbdisplay/files/`|![](screenshots/dd_storage.gif)|
 
 Since it takes a bit of time to download image file from the Web, you will need to check it's download status asyncrhonously like
 
