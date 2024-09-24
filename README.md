@@ -1746,7 +1746,7 @@ Once permission granted, DumbDisplay app will create a private folder, and write
 
 |  |  |
 |--|--|
-|You can browse the private folder using some "File Manager" app (with proper permission) -- `Android/data/nobody.trevorlee.dumbdisplay/files/`|![](screenshots/dd_storage.gif)|
+|You can browse to the private folder using some "File Manager" app (like [***Files*** by ***Marc apps & software***](https://play.google.com/store/apps/details?id=com.marc.files&hl=en)) -- `Android/data/nobody.trevorlee.dumbdisplay/files/`|![](screenshots/dd_storage.gif)|
 
 Since it takes a bit of time to download image file from the Web, you will need to check it's download status asyncrhonously like
 

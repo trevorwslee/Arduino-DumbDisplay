@@ -68,7 +68,8 @@
 
 
 #define TO_BOOL(val) (val ? "1" : "0")
-#define TO_EDIAN() String(DDCheckEndian())
+//#define TO_EDIAN() String(DDCheckEndian())  since 2024-09-14, use the following
+#define TO_EDIAN() TO_BOOL(DDCheckEndian())  
 
 
 //#define DD_DEBUG_BASIC
@@ -3917,6 +3918,16 @@ void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoShowHideLayer
     _sendCommand1("", "CFGAP", layoutSpec);
   }
 }
+// void DumbDisplay::configAutoPinEx(const String& layoutSpec, const String& remainingLayoutSpec) {
+//   _Connect();
+//   if (true) {
+//     if (layoutSpec.c_str() == NULL) {
+//       __SendErrorComment("invalid autopin config");
+//       return;
+//     }
+//   }
+//   _sendCommand2("", "CFGAP", layoutSpec, remainingLayoutSpec);
+// }
 void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
   _Connect();
   _sendCommand1("", "ADDRESTAP", remainingLayoutSpec);

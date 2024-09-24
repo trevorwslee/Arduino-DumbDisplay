@@ -743,7 +743,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /// @param segments each character represents a segment to turn on -- 
     ///                 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' 
     void turnOff(const String& segments, int digitIdx = 0);
-    /// like turnOn(), exception that the digit will be cleared first
+    /// like turnOn(), except that the digit will be cleared first
     /// @param segments empty segments basically means turn all segments of the digit off
     void setOn(const String& segments = "", int digitIdx = 0);
     /// show a digit
@@ -1332,8 +1332,11 @@ class DumbDisplay {
     /// @param layoutSpec the layout specification
     /// @param autoShowHideLayers auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
     void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoShowHideLayers = false);
+    // /// in addition to DumbDisplay::configAutoPin(), also configure the remaining layout spec for the remaining layers not mentioned in the layoutSpec 
+    // /// @see configAutoPin
+    // /// @see addRemainingAutoPinConfig
+    // void configAutoPinEx(const String& layoutSpec = DD_AP_VERT, const String& remainingLayoutSpec);
     /// add the "auto pin" config for layers not included in "auto pin" set by configAutoPin()
-    /// @param remainingLayoutSpec 
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
     /// configure "pin frame" to be x-units by y-units (default 100x100)
     /// @param autoShowHideLayers auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
