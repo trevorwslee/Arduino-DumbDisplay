@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r31)
+# DumbDisplay Arduino Library (v0.9.9-r33)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r31)](#dumbdisplay-arduino-library-v099-r31)
+- [DumbDisplay Arduino Library (v0.9.9-r33)](#dumbdisplay-arduino-library-v099-r33)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -998,6 +998,7 @@ Before talking about the various [DumbDisplay features](#features), here is a co
 
 |||
 |--|--|
+|![](screenshots/snapper-ss.jpg)|[Turn ESP32-CAM into a Snapshot Taker, for Selfies and Time Lapse Pictures](https://github.com/trevorwslee/ESP32CamSnapper)|
 |[Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|![](screenshots/tft_show_show_ss.png)|
 |![](screenshots/pico-radar.png)|[Arduino Experiment of Ultrasonic Sensor, ToF Laser Range Sensor and Servo Motor, With Raspberry Pi Pico and DumbDisplay](https://www.instructables.com/Arduino-Experiment-of-Ultrasonic-Sensor-ToF-Laser-/)|
 |[Mnist Dataset -- From Training to Running With ESP32 / ESP32S3](https://www.instructables.com/Mnist-Dataset-From-Training-to-Running-With-ESP32-/)|![](screenshots/esp32_mnist.gif)|
@@ -2257,6 +2258,10 @@ MIT
 
 
 # Change History
+
+v0.9.9-r33
+  - added "layer-level" support
+  - bug fix
 
 v0.9.9-r31
   - added "confirmation feedback"

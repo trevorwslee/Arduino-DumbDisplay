@@ -2316,6 +2316,21 @@ void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFe
 #endif
 }
 
+void MultiLevelDDLayer::switchLevel(const String& levelId, bool addIfMissing) {
+  _sendCommand2(layerId, C_switchlevel, levelId, TO_BOOL(addIfMissing));
+}
+void MultiLevelDDLayer::levelOpacity(int opacity) {
+  _sendCommand1(layerId, C_levelopacity, String(opacity));  
+}
+void MultiLevelDDLayer::levelTransparent(bool transparent) {
+  _sendCommand1(layerId, C_leveltransparent, TO_BOOL(transparent));  
+}
+void MultiLevelDDLayer::reorderLevel(const String& levelId, const String& how) {
+  _sendCommand2(layerId, C_reordlevel, levelId, how);  
+}
+void MultiLevelDDLayer::deleteLevel(const String& levelId) {
+  _sendCommand1(layerId, C_dellevel, levelId);  
+}
 
 void MbDDLayer::showIcon(MbIcon icon) {
   _sendCommand1(layerId, "shi", String(icon));
@@ -4721,8 +4736,6 @@ void DDLayer::debugOnly(int i) {
   // }
   // _sendByteArrayAfterCommand(bytes, i);
 }
-
-
 
 // void DDLogToSerial(const String& logLine) {
 //    _LogToSerial(logLine);
