@@ -40,6 +40,12 @@
 #define C_blend            "#25"
 #define C_noblend          "#26"
 #define C_explicitfeedback "#27"
+#define C_switchlevel      "#2a"
+#define C_dellevel         "#2b"
+#define C_reordlevel       "#2c"
+#define C_levelopacity     "#2d"
+#define C_leveltransparent "#2e"
+
 
 
 #define C_fillscreen       "#30"

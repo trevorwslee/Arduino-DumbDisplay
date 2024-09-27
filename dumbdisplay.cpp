@@ -68,7 +68,8 @@
 
 
 #define TO_BOOL(val) (val ? "1" : "0")
-#define TO_EDIAN() String(DDCheckEndian())
+//#define TO_EDIAN() String(DDCheckEndian())  since 2024-09-14, use the following
+#define TO_EDIAN() TO_BOOL(DDCheckEndian())  
 
 
 //#define DD_DEBUG_BASIC
@@ -2315,6 +2316,21 @@ void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFe
 #endif
 }
 
+void MultiLevelDDLayer::switchLevel(const String& levelId, bool addIfMissing) {
+  _sendCommand2(layerId, C_switchlevel, levelId, TO_BOOL(addIfMissing));
+}
+void MultiLevelDDLayer::levelOpacity(int opacity) {
+  _sendCommand1(layerId, C_levelopacity, String(opacity));  
+}
+void MultiLevelDDLayer::levelTransparent(bool transparent) {
+  _sendCommand1(layerId, C_leveltransparent, TO_BOOL(transparent));  
+}
+void MultiLevelDDLayer::reorderLevel(const String& levelId, const String& how) {
+  _sendCommand2(layerId, C_reordlevel, levelId, how);  
+}
+void MultiLevelDDLayer::deleteLevel(const String& levelId) {
+  _sendCommand1(layerId, C_dellevel, levelId);  
+}
 
 void MbDDLayer::showIcon(MbIcon icon) {
   _sendCommand1(layerId, "shi", String(icon));
@@ -3917,6 +3933,16 @@ void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoShowHideLayer
     _sendCommand1("", "CFGAP", layoutSpec);
   }
 }
+// void DumbDisplay::configAutoPinEx(const String& layoutSpec, const String& remainingLayoutSpec) {
+//   _Connect();
+//   if (true) {
+//     if (layoutSpec.c_str() == NULL) {
+//       __SendErrorComment("invalid autopin config");
+//       return;
+//     }
+//   }
+//   _sendCommand2("", "CFGAP", layoutSpec, remainingLayoutSpec);
+// }
 void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
   _Connect();
   _sendCommand1("", "ADDRESTAP", remainingLayoutSpec);
@@ -4710,8 +4736,6 @@ void DDLayer::debugOnly(int i) {
   // }
   // _sendByteArrayAfterCommand(bytes, i);
 }
-
-
 
 // void DDLogToSerial(const String& logLine) {
 //    _LogToSerial(logLine);

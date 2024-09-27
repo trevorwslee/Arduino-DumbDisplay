@@ -163,53 +163,70 @@ class DDLayer: public DDObject {
     /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     /// @param shape can be "flat", "hair", "round", "raised" or "sunken"  
     /// @param extraSize simply add to size; however if shape is "round", it affects the "roundness"
+    /// @note layer property
     void border(float size, const String& color, const String& shape = "flat", float extraSize = 0);
     /// set no border
+    /// @note layer property
     void noBorder();
     /// set padding for all sides
     /// @param size for size unit, see border()
+    /// @note layer property
     void padding(float size);
     /// set padding for each side;
     /// for unit, see border()
+    /// @note layer property
     void padding(float left, float top, float right, float bottom);
     /// set no padding
+    /// @note layer property
     void noPadding();
     /// set margin for all sides
     /// @param size for size unit, see border()
+    /// @note layer property
     void margin(float size);
     /// set margin for each side;
-    /// for unit, see border()
+    /// for unit, see DDLayer::border()
+    /// @note layer property
     void margin(float left, float top, float right, float bottom);
     /// set no margin
+    /// @note layer property
     void noMargin();
-    /// clear the layer
-    void clear();
     /// set layer background color
     /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
-    /// @param opacity background opacity (0 - 100)
+    /// @param opacity background opacity (0 - 100); it combines with layer opacity and alpha
+    /// @note layer property
     void backgroundColor(const String& color, int opacity = 100);
     /// set no layer background color
+    /// @note layer property
     void noBackgroundColor();
     /// set whether layer visible (not visible means hidden)
+    /// @note layer property
     void visible(bool visible);
-    /// set whether layer transparent
+    /// set whether layer is transparent
+    /// @note layer property
     void transparent(bool transparent);
     /// set layer disabled or not; if disabled, layer will not have "feedback", and its appearance will be like disabled 
+    /// @note layer property
     void disabled(bool disabled = true);
     /// set layer opacity percentage
     /// @param opacity 0 - 100
+    /// @note layer property
     void opacity(int opacity);
-    /// set layer's alpha channel
+    /// set layer's alpha channel; it combines with opacity
     /// @param alpha 0 - 255
+    /// @note layer property
     void alpha(int alpha);
     /// blending with "film" of color over the layer
     /// @param color 
     /// @param alpha 
     /// @param mode xfermode "darken" / "lighten" / "screen" / "overlay" / "" (no xfermode)
+    /// @note layer property
     void blend(const String& color, int alpha = 255, const String& mode = "darken");
     /// no blending
+    /// @note layer property
     void noblend();
-   /// normally used for "feedback" -- flash the default way (layer + border)
+    /// clear the layer
+    void clear();
+    /// normally used for "feedback" -- flash the default way (layer + border)
     void flash();
     /// normally used for "feedback" -- flash the area (x, y) where the layer is clicked
     void flashArea(int x, int y);
@@ -270,6 +287,32 @@ class DDLayer: public DDObject {
 #endif    
 };
 
+#define DD_DEF_LAYER_LEVEL_ID "_"
+
+/// Base class for a multi-level layer.
+/// A layer (single-level or multi-level) will have at least one level (DD_DEF_LAYER_LEVEL_ID). 
+/// A multi-level layer can have other named levels, which act like separate sub-layers with separate sets of non-layer-specific properties.
+class MultiLevelDDLayer: public DDLayer {
+  public:
+    /// switch to a different level (which is like a sub-layer)
+    /// @param levelId level ID; use DD_DEF_LAYER_LEVEL_ID for the default level
+    /// @param addIfMissing if true, add the level if it is missing
+    void switchLevel(const String& levelId, bool addIfMissing = true);
+    /// set the opacity of the current level 
+    /// @param opacity background opacity (0 - 100)
+    void levelOpacity(int opacity);
+    /// set whether level is transparent
+    void levelTransparent(bool transparent);
+    /// reorder the specified level (by moving it in the z-order plane)
+    /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
+    void reorderLevel(const String& levelId, const String& how);
+    /// delete the specified level
+    void deleteLevel(const String& levelId);
+  protected:
+    MultiLevelDDLayer(int8_t layerId): DDLayer(layerId) {}
+};
+
+
 
 enum MbArrow { North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest };
 enum MbIcon { Heart, SmallHeart, Yes, No, Happy, Sad, Confused, Angry, Asleep, Surprised,
@@ -323,10 +366,10 @@ class MbDDLayer: public DDLayer {
 };
 
 /// Class for Turtle-like DD layer; created with DumbDisplay::createTurtleLayer()
-class TurtleDDLayer: public DDLayer {
+class TurtleDDLayer: public MultiLevelDDLayer {
   public:
     /// for internal use only
-    TurtleDDLayer(int8_t layerId): DDLayer(layerId) {
+    TurtleDDLayer(int8_t layerId): MultiLevelDDLayer(layerId) {
     }
     /// forward; with pen or not
     void forward(int distance, bool withPen = true);
@@ -537,10 +580,10 @@ class SelectionDDLayer: public DDLayer {
  };
 
 /// Class for graphical LCD layer; created with DumbDisplay::createGraphicalLayer()
-class GraphicalDDLayer: public DDLayer {
+class GraphicalDDLayer: public MultiLevelDDLayer {
   public:
     /// for internal use only
-    GraphicalDDLayer(int8_t layerId): DDLayer(layerId) {
+    GraphicalDDLayer(int8_t layerId): MultiLevelDDLayer(layerId) {
     }
     /// rotate the screen
     void setRotation(int8_t rotationType);
@@ -743,7 +786,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /// @param segments each character represents a segment to turn on -- 
     ///                 'a', 'b', 'c', 'd', 'e', 'f', 'g', '.' 
     void turnOff(const String& segments, int digitIdx = 0);
-    /// like turnOn(), exception that the digit will be cleared first
+    /// like turnOn(), except that the digit will be cleared first
     /// @param segments empty segments basically means turn all segments of the digit off
     void setOn(const String& segments = "", int digitIdx = 0);
     /// show a digit
@@ -1332,8 +1375,11 @@ class DumbDisplay {
     /// @param layoutSpec the layout specification
     /// @param autoShowHideLayers auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
     void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoShowHideLayers = false);
+    // /// in addition to DumbDisplay::configAutoPin(), also configure the remaining layout spec for the remaining layers not mentioned in the layoutSpec 
+    // /// @see configAutoPin
+    // /// @see addRemainingAutoPinConfig
+    // void configAutoPinEx(const String& layoutSpec = DD_AP_VERT, const String& remainingLayoutSpec);
     /// add the "auto pin" config for layers not included in "auto pin" set by configAutoPin()
-    /// @param remainingLayoutSpec 
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
     /// configure "pin frame" to be x-units by y-units (default 100x100)
     /// @param autoShowHideLayers auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
