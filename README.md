@@ -52,6 +52,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
   - [Audio Supports](#audio-supports)
   - [Retrieving Image Data to Microcontroller](#retrieving-image-data-to-microcontroller)
   - ["Passive" Connection](#passive-connection)
+    - ["Passive" Connection with "Master Reset"](#passive-connection-with-master-reset)
 - [Reference](#reference)
 - [DumbDisplay WIFI Bridge](#dumbdisplay-wifi-bridge)
 - [DumbDisplay App Hints](#dumbdisplay-app-hints)
@@ -2011,6 +2012,8 @@ Notice the pattern of calling `pdd.loop()`:
 ```
 Also note that `[](){...}` is simply a C++ lambda expression that accepts no parameters and return no value.
 If you need it to acess local variables, you can try "capturing" like `[&](){...}`
+
+### "Passive" Connection with "Master Reset"
 
 Instead of relying on reconnection, you may choose to "master reset" DumbDisplay to ground-zero, and "passively" wait for connection afresh. To do so, the above sketch need be modified like
 
