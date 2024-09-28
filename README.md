@@ -997,14 +997,12 @@ Please refer to the section [Using "Tunnel" to Download Images from the Web](#us
 Before talking about the various [DumbDisplay features](#features), here is a couple of selected demos that might interested you
 
 
-|||
-|--|--|
 |[Turn ESP32-CAM into a Snapshot Taker, for Selfies and Time Lapse Pictures](https://github.com/trevorwslee/ESP32CamSnapper)|[Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|
+|--|--|
 |![](screenshots/snapper-ss.jpg)|![](screenshots/tft_show_show_ss.png)|
 
-||||
-|--|--|--|
 |[Arduino Experiment of Ultrasonic Sensor, ToF Laser Range Sensor and Servo Motor, With Raspberry Pi Pico and DumbDisplay](https://www.instructables.com/Arduino-Experiment-of-Ultrasonic-Sensor-ToF-Laser-/)|[Mnist Dataset -- From Training to Running With ESP32 / ESP32S3](https://www.instructables.com/Mnist-Dataset-From-Training-to-Running-With-ESP32-/)|[NEO-7M U-BLOX GPS Module Experiment](https://www.instructables.com/NEO-7M-U-BLOX-GPS-Module-Experiment/)|
+|--|--|--|
 |![](screenshots/pico-radar.png)|![](screenshots/esp32_mnist.gif)|![](screenshots/ddgpsmap_ss.png)|
 
 
