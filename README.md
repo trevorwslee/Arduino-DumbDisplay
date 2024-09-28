@@ -996,13 +996,17 @@ Please refer to the section [Using "Tunnel" to Download Images from the Web](#us
 
 Before talking about the various [DumbDisplay features](#features), here is a couple of selected demos that might interested you
 
+
 |||
 |--|--|
-|![](screenshots/snapper-ss.jpg)|[Turn ESP32-CAM into a Snapshot Taker, for Selfies and Time Lapse Pictures](https://github.com/trevorwslee/ESP32CamSnapper)|
-|[Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|![](screenshots/tft_show_show_ss.png)|
-|![](screenshots/pico-radar.png)|[Arduino Experiment of Ultrasonic Sensor, ToF Laser Range Sensor and Servo Motor, With Raspberry Pi Pico and DumbDisplay](https://www.instructables.com/Arduino-Experiment-of-Ultrasonic-Sensor-ToF-Laser-/)|
-|[Mnist Dataset -- From Training to Running With ESP32 / ESP32S3](https://www.instructables.com/Mnist-Dataset-From-Training-to-Running-With-ESP32-/)|![](screenshots/esp32_mnist.gif)|
-|![](screenshots/ddgpsmap_ss.png)|[NEO-7M U-BLOX GPS Module Experiment](https://www.instructables.com/NEO-7M-U-BLOX-GPS-Module-Experiment/)
+|[Turn ESP32-CAM into a Snapshot Taker, for Selfies and Time Lapse Pictures](https://github.com/trevorwslee/ESP32CamSnapper)|[Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|
+|![](screenshots/snapper-ss.jpg)|![](screenshots/tft_show_show_ss.png)|
+
+||||
+|--|--|--|
+|[Arduino Experiment of Ultrasonic Sensor, ToF Laser Range Sensor and Servo Motor, With Raspberry Pi Pico and DumbDisplay](https://www.instructables.com/Arduino-Experiment-of-Ultrasonic-Sensor-ToF-Laser-/)|[Mnist Dataset -- From Training to Running With ESP32 / ESP32S3](https://www.instructables.com/Mnist-Dataset-From-Training-to-Running-With-ESP32-/)|[NEO-7M U-BLOX GPS Module Experiment](https://www.instructables.com/NEO-7M-U-BLOX-GPS-Module-Experiment/)|
+|![](screenshots/pico-radar.png)|![](screenshots/esp32_mnist.gif)|![](screenshots/ddgpsmap_ss.png)|
+
 
 
 # Features
@@ -2037,8 +2041,7 @@ Notice:
 * Note that after "master reset", the layers / tunnels created will not be valid anymore. See that `led` is set be to `NULL` to indicate that `led` need be created up on connected again
 
 
-Again, there is a *helper* class `DDMasterResetPassiveConnectionHelper` that can aid programming such *master reset* "passive" connection.
-Say, the above can be written as
+For this ***recommended*** way of "passive" connection, there is a *helper* class `DDMasterResetPassiveConnectionHelper` that can aid in programming the flow. Say, the above can be written as
 ```
 #include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput());
@@ -2081,8 +2084,7 @@ Notice that calling of `pdd.loop()` is similar, but with one addition optional `
 |  |  |
 |--|--|
 |For a complete program / sketch that demonstrates how "passive" connetion is used, you may want to refer to the post [Extending a TFT_eSPI Example With TTGO T-Display Using PlatformIO, With DumbDisplay](https://www.instructables.com/Extending-a-TFTeSPI-Example-With-TTGO-T-Display-Us/)|![](screenshots/tdisplayclock.png)|
-
-The above mentioned post -- [Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/) -- also demonstrates the use of `DDMasterResetPassiveConnectionHelper` for managing connection, disconnection and re-connecting of DumbDisplay Android app.
+|The above mentioned post -- [Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/) -- also demonstrates the use of `DDMasterResetPassiveConnectionHelper` for managing connection, disconnection and re-connecting of DumbDisplay Android app.|![](screenshots/tft_show_show_ss.png)|
 
 
 # Reference
