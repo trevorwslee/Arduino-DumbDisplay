@@ -294,15 +294,28 @@ class DDLayer: public DDObject {
 /// A multi-level layer can have other named levels, which act like separate sub-layers with separate sets of non-layer-specific properties.
 class MultiLevelDDLayer: public DDLayer {
   public:
-    /// switch to a different level (which is like a sub-layer)
+    /// add a level, optionally change its "opening" size
+    /// @param levelId level ID; cannot be DD_DEF_LAYER_LEVEL_ID
+    /// @param width width of the level "opening"; 0 means the maximum width (the width of the layer)
+    /// @param height height of the level "opening"; 0 means the maximum height (the height of the layer)
+    void addLevel(const String& levelId, float width = 0, float height = 0);
+    /// switch to a different level (which is like a sub-layer), making it the current level
     /// @param levelId level ID; use DD_DEF_LAYER_LEVEL_ID for the default level
     /// @param addIfMissing if true, add the level if it is missing
     void switchLevel(const String& levelId, bool addIfMissing = true);
+    /// push the current level onto the level stack
+    void pushLevel(); 
+    /// pop a level from the level stack and make it the current level
+    void popLevel();
     /// set the opacity of the current level 
     /// @param opacity background opacity (0 - 100)
     void levelOpacity(int opacity);
     /// set whether level is transparent
     void levelTransparent(bool transparent);
+    /// set the anchor of the level; note that level anchor is the top-left corner of the level "opening"
+    void setLevelAnchor(float x, float y);
+    /// move the level anchor
+    void moveLevelAnchorBy(float byX, float byY);
     /// reorder the specified level (by moving it in the z-order plane)
     /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
     void reorderLevel(const String& levelId, const String& how);
@@ -729,6 +742,9 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// - x / y: position of the left-top corner
     /// - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
     void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& options = "");
+    // inline void drawImageFile(const String& imageFileName, const String& options = "", int x = 0, int y = 0, int w = 0, int h = 0) {
+    //   drawImageFile(imageFileName, x, y, w, h, options);
+    // }
     /// draw image file in cache (if not already loaded to cache, load it)
     /// - x / y / w / h: rect to draw the image; 0 means the default value
     /// - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
@@ -1487,7 +1503,7 @@ class DumbDisplay {
     /// additionally:
     /// - save and persist the layer commands
     /// - enable DumbDisplay reconnect feature -- tells the layer setup commands to use when DumbDisplay reconnects
-    void playbackLayerSetupCommands(const String& persist_id);
+    void playbackLayerSetupCommands(const String& layerSetupPersistId);
     /// start recording layer commands (of any layers);
     /// and sort of freeze the display, until playback
     void recordLayerCommands();

@@ -162,7 +162,8 @@
 
 //#define DD_SID "Arduino-c9"  // DD library version (compatibility)
 //#define DD_SID "Arduino-c10"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v30
-#define DD_SID "Arduino-c11"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v31
+//#define DD_SID "Arduino-c11"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v31
+#define DD_SID "Arduino-c12"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v34
 
 
 #include "_dd_commands.h"
@@ -516,7 +517,7 @@ this->print("// NEED TO RECONNECT\n");
 
 //volatile bool _Preconneced = false;
 //volatile bool _Connected = false;
-/*volatile */short _DDCompatibility = 0;
+/*volatile */short _DDCompatibility = 0;  // see DD_APP_COMPATIBILITY
 /*volatile */int _NextLid = 0;
 /*volatile*/int _NextImgId = 0;
 /*volatile*/int _NextBytesId = 0;
@@ -2316,14 +2317,33 @@ void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFe
 #endif
 }
 
+void MultiLevelDDLayer::addLevel(const String& levelId, float width, float height) {
+  if (IS_FLOAT_ZERO(width) && IS_FLOAT_ZERO(height)) {
+    _sendCommand1(layerId, C_addlevel, levelId);
+  } else {
+    _sendCommand3(layerId, C_addlevel, levelId, TO_NUM(width), TO_NUM(height));
+  }
+}
 void MultiLevelDDLayer::switchLevel(const String& levelId, bool addIfMissing) {
   _sendCommand2(layerId, C_switchlevel, levelId, TO_BOOL(addIfMissing));
+}
+void MultiLevelDDLayer::pushLevel() {
+  _sendCommand0(layerId, C_pushlevel);
+}
+void MultiLevelDDLayer::popLevel() {
+  _sendCommand0(layerId, C_poplevel);
 }
 void MultiLevelDDLayer::levelOpacity(int opacity) {
   _sendCommand1(layerId, C_levelopacity, String(opacity));  
 }
 void MultiLevelDDLayer::levelTransparent(bool transparent) {
   _sendCommand1(layerId, C_leveltransparent, TO_BOOL(transparent));  
+}
+void MultiLevelDDLayer::setLevelAnchor(float x, float y) {
+  _sendCommand2(layerId, C_setlevelanchor, TO_NUM(x), TO_NUM(y));
+}
+void MultiLevelDDLayer::moveLevelAnchorBy(float byX, float byY) {
+  _sendCommand2(layerId, C_movelevelanchorby, TO_NUM(byX), TO_NUM(byY));
 }
 void MultiLevelDDLayer::reorderLevel(const String& levelId, const String& how) {
   _sendCommand2(layerId, C_reordlevel, levelId, how);  
@@ -2566,7 +2586,7 @@ void LcdDDLayer::writeLine(const String& text, int y, const String& align) {
   _sendCommand3(layerId, C_writeline, String(y), align, text);
 }
 void LcdDDLayer::writeRightAlignedLine(const String& text, int y) {
-  _sendCommand3(layerId, C_writeline, String(y),"R", text);
+  _sendCommand3(layerId, C_writeline, String(y), "R", text);
 }
 void LcdDDLayer::writeCenteredLine(const String& text, int y) {
   _sendCommand3(layerId, C_writeline, String(y), "C", text);
@@ -2812,13 +2832,31 @@ void GraphicalDDLayer::unloadAllImageFiles() {
   _sendCommand0(layerId, C_unloadallimagefiles);
 }
 void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, int w, int h, const String& options) {
-  if (w == 0 && h == 0 && options == "") {
-    _sendCommand3(layerId, C_drawimagefile, imageFileName, String(x), String(y));
-  } else {
-    if (options == "") {
-      _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+  if (_DDCompatibility >= 11) {
+    if (x == 0 && y == 0 && w == 0 && h == 0) {
+      _sendCommand2(layerId, C_drawimagefile, imageFileName, options);
+    } else if (w == 0 && h == 0) {
+      if (options == "") {
+        _sendCommand3(layerId, C_drawimagefile, imageFileName, String(x), String(y));
+      } else {
+        _sendCommand4(layerId, C_drawimagefile, imageFileName, String(x), String(y), options);
+      }  
     } else {
-      _sendCommand6(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h), options);
+      if (options == "") {
+        _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+      } else {
+        _sendCommand6(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h), options);
+      }
+    }
+  } else { 
+    if (w == 0 && h == 0 && options == "") {
+      _sendCommand3(layerId, C_drawimagefile, imageFileName, String(x), String(y));
+    } else {
+      if (options == "") {
+        _sendCommand5(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h));
+      } else {
+        _sendCommand6(layerId, C_drawimagefile, imageFileName, String(x), String(y), String(w), String(h), options);
+      }
     }
   }
 }
