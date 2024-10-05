@@ -298,12 +298,12 @@ class MultiLevelDDLayer: public DDLayer {
     /// @param levelId level ID; cannot be DD_DEF_LAYER_LEVEL_ID
     /// @param width width of the level "opening"; 0 means the maximum width (the width of the layer)
     /// @param height height of the level "opening"; 0 means the maximum height (the height of the layer)
-    void addLevel(const String& levelId, float width = 0, float height = 0);
+    void addLevel(const String& levelId, float width = 0, float height = 0, bool switchToIt = false);
     /// switch to a different level (which is like a sub-layer), making it the current level
     /// @param levelId level ID; use DD_DEF_LAYER_LEVEL_ID for the default level
     /// @param addIfMissing if true, add the level if it is missing
     void switchLevel(const String& levelId, bool addIfMissing = true);
-    /// push the current level onto the level stack
+    /// push the current level onto the level stack, to be pop with popLevel()
     void pushLevel(); 
     /// pop a level from the level stack and make it the current level
     void popLevel();
@@ -728,26 +728,39 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// @param draw means draw the text (in the heading direction)
     void write(const String& text, bool draw = false);
     /// load image file to cache
-    /// - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
-    /// - asImageFileNmae: better provide a different name for the scaled cached
+    /// @param w,h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
+    /// @param asImageFileName: better provide a different name for the scaled cached
     void loadImageFile(const String& imageFileName, int w = 0, int h = 0, const String& asImageFileName = "");
     /// load image file to cache cropped
+    /// @param x,y,w,h: rect to crop the image
+    /// @param asImageFileName: since image cropped, should provide a different name for the scaled cached
+    /// @param
     /// @see loadImageFile()
-    void loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName = "");
+    inline void loadImageFileScaled(const String& imageFileName, int w, int h, const String& asImageFileName) {
+      loadImageFile(imageFileName, w, h, asImageFileName);
+    }
+    void loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName, int scaleW = 0, int scaleH = 0);
     /// unload image file from cache
     void unloadImageFile(const String& imageFileName);
     /// unload all image files from cache
     void unloadAllImageFiles();
     /// draw image file in cache (if not already loaded to cache, load it) 
-    /// - x / y: position of the left-top corner
-    /// - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
+    /// @param x,y: position of the left-top corner
+    /// @param w,h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
     void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& options = "");
-    // inline void drawImageFile(const String& imageFileName, const String& options = "", int x = 0, int y = 0, int w = 0, int h = 0) {
-    //   drawImageFile(imageFileName, x, y, w, h, options);
-    // }
+    /// a simpler of drawImageFile() 
+    /// @see drawImageFile()
+    inline void drawImageFileBasic(const String& imageFileName, const String& options) {
+      drawImageFile(imageFileName, 0, 0, 0, 0, options);
+    }
+    /// draw image file in cache scaled, like calling drawImageFile(imageFileName, 0, 0, w, h, options) with w and h
+    /// @see drawImageFile()
+    inline void drawImageFileScaled(const String& imageFileName, int w, int h, const String& options = "") {
+      drawImageFile(imageFileName, 0, 0, w, h, options);
+    }
     /// draw image file in cache (if not already loaded to cache, load it)
-    /// - x / y / w / h: rect to draw the image; 0 means the default value
-    /// - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
+    /// @param x,y,w,h: rect to draw the image; 0 means the default value
+    /// @param align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /// cache image; not saved
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);

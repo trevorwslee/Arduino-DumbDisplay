@@ -2317,11 +2317,11 @@ void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFe
 #endif
 }
 
-void MultiLevelDDLayer::addLevel(const String& levelId, float width, float height) {
-  if (IS_FLOAT_ZERO(width) && IS_FLOAT_ZERO(height)) {
+void MultiLevelDDLayer::addLevel(const String& levelId, float width, float height, bool switchToIt) {
+  if (IS_FLOAT_ZERO(width) && IS_FLOAT_ZERO(height) && !switchToIt) {
     _sendCommand1(layerId, C_addlevel, levelId);
   } else {
-    _sendCommand3(layerId, C_addlevel, levelId, TO_NUM(width), TO_NUM(height));
+    _sendCommand4(layerId, C_addlevel, levelId, TO_NUM(width), TO_NUM(height), TO_BOOL(switchToIt));
   }
 }
 void MultiLevelDDLayer::switchLevel(const String& levelId, bool addIfMissing) {
@@ -2693,32 +2693,79 @@ void GraphicalDDLayer::drawLine(int x1, int y1, int x2, int y2, const String& co
   _sendCommand5(layerId, C_drawline, TO_C_INT(x1), TO_C_INT(y1), TO_C_INT(x2), TO_C_INT(y2), color);
 }
 void GraphicalDDLayer::drawRect(int x, int y, int w, int h, const String& color, bool filled) {
-  _sendCommand6(layerId, c_drawrect, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), color, TO_BOOL(filled));
+  if (_DDCompatibility >= 11) {
+    if (color == "" && !filled) {
+      _sendCommand4(layerId, c_drawrect, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h));
+    } else {
+      _sendCommand6(layerId, c_drawrect, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), color, TO_BOOL(filled));
+    }
+  } else {
+      _sendCommand6(layerId, c_drawrect, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), color, TO_BOOL(filled));
+  }
 }
 void GraphicalDDLayer::drawOval(int x, int y, int w, int h, const String& color, bool filled) {
-  _sendCommand6(layerId, c_drawoval, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), color, TO_BOOL(filled));
+  if (_DDCompatibility >= 11) {
+    if (color == "" && !filled) {
+      _sendCommand4(layerId, c_drawoval, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h));
+    } else {
+      _sendCommand6(layerId, c_drawoval, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), color, TO_BOOL(filled));
+    }
+  } else {
+    _sendCommand6(layerId, c_drawoval, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), color, TO_BOOL(filled));
+  }
 }
 void GraphicalDDLayer::drawArc(int x, int y, int w, int h, int startAngle, int sweepAngle, bool useCenter, const String& color, bool filled) {
-  _sendCommand9(layerId, c_drawarc, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), TO_C_INT(startAngle), TO_C_INT(sweepAngle), TO_BOOL(useCenter), color, TO_BOOL(filled));
+  if (_DDCompatibility >= 11) {
+    if (color == "" && !filled) {
+      _sendCommand7(layerId, c_drawarc, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), TO_C_INT(startAngle), TO_C_INT(sweepAngle), TO_BOOL(useCenter));
+    } else {
+      _sendCommand9(layerId, c_drawarc, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), TO_C_INT(startAngle), TO_C_INT(sweepAngle), TO_BOOL(useCenter), color, TO_BOOL(filled));
+    }
+  } else {
+    _sendCommand9(layerId, c_drawarc, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), TO_C_INT(startAngle), TO_C_INT(sweepAngle), TO_BOOL(useCenter), color, TO_BOOL(filled));
+  }
 }
 // void GraphicalDDLayer::fillRect(int x, int y, int w, int h, const String& color) {
 //   _sendCommand6(layerId, "drawrect", String(x), String(y), String(w), String(h), color, TO_BOOL(true));
 // }
 void GraphicalDDLayer::drawCircle(int x, int y, int r, const String& color, bool filled) {
-  _sendCommand5(layerId, C_drawcircle, TO_C_INT(x), TO_C_INT(y), TO_C_INT(r), color, TO_BOOL(filled));
+  if (_DDCompatibility >= 11) {
+    if (color == "" && !filled) {
+      _sendCommand3(layerId, C_drawcircle, TO_C_INT(x), TO_C_INT(y), TO_C_INT(r));
+    } else {
+      _sendCommand5(layerId, C_drawcircle, TO_C_INT(x), TO_C_INT(y), TO_C_INT(r), color, TO_BOOL(filled));
+    }
+  } else {
+    _sendCommand5(layerId, C_drawcircle, TO_C_INT(x), TO_C_INT(y), TO_C_INT(r), color, TO_BOOL(filled));
+  }
 }
 // void GraphicalDDLayer::fillCircle(int x, int y, int r, const String& color) {
 //   _sendCommand5(layerId, "drawcircle", String(x), String(y), String(r), color, TO_BOOL(true));
 // }
 void GraphicalDDLayer::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color, bool filled) {
-  //_sendCommand8(layerId, C_drawtriangle, String(x1), String(y1), String(x2), String(y2), String(x3), String(y3), color, TO_BOOL(filled));
-  _sendCommand8(layerId, C_drawtriangle, TO_C_INT(x1), TO_C_INT(y1), TO_C_INT(x2), TO_C_INT(y2), TO_C_INT(x3), TO_C_INT(y3), color, TO_BOOL(filled));
+  if (_DDCompatibility >= 11) {
+    if (color == "" && !filled) {
+      _sendCommand6(layerId, C_drawtriangle, TO_C_INT(x1), TO_C_INT(y1), TO_C_INT(x2), TO_C_INT(y2), TO_C_INT(x3), TO_C_INT(y3));
+    } else {
+      _sendCommand8(layerId, C_drawtriangle, TO_C_INT(x1), TO_C_INT(y1), TO_C_INT(x2), TO_C_INT(y2), TO_C_INT(x3), TO_C_INT(y3), color, TO_BOOL(filled));
+    }
+  } else {
+    _sendCommand8(layerId, C_drawtriangle, TO_C_INT(x1), TO_C_INT(y1), TO_C_INT(x2), TO_C_INT(y2), TO_C_INT(x3), TO_C_INT(y3), color, TO_BOOL(filled));
+  }
 }
 // void GraphicalDDLayer::fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, const String& color) {
 //   _sendCommand8(layerId, "drawtriangle", String(x1), String(y1), String(x2), String(y2), String(x3), String(y3), color, TO_BOOL(true));
 // }
 void GraphicalDDLayer::drawRoundRect(int x, int y, int w, int h, int r, const String& color, bool filled) {
-  _sendCommand7(layerId, C_drawroundrect, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), TO_C_INT(r), color, TO_BOOL(filled));
+  if (_DDCompatibility >= 11) {
+    if (color == "" && !filled) {
+      _sendCommand5(layerId, C_drawroundrect, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), TO_C_INT(r));
+    } else {
+      _sendCommand7(layerId, C_drawroundrect, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), TO_C_INT(r), color, TO_BOOL(filled));
+    }
+  } else {
+    _sendCommand7(layerId, C_drawroundrect, TO_C_INT(x), TO_C_INT(y), TO_C_INT(w), TO_C_INT(h), TO_C_INT(r), color, TO_BOOL(filled));
+  }
 }
 // void GraphicalDDLayer::fillRoundRect(int x, int y, int w, int h, int r, const String& color) {
 //   _sendCommand7(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color, TO_BOOL(true));
@@ -2783,8 +2830,12 @@ void GraphicalDDLayer::centeredPolygon(int radius, int vertexCount, bool inside)
 void GraphicalDDLayer::loadImageFile(const String& imageFileName, int w, int h, const String& asImageFileName) {
   _sendCommand4(layerId, C_loadimagefile, imageFileName, String(w), String(h), asImageFileName);
 }
-void GraphicalDDLayer::loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName) {
-  _sendCommand6(layerId, C_loadimagefilecropped, imageFileName, String(x), String(y), String(w), String(h), asImageFileName);
+void GraphicalDDLayer::loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName, int scaleW, int scaleH) {
+  if (scaleW == 0 && scaleH == 0) {
+    _sendCommand6(layerId, C_loadimagefilecropped, imageFileName, String(x), String(y), String(w), String(h), asImageFileName);
+  } else {
+    _sendCommand8(layerId, C_loadimagefilecropped, imageFileName, String(x), String(y), String(w), String(h), asImageFileName, String(scaleW), String(scaleH));
+  }
 }
 void GraphicalDDLayer::cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressMethod) {
   _sendCommand2("", C_CACHEIMG, layerId, imageName);
@@ -2835,11 +2886,11 @@ void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, 
   if (_DDCompatibility >= 11) {
     if (x == 0 && y == 0 && w == 0 && h == 0) {
       _sendCommand2(layerId, C_drawimagefile, imageFileName, options);
-    } else if (w == 0 && h == 0) {
+    } else if (x == 0 && y == 0) {
       if (options == "") {
-        _sendCommand3(layerId, C_drawimagefile, imageFileName, String(x), String(y));
+        _sendCommand3(layerId, C_drawimagefile, imageFileName, String(w), String(h));
       } else {
-        _sendCommand4(layerId, C_drawimagefile, imageFileName, String(x), String(y), options);
+        _sendCommand4(layerId, C_drawimagefile, imageFileName, String(w), String(h), options);
       }  
     } else {
       if (options == "") {
