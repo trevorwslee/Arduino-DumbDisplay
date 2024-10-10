@@ -313,9 +313,21 @@ class MultiLevelDDLayer: public DDLayer {
     /// set whether level is transparent
     void levelTransparent(bool transparent);
     /// set the anchor of the level; note that level anchor is the top-left corner of the level "opening"
-    void setLevelAnchor(float x, float y);
+    void setLevelAnchor(float x, float y, long reachInMillis = 0);
     /// move the level anchor
-    void moveLevelAnchorBy(float byX, float byY);
+    void moveLevelAnchorBy(float byX, float byY, long reachInMillis = 0);
+    /// register an image for setting as level's background
+    /// @param backgroundId id to identify the background
+    /// @param backgroundImageName name of the image
+    /// @param drawBackgroundOptions options for drawing the background; same means as the option param of GraphicalDDLayer::drawImageFiler()
+    void registerLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions = "");
+    /// set a registered background image as the current level's background
+    /// @param backgroundId 
+    /// @param backgroundImageName if not registered, the name of the image to register
+    /// @param drawBackgroundOptions if not registered, the options for drawing the background
+    void setLevelBackground(const String& backgroundId, const String& backgroundImageName = "", const String& drawBackgroundOptions = "");
+    /// set that the current level uses no background image
+    void setLevelNoBackground();
     /// reorder the specified level (by moving it in the z-order plane)
     /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
     void reorderLevel(const String& levelId, const String& how);
@@ -748,9 +760,9 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// @param x,y: position of the left-top corner
     /// @param w,h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
     void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& options = "");
-    /// a simpler of drawImageFile() 
+    /// another version of drawImageFile() 
     /// @see drawImageFile()
-    inline void drawImageFileBasic(const String& imageFileName, const String& options) {
+    inline void drawImageFile(const String& imageFileName, const String& options) {
       drawImageFile(imageFileName, 0, 0, 0, 0, options);
     }
     /// draw image file in cache scaled, like calling drawImageFile(imageFileName, 0, 0, w, h, options) with w and h
@@ -760,7 +772,7 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     }
     /// draw image file in cache (if not already loaded to cache, load it)
     /// @param x,y,w,h: rect to draw the image; 0 means the default value
-    /// @param align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
+    /// @param open (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
     void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
     /// cache image; not saved
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
@@ -1522,18 +1534,21 @@ class DumbDisplay {
     void recordLayerCommands();
     /// playback recorded commands (unfreeze the display)
     void playbackLayerCommands();
-    /// stop recording commands (and forget what have recorded)
-    void stopRecordLayerCommands();
-    /// save the recorded commands (and continue recording)
+    /// stop recording commands (if not saved, will forget what recorded)
+    /// @param saveId if provided, save like calling saveLayerCommands(); otherwise, forget what have been recording
+    /// @param persistSave if save, store it to your phone as well
+    void stopRecordLayerCommands(const String& saveId = "", bool persistSave = false);
+    /// save the recorded commands (continue recording or not depends on parameter passed in );
+    /// any pre-existed saved commands with the same id will be replaced with the recording commands (delete if not recording)
     /// @param id identifier of the recorded commands, overwriting and previous one;
     ///           if not recording, will delete previous recorded commands
-    /// @param persist store it to your phone or not
-    void saveLayerCommands(const String& id, bool persist = false);
+    /// @param persist store it to your phone as well
+    /// @param stopAfterSave stop recording after saving
+    void saveLayerCommands(const String& id, bool persist = false, bool stopAfterSave = false);
     /// load saved commands (as if recording those commands)
     /// - recording started or not, will add the commands to the buffer
     /// - afterward, will keep recording
     /// - use playbackLayerCommands() to playback loaded commands
-    /// - if not recording commands, this basically remove saved commands
     void loadLayerCommands(const String& id);
     /// capture and save display as image
     /// @param imageFileName: name of image file; if it ends with ".png", saved image format will be PNG; other, saved image format will be JPEG */

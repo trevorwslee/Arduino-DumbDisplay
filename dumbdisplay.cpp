@@ -2339,11 +2339,32 @@ void MultiLevelDDLayer::levelOpacity(int opacity) {
 void MultiLevelDDLayer::levelTransparent(bool transparent) {
   _sendCommand1(layerId, C_leveltransparent, TO_BOOL(transparent));  
 }
-void MultiLevelDDLayer::setLevelAnchor(float x, float y) {
-  _sendCommand2(layerId, C_setlevelanchor, TO_NUM(x), TO_NUM(y));
+void MultiLevelDDLayer::setLevelAnchor(float x, float y, long reachInMillis) {
+  if (reachInMillis > 0) {
+    _sendCommand3(layerId, C_setlevelanchor, TO_NUM(x), TO_NUM(y), String(reachInMillis));
+  } else {
+    _sendCommand2(layerId, C_setlevelanchor, TO_NUM(x), TO_NUM(y));
+  }
 }
-void MultiLevelDDLayer::moveLevelAnchorBy(float byX, float byY) {
-  _sendCommand2(layerId, C_movelevelanchorby, TO_NUM(byX), TO_NUM(byY));
+void MultiLevelDDLayer::moveLevelAnchorBy(float byX, float byY, long reachInMillis) {
+  if (reachInMillis > 0) {
+    _sendCommand3(layerId, C_movelevelanchorby, TO_NUM(byX), TO_NUM(byY), String(reachInMillis));
+  } else {
+    _sendCommand2(layerId, C_movelevelanchorby, TO_NUM(byX), TO_NUM(byY));
+  }
+}
+void MultiLevelDDLayer::registerLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions) {
+  _sendCommand3(layerId, C_reglevelbg, backgroundId, backgroundImageName, drawBackgroundOptions);  
+}
+void MultiLevelDDLayer::setLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions) {
+  if (backgroundImageName == "") {
+    _sendCommand1(layerId, C_setlevelbg, backgroundId);  
+  } else {
+    _sendCommand3(layerId, C_setlevelbg, backgroundId, backgroundImageName, drawBackgroundOptions);  
+  }
+}
+void MultiLevelDDLayer::setLevelNoBackground() {
+    _sendCommand0(layerId, C_setlevelnobg);  
 }
 void MultiLevelDDLayer::reorderLevel(const String& levelId, const String& how) {
   _sendCommand2(layerId, C_reordlevel, levelId, how);  
@@ -2912,7 +2933,11 @@ void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, 
   }
 }
 void GraphicalDDLayer::drawImageFileFit(const String& imageFileName, int x, int y, int w, int h, const String& align) {
-  _sendCommand6(layerId, C_drawimagefilefit, imageFileName, String(x), String(y), String(w), String(h), align);
+  if (x == 0 && y == 0 && w == 0 && h == 0 && align == "") {
+    _sendCommand1(layerId, C_drawimagefilefit, imageFileName);
+  } else {
+    _sendCommand6(layerId, C_drawimagefilefit, imageFileName, String(x), String(y), String(w), String(h), align);
+  }
 }
 void GraphicalDDLayer::write(const String& text, bool draw) {
   _sendCommand1(layerId, draw ? C_drawtext : C_write, text);
@@ -4233,11 +4258,19 @@ void DumbDisplay::playbackLayerCommands() {
 #endif
   _sendCommand0("", C_PLAYC);
 }
-void DumbDisplay::stopRecordLayerCommands() {
-  _sendCommand0("", "STOPC");
+void DumbDisplay::stopRecordLayerCommands(const String& saveId, bool persistSave) {
+  if (_DDCompatibility >= 11 && saveId != "") {
+    _sendCommand2("", "STOPC", saveId, TO_BOOL(persistSave));
+  } else {
+    _sendCommand0("", "STOPC");
+  }
 }
-void DumbDisplay::saveLayerCommands(const String& id, bool persist) {
-  _sendCommand2("", C_SAVEC, id, TO_BOOL(persist));
+void DumbDisplay::saveLayerCommands(const String& id, bool persist, bool stopAfterSave) {
+  if (_DDCompatibility >= 11 && stopAfterSave) {
+    _sendCommand3("", C_SAVEC, id, TO_BOOL(persist), TO_BOOL(stopAfterSave));
+  } else {
+    _sendCommand2("", C_SAVEC, id, TO_BOOL(persist));
+  }
 }
 void DumbDisplay::loadLayerCommands(const String& id) {
   _sendCommand1("", "LOADC", id);

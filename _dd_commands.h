@@ -50,7 +50,6 @@
 #define C_addlevel         "#2f"
 
 
-
 #define C_fillscreen       "#30"
 #define C_drawtriangle     "#31"
 #define C_drawline         "#32"
@@ -64,6 +63,9 @@
 
 #define C_setlevelanchor    "#3a"
 #define C_movelevelanchorby "#3b"
+#define C_reglevelbg        "#3c"
+#define C_setlevelbg        "#3d"
+#define C_setlevelnobg      "#3e"
 
 
 #define C_textcolor        "#40"
