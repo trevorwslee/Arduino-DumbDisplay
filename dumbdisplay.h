@@ -299,12 +299,17 @@ class MultiLevelDDLayer: public DDLayer {
     /// @param width width of the level "opening"; 0 means the maximum width (the width of the layer)
     /// @param height height of the level "opening"; 0 means the maximum height (the height of the layer)
     void addLevel(const String& levelId, float width = 0, float height = 0, bool switchToIt = false);
+    /// another version of addLevel()
+    inline void addLevel(const String& levelId, bool switchToIt) {
+      addLevel(levelId, 0, 0, switchToIt);
+    }
     /// switch to a different level (which is like a sub-layer), making it the current level
     /// @param levelId level ID; use DD_DEF_LAYER_LEVEL_ID for the default level
     /// @param addIfMissing if true, add the level if it is missing
     void switchLevel(const String& levelId, bool addIfMissing = true);
     /// push the current level onto the level stack, to be pop with popLevel()
-    void pushLevel(); 
+    /// @param levelId if not empty, level ID to switch to
+    void pushLevel(const String& levelId = "", bool addIfMissing = true); 
     /// pop a level from the level stack and make it the current level
     void popLevel();
     /// set the opacity of the current level 
@@ -760,8 +765,7 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// @param x,y: position of the left-top corner
     /// @param w,h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
     void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& options = "");
-    /// another version of drawImageFile() 
-    /// @see drawImageFile()
+    /// another version of drawImageFile() with options
     inline void drawImageFile(const String& imageFileName, const String& options) {
       drawImageFile(imageFileName, 0, 0, 0, 0, options);
     }
@@ -772,8 +776,12 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     }
     /// draw image file in cache (if not already loaded to cache, load it)
     /// @param x,y,w,h: rect to draw the image; 0 means the default value
-    /// @param open (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
-    void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
+    /// @param options (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
+    void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& options = "");
+    /// another version of drawImageFileFit() with options
+    inline void drawImageFileFit(const String& imageFileName, const String& options) {
+      drawImageFileFit(imageFileName, 0, 0, 0, 0, options);
+    }
     /// cache image; not saved
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
     void cacheImageWithTS(const String& imageName, const uint8_t *bytes, int byteCount, long imageTimestamp, char compressionMethod = 0);

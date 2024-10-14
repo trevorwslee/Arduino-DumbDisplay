@@ -2318,8 +2318,12 @@ void DDLayer::setFeedbackHandler(DDFeedbackHandler handler, const String& autoFe
 }
 
 void MultiLevelDDLayer::addLevel(const String& levelId, float width, float height, bool switchToIt) {
-  if (IS_FLOAT_ZERO(width) && IS_FLOAT_ZERO(height) && !switchToIt) {
-    _sendCommand1(layerId, C_addlevel, levelId);
+  if (IS_FLOAT_ZERO(width) && IS_FLOAT_ZERO(height)) {
+    if (switchToIt) {
+      _sendCommand2(layerId, C_addlevel, levelId, TO_BOOL(switchToIt));
+    } else {
+      _sendCommand1(layerId, C_addlevel, levelId);
+    }
   } else {
     _sendCommand4(layerId, C_addlevel, levelId, TO_NUM(width), TO_NUM(height), TO_BOOL(switchToIt));
   }
@@ -2327,8 +2331,12 @@ void MultiLevelDDLayer::addLevel(const String& levelId, float width, float heigh
 void MultiLevelDDLayer::switchLevel(const String& levelId, bool addIfMissing) {
   _sendCommand2(layerId, C_switchlevel, levelId, TO_BOOL(addIfMissing));
 }
-void MultiLevelDDLayer::pushLevel() {
-  _sendCommand0(layerId, C_pushlevel);
+void MultiLevelDDLayer::pushLevel(const String& levelId, bool addIfMissing) {
+  if (levelId != "") {
+    _sendCommand2(layerId, C_pushlevel, levelId, TO_BOOL(addIfMissing));
+  } else {
+    _sendCommand0(layerId, C_pushlevel);
+  }
 }
 void MultiLevelDDLayer::popLevel() {
   _sendCommand0(layerId, C_poplevel);
@@ -2932,11 +2940,11 @@ void GraphicalDDLayer::drawImageFile(const String& imageFileName, int x, int y, 
     }
   }
 }
-void GraphicalDDLayer::drawImageFileFit(const String& imageFileName, int x, int y, int w, int h, const String& align) {
-  if (x == 0 && y == 0 && w == 0 && h == 0 && align == "") {
+void GraphicalDDLayer::drawImageFileFit(const String& imageFileName, int x, int y, int w, int h, const String& options) {
+  if (x == 0 && y == 0 && w == 0 && h == 0 && options == "") {
     _sendCommand1(layerId, C_drawimagefilefit, imageFileName);
   } else {
-    _sendCommand6(layerId, C_drawimagefilefit, imageFileName, String(x), String(y), String(w), String(h), align);
+    _sendCommand6(layerId, C_drawimagefilefit, imageFileName, String(x), String(y), String(w), String(h), options);
   }
 }
 void GraphicalDDLayer::write(const String& text, bool draw) {
