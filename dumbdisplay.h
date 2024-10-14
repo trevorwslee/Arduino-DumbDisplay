@@ -308,8 +308,10 @@ class MultiLevelDDLayer: public DDLayer {
     /// @param addIfMissing if true, add the level if it is missing
     void switchLevel(const String& levelId, bool addIfMissing = true);
     /// push the current level onto the level stack, to be pop with popLevel()
-    /// @param levelId if not empty, level ID to switch to
-    void pushLevel(const String& levelId = "", bool addIfMissing = true); 
+    void pushLevel(); 
+    /// push the current level onto the level stack, to be pop with popLevel()
+    /// @param switchTolevelId switch to level ID (after pushing current level)
+    void pushLevelAndSwitchTo(const String& switchTolevelId, bool addIfMissing = true); 
     /// pop a level from the level stack and make it the current level
     void popLevel();
     /// set the opacity of the current level 
@@ -843,7 +845,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /// show number (can be float)
     void showNumber(float number, const String& padding = " ");
     /// show HEX number
-    void showHexNumber(int number);
+    void showHexNumber(int16_t number);
     /// show formatted number (even number with hex digits);
     /// e.g. "12.00", "00.34", "-.12", "0ff"
     void showFormatted(const String& formatted, bool completeReplace = true, int startIdx = 0);
@@ -868,7 +870,7 @@ class JoystickDDLayer: public DDLayer {
     /// @param x x to move to
     /// @param x y to move to
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
-    void moveToPos(int x, int y, bool sendFeedback = false);
+    void moveToPos(int16_t x, int16_t y, bool sendFeedback = false);
     /// move joystick to the center
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
     void moveToCenter(bool sendFeedback = false);
@@ -876,7 +878,7 @@ class JoystickDDLayer: public DDLayer {
     /// @param minValue the min value of the stick
     /// @param maxValue the max value of the stick
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
-    void valueRange(int minValue, int maxValue, int valueStep = 1, bool sendFeedback = false);
+    void valueRange(int16_t minValue, int16_t maxValue, int valueStep = 1, bool sendFeedback = false);
     /// set 'snappy' makes stick snaps to closest value when moved
     void snappy(bool snappy = true);
     /// show value on top of the stick 

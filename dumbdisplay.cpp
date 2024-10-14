@@ -2331,12 +2331,11 @@ void MultiLevelDDLayer::addLevel(const String& levelId, float width, float heigh
 void MultiLevelDDLayer::switchLevel(const String& levelId, bool addIfMissing) {
   _sendCommand2(layerId, C_switchlevel, levelId, TO_BOOL(addIfMissing));
 }
-void MultiLevelDDLayer::pushLevel(const String& levelId, bool addIfMissing) {
-  if (levelId != "") {
-    _sendCommand2(layerId, C_pushlevel, levelId, TO_BOOL(addIfMissing));
-  } else {
-    _sendCommand0(layerId, C_pushlevel);
-  }
+void MultiLevelDDLayer::pushLevel() {
+  _sendCommand0(layerId, C_pushlevel);
+}
+void MultiLevelDDLayer::pushLevelAndSwitchTo(const String& switchTolevelId, bool addIfMissing) {
+  _sendCommand2(layerId, C_pushlevel, switchTolevelId, TO_BOOL(addIfMissing));
 }
 void MultiLevelDDLayer::popLevel() {
   _sendCommand0(layerId, C_poplevel);
@@ -2980,7 +2979,7 @@ void SevenSegmentRowDDLayer::showNumber(float number, const String& padding) {
     _sendCommand2(layerId, C_shownumber, String(number, 5), padding);
   }
 }
-void SevenSegmentRowDDLayer::showHexNumber(int number) {
+void SevenSegmentRowDDLayer::showHexNumber(int16_t number) {
   _sendCommand1(layerId, C_showhex, String(number));
 }
 void SevenSegmentRowDDLayer::showFormatted(const String& formatted, bool completeReplace, int startIdx) {
@@ -2993,13 +2992,13 @@ void JoystickDDLayer::autoRecenter(bool autoRecenter) {
 void JoystickDDLayer::colors(const String& stickColor, const String& stickOutlineColor, const String& socketColor, const String& socketOutlineColor) {
   _sendCommand4(layerId, C_colors, stickColor, stickOutlineColor, socketColor, socketOutlineColor);
 }
-void JoystickDDLayer::moveToPos(int x, int y, bool sendFeedback) {
+void JoystickDDLayer::moveToPos(int16_t x, int16_t y, bool sendFeedback) {
   _sendCommand3(layerId, C_movetopos, TO_C_INT(x), TO_C_INT(y), TO_BOOL(sendFeedback));
 }
 void JoystickDDLayer::moveToCenter(bool sendFeedback) {
   _sendCommand1(layerId, C_movetocenter, TO_BOOL(sendFeedback));
 }
-void JoystickDDLayer::valueRange(int minValue, int maxValue, int valueStep, bool sendFeedback) {
+void JoystickDDLayer::valueRange(int16_t minValue, int16_t maxValue, int valueStep, bool sendFeedback) {
     if (_DDCompatibility >= 8) {
       _sendCommand4(layerId, C_valuerange, String(minValue), String(maxValue), String(valueStep), TO_BOOL(sendFeedback));
     } else {
