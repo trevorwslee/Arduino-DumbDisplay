@@ -176,6 +176,13 @@ Since the sketch assumes USB connectivity to your Android phone, hence, the fina
 
 You may want to refer to my post [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/) for more description on such connection.
 
+Notes:
+* The DumbDisplay object will actually send text-based commands to DumbDisplay app to create layers (plus others)
+* The layer object is simply a representation of the corresponding layer on the DumbDisplay app side
+  -- most operations on the layer object actually sends text-based commands to DumbDisplay app
+* As a result, action like creating a layer will block until a connection with DumbDisplay app is made
+* If this "active" connection does not fit your use base, you may want to consider ["Passive" Connection](#passive-connection)  
+
 
 |  |  |
 |--|--|

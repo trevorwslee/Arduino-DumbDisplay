@@ -78,6 +78,11 @@
 #define C_ledoncolor       "#47"
 #define C_ledoffcolor      "#48"
 #define C_pencolor         "#49"
+
+#define C_anilevelbg       "#4a"
+#define C_stopanilevelbg   "#4b"
+
+
 #define C_print            "#50"
 #define C_textfont         "#51"
 #define C_drawroundrect    "#52"

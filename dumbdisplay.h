@@ -335,6 +335,11 @@ class MultiLevelDDLayer: public DDLayer {
     void setLevelBackground(const String& backgroundId, const String& backgroundImageName = "", const String& drawBackgroundOptions = "");
     /// set that the current level uses no background image
     void setLevelNoBackground();
+    /// start animate level background (if level background has a series of images)
+    /// @param fps frames per second which is used to calculate the interval between the series of images
+    void animateLevelBackground(int fps);
+    /// stop animate level background
+    void stopAnimateLevelBackground();
     /// reorder the specified level (by moving it in the z-order plane)
     /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
     void reorderLevel(const String& levelId, const String& how);
