@@ -3,6 +3,7 @@
 // ***
 
 //#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
+//#include <Adafruit_SPITFT.h>
 
 #ifndef _dd_a_tft_util_h
 #define _dd_a_tft_util_h
@@ -11,7 +12,7 @@
 
 class AfTftDDDebugInterface: public DrawTextDDDebugInterface {
   public:
-    AfTftDDDebugInterface(Adafruit_ST77xx& tft, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1*/, bool indicateSendCommand = false): tft(tft) {
+    AfTftDDDebugInterface(/*Adafruit_ST77xx*/Adafruit_SPITFT& tft, int x = 0, int y = 0/*, uint8_t fontSize = 2, uint8_t font = 1*/, bool indicateSendCommand = false): tft(tft) {
       this->x = x;
       this->y = y;
       //this->fontSize = fontSize;
@@ -21,9 +22,9 @@ class AfTftDDDebugInterface: public DrawTextDDDebugInterface {
   public:
     virtual void logSendCommand(int state) {
       if (indicateSendCommand) {
-        tft.fillRect(x + 2, y + 2, x + 12, y + 12, ST77XX_WHITE);
+        tft.fillRect(x + 2, y + 2, x + 12, y + 12, 0xFFFF/*ST77XX_WHITE*/);
         if (state == 1) {
-          tft.fillCircle(x + 7, y + 7, 5, ST77XX_RED);
+          tft.fillCircle(x + 7, y + 7, 5, 0xF800/*ST77XX_RED*/);
         }
       }
     }
@@ -49,7 +50,7 @@ class AfTftDDDebugInterface: public DrawTextDDDebugInterface {
       tft.print(msg);
     }
   private:
-    Adafruit_ST77xx& tft;  
+    Adafruit_SPITFT& tft;  
     int x;
     int y;
     //uint8_t fontSize;

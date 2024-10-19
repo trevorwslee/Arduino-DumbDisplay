@@ -2373,11 +2373,11 @@ void MultiLevelDDLayer::setLevelBackground(const String& backgroundId, const Str
 void MultiLevelDDLayer::setLevelNoBackground() {
     _sendCommand0(layerId, C_setlevelnobg);  
 }
-void MultiLevelDDLayer::animateLevelBackground(int fps) {
-    _sendCommand1(layerId, C_anilevelbg, String(fps));  
+void MultiLevelDDLayer::animateLevelBackground(int fps, bool reset, const String& options) {
+  _sendCommand3(layerId, C_anilevelbg, String(fps), TO_BOOL(reset), options);  
 }
-void MultiLevelDDLayer::stopAnimateLevelBackground() {
-    _sendCommand0(layerId, C_stopanilevelbg);  
+void MultiLevelDDLayer::stopAnimateLevelBackground(bool reset) {
+    _sendCommand1(layerId, C_stopanilevelbg, TO_BOOL(reset));  
 }
 void MultiLevelDDLayer::reorderLevel(const String& levelId, const String& how) {
   _sendCommand2(layerId, C_reordlevel, levelId, how);  
