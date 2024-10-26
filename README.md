@@ -2271,6 +2271,7 @@ MIT
 
 v0.9.9-r34
   - added "layer-level" background (with animate support)
+  - enhanced performance a bit
   - bug fix
 
 v0.9.9-r33

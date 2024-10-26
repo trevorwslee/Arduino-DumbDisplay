@@ -248,7 +248,7 @@ class DDLayer: public DDObject {
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "", const String& allowFeedbackTypes = "");
     /// rely on getFeedback() being called
     /// @param autoFeedbackMethod
-    /// - "" -- no auto feedback (the default)
+    /// - "" -- no auto feedback flash (the default)
     /// - "f" -- flash the standard way (layer + border)
     /// - "fl" -- flash the layer
     /// - "fa" -- flash the area where the layer is clicked
@@ -346,6 +346,8 @@ class MultiLevelDDLayer: public DDLayer {
     /// reorder the specified level (by moving it in the z-order plane)
     /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
     void reorderLevel(const String& levelId, const String& how);
+    /// export (and save) the levels as an image (without the decorations of the layer like border)
+    void exportLevelsAsImage(const String& imageFileName, bool cacheItNotSave = false);
     /// delete the specified level
     void deleteLevel(const String& levelId);
   protected:
@@ -640,7 +642,16 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// set font
     /// @param fontName empty means default
     /// @param textSize 0 means default
-    void setTextFont(const String& fontName = "", int textSize = 0);
+    void setTextFont(const String& fontName);
+    /// reset text font and size
+    void setTextFont();
+    /// @deprecated
+    inline void setTextFont(const String& fontName, int textSize) {
+      setTextFont(fontName);
+      if (textSize > 0) {
+        setTextSize(textSize);
+      }
+    }
     /// set whether "print" will auto wrap or not
     void setTextWrap(bool wrapOn);
     /// fill screen with color
@@ -660,6 +671,9 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// @param backgroundColor DD_RGB_COLOR(...) or common color name; empty background color means no background color
     /// @param size 0 means default
     void drawStr(int x, int y, const String& string, const String& color = "", const String& bgColor = "", int size = 0);
+    /// similar to drawStr(), but draw string as a text line at (0, y) with alignment option 
+    /// @param align 'L', 'C', or 'R'
+    void drawTextLine(const String& text, int y, const String& align = "L", const String& color = "", const String& bgColor = "", int size = 0);
     /// draw a pixel
     /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     void drawPixel(int x, int y, const String& color = "");

@@ -30,16 +30,17 @@ void setup() {
   graphical->setTextColor("blue");
 
   // the list of support downloadable fonts
-  char* fonts[] = { "B612", "Cutive", "Noto Sans", "Oxygen", "Roboto", "Share Tech", "Spline Sans", "Ubuntu" };
+  const int fontCount = 8;
+  const String fonts[8] = { "B612", "Cutive", "Noto Sans", "Oxygen", "Roboto", "Share Tech", "Spline Sans", "Ubuntu" };
   
   // show font samples regular
   graphical->setTextFont();
   graphical->println("REGULAR:");
-  for (int i = 0; i < sizeof(fonts) / 2; i++) {
+  for (int i = 0; i < fontCount; i++) {
       graphical->setTextFont();
       graphical->print(". ");
-      String fontName = String(fonts[i]);          // font-name like: Roboto
-      graphical->setTextFont("DL::" + fontName);   // add prefix "DL:"
+      const String& fontName = fonts[i];           // font-name like: Roboto
+      graphical->setTextFont("DL::" + fontName);   // add prefix "DL::"
       graphical->println(fontName);
   }
 
@@ -47,10 +48,10 @@ void setup() {
   graphical->setTextFont();
   graphical->println();
   graphical->println("MONOSPACE:");
-  for (int i = 0; i < sizeof(fonts) / 2; i++) {
+  for (int i = 0; i < fontCount; i++) {
       graphical->setTextFont();
       graphical->print(". ");
-      String fontName = String(fonts[i]) + " Mono";  // font-name like: Roboto Mono
+      String fontName = fonts[i] + " Mono";          // font-name like: Roboto Mono
       graphical->setTextFont("DL::" + fontName);     // add prefix "DL:"
       graphical->println(fontName);
   }

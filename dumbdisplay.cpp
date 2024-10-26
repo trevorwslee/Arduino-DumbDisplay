@@ -2382,6 +2382,9 @@ void MultiLevelDDLayer::stopAnimateLevelBackground(bool reset) {
 void MultiLevelDDLayer::reorderLevel(const String& levelId, const String& how) {
   _sendCommand2(layerId, C_reordlevel, levelId, how);  
 }
+void MultiLevelDDLayer::exportLevelsAsImage(const String& imageFileName, bool cacheItNotSave) {
+  _sendCommand2(layerId, C_explevelsasimg, imageFileName, TO_BOOL(cacheItNotSave));  
+}
 void MultiLevelDDLayer::deleteLevel(const String& levelId) {
   _sendCommand1(layerId, C_dellevel, levelId);  
 }
@@ -2699,8 +2702,11 @@ void GraphicalDDLayer::setTextColor(const String& color, const String& bgColor) 
 void GraphicalDDLayer::setTextSize(int size) {
   _sendCommand1(layerId, C_textsize, String(size));
 }
-void GraphicalDDLayer::setTextFont(const String& fontName, int size) {
-  _sendCommand2(layerId, C_textfont, fontName, String(size));
+void GraphicalDDLayer::setTextFont() {
+  _sendCommand0(layerId, C_textfont);
+}
+void GraphicalDDLayer::setTextFont(const String& fontName) {
+  _sendCommand1(layerId, C_textfont, fontName);
 }
 void GraphicalDDLayer::setTextWrap(bool wrapOn) {
   _sendCommand1(layerId, C_settextwrap, TO_BOOL(wrapOn));
@@ -2719,6 +2725,9 @@ void GraphicalDDLayer::drawChar(int x, int y, char c, const String& color, const
 }
 void GraphicalDDLayer::drawStr(int x, int y, const String& string, const String& color, const String& bgColor, int size) {
   _sendCommand6(layerId, C_drawstr, TO_C_INT(x), TO_C_INT(y), color, bgColor, String(size), string);
+}
+void GraphicalDDLayer::drawTextLine(const String& text, int y, const String& align, const String& color, const String& bgColor, int size) {
+  _sendCommand6(layerId, C_drawtextline, TO_C_INT(y), align, color, bgColor, String(size), text);
 }
 void GraphicalDDLayer::drawPixel(int x, int y, const String& color) {
   _sendCommand3(layerId, C_drawpixel, TO_C_INT(x), TO_C_INT(y), color);
