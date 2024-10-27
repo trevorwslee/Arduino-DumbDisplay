@@ -295,11 +295,11 @@ class DDAutoPinConfig {
     DDAutoPinConfig& beginGroup(char dir) {
       addConfig(String(dir) + "(");
       depth += 1;
-      int maxDepth = sizeof(started) / sizeof(bool) - 1;
-      if (depth > maxDepth) {
-        // not expected
-        depth = maxDepth;
-      }
+      // int maxDepth = sizeof(started) / sizeof(bool) - 1;
+      // if (depth > maxDepth) {
+      //   // not expected
+      //   depth = maxDepth;
+      // }
       started[depth] = false;
       return *this;
     }  
@@ -322,11 +322,11 @@ class DDAutoPinConfig {
     DDAutoPinConfig& beginPaddedGroup(char dir, int left, int top, int right, int bottom) {
       addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
       depth += 1;
-      int maxDepth = sizeof(started) / sizeof(bool) - 1;
-      if (depth > maxDepth) {
-        // not expected
-        depth = maxDepth;
-      }
+      // int maxDepth = sizeof(started) / sizeof(bool) - 1;
+      // if (depth > maxDepth) {
+      //   // not expected
+      //   depth = maxDepth;
+      // }
       started[depth] = false;
       return beginGroup(dir);
     }  
@@ -509,7 +509,7 @@ class DDFadingLayers {
 };
 
 
-#if __GNUC__ >= 8
+#if __GNUC__ > 8
   #include <functional>
 #endif  
 
@@ -532,7 +532,7 @@ class DDMasterResetPassiveConnectionHelper {
     /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
     /// @param updateCallback called to update DumbDisplay components
     /// @param disconnectedCallback called after "master reset" DumbDisplay, i.e. lost previous connection
-#if defined(DD_PASSIVE_CONNECTION_HELPER) || __GNUC__ >= 8
+#if defined(DD_PASSIVE_CONNECTION_HELPER) || __GNUC__ > 8
     bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback, std::function<void()> disconnectedCallback = NULL) {
 #else
     bool loop(void (*initializeCallback)(), void (*updateCallback)(), void (*disconnectedCallback)() = NULL) {
@@ -611,7 +611,7 @@ class DDReconnectPassiveConnectionHelper {
     /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
     /// @param updateCallback called to update DumbDisplay components
     /// @param disconnectedCallback called after "master reset" DumbDisplay, i.e. lost previous connection
-#if defined(DD_PASSIVE_CONNECTION_HELPER) || __GNUC__ >= 8
+#if defined(DD_PASSIVE_CONNECTION_HELPER) || __GNUC__ > 8
     bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback) {
 #else
     bool loop(void (*initializeCallback)(), void (*updateCallback)()) {

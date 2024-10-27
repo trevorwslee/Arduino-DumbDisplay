@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <math.h>
+//#include <math.h>
 
 #include "dumbdisplay.h"
 
@@ -3729,7 +3729,11 @@ bool ImageRetrieverDDTunnel::_readImageData(DDImageData& imageData, short type) 
 #endif
   if (widthSepIdx == -1 || heightSepIdx == -1 || byteCountSepIdx == -1) {
     if (_CanLogToSerial()) {
-      int count = fmin(value.length(), 15);
+      //int count = fmin(value.length(), 15);
+      int count = value.length();
+      if (count > 15) {
+        count = 15;
+      }
       Serial.print(String("XXX invalid (") + String(value.length()) + ")[" + value.substring(0, count) + "] ... XXX");
     }
     __SendErrorComment("invalid delimiters");
