@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r33)
+# DumbDisplay Arduino Library (v0.9.9-r34)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r33)](#dumbdisplay-arduino-library-v099-r33)
+- [DumbDisplay Arduino Library (v0.9.9-r34)](#dumbdisplay-arduino-library-v099-r34)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -82,8 +82,8 @@ On it, a few types of layers can be created mixed-and-matched:
 * ***Plotter***, which works similar to the plotter of DumbDisplay [when it is acting as serial monitor], but plotting data are sent by calling the layer's method -- [PlotterDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_plotter_d_d_layer.html)
 * ***Terminal*** "device dependent view" layer, for showing sketch traces -- [TerminalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html)
 * ***WebView*** "device dependent view" layer, that allows you to use Android WebView as a DD layer -- [WebViewDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_web_view_d_d_layer.html)
-* ***DumbDisplay window*** "device dependent view" layer, that opens up a window for connecting to other microcontroller's DumbDisplay sketch independently -- [DumbDisplayWindowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display_window_d_d_layer.html)
 * ***TomTom map*** "device dependent view" layer, for showing location (latitude/longitude) -- [TomTomMapDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html)
+* ***DumbDisplay window*** "device dependent view" layer, that opens up a window for connecting to other microcontroller's DumbDisplay sketch independently -- [DumbDisplayWindowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display_window_d_d_layer.html)
 
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected microcontroller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism) for more on "layer feedback" mechanism.
 
@@ -175,6 +175,13 @@ void loop() {
 Since the sketch assumes USB connectivity to your Android phone, hence, the final step is to attach your microcontroller board to your Android phone via a OTG adapter. 
 
 You may want to refer to my post [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/) for more description on such connection.
+
+Notes:
+* The DumbDisplay object will actually send text-based commands to DumbDisplay app to create layers (plus others)
+* The layer object is simply a representation of the corresponding layer on the DumbDisplay app side
+  -- most operations on the layer object actually sends text-based commands to DumbDisplay app
+* As a result, action like creating a layer will block until a connection with DumbDisplay app is made
+* If this "active" connection does not fit your use base, you may want to consider ["Passive" Connection](#passive-connection)  
 
 
 |  |  |
@@ -2142,7 +2149,7 @@ You may want to watch the video [**Bridging Arduino UNO and Android DumbDisplay 
 * On the contrary, if you do have some info, like that logged with `writeComment()`, that you have to jog down for whatever reason,
   you can share the Terminal's text with the command "Share Terminal Text"
 
-* Setting DumbDisplay app's `Pixel Density` to **Medium** will make the layer's text and other aspects look better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text but don't want to pay the price, try setting it to **Over**. Hopefully, **Over** is less taxing, since the text rendering is "native to your device", resulting in rendered text sligtly "over" the boundary where it should be, but looks better 
+* Setting DumbDisplay app's `Pixel Density` to **Medium** will make the layer's text and other aspects look better. Setting it to **High** or even **Fine** would be very taxing to your phone. If want better looking text but don't want to pay the price, try setting it to **Over**. In fact, **Over** is ***recommended*** if **Normal** doesn't look good to your; however, since text rendering is "native", text might look sligtly "over" the boundary where it should be (but looks better) 
 
 |**Normal**|**Medium**|**High**|**Fine**|**Over**|
 |--|--|--|--|--|
@@ -2261,6 +2268,11 @@ MIT
 
 
 # Change History
+
+v0.9.9-r34
+  - added "layer-level" background (with animate support)
+  - enhanced performance a bit
+  - bug fix
 
 v0.9.9-r33
   - added "layer-level" support

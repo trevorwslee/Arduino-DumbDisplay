@@ -55,6 +55,7 @@ void loop() {
     dumbdisplay.playSound("voice_yes.wav");
   }
 
+  // check if "NO" clicked
   if (noLayer->getFeedback()) {
     // if so, play the pre-installed "NO" WAV file
     dumbdisplay.playSound("voice_no.wav");

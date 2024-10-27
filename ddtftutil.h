@@ -61,7 +61,7 @@ class TftDDDebugInterface: public DrawTextDDDebugInterface {
       tft.setTextColor(textcolor, textbgcolor);
       tft.setTextSize(textsize);
     }
-  private:
+  protected:
     TFT_eSPI& tft;  
     int x;
     int y;

@@ -248,7 +248,7 @@ class DDLayer: public DDObject {
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "", const String& allowFeedbackTypes = "");
     /// rely on getFeedback() being called
     /// @param autoFeedbackMethod
-    /// - "" -- no auto feedback (the default)
+    /// - "" -- no auto feedback flash (the default)
     /// - "f" -- flash the standard way (layer + border)
     /// - "fl" -- flash the layer
     /// - "fa" -- flash the area where the layer is clicked
@@ -294,18 +294,60 @@ class DDLayer: public DDObject {
 /// A multi-level layer can have other named levels, which act like separate sub-layers with separate sets of non-layer-specific properties.
 class MultiLevelDDLayer: public DDLayer {
   public:
-    /// switch to a different level (which is like a sub-layer)
+    /// add a level, optionally change its "opening" size
+    /// @param levelId level ID; cannot be DD_DEF_LAYER_LEVEL_ID
+    /// @param width width of the level "opening"; 0 means the maximum width (the width of the layer)
+    /// @param height height of the level "opening"; 0 means the maximum height (the height of the layer)
+    void addLevel(const String& levelId, float width = 0, float height = 0, bool switchToIt = false);
+    /// another version of addLevel()
+    inline void addLevel(const String& levelId, bool switchToIt) {
+      addLevel(levelId, 0, 0, switchToIt);
+    }
+    /// switch to a different level (which is like a sub-layer), making it the current level
     /// @param levelId level ID; use DD_DEF_LAYER_LEVEL_ID for the default level
     /// @param addIfMissing if true, add the level if it is missing
     void switchLevel(const String& levelId, bool addIfMissing = true);
+    /// push the current level onto the level stack, to be pop with popLevel()
+    void pushLevel(); 
+    /// push the current level onto the level stack, to be pop with popLevel()
+    /// @param switchTolevelId switch to level ID (after pushing current level)
+    void pushLevelAndSwitchTo(const String& switchTolevelId, bool addIfMissing = true); 
+    /// pop a level from the level stack and make it the current level
+    void popLevel();
     /// set the opacity of the current level 
     /// @param opacity background opacity (0 - 100)
     void levelOpacity(int opacity);
     /// set whether level is transparent
     void levelTransparent(bool transparent);
+    /// set the anchor of the level; note that level anchor is the top-left corner of the level "opening"
+    void setLevelAnchor(float x, float y, long reachInMillis = 0);
+    /// move the level anchor
+    void moveLevelAnchorBy(float byX, float byY, long reachInMillis = 0);
+    /// register an image for setting as level's background
+    /// @param backgroundId id to identify the background
+    /// @param backgroundImageName name of the image
+    /// @param drawBackgroundOptions options for drawing the background; same means as the option param of GraphicalDDLayer::drawImageFiler()
+    void registerLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions = "");
+    /// set a registered background image as the current level's background
+    /// @param backgroundId 
+    /// @param backgroundImageName if not registered, the name of the image to register
+    /// @param drawBackgroundOptions if not registered, the options for drawing the background
+    void setLevelBackground(const String& backgroundId, const String& backgroundImageName = "", const String& drawBackgroundOptions = "");
+    /// set that the current level uses no background image
+    void setLevelNoBackground();
+    /// start animate level background (if level background has a series of images)
+    /// @param fps frames per second which is used to calculate the interval between the series of images
+    /// @param reset reset to the first image in the series
+    /// @param options can be "r" to reverse the order of the series of images
+    void animateLevelBackground(int fps, bool reset = true, const String& options = "");
+    /// stop animate level background
+    /// @param reset reset to the first image in the series
+    void stopAnimateLevelBackground(bool reset = true);
     /// reorder the specified level (by moving it in the z-order plane)
     /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
     void reorderLevel(const String& levelId, const String& how);
+    /// export (and save) the levels as an image (without the decorations of the layer like border)
+    void exportLevelsAsImage(const String& imageFileName, bool cacheItNotSave = false);
     /// delete the specified level
     void deleteLevel(const String& levelId);
   protected:
@@ -600,7 +642,16 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// set font
     /// @param fontName empty means default
     /// @param textSize 0 means default
-    void setTextFont(const String& fontName = "", int textSize = 0);
+    void setTextFont(const String& fontName);
+    /// reset text font and size
+    void setTextFont();
+    /// @deprecated
+    inline void setTextFont(const String& fontName, int textSize) {
+      setTextFont(fontName);
+      if (textSize > 0) {
+        setTextSize(textSize);
+      }
+    }
     /// set whether "print" will auto wrap or not
     void setTextWrap(bool wrapOn);
     /// fill screen with color
@@ -620,6 +671,9 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// @param backgroundColor DD_RGB_COLOR(...) or common color name; empty background color means no background color
     /// @param size 0 means default
     void drawStr(int x, int y, const String& string, const String& color = "", const String& bgColor = "", int size = 0);
+    /// similar to drawStr(), but draw string as a text line at (0, y) with alignment option 
+    /// @param align 'L', 'C', or 'R'
+    void drawTextLine(const String& text, int y, const String& align = "L", const String& color = "", const String& bgColor = "", int size = 0);
     /// draw a pixel
     /// @param color DD_RGB_COLOR(...) or common color name; empty color means text color
     void drawPixel(int x, int y, const String& color = "");
@@ -715,24 +769,43 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// @param draw means draw the text (in the heading direction)
     void write(const String& text, bool draw = false);
     /// load image file to cache
-    /// - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
-    /// - asImageFileNmae: better provide a different name for the scaled cached
+    /// @param w,h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
+    /// @param asImageFileName: better provide a different name for the scaled cached
     void loadImageFile(const String& imageFileName, int w = 0, int h = 0, const String& asImageFileName = "");
     /// load image file to cache cropped
+    /// @param x,y,w,h: rect to crop the image
+    /// @param asImageFileName: since image cropped, should provide a different name for the scaled cached
+    /// @param
     /// @see loadImageFile()
-    void loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName = "");
+    inline void loadImageFileScaled(const String& imageFileName, int w, int h, const String& asImageFileName) {
+      loadImageFile(imageFileName, w, h, asImageFileName);
+    }
+    void loadImageFileCropped(const String& imageFileName, int x, int y, int w, int h, const String& asImageFileName, int scaleW = 0, int scaleH = 0);
     /// unload image file from cache
     void unloadImageFile(const String& imageFileName);
     /// unload all image files from cache
     void unloadAllImageFiles();
     /// draw image file in cache (if not already loaded to cache, load it) 
-    /// - x / y: position of the left-top corner
-    /// - w / h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
+    /// @param x,y: position of the left-top corner
+    /// @param w,h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
     void drawImageFile(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& options = "");
+    /// another version of drawImageFile() with options
+    inline void drawImageFile(const String& imageFileName, const String& options) {
+      drawImageFile(imageFileName, 0, 0, 0, 0, options);
+    }
+    /// draw image file in cache scaled, like calling drawImageFile(imageFileName, 0, 0, w, h, options) with w and h
+    /// @see drawImageFile()
+    inline void drawImageFileScaled(const String& imageFileName, int w, int h, const String& options = "") {
+      drawImageFile(imageFileName, 0, 0, w, h, options);
+    }
     /// draw image file in cache (if not already loaded to cache, load it)
-    /// - x / y / w / h: rect to draw the image; 0 means the default value
-    /// - align (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
-    void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& align = "");
+    /// @param x,y,w,h: rect to draw the image; 0 means the default value
+    /// @param options (e.g. "LB"): left align "L"; right align "R"; top align "T"; bottom align "B"; default to fit centered
+    void drawImageFileFit(const String& imageFileName, int x = 0, int y = 0, int w = 0, int h = 0, const String& options = "");
+    /// another version of drawImageFileFit() with options
+    inline void drawImageFileFit(const String& imageFileName, const String& options) {
+      drawImageFileFit(imageFileName, 0, 0, 0, 0, options);
+    }
     /// cache image; not saved
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
     void cacheImageWithTS(const String& imageName, const uint8_t *bytes, int byteCount, long imageTimestamp, char compressionMethod = 0);
@@ -794,7 +867,7 @@ class SevenSegmentRowDDLayer: public DDLayer {
     /// show number (can be float)
     void showNumber(float number, const String& padding = " ");
     /// show HEX number
-    void showHexNumber(int number);
+    void showHexNumber(int16_t number);
     /// show formatted number (even number with hex digits);
     /// e.g. "12.00", "00.34", "-.12", "0ff"
     void showFormatted(const String& formatted, bool completeReplace = true, int startIdx = 0);
@@ -819,7 +892,7 @@ class JoystickDDLayer: public DDLayer {
     /// @param x x to move to
     /// @param x y to move to
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
-    void moveToPos(int x, int y, bool sendFeedback = false);
+    void moveToPos(int16_t x, int16_t y, bool sendFeedback = false);
     /// move joystick to the center
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
     void moveToCenter(bool sendFeedback = false);
@@ -827,7 +900,7 @@ class JoystickDDLayer: public DDLayer {
     /// @param minValue the min value of the stick
     /// @param maxValue the max value of the stick
     /// @param sendFeedback if true, will send "feedback" for the move (regardless of the current position)
-    void valueRange(int minValue, int maxValue, int valueStep = 1, bool sendFeedback = false);
+    void valueRange(int16_t minValue, int16_t maxValue, int valueStep = 1, bool sendFeedback = false);
     /// set 'snappy' makes stick snaps to closest value when moved
     void snappy(bool snappy = true);
     /// show value on top of the stick 
@@ -1487,24 +1560,27 @@ class DumbDisplay {
     /// additionally:
     /// - save and persist the layer commands
     /// - enable DumbDisplay reconnect feature -- tells the layer setup commands to use when DumbDisplay reconnects
-    void playbackLayerSetupCommands(const String& persist_id);
+    void playbackLayerSetupCommands(const String& layerSetupPersistId);
     /// start recording layer commands (of any layers);
     /// and sort of freeze the display, until playback
     void recordLayerCommands();
     /// playback recorded commands (unfreeze the display)
     void playbackLayerCommands();
-    /// stop recording commands (and forget what have recorded)
-    void stopRecordLayerCommands();
-    /// save the recorded commands (and continue recording)
+    /// stop recording commands (if not saved, will forget what recorded)
+    /// @param saveId if provided, save like calling saveLayerCommands(); otherwise, forget what have been recording
+    /// @param persistSave if save, store it to your phone as well
+    void stopRecordLayerCommands(const String& saveId = "", bool persistSave = false);
+    /// save the recorded commands (continue recording or not depends on parameter passed in );
+    /// any pre-existed saved commands with the same id will be replaced with the recording commands (delete if not recording)
     /// @param id identifier of the recorded commands, overwriting and previous one;
     ///           if not recording, will delete previous recorded commands
-    /// @param persist store it to your phone or not
-    void saveLayerCommands(const String& id, bool persist = false);
+    /// @param persist store it to your phone as well
+    /// @param stopAfterSave stop recording after saving
+    void saveLayerCommands(const String& id, bool persist = false, bool stopAfterSave = false);
     /// load saved commands (as if recording those commands)
     /// - recording started or not, will add the commands to the buffer
     /// - afterward, will keep recording
     /// - use playbackLayerCommands() to playback loaded commands
-    /// - if not recording commands, this basically remove saved commands
     void loadLayerCommands(const String& id);
     /// capture and save display as image
     /// @param imageFileName: name of image file; if it ends with ".png", saved image format will be PNG; other, saved image format will be JPEG */

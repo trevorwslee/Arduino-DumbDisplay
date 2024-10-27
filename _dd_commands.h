@@ -40,12 +40,14 @@
 #define C_blend            "#25"
 #define C_noblend          "#26"
 #define C_explicitfeedback "#27"
+#define C_pushlevel        "#28"
+#define C_poplevel         "#29"
 #define C_switchlevel      "#2a"
 #define C_dellevel         "#2b"
 #define C_reordlevel       "#2c"
 #define C_levelopacity     "#2d"
 #define C_leveltransparent "#2e"
-
+#define C_addlevel         "#2f"
 
 
 #define C_fillscreen       "#30"
@@ -58,6 +60,14 @@
 #define C_ledon            "#37"
 #define C_ledoff           "#38"
 #define C_writeline        "#39"
+
+#define C_setlevelanchor    "#3a"
+#define C_movelevelanchorby "#3b"
+#define C_reglevelbg        "#3c"
+#define C_setlevelbg        "#3d"
+#define C_setlevelnobg      "#3e"
+
+
 #define C_textcolor        "#40"
 #define C_textsize         "#41"
 #define C_drawstr          "#42"
@@ -68,6 +78,14 @@
 #define C_ledoncolor       "#47"
 #define C_ledoffcolor      "#48"
 #define C_pencolor         "#49"
+
+#define C_anilevelbg       "#4a"
+#define C_stopanilevelbg   "#4b"
+#define C_explevelsasimg   "#4c"
+
+#define C_drawtextline     "#4f"
+
+
 #define C_print            "#50"
 #define C_textfont         "#51"
 #define C_drawroundrect    "#52"
