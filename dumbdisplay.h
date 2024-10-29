@@ -303,6 +303,12 @@ class MultiLevelDDLayer: public DDLayer {
     inline void addLevel(const String& levelId, bool switchToIt) {
       addLevel(levelId, 0, 0, switchToIt);
     }
+    /// like addLevel() but add to the top (i.e. will be drawn last)
+    void addTopLevel(const String& levelId, float width = 0, float height = 0, bool switchToIt = false);
+    /// another version of addTopLevel()
+    inline void addTopLevel(const String& levelId, bool switchToIt) {
+      addTopLevel(levelId, 0, 0, switchToIt);
+    }
     /// switch to a different level (which is like a sub-layer), making it the current level
     /// @param levelId level ID; use DD_DEF_LAYER_LEVEL_ID for the default level
     /// @param addIfMissing if true, add the level if it is missing

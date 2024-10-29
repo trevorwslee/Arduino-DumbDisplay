@@ -508,11 +508,12 @@ class DDFadingLayers {
     int nextUseLayerIdx;
 };
 
-
-#if __GNUC__ > 8
+#if __GNUC__ >= 8 && defined(ESP32)
+  #define DD_CPP_FUNCTIONAL
+#endif
+#if defined(DD_CPP_FUNCTIONAL)
   #include <functional>
 #endif  
-
 
 #ifndef DD_NO_PASSIVE_CONNECT
 
@@ -532,7 +533,7 @@ class DDMasterResetPassiveConnectionHelper {
     /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
     /// @param updateCallback called to update DumbDisplay components
     /// @param disconnectedCallback called after "master reset" DumbDisplay, i.e. lost previous connection
-#if defined(DD_PASSIVE_CONNECTION_HELPER) || __GNUC__ > 8
+#if defined(DD_CPP_FUNCTIONAL)
     bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback, std::function<void()> disconnectedCallback = NULL) {
 #else
     bool loop(void (*initializeCallback)(), void (*updateCallback)(), void (*disconnectedCallback)() = NULL) {
@@ -611,7 +612,7 @@ class DDReconnectPassiveConnectionHelper {
     /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
     /// @param updateCallback called to update DumbDisplay components
     /// @param disconnectedCallback called after "master reset" DumbDisplay, i.e. lost previous connection
-#if defined(DD_PASSIVE_CONNECTION_HELPER) || __GNUC__ > 8
+#if defined(DD_CPP_FUNCTIONAL)
     bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback) {
 #else
     bool loop(void (*initializeCallback)(), void (*updateCallback)()) {
