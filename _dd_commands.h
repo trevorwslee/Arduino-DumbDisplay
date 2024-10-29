@@ -66,6 +66,7 @@
 #define C_reglevelbg        "#3c"
 #define C_setlevelbg        "#3d"
 #define C_setlevelnobg      "#3e"
+#define C_addtoplevel       "#3f"
 
 
 #define C_textcolor        "#40"

@@ -2328,6 +2328,17 @@ void MultiLevelDDLayer::addLevel(const String& levelId, float width, float heigh
     _sendCommand4(layerId, C_addlevel, levelId, TO_NUM(width), TO_NUM(height), TO_BOOL(switchToIt));
   }
 }
+void MultiLevelDDLayer::addTopLevel(const String& levelId, float width, float height, bool switchToIt) {
+  if (IS_FLOAT_ZERO(width) && IS_FLOAT_ZERO(height)) {
+    if (switchToIt) {
+      _sendCommand2(layerId, C_addtoplevel, levelId, TO_BOOL(switchToIt));
+    } else {
+      _sendCommand1(layerId, C_addtoplevel, levelId);
+    }
+  } else {
+    _sendCommand4(layerId, C_addtoplevel, levelId, TO_NUM(width), TO_NUM(height), TO_BOOL(switchToIt));
+  }
+}
 void MultiLevelDDLayer::switchLevel(const String& levelId, bool addIfMissing) {
   _sendCommand2(layerId, C_switchlevel, levelId, TO_BOOL(addIfMissing));
 }

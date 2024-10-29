@@ -19,7 +19,6 @@
 
 #include "dumbdisplay.h"
 
-
 // create the DumbDisplay object; assuming USB connection with the default 115200 baud
 DumbDisplay dumbdisplay(new DDInputOutput());
 
@@ -38,6 +37,9 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
 void setup() {
     // create the Microbit-like layer with size 10x10
     mb = dumbdisplay.createMicrobitLayer(10, 10);
+
+    // Create a boarder around the layer (size 0.5 ~= 5% of a dot)
+    mb->border(0.5, "black");
     
     // setup "callback" function to handle "feedback" event-driven -- auto flashing the clicked area
     mb->setFeedbackHandler(FeedbackHandler, "fa");
