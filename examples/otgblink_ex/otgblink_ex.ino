@@ -3,7 +3,11 @@
  */
 
 /**
- * to run and see the result of this sketch, you will need two addition things:
+ * If BLUETOOTH is #defined, it uses ESP32 bluetooth connection
+ * . BLUETOOTH is the name of the bluetooth device
+ * If WIFI_SSID is #defined, it uses wifi connection
+ * . once sketch running, connect to it with Serial Monitor to check for IP address
+ * Otherwise, it uses USB connection (OTG) with the default 115200 baud
  * . you will need to install Android DumbDisplay app from Play store
  *   https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
  * . although there are several ways for microcontroller board to establish connection
@@ -23,10 +27,6 @@
 
 #include "dumbdisplay.h"
 
-// actually, you have a choice here
-// * if BLUETOOTH defined, it uses ESP32 bluetooth connection
-// * if WIFI_SSID defined, it uses wifi connection
-// * otherwise, it uses USB connection (OTG) with the default 115200 baud
 
 #if defined(BLUETOOTH)
   #include "esp32dumbdisplay.h"
