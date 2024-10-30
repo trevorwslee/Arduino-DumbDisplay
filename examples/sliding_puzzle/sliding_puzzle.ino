@@ -75,7 +75,7 @@ void showHideTileAt00(bool show) {
   String holeTileLevelId = boardTileLevelIds[0][0];
   board->switchLevel(holeTileLevelId);
   board->setLevelAnchor(0, 0);
-  board->levelTransparent(!show);// levelOpacity(0);}
+  board->levelTransparent(!show);
 }
 
 
@@ -109,7 +109,7 @@ void initializeBoard() {
       // the the tile anchor of the level to the tile position on the board
       board->setLevelAnchor(x, y);
 
-      // set the back of the level to the tile image, with board around (b:3-gray-round)
+      // set the back of the level to the tile image, with board (b:3-gray-round)
       board->setLevelBackground("", imageName, "b:3-gray-round");
       
       boardTileLevelIds[colTileIdx][rowTileIdx] = tileLevelId;
@@ -255,6 +255,7 @@ bool posToHoleTileFromIdxes(int x, int y, int& colIdx, int& rowIdx, int& fromDir
 bool onBoardDragged(int x, int y) {
   bool tileMoved = false;
   if (x != -1 && y != -1) {
+    // dragging
     if (moveTileColIdx == -1) {
       int colIdx;
       int rowIdx;
@@ -310,6 +311,7 @@ bool onBoardDragged(int x, int y) {
       moveTileDelta = delta;
     }
   } else {
+    // done dragging
     if (moveTileColIdx != -1) {
       int tileAnchorX;
       int tileAnchorY;
@@ -358,19 +360,14 @@ void initializeDD() {
 
   board->drawImageFileFit("dumbdisplay.png");
   board->setTextFont("DL::Roboto");
-  board->drawTextLine("In God We Trust", 34, "C", "white", "purple", 32);
-  board->drawTextLine("May God bless you❤️", 340, "R-20", "purple", "", 20);
+  board->drawTextLine("In God We Trust", 34, "C", "white", "purple", 32);     // C is for centering on the line (from left to right)
+  board->drawTextLine("May God bless you❤️", 340, "R-20", "purple", "", 20);  // R is for right-justify align on the line; with -20 offset from right
+
+  board->enableFeedback();
 
   holeTileColIdx = -1;
   holeTileRowIdx = -1;
   randomizeTilesStepCount = 0;
-
-  board->enableFeedback();
-
-  if (false) {
-    ensureBoardInitialized();
-  }
-
   waitingToRestartMillis = 0;
 }
 void updateDD(bool isFirstUpdate) {

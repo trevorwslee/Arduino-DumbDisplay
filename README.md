@@ -2127,8 +2127,9 @@ Other than the default layer level (`DD_DEF_LAYER_LEVEL_ID`) added automatically
 
 ```
 
-For more on the various features of layer level, you might want to refer to the included example [`sliding_puzzle`](https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/sliding_puzzle/sliding_puzzle.ino) which uses a single `GraphicalDDLayer` layer and lots of layer levels to realize a simple Sliding Puzzle game created on-the-fly
-with the default DumbDisplay logo `PNG` file plus some drawings and texts.
+|  |  |
+|--|--|
+|![](screenshots/sliding-ss.jpg)|For more on the various features of layer level, you might want to refer to the included example [`sliding_puzzle`](https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/sliding_puzzle/sliding_puzzle.ino) which uses a single `GraphicalDDLayer` layer and lots of layer levels to realize a simple Sliding Puzzle game created on-the-fly with the default DumbDisplay logo `PNG` file plus some drawings and texts.|
 
 
 
