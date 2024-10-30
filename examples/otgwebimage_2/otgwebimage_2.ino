@@ -1,6 +1,6 @@
 
 /**
- * this is an extension to otgwebimage example; so, you want to try that on first
+ * this is an extension to otgwebimage example; so, you want to try that one first
  * . the web image is actually a lock, two web images are downloaded
  *   . one for unlocked
  *   . one for locked
