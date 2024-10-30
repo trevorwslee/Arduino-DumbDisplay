@@ -1,4 +1,8 @@
 /**
+ * Sorry! Very likely, this sketch will not work for less-capable boards like Arduino Uno, Nano, etc. 
+ */
+
+/**
  * to run and see the result of this sketch, you will need two addition things:
  * . you will need to install Android DumbDisplay app from Play store
  *   https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
@@ -12,8 +16,8 @@
  *   hopefully, the UI is obvious enough :)
  * . for more details on DumbDisplay Arduino Library, please refer to
  *   https://github.com/trevorwslee/Arduino-DumbDisplay#readme
- * there is a related blog post that you may want to take a look:
- * . https://create.arduino.cc/projecthub/trevorwslee/blink-test-with-virtual-display-dumbdisplay-5c8350
+ * there is a related post that you may want to take a look:
+ * . https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
  */
 
 

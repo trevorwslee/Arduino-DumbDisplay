@@ -38,6 +38,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
     - [WebView Layer](#webview-layer)
     - [TomTom Map Layer](#tomtom-map-layer)
     - [DumbDisplay Window Layer](#dumbdisplay-window-layer)
+  - [Layer Level Support](#layer-level-support)
   - [Downloadable Font Support](#downloadable-font-support)
   - [Positioning of Layers](#positioning-of-layers)
   - [Record and Playback Commands](#record-and-playback-commands)
@@ -1398,6 +1399,43 @@ For `WIFI`, you should be able to see the WIFI IP address by connecting the targ
 
 One use case of `DumbDisplayWindowDDLayer` can be like -- a microcontroller implementing a remote control for a remote car with DumbDisplay, and additionally, a ESP32Cam put in the front of the remote car for 
 streaming live-pictures to the remote control independently.
+
+## Layer Level Support
+
+Some specific layer inherited from [`MultiLevelDDLayer`](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_multi_level_d_d_layer.html) --
+namely, [`GraphicalDDLayer`](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) -- can have multiple named layer levels of canvas on which you draw.
+
+The concept is much like homogenous sub-layering except:
+* Instead of having an Arduino side object via which you draw things, you still have only a single `GraphicalDDLayer` object
+* To draw on a different layer level, you need to add and switch to it, to make the layer level the current one
+* Z-order of the layer levels is just like layers.
+
+By default, all `GraphicalDDLayer` will have a single layer level called `DD_DEF_LAYER_LEVEL_ID`. You add new layer level like
+```
+  ...
+  graphical = dumbdisplay->createGraphicalLayer(500, 500);
+  ...
+  // set layer specific properties that are outside of levels
+  graphical->border(2, DD_COLOR_chocolate);
+  graphical->backgroundColor(DD_COLOR_azure);
+  graphical->enableFeedback("fs");
+  ...
+  // add a new level, switch to it, and draw on it
+  graphical->addLevel("simple-level");
+  graphical->switchLevel("simple-level");
+  graphical->levelOpacity(50);
+  graphical->drawRect(10, 10, 480, 480, "red", true);
+  graphical->setCursor(15, 15);
+  graphical->write("This is the 'simple-level' level!", true);
+  ...
+
+```
+
+You might want to refer to the included example `sliding_puzzle` which uses a single `GraphicalDDLayer` and lots of levels to realize a simple Sliding Puzzle game created on-the-fly
+with the default DumbDisplay logo `PNG` file plus some drawings and texts.
+
+The example should demonstrate the various features of layer levels.
+
 
 
 ## Downloadable Font Support

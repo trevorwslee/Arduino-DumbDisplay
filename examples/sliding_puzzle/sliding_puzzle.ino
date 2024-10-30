@@ -1,5 +1,8 @@
 /**
- * to run and see the result of this sketch, you will need two addition things:
+ * If BLUETOOTH is #defined, it uses ESP32 bluetooth connection
+ * If WIFI_SSID is #defined, it uses wifi connection
+ * Otherwise, it uses USB connection (OTG) with the default 115200 baud
+ * To run and see the result of this sketch, you will need two addition things:
  * . you will need to install Android DumbDisplay app from Play store
  *   https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
  * . although there are several ways for microcontroller board to establish connection
@@ -12,31 +15,22 @@
  *   hopefully, the UI is obvious enough :)
  * . for more details on DumbDisplay Arduino Library, please refer to
  *   https://github.com/trevorwslee/Arduino-DumbDisplay#readme
- * there is a related post that you may want to take a look:
+ * There is a related blog post that you may want to take a look:
  * . https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
  */
 
 
 #include "dumbdisplay.h"
 
-
-// create the DumbDisplay object; assuming USB connection with the default 115200 baud
-DumbDisplay dumbdisplay(new DDInputOutput());
-
-// declare a LED layer object, to be created in setup()
-LedGridDDLayer *led;
-
-
-void setup() {
-    // create the LED layer object, with only a single LED
-    led = dumbdisplay.createLedGridLayer();
-}
+#if defined(BLUETOOTH)
+  #include "esp32dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true));
+#elif defined(WIFI_SSID)
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+#else
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput());
+#endif
 
 
-void loop() {
-    // toggle the LED
-    led->toggle();
-
-    // delay for a second
-    delay(1000);
-}

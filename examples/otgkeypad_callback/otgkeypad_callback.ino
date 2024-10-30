@@ -12,8 +12,8 @@
  *   hopefully, the UI is obvious enough :)
  * . for more details on DumbDisplay Arduino Library, please refer to
  *   https://github.com/trevorwslee/Arduino-DumbDisplay#readme
- * there is a related blog post that you may want to take a look:
- * . https://create.arduino.cc/projecthub/trevorwslee/blink-test-with-virtual-display-dumbdisplay-5c8350
+ * there is a related post that you may want to take a look:
+ * . https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
  */
 
 #include "dumbdisplay.h"
