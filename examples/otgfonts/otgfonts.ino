@@ -3,7 +3,11 @@
  */
 
 /**
- * to run and see the result of this sketch, you will need two addition things:
+ * If BLUETOOTH is #defined, it uses ESP32 bluetooth connection
+ * . BLUETOOTH is the name of the bluetooth device
+ * If WIFI_SSID is #defined, it uses wifi connection
+ * . once sketch running, connect to it with Serial Monitor to check for IP address
+ * Otherwise, it uses USB connection (OTG) with the default 115200 baud
  * . you will need to install Android DumbDisplay app from Play store
  *   https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
  * . although there are several ways for microcontroller board to establish connection
@@ -16,14 +20,24 @@
  *   hopefully, the UI is obvious enough :)
  * . for more details on DumbDisplay Arduino Library, please refer to
  *   https://github.com/trevorwslee/Arduino-DumbDisplay#readme
- * there is a related post that you may want to take a look:
+ * There is a related post that you may want to take a look:
  * . https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
  */
 
 
 #include "dumbdisplay.h"
 
-DumbDisplay dumbdisplay(new DDInputOutput(115200));
+#if defined(BLUETOOTH)
+  #include "esp32dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH, true));
+#elif defined(WIFI_SSID)
+  #include "wifidumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDWiFiServerIO(WIFI_SSID, WIFI_PASSWORD));
+#else
+  #include "dumbdisplay.h"
+  DumbDisplay dumbdisplay(new DDInputOutput());
+#endif
+
 
 
 void setup() {
