@@ -35,7 +35,7 @@
 #endif
 
 
-#define SUGGEST_TRY_DEPTH 2
+#define SUGGEST_TRY_DEPTH 5
 
 // DDMasterResetPassiveConnectionHelper is for making "passive" connection; i.e. it can be reconnected after disconnect
 DDMasterResetPassiveConnectionHelper pdd(dumbdisplay);
@@ -43,19 +43,9 @@ DDMasterResetPassiveConnectionHelper pdd(dumbdisplay);
 // the only layer for the board
 GraphicalDDLayer* board;
 
-#ifdef SUGGEST_TRY_DEPTH
-  // the "button" for suggesting a move
-  LcdDDLayer* suggestButton;
-  const bool logTryMove = true;
-  const long tryMoveInMillis = 0L;
-#endif
-
 const int BOARD_SIZE = 400;
 const int TILE_COUNT = 4;   // the the sliding puzzle is 4x4; i.e. 16 tiles
 const int TILE_SIZE = BOARD_SIZE / TILE_COUNT;
-
-// tells what levelId is at what tile position
-//String boardTileLevelIds[TILE_COUNT][TILE_COUNT];
 
 // tells what tile Id (basically tile level id) is at what tile position
 int boardTileIds[TILE_COUNT][TILE_COUNT];
@@ -65,12 +55,12 @@ long waitingToRestartMillis = -1;  // -1 means not waiting
 int holeTileColIdx;  // -1 means board not initialize
 int holeTileRowIdx;
 
-byte canMoveFromDirs[4];
+// short canMoveFromDirs[4];
 
 long randomizeMoveTileInMillis;
 int initRandomizeTileStepCount;
 int randomizeTilesStepCount;
-byte randomizeCanMoveFromDir;
+short randomizeCanMoveFromDir;
 
 int moveTileColIdx;
 int moveTileRowIdx;
@@ -81,7 +71,19 @@ int moveTileRefY;
 int moveTileId;
 
 
-int checkCanMoveFromDirs(byte prevCanMoveFromDir = -1) {  // prevCanMoveFromDir -1 means no previous direction
+#ifdef SUGGEST_TRY_DEPTH
+  
+  // the "button" for suggesting a move
+  LcdDDLayer* suggestButton;
+
+  const bool logTryMove = false;
+  const long tryMoveInMillis = 0L;
+  
+#endif
+
+
+
+int checkCanMoveFromDirs(short* canMoveFromDirs, short prevCanMoveFromDir = -1) {  // prevCanMoveFromDir -1 means no previous direction
   int canCount = 0;
   if (holeTileColIdx > 0 && prevCanMoveFromDir != 1) {
     canMoveFromDirs[canCount++] = 0;  // 0: left
@@ -98,7 +100,7 @@ int checkCanMoveFromDirs(byte prevCanMoveFromDir = -1) {  // prevCanMoveFromDir 
   return canCount;
 }
 
-void canMoveFromDirToFromIdxes(byte canMoveFromDir, int& fromColIdx, int& fromRowIdx) {
+void canMoveFromDirToFromIdxes(short canMoveFromDir, int& fromColIdx, int& fromRowIdx) {
   if (canMoveFromDir == 0) {
     fromColIdx = holeTileColIdx - 1;
     fromRowIdx = holeTileRowIdx;
@@ -177,15 +179,12 @@ void initializeBoard() {
   initRandomizeTileStepCount = 5;
   //puzzleSolved = true;
 
-// #ifdef SUGGEST_TRY_DEPTH
-//   suggestButton->enableFeedback("fl");
-// #endif
-
   dumbdisplay.log("... done creating board");
 }
 
 void randomizeTilesStep() {
-  int canCount = checkCanMoveFromDirs(randomizeCanMoveFromDir);
+  short canMoveFromDirs[4];
+  int canCount = checkCanMoveFromDirs(canMoveFromDirs, randomizeCanMoveFromDir);
   randomizeCanMoveFromDir = canMoveFromDirs[random(canCount)];
   int fromColIdx;
   int fromRowIdx;
@@ -232,7 +231,7 @@ int calcBoardCost() {
 
 
 #ifdef SUGGEST_TRY_DEPTH
-int tryMoveTile(int depth, byte canMoveFromDir) {
+int tryMoveTile(int depth, short canMoveFromDir) {
   int fromColIdx;
   int fromRowIdx;
   int fromTileId;
@@ -261,10 +260,12 @@ int tryMoveTile(int depth, byte canMoveFromDir) {
   holeTileRowIdx = fromRowIdx;
   int lowestBoardCost = calcBoardCost();
   if (depth > 0) {
-    int canCount = checkCanMoveFromDirs(canMoveFromDir);
+
+    short canMoveFromDirs[4];
+    int canCount = checkCanMoveFromDirs(canMoveFromDirs, canMoveFromDir);
     if (canCount > 0) {
       for (int i = 0; i < canCount; i++) {
-        byte canMoveFromDir = canMoveFromDirs[i];
+        short canMoveFromDir = canMoveFromDirs[i];
         int ndBoardCost = tryMoveTile(depth - 1, canMoveFromDir);
         if (ndBoardCost != -1 && ndBoardCost < lowestBoardCost) {
           lowestBoardCost = ndBoardCost;
@@ -289,29 +290,31 @@ int tryMoveTile(int depth, byte canMoveFromDir) {
   }
   return lowestBoardCost;
 }
-byte suggestMoveDir() {
+short suggestMoveDir() {
   int boardCost = calcBoardCost();
   if (boardCost == 0) {
     return -1;
   }
-  int lowestBoardCost = boardCost;
-  int canCount = checkCanMoveFromDirs();
+  short canMoveFromDirs[4];
+  int canCount = checkCanMoveFromDirs(canMoveFromDirs);
   if (canCount == 0) {
     return -1;
   }
-  byte suggestedMoveDir = -1;
+  int lowestBoardCost = -1;
+  short suggestedMoveDir = -1;
   for (int i = 0; i < canCount; i++) {
-    byte canMoveFromDir = canMoveFromDirs[i];
+    short canMoveFromDir = canMoveFromDirs[i];
     int ndBoardCost = tryMoveTile(SUGGEST_TRY_DEPTH, canMoveFromDir);
-    if (ndBoardCost != -1 && ndBoardCost < lowestBoardCost) {
+    dumbdisplay.logToSerial("$$$ ... tried canMoveFromDir: " + String(canMoveFromDir) + " @ cost: " + String(ndBoardCost) + " ...");
+    if (ndBoardCost != -1 && (lowestBoardCost == -1 || ndBoardCost < lowestBoardCost)) {
       lowestBoardCost = ndBoardCost;
       suggestedMoveDir = canMoveFromDir;
     }
   }
   if (suggestedMoveDir != -1) {
-    dumbdisplay.logToSerial(">>> suggestedMoveDir: " + String(suggestedMoveDir) + " @ cost: " + String(lowestBoardCost));
+    dumbdisplay.logToSerial("$$$ suggestedMoveDir: " + String(suggestedMoveDir) + " @ cost: " + String(lowestBoardCost));
   } else {
-    dumbdisplay.logToSerial(">>> suggestedMoveDir: none @ cost: " + String(lowestBoardCost));
+    dumbdisplay.logToSerial("$$$ suggestedMoveDir: none @ cost: " + String(lowestBoardCost));
   }
   return suggestedMoveDir;
 }
@@ -582,8 +585,18 @@ void updateDD(bool isFirstUpdate) {
     }
 #ifdef SUGGEST_TRY_DEPTH 
     if (suggestButton->getFeedback() != NULL) {
-      byte suggestedMoveDir = suggestMoveDir();
-
+      short suggestedMoveDir = suggestMoveDir();
+      if (suggestedMoveDir != -1) {
+          int fromColIdx;
+          int fromRowIdx;
+          canMoveFromDirToFromIdxes(suggestedMoveDir, fromColIdx, fromRowIdx);
+          int fromTileId = boardTileIds[fromColIdx][fromRowIdx];
+          String fromTileLevelId = String(fromTileId);
+          board->switchLevel(fromTileLevelId);
+          board->setLevelAnchor(holeTileColIdx * TILE_SIZE, holeTileRowIdx * TILE_SIZE, 1000);
+      } else {
+        dumbdisplay.log("No suggested move!");
+      }
     }
 #endif      
   }
