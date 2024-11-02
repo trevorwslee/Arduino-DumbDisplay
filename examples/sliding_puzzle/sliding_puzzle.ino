@@ -74,12 +74,11 @@ int moveTileId;
 
 #ifdef SUGGEST_TRY_DEPTH
   
-  // the "button" for suggesting a move
-  LcdDDLayer* suggestButton;
+  // the toggle "button" for suggesting moves
+  SelectionDDLayer* suggest;
 
-  const bool logTryMove = false;
-  const long tryMoveInMillis = 0L;
-  const long suggestedMoveInMillis= 300L;
+  const long suggestedMoveInMillis= 250;
+  bool suggesting;
   
 #endif
 
@@ -240,17 +239,17 @@ int tryMoveTile(int depth, short canMoveFromDir) {
   int prevHoldRowIdx;
   int prevHoleTileId;
   canMoveFromDirToFromIdxes(canMoveFromDir, fromColIdx, fromRowIdx);
-  if (tryMoveInMillis > 0) {
-    board->switchLevel(String(boardTileIds[fromColIdx][fromRowIdx]));
-    board->setLevelAnchor(holeTileColIdx * TILE_SIZE, holeTileRowIdx * TILE_SIZE, tryMoveInMillis); 
-    delay(tryMoveInMillis);
-    board->setLevelAnchor(holeTileColIdx * TILE_SIZE, holeTileRowIdx * TILE_SIZE); 
-  }
-  if (logTryMove) {
-    dumbdisplay.logToSerial("^^^ [" + String(depth) + "] " + canMoveFromDir + " ... ^^^");
-    dumbdisplay.logToSerial("> hole (" + String(holeTileColIdx) + " / " + String(holeTileRowIdx) + ") = " + String(boardTileIds[holeTileColIdx][holeTileRowIdx]));
-    dumbdisplay.logToSerial("> move (" + String(fromColIdx) + " / " + String(fromRowIdx) + ") = " + String(boardTileIds[fromColIdx][fromRowIdx]));
-  }
+  // if (tryMoveInMillis > 0) {
+  //   board->switchLevel(String(boardTileIds[fromColIdx][fromRowIdx]));
+  //   board->setLevelAnchor(holeTileColIdx * TILE_SIZE, holeTileRowIdx * TILE_SIZE, tryMoveInMillis); 
+  //   delay(tryMoveInMillis);
+  //   board->setLevelAnchor(holeTileColIdx * TILE_SIZE, holeTileRowIdx * TILE_SIZE); 
+  // }
+  // if (logTryMove) {
+  //   dumbdisplay.logToSerial("^^^ [" + String(depth) + "] " + canMoveFromDir + " ... ^^^");
+  //   dumbdisplay.logToSerial("> hole (" + String(holeTileColIdx) + " / " + String(holeTileRowIdx) + ") = " + String(boardTileIds[holeTileColIdx][holeTileRowIdx]));
+  //   dumbdisplay.logToSerial("> move (" + String(fromColIdx) + " / " + String(fromRowIdx) + ") = " + String(boardTileIds[fromColIdx][fromRowIdx]));
+  // }
   fromTileId = boardTileIds[fromColIdx][fromRowIdx];
   prevHoldColIdx = holeTileColIdx;
   prevHoldRowIdx = holeTileRowIdx;
@@ -260,16 +259,21 @@ int tryMoveTile(int depth, short canMoveFromDir) {
   holeTileColIdx = fromColIdx;
   holeTileRowIdx = fromRowIdx;
   int lowestBoardCost = calcBoardCost();
-  if (depth > 0) {
-
+  if (lowestBoardCost > 0 && depth > 0) {
     short canMoveFromDirs[4];
     int canCount = checkCanMoveFromDirs(canMoveFromDirs, canMoveFromDir);
     if (canCount > 0) {
       for (int i = 0; i < canCount; i++) {
         short canMoveFromDir = canMoveFromDirs[i];
         int ndBoardCost = tryMoveTile(depth - 1, canMoveFromDir);
-        if (ndBoardCost != -1 && ndBoardCost < lowestBoardCost) {
-          lowestBoardCost = ndBoardCost;
+        if (ndBoardCost != -1) {
+          bool acceptIt = ndBoardCost < lowestBoardCost;
+          if (!acceptIt && ndBoardCost == lowestBoardCost) {
+            acceptIt = random(2) == 0;
+          }
+          if (acceptIt) {
+            lowestBoardCost = ndBoardCost;
+          }
         }
       }
     }
@@ -278,17 +282,17 @@ int tryMoveTile(int depth, short canMoveFromDir) {
   holeTileRowIdx = prevHoldRowIdx;
   boardTileIds[holeTileColIdx][holeTileRowIdx] = prevHoleTileId;
   boardTileIds[fromColIdx][fromRowIdx] = fromTileId;
-  if (logTryMove) {
-    dumbdisplay.logToSerial("< move (" + String(fromColIdx) + " / " + String(fromRowIdx) + ") = " + String(boardTileIds[fromColIdx][fromRowIdx]));
-    dumbdisplay.logToSerial("< hole (" + String(holeTileColIdx) + " / " + String(holeTileRowIdx) + ") = " + String(boardTileIds[holeTileColIdx][holeTileRowIdx]));
-    dumbdisplay.logToSerial("=== [" + String(depth) + "] " + canMoveFromDir + " ==> lowestBoardCost="  + String(lowestBoardCost) + " ===");
-  }
-  if (tryMoveInMillis > 0) {
-    board->switchLevel(String(boardTileIds[fromColIdx][fromRowIdx]));
-    board->setLevelAnchor(fromColIdx * TILE_SIZE, fromRowIdx * TILE_SIZE, tryMoveInMillis); 
-    delay(tryMoveInMillis);
-    board->setLevelAnchor(fromColIdx * TILE_SIZE, fromRowIdx * TILE_SIZE); 
-  }
+  // if (logTryMove) {
+  //   dumbdisplay.logToSerial("< move (" + String(fromColIdx) + " / " + String(fromRowIdx) + ") = " + String(boardTileIds[fromColIdx][fromRowIdx]));
+  //   dumbdisplay.logToSerial("< hole (" + String(holeTileColIdx) + " / " + String(holeTileRowIdx) + ") = " + String(boardTileIds[holeTileColIdx][holeTileRowIdx]));
+  //   dumbdisplay.logToSerial("=== [" + String(depth) + "] " + canMoveFromDir + " ==> lowestBoardCost="  + String(lowestBoardCost) + " ===");
+  // }
+  // if (tryMoveInMillis > 0) {
+  //   board->switchLevel(String(boardTileIds[fromColIdx][fromRowIdx]));
+  //   board->setLevelAnchor(fromColIdx * TILE_SIZE, fromRowIdx * TILE_SIZE, tryMoveInMillis); 
+  //   delay(tryMoveInMillis);
+  //   board->setLevelAnchor(fromColIdx * TILE_SIZE, fromRowIdx * TILE_SIZE); 
+  // }
   return lowestBoardCost;
 }
 short suggestMoveDir() {
@@ -530,7 +534,9 @@ bool checkBoardSolved() {
   dumbdisplay.log("***** Board Solved *****");
   board->enableFeedback();
 #ifdef SUGGEST_TRY_DEPTH
-  suggestButton->disabled(true);
+  suggest->disabled(true);
+  suggest->deselect();
+  suggesting = false;
 #endif
   showHideHoleTile(true);
   delay(200);
@@ -565,12 +571,13 @@ void initializeDD() {
   board->enableFeedback();
 
 #ifdef SUGGEST_TRY_DEPTH
-  suggestButton = dumbdisplay.createLcdLayer(9, 1);
-  suggestButton->border(1, "black");
-  suggestButton->enableFeedback("fl");
-  suggestButton->disabled(true);
-  suggestButton->writeCenteredLine("Suggest");
+  suggest = dumbdisplay.createSelectionLayer(10, 1);
+  suggest->border(1, "black");
+  //suggestButton->enableFeedback("fl");
+  suggest->disabled(true);
+  suggest->textCentered("Suggest");
   dumbdisplay.configAutoPin();
+  suggesting = false;
 #endif
 
   holeTileColIdx = -1;
@@ -601,7 +608,7 @@ void updateDD(bool isFirstUpdate) {
       dumbdisplay.log("... done randomizing board");
       board->enableFeedback(":drag");  // :drag to allow dragging that produces MOVE feedback type (and ended with -1, -1 MOVE feedbackv)
 #ifdef SUGGEST_TRY_DEPTH
-      suggestButton->disabled(false);
+      suggest->disabled(false);
 #endif
     }
   } else {
@@ -624,7 +631,11 @@ void updateDD(bool isFirstUpdate) {
       }
     }
 #ifdef SUGGEST_TRY_DEPTH 
-    if (suggestButton->getFeedback() != NULL) {
+    if (suggest->getFeedback() != NULL) {
+      suggesting = !suggesting;
+      suggest->setSelected(suggesting);
+    }
+    if (suggesting) {
       if (suggestMove()) {
         checkBoardSolved();
       }

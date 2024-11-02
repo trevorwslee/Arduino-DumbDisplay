@@ -615,6 +615,13 @@ class SelectionDDLayer: public DDLayer {
     void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
     /// deselect a "selection" unit
     void deselect(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool selectTheOthers = false);
+    void setSelected(bool selected, int horiSelectionIdx = 0, int vertSelectionIdx = 0) {
+      if (selected) {
+        select(horiSelectionIdx, vertSelectionIdx, false);
+      } else {
+        deselect(horiSelectionIdx, vertSelectionIdx, true);
+      }
+    }
     /// select all "selection" units
     void selectAll();
     /// deselect all "selection" units
