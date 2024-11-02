@@ -35,30 +35,40 @@
 #endif
 
 
+#define SUGGEST_TRY_DEPTH 1
+
 // DDMasterResetPassiveConnectionHelper is for making "passive" connection; i.e. it can be reconnected after disconnect
 DDMasterResetPassiveConnectionHelper pdd(dumbdisplay);
 
 // the only layer for the board
 GraphicalDDLayer* board;
 
+#ifdef SUGGEST_TRY_DEPTH
+// the "button" for suggesting a move
+LcdDDLayer* suggestButton;
+#endif
 
 const int BOARD_SIZE = 400;
 const int TILE_COUNT = 4;   // the the sliding puzzle is 4x4; i.e. 16 tiles
 const int TILE_SIZE = BOARD_SIZE / TILE_COUNT;
 
 // tells what levelId is at what tile position
-String boardTileLevelIds[TILE_COUNT][TILE_COUNT];
+//String boardTileLevelIds[TILE_COUNT][TILE_COUNT];
+
+// tells what tile Id (basically tile level id) is at what tile position
+int boardTileIds[TILE_COUNT][TILE_COUNT];
 
 long waitingToRestartMillis = -1;  // -1 means not waiting
 
 int holeTileColIdx;  // -1 means board not initialize
 int holeTileRowIdx;
 
-int randomizeCanFromDirs[4];
+byte canMoveFromDirs[4];
+
 long randomizeMoveTileInMillis;
 int initRandomizeTileStepCount;
 int randomizeTilesStepCount;
-int randomizeCanFromDir;
+byte randomizeCanMoveFromDir;
 
 int moveTileColIdx;
 int moveTileRowIdx;
@@ -66,18 +76,55 @@ int moveTileFromDir;
 int moveTileDelta;
 int moveTileRefX;
 int moveTileRefY;
-String moveTileLevelId;
-
-bool puzzleSolved;
+int moveTileId;
 
 
-// show / hide the tile at tile position (0, 0) ... i.e. the "hold" tile when the board is just initialized
-void showHideTileAt00(bool show) {
-  String holeTileLevelId = boardTileLevelIds[0][0];
+int checkCanMoveFromDirs(byte prevCanMoveFromDir = -1) {  // prevCanMoveFromDir -1 means no previous direction
+  int canCount = 0;
+  if (holeTileColIdx > 0 && prevCanMoveFromDir != 1) {
+    canMoveFromDirs[canCount++] = 0;  // 0: left
+  }
+  if (holeTileColIdx < (TILE_COUNT - 1) && prevCanMoveFromDir != 0) {
+    canMoveFromDirs[canCount++] = 1;  // 1: right
+  }
+  if (holeTileRowIdx > 0 && prevCanMoveFromDir != 3) {
+    canMoveFromDirs[canCount++] = 2;  // 2: up
+  }
+  if (holeTileRowIdx < (TILE_COUNT - 1) && prevCanMoveFromDir != 2) {
+    canMoveFromDirs[canCount++] = 3;  // 3: down
+  }
+  return canCount;
+}
+
+void canMoveFromDirToFromIdxes(byte canMoveFromDir, int& fromColIdx, int& fromRowIdx) {
+  if (canMoveFromDir == 0) {
+    fromColIdx = holeTileColIdx - 1;
+    fromRowIdx = holeTileRowIdx;
+  } else if (canMoveFromDir == 1) {
+    fromColIdx = holeTileColIdx + 1;
+    fromRowIdx = holeTileRowIdx;
+  } else if (canMoveFromDir == 2) {
+    fromColIdx = holeTileColIdx;
+    fromRowIdx = holeTileRowIdx - 1;
+  } else {
+    fromColIdx = holeTileColIdx;
+    fromRowIdx = holeTileRowIdx + 1;
+  }
+}
+
+
+// show / hide the hole tile, which might not be in position
+void showHideHoleTile(bool show) {
+  int holeTileId = boardTileIds[holeTileColIdx][holeTileRowIdx];
+  String holeTileLevelId = String(holeTileId);
+  int anchorX = holeTileColIdx * TILE_SIZE;
+  int anchorY = holeTileRowIdx * TILE_SIZE;
   board->switchLevel(holeTileLevelId);
+  board->setLevelAnchor(anchorX, anchorY);
   board->setLevelAnchor(0, 0);
   board->levelTransparent(!show);
 }
+
 
 
 void initializeBoard() {
@@ -95,12 +142,12 @@ void initializeBoard() {
   
   for (int rowTileIdx = 0; rowTileIdx < TILE_COUNT; rowTileIdx++) {
     for (int colTileIdx = 0; colTileIdx < TILE_COUNT; colTileIdx++) {
-      int tileIdx = colTileIdx + rowTileIdx * TILE_COUNT;
+      int tileId = colTileIdx + rowTileIdx * TILE_COUNT;
 
       // imageName refers to a tile of the image "boardimg"; e.g. "0!4x4@boardimg" refers to the 0th tile of a 4x4 image named "boardimg"
-      String imageName = String(tileIdx) + "!" + String(TILE_COUNT) + "x" + String(TILE_COUNT) + "@boardimg";
+      String imageName = String(tileId) + "!" + String(TILE_COUNT) + "x" + String(TILE_COUNT) + "@boardimg";
       
-      String tileLevelId = String(tileIdx);
+      String tileLevelId = String(tileId);
       int x = colTileIdx * TILE_SIZE;
       int y = rowTileIdx * TILE_SIZE;
 
@@ -113,7 +160,7 @@ void initializeBoard() {
       // set the back of the level to the tile image, with board (b:3-gray-round)
       board->setLevelBackground("", imageName, "b:3-gray-round");
       
-      boardTileLevelIds[colTileIdx][rowTileIdx] = tileLevelId;
+      boardTileIds[colTileIdx][rowTileIdx] = tileId;
     }
   }
 
@@ -126,46 +173,27 @@ void initializeBoard() {
   moveTileRowIdx = -1;
   randomizeMoveTileInMillis = 300;
   initRandomizeTileStepCount = 5;
-  puzzleSolved = true;
+  //puzzleSolved = true;
+
+#ifdef SUGGEST_TRY_DEPTH
+  suggestButton->enableFeedback("fl");
+#endif
 
   dumbdisplay.log("... done creating board");
 }
 
 void randomizeTilesStep() {
-  int canCount = 0;
-  if (holeTileColIdx > 0 && randomizeCanFromDir != 1) {
-    randomizeCanFromDirs[canCount++] = 0;  // 0: left
-  }
-  if (holeTileColIdx < (TILE_COUNT - 1) && randomizeCanFromDir != 0) {
-    randomizeCanFromDirs[canCount++] = 1;  // 1: right
-  }
-  if (holeTileRowIdx > 0 && randomizeCanFromDir != 3) {
-    randomizeCanFromDirs[canCount++] = 2;  // 2: up
-  }
-  if (holeTileRowIdx < (TILE_COUNT - 1) && randomizeCanFromDir != 2) {
-    randomizeCanFromDirs[canCount++] = 3;  // 3: down
-  }
-  randomizeCanFromDir = randomizeCanFromDirs[random(canCount)];
+  int canCount = checkCanMoveFromDirs(randomizeCanMoveFromDir);
+  randomizeCanMoveFromDir = canMoveFromDirs[random(canCount)];
   int fromColIdx;
   int fromRowIdx;
-  if (randomizeCanFromDir == 0) {
-    fromColIdx = holeTileColIdx - 1;
-    fromRowIdx = holeTileRowIdx;
-  } else if (randomizeCanFromDir == 1) {
-    fromColIdx = holeTileColIdx + 1;
-    fromRowIdx = holeTileRowIdx;
-  } else if (randomizeCanFromDir == 2) {
-    fromColIdx = holeTileColIdx;
-    fromRowIdx = holeTileRowIdx - 1;
-  } else {
-    fromColIdx = holeTileColIdx;
-    fromRowIdx = holeTileRowIdx + 1;
-  }
+  canMoveFromDirToFromIdxes(randomizeCanMoveFromDir, fromColIdx, fromRowIdx);
   int toColIdx = holeTileColIdx;
   int toRowIdx = holeTileRowIdx;
-  String fromTileLevelId = boardTileLevelIds[fromColIdx][fromRowIdx];
-  boardTileLevelIds[fromColIdx][fromRowIdx] = boardTileLevelIds[holeTileColIdx][holeTileRowIdx];
-  boardTileLevelIds[holeTileColIdx][holeTileRowIdx] = fromTileLevelId;
+  int fromTileId = boardTileIds[fromColIdx][fromRowIdx];
+  String fromTileLevelId = String(fromTileId);
+  boardTileIds[fromColIdx][fromRowIdx] = boardTileIds[holeTileColIdx][holeTileRowIdx];
+  boardTileIds[holeTileColIdx][holeTileRowIdx] = fromTileId;
   board->switchLevel(fromTileLevelId);
   int x = toColIdx * TILE_SIZE;
   int y = toRowIdx * TILE_SIZE;
@@ -183,6 +211,106 @@ void randomizeTilesStep() {
   board->setLevelAnchor(x, y);
 }
 
+
+int calcBoardCost() {
+  int cost = 0;
+  for (int rowTileIdx = 0; rowTileIdx < TILE_COUNT; rowTileIdx++) {
+    for (int colTileIdx = 0; colTileIdx < TILE_COUNT; colTileIdx++) {
+      int tileId = colTileIdx + rowTileIdx * TILE_COUNT;
+      int boardTileId = boardTileIds[colTileIdx][rowTileIdx];
+      if (boardTileId != tileId) {
+        int colIdx = boardTileId % TILE_COUNT;
+        int rowIdx = boardTileId / TILE_COUNT;
+        cost += abs(colIdx - colTileIdx) + abs(rowIdx - rowTileIdx);
+      }
+    }
+  }
+  return cost;
+}
+
+
+#ifdef SUGGEST_TRY_DEPTH
+int tryMoveTile(int depth, byte canMoveFromDir, byte* pTriedFromMoveDir) {
+  int fromColIdx;
+  int fromRowIdx;
+  int fromTileId;
+  int prevHoldColIdx;
+  int prevHoldRowIdx;
+  int prevHoleTileId;
+  if (canMoveFromDir != -1) {
+    canMoveFromDirToFromIdxes(canMoveFromDir, fromColIdx, fromRowIdx);
+    if (true) {
+      //dumbdisplay.log("* prevHoldColIdx: " + String(prevHoldColIdx) + " / prevHoldRowIdx: " + String(prevHoldRowIdx) + " / prevHoleTileId: " + String(prevHoleTileId) + " / holdTileColIdx: " + String(holeTileColIdx) + " / holeTileRowIdx: " + String(holeTileRowIdx));
+      dumbdisplay.log("> fromTileId: " + String(boardTileIds[fromColIdx][fromRowIdx]));
+      dumbdisplay.log("> holeTileId: " + String(boardTileIds[holeTileColIdx][holeTileRowIdx]));
+      dumbdisplay.log("> holdTileColIdx: " + String(holeTileColIdx) + " / holeTileRowIdx: " + String(holeTileRowIdx));
+    }
+    fromTileId = boardTileIds[fromColIdx][fromRowIdx];
+    prevHoldColIdx = holeTileColIdx;
+    prevHoldRowIdx = holeTileRowIdx;
+    prevHoleTileId = boardTileIds[holeTileColIdx][holeTileRowIdx];
+    boardTileIds[holeTileColIdx][holeTileRowIdx] = fromTileId;
+    boardTileIds[fromColIdx][fromRowIdx] = prevHoleTileId;
+    holeTileColIdx = fromColIdx;
+    holeTileRowIdx = fromRowIdx;
+  }
+  byte triedFromMoveDir = -1;
+  int thisDepthBoardCost = -1;
+  if (depth > 0) {
+    int canCount = checkCanMoveFromDirs();
+    if (canCount > 0) {
+      int nextDepthLowestBoardCount = -1;
+      for (int i = 0; i < canCount; i++) {
+        byte canMoveFromDir = canMoveFromDirs[i];
+        int nextDepthBoardCost = tryMoveTile(depth - 1, canMoveFromDir, NULL);
+        if (nextDepthLowestBoardCount == -1 || nextDepthBoardCost < nextDepthLowestBoardCount) {
+          nextDepthLowestBoardCount = nextDepthBoardCost;
+          triedFromMoveDir = canMoveFromDir;
+        }
+      }
+    }
+  }
+  if (thisDepthBoardCost == -1) {
+    thisDepthBoardCost = calcBoardCost();
+  }
+  if (canMoveFromDir != -1) {
+    holeTileColIdx = prevHoldColIdx;
+    holeTileRowIdx = prevHoldRowIdx;
+    boardTileIds[holeTileColIdx][holeTileRowIdx] = prevHoleTileId;
+    boardTileIds[fromColIdx][fromRowIdx] = fromTileId;
+    if (true) {
+      dumbdisplay.log("< fromTileId: " + String(boardTileIds[fromColIdx][fromRowIdx]));
+      dumbdisplay.log("< holeTileId: " + String(boardTileIds[holeTileColIdx][holeTileRowIdx]));
+      dumbdisplay.log("< holdTileColIdx: " + String(holeTileColIdx) + " / holeTileRowIdx: " + String(holeTileRowIdx));
+    }
+  }
+  if (true) {
+    dumbdisplay.log("* depth: " + String(depth) + " / triedFromMoveDir: " + String(triedFromMoveDir) + "/ thisDepthBoardCost: " + String(thisDepthBoardCost));
+  }
+  if (pTriedFromMoveDir != NULL) {
+    *pTriedFromMoveDir = triedFromMoveDir;
+  }
+  return thisDepthBoardCost;
+}
+byte suggestMoveDir() {
+  //dumbdisplay.log("Suggesting move ...");
+  int canCount = checkCanMoveFromDirs();
+  if (canCount == 0) {
+    return -1;
+  }
+  int boardCost = calcBoardCost();
+  if (boardCost == 0) {
+    return -1;
+  }
+  byte triedFromMoveDir;
+  int newBoardCost = tryMoveTile(SUGGEST_TRY_DEPTH - 1, -1, &triedFromMoveDir);
+  if (newBoardCost >= boardCost) {
+    return -1;
+  }
+  return triedFromMoveDir;
+}
+#endif
+
 void ensureBoardInitialized() {
   if (holeTileColIdx == -1) {
     initializeBoard();
@@ -190,11 +318,9 @@ void ensureBoardInitialized() {
 }
 
 void startRandomizeBoard() {
-  if (puzzleSolved) {
-    showHideTileAt00(false);
-  }
+  showHideHoleTile(false);
   randomizeTilesStepCount = initRandomizeTileStepCount;
-  randomizeCanFromDir = -1;
+  randomizeCanMoveFromDir = -1;
 }
 
 int posToHoleTileFromDir(int x, int y) {
@@ -271,7 +397,7 @@ bool onBoardDragged(int x, int y) {
         moveTileDelta = 0;
         moveTileRefX = x;
         moveTileRefY = y;
-        moveTileLevelId = boardTileLevelIds[moveTileColIdx][moveTileRowIdx];
+        moveTileId = boardTileIds[moveTileColIdx][moveTileRowIdx];
       }
     } else {
       int tileAnchorX = moveTileColIdx * TILE_SIZE;
@@ -310,7 +436,7 @@ bool onBoardDragged(int x, int y) {
           tileAnchorY -= delta;
         }
       }
-      board->switchLevel(moveTileLevelId);
+      board->switchLevel(String(moveTileId));
       board->setLevelAnchor(tileAnchorX, tileAnchorY);
       moveTileDelta = delta;
     }
@@ -322,16 +448,16 @@ bool onBoardDragged(int x, int y) {
       if (moveTileDelta >= TILE_SIZE / 3) {
         tileAnchorX = holeTileColIdx * TILE_SIZE;
         tileAnchorY = holeTileRowIdx * TILE_SIZE;
-        String prevHoleTileLevelId = boardTileLevelIds[holeTileColIdx][holeTileRowIdx];
-        boardTileLevelIds[holeTileColIdx][holeTileRowIdx] = boardTileLevelIds[moveTileColIdx][moveTileRowIdx];
-        boardTileLevelIds[moveTileColIdx][moveTileRowIdx] = prevHoleTileLevelId;
+        int prevHoleTileId = boardTileIds[holeTileColIdx][holeTileRowIdx];
+        boardTileIds[holeTileColIdx][holeTileRowIdx] = boardTileIds[moveTileColIdx][moveTileRowIdx];
+        boardTileIds[moveTileColIdx][moveTileRowIdx] = prevHoleTileId;
         holeTileColIdx = moveTileColIdx;
         holeTileRowIdx = moveTileRowIdx;
       } else {
         tileAnchorX = moveTileColIdx * TILE_SIZE;
         tileAnchorY = moveTileRowIdx * TILE_SIZE;
       }
-      board->switchLevel(moveTileLevelId);
+      board->switchLevel(String(moveTileId));
       board->setLevelAnchor(tileAnchorX, tileAnchorY);
       tileMoved = true;
     }
@@ -344,9 +470,9 @@ bool onBoardDragged(int x, int y) {
 bool checkBoardSolved() {
   for (int rowTileIdx = 0; rowTileIdx < TILE_COUNT; rowTileIdx++) {
     for (int colTileIdx = 0; colTileIdx < TILE_COUNT; colTileIdx++) {
-      int tileIdx = colTileIdx + rowTileIdx * TILE_COUNT;
-      String tileLevelId = boardTileLevelIds[colTileIdx][rowTileIdx];
-      if (tileLevelId != String(tileIdx)) {
+      int tileId = colTileIdx + rowTileIdx * TILE_COUNT;
+      int boardTileId = boardTileIds[colTileIdx][rowTileIdx];
+      if (boardTileId != tileId) {
         return false;
       }
     }
@@ -368,6 +494,13 @@ void initializeDD() {
   board->drawTextLine("May God bless you❤️", 340, "R-20", "purple", "", 20);  // R is for right-justify align on the line; with -20 offset from right
 
   board->enableFeedback();
+
+#ifdef SUGGEST_TRY_DEPTH
+  suggestButton = dumbdisplay.createLcdLayer(9, 1);
+  suggestButton->border(1, "black");
+  suggestButton->writeCenteredLine("Suggest");
+  dumbdisplay.configAutoPin();
+#endif
 
   holeTileColIdx = -1;
   holeTileRowIdx = -1;
@@ -396,7 +529,6 @@ void updateDD(bool isFirstUpdate) {
       // randomization is done
       dumbdisplay.log("... done randomizing board");
       board->enableFeedback(":drag");  // :drag to allow dragging that produces MOVE feedback type (and ended with -1, -1 MOVE feedback)
-      puzzleSolved = false;
     }
   } else {
     if (fb != NULL) {
@@ -416,11 +548,11 @@ void updateDD(bool isFirstUpdate) {
           if (checkBoardSolved()) {
             dumbdisplay.log("***** Board Solved *****");
             board->enableFeedback();
-            showHideTileAt00(true);
+            showHideHoleTile(true);
             delay(200);
-            showHideTileAt00(false);
+            showHideHoleTile(false);
             delay(200);
-            showHideTileAt00(true);
+            showHideHoleTile(true);
             randomizeMoveTileInMillis -= 50;  // randomize faster and faster
             if (randomizeMoveTileInMillis < 100) {
               randomizeMoveTileInMillis = 100;
@@ -429,12 +561,17 @@ void updateDD(bool isFirstUpdate) {
             if (initRandomizeTileStepCount > 50) {
               initRandomizeTileStepCount = 50;
             }
-            puzzleSolved = true;
             waitingToRestartMillis = 0;
           }
         }
       }
     }
+#ifdef SUGGEST_TRY_DEPTH 
+    if (suggestButton->getFeedback() != NULL) {
+      byte suggestedMoveDir = suggestMoveDir();
+
+    }
+#endif      
   }
 }
 
