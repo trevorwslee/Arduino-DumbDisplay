@@ -57,6 +57,7 @@ int holeTileRowIdx;
 
 // short canMoveFromDirs[4];
 
+short randomizeCanMoveFromDirs[4];
 long randomizeMoveTileInMillis;
 int initRandomizeTileStepCount;
 int randomizeTilesStepCount;
@@ -78,6 +79,7 @@ int moveTileId;
 
   const bool logTryMove = false;
   const long tryMoveInMillis = 0L;
+  const long suggestedMoveInMillis= 300L;
   
 #endif
 
@@ -183,9 +185,8 @@ void initializeBoard() {
 }
 
 void randomizeTilesStep() {
-  short canMoveFromDirs[4];
-  int canCount = checkCanMoveFromDirs(canMoveFromDirs, randomizeCanMoveFromDir);
-  randomizeCanMoveFromDir = canMoveFromDirs[random(canCount)];
+  int canCount = checkCanMoveFromDirs(randomizeCanMoveFromDirs, randomizeCanMoveFromDir);
+  randomizeCanMoveFromDir = randomizeCanMoveFromDirs[random(canCount)];
   int fromColIdx;
   int fromRowIdx;
   canMoveFromDirToFromIdxes(randomizeCanMoveFromDir, fromColIdx, fromRowIdx);
@@ -306,9 +307,21 @@ short suggestMoveDir() {
     short canMoveFromDir = canMoveFromDirs[i];
     int ndBoardCost = tryMoveTile(SUGGEST_TRY_DEPTH, canMoveFromDir);
     dumbdisplay.logToSerial("$$$ ... tried canMoveFromDir: " + String(canMoveFromDir) + " @ cost: " + String(ndBoardCost) + " ...");
-    if (ndBoardCost != -1 && (lowestBoardCost == -1 || ndBoardCost < lowestBoardCost)) {
-      lowestBoardCost = ndBoardCost;
-      suggestedMoveDir = canMoveFromDir;
+    if (ndBoardCost != -1) {
+      bool takeIt = lowestBoardCost == -1;
+      if (!takeIt) {
+        if (ndBoardCost < lowestBoardCost) {
+          takeIt = true;
+        } else if (ndBoardCost == lowestBoardCost) {
+          if (random(2) == 0) {
+            takeIt = true;
+          }
+        }
+      }
+      if (takeIt) {
+        lowestBoardCost = ndBoardCost;
+        suggestedMoveDir = canMoveFromDir;
+      }
     }
   }
   if (suggestedMoveDir != -1) {
@@ -317,6 +330,34 @@ short suggestMoveDir() {
     dumbdisplay.logToSerial("$$$ suggestedMoveDir: none @ cost: " + String(lowestBoardCost));
   }
   return suggestedMoveDir;
+}
+bool suggestMove() {
+  short suggestedMoveDir = suggestMoveDir();
+  if (suggestedMoveDir != -1) {
+      //long inMillis = 500L;
+      int fromColIdx;
+      int fromRowIdx;
+      canMoveFromDirToFromIdxes(suggestedMoveDir, fromColIdx, fromRowIdx);
+      int prevHoleTileId = boardTileIds[holeTileColIdx][holeTileRowIdx];
+      int prevHoleTileColIdx = holeTileColIdx;
+      int prevHoleTileRowIdx = holeTileRowIdx;
+      int fromTileId = boardTileIds[fromColIdx][fromRowIdx];
+      String fromTileLevelId = String(fromTileId);
+      // board->switchLevel(fromTileLevelId);
+      // board->setLevelAnchor(holeTileColIdx * TILE_SIZE, holeTileRowIdx * TILE_SIZE, inMillis);
+      boardTileIds[holeTileColIdx][holeTileRowIdx] = boardTileIds[fromColIdx][fromRowIdx];
+      boardTileIds[fromColIdx][fromRowIdx] = prevHoleTileId;
+      holeTileColIdx = fromColIdx;
+      holeTileRowIdx = fromRowIdx;
+      board->switchLevel(fromTileLevelId);
+      board->setLevelAnchor(prevHoleTileColIdx * TILE_SIZE, prevHoleTileRowIdx * TILE_SIZE, suggestedMoveInMillis);
+      delay(suggestedMoveInMillis);
+      board->setLevelAnchor(prevHoleTileColIdx * TILE_SIZE, prevHoleTileRowIdx * TILE_SIZE);
+      return true;
+  } else {
+    dumbdisplay.log("No suggested move!");
+    return false;
+  }
 }
 #endif
 
@@ -486,6 +527,25 @@ bool checkBoardSolved() {
       }
     }
   }
+  dumbdisplay.log("***** Board Solved *****");
+  board->enableFeedback();
+#ifdef SUGGEST_TRY_DEPTH
+  suggestButton->disabled(true);
+#endif
+  showHideHoleTile(true);
+  delay(200);
+  showHideHoleTile(false);
+  delay(200);
+  showHideHoleTile(true);
+  randomizeMoveTileInMillis -= 50;  // randomize faster and faster
+  if (randomizeMoveTileInMillis < 100) {
+    randomizeMoveTileInMillis = 100;
+  }
+  initRandomizeTileStepCount += 5;  // randomize more and more
+  if (initRandomizeTileStepCount > 50) {
+    initRandomizeTileStepCount = 50;
+  }
+  waitingToRestartMillis = 0;
   return true;
 }
 
@@ -559,43 +619,14 @@ void updateDD(bool isFirstUpdate) {
         // dragging / moving a tile ... handle it in onBoardDragged
         if (onBoardDragged(fb->x, fb->y)) {
           // ended up moving a tile ... check if the board is solved
-          if (checkBoardSolved()) {
-            dumbdisplay.log("***** Board Solved *****");
-            board->enableFeedback();
-#ifdef SUGGEST_TRY_DEPTH
-            suggestButton->disabled(true);
-#endif
-            showHideHoleTile(true);
-            delay(200);
-            showHideHoleTile(false);
-            delay(200);
-            showHideHoleTile(true);
-            randomizeMoveTileInMillis -= 50;  // randomize faster and faster
-            if (randomizeMoveTileInMillis < 100) {
-              randomizeMoveTileInMillis = 100;
-            }
-            initRandomizeTileStepCount += 5;  // randomize more and more
-            if (initRandomizeTileStepCount > 50) {
-              initRandomizeTileStepCount = 50;
-            }
-            waitingToRestartMillis = 0;
-          }
+          checkBoardSolved();
         }
       }
     }
 #ifdef SUGGEST_TRY_DEPTH 
     if (suggestButton->getFeedback() != NULL) {
-      short suggestedMoveDir = suggestMoveDir();
-      if (suggestedMoveDir != -1) {
-          int fromColIdx;
-          int fromRowIdx;
-          canMoveFromDirToFromIdxes(suggestedMoveDir, fromColIdx, fromRowIdx);
-          int fromTileId = boardTileIds[fromColIdx][fromRowIdx];
-          String fromTileLevelId = String(fromTileId);
-          board->switchLevel(fromTileLevelId);
-          board->setLevelAnchor(holeTileColIdx * TILE_SIZE, holeTileRowIdx * TILE_SIZE, 1000);
-      } else {
-        dumbdisplay.log("No suggested move!");
+      if (suggestMove()) {
+        checkBoardSolved();
       }
     }
 #endif      
