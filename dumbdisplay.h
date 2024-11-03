@@ -619,7 +619,7 @@ class SelectionDDLayer: public DDLayer {
       if (selected) {
         select(horiSelectionIdx, vertSelectionIdx, false);
       } else {
-        deselect(horiSelectionIdx, vertSelectionIdx, true);
+        deselect(horiSelectionIdx, vertSelectionIdx, false);
       }
     }
     /// select all "selection" units
