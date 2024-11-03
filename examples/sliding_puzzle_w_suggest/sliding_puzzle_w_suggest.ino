@@ -43,7 +43,7 @@
 
 
 #define SUGGEST_MAX_DEPTH 15
-#define SUGGEST_MIN_DEPTH 5
+#define SUGGEST_MIN_DEPTH 3
 
 
 // DDMasterResetPassiveConnectionHelper is for making "passive" connection; i.e. it can be reconnected after disconnect
@@ -601,7 +601,10 @@ void updateDD(bool isFirstUpdate) {
   }
 
   const DDFeedback* boardFeedback = board->getFeedback();
+
+#ifdef SUGGEST_MAX_DEPTH
   const DDFeedback* suggestFeedback = suggestSelection->getFeedback();
+#endif
 
   if (randomizeTilesStepCount > 0) {
     // randomizing the board
