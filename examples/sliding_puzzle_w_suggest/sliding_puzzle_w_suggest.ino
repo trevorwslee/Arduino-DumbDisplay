@@ -1,9 +1,13 @@
 // **********
-// * This version added "suggest" button so that you can ask for suggestion of "next move".
+// * This is a version of sliding_puzzle added "suggest" button so that you can ask for suggestion of "next move".
 // * Exhaustive search for the solution will be much faster for game like this.
 // * However, the suggestion here is just "next move" suggestion that can be considered "guided" random suggestion.
 // **********
 
+/**
+ * Sorry! Very likely, this sketch will not work for less-capable boards like Arduino Uno, Nano, etc. 
+ * It appears that ESP32 with Bluetooth gives better experience for this sketch.
+ */
 
 /**
  * If BLUETOOTH is #defined, it uses ESP32 bluetooth connection
@@ -63,8 +67,6 @@ long waitingToRestartMillis = -1;  // -1 means not waiting
 
 int holeTileColIdx;  // -1 means board not initialize
 int holeTileRowIdx;
-
-// short canMoveFromDirs[4];
 
 short randomizeCanMoveFromDirs[4];
 long randomizeMoveTileInMillis;
@@ -187,7 +189,6 @@ void initializeBoard() {
   moveTileRowIdx = -1;
   randomizeMoveTileInMillis = 300;
   initRandomizeTileStepCount = 5;
-  //puzzleSolved = true;
 
   dumbdisplay.log("... done creating board");
 }
@@ -338,7 +339,6 @@ short suggestMoveDir() {
 bool suggestMove() {
   short suggestedMoveDir = suggestMoveDir();
   if (suggestedMoveDir != -1) {
-      //long inMillis = 500L;
       int fromColIdx;
       int fromRowIdx;
       canMoveFromDirToFromIdxes(suggestedMoveDir, fromColIdx, fromRowIdx);
@@ -347,8 +347,6 @@ bool suggestMove() {
       int prevHoleTileRowIdx = holeTileRowIdx;
       int fromTileId = boardTileIds[fromColIdx][fromRowIdx];
       String fromTileLevelId = String(fromTileId);
-      // board->switchLevel(fromTileLevelId);
-      // board->setLevelAnchor(holeTileColIdx * TILE_SIZE, holeTileRowIdx * TILE_SIZE, inMillis);
       boardTileIds[holeTileColIdx][holeTileRowIdx] = boardTileIds[fromColIdx][fromRowIdx];
       boardTileIds[fromColIdx][fromRowIdx] = prevHoleTileId;
       holeTileColIdx = fromColIdx;
@@ -575,7 +573,6 @@ void initializeDD() {
 #ifdef SUGGEST_MAX_DEPTH
   suggestSelection = dumbdisplay.createSelectionLayer(11, 1, 2, 1);
   suggestSelection->border(1, "black");
-  //suggestButton->enableFeedback("fl");
   suggestSelection->disabled(true);
   suggestSelection->text("💪Suggest");
   suggestSelection->textRightAligned("Continuous", 0, 1);
@@ -588,8 +585,8 @@ void initializeDD() {
   randomizeTilesStepCount = 0;
   waitingToRestartMillis = 0;
 }
-void updateDD(bool isFirstUpdate) {
 
+void updateDD(bool isFirstUpdate) {
   if (waitingToRestartMillis != -1) {
     // starts off waiting for double tab
     long nowMillis = millis();

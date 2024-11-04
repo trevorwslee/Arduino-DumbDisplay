@@ -53,8 +53,6 @@ long waitingToRestartMillis = -1;  // -1 means not waiting
 int holeTileColIdx;  // -1 means board not initialize
 int holeTileRowIdx;
 
-// short canMoveFromDirs[4];
-
 short randomizeCanMoveFromDirs[4];
 long randomizeMoveTileInMillis;
 int initRandomizeTileStepCount;
@@ -164,7 +162,6 @@ void initializeBoard() {
   moveTileRowIdx = -1;
   randomizeMoveTileInMillis = 300;
   initRandomizeTileStepCount = 5;
-  //puzzleSolved = true;
 
   dumbdisplay.log("... done creating board");
 }
@@ -422,8 +419,8 @@ void initializeDD() {
   randomizeTilesStepCount = 0;
   waitingToRestartMillis = 0;
 }
-void updateDD(bool isFirstUpdate) {
 
+void updateDD(bool isFirstUpdate) {
   if (waitingToRestartMillis != -1) {
     // starts off waiting for double tab
     long nowMillis = millis();

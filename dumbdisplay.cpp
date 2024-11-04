@@ -230,7 +230,7 @@ class DDWriteOnyIO: public DDInputOutput {
         const uint8_t *s = buf;
         uint8_t *t = buffer + bufferedCount;
         bool flushAfterward = false;
-        for (int i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; i++) {
           if (!this->keepBuffering) {
             if (*s == '\n') {
               flushAfterward = true;
@@ -527,26 +527,26 @@ this->print("// NEED TO RECONNECT\n");
 DDObject** _DDLayerArray = NULL;
 int _MaxDDLayerCount = 0;
 
-DDInputOutput* /*volatile */_IO = NULL;
+DDInputOutput* /*volatile */_DDIO = NULL;
 
 #ifdef SUPPORT_USE_WOIO
-DDInputOutput* /*volatile */_WOIO = NULL;
+DDInputOutput* /*volatile */_WODDIO = NULL;
 /*volatile */uint16_t _SendBufferSize = 0;//DD_DEF_SEND_BUFFER_SIZE;
 #else
-#define _WOIO _IO
+#define _WODDIO _DDIO
 #endif
 
 
 inline void _SetIO(DDInputOutput* io, uint16_t sendBufferSize, long idleTimeout) {
-  _IO = io;
+  _DDIO = io;
 #ifdef SUPPORT_USE_WOIO  
-  if (_WOIO != NULL) delete _WOIO;
+  if (_WODDIO != NULL) delete _WODDIO;
   if (sendBufferSize > 0 && io->canUseBuffer()) {
     _SendBufferSize = sendBufferSize;
-    _WOIO = new DDWriteOnyIO(io, sendBufferSize);
+    _WODDIO = new DDWriteOnyIO(io, sendBufferSize);
   } else {
     _SendBufferSize = 0;
-    _WOIO = io;
+    _WODDIO = io;
   }
 #endif
   _DDIdleTimeoutMillis = idleTimeout;
@@ -561,7 +561,7 @@ bool _CanLogToSerial() {
   if (_ConnectedIOProxy != NULL) {
     return !_ConnectedFromSerial;
   } else {
-    return _IO != NULL && !(_IO->isForSerial() || _IO->isBackupBySerial());
+    return _DDIO != NULL && !(_DDIO->isForSerial() || _DDIO->isBackupBySerial());
   }
 }
 
@@ -633,7 +633,7 @@ bool __Connect(/*bool calledPassive = false*/) {
 //       return false;
 //   }
 // #endif
-  bool mustLoop = !_IO->canConnectPassive();
+  bool mustLoop = !_DDIO->canConnectPassive();
   if (_C_state.step > 0 && _C_state.hsStartMillis > 0) {
     long diffMillis = millis() - _C_state.hsStartMillis;
     if (diffMillis > _DDIdleTimeoutMillis) {
@@ -657,7 +657,7 @@ bool __Connect(/*bool calledPassive = false*/) {
 #endif
   }
   if (_C_state.step == _C_PRECONNECTING/*1*/) {
-    if (!_IO->preConnect(_C_state.firstCall)) {
+    if (!_DDIO->preConnect(_C_state.firstCall)) {
 #ifdef SUPPORT_IDLE_CALLBACK
       bool checkIdle = _IdleCallback != NULL;
       if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
@@ -682,7 +682,7 @@ bool __Connect(/*bool calledPassive = false*/) {
   }
   if (_C_state.step == _C_PRECONNECTED/*3*/) {
     _C_state.hsNextMillis = millis();
-    //IOProxy ioProxy(_IO);
+    //IOProxy ioProxy(_DDIO);
     if (_C_state.pIOProxy != NULL) {
       delete _C_state.pIOProxy;
     }
@@ -692,12 +692,12 @@ bool __Connect(/*bool calledPassive = false*/) {
     if (_C_state.pBUSIO != NULL) {
       delete _C_state.pBUSIO;
     }
-    _C_state.pIOProxy = new IOProxy(_IO);
+    _C_state.pIOProxy = new IOProxy(_DDIO);
     _C_state.pBUSerialIOProxy = NULL;
     _C_state.pBUSIO = NULL;
-    if (_IO->isBackupBySerial()) {
-      //pSIO = new DDInputOutput(_IO);
-      _C_state.pBUSIO = _IO->newForSerialConnection();
+    if (_DDIO->isBackupBySerial()) {
+      //pSIO = new DDInputOutput(_DDIO);
+      _C_state.pBUSIO = _DDIO->newForSerialConnection();
       _C_state.pBUSerialIOProxy = new IOProxy(_C_state.pBUSIO);
     }
     _C_state.hsStartMillis = millis();
@@ -757,32 +757,32 @@ bool __Connect(/*bool calledPassive = false*/) {
         if (data == "ddhello") {
           if (fromBUSerial) {
             _SetIO(_C_state.pBUSIO, DD_DEF_SEND_BUFFER_SIZE, DD_DEF_IDLE_TIMEOUT);
-            //_IO = pSIO;
+            //_DDIO = pSIO;
             _C_state.pBUSIO = NULL;
           }
           if (_ConnectedIOProxy != NULL) {
             delete _ConnectedIOProxy;
           }
-          _ConnectedIOProxy = new IOProxy(_IO);
+          _ConnectedIOProxy = new IOProxy(_DDIO);
 //          _ConnectedFromSerial = fromSerial;
-          //_ConnectedFromSerial = _IO->isSerial();
-          _ConnectedFromSerial =  fromBUSerial || _IO->isSerial();
+          //_ConnectedFromSerial = _DDIO->isSerial();
+          _ConnectedFromSerial =  fromBUSerial || _DDIO->isSerial();
 #ifdef DD_DEBUG_BASIC  
           if (_CanLogToSerial()) Serial.println("--- connection established");
 #endif
           if (_CanLogToSerial()) {
             Serial.println("**********");
 #ifdef DD_DEBUG_BASIC  
-            Serial.print("* _IO.isSerial()=");
-            Serial.println(_IO->isSerial());
-            Serial.print("* _IO.isForSerial()=");
-            Serial.println(_IO->isForSerial());
-            Serial.print("* _IO.isBackupBySerial()=");
-            Serial.println(_IO->isBackupBySerial());
-            Serial.print("* _IO.canConnectPassive()=");
-            Serial.println(_IO->canConnectPassive());
-            Serial.print("* _IO.canUseBuffer()=");
-            Serial.println(_IO->canUseBuffer());
+            Serial.print("* _DDIO.isSerial()=");
+            Serial.println(_DDIO->isSerial());
+            Serial.print("* _DDIO.isForSerial()=");
+            Serial.println(_DDIO->isForSerial());
+            Serial.print("* _DDIO.isBackupBySerial()=");
+            Serial.println(_DDIO->isBackupBySerial());
+            Serial.print("* _DDIO.canConnectPassive()=");
+            Serial.println(_DDIO->canConnectPassive());
+            Serial.print("* _DDIO.canUseBuffer()=");
+            Serial.println(_DDIO->canUseBuffer());
 #endif
 #ifdef SUPPORT_USE_WOIO
             Serial.print("* _SendBufferSize=");
@@ -829,7 +829,7 @@ bool __Connect(/*bool calledPassive = false*/) {
     _C_state.step = 6;
   }
   if (_C_state.step == 6) { 
-    //IOProxy ioProxy(_IO);
+    //IOProxy ioProxy(_DDIO);
     while (true) {
       if (mustLoop) YIELD();
       long now = millis();
@@ -888,30 +888,30 @@ bool __Connect(/*bool calledPassive = false*/) {
   }
   _Connected = true;
   _ConnectVersion = 1;
-//  _ConnectedIOProxy = new IOProxy(_IO);
+//  _ConnectedIOProxy = new IOProxy(_DDIO);
   _DDCompatibility = _C_state.compatibility;
   if (false) {
     // ignore any input in 1000ms window
     delay(1000);
-    while (_IO->available()) {
-      _IO->read();
+    while (_DDIO->available()) {
+      _DDIO->read();
     }
   }
   if (true) {       
-    _IO->print("// Connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
+    _DDIO->print("// Connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO) || defined(ARDUINO_AVR_MEGA2560)
-    _IO->print("// $ Free SRAM: " + String(freeRam() / 1024.0) + "KB" + "\n");
+    _DDIO->print("// $ Free SRAM: " + String(freeRam() / 1024.0) + "KB" + "\n");
 #elif defined(ESP32)
-    _IO->print(String("// $ Sketch: ") + String(ESP.getSketchSize() / 1024.0) + "KB" + " / Free: " + String(ESP.getFreeSketchSpace() / 1024.0) + "KB" + "\n");
-    _IO->print(String("// $ Heap: " + String(ESP.getHeapSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreeHeap() / 1024.0) + "KB" + "\n");
-    _IO->print(String("// $ PSRAM: " + String(ESP.getPsramSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreePsram() / 1024.0) + "KB" + "\n");
+    _DDIO->print(String("// $ Sketch: ") + String(ESP.getSketchSize() / 1024.0) + "KB" + " / Free: " + String(ESP.getFreeSketchSpace() / 1024.0) + "KB" + "\n");
+    _DDIO->print(String("// $ Heap: " + String(ESP.getHeapSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreeHeap() / 1024.0) + "KB" + "\n");
+    _DDIO->print(String("// $ PSRAM: " + String(ESP.getPsramSize() / 1024.0) + "KB") + " / Free: " + String(ESP.getFreePsram() / 1024.0) + "KB" + "\n");
 #endif    
-    //_IO->flush();
+    //_DDIO->flush();
     if (false) {
       // *** debug code
       for (int i = 0; i < 10; i++) {
         delay(500);
-        _IO->print("// connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
+        _DDIO->print("// connected to DD c" + String(_C_state.compatibility) + "\n"/*.c_str()*/);
       }
     }
 #ifdef DD_DEBUG_HS          
@@ -926,7 +926,7 @@ bool __Connect(/*bool calledPassive = false*/) {
 // #endif
     // if (false) {
     //   // *** debug code
-    //   _IO->print("// connection to DD made\n");
+    //   _DDIO->print("// connection to DD made\n");
     //    _sendCommand0("", "// *** connection made ***");
     // }
 #ifdef DD_DEBUG_HS          
@@ -972,7 +972,7 @@ void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
     bool firstCall = true;
     while (true) {
       YIELD();
-      if (_IO->preConnect(firstCall)) {
+      if (_DDIO->preConnect(firstCall)) {
         break;
       }
 #ifdef SUPPORT_IDLE_CALLBACK
@@ -989,7 +989,7 @@ void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
       firstCall = false;
     }
   }
-//   if (!_IO->isSerial()) {
+//   if (!_DDIO->isSerial()) {
 //     Serial.println("**********");
 // #ifdef SUPPORT_USE_WOIO
 //     Serial.print("* _SendBufferSize=");
@@ -1002,12 +1002,12 @@ void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
 //   }
   {
     long nextTime = 0;
-    IOProxy ioProxy(_IO);
+    IOProxy ioProxy(_DDIO);
     IOProxy* pSerialIOProxy = NULL;
     DDInputOutput *pSIO = NULL;
-    if (_IO->isBackupBySerial()) {
-      //pSIO = new DDInputOutput(_IO);
-      pSIO = _IO->newForSerialConnection();
+    if (_DDIO->isBackupBySerial()) {
+      //pSIO = new DDInputOutput(_DDIO);
+      pSIO = _DDIO->newForSerialConnection();
       pSerialIOProxy = new IOProxy(pSIO);
     }
     long startMillis = millis();
@@ -1045,7 +1045,7 @@ void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
         if (data == "ddhello") {
           if (fromSerial) {
             _SetIO(pSIO, DD_DEF_SEND_BUFFER_SIZE, DD_DEF_IDLE_TIMEOUT);
-            //_IO = pSIO;
+            //_DDIO = pSIO;
             pSIO = NULL;
           }
 #ifdef MASTER_RESET_KEEP_CONNECTED
@@ -1053,9 +1053,9 @@ void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
             delete _ConnectedIOProxy;
           }
 #endif          
-          _ConnectedIOProxy = new IOProxy(_IO);
+          _ConnectedIOProxy = new IOProxy(_DDIO);
           _ConnectedFromSerial = fromSerial;
-          //_ConnectedFromSerial = _IO->isSerial();
+          //_ConnectedFromSerial = _DDIO->isSerial();
           break;
         }
 #ifdef DD_DEBUG_HS          
@@ -1075,7 +1075,7 @@ void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
   int compatibility = 0;
   { 
     long nextTime = 0;
-    IOProxy ioProxy(_IO);
+    IOProxy ioProxy(_DDIO);
     while (true) {
       YIELD();
       long now = millis();
@@ -1104,23 +1104,23 @@ void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
   }
   _Connected = true;
   _ConnectVersion = 1;
-//  _ConnectedIOProxy = new IOProxy(_IO);
+//  _ConnectedIOProxy = new IOProxy(_DDIO);
   _DDCompatibility = compatibility;
   if (false) {
     // ignore any input in 1000ms window
     delay(1000);
-    while (_IO->available()) {
-      _IO->read();
+    while (_DDIO->available()) {
+      _DDIO->read();
     }
   }
   if (true) {       
-    _IO->print("// connected to DD c" + String(compatibility) + "\n"/*.c_str()*/);
-    //_IO->flush();
+    _DDIO->print("// connected to DD c" + String(compatibility) + "\n"/*.c_str()*/);
+    //_DDIO->flush();
     if (false) {
       // *** debug code
       for (int i = 0; i < 10; i++) {
         delay(500);
-        _IO->print("// connected to DD c" + String(compatibility) + "\n"/*.c_str()*/);
+        _DDIO->print("// connected to DD c" + String(compatibility) + "\n"/*.c_str()*/);
       }
     }
 #ifdef DD_DEBUG_HS          
@@ -1129,7 +1129,7 @@ void _Connect(/*long maxWaitMillis = -1, bool calledPassive = false*/) {
   }
     // if (false) {
     //   // *** debug code
-    //   _IO->print("// connection to DD made\n");
+    //   _DDIO->print("// connection to DD made\n");
     //    _sendCommand0("", "// *** connection made ***");
     // }
 #ifdef DD_DEBUG_HS          
@@ -1154,11 +1154,12 @@ int _AllocLid() {
   if (DD_LAYER_COUNT_INC > 0) {
     if (lid >= _MaxDDLayerCount) {
       if (true) {
-        int oriLayerCount = _MaxDDLayerCount;
+        //int oriLayerCount = _MaxDDLayerCount;
         _MaxDDLayerCount = lid + (lid == 0 ? DD_INIT_LAYER_COUNT : DD_LAYER_COUNT_INC);
 #ifdef USE_MALLOC_FOR_LAYER_ARRAY
         _DDLayerArray = (DDObject**) realloc(_DDLayerArray, _MaxDDLayerCount * sizeof(DDObject*));
 #else
+        int oriLayerCount = _MaxDDLayerCount;
         DDObject** oriLayerArray = _DDLayerArray;
         DDObject** layerArray = new DDObject*[_MaxDDLayerCount];
         if (oriLayerArray != NULL) {
@@ -1392,8 +1393,8 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
   Serial.print("// *** sent");
 #endif        
   if (layerId != "") {
-    _WOIO->print(layerId/*.c_str()*/);
-    _WOIO->print(".");
+    _WODDIO->print(layerId/*.c_str()*/);
+    _WODDIO->print(".");
   }
 #ifdef SUPPORT_ENCODE_OPER
   if (_DDCompatibility >= 3 && !_DDDisableParamEncoding && layerId != "" && command[0] == '#') {
@@ -1401,15 +1402,15 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
     encoded[0] = 14 + ((command[1] > '9') ? ((command[1] - 'a') + 10) : (command[1] - '0'));
     encoded[1] = 14 + ((command[2] > '9') ? ((command[2] - 'a') + 10) : (command[2] - '0'));
     encoded[2] = 0;
-    _WOIO->print(encoded);
+    _WODDIO->print(encoded);
   } else { 
-    _WOIO->print(command);
+    _WODDIO->print(command);
     if (pParam1 != NULL) {
-      _WOIO->print(":");
+      _WODDIO->print(":");
     }
   }   
 #else
-  _WOIO->print(command);
+  _WODDIO->print(command);
   #ifdef DD_DEBUG_SEND_COMMAND          
   Serial.print(" ...");
   #endif        
@@ -1419,35 +1420,35 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
     Serial.print(*pParam1);
     Serial.print(" |]");
   #endif        
-    _WOIO->print(":");
+    _WODDIO->print(":");
   }
 #endif
   if (pParam1 != NULL) {
-    _WOIO->print(*pParam1/*pParam1->c_str()*/);
+    _WODDIO->print(*pParam1/*pParam1->c_str()*/);
     if (pParam2 != NULL) {
-      _WOIO->print(",");
-      _WOIO->print(*pParam2/*pParam2->c_str()*/);
+      _WODDIO->print(",");
+      _WODDIO->print(*pParam2/*pParam2->c_str()*/);
       if (pParam3 != NULL) {
-        _WOIO->print(",");
-        _WOIO->print(*pParam3/*pParam3->c_str()*/);
+        _WODDIO->print(",");
+        _WODDIO->print(*pParam3/*pParam3->c_str()*/);
         if (pParam4 != NULL) {
-          _WOIO->print(",");
-          _WOIO->print(*pParam4/*pParam4->c_str()*/);
+          _WODDIO->print(",");
+          _WODDIO->print(*pParam4/*pParam4->c_str()*/);
           if (pParam5 != NULL) {
-            _WOIO->print(",");
-            _WOIO->print(*pParam5/*pParam5->c_str()*/);
+            _WODDIO->print(",");
+            _WODDIO->print(*pParam5/*pParam5->c_str()*/);
             if (pParam6 != NULL) {
-              _WOIO->print(",");
-              _WOIO->print(*pParam6/*pParam6->c_str()*/);
+              _WODDIO->print(",");
+              _WODDIO->print(*pParam6/*pParam6->c_str()*/);
               if (pParam7 != NULL) {
-                _WOIO->print(",");
-                _WOIO->print(*pParam7/*pParam7->c_str()*/);
+                _WODDIO->print(",");
+                _WODDIO->print(*pParam7/*pParam7->c_str()*/);
                 if (pParam8 != NULL) {
-                  _WOIO->print(",");
-                  _WOIO->print(*pParam8/*pParam8->c_str()*/);
+                  _WODDIO->print(",");
+                  _WODDIO->print(*pParam8/*pParam8->c_str()*/);
                   if (pParam9 != NULL) {
-                    _WOIO->print(",");
-                    _WOIO->print(*pParam9/*pParam9->c_str()*/);
+                    _WODDIO->print(",");
+                    _WODDIO->print(*pParam9/*pParam9->c_str()*/);
                   }
                 }
               }
@@ -1460,18 +1461,18 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
 #ifdef DD_DEBUG_SEND_COMMAND          
   Serial.print(" COMMAND ");
 #endif        
-  _WOIO->print("\n");
+  _WODDIO->print("\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
-    _WOIO->flush();
+    _WODDIO->flush();
   }
   if (YIELD_AFTER_SEND_COMMAND) {
     yield();
   }
 #ifdef DEBUG_ECHO_COMMAND
-  _IO->print("// ");
-  _IO->print(command);
-  _IO->print("\n");
-  _IO->flush();
+  _DDIO->print("// ");
+  _DDIO->print(command);
+  _DDIO->print("\n");
+  _DDIO->flush();
 #endif  
 #ifdef DD_DEBUG_SEND_COMMAND          
   Serial.println(command);
@@ -1485,15 +1486,15 @@ void __SendComment(const char* comment, bool isError = false) {
       }
 #endif
   }
-  _WOIO->print("//");
+  _WODDIO->print("//");
   if (isError) {
-    _WOIO->print("X");
+    _WODDIO->print("X");
   }
-  _WOIO->print(" ");
-  _WOIO->print(comment);
-  _WOIO->print("\n");
+  _WODDIO->print(" ");
+  _WODDIO->print(comment);
+  _WODDIO->print("\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
-    _WOIO->flush();
+    _WODDIO->flush();
   }
   if (YIELD_AFTER_SEND_COMMAND) {
     yield();
@@ -1515,11 +1516,11 @@ void __SendComment(const String& comment, bool isError = false) {
   Serial.print(">> ");
   int len = comment.length();
   for (int i = 0; i < len; i++) {
-    _WOIO->write(comment.charAt(i));
+    _WODDIO->write(comment.charAt(i));
   }
-  _WOIO->print(" --\n");
+  _WODDIO->print(" --\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
-    _WOIO->flush();
+    _WODDIO->flush();
   }
   if (YIELD_AFTER_SEND_COMMAND) {
     yield();
@@ -1572,23 +1573,23 @@ void _SendCommand(const String& layerId, const char* command, const String* pPar
 }
 void __SendSpecialCommand(const char* specialType, const String& specialId, const char* specialCommand, const String& specialData) {
 //Serial.println("//&&" + specialData);
-  _WOIO->print("%%>");
-  _WOIO->print(specialType);
-  _WOIO->print(".");
+  _WODDIO->print("%%>");
+  _WODDIO->print(specialType);
+  _WODDIO->print(".");
   if (specialId != "") {
-    _WOIO->print(specialId);
+    _WODDIO->print(specialId);
     if (specialCommand != NULL) {
-      _WOIO->print(":");
-      _WOIO->print(specialCommand);
+      _WODDIO->print(":");
+      _WODDIO->print(specialCommand);
     }
-    _WOIO->print(">");
+    _WODDIO->print(">");
   }
     if (specialData != "") {
-      _WOIO->print(specialData);
+      _WODDIO->print(specialData);
     }
-  _WOIO->print("\n");
+  _WODDIO->print("\n");
   if (FLUSH_AFTER_SENT_COMMAND) {
-    _WOIO->flush();
+    _WODDIO->flush();
   }
   if (YIELD_AFTER_SEND_COMMAND) {
     yield();
@@ -1613,8 +1614,8 @@ int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBy
       if (zeroCount > 0) {
         if (toBytes != NULL) {
           if (readFromProgramSpace) {
-            _IO->write(0);
-            _IO->write(zeroCount);
+            _DDIO->write(0);
+            _DDIO->write(zeroCount);
             compressedByteCount += 2;
           } else {
             toBytes[compressedByteCount++] = 0;
@@ -1628,7 +1629,7 @@ int __FillZeroCompressedBytes(const uint8_t *bytes, int byteCount, uint8_t *toBy
       if (!isZero) {
         if (toBytes != NULL) {
           if (readFromProgramSpace) {
-            _IO->write(b);
+            _DDIO->write(b);
             compressedByteCount += 1;
           } else {
             toBytes[compressedByteCount++] = b;
@@ -1661,19 +1662,19 @@ void __SendByteArrayPortion(const char* bytesNature, const uint8_t *bytes, int b
       compressedByteCount = -1;
     }
   }
-  _IO->print("|bytes|>");
+  _DDIO->print("|bytes|>");
   if (_DDCompatibility >= 5 && bytesNature != NULL) {
 //Serial.print("*** BYTES NATURE: ");
 //Serial.println(bytesNature);    
-    _IO->print(bytesNature);
-    _IO->print("#");
+    _DDIO->print(bytesNature);
+    _DDIO->print("#");
   }
-  _IO->print(String(byteCount));
+  _DDIO->print(String(byteCount));
   if (compressedByteCount != -1) {
-    _IO->print("@0>");
-    _IO->print(String(compressedByteCount));
+    _DDIO->print("@0>");
+    _DDIO->print(String(compressedByteCount));
   }
-  _IO->print(":");
+  _DDIO->print(":");
   if (true) {
     if (compressedByteCount != -1) {
       //__CountZeroCompressedBytes(bytes, byteCount, true);
@@ -1683,30 +1684,30 @@ void __SendByteArrayPortion(const char* bytesNature, const uint8_t *bytes, int b
       } else {
         uint8_t *compressedBytes = new uint8_t[compressedByteCount];
         __FillZeroCompressedBytes(bytes, byteCount, compressedBytes, false);
-        _IO->write(compressedBytes, compressedByteCount);
+        _DDIO->write(compressedBytes, compressedByteCount);
         delete compressedBytes;
       }
     } else {
       if (readFromProgramSpace) {
         for (int i = 0; i < byteCount; i++) {
 #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO)
-          _IO->write(pgm_read_byte(bytes[i]));
+          _DDIO->write(pgm_read_byte(bytes[i]));
 #else          
-          _IO->write(bytes[i]);
+          _DDIO->write(bytes[i]);
 #endif          
         }
       } else {
-        _IO->write(bytes, byteCount);
+        _DDIO->write(bytes, byteCount);
       }
     }
   } else {
     for (int i = 0; i < byteCount; i++) {
       uint8_t b = bytes[i];
-      _IO->write(b);
+      _DDIO->write(b);
     }
   }
   if (FLUSH_AFTER_SENT_COMMAND) {
-    _IO->flush();
+    _DDIO->flush();
   }
   if (YIELD_AFTER_SEND_COMMAND) {
     yield();
@@ -4039,9 +4040,9 @@ void JsonDDTunnelMultiplexer::reconnect() {
 //#endif
 
 
-void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize, long idleTimeout/*, boolean enableDoubleClick*/) {
+void DumbDisplay::initialize(DDInputOutput* pIO, uint16_t sendBufferSize, long idleTimeout/*, bool enableDoubleClick*/) {
   _SetIO(pIO, sendBufferSize, idleTimeout);
-  //_IO = pIO;
+  //_DDIO = pIO;
   //_EnableDoubleClick = enableDoubleClick;
 }
 void DumbDisplay::connect() {
@@ -4261,7 +4262,7 @@ void DumbDisplay::recordLayerSetupCommands() {
   _sendCommand0("", C_RECC);
 #ifdef SUPPORT_USE_WOIO
   if (_SendBufferSize > 0) {
-    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(true);
+    ((DDWriteOnyIO*) _WODDIO)->setKeepBuffering(true);
   }
 #endif
 }
@@ -4270,8 +4271,8 @@ void DumbDisplay::playbackLayerSetupCommands(const String& layerSetupPersistId) 
   _sendCommand0("", C_PLAYC);
 #ifdef SUPPORT_USE_WOIO
   if (_SendBufferSize > 0) {
-    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(false);
-    ((DDWriteOnyIO*) _WOIO)->flush();
+    ((DDWriteOnyIO*) _WODDIO)->setKeepBuffering(false);
+    ((DDWriteOnyIO*) _WODDIO)->flush();
   }
 #endif
 #ifdef SUPPORT_RECONNECT
@@ -4282,7 +4283,7 @@ void DumbDisplay::recordLayerCommands() {
   _Connect();
 #ifdef SUPPORT_USE_WOIO
   if (_SendBufferSize > 0) {
-    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(true);
+    ((DDWriteOnyIO*) _WODDIO)->setKeepBuffering(true);
   }
 #endif
   _sendCommand0("", C_RECC);
@@ -4290,7 +4291,7 @@ void DumbDisplay::recordLayerCommands() {
 void DumbDisplay::playbackLayerCommands() {
 #ifdef SUPPORT_USE_WOIO
   if (_SendBufferSize > 0) {
-    ((DDWriteOnyIO*) _WOIO)->setKeepBuffering(false);
+    ((DDWriteOnyIO*) _WODDIO)->setKeepBuffering(false);
   }
 #endif
   _sendCommand0("", C_PLAYC);
@@ -4519,7 +4520,7 @@ JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, cons
   return NULL;
 #endif
 }
-SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload) {
+SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName, bool redownload) {
 #ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
@@ -4646,7 +4647,7 @@ void DumbDisplay::setConnectVersionChangedCallback(DDConnectVersionChangedCallba
 bool DumbDisplay::canPrintToSerial() {
   return _CanLogToSerial();
 }
-void DumbDisplay::logToSerial(const String& logLine, boolean force) {
+void DumbDisplay::logToSerial(const String& logLine, bool force) {
   if (_CanLogToSerial()) {
 #ifdef DDIO_USE_DD_SERIAL
     if (_The_DD_Serial != NULL) {
@@ -4672,7 +4673,7 @@ void DumbDisplay::logToSerial(const String& logLine, boolean force) {
     }
   }
 }
-void DumbDisplay::log(const String& logLine, boolean isError) {
+void DumbDisplay::log(const String& logLine, bool isError) {
   if (_CanLogToSerial()) {
 #ifdef DDIO_USE_DD_SERIAL
     if (_The_DD_Serial != NULL) {
@@ -4758,7 +4759,7 @@ bool DumbDisplay::connectPassive(DDConnectPassiveStatus* pStatus) {
 void DumbDisplay::masterReset() {
 #ifdef SUPPORT_MASTER_RESET
   bool reconnecting = _ConnectedIOProxy != NULL && _ConnectedIOProxy->isReconnecting();
-  //bool canLogToSerial = !_IO->isSerial();
+  //bool canLogToSerial = !_DDIO->isSerial();
   bool canLogToSerial = _CanLogToSerial();
 
 #ifdef MASTER_RESET_KEEP_CONNECTED
@@ -4818,11 +4819,11 @@ void DumbDisplay::masterReset() {
   _NextLid = 0;
   _NextImgId = 0;  // allocated image not tracked
   _NextBytesId = 0;
-  //_IO = NULL;
+  //_DDIO = NULL;
 // #ifdef SUPPORT_USE_WOIO
-//   if (_WOIO != NULL) {
-// 	  delete _WOIO;
-//     _WOIO = NULL;
+//   if (_WODDIO != NULL) {
+// 	  delete _WODDIO;
+//     _WODDIO = NULL;
 //   }  
 // #endif
 
