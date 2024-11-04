@@ -11,6 +11,7 @@
 
 
 #define LOG_DDWIFI_STATUS
+//#define WRITE_BYTE_BY_BYTES
 
 
 /// Subclass of DDInputOutput
@@ -64,6 +65,11 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
       return ch;
     } 
     void print(const String &s) {
+#ifdef WRITE_BYTE_BY_BYTES      
+      for (size_t i = 0; i < s.length(); i++) {
+        write(s.charAt(i));
+      }
+#else
       // if (true) {  // TODO: disable debug
       //   Serial.print("* print: [");
       //   Serial.print(s);
@@ -73,8 +79,18 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
       if (true) {  // TODO: forced delay since 2024-11-04
         delay(200);
       }
+#endif      
     }
     void print(const char *p) {
+#ifdef WRITE_BYTE_BY_BYTES      
+    while (true) {
+      char c = *(p++);
+      if (c == 0) {
+        break;
+      }
+      write(c);
+    }
+#else
       if (false) {  // TODO: disable debug
         Serial.print("* print: [");
         Serial.print(p);
@@ -87,21 +103,27 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
       if (true) {  // TODO: forced delay since 2024-11-04
         delay(200);
       }
+#endif
     }
     void write(uint8_t b) {
-      if (false) {
-        while (true) {
-          size_t count = client.write(b);
-          if (count > 0) {
-            break;
-          }
-          delay(50);
+#ifdef WRITE_BYTE_BY_BYTES      
+      while (true) {
+        size_t count = client.write(b);
+        if (count > 0) {
+          break;
         }
-      } else {
-        client.write(b);
+        delay(200);
       }
+#else
+      client.write(b);
+#endif
     }
     void write(const uint8_t *buf, size_t size) {
+#ifdef WRITE_BYTE_BY_BYTES
+      for (size_t i = 0; i < size; i++) {
+        write(buf[i]);
+      }       
+#else
       if (false) {
         Serial.print("*** write ");
         Serial.print(size);
@@ -111,9 +133,10 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
       } else {
         client.write(buf, size);
       }
-      if (true) {  // TODO: forced delay since 2024-11-04
+      if (false) {  // TODO: forced delay since 2024-11-04
         delay(200);
       }
+#endif      
     }
     bool preConnect(bool firstCall) {
       if (firstCall) {  // since 2023-08-10
@@ -200,7 +223,7 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
       return false;  // TODO: make it passive
     }
     bool canUseBuffer() {
-      return false;  // TODO: can use buffer??
+      return false;  // buffering might make it fails to send (and marked disconnected)
     }
   private:
 //     bool _connectToNetwork() {

@@ -73,7 +73,7 @@
 
 
 //#define DD_DEBUG_BASIC
-//#define DD_DEBUG_HS
+//#define DD_DEBUG_HS 
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
 //#define DEBUG_VALIDATE_CONNECTION
@@ -717,7 +717,8 @@ bool __Connect(/*bool calledPassive = false*/) {
 #endif
         _C_state.pIOProxy->print("ddhello\n");
         if (_C_state.pBUSerialIOProxy != NULL) {
-#if defined(DD_EXPERIMENTAL)
+//#if defined(DD_EXPERIMENTAL)
+#if true  // since 2024-11-04 
           _C_state.pBUSerialIOProxy->print("ddhello");
           const char* viaWhat = _C_state.pIOProxy->getWhat();
           if (viaWhat != NULL) {
@@ -732,6 +733,9 @@ bool __Connect(/*bool calledPassive = false*/) {
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:ddhello");
 #endif        
+        // if (true) {  // since 2024-11-04, delay a bit after sending dehello
+        //   delay(200);
+        // }
 #ifdef SUPPORT_IDLE_CALLBACK
         bool checkIdle = _IdleCallback != NULL;
         if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
@@ -752,8 +756,8 @@ bool __Connect(/*bool calledPassive = false*/) {
       if (available) {
         const String& data = fromBUSerial ? _C_state.pBUSerialIOProxy->get() : _C_state.pIOProxy->get();
 #ifdef DD_DEBUG_HS          
-        Serial.println("handshake:data-" + data);
-#endif        
+        Serial.println("handshake:data-[" + data + "]");
+#endif  
         if (data == "ddhello") {
           if (fromBUSerial) {
             _SetIO(_C_state.pBUSIO, DD_DEF_SEND_BUFFER_SIZE, DD_DEF_IDLE_TIMEOUT);
@@ -800,8 +804,12 @@ bool __Connect(/*bool calledPassive = false*/) {
           // return false;
           break;  // faster
         }
-#ifdef DD_DEBUG_HS          
-        Serial.println("handshake:DONE");
+#ifdef DD_DEBUG_HS   
+        if (_ConnectedIOProxy != NULL) {   
+          Serial.println("handshake:DONE");
+        } else {      
+          Serial.println("handshake:... got=[" + data + "]");
+        }
 #endif        
         if (fromBUSerial) 
           _C_state.pBUSerialIOProxy->clear();
@@ -849,6 +857,12 @@ bool __Connect(/*bool calledPassive = false*/) {
         // }
         _ConnectedIOProxy->/*ioProxy.*/print("\n");
         _C_state.hsNextMillis = now + HAND_SHAKE_GAP;
+#ifdef DD_DEBUG_HS          
+        Serial.println("handshake:sent-ddinit");
+#endif  
+        // if (true) {  // since 2024-11-04, delay a bit after sending ddinit
+        //   delay(200);
+        // }
       }
       if (_ConnectedIOProxy->/*ioProxy.*/available()) {
         const String& data = _ConnectedIOProxy->/*ioProxy.*/get();
