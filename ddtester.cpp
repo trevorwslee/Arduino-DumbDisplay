@@ -139,7 +139,7 @@ void shapeTurtleTestStep(bool passiveConnect, TurtleDDLayer *pLayer, int stepCou
     pLayer->forward(100);
 }
 
-int r = random(0, 255);
+int r = random(0, 256);
 int g = 128;
 int b = 0;
 void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
@@ -162,7 +162,7 @@ void standardTurtleTestStep(TurtleDDLayer *pLayer, bool firstStep) {
   b = b + 20;
   if (b > 255) {
       b = 0;
-      r = random(0, 255);
+      r = random(0, 256);
   }
 }
 
@@ -360,7 +360,7 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
       b = 255;  
     p7SegmentRowLayer->backgroundColor(DD_RGB_COLOR(r, g, b));
   } else if (pLayer == pLcdLayer) {
-    int r = random(255);
+    int r = random(256);
     int g = 255 - r;
     pLcdLayer->bgPixelColor(DD_RGB_COLOR(r, 218, 218));
     pLcdLayer->backgroundColor(DD_RGB_COLOR(16, g, 16));

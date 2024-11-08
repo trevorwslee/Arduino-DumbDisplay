@@ -717,8 +717,7 @@ bool __Connect(/*bool calledPassive = false*/) {
 #endif
         _C_state.pIOProxy->print("ddhello\n");
         if (_C_state.pBUSerialIOProxy != NULL) {
-//#if defined(DD_EXPERIMENTAL)
-#if true  // since 2024-11-04 
+#if defined(DD_EXPERIMENTAL)
           _C_state.pBUSerialIOProxy->print("ddhello");
           const char* viaWhat = _C_state.pIOProxy->getWhat();
           if (viaWhat != NULL) {
@@ -733,9 +732,6 @@ bool __Connect(/*bool calledPassive = false*/) {
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:ddhello");
 #endif        
-        // if (true) {  // since 2024-11-04, delay a bit after sending dehello
-        //   delay(200);
-        // }
 #ifdef SUPPORT_IDLE_CALLBACK
         bool checkIdle = _IdleCallback != NULL;
         if (checkIdle/*!_IsInPassiveMode && _IdleCallback != NULL*/) {
@@ -833,7 +829,12 @@ bool __Connect(/*bool calledPassive = false*/) {
   //int compatibility = 0;
   if (_C_state.step == _C_HANDSHAKE/*5*/) { 
     //_C_state.compatibility = 0;
-    _C_state.hsNextMillis = millis();
+    if (true) {
+      // since 2024-11-08 ... faster sent >init>
+      _C_state.hsNextMillis = millis() + HAND_SHAKE_GAP;
+    } else {
+      _C_state.hsNextMillis = millis();
+    }
     _C_state.step = 6;
   }
   if (_C_state.step == 6) { 
@@ -860,9 +861,6 @@ bool __Connect(/*bool calledPassive = false*/) {
 #ifdef DD_DEBUG_HS          
         Serial.println("handshake:sent-ddinit");
 #endif  
-        // if (true) {  // since 2024-11-04, delay a bit after sending ddinit
-        //   delay(200);
-        // }
       }
       if (_ConnectedIOProxy->/*ioProxy.*/available()) {
         const String& data = _ConnectedIOProxy->/*ioProxy.*/get();

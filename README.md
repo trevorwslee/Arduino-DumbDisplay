@@ -626,7 +626,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddpintur
 DumbDisplay dumbdisplay(new DDInputOutput());
 
 TurtleDDLayer *turtle = NULL;
-int r = random(0, 255);
+int r = random(0, 256);
 int g = 128;
 int b = 0;
 
@@ -688,7 +688,7 @@ void loop() {
   b = b + 20;
   if (b > 255) {
       b = 0;
-      r = random(0, 255);
+      r = random(0, 256);
   }
 }
 ```

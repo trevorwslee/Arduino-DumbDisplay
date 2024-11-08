@@ -8,7 +8,7 @@ DumbDisplay dumbdisplay(new DDInputOutput(57600));
 
 
 TurtleDDLayer *turtle;
-int r = random(0, 255);
+int r = random(0, 256);
 int g = 128;
 int b = 0;
 
@@ -71,6 +71,6 @@ void loop() {
     b = b + 20;
     if (b > 255) {
         b = 0;
-        r = random(0, 255);
+        r = random(0, 256);
     }
 }
