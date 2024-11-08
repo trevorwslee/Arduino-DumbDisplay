@@ -73,7 +73,7 @@
 
 
 //#define DD_DEBUG_BASIC
-//#define DD_DEBUG_HS 
+//#define DD_DEBUG_HS   // TODO: disable DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
 //#define DEBUG_VALIDATE_CONNECTION

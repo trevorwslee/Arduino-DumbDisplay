@@ -27,42 +27,33 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
       this->ssid = ssid;
       this->password = passphrase;
       this->port = serverPort;
+      this->bufferFilled = false;
       //this->logToSerial = logToSerial;
       //Serial.begin(DD_SERIAL_BAUD);f
       //this->server.setNonBlockingMode();
     }
     const char* getWhat() {
-      return "WIFI";
+      return "ambWIFI";
     }
-    // // experimental ... not quite working
-    // bool availableAdditionalClient(WiFiClient& additionalClient) {
-    //   if (client.connected()) {
-    //       WiFiClient cli = server.available();
-    //       if (cli) {
-    //         additionalClient = cli;
-    //         return true;
-    //       }
-    //   }
-    //   return false;
-    // }
     bool available() {
-      int count =  client.available();
-      if (false) {  // TODO: disable
-        if (count > 0) {
-          Serial.print("- available: ");
-          Serial.println(count);
-        }
-      }
-      return count > 0;
+      return _fillBuffer();
+      // int count =  client.available();
+      // return count > 0;
     }
     char read() {
-      char ch = client.read();
-      if (false) {  // TODO: disable
-          Serial.print("- read:[");
-          Serial.print(ch);
-          Serial.println("]");
+      if (!_fillBuffer()) {
+        return -1;
       }
-      return ch;
+      char c = this->buffer[0];
+      this->bufferFilled = false;
+      return c;
+      // char ch = client.read();
+      // if (false) {  // TODO: disable
+      //     Serial.print("- read:[");
+      //     Serial.print(ch);
+      //     Serial.println("]");
+      // }
+      // return ch;
     } 
     void print(const String &s) {
 #ifdef WRITE_BYTE_BY_BYTES      
@@ -76,9 +67,9 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
       //   Serial.println("]");
       // }
       client.print(s);
-      if (true) {  // TODO: forced delay since 2024-11-04
-        delay(200);
-      }
+      // if (true) {  // TODO: forced delay since 2024-11-04
+      //   delay(200);
+      // }
 #endif      
     }
     void print(const char *p) {
@@ -91,18 +82,13 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
       write(c);
     }
 #else
-      if (false) {  // TODO: disable debug
-        Serial.print("* print: [");
-        Serial.print(p);
-        Serial.println("]");
-      }
       client.print(p);
       // if (true) {
       //   client.flush();
       // }
-      if (true) {  // TODO: forced delay since 2024-11-04
-        delay(200);
-      }
+      // if (true) {  // TODO: forced delay since 2024-11-04
+      //   delay(200);
+      // }
 #endif
     }
     void write(uint8_t b) {
@@ -124,18 +110,10 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
         write(buf[i]);
       }       
 #else
-      if (false) {
-        Serial.print("*** write ");
-        Serial.print(size);
-        Serial.print(" ... ");
-        size_t written = client.write(buf, size);
-        Serial.println(written);
-      } else {
-        client.write(buf, size);
-      }
-      if (false) {  // TODO: forced delay since 2024-11-04
-        delay(200);
-      }
+      client.write(buf, size);
+      // if (false) {  // TODO: forced delay since 2024-11-04
+      //   delay(200);
+      // }
 #endif      
     }
     bool preConnect(bool firstCall) {
@@ -226,77 +204,6 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
       return false;  // buffering might make it fails to send (and marked disconnected)
     }
   private:
-//     bool _connectToNetwork() {
-//       WiFi.begin(ssid, password);
-//       long last = millis();
-//       while (true) {
-//         uint8_t status = WiFi.status();
-//         if (status == WL_CONNECTED)
-//           break;
-//         delay(200);
-//         long diff = millis() - last;
-//         if (diff > 1000) {
-//           if (logToSerial) {
-//             Serial.print("binding WIFI ");
-//             Serial.print(ssid);
-// #ifdef LOG_DDWIFI_STATUS
-//             Serial.print(" ... ");
-//             Serial.print(status);
-// #endif
-//             Serial.println(" ...");
-//           }
-//           last = millis();
-//         }
-//       }
-//       if (logToSerial) {
-//         Serial.print("binded WIFI ");
-//         Serial.println(ssid);
-//       }
-//       return true;
-//     }
-//     bool _connectToClient(bool initConnect) {
-//       if (initConnect) {
-//         if (!_connectToNetwork())
-//           return false;
-//         server.begin();
-//       }
-//       long last = millis();
-//       while (true) {
-//         client = server.available();
-//         if (client) {
-//           break;
-//         } else {
-//           if (WiFi.status() != WL_CONNECTED) 
-//             return false;
-//           long diff = millis() - last;
-//           if (diff >= 1000) {
-//             IPAddress localIP = WiFi.localIP();
-//             uint32_t localIPValue = localIP;
-//             if (logToSerial) {
-// #ifdef LOG_DDWIFI_STATUS
-//               Serial.print("via WIFI ... ");
-//               Serial.print(WiFi.status());
-//               Serial.print(" ... ");
-// #endif
-//               Serial.print("listening on ");
-// // #ifdef LOG_DDWIFI_STATUS
-// //               Serial.print("(");
-// //               Serial.print(localIPValue);
-// //               Serial.print(") ");
-// // #endif
-//               Serial.print(localIP);
-//               Serial.print(":");
-//               Serial.print(port);
-//               Serial.println(" ...");
-//             }
-//             last = millis();
-//             if (localIPValue == 0)
-//               return false;
-//           }
-//         }
-//       }
-//       return true;
-//     }
     void checkConnection() {
       if (connectionState == '0' || connectionState == 'C') {  // since 2023-08-16 added check connectionState == '0'
         if (connectionState == '0' || WiFi.status() != WL_CONNECTED) {
@@ -359,27 +266,10 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
             Serial.print(":");
             Serial.print(port);
             Serial.println(" ...");
-            // if (true) {
-            //   // testing for ESP
-            //   Serial.println("*** sleep ...");
-            //   esp_sleep_enable_timer_wakeup(10 * 1000);  // 10ms
-            //   esp_light_sleep_start();
-            //   Serial.println("*** ... up");
-            // }
             stateMillis = millis();
           }
           WiFiClient cli = server.available();
-          // if (cli) {
-          //   if (!cli.connected()) {  // TODO: unexpected ... debugging
-          //     Serial.println("??? client not connected");
-          //     cli.stop();
-          //     return;
-          //   }
-          // }    
           if (cli && cli.connected()) {  // TODO: for some reason, under lying _sock an be 0xFF, which seems to indicated "try again"
-            // if (true)
-            //   delay(2000);  // wait a bit
-            //cli.setNonBlockingMode();
             client = cli;
             connectionState = 'C';
             stateMillis = 0;
@@ -391,14 +281,28 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
       }
     }
   private:
+    bool _fillBuffer() {
+      if (this->bufferFilled) {
+        return true;
+      }
+      int n = client.read(this->buffer, 1);
+      if (n > 0) {
+        this->bufferFilled = true;
+        return true;
+      } else {
+        return false;
+      }
+    }  
+  private:
     char* ssid;
     char *password;
     int port;
-    //bool logToSerial;
     char connectionState;
     long stateMillis;
     WiFiServer server;
     WiFiClient client;
+    char buffer[1];
+    bool bufferFilled;
 };
 
 

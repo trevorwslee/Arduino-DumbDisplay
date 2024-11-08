@@ -425,7 +425,7 @@ void updateDD(bool isFirstUpdate) {
     // starts off waiting for double tab
     long nowMillis = millis();
     long diffMillis = nowMillis - waitingToRestartMillis;
-    if (diffMillis > 5000) {
+    if (diffMillis > 15000) {
       dumbdisplay.log("! double tab to start !");
       waitingToRestartMillis = nowMillis;
     }
