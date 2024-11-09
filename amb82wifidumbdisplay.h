@@ -6,33 +6,30 @@
 
 #include "dumbdisplay.h"
 
-#if defined(ARDUINO_UNOR4_WIFI)
-  #include <WiFiS3.h>
-#elif defined(ESP8266)
-  #include <ESP8266WiFi.h>
-#else
-  #include <WiFi.h>
-#endif
+#include <WiFi.h>
 
 
 
-//#define LOG_DDWIFI_STATUS
+#define LOG_DDWIFI_STATUS
+//#define WRITE_BYTE_BY_BYTES
 
 
 /// Subclass of DDInputOutput
-class DDWiFiServerIO: public DDInputOutput {
+class DDAmb82WiFiServerIO: public DDInputOutput {
   public:
     /* WiFI IO mechanism */
     /* - ssid: WIFI name (pass to WiFi) */
     /* - passphrase: WIFI password (pass to WiFi) */
     /* - serverPort: server port (pass to WiFiServer) */
-    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT): DDInputOutput(DD_SERIAL_BAUD, false, false),
-                   server(serverPort) {
+    DDAmb82WiFiServerIO(char* ssid, char *passphrase, int serverPort = DD_WIFI_PORT): DDInputOutput(DD_SERIAL_BAUD, false, false),
+                        //server(serverPort) {
+                        server(serverPort, tProtMode::TCP_MODE, tBlockingMode::NON_BLOCKING_MODE) {
       this->ssid = ssid;
       this->password = passphrase;
       this->port = serverPort;
       //this->logToSerial = logToSerial;
-      //Serial.begin(DD_SERIAL_BAUD);
+      //Serial.begin(DD_SERIAL_BAUD);f
+      //this->server.setNonBlockingMode();
     }
     const char* getWhat() {
       return "WIFI";
@@ -49,21 +46,84 @@ class DDWiFiServerIO: public DDInputOutput {
     //   return false;
     // }
     bool available() {
-      return client.available() > 0;
+      int count =  client.available();
+      if (false) {  // TODO: disable
+        if (count > 0) {
+          Serial.print("- available: ");
+          Serial.println(count);
+        }
+      }
+      return count > 0;
     }
     char read() {
-      return client.read();
+      char ch = client.read();
+      if (false) {  // TODO: disable
+          Serial.print("- read:[");
+          Serial.print(ch);
+          Serial.println("]");
+      }
+      return ch;
     } 
     void print(const String &s) {
+#ifdef WRITE_BYTE_BY_BYTES      
+      for (size_t i = 0; i < s.length(); i++) {
+        write(s.charAt(i));
+      }
+#else
+      // if (true) {  // TODO: disable debug
+      //   Serial.print("* print: [");
+      //   Serial.print(s);
+      //   Serial.println("]");
+      // }
       client.print(s);
+      if (true) {  // TODO: forced delay since 2024-11-04
+        delay(200);
+      }
+#endif      
     }
     void print(const char *p) {
+#ifdef WRITE_BYTE_BY_BYTES      
+    while (true) {
+      char c = *(p++);
+      if (c == 0) {
+        break;
+      }
+      write(c);
+    }
+#else
+      if (false) {  // TODO: disable debug
+        Serial.print("* print: [");
+        Serial.print(p);
+        Serial.println("]");
+      }
       client.print(p);
+      // if (true) {
+      //   client.flush();
+      // }
+      if (true) {  // TODO: forced delay since 2024-11-04
+        delay(200);
+      }
+#endif
     }
     void write(uint8_t b) {
+#ifdef WRITE_BYTE_BY_BYTES      
+      while (true) {
+        size_t count = client.write(b);
+        if (count > 0) {
+          break;
+        }
+        delay(200);
+      }
+#else
       client.write(b);
+#endif
     }
     void write(const uint8_t *buf, size_t size) {
+#ifdef WRITE_BYTE_BY_BYTES
+      for (size_t i = 0; i < size; i++) {
+        write(buf[i]);
+      }       
+#else
       if (false) {
         Serial.print("*** write ");
         Serial.print(size);
@@ -73,21 +133,25 @@ class DDWiFiServerIO: public DDInputOutput {
       } else {
         client.write(buf, size);
       }
+      if (false) {  // TODO: forced delay since 2024-11-04
+        delay(200);
+      }
+#endif      
     }
     bool preConnect(bool firstCall) {
       if (firstCall) {  // since 2023-08-10
         if (!Serial) Serial.begin(DD_SERIAL_BAUD);
-#if defined(ARDUINO_UNOR4_WIFI)
-        if (WiFi.status() == WL_NO_MODULE) {
-          Serial.println("XXX communication with WiFi module failed");
-        }
-        String fv = WiFi.firmwareVersion();
-        if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
-          Serial.println("XXX please upgrade the firmware");
-        } else {
-          Serial.println("* WIFI_FIRMWARE_LATEST_VERSION=" + String(WIFI_FIRMWARE_LATEST_VERSION));
-        }
-#endif
+// #if defined(ARDUINO_UNOR4_WIFI)
+//         if (WiFi.status() == WL_NO_MODULE) {
+//           Serial.println("XXX communication with WiFi module failed");
+//         }
+//         String fv = WiFi.firmwareVersion();
+//         if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
+//           Serial.println("XXX please upgrade the firmware");
+//         } else {
+//           Serial.println("* WIFI_FIRMWARE_LATEST_VERSION=" + String(WIFI_FIRMWARE_LATEST_VERSION));
+//         }
+// #endif
       }
       if (true) {  // since 2023-08-16
         if (firstCall && !client.connected()) {
@@ -145,7 +209,9 @@ class DDWiFiServerIO: public DDInputOutput {
       }
     }
     void flush() {
-      client.flush();
+      if (false) {
+        client.flush();  // flush is not the expected -- just flush send buffer
+      }
     }
     void validConnection() {
 #ifdef LOG_DDWIFI_STATUS
@@ -154,10 +220,10 @@ class DDWiFiServerIO: public DDInputOutput {
       checkConnection();
     }
     bool canConnectPassive() {
-      return true;
+      return false;  // TODO: make it passive
     }
     bool canUseBuffer() {
-      return true;
+      return false;  // buffering might make it fails to send (and marked disconnected)
     }
   private:
 //     bool _connectToNetwork() {
@@ -282,7 +348,7 @@ class DDWiFiServerIO: public DDInputOutput {
           long diff = millis() - stateMillis;
           if (diff >= 1000) {
             IPAddress localIP = WiFi.localIP();
-            uint32_t localIPValue = localIP;
+            //uint32_t localIPValue = localIP;
 #ifdef LOG_DDWIFI_STATUS
             Serial.print("via WIFI ... ");
             Serial.print(WiFi.status());
@@ -303,7 +369,17 @@ class DDWiFiServerIO: public DDInputOutput {
             stateMillis = millis();
           }
           WiFiClient cli = server.available();
-          if (cli) {
+          // if (cli) {
+          //   if (!cli.connected()) {  // TODO: unexpected ... debugging
+          //     Serial.println("??? client not connected");
+          //     cli.stop();
+          //     return;
+          //   }
+          // }    
+          if (cli && cli.connected()) {  // TODO: for some reason, under lying _sock an be 0xFF, which seems to indicated "try again"
+            // if (true)
+            //   delay(2000);  // wait a bit
+            //cli.setNonBlockingMode();
             client = cli;
             connectionState = 'C';
             stateMillis = 0;
@@ -315,8 +391,8 @@ class DDWiFiServerIO: public DDInputOutput {
       }
     }
   private:
-    const char* ssid;
-    const char *password;
+    char* ssid;
+    char *password;
     int port;
     //bool logToSerial;
     char connectionState;

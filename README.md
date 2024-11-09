@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r34)
+# DumbDisplay Arduino Library (v0.9.9-r35)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r34)](#dumbdisplay-arduino-library-v099-r34)
+- [DumbDisplay Arduino Library (v0.9.9-r35)](#dumbdisplay-arduino-library-v099-r35)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -626,7 +626,7 @@ https://github.com/trevorwslee/Arduino-DumbDisplay/blob/develop/samples/ddpintur
 DumbDisplay dumbdisplay(new DDInputOutput());
 
 TurtleDDLayer *turtle = NULL;
-int r = random(0, 255);
+int r = random(0, 256);
 int g = 128;
 int b = 0;
 
@@ -688,7 +688,7 @@ void loop() {
   b = b + 20;
   if (b > 255) {
       b = 0;
-      r = random(0, 255);
+      r = random(0, 256);
   }
 }
 ```

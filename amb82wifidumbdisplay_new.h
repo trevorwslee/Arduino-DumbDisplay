@@ -6,88 +6,130 @@
 
 #include "dumbdisplay.h"
 
-#if defined(ARDUINO_UNOR4_WIFI)
-  #include <WiFiS3.h>
-#elif defined(ESP8266)
-  #include <ESP8266WiFi.h>
-#else
-  #include <WiFi.h>
-#endif
+#include <WiFi.h>
 
 
 
-//#define LOG_DDWIFI_STATUS
+#define LOG_DDWIFI_STATUS
+//#define WRITE_BYTE_BY_BYTES
 
 
 /// Subclass of DDInputOutput
-class DDWiFiServerIO: public DDInputOutput {
+class DDAmb82WiFiServerIO: public DDInputOutput {
   public:
     /* WiFI IO mechanism */
     /* - ssid: WIFI name (pass to WiFi) */
     /* - passphrase: WIFI password (pass to WiFi) */
     /* - serverPort: server port (pass to WiFiServer) */
-    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT): DDInputOutput(DD_SERIAL_BAUD, false, false),
-                   server(serverPort) {
+    DDAmb82WiFiServerIO(char* ssid, char *passphrase, int serverPort = DD_WIFI_PORT): DDInputOutput(DD_SERIAL_BAUD, false, false),
+                        //server(serverPort) {
+                        server(serverPort, tProtMode::TCP_MODE, tBlockingMode::NON_BLOCKING_MODE) {
       this->ssid = ssid;
       this->password = passphrase;
       this->port = serverPort;
+      this->bufferFilled = false;
       //this->logToSerial = logToSerial;
-      //Serial.begin(DD_SERIAL_BAUD);
+      //Serial.begin(DD_SERIAL_BAUD);f
+      //this->server.setNonBlockingMode();
     }
     const char* getWhat() {
-      return "WIFI";
+      return "ambWIFI";
     }
-    // // experimental ... not quite working
-    // bool availableAdditionalClient(WiFiClient& additionalClient) {
-    //   if (client.connected()) {
-    //       WiFiClient cli = server.available();
-    //       if (cli) {
-    //         additionalClient = cli;
-    //         return true;
-    //       }
-    //   }
-    //   return false;
-    // }
     bool available() {
-      return client.available() > 0;
+      return _fillBuffer();
+      // int count =  client.available();
+      // return count > 0;
     }
     char read() {
-      return client.read();
+      if (!_fillBuffer()) {
+        return -1;
+      }
+      char c = this->buffer[0];
+      this->bufferFilled = false;
+      return c;
+      // char ch = client.read();
+      // if (false) {  // TODO: disable
+      //     Serial.print("- read:[");
+      //     Serial.print(ch);
+      //     Serial.println("]");
+      // }
+      // return ch;
     } 
     void print(const String &s) {
+#ifdef WRITE_BYTE_BY_BYTES      
+      for (size_t i = 0; i < s.length(); i++) {
+        write(s.charAt(i));
+      }
+#else
+      // if (true) {  // TODO: disable debug
+      //   Serial.print("* print: [");
+      //   Serial.print(s);
+      //   Serial.println("]");
+      // }
       client.print(s);
+      // if (true) {  // TODO: forced delay since 2024-11-04
+      //   delay(200);
+      // }
+#endif      
     }
     void print(const char *p) {
+#ifdef WRITE_BYTE_BY_BYTES      
+    while (true) {
+      char c = *(p++);
+      if (c == 0) {
+        break;
+      }
+      write(c);
+    }
+#else
       client.print(p);
+      // if (true) {
+      //   client.flush();
+      // }
+      // if (true) {  // TODO: forced delay since 2024-11-04
+      //   delay(200);
+      // }
+#endif
     }
     void write(uint8_t b) {
+#ifdef WRITE_BYTE_BY_BYTES      
+      while (true) {
+        size_t count = client.write(b);
+        if (count > 0) {
+          break;
+        }
+        delay(200);
+      }
+#else
       client.write(b);
+#endif
     }
     void write(const uint8_t *buf, size_t size) {
-      if (false) {
-        Serial.print("*** write ");
-        Serial.print(size);
-        Serial.print(" ... ");
-        size_t written = client.write(buf, size);
-        Serial.println(written);
-      } else {
-        client.write(buf, size);
-      }
+#ifdef WRITE_BYTE_BY_BYTES
+      for (size_t i = 0; i < size; i++) {
+        write(buf[i]);
+      }       
+#else
+      client.write(buf, size);
+      // if (false) {  // TODO: forced delay since 2024-11-04
+      //   delay(200);
+      // }
+#endif      
     }
     bool preConnect(bool firstCall) {
       if (firstCall) {  // since 2023-08-10
         if (!Serial) Serial.begin(DD_SERIAL_BAUD);
-#if defined(ARDUINO_UNOR4_WIFI)
-        if (WiFi.status() == WL_NO_MODULE) {
-          Serial.println("XXX communication with WiFi module failed");
-        }
-        String fv = WiFi.firmwareVersion();
-        if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
-          Serial.println("XXX please upgrade the firmware");
-        } else {
-          Serial.println("* WIFI_FIRMWARE_LATEST_VERSION=" + String(WIFI_FIRMWARE_LATEST_VERSION));
-        }
-#endif
+// #if defined(ARDUINO_UNOR4_WIFI)
+//         if (WiFi.status() == WL_NO_MODULE) {
+//           Serial.println("XXX communication with WiFi module failed");
+//         }
+//         String fv = WiFi.firmwareVersion();
+//         if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
+//           Serial.println("XXX please upgrade the firmware");
+//         } else {
+//           Serial.println("* WIFI_FIRMWARE_LATEST_VERSION=" + String(WIFI_FIRMWARE_LATEST_VERSION));
+//         }
+// #endif
       }
       if (true) {  // since 2023-08-16
         if (firstCall && !client.connected()) {
@@ -145,7 +187,9 @@ class DDWiFiServerIO: public DDInputOutput {
       }
     }
     void flush() {
-      client.flush();
+      if (false) {
+        client.flush();  // flush is not the expected -- just flush send buffer
+      }
     }
     void validConnection() {
 #ifdef LOG_DDWIFI_STATUS
@@ -154,83 +198,12 @@ class DDWiFiServerIO: public DDInputOutput {
       checkConnection();
     }
     bool canConnectPassive() {
-      return true;
+      return false;  // TODO: make it passive
     }
     bool canUseBuffer() {
-      return true;
+      return false;  // buffering might make it fails to send (and marked disconnected)
     }
   private:
-//     bool _connectToNetwork() {
-//       WiFi.begin(ssid, password);
-//       long last = millis();
-//       while (true) {
-//         uint8_t status = WiFi.status();
-//         if (status == WL_CONNECTED)
-//           break;
-//         delay(200);
-//         long diff = millis() - last;
-//         if (diff > 1000) {
-//           if (logToSerial) {
-//             Serial.print("binding WIFI ");
-//             Serial.print(ssid);
-// #ifdef LOG_DDWIFI_STATUS
-//             Serial.print(" ... ");
-//             Serial.print(status);
-// #endif
-//             Serial.println(" ...");
-//           }
-//           last = millis();
-//         }
-//       }
-//       if (logToSerial) {
-//         Serial.print("binded WIFI ");
-//         Serial.println(ssid);
-//       }
-//       return true;
-//     }
-//     bool _connectToClient(bool initConnect) {
-//       if (initConnect) {
-//         if (!_connectToNetwork())
-//           return false;
-//         server.begin();
-//       }
-//       long last = millis();
-//       while (true) {
-//         client = server.available();
-//         if (client) {
-//           break;
-//         } else {
-//           if (WiFi.status() != WL_CONNECTED) 
-//             return false;
-//           long diff = millis() - last;
-//           if (diff >= 1000) {
-//             IPAddress localIP = WiFi.localIP();
-//             uint32_t localIPValue = localIP;
-//             if (logToSerial) {
-// #ifdef LOG_DDWIFI_STATUS
-//               Serial.print("via WIFI ... ");
-//               Serial.print(WiFi.status());
-//               Serial.print(" ... ");
-// #endif
-//               Serial.print("listening on ");
-// // #ifdef LOG_DDWIFI_STATUS
-// //               Serial.print("(");
-// //               Serial.print(localIPValue);
-// //               Serial.print(") ");
-// // #endif
-//               Serial.print(localIP);
-//               Serial.print(":");
-//               Serial.print(port);
-//               Serial.println(" ...");
-//             }
-//             last = millis();
-//             if (localIPValue == 0)
-//               return false;
-//           }
-//         }
-//       }
-//       return true;
-//     }
     void checkConnection() {
       if (connectionState == '0' || connectionState == 'C') {  // since 2023-08-16 added check connectionState == '0'
         if (connectionState == '0' || WiFi.status() != WL_CONNECTED) {
@@ -282,7 +255,7 @@ class DDWiFiServerIO: public DDInputOutput {
           long diff = millis() - stateMillis;
           if (diff >= 1000) {
             IPAddress localIP = WiFi.localIP();
-            uint32_t localIPValue = localIP;
+            //uint32_t localIPValue = localIP;
 #ifdef LOG_DDWIFI_STATUS
             Serial.print("via WIFI ... ");
             Serial.print(WiFi.status());
@@ -293,17 +266,10 @@ class DDWiFiServerIO: public DDInputOutput {
             Serial.print(":");
             Serial.print(port);
             Serial.println(" ...");
-            // if (true) {
-            //   // testing for ESP
-            //   Serial.println("*** sleep ...");
-            //   esp_sleep_enable_timer_wakeup(10 * 1000);  // 10ms
-            //   esp_light_sleep_start();
-            //   Serial.println("*** ... up");
-            // }
             stateMillis = millis();
           }
           WiFiClient cli = server.available();
-          if (cli) {
+          if (cli && cli.connected()) {  // TODO: for some reason, under lying _sock an be 0xFF, which seems to indicated "try again"
             client = cli;
             connectionState = 'C';
             stateMillis = 0;
@@ -315,14 +281,28 @@ class DDWiFiServerIO: public DDInputOutput {
       }
     }
   private:
-    const char* ssid;
-    const char *password;
+    bool _fillBuffer() {
+      if (this->bufferFilled) {
+        return true;
+      }
+      int n = client.read(this->buffer, 1);
+      if (n > 0) {
+        this->bufferFilled = true;
+        return true;
+      } else {
+        return false;
+      }
+    }  
+  private:
+    char* ssid;
+    char *password;
     int port;
-    //bool logToSerial;
     char connectionState;
     long stateMillis;
     WiFiServer server;
     WiFiClient client;
+    char buffer[1];
+    bool bufferFilled;
 };
 
 

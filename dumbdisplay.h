@@ -298,9 +298,9 @@ class MultiLevelDDLayer: public DDLayer {
     /// @param levelId level ID; cannot be DD_DEF_LAYER_LEVEL_ID
     /// @param width width of the level "opening"; 0 means the maximum width (the width of the layer)
     /// @param height height of the level "opening"; 0 means the maximum height (the height of the layer)
-    void addLevel(const String& levelId, float width = 0, float height = 0, bool switchToIt = false);
+    void addLevel(const String& levelId, float width, float height, bool switchToIt = false);
     /// another version of addLevel()
-    inline void addLevel(const String& levelId, bool switchToIt) {
+    inline void addLevel(const String& levelId, bool switchToIt = false) {
       addLevel(levelId, 0, 0, switchToIt);
     }
     /// like addLevel() but add to the top (i.e. will be drawn last)
@@ -615,6 +615,13 @@ class SelectionDDLayer: public DDLayer {
     void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
     /// deselect a "selection" unit
     void deselect(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool selectTheOthers = false);
+    void setSelected(bool selected, int horiSelectionIdx = 0, int vertSelectionIdx = 0) {
+      if (selected) {
+        select(horiSelectionIdx, vertSelectionIdx, false);
+      } else {
+        deselect(horiSelectionIdx, vertSelectionIdx, false);
+      }
+    }
     /// select all "selection" units
     void selectAll();
     /// deselect all "selection" units
@@ -1277,7 +1284,7 @@ class ObjectDetectDemoServiceDDTunnel: public BasicDDTunnel {
 struct DDImageData {
   DDImageData(): bytes(NULL) {};
   ~DDImageData();
-  boolean isValid() { return width > 0 && height > 0; }
+  bool isValid() { return width > 0 && height > 0; }
   void release();
   int width;
   int height;
@@ -1292,7 +1299,7 @@ struct DDPixelImage: public DDImageData {
 struct DDPixelImage16 {
   DDPixelImage16(): data(NULL) {};
   ~DDPixelImage16();
-  boolean isValid() { return width > 0 && height > 0; }
+  bool isValid() { return width > 0 && height > 0; }
   void transferTo(DDPixelImage16& pixelImage16);
   void release();
   int width;
@@ -1538,7 +1545,7 @@ class DumbDisplay {
     /// you will get result in JSON format: ```{"result":"ok"}``` or ```{"result":"failed"}```
     /// for simplicity, use SimpleToolDDTunnel.checkResult() to check the result
     /// @see SimpleToolDDTunnel
-    SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, boolean redownload = true);
+    SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, bool redownload = true);
     /// @deprecated use createGeneralServiceTunnel() instead
     BasicDDTunnel* createDateTimeServiceTunnel();
     /// create a general "service tunnel" for purposes like getting date-time info from phone;
@@ -1675,7 +1682,7 @@ class DumbDisplay {
     /// log line to Serial; if it is not safe to output to Serial, will write comment with DumbDisplay::writeComment() instead
     void logToSerial(const String& logLine, bool force = false);
     /// like to Serial (if safe to do so); and if connected,  will log as comment to DD as well  
-    void log(const String& logLine, boolean isError = false);
+    void log(const String& logLine, bool isError = false);
  public:
  #ifndef DD_NO_PASSIVE_CONNECT
    /// @brief

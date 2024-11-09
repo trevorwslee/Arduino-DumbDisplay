@@ -1,5 +1,13 @@
 /**
- * to run and see the result of this sketch, you will need two addition things:
+ * Sorry! Very likely, this sketch will not work for less-capable boards like Arduino Uno, Nano, etc. 
+ */
+
+/**
+ * If BLUETOOTH is #defined, it uses ESP32 bluetooth connection
+ * . BLUETOOTH is the name of the bluetooth device
+ * If WIFI_SSID is #defined, it uses wifi connection
+ * . once sketch running, connect to it with Serial Monitor to check for IP address
+ * Otherwise, it uses USB connection (OTG) with the default 115200 baud
  * . you will need to install Android DumbDisplay app from Play store
  *   https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
  * . although there are several ways for microcontroller board to establish connection
@@ -12,9 +20,10 @@
  *   hopefully, the UI is obvious enough :)
  * . for more details on DumbDisplay Arduino Library, please refer to
  *   https://github.com/trevorwslee/Arduino-DumbDisplay#readme
- * there is a related post that you may want to take a look:
+ * There is a related post that you may want to take a look:
  * . https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
  */
+
 
 
 #include "dumbdisplay.h"
@@ -30,7 +39,7 @@ JsonDDTunnel *restTunnel;
 
 
 void setup() {
-  // setup a "graphial" layer with size 350x150
+  // setup a "graphical" layer with size 350x150
   graphicalLayer = dumbdisplay.createGraphicalLayer(350, 150);
   graphicalLayer->backgroundColor("yellow");        // set background color to yellow
   graphicalLayer->border(10, "blue", "round");      // a round blue border of size 10  

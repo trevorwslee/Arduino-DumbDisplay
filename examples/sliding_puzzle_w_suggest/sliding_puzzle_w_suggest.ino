@@ -1,3 +1,14 @@
+// **********
+// * This is a version of sliding_puzzle added "suggest" button so that you can ask for suggestion of "next move".
+// * Exhaustive search for the solution will be much faster for game like this.
+// * However, the suggestion here is just "next move" suggestion that can be considered "guided" random suggestion.
+// **********
+
+/**
+ * Sorry! Very likely, this sketch will not work for less-capable boards like Arduino Uno, Nano, etc. 
+ * It appears that ESP32 with Bluetooth gives better experience for this sketch.
+ */
+
 /**
  * If BLUETOOTH is #defined, it uses ESP32 bluetooth connection
  * . BLUETOOTH is the name of the bluetooth device
@@ -35,6 +46,10 @@
 #endif
 
 
+#define SUGGEST_MAX_DEPTH 15
+#define SUGGEST_MIN_DEPTH 3
+
+
 // DDMasterResetPassiveConnectionHelper is for making "passive" connection; i.e. it can be reconnected after disconnect
 DDMasterResetPassiveConnectionHelper pdd(dumbdisplay);
 
@@ -66,6 +81,18 @@ int moveTileDelta;
 int moveTileRefX;
 int moveTileRefY;
 int moveTileId;
+
+
+#ifdef SUGGEST_MAX_DEPTH
+  
+  // the "selections" for suggesting moves
+  SelectionDDLayer* suggestSelection;
+
+  const long suggestedMoveTileInMillis= 250;
+  bool suggestContinuously;
+  
+#endif
+
 
 
 int checkCanMoveFromDirs(short* canMoveFromDirs, short prevCanMoveFromDir = -1) {  // prevCanMoveFromDir -1 means no previous direction
@@ -213,6 +240,108 @@ int calcBoardCost() {
 }
 
 
+#ifdef SUGGEST_MAX_DEPTH
+int tryMoveTile(int depth, short canMoveFromDir) {
+  int fromColIdx;
+  int fromRowIdx;
+  int fromTileId;
+  int prevHoldColIdx;
+  int prevHoldRowIdx;
+  int prevHoleTileId;
+  canMoveFromDirToFromIdxes(canMoveFromDir, fromColIdx, fromRowIdx);
+  fromTileId = boardTileIds[fromRowIdx][fromColIdx];
+  prevHoldColIdx = holeTileColIdx;
+  prevHoldRowIdx = holeTileRowIdx;
+  prevHoleTileId = boardTileIds[holeTileRowIdx][holeTileColIdx];
+  boardTileIds[holeTileRowIdx][holeTileColIdx] = fromTileId;
+  boardTileIds[fromRowIdx][fromColIdx] = prevHoleTileId;
+  holeTileColIdx = fromColIdx;
+  holeTileRowIdx = fromRowIdx;
+  int lowestBoardCost = calcBoardCost();
+  if (lowestBoardCost > 0 && depth > 0) {
+    short canMoveFromDirs[4];
+    int canCount = checkCanMoveFromDirs(canMoveFromDirs, canMoveFromDir);
+    if (canCount > 0) {
+      for (int i = 0; i < canCount; i++) {
+        short canMoveFromDir = canMoveFromDirs[i];
+        int ndBoardCost = tryMoveTile(depth - 1, canMoveFromDir);
+        if (ndBoardCost != -1 && (ndBoardCost < lowestBoardCost)) {
+          lowestBoardCost = ndBoardCost;
+        }
+      }
+    }
+  }
+  holeTileColIdx = prevHoldColIdx;
+  holeTileRowIdx = prevHoldRowIdx;
+  boardTileIds[holeTileRowIdx][holeTileColIdx] = prevHoleTileId;
+  boardTileIds[fromRowIdx][fromColIdx] = fromTileId;
+  return lowestBoardCost;
+}
+short suggestMoveDir() {
+  int boardCost = calcBoardCost();
+  if (boardCost == 0) {
+    return -1;
+  }
+  short canMoveFromDirs[4];
+  int canCount = checkCanMoveFromDirs(canMoveFromDirs);
+  if (canCount == 0) {
+    return -1;
+  }
+  int suggestedBoardCost = -1;
+  short suggestedMoveDir = -1;
+  for (int i = 0; i < canCount; i++) {
+    int maxDepth = random(SUGGEST_MAX_DEPTH - SUGGEST_MIN_DEPTH) + SUGGEST_MIN_DEPTH;
+    short canMoveFromDir = canMoveFromDirs[i];
+    int ndBoardCost = tryMoveTile(maxDepth, canMoveFromDir);
+    dumbdisplay.logToSerial("$$$ ... tried canMoveFromDir: " + String(canMoveFromDir) + " @ cost: " + String(ndBoardCost) + " ...");
+    if (ndBoardCost != -1) {
+      bool takeIt = suggestedBoardCost == -1;
+      if (!takeIt) {
+        if (ndBoardCost < suggestedBoardCost) {
+          takeIt = true;
+        } else if (ndBoardCost == suggestedBoardCost) {
+          if (random(2) == 0) {
+            takeIt = true;
+          }
+        }
+      }
+      if (takeIt) {
+        suggestedBoardCost = ndBoardCost;
+        suggestedMoveDir = canMoveFromDir;
+      }
+    }
+  }
+  dumbdisplay.logToSerial("$$$ suggestedMoveDir: " + String(suggestedMoveDir) + " @ cost: " + String(suggestedBoardCost));
+  return suggestedMoveDir;
+}
+bool suggestMove() {
+  short suggestedMoveDir = suggestMoveDir();
+  if (suggestedMoveDir != -1) {
+      int fromColIdx;
+      int fromRowIdx;
+      canMoveFromDirToFromIdxes(suggestedMoveDir, fromColIdx, fromRowIdx);
+      int prevHoleTileId = boardTileIds[holeTileRowIdx][holeTileColIdx];
+      int prevHoleTileColIdx = holeTileColIdx;
+      int prevHoleTileRowIdx = holeTileRowIdx;
+      int fromTileId = boardTileIds[fromRowIdx][fromColIdx];
+      String fromTileLevelId = String(fromTileId);
+      boardTileIds[holeTileRowIdx][holeTileColIdx] = boardTileIds[fromRowIdx][fromColIdx];
+      boardTileIds[fromRowIdx][fromColIdx] = prevHoleTileId;
+      holeTileColIdx = fromColIdx;
+      holeTileRowIdx = fromRowIdx;
+      board->switchLevel(fromTileLevelId);
+      board->setLevelAnchor(prevHoleTileColIdx * TILE_SIZE, prevHoleTileRowIdx * TILE_SIZE, suggestedMoveTileInMillis);
+      delay(suggestedMoveTileInMillis);
+      board->setLevelAnchor(prevHoleTileColIdx * TILE_SIZE, prevHoleTileRowIdx * TILE_SIZE);
+      return true;
+  } else {
+    if (!suggestContinuously) {
+      dumbdisplay.log("No suggested move!");
+    }
+    return false;
+  }
+}
+#endif
 
 void ensureBoardInitialized() {
   if (holeTileColIdx == -1) {
@@ -382,6 +511,11 @@ bool checkBoardSolved() {
   }
   dumbdisplay.log("***** Board Solved *****");
   board->enableFeedback();
+#ifdef SUGGEST_MAX_DEPTH
+  suggestSelection->disabled(true);
+  suggestSelection->deselect(1);
+  suggestContinuously = false;
+#endif
   showHideHoleTile(true);
   delay(200);
   showHideHoleTile(false);
@@ -414,6 +548,16 @@ void initializeDD() {
 
   board->enableFeedback();
 
+#ifdef SUGGEST_MAX_DEPTH
+  suggestSelection = dumbdisplay.createSelectionLayer(11, 1, 2, 1);
+  suggestSelection->border(1, "black");
+  suggestSelection->disabled(true);
+  suggestSelection->text("💪Suggest");
+  suggestSelection->textRightAligned("Continuous", 0, 1);
+  dumbdisplay.configAutoPin();
+  suggestContinuously = false;
+#endif
+
   holeTileColIdx = -1;
   holeTileRowIdx = -1;
   randomizeTilesStepCount = 0;
@@ -433,6 +577,10 @@ void updateDD(bool isFirstUpdate) {
 
   const DDFeedback* boardFeedback = board->getFeedback();
 
+#ifdef SUGGEST_MAX_DEPTH
+  const DDFeedback* suggestFeedback = suggestSelection->getFeedback();
+#endif
+
   if (randomizeTilesStepCount > 0) {
     // randomizing the board
     randomizeTilesStep();
@@ -441,6 +589,9 @@ void updateDD(bool isFirstUpdate) {
       // randomization is done
       dumbdisplay.log("... done randomizing board");
       board->enableFeedback(":drag");  // :drag to allow dragging that produces MOVE feedback type (and ended with -1, -1 MOVE feedbackv)
+#ifdef SUGGEST_MAX_DEPTH
+      suggestSelection->disabled(false);
+#endif
     }
   } else {
     if (boardFeedback != NULL) {
@@ -461,6 +612,29 @@ void updateDD(bool isFirstUpdate) {
         }
       }
     }
+#ifdef SUGGEST_MAX_DEPTH 
+    bool suggest = false;
+    if (suggestFeedback != NULL) {
+      int x = suggestFeedback->x;
+      int y = suggestFeedback->y;
+      if (x == 0 && y == 0) {
+        suggest = true;
+        suggestSelection->flashArea(0, 0);
+      } else if (x == 1 && y == 0) {
+        suggestContinuously = !suggestContinuously;
+        suggestSelection->setSelected(suggestContinuously, 1);
+        suggestSelection->flashArea(1, 0);
+      }
+    }
+    if (suggestContinuously) {
+      suggest = true;
+    }
+    if (suggest) {
+      if (suggestMove()) {
+        checkBoardSolved();
+      }
+    }
+#endif      
   }
 }
 
