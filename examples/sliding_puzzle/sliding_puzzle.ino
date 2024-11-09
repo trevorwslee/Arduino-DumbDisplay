@@ -104,7 +104,7 @@ void canMoveFromDirToFromIdxes(short canMoveFromDir, int& fromColIdx, int& fromR
 
 // show / hide the hole tile, which might not be in position
 void showHideHoleTile(bool show) {
-  int holeTileId = boardTileIds[holeTileColIdx][holeTileRowIdx];
+  int holeTileId = boardTileIds[holeTileRowIdx][holeTileColIdx];
   String holeTileLevelId = String(holeTileId);
   int anchorX = holeTileColIdx * TILE_SIZE;
   int anchorY = holeTileRowIdx * TILE_SIZE;
@@ -149,7 +149,7 @@ void initializeBoard() {
       // set the back of the level to the tile image, with board (b:3-gray-round)
       board->setLevelBackground("", imageName, "b:3-gray-round");
       
-      boardTileIds[colTileIdx][rowTileIdx] = tileId;
+      boardTileIds[rowTileIdx][colTileIdx] = tileId;
     }
   }
 
@@ -174,10 +174,10 @@ void randomizeTilesStep() {
   canMoveFromDirToFromIdxes(randomizeCanMoveFromDir, fromColIdx, fromRowIdx);
   int toColIdx = holeTileColIdx;
   int toRowIdx = holeTileRowIdx;
-  int fromTileId = boardTileIds[fromColIdx][fromRowIdx];
+  int fromTileId = boardTileIds[fromRowIdx][fromColIdx];
   String fromTileLevelId = String(fromTileId);
-  boardTileIds[fromColIdx][fromRowIdx] = boardTileIds[holeTileColIdx][holeTileRowIdx];
-  boardTileIds[holeTileColIdx][holeTileRowIdx] = fromTileId;
+  boardTileIds[fromRowIdx][fromColIdx] = boardTileIds[holeTileRowIdx][holeTileColIdx];
+  boardTileIds[holeTileRowIdx][holeTileColIdx] = fromTileId;
   board->switchLevel(fromTileLevelId);
   int x = toColIdx * TILE_SIZE;
   int y = toRowIdx * TILE_SIZE;
@@ -201,7 +201,7 @@ int calcBoardCost() {
   for (int rowTileIdx = 0; rowTileIdx < TILE_COUNT; rowTileIdx++) {
     for (int colTileIdx = 0; colTileIdx < TILE_COUNT; colTileIdx++) {
       int tileId = colTileIdx + rowTileIdx * TILE_COUNT;
-      int boardTileId = boardTileIds[colTileIdx][rowTileIdx];
+      int boardTileId = boardTileIds[rowTileIdx][colTileIdx];
       if (boardTileId != tileId) {
         int colIdx = boardTileId % TILE_COUNT;
         int rowIdx = boardTileId / TILE_COUNT;
@@ -300,7 +300,7 @@ bool onBoardDragged(int x, int y) {
         moveTileDelta = 0;
         moveTileRefX = x;
         moveTileRefY = y;
-        moveTileId = boardTileIds[moveTileColIdx][moveTileRowIdx];
+        moveTileId = boardTileIds[moveTileRowIdx][moveTileColIdx];
       }
     } else {
       int tileAnchorX = moveTileColIdx * TILE_SIZE;
@@ -351,9 +351,9 @@ bool onBoardDragged(int x, int y) {
       if (moveTileDelta >= TILE_SIZE / 3) {
         tileAnchorX = holeTileColIdx * TILE_SIZE;
         tileAnchorY = holeTileRowIdx * TILE_SIZE;
-        int prevHoleTileId = boardTileIds[holeTileColIdx][holeTileRowIdx];
-        boardTileIds[holeTileColIdx][holeTileRowIdx] = boardTileIds[moveTileColIdx][moveTileRowIdx];
-        boardTileIds[moveTileColIdx][moveTileRowIdx] = prevHoleTileId;
+        int prevHoleTileId = boardTileIds[holeTileRowIdx][holeTileColIdx];
+        boardTileIds[holeTileRowIdx][holeTileColIdx] = boardTileIds[moveTileRowIdx][moveTileColIdx];
+        boardTileIds[moveTileRowIdx][moveTileColIdx] = prevHoleTileId;
         holeTileColIdx = moveTileColIdx;
         holeTileRowIdx = moveTileRowIdx;
       } else {
@@ -374,7 +374,7 @@ bool checkBoardSolved() {
   for (int rowTileIdx = 0; rowTileIdx < TILE_COUNT; rowTileIdx++) {
     for (int colTileIdx = 0; colTileIdx < TILE_COUNT; colTileIdx++) {
       int tileId = colTileIdx + rowTileIdx * TILE_COUNT;
-      int boardTileId = boardTileIds[colTileIdx][rowTileIdx];
+      int boardTileId = boardTileIds[rowTileIdx][colTileIdx];
       if (boardTileId != tileId) {
         return false;
       }
