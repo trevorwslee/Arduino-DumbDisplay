@@ -58,14 +58,24 @@
   #define I2S_SAMPLE_RATE            8000
   #define I2S_PORT                   I2S_NUM_0
 #elif defined(FOR_VCC_S3EYE) || defined(FOR_VCC_S3EYE_2)
-  #define I2S_WS                     42 //0
-  #define I2S_SD                     2 //2
-  #define I2S_SCK                    41 //I2S_PIN_NO_CHANGE
+  #define I2S_WS                     42
+  #define I2S_SD                     2
+  #define I2S_SCK                    41
   #define SIMULTANEOUS_CAM_MIC_RATE  4
   #define ENABLE_FACE_DETECTION
   #define I2S_SAMPLE_BIT_COUNT       32
   #define I2S_SAMPLE_RATE            8000
   #define I2S_PORT                   I2S_NUM_0
+#elif defined(FOR_S3SENSE)
+  #define I2S_WS                     42     // for PDM, WS is the clock
+  #define I2S_SD                     41
+  #define I2S_SCK                    -1
+  //#define SIMULTANEOUS_CAM_MIC_RATE  4
+  #define ENABLE_FACE_DETECTION
+  #define I2S_SAMPLE_BIT_COUNT       16     // for PDM, must be 16
+  #define I2S_SAMPLE_RATE            8000
+  #define I2S_PORT                   I2S_NUM_0
+  #define I2S_IS_PDM
 #else
   #error "Board not supported"
 #endif
@@ -810,6 +820,24 @@ void loop() {
   #define HREF_GPIO_NUM      7      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
   #define VFLIP
+#elif defined(FOR_S3SENSE)
+  #define PWDN_GPIO_NUM     -1
+  #define RESET_GPIO_NUM    -1      // -1 = not used
+  #define XCLK_GPIO_NUM     10
+  #define SIOD_GPIO_NUM     40      // i2c sda
+  #define SIOC_GPIO_NUM     39      // i2c scl
+  #define Y9_GPIO_NUM       48
+  #define Y8_GPIO_NUM       11
+  #define Y7_GPIO_NUM       12
+  #define Y6_GPIO_NUM       14
+  #define Y5_GPIO_NUM       16
+  #define Y4_GPIO_NUM       18
+  #define Y3_GPIO_NUM       17
+  #define Y2_GPIO_NUM       15
+  #define VSYNC_GPIO_NUM    38      // vsync_pin
+  #define HREF_GPIO_NUM     47      // href_pin
+  #define PCLK_GPIO_NUM     13      // pixel_clock_pin
+  #define VFLIP
 #else
   #error board not supported
 #endif
@@ -983,15 +1011,32 @@ bool captureImage() {
 void i2s_install() {
   dumbdisplay.log("Install I2S");
   const i2s_config_t i2s_config = {
+#ifdef I2S_IS_PDM
+    .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM),
+#else    
     .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
+#endif
     .sample_rate = I2S_SAMPLE_RATE,
     .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BIT_COUNT),
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = 0,
+// #ifdef I2S_IS_PDM
+//     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+//     //.intr_alloc_flags = 0,
+// #else
+//     .intr_alloc_flags = 0,
+// #endif
     .dma_buf_count = I2S_DMA_BUF_COUNT,
     .dma_buf_len = I2S_DMA_BUF_LEN,
     .use_apll = false
+// #ifdef I2S_IS_PDM
+//     .use_apll = false,
+//     .tx_desc_auto_clear = false,
+//     .fixed_mclk = 0
+// #else
+//     .use_apll = false
+// #endif
   };
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
 }
@@ -1016,6 +1061,11 @@ void i2s_setpin() {
 void readMicData(MicInfo &micInfo) {
   // read I2S data and place in data buffer
   size_t bytesRead = 0;
+// #ifdef I2S_IS_PDM
+//   esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, 1000);
+// #else  
+//   esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
+// #endif
   esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
   int samplesRead = 0;
 #if I2S_SAMPLE_BIT_COUNT == 32

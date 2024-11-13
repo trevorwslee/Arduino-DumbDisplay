@@ -220,6 +220,8 @@ void randomizeTilesStep() {
   
   // make sure the tile is at the destination
   board->setLevelAnchor(x, y);
+
+  //dumbdisplay.logToSerial("... randomizing board ... " + String(randomizeTilesStepCount) + " ...");
 }
 
 
@@ -314,8 +316,7 @@ short suggestMoveDir() {
   dumbdisplay.logToSerial("$$$ suggestedMoveDir: " + String(suggestedMoveDir) + " @ cost: " + String(suggestedBoardCost));
   return suggestedMoveDir;
 }
-bool suggestMove() {
-  short suggestedMoveDir = suggestMoveDir();
+bool moveAsSuggested(short suggestedMoveDir) {
   if (suggestedMoveDir != -1) {
       int fromColIdx;
       int fromRowIdx;
@@ -341,6 +342,10 @@ bool suggestMove() {
     return false;
   }
 }
+bool suggestMove() {
+ short suggestedMoveDir = suggestMoveDir();
+ return moveAsSuggested(suggestedMoveDir);
+}
 #endif
 
 void ensureBoardInitialized() {
@@ -353,6 +358,7 @@ void startRandomizeBoard() {
   showHideHoleTile(false);
   randomizeTilesStepCount = initRandomizeTileStepCount;
   randomizeCanMoveFromDir = -1;
+  //dumbdisplay.log(".... randomizing board ... " + String(randomizeTilesStepCount) + " ...");
 }
 
 int posToHoleTileFromDir(int x, int y) {
@@ -526,8 +532,8 @@ bool checkBoardSolved() {
     randomizeMoveTileInMillis = 50;
   }
   initRandomizeTileStepCount += 5;  // randomize more and more
-  if (initRandomizeTileStepCount > 100) {
-    initRandomizeTileStepCount = 100;
+  if (initRandomizeTileStepCount > 30) {
+    initRandomizeTileStepCount = 30;
   }
   waitingToRestartMillis = 0;
   return true;
