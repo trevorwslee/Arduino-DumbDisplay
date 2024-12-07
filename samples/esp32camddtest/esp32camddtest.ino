@@ -256,7 +256,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
   #define HREF_GPIO_NUM      7      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
   #define VFLIP
-#elif defined(FOR_S3SENSE)
+#elif defined(FOR_XIAO_S3SENSE)
   #define PWDN_GPIO_NUM     -1
   #define RESET_GPIO_NUM    -1      // -1 = not used
   #define XCLK_GPIO_NUM     10
@@ -273,7 +273,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
   #define VSYNC_GPIO_NUM    38      // vsync_pin
   #define HREF_GPIO_NUM     47      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
-  //#define VFLIP
+  #define VFLIP
 #else
   // for CAMERA_MODEL_AI_THINKER
   #define PWDN_GPIO_NUM     32      // power to camera (on/off)
