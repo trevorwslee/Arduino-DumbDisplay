@@ -66,7 +66,7 @@
   #define I2S_SAMPLE_BIT_COUNT       32
   #define I2S_SAMPLE_RATE            8000
   #define I2S_PORT                   I2S_NUM_0
-#elif defined(FOR_S3SENSE)
+#elif defined(FOR_XIAO_S3SENSE)
   #define I2S_WS                     42     // for PDM, WS is the clock
   #define I2S_SD                     41
   #define I2S_SCK                    -1
@@ -820,7 +820,7 @@ void loop() {
   #define HREF_GPIO_NUM      7      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
   #define VFLIP
-#elif defined(FOR_S3SENSE)
+#elif defined(FOR_XIAO_S3SENSE)
   #define PWDN_GPIO_NUM     -1
   #define RESET_GPIO_NUM    -1      // -1 = not used
   #define XCLK_GPIO_NUM     10

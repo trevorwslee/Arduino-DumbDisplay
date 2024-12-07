@@ -46,7 +46,7 @@
 #endif
 
 
-#define SUGGEST_MAX_DEPTH 15
+#define SUGGEST_MAX_DEPTH 10
 #define SUGGEST_MIN_DEPTH 3
 
 
@@ -225,6 +225,7 @@ void randomizeTilesStep() {
 }
 
 
+#ifdef SUGGEST_MAX_DEPTH
 int calcBoardCost() {
   int cost = 0;
   for (int rowTileIdx = 0; rowTileIdx < TILE_COUNT; rowTileIdx++) {
@@ -240,9 +241,6 @@ int calcBoardCost() {
   }
   return cost;
 }
-
-
-#ifdef SUGGEST_MAX_DEPTH
 int tryMoveTile(int depth, short canMoveFromDir) {
   int fromColIdx;
   int fromRowIdx;
@@ -292,7 +290,7 @@ short suggestMoveDir() {
   int suggestedBoardCost = -1;
   short suggestedMoveDir = -1;
   for (int i = 0; i < canCount; i++) {
-    int maxDepth = random(SUGGEST_MAX_DEPTH - SUGGEST_MIN_DEPTH) + SUGGEST_MIN_DEPTH;
+    int maxDepth = random(SUGGEST_MAX_DEPTH - SUGGEST_MIN_DEPTH + 1) + SUGGEST_MIN_DEPTH;
     short canMoveFromDir = canMoveFromDirs[i];
     int ndBoardCost = tryMoveTile(maxDepth, canMoveFromDir);
     dumbdisplay.logToSerial("$$$ ... tried canMoveFromDir: " + String(canMoveFromDir) + " @ cost: " + String(ndBoardCost) + " ...");

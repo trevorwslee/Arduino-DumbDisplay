@@ -183,7 +183,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
   #define HREF_GPIO_NUM      7      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
   #define VFLIP
-#elif defined(FOR_S3SENSE)
+#elif defined(FOR_XIAO_S3SENSE)
   #define PWDN_GPIO_NUM     -1
   #define RESET_GPIO_NUM    -1      // -1 = not used
   #define XCLK_GPIO_NUM     10
