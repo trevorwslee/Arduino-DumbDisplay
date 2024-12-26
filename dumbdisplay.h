@@ -1008,6 +1008,19 @@ class DumbDisplayWindowDDLayer: public DDLayer {
     void disconnect();
 };
 
+/// Class for a RTSP-client "device dependent view" layer;
+/// see created with DumbDisplay::createRtspClient()
+class RtspClientDDLayer: public DDLayer {
+  public:
+    /// for internal use only
+    RtspClientDDLayer(int8_t layerId): DDLayer(layerId) {}
+    /// @param url e.g. rtsp://192.168.0.154 
+    void start(const String& url);
+    void stop();
+};
+
+
+
 
 
 /// Helper class for constructing "tunnel" endpoint, if the endpoint is not a simple URL. Can be used for DDTunnel::reconnectToEndpoint()
@@ -1528,6 +1541,9 @@ class DumbDisplay {
     /// create a DumbDisplay "window" layer
     /// @see DumbDisplayDDLayer
     DumbDisplayWindowDDLayer* createDumbDisplayWindowLayer(int width, int height);
+    /// create a RTSP-client layer
+    /// @see RtspClientDDLayer
+    RtspClientDDLayer* createRtspClient(int width, int height);
     /// create a "tunnel" for accessing the Web
     /// @note if not connect now, need to connect via reconnect()
     /// @see BasicDDTunnel

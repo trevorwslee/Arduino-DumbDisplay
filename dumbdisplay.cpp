@@ -163,7 +163,8 @@
 //#define DD_SID "Arduino-c9"  // DD library version (compatibility)
 //#define DD_SID "Arduino-c10"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v30
 //#define DD_SID "Arduino-c11"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v31
-#define DD_SID "Arduino-c12"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v34
+//#define DD_SID "Arduino-c12"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v34
+#define DD_SID "Arduino-c13"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v40
 
 
 #include "_dd_commands.h"
@@ -3103,6 +3104,13 @@ void DumbDisplayWindowDDLayer::disconnect() {
   _sendCommand0(layerId, C_disconnect);
 }
 
+void RtspClientDDLayer::start(const String& url) {
+  _sendCommand1(layerId, "start", url);
+}
+void RtspClientDDLayer::stop() {
+  _sendCommand0(layerId, "stop");
+}
+
 
 
 
@@ -4243,6 +4251,17 @@ DumbDisplayWindowDDLayer* DumbDisplay::createDumbDisplayWindowLayer(int width, i
   _PostCreateLayer(pLayer);
   return pLayer;  
 }
+
+RtspClientDDLayer* DumbDisplay::createRtspClient(int width, int height) {
+
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand3(layerId, "SU", String("rtspclient"), String(width), String(height));
+  RtspClientDDLayer* pLayer = new RtspClientDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;    
+}
+
 
 
 
