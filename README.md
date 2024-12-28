@@ -86,6 +86,7 @@ On it, a few types of layers can be created mixed-and-matched:
 * ***WebView*** "device dependent view" layer, that allows you to use Android WebView as a DD layer -- [WebViewDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_web_view_d_d_layer.html)
 * ***TomTom map*** "device dependent view" layer, for showing location (latitude/longitude) -- [TomTomMapDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html)
 * ***DumbDisplay window*** "device dependent view" layer, that opens up a window for connecting to other microcontroller's DumbDisplay sketch independently -- [DumbDisplayWindowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display_window_d_d_layer.html)
+* **RTSP Client*** "device dependent view" layer, for showing RTSP streamed video -- [RtspClientDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_rtsp_client_d_d_layer.html)
 
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected microcontroller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism) for more on "layer feedback" mechanism.
 
@@ -1007,9 +1008,9 @@ Please refer to the section [Using "Tunnel" to Download Images from the Web](#us
 Before talking about the various [DumbDisplay features](#features), here is a couple of selected demos that might interested you
 
 
-|[Turn ESP32-CAM into a Snapshot Taker, for Selfies and Time Lapse Pictures](https://github.com/trevorwslee/ESP32CamSnapper)|[Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|
-|--|--|
-|![](screenshots/snapper-ss.jpg)|![](screenshots/tft_show_show_ss.png)|
+|[Turn ESP32-CAM into a Snapshot Taker, for Selfies and Time Lapse Pictures](https://www.instructables.com/Turn-ESP32-CAM-Into-a-Snapshot-Taker-for-Selfies-a/)|[Sliding Puzzle 'Next Move' Suggesting Simple DL Model With ESP32 TensorFlow Lite](https://www.instructables.com/Sliding-Puzzle-Next-Move-Suggesting-Simple-DL-Mode/)|[Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|
+|--|--|--|
+|![](screenshots/snapper-ss.jpg)|![](screenshots/sliding.gif)|![](screenshots/tft_show_show_ss.png)|
 
 |[Arduino Experiment of Ultrasonic Sensor, ToF Laser Range Sensor and Servo Motor, With Raspberry Pi Pico and DumbDisplay](https://www.instructables.com/Arduino-Experiment-of-Ultrasonic-Sensor-ToF-Laser-/)|[Mnist Dataset -- From Training to Running With ESP32 / ESP32S3](https://www.instructables.com/Mnist-Dataset-From-Training-to-Running-With-ESP32-/)|[NEO-7M U-BLOX GPS Module Experiment](https://www.instructables.com/NEO-7M-U-BLOX-GPS-Module-Experiment/)|
 |--|--|--|
