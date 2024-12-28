@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r35)
+# DumbDisplay Arduino Library (v0.9.9-r40)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r35)](#dumbdisplay-arduino-library-v099-r35)
+- [DumbDisplay Arduino Library (v0.9.9-r40)](#dumbdisplay-arduino-library-v099-r40)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -38,6 +38,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
     - [WebView Layer](#webview-layer)
     - [TomTom Map Layer](#tomtom-map-layer)
     - [DumbDisplay Window Layer](#dumbdisplay-window-layer)
+    - [RTSP Client Layer](#rtsp-client-layer)
   - [Downloadable Font Support](#downloadable-font-support)
   - [Positioning of Layers](#positioning-of-layers)
   - [Record and Playback Commands](#record-and-playback-commands)
@@ -1370,7 +1371,7 @@ Another "device dependent view" layer is [`TomTomMapDDLayer`](https://trevorwsle
 
 ### DumbDisplay Window Layer
 
-An experimental support of connecting to other microcontroller's DumbDisplay in a "window" can be realized with `DumbDisplayWindowDDLayer`, like
+A "device dependent view" layer that provide simple support for connecting to other microcontroller's DumbDisplay in a "window" can be realized with `DumbDisplayWindowDDLayer`, like
 ```
 ...
 DumbDisplayWindowDDLayer *ddwin_layer;
@@ -1394,11 +1395,32 @@ where arguments to `connect()` are:
 Note that the target microcontroller is supposed to be an independent DumbDisplay-enabled sketch that doesn't rely on being "contained", it should be fully connectable like other DumbDisplay sketches.
 For `WIFI`, you should be able to see the WIFI IP address by connecting the target microcontroller to Serial monitor; likewise, you can find the `BT` / `LE` Bluetooth module address by connecting the microcontroller to Serial monitor as well. 
 
-
-
-
 One use case of `DumbDisplayWindowDDLayer` can be like -- a microcontroller implementing a remote control for a remote car with DumbDisplay, and additionally, a ESP32Cam put in the front of the remote car for 
 streaming live-pictures to the remote control independently.
+
+
+### RTSP Client Layer
+
+A "device dependent view" layer that supports connecting to a RTSP video stream as a layer, with the help of the `rtsp-client-android` library -- https://github.com/alexeyvasilyev/rtsp-client-android
+
+For example:
+```
+...
+RtspClientDDLayer* rtspClient;
+...
+void setup() {
+  ...
+  rtspClient = dumbdisplay->createRtspClient(160, 90);
+  rtspClient->border(3, "blue", "round");  
+  rtspClient->padding(3);
+  ...
+  rtspClient->start("rtsp://192.168.0.154");
+  delay(5 * 60);
+  rtspClient->stop();
+  ...
+}
+
+```
 
 
 ## Downloadable Font Support
@@ -2309,6 +2331,11 @@ MIT
 
 
 # Change History
+
+
+v0.9.9-r40
+  - added RtspClientDDLayer
+  - bug fix
 
 v0.9.9-r34
   - added "layer-level" background (with animate support)
