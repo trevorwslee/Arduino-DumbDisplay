@@ -2664,9 +2664,20 @@ void LcdDDLayer::noBgPixelColor() {
 }
 
 
-void SelectionDDLayer::pixelColor(const String &color) {
+void SelectionBaseDDLayer::pixelColor(const String &color) {
   _sendCommand1(layerId, C_pixelcolor, color);
 }
+void SelectionBaseDDLayer::selectAll() {
+  _sendCommand0(layerId, C_select);
+}
+void SelectionBaseDDLayer::deselectAll() {
+  _sendCommand0(layerId, C_deselect);
+}
+void SelectionBaseDDLayer::highlightBorder(bool forSelected, const String& borderColor, const String& borderShape) {
+  _sendCommand3(layerId, C_highlighborder, TO_BOOL(forSelected), borderColor, borderShape);
+}
+
+
 void SelectionDDLayer::text(const String& text, int y, int horiSelectionIdx, int vertSelectionIdx, const String& align) {
   _sendCommand5(layerId, C_text, String(y), String(horiSelectionIdx), String(vertSelectionIdx), align, text);
 }
@@ -2691,12 +2702,6 @@ void SelectionDDLayer::select(int horiSelectionIdx, int vertSelectionIdx, bool d
 void SelectionDDLayer::deselect(int horiSelectionIdx, int vertSelectionIdx, bool selectTheOthers) {
   _sendCommand3(layerId, C_deselect, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(selectTheOthers));
 }
-void SelectionDDLayer::selectAll() {
-  _sendCommand0(layerId, C_select);
-}
-void SelectionDDLayer::deselectAll() {
-  _sendCommand0(layerId, C_deselect);
-}
 void SelectionDDLayer::selected(bool selected, int horiSelectionIdx, int vertSelectionIdx, bool reverseTheOthers) {
   if (selected) {
     _sendCommand3(layerId, C_select, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(reverseTheOthers));
@@ -2704,8 +2709,46 @@ void SelectionDDLayer::selected(bool selected, int horiSelectionIdx, int vertSel
     _sendCommand3(layerId, C_deselect, String(horiSelectionIdx), String(vertSelectionIdx), TO_BOOL(reverseTheOthers));
   }
 }
-void SelectionDDLayer::highlightBorder(bool forSelected, const String& borderColor, const String& borderShape) {
-  _sendCommand3(layerId, C_highlighborder, TO_BOOL(forSelected), borderColor, borderShape);
+
+void SelectionListDDLayer::add(int selectionIdx) {
+  _sendCommand1(layerId, C_add, String(selectionIdx));
+}
+void SelectionListDDLayer::remove(int selectionIdx) {
+  _sendCommand1(layerId, C_remove, String(selectionIdx));
+}
+void SelectionListDDLayer::offset(int offset) {
+  _sendCommand1(layerId, C_offset, String(offset));
+}
+void SelectionListDDLayer::text(int selectionIdx, const String& text, int y, const String& align) {
+  _sendCommand4(layerId, C_text, String(y), String(selectionIdx), align, text);
+}
+void SelectionListDDLayer::textCentered(int selectionIdx, const String& text, int y) {
+  _sendCommand4(layerId, C_text, String(y), String(selectionIdx), "C", text);
+}
+void SelectionListDDLayer::textRightAligned(int selectionIdx, const String& text, int y) {
+  _sendCommand4(layerId, C_text, String(y), String(selectionIdx), "R", text);
+}
+void SelectionListDDLayer::unselectedText(int selectionIdx, const String& text, int y, const String& align) {
+  _sendCommand4(layerId, C_unselectedtext, String(y), String(selectionIdx), align, text);
+}
+void SelectionListDDLayer::unselectedTextCentered(int selectionIdx, const String& text, int y) {
+  _sendCommand4(layerId, C_unselectedtext, String(y), String(selectionIdx), "C", text);
+}
+void SelectionListDDLayer::unselectedTextRightAligned(int selectionIdx, const String& text, int y) {
+  _sendCommand4(layerId, C_unselectedtext, String(y), String(selectionIdx), "R", text);
+}
+void SelectionListDDLayer::select(int selectionIdx, bool deselectTheOthers) {
+  _sendCommand2(layerId, C_select, String(selectionIdx), TO_BOOL(deselectTheOthers));
+}
+void SelectionListDDLayer::deselect(int selectionIdx, bool selectTheOthers) {
+  _sendCommand2(layerId, C_deselect, String(selectionIdx), TO_BOOL(selectTheOthers));
+}
+void SelectionListDDLayer::selected(int selectionIdx, bool selected, bool reverseTheOthers) {
+  if (selected) {
+    _sendCommand2(layerId, C_select, String(selectionIdx), TO_BOOL(reverseTheOthers));
+  } else {
+    _sendCommand2(layerId, C_deselect, String(selectionIdx), TO_BOOL(reverseTheOthers));
+  }
 }
 
 
@@ -4172,6 +4215,17 @@ SelectionDDLayer* DumbDisplay::createSelectionLayer(int colCount, int rowCount,
     _sendCommand8(layerId, "SU", String("selection"), String(colCount), String(rowCount), String(horiSelectionCount), String(vertSelectionCount), String(charHeight), fontName, TO_NUM(selectionBorderSizeCharHeightFactor));
   }
   SelectionDDLayer* pLayer = new SelectionDDLayer(lid);
+  _PostCreateLayer(pLayer);
+  return pLayer;
+}
+SelectionListDDLayer* DumbDisplay::createSelectionListLayer(int colCount, int rowCount, 
+                                                            int horiSelectionCount, int vertSelectionCount,
+                                                            int charHeight, const String& fontName,
+                                                            bool canDrawDots, float selectionBorderSizeCharHeightFactor) {
+  int lid = _AllocLid();
+  String layerId = String(lid);
+  _sendCommand9(layerId, "SU", String("selectionlist"), String(colCount), String(rowCount), String(horiSelectionCount), String(vertSelectionCount), String(charHeight), fontName, TO_BOOL(canDrawDots), TO_NUM(selectionBorderSizeCharHeightFactor));
+  SelectionListDDLayer* pLayer = new SelectionListDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
 }

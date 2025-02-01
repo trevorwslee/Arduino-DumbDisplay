@@ -584,19 +584,34 @@ class LcdDDLayer: public DDLayer {
     void noBgPixelColor();
 };
 
-/// @brief
-/// Class for "selection" layer of multiple LCD-like "selection" units; created with DumbDisplay::createSelectionLayer()
-/// @note by default, it has "feedback" enabled to indicate which "selection" unit is clicked
-/// @since v0.9.9-r10
-class SelectionDDLayer: public DDLayer {
+
+class SelectionBaseDDLayer: public DDLayer {
   public:
     /// for internal use only
-    SelectionDDLayer(int8_t layerId): DDLayer(layerId) {
+    SelectionBaseDDLayer(int8_t layerId): DDLayer(layerId) {
       _enableFeedback();
     }
     /// set pixel color
     /// @param color DD_RGB_COLOR(...) or common color name
     void pixelColor(const String &color);
+    /// select all "selection" units
+    void selectAll();
+    /// deselect all "selection" units
+    void deselectAll();
+    /// set selected / unselected "selection" unit border characteristics 
+    /// @param borderColor DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"; "" means default
+    /// @param borderShape can be "flat", "hair", "round", "raised" or "sunken"; "" means default  
+    void highlightBorder(bool forSelected, const String& borderColor = "", const String& borderShape = "");
+};
+
+/// @brief
+/// Class for "selection" layer of multiple LCD-like "selection" units; created with DumbDisplay::createSelectionLayer()
+/// @note by default, it has "feedback" enabled to indicate which "selection" unit is clicked
+/// @since v0.9.9-r10
+class SelectionDDLayer: public SelectionBaseDDLayer {
+  public:
+    /// for internal use only
+    SelectionDDLayer(int8_t layerId): SelectionBaseDDLayer(layerId) {}
     /// set a "selection" unit text (of y-th row)
     /// @param align 'L', 'C', or 'R'
     void text(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
@@ -615,6 +630,7 @@ class SelectionDDLayer: public DDLayer {
     void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
     /// deselect a "selection" unit
     void deselect(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool selectTheOthers = false);
+    /// @deprecated
     void setSelected(bool selected, int horiSelectionIdx = 0, int vertSelectionIdx = 0) {
       if (selected) {
         select(horiSelectionIdx, vertSelectionIdx, false);
@@ -622,17 +638,47 @@ class SelectionDDLayer: public DDLayer {
         deselect(horiSelectionIdx, vertSelectionIdx, false);
       }
     }
-    /// select all "selection" units
-    void selectAll();
-    /// deselect all "selection" units
-    void deselectAll();
-    /// set a "selection" unit selected or not
+    /// set a "selection" unit selected or not (combination of select() and deselect())
     void selected(bool selected, int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool reverseTheOthers = false);
-    /// set selected / unselected "selection" unit border characteristics 
-    /// @param borderColor DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"; "" means default
-    /// @param borderShape can be "flat", "hair", "round", "raised" or "sunken"; "" means default  
-    void highlightBorder(bool forSelected, const String& borderColor = "", const String& borderShape = "");
- };
+};
+
+/// @brief
+/// Class for "selection list" layer, like SelectionDDLayer but "selections" can be added and removed dynamically; it can be created with DumbDisplay::createListSelectionLayer()
+/// @note by default, it has "feedback" enabled to indicate which "selection" unit is clicked
+/// @since v0.9.9-r41
+class SelectionListDDLayer: public SelectionBaseDDLayer {
+  public:
+    /// for internal use only
+    SelectionListDDLayer(int8_t layerId): SelectionBaseDDLayer(layerId) {}
+    /// add (insert) a "selection" unit
+    /// @param selectionIdx add (insert) the selection to index
+    void add(int selectionIdx);
+    /// remove a "selection" unit
+    /// @param selectionIdx remove the selection at index
+    void remove(int selectionIdx);
+    /// set the offset to the "selection" unit start showing
+    void offset(int offset);
+    /// set a "selection" unit text (of y-th row)
+    /// @param align 'L', 'C', or 'R'
+    void text(int selectionIdx, const String& text, int y = 0, const String& align = "L");
+    /// set a "selection" unit centered text (of y-th row)
+    void textCentered(int selectionIdx, const String& text, int y = 0);
+    /// set a "selection" unit right-aligned text (of y-th row)
+    void textRightAligned(int selectionIdx, const String& text, int y = 0);
+    /// set a "selection" unit text (of y-th row) when unselected (it defaults to the same text as selected)
+    /// @param align 'L', 'C', or 'R'
+    void unselectedText(int selectionIdx, const String& text, int y = 0, const String& align = "L");
+    /// set a "selection" unit centered text (of y-th row) when unselected (it defaults to the same text as selected)
+    void unselectedTextCentered(int selectionIdx, const String& text, int y = 0);
+     /// set a "selection" unit right-aligned text (of y-th row) when unselected (it defaults to the same text as selected)
+   void unselectedTextRightAligned(int selectionIdx, const String& text, int y = 0);
+    /// select a "selection" unit
+    void select(int selectionIdx, bool deselectTheOthers = true);
+    /// deselect a "selection" unit
+    void deselect(int selectionIdx, bool selectTheOthers = false);
+    /// set a "selection" unit selected or not (combination of select() and deselect())
+    void selected(int selectionIdx, bool selected, bool reverseTheOthers = false);
+};
 
 /// Class for graphical LCD layer; created with DumbDisplay::createGraphicalLayer()
 class GraphicalDDLayer: public MultiLevelDDLayer {
@@ -1505,6 +1551,11 @@ class DumbDisplay {
                                            int horiSelectionCount = 1, int vertSelectionCount = 1,
                                            int charHeight = 0, const String& fontName = "",
                                            bool canDrawDots = true, float selectionBorderSizeCharHeightFactor = 0.3);
+    /// create a list "selection" layer
+    SelectionListDDLayer* createSelectionListLayer(int colCount = 16, int rowCount = 2,
+                                                   int horiSelectionCount = 1, int vertSelectionCount = 1,
+                                                   int charHeight = 0, const String& fontName = "",
+                                                   bool canDrawDots = true, float selectionBorderSizeCharHeightFactor = 0.3);
     /// create a graphical LCD layer
     /// @see GraphicalDDLayer
     GraphicalDDLayer* createGraphicalLayer(int width, int height);

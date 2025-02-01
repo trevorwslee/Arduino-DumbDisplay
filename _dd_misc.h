@@ -640,5 +640,116 @@ class DDReconnectPassiveConnectionHelper {
 
 #endif
 
+class SelectionListLayerHelper {
+  public:
+    SelectionListLayerHelper(SelectionListDDLayer* selectionListLayer): selectionListLayer(selectionListLayer) {
+      this->selectionCount = 0;
+      this->selectionOffset = 0;
+    }
+  public:
+    /// @param selectionIdx -1 means append as the last selection
+    /// @return -1 if selectionIdx is out of range
+    int add(int selectionIdx = -1) {
+      int addSelectionIdx;
+      if (selectionIdx == -1) {
+        addSelectionIdx = selectionCount;
+      } else {
+        addSelectionIdx = selectionIdx;
+      } 
+      if (addSelectionIdx < 0 || addSelectionIdx >= selectionCount) {
+        return -1;
+      }
+      selectionListLayer->add(addSelectionIdx);
+      selectionCount += 1;
+      return addSelectionIdx;
+    }  
+    /// @param selectionIdx -1 means the last selection
+    /// @return -1 if selectionIdx is out of range
+    int remove(int selectionIdx = -1) {
+      int removeSelectionIdx;
+      if (selectionIdx == -1) {
+        removeSelectionIdx = selectionCount;
+      } else {
+        removeSelectionIdx = selectionIdx;
+      } 
+      if (removeSelectionIdx < 0 || removeSelectionIdx >= selectionCount) {
+        return -1;
+      }
+      selectionListLayer->remove(removeSelectionIdx);
+      selectionCount -= 1;
+      if (selectionOffset > selectionCount) {
+        selectionOffset = selectionCount;
+      }
+      return removeSelectionIdx;
+    }
+    int getOffset() {
+      return selectionOffset;
+    }
+    void setOffset(int offset) {
+      selectionListLayer->offset(offset);
+      selectionOffset = offset;
+    }
+  public:
+    SelectionListDDLayer* selectionListLayer;
+  private:  
+    int selectionCount;
+    int selectionOffset;
+};
+
+
+
+class TrackedSelectionListLayerHelper {
+  public:
+    TrackedSelectionListLayerHelper(SelectionListDDLayer* selectionListLayer, short bufferSizeInc = 2): baseHelper(selectionListLayer) {
+      this->bufferSizeInc = bufferSizeInc;
+      this->textBuffer = NULL;
+      this->textBufferSize = 0;
+      this->trackedTextCount = 0;
+    }
+    int addSelection(int selectionIdx, const String& text, int y, const String& align = "L") {
+      int idx = baseHelper.add(selectionIdx);
+      if (idx != -1) {
+        baseHelper.selectionListLayer->text(idx, text, 0, align);
+        if ((trackedTextCount + 1) > textBufferSize) {
+          int newSize = textBufferSize + bufferSizeInc;
+          String* newTextBuffer = new String[newSize];
+          for (int i = 0; i < textBufferSize; i++) {
+            newTextBuffer[i] = textBuffer[i];
+          }
+          if (textBuffer != NULL) {
+            delete[] textBuffer;
+          }
+          textBuffer = newTextBuffer;
+          textBufferSize = newSize;
+        }
+        textBuffer[trackedTextCount++] = text;
+      }
+      return idx;
+    }
+    int removeSelection(int selectionIdx) {
+      selectionIdx = baseHelper.remove(selectionIdx);
+      if (selectionIdx != -1) {
+        trackedTextCount -= 1;
+        for (int i = selectionIdx; i < trackedTextCount; i++) {
+          textBuffer[i] = textBuffer[i + 1];
+        }
+      }
+      return selectionIdx;
+    }
+    int getSelectionOffset() {
+      return baseHelper.getOffset();
+    }
+    void setSelectionOffset(int offset) {
+      baseHelper.setOffset(offset);
+    }
+  private:  
+  private: 
+    SelectionListLayerHelper baseHelper; 
+    String* textBuffer;
+    short bufferSizeInc;
+    int textBufferSize;
+    int trackedTextCount;
+};
+
 #endif
 
