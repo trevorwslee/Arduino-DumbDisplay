@@ -647,6 +647,9 @@ class SelectionListLayerHelper {
       this->selectionOffset = 0;
     }
   public:
+    SelectionListDDLayer* getLayer() {
+      return selectionListLayer;
+    }
     /// @param selectionIdx -1 means append as the last selection
     /// @return -1 if selectionIdx is out of range
     int add(int selectionIdx = -1) {
@@ -656,7 +659,7 @@ class SelectionListLayerHelper {
       } else {
         addSelectionIdx = selectionIdx;
       } 
-      if (addSelectionIdx < 0 || addSelectionIdx >= selectionCount) {
+      if (addSelectionIdx < 0 || addSelectionIdx > selectionCount) {
         return -1;
       }
       selectionListLayer->add(addSelectionIdx);
@@ -698,18 +701,38 @@ class SelectionListLayerHelper {
 
 
 
-class TrackedSelectionListLayerHelper {
+class SelectionListLayerWrapper {
   public:
-    TrackedSelectionListLayerHelper(SelectionListDDLayer* selectionListLayer, short bufferSizeInc = 2): baseHelper(selectionListLayer) {
+    SelectionListLayerWrapper(short bufferSizeInc = 2) {
       this->bufferSizeInc = bufferSizeInc;
+      this->helper = NULL;
       this->textBuffer = NULL;
       this->textBufferSize = 0;
       this->trackedTextCount = 0;
     }
-    int addSelection(int selectionIdx, const String& text, int y, const String& align = "L") {
-      int idx = baseHelper.add(selectionIdx);
+    SelectionListDDLayer* initializeLayer(DumbDisplay& dumbdisplay,
+                                      int colCount, int rowCount,
+                                      int horiSelectionCount, int vertSelectionCount,
+                                      int charHeight = 0, const String& fontName = "",
+                                      bool canDrawDots = true, float selectionBorderSizeCharHeightFactor = 0.3) {
+      if (this->helper != NULL) {
+        delete this->helper;
+        this->helper = NULL;
+      }
+      if (this->textBuffer != NULL) {
+        delete[] this->textBuffer;
+        this->textBuffer = NULL;
+        this->textBufferSize = 0;
+        this->trackedTextCount = 0;
+      }
+      SelectionListDDLayer* selectionListLayer = dumbdisplay.createSelectionListLayer(colCount, rowCount, horiSelectionCount, vertSelectionCount, charHeight, fontName, canDrawDots, selectionBorderSizeCharHeightFactor);
+      this->helper = new SelectionListLayerHelper(selectionListLayer);
+      return selectionListLayer;
+    }
+    int addSelection(int selectionIdx, const String& text, const String& align = "L") {
+      int idx = helper->add(selectionIdx);
       if (idx != -1) {
-        baseHelper.selectionListLayer->text(idx, text, 0, align);
+        helper->selectionListLayer->text(idx, text, 0, align);
         if ((trackedTextCount + 1) > textBufferSize) {
           int newSize = textBufferSize + bufferSizeInc;
           String* newTextBuffer = new String[newSize];
@@ -726,8 +749,11 @@ class TrackedSelectionListLayerHelper {
       }
       return idx;
     }
+    SelectionListDDLayer* getLayer() {
+      return helper->getLayer();
+    }
     int removeSelection(int selectionIdx) {
-      selectionIdx = baseHelper.remove(selectionIdx);
+      selectionIdx = helper->remove(selectionIdx);
       if (selectionIdx != -1) {
         trackedTextCount -= 1;
         for (int i = selectionIdx; i < trackedTextCount; i++) {
@@ -736,15 +762,29 @@ class TrackedSelectionListLayerHelper {
       }
       return selectionIdx;
     }
-    int getSelectionOffset() {
-      return baseHelper.getOffset();
+    int getOffset() {
+      return helper->getOffset();
     }
-    void setSelectionOffset(int offset) {
-      baseHelper.setOffset(offset);
+    void setOffset(int offset) {
+      helper->setOffset(offset);
     }
-  private:  
+    void select(int selectionIdx, bool deselectTheOthers = true) {
+      helper->selectionListLayer->select(selectionIdx, deselectTheOthers);
+    }
+    void deselect(int selectionIdx, bool selectTheOthers = false) {
+      helper->selectionListLayer->deselect(selectionIdx, selectTheOthers);
+    }
+    void selected(int selectionIdx, bool selected, bool reverseTheOthers = false) {
+      helper->selectionListLayer->selected(selectionIdx, selected, reverseTheOthers);
+    }
+    void selectAll() {
+      helper->selectionListLayer->selectAll();
+    }
+    void deselectAll() {
+      helper->selectionListLayer->deselectAll();
+    }
   private: 
-    SelectionListLayerHelper baseHelper; 
+    SelectionListLayerHelper* helper; 
     String* textBuffer;
     short bufferSizeInc;
     int textBufferSize;
