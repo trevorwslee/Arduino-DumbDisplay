@@ -508,12 +508,12 @@ class DDFadingLayers {
     int nextUseLayerIdx;
 };
 
-#if __GNUC__ >= 8 && defined(ESP32)
-  #define DD_CPP_FUNCTIONAL
-#endif
-#if defined(DD_CPP_FUNCTIONAL)
-  #include <functional>
-#endif  
+// #if __GNUC__ >= 8 && defined(ESP32)
+//   #define DD_CPP_FUNCTIONAL
+// #endif
+// #if defined(DD_CPP_FUNCTIONAL)
+//   #include <functional>
+// #endif  
 
 #ifndef DD_NO_PASSIVE_CONNECT
 
@@ -533,11 +533,12 @@ class DDMasterResetPassiveConnectionHelper {
     /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
     /// @param updateCallback called to update DumbDisplay components
     /// @param disconnectedCallback called after "master reset" DumbDisplay, i.e. lost previous connection
-#if defined(DD_CPP_FUNCTIONAL)
-    bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback, std::function<void()> disconnectedCallback = NULL) {
-#else
     bool loop(void (*initializeCallback)(), void (*updateCallback)(), void (*disconnectedCallback)() = NULL) {
-#endif
+// #if defined(DD_CPP_FUNCTIONAL)
+//     bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback, std::function<void()> disconnectedCallback = NULL) {
+// #else
+//     bool loop(void (*initializeCallback)(), void (*updateCallback)(), void (*disconnectedCallback)() = NULL) {
+// #endif
       DDConnectPassiveStatus connectStatus;
       dumbdisplay.connectPassive(&connectStatus);
       if (connectStatus.connected) {
@@ -612,11 +613,12 @@ class DDReconnectPassiveConnectionHelper {
     /// @param initializeCallback called after DumbDisplay is connected (or reconnected)
     /// @param updateCallback called to update DumbDisplay components
     /// @param disconnectedCallback called after "master reset" DumbDisplay, i.e. lost previous connection
-#if defined(DD_CPP_FUNCTIONAL)
-    bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback) {
-#else
     bool loop(void (*initializeCallback)(), void (*updateCallback)()) {
-#endif
+// #if defined(DD_CPP_FUNCTIONAL)
+//     bool loop(std::function<void()> initializeCallback, std::function<void()> updateCallback) {
+// #else
+//     bool loop(void (*initializeCallback)(), void (*updateCallback)()) {
+// #endif
       if (dumbdisplay.connectPassive()) {
         if (!this->init) {
           this->dumbdisplay.recordLayerSetupCommands();
@@ -645,11 +647,30 @@ class SelectionListLayerHelper {
     SelectionListLayerHelper(SelectionListDDLayer* selectionListLayer): selectionListLayer(selectionListLayer) {
       this->selectionCount = 0;
       this->selectionOffset = 0;
+      //this->visibleSelectionCount = 0;
+      this->listStateChangedCallback = NULL;
     }
   public:
-    SelectionListDDLayer* getLayer() {
+    inline SelectionListDDLayer* getLayer() {
       return selectionListLayer;
     }
+    inline int getOffset() {
+      return selectionOffset;
+    }
+    inline int getSelectionCount() {
+      return selectionCount;
+    }
+  public:
+    void setListStateChangedCallback(void (*listStateChangedCallback)()) {
+      this->listStateChangedCallback = listStateChangedCallback;
+    }
+    // void setScrollLayers(DDLayer* scrollUpLayer, DDLayer* scrollDownLayer, int visibleSelectionCount) {
+    //   this->scrollUpLayer = scrollUpLayer;
+    //   this->scrollDownLayer = scrollDownLayer;
+    //   this->visibleSelectionCount = visibleSelectionCount;
+    //   syncScollState();
+    // }
+  public:
     /// @param selectionIdx -1 means append as the last selection
     /// @return -1 if selectionIdx is out of range
     int add(int selectionIdx = -1) {
@@ -664,6 +685,7 @@ class SelectionListLayerHelper {
       }
       selectionListLayer->add(addSelectionIdx);
       selectionCount += 1;
+      onListStateChanged();
       return addSelectionIdx;
     }  
     /// @param selectionIdx -1 means the last selection
@@ -683,22 +705,43 @@ class SelectionListLayerHelper {
       if (selectionOffset > selectionCount) {
         selectionOffset = selectionCount;
       }
+      onListStateChanged();
       return removeSelectionIdx;
-    }
-    int getOffset() {
-      return selectionOffset;
     }
     void setOffset(int offset) {
       selectionListLayer->offset(offset);
       selectionOffset = offset;
+      onListStateChanged();
     }
-  public:
-    SelectionListDDLayer* selectionListLayer;
+    inline void decrementOffset() {
+      setOffset(selectionOffset - 1);
+    }
+    inline void incrementOffset() {
+      setOffset(selectionOffset + 1);
+    }
+  protected:  
+    void onListStateChanged() {
+      if (this->listStateChangedCallback != NULL) {
+        this->listStateChangedCallback();
+      }
+      // if (scrollUpLayer != NULL) {
+      //   bool canScrollUp = selectionOffset > 0;
+      //   scrollUpLayer->disabled(!canScrollUp);
+      // }
+      // if (scrollDownLayer != NULL) {
+      //   bool canScrollDown = selectionOffset < (selectionCount - visibleSelectionCount);
+      //   scrollDownLayer->disabled(!canScrollDown);
+      // }
+    }  
   private:  
+    SelectionListDDLayer* selectionListLayer;
     int selectionCount;
     int selectionOffset;
+    //int visibleSelectionCount;
+    void (*listStateChangedCallback)();
+    //DDLayer* scrollUpLayer;
+    //DDLayer* scrollDownLayer;
 };
-
 
 
 class SelectionListLayerWrapper {
@@ -711,10 +754,10 @@ class SelectionListLayerWrapper {
       this->trackedTextCount = 0;
     }
     SelectionListDDLayer* initializeLayer(DumbDisplay& dumbdisplay,
-                                      int colCount, int rowCount,
-                                      int horiSelectionCount, int vertSelectionCount,
-                                      int charHeight = 0, const String& fontName = "",
-                                      bool canDrawDots = true, float selectionBorderSizeCharHeightFactor = 0.3) {
+                                         int colCount, int rowCount,
+                                         int horiSelectionCount, int vertSelectionCount,
+                                         int charHeight = 0, const String& fontName = "",
+                                         bool canDrawDots = true, float selectionBorderSizeCharHeightFactor = 0.3) {
       if (this->helper != NULL) {
         delete this->helper;
         this->helper = NULL;
@@ -727,12 +770,31 @@ class SelectionListLayerWrapper {
       }
       SelectionListDDLayer* selectionListLayer = dumbdisplay.createSelectionListLayer(colCount, rowCount, horiSelectionCount, vertSelectionCount, charHeight, fontName, canDrawDots, selectionBorderSizeCharHeightFactor);
       this->helper = new SelectionListLayerHelper(selectionListLayer);
+      //this->visibleSelectionCount = horiSelectionCount * vertSelectionCount;
+      // setScrollLayers(NULL, NULL);
       return selectionListLayer;
     }
+  public:   
+    inline SelectionListDDLayer* getLayer() {
+      return helper->getLayer();
+    }
+    inline int getOffset() {
+      return helper->getOffset();
+    }
+    inline int getSelectionCount() {
+      return helper->getSelectionCount();
+    }
+  public:   
+    void setListStateChangedCallback(void (*listStateChangedCallback)()) {
+      helper->setListStateChangedCallback(listStateChangedCallback);
+    }
+    // void setScrollLayers(DDLayer* scrollUpLayer, DDLayer* scrollDownLayer) {
+    //   this->helper->setScrollLayers(scrollUpLayer, scrollDownLayer, this->visibleSelectionCount);
+    // }
     int addSelection(int selectionIdx, const String& text, const String& align = "L") {
       int idx = helper->add(selectionIdx);
       if (idx != -1) {
-        helper->selectionListLayer->text(idx, text, 0, align);
+        helper->getLayer()->text(idx, text, 0, align);
         if ((trackedTextCount + 1) > textBufferSize) {
           int newSize = textBufferSize + bufferSizeInc;
           String* newTextBuffer = new String[newSize];
@@ -749,9 +811,6 @@ class SelectionListLayerWrapper {
       }
       return idx;
     }
-    SelectionListDDLayer* getLayer() {
-      return helper->getLayer();
-    }
     int removeSelection(int selectionIdx) {
       selectionIdx = helper->remove(selectionIdx);
       if (selectionIdx != -1) {
@@ -762,26 +821,29 @@ class SelectionListLayerWrapper {
       }
       return selectionIdx;
     }
-    int getOffset() {
-      return helper->getOffset();
-    }
     void setOffset(int offset) {
       helper->setOffset(offset);
     }
+    inline void incrementOffset() {
+      helper->incrementOffset();
+    }
+    inline void decrementOffset() {
+      helper->decrementOffset();
+    }
     void select(int selectionIdx, bool deselectTheOthers = true) {
-      helper->selectionListLayer->select(selectionIdx, deselectTheOthers);
+      helper->getLayer()->select(selectionIdx, deselectTheOthers);
     }
     void deselect(int selectionIdx, bool selectTheOthers = false) {
-      helper->selectionListLayer->deselect(selectionIdx, selectTheOthers);
+      helper->getLayer()->deselect(selectionIdx, selectTheOthers);
     }
     void selected(int selectionIdx, bool selected, bool reverseTheOthers = false) {
-      helper->selectionListLayer->selected(selectionIdx, selected, reverseTheOthers);
+      helper->getLayer()->selected(selectionIdx, selected, reverseTheOthers);
     }
     void selectAll() {
-      helper->selectionListLayer->selectAll();
+      helper->getLayer()->selectAll();
     }
     void deselectAll() {
-      helper->selectionListLayer->deselectAll();
+      helper->getLayer()->deselectAll();
     }
   private: 
     SelectionListLayerHelper* helper; 
@@ -789,6 +851,7 @@ class SelectionListLayerWrapper {
     short bufferSizeInc;
     int textBufferSize;
     int trackedTextCount;
+    //int visibleSelectionCount;
 };
 
 #endif
