@@ -1,4 +1,6 @@
+// ***
 // *** experimental ***
+// ***
 
 #define AUTO_START_RTSP true
 
@@ -125,22 +127,27 @@ void setup() {
 }
 
 void loop() {
-  pdd.loop([]() {
-    initializeDD();
-  },
-           []() {
-             updateDD(!pdd.firstUpdated());
-           },
-           []() {
-             deinitializeDD();
-           });
+  pdd.loop(
+    []() {
+      initializeDD();
+    },
+    []() {
+      updateDD(!pdd.firstUpdated());
+    },
+    []() {
+      deinitializeDD();
+    }
+  );
 }
+
+SelectionListLayerWrapper nameListSelectionWrapper;
 
 // User callback function for post processing of face recognition results
 void FRPostProcess(std::vector<FaceRecognitionResult> results) {
   uint16_t im_h = configVID.height();
   uint16_t im_w = configVID.width();
 
+  nameListSelectionWrapper.deselectAll();
   //printf("Total number of faces detected = %d\r\n", facerecog.getResultCount());
   OSD.createBitmap(CHANNELVID);
 
@@ -154,13 +161,26 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
       int ymin = (int)(item.yMin() * im_h);
       int ymax = (int)(item.yMax() * im_h);
 
+      if (false) {
+        dumbdisplay.writeComment("* detected: [" + String(item.name()) + "]");
+      }
+      int idx = nameListSelectionWrapper.findSelection(item.name());
+      if (idx != -1) {
+        nameListSelectionWrapper.select(idx, false);
+        nameListSelectionWrapper.scrollToView(idx);
+      }
+      
+      // Ensure number of snapshots under MAX_UNKNOWN_COUNT
       uint32_t osd_color;
       if (String(item.name()) == String("unknown")) {
         osd_color = OSD_COLOR_RED;
         if (regFace == false) {
           unknownDetected = true;
           unknownCount++;
-          if (unknownCount < (MAX_UNKNOWN_COUNT + 1)) {                 // Ensure number of snapshots under MAX_UNKNOWN_COUNT
+          if (unknownCount < (MAX_UNKNOWN_COUNT + 1)) {  
+            if (true) {
+              dumbdisplay.writeComment("* save Stranger" + String(unknownCount));
+            }               // Ensure number of snapshots under MAX_UNKNOWN_COUNT
             facerecog.registerFace("Stranger" + String(unknownCount));  // Register under named Stranger <No.> to prevent recapture of same unrecognised person twice
             fs.begin();
             File file = fs.open(String(fs.getRootPath()) + "Stranger" + String(unknownCount) + ".jpg");  // Capture snapshot of stranger under name Stranger <No.>
@@ -202,6 +222,11 @@ RtspClientDDLayer *rtspClient;
 SelectionDDLayer *startStopSelection;
 LcdDDLayer *registerButton;
 LedGridDDLayer *led;
+
+SelectionListDDLayer *nameListSelection;
+LcdDDLayer *scrollUpButton;
+LcdDDLayer *scrollDownButton;
+
 bool rtspStarted;
 long lastMillis;
 int counter = 0;
@@ -221,10 +246,22 @@ void startStopRtsp(bool start) {
   }
 }
 
+void onNameListStateChanged() {
+  int selectionOffset = nameListSelectionWrapper.getOffset();
+  int selectionCount = nameListSelectionWrapper.getSelectionCount();
+  int visibleSelectionCount = 4;
+  bool canScrollUp = selectionOffset > 0;
+  bool canScrollDown = selectionOffset < (selectionCount - visibleSelectionCount);
+  scrollUpButton->disabled(!canScrollUp);
+  scrollDownButton->disabled(!canScrollDown);
+  //removeLayer->disabled(selectionCount == 0);
+}
+
+
 void initializeDD() {
   rtspClient = dumbdisplay.createRtspClient(160, 90);
-  rtspClient->border(3, "blue", "round");
-  rtspClient->padding(3);
+  rtspClient->border(2, "blue", "round");
+  rtspClient->padding(2);
 
   startStopSelection = dumbdisplay.createSelectionLayer(2, 1);
   startStopSelection->highlightBorder(true, DD_COLOR_blue);
@@ -232,10 +269,23 @@ void initializeDD() {
   startStopSelection->text("📺");
 
   registerButton = dumbdisplay.createLcdLayer(8, 1);
-  registerButton->border(2, DD_COLOR_green);
+  registerButton->border(1, DD_COLOR_navy);
   registerButton->writeCenteredLine("Register");
   registerButton->enableFeedback("f:keys");
 
+  nameListSelection = nameListSelectionWrapper.initializeLayer(dumbdisplay, 10, 1, 2, 2);
+  nameListSelectionWrapper.setListStateChangedCallback(onNameListStateChanged);
+  nameListSelection->border(1, DD_COLOR_black);
+
+  scrollUpButton = dumbdisplay.createLcdLayer(2, 3);
+  scrollUpButton->border(1, DD_COLOR_navy);
+  scrollUpButton->writeCenteredLine("⏪", 1);
+  scrollUpButton->enableFeedback("f");
+ 
+  scrollDownButton = dumbdisplay.createLcdLayer(2, 3);
+  scrollDownButton->border(1, DD_COLOR_navy);
+  scrollDownButton->writeCenteredLine("⏩", 1);
+  scrollDownButton->enableFeedback("f");
 
   led = dumbdisplay.createLedGridLayer();
   const char *color = "darkblue";
@@ -252,13 +302,18 @@ void initializeDD() {
   led->enableFeedback("fl");
 
   dumbdisplay.configAutoPin(DDAutoPinConfig('V')
-                              .addLayer(rtspClient)
-                              .beginGroup('H')
-                              .addLayer(startStopSelection)
-                              .addLayer(registerButton)
-                              .addLayer(led)
-                              .endGroup()
-                              .build());
+    .addLayer(rtspClient)
+    .beginGroup('H')
+      .addLayer(startStopSelection)
+      .addLayer(registerButton)
+      .addLayer(led)
+    .endGroup()
+    .beginGroup('H')
+      .addLayer(scrollUpButton)
+      .addLayer(nameListSelection)
+      .addLayer(scrollDownButton)
+    .endGroup()
+    .build());
 
   // String url = "rtsp://" + ip;
   // dumbdisplay.log("* RTSP: " + url);
@@ -275,8 +330,16 @@ void updateDD(bool isFirstUpdate) {
     lastOSDMillis = 0;
   }
   if (osdIdle) {
+    nameListSelectionWrapper.deselectAll();
     OSD.createBitmap(CHANNELVID);
     OSD.update(CHANNELVID);
+  }
+
+  if (scrollUpButton->getFeedback() != NULL) {
+    nameListSelectionWrapper.decrementOffset();
+  }
+  if (scrollDownButton->getFeedback() != NULL) {
+    nameListSelectionWrapper.incrementOffset();
   }
 
   if (startStopSelection->getFeedback() != NULL) {
@@ -287,7 +350,11 @@ void updateDD(bool isFirstUpdate) {
   if (regFB != NULL) {
     if (regFB->text.length() > 0) {
       String name = regFB->text;
+      if (true) {
+        dumbdisplay.writeComment("* register: [" + name + "]");
+      }
       facerecog.registerFace(name);
+      nameListSelectionWrapper.addSelection(-1, name);
     }
   }
 
