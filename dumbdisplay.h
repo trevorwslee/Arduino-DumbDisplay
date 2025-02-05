@@ -866,13 +866,19 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
       drawImageFileFit(imageFileName, 0, 0, 0, 0, options);
     }
     /// cache image; not saved
+    /// @param imageName cachedImageName
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
+    /// cache image with specified timestamp; not saved
+    /// @param imageName cachedImageName
     void cacheImageWithTS(const String& imageName, const uint8_t *bytes, int byteCount, long imageTimestamp, char compressionMethod = 0);
     /// cache single-bit "pixel" image (i.e. B&W image); not saved
+    /// @param imageName cachedImageName
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
     /// cache 16-bit "pixel" image (i.e. 565 RGB image); not saved
+    /// @param imageName cachedImageName
     void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
-    /// cache grayscale "pixel" image; as if image saved and loaded
+    /// cache grayscale "pixel" image; not saved
+    /// @param imageName cachedImageName
     void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// saved cached image
     /// @param imageName cachedImageName

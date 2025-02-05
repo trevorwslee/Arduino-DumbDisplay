@@ -42,8 +42,9 @@ StreamIO videoStreamer(1, 1);
 StreamIO videoStreamerFDFR(1, 1);
 StreamIO videoStreamerRGBFD(1, 1);
 
-char ssid[] = "TrevorWireless";  // your network SSID (name)
-char pass[] = "joysftrevorws";   // your network password
+#include "_secret.h"
+char ssid[] = WIFI_SSID;       // your network SSID (name)
+char pass[] = WIFI_PASSWORD;   // your network password
 int status = WL_IDLE_STATUS;
 
 bool buttonState = false;
