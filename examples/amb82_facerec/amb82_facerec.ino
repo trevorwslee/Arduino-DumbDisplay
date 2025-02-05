@@ -142,13 +142,16 @@ void loop() {
 }
 
 SelectionListLayerWrapper nameListSelectionWrapper;
+bool rtspStarted;
 
 // User callback function for post processing of face recognition results
 void FRPostProcess(std::vector<FaceRecognitionResult> results) {
   uint16_t im_h = configVID.height();
   uint16_t im_w = configVID.width();
 
-  nameListSelectionWrapper.deselectAll();
+  if (rtspStarted) {
+    nameListSelectionWrapper.deselectAll();
+  }
   //printf("Total number of faces detected = %d\r\n", facerecog.getResultCount());
   OSD.createBitmap(CHANNELVID);
 
@@ -162,14 +165,16 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
       int ymin = (int)(item.yMin() * im_h);
       int ymax = (int)(item.yMax() * im_h);
 
-      if (false) {
-        dumbdisplay.writeComment("* detected: [" + String(item.name()) + "]");
-      }
-      int idx = nameListSelectionWrapper.findSelection(item.name());
-      if (idx != -1) {
-        nameListSelectionWrapper.select(idx, false);
-        nameListSelectionWrapper.scrollToView(idx);
-      }
+      if (rtspStarted) {
+        if (false) {
+          dumbdisplay.writeComment("* detected: [" + String(item.name()) + "]");
+        }
+        int idx = nameListSelectionWrapper.findSelection(item.name());
+        if (idx != -1) {
+          nameListSelectionWrapper.select(idx, false);
+          nameListSelectionWrapper.scrollToView(idx);
+        }
+    }
       
       // Ensure number of snapshots under MAX_UNKNOWN_COUNT
       uint32_t osd_color;
@@ -228,9 +233,22 @@ SelectionListDDLayer *nameListSelection;
 LcdDDLayer *scrollUpButton;
 LcdDDLayer *scrollDownButton;
 
-bool rtspStarted;
 long lastMillis;
 int counter = 0;
+
+void syncRegisterButtonUI() {
+  if (rtspStarted) {
+    registerButton->disabled(false);
+    registerButton->writeCenteredLine("Register");
+    registerButton->enableFeedback("f:keys");
+    nameListSelectionWrapper.deselectAll();
+  } else {
+    registerButton->disabled(true);
+    registerButton->writeCenteredLine("Deregister");
+    registerButton->enableFeedback();
+    nameListSelectionWrapper.deselectAll();
+  }
+}
 
 void startStopRtsp(bool start) {
   if (start) {
@@ -245,6 +263,7 @@ void startStopRtsp(bool start) {
     startStopSelection->deselect();
     rtspStarted = false;
   }
+  syncRegisterButtonUI();
 }
 
 void onNameListStateChanged() {
@@ -269,10 +288,8 @@ void initializeDD() {
   startStopSelection->highlightBorder(false, DD_COLOR_gray);
   startStopSelection->text("📺");
 
-  registerButton = dumbdisplay.createLcdLayer(8, 1);
+  registerButton = dumbdisplay.createLcdLayer(10, 1);
   registerButton->border(1, DD_COLOR_navy);
-  registerButton->writeCenteredLine("Register");
-  registerButton->enableFeedback("f:keys");
 
   nameListSelection = nameListSelectionWrapper.initializeLayer(dumbdisplay, 10, 1, 2, 2);
   nameListSelectionWrapper.setListStateChangedCallback(onNameListStateChanged);
@@ -331,7 +348,9 @@ void updateDD(bool isFirstUpdate) {
     lastOSDMillis = 0;
   }
   if (osdIdle) {
-    nameListSelectionWrapper.deselectAll();
+    if (rtspStarted) {
+      nameListSelectionWrapper.deselectAll();
+    }
     OSD.createBitmap(CHANNELVID);
     OSD.update(CHANNELVID);
   }
@@ -356,6 +375,20 @@ void updateDD(bool isFirstUpdate) {
       }
       facerecog.registerFace(name);
       nameListSelectionWrapper.addSelection(-1, name);
+    }
+  }
+
+  if (rtspStarted) {
+
+  } else {
+    const DDFeedback *nlFB = nameListSelection->getFeedback();
+    if (nlFB != NULL) {
+      int x = nlFB->x;
+      int y = nlFB->y;
+      nameListSelection->flashArea(x, y);
+      int selectionIdx = nameListSelectionWrapper.getSelectionIndexFromView(x, y);
+      nameListSelectionWrapper.select(selectionIdx);
+      registerButton->disabled(false);
     }
   }
 

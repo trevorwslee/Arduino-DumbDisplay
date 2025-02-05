@@ -782,7 +782,8 @@ class SelectionListLayerWrapper {
       }
       SelectionListDDLayer* selectionListLayer = dumbdisplay.createSelectionListLayer(colCount, rowCount, horiSelectionCount, vertSelectionCount, charHeight, fontName, canDrawDots, selectionBorderSizeCharHeightFactor);
       this->helper = new SelectionListLayerHelper(selectionListLayer);
-      this->visibleSelectionCount = horiSelectionCount * vertSelectionCount;
+      this->viewHoriSelectionCount = horiSelectionCount;
+      this->viewSelectionCount = horiSelectionCount * vertSelectionCount;
       // setScrollLayers(NULL, NULL);
       return selectionListLayer;
     }
@@ -795,6 +796,9 @@ class SelectionListLayerWrapper {
     }
     inline int getSelectionCount() {
       return helper->getSelectionCount();
+    }
+    int getSelectionIndexFromView(int horiSelectionIdx, int vertSelectionIdx) {
+      return this->getOffset() + (vertSelectionIdx * this->viewHoriSelectionCount) + horiSelectionIdx;
     }
     const String& getSelectionText(int selectionIdx) {
       return this->textBuffer[selectionIdx];
@@ -809,7 +813,7 @@ class SelectionListLayerWrapper {
     }
   public:   
     void setListStateChangedCallback(void (*listStateChangedCallback)()) {
-      helper->setListStateChangedCallback(listStateChangedCallback, this->visibleSelectionCount);
+      helper->setListStateChangedCallback(listStateChangedCallback, this->viewSelectionCount);
     }
     // void setScrollLayers(DDLayer* scrollUpLayer, DDLayer* scrollDownLayer) {
     //   this->helper->setScrollLayers(scrollUpLayer, scrollDownLayer, this->visibleSelectionCount);
@@ -877,7 +881,8 @@ class SelectionListLayerWrapper {
     short bufferSizeInc;
     int textBufferSize;
     int trackedTextCount;
-    int visibleSelectionCount;
+    int viewHoriSelectionCount;
+    int viewSelectionCount;
 };
 
 #endif
