@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r40)
+# DumbDisplay Arduino Library (v0.9.9-r41)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r40)](#dumbdisplay-arduino-library-v099-r40)
+- [DumbDisplay Arduino Library (v0.9.9-r41)](#dumbdisplay-arduino-library-v099-r41)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -80,13 +80,14 @@ On it, a few types of layers can be created mixed-and-matched:
 * ***Graphical LCD***, which is derived from the Turtle layer (i.e. in addition to general features of graphical LCD, it also has certain Turtle-like features) -- [GraphicalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_graphical_d_d_layer.html) 
 * ***7-Segment-row***, which can be used to display a series of digits, plus a decimal dot -- [SevenSegmentRowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_seven_segment_row_d_d_layer.html)
 * ***Selection***, which is composed of a row / a column / a grid of text-based-LCD-lookalikes for the purpose of selection -- [SelectionDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_selection_d_d_layer.html)
+* ***SelectionList***, like ***Selection***, but "selections" can be added and removed dynamically -- [SelectionListDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_selection_list_d_d_layer.html)
 * ***Joystick***, which can be used for getting virtual joystick movement input, and can also be used for horizontal/vertical "slider" input -- [JoystickDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_joystick_d_d_layer.html)
 * ***Plotter***, which works similar to the plotter of DumbDisplay [when it is acting as serial monitor], but plotting data are sent by calling the layer's method -- [PlotterDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_plotter_d_d_layer.html)
 * ***Terminal*** "device dependent view" layer, for showing sketch traces -- [TerminalDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_terminal_d_d_layer.html)
 * ***WebView*** "device dependent view" layer, that allows you to use Android WebView as a DD layer -- [WebViewDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_web_view_d_d_layer.html)
 * ***TomTom map*** "device dependent view" layer, for showing location (latitude/longitude) -- [TomTomMapDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_tom_tom_map_d_d_layer.html)
 * ***DumbDisplay window*** "device dependent view" layer, that opens up a window for connecting to other microcontroller's DumbDisplay sketch independently -- [DumbDisplayWindowDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_dumb_display_window_d_d_layer.html)
-* **RTSP Client*** "device dependent view" layer, for showing RTSP streamed video -- [RtspClientDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_rtsp_client_d_d_layer.html)
+* ***RTSP Client*** "device dependent view" layer, for showing RTSP streamed video -- [RtspClientDDLayer](https://trevorwslee.github.io/ArduinoDumbDisplay/html/class_rtsp_client_d_d_layer.html)
 
 Note that with the "layer feedback" mechanism, user interaction (like clicking of layers) can be routed back to the connected microcontroller, and as a result, the layers can be used as simple input gadgets as well. Please refer to [DumbDisplay "Feedback" Mechanism](#dumbdisplay-feedback-mechanism) for more on "layer feedback" mechanism.
 
@@ -150,7 +151,7 @@ which requires an IO object for communicating with your DumbDisplay Android app.
 
 |  |  |
 |--|--|
-|A kickstart virtual blink test example would be like https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink/otgblink.ino|![](screenshots/otgblink.png)|
+|A kickstart virtual blink test example would be like `otgblink` -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otgblink/otgblink.ino|![](screenshots/otgblink.png)|
 
 
 ```
@@ -189,7 +190,7 @@ Notes:
 
 |  |  |
 |--|--|
-|![](screenshots/otg7segment.png)|Another simple example is making use of virtual 7-segment display for counting (from 0 to 9) like https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otg7segment/otg7segment.ino|
+|![](screenshots/otg7segment.png)|Another simple example is making use of virtual 7-segment display for counting (from 0 to 9) like `otg7segment` -- https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/otg7segment/otg7segment.ino|
 
 ```
 #include "dumbdisplay.h"
@@ -1423,6 +1424,8 @@ void setup() {
 
 ```
 
+For example usage of RTSP Client Layer, you may refer to the example [`amb82_facerecog`](https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/amb82_facerecog/amb82_facerecog.ino)
+
 
 ## Downloadable Font Support
 
@@ -2332,6 +2335,10 @@ MIT
 
 
 # Change History
+
+v0.9.9-r41
+  - added SelectionListDDLayer
+  - bug fix
 
 
 v0.9.9-r40

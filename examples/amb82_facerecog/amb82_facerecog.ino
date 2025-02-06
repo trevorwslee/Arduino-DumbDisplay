@@ -1,8 +1,41 @@
-// ***
-// *** experimental ***
-// ***
+// **********
+// This sketch is modified from the `Examples/AmebaNN/RTSPFaceRecognition` example of the Arduino IDE board
+// Realtek Ameba Boards (32-bit Arm v8M @ 500MHx) -- https://www.amebaiot.com/en/
+// The board tested the sketch with is the AMB82 MINI (Ameba RTL8735B) -- https://www.amebaiot.com/en/ameba-arduino-summary/
+// **********
+
+
+/**
+ *
+ * IMPORTANT: set the macros WIFI_SSID and WIFI_PASSWORD below
+ *
+ * to run and see the result of this sketch, you will need two addition things:
+ * . you will need to install Android DumbDisplay app from Play store
+ *   https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay
+ * . although there are several ways for microcontroller board to establish connection
+ *   with DumbDisplay app, here, the simple OTG USB connection is assume;
+ *   hence, you will need an OTG adaptor cable for connecting your microcontroller board
+ *   to your Android phone
+ * . after uploading the sketch to your microcontroller board, plug the USB cable
+ *   to the OTG adaptor connected to your Android phone
+ * . open the DumbDisplay app and make connection to your microcontroller board via the USB cable;
+ *   hopefully, the UI is obvious enough :)
+ * . for more details on DumbDisplay Arduino Library, please refer to
+ *   https://github.com/trevorwslee/Arduino-DumbDisplay#readme
+ * there is a related blog post that you may want to take a look:
+ * . https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
+ */
+
+
+// *** comment out and set the following lines that define WIFI_SSID and WIFI_PASSWORD .. or define them in _secret.h
+//#define WIFI_SSID           "wifi ssid"
+//#define WIFI_PASSWORD       "wifi password"
+#ifndef WIFI_SSID
+  #include "_secret.h"
+#endif
 
 #define AUTO_START_RTSP true
+
 
 #include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput());
@@ -150,9 +183,7 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
   uint16_t im_h = configVID.height();
   uint16_t im_w = configVID.width();
 
-  if (rtspStarted) {
-    nameListSelectionWrapper.deselectAll();
-  }
+  bool recognizedAny = false;
   //printf("Total number of faces detected = %d\r\n", facerecog.getResultCount());
   OSD.createBitmap(CHANNELVID);
 
@@ -172,8 +203,9 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
         }
         int idx = nameListSelectionWrapper.findSelection(item.name());
         if (idx != -1) {
-          nameListSelectionWrapper.select(idx, false);
+          nameListSelectionWrapper.select(idx, !recognizedAny);
           nameListSelectionWrapper.scrollToView(idx);
+          recognizedAny = true;
         }
     }
       
@@ -222,6 +254,9 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
     unknownDetected = false;
   }
   OSD.update(CHANNELVID);
+  if (rtspStarted && !recognizedAny) {
+    nameListSelectionWrapper.deselectAll();
+  }
   lastOSDMillis = millis();
 }
 
@@ -240,12 +275,18 @@ int counter = 0;
 void syncRegisterButtonUI() {
   if (rtspStarted) {
     registerButton->disabled(false);
+    registerButton->border(0.8, DD_COLOR_darkgreen);
+    registerButton->pixelColor(DD_COLOR_darkgreen);
+    registerButton->bgPixelColor(DD_COLOR_lightgreen);
     registerButton->writeCenteredLine("Register");
     registerButton->enableFeedback("f:keys");
     nameListSelectionWrapper.deselectAll();
     selectedNameIndex = -1;
   } else {
     registerButton->disabled(true);
+    registerButton->border(0.8, DD_COLOR_darkred);
+    registerButton->pixelColor(DD_COLOR_darkred);
+    registerButton->bgPixelColor(DD_COLOR_orange);
     registerButton->writeCenteredLine("Deregister");
     registerButton->enableFeedback();
     nameListSelectionWrapper.deselectAll();
@@ -292,7 +333,6 @@ void initializeDD() {
   startStopSelection->text("📺");
 
   registerButton = dumbdisplay.createLcdLayer(10, 1);
-  registerButton->border(1, DD_COLOR_navy);
 
   nameListSelection = nameListSelectionWrapper.initializeLayer(dumbdisplay, 10, 1, 2, 2);
   nameListSelectionWrapper.setListStateChangedCallback(onNameListStateChanged);
@@ -375,7 +415,7 @@ void updateDD(bool isFirstUpdate) {
       if (regFB->text.length() > 0) {
         String name = regFB->text;
         if (true) {
-          dumbdisplay.writeComment("* register: [" + name + "]");
+          dumbdisplay.writeComment("+ register: [" + name + "]");
         }
         facerecog.registerFace(name);
         int index = nameListSelectionWrapper.addSelection(-1, name);
@@ -384,6 +424,9 @@ void updateDD(bool isFirstUpdate) {
     } else {
       if (selectedNameIndex != -1) {
         String name = nameListSelectionWrapper.getSelectionText(selectedNameIndex);
+        if (true) {
+          dumbdisplay.writeComment("- deregister: [" + name + "]");
+        }
         facerecog.removeFace(name);
         nameListSelectionWrapper.removeSelection(selectedNameIndex);
         registerButton->disabled(true);
