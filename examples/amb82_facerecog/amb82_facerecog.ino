@@ -143,6 +143,7 @@ void loop() {
 
 SelectionListLayerWrapper nameListSelectionWrapper;
 bool rtspStarted;
+int selectedNameIndex;
 
 // User callback function for post processing of face recognition results
 void FRPostProcess(std::vector<FaceRecognitionResult> results) {
@@ -242,11 +243,13 @@ void syncRegisterButtonUI() {
     registerButton->writeCenteredLine("Register");
     registerButton->enableFeedback("f:keys");
     nameListSelectionWrapper.deselectAll();
+    selectedNameIndex = -1;
   } else {
     registerButton->disabled(true);
     registerButton->writeCenteredLine("Deregister");
     registerButton->enableFeedback();
     nameListSelectionWrapper.deselectAll();
+    selectedNameIndex = -1;
   }
 }
 
@@ -368,26 +371,35 @@ void updateDD(bool isFirstUpdate) {
 
   const DDFeedback *regFB = registerButton->getFeedback();
   if (regFB != NULL) {
-    if (regFB->text.length() > 0) {
-      String name = regFB->text;
-      if (true) {
-        dumbdisplay.writeComment("* register: [" + name + "]");
+    if (rtspStarted) {
+      if (regFB->text.length() > 0) {
+        String name = regFB->text;
+        if (true) {
+          dumbdisplay.writeComment("* register: [" + name + "]");
+        }
+        facerecog.registerFace(name);
+        int index = nameListSelectionWrapper.addSelection(-1, name);
+        nameListSelectionWrapper.scrollToView(index);
       }
-      facerecog.registerFace(name);
-      nameListSelectionWrapper.addSelection(-1, name);
-    }
+    } else {
+      if (selectedNameIndex != -1) {
+        String name = nameListSelectionWrapper.getSelectionText(selectedNameIndex);
+        facerecog.removeFace(name);
+        nameListSelectionWrapper.removeSelection(selectedNameIndex);
+        registerButton->disabled(true);
+      }
+    }  
   }
 
   if (rtspStarted) {
-
   } else {
     const DDFeedback *nlFB = nameListSelection->getFeedback();
     if (nlFB != NULL) {
       int x = nlFB->x;
       int y = nlFB->y;
       nameListSelection->flashArea(x, y);
-      int selectionIdx = nameListSelectionWrapper.getSelectionIndexFromView(x, y);
-      nameListSelectionWrapper.select(selectionIdx);
+      selectedNameIndex = nameListSelectionWrapper.getSelectionIndexFromView(x, y);
+      nameListSelectionWrapper.select(selectedNameIndex);
       registerButton->disabled(false);
     }
   }
