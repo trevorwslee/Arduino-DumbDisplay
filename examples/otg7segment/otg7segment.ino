@@ -13,7 +13,7 @@
  * . for more details on DumbDisplay Arduino Library, please refer to
  *   https://github.com/trevorwslee/Arduino-DumbDisplay#readme
  * there is a related blog post that you may want to take a look:
- * . https://create.arduino.cc/projecthub/trevorwslee/blink-test-with-virtual-display-dumbdisplay-5c8350
+ * . https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/
  */
 
 

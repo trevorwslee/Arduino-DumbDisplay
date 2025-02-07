@@ -626,7 +626,8 @@ void updateDD(bool isFirstUpdate) {
         suggestSelection->flashArea(0, 0);
       } else if (x == 1 && y == 0) {
         suggestContinuously = !suggestContinuously;
-        suggestSelection->setSelected(suggestContinuously, 1);
+        //suggestSelection->setSelected(suggestContinuously, 1);
+        suggestSelection->selected(suggestContinuously, 1);
         suggestSelection->flashArea(1, 0);
       }
     }
