@@ -642,12 +642,13 @@ class DDReconnectPassiveConnectionHelper {
 
 #endif
 
+/// helper for using of SelectionListLayerWrapper; suggested to use SelectionListLayerWrapper whenever it makes sense
 class SelectionListLayerHelper {
   public:
     SelectionListLayerHelper(SelectionListDDLayer* selectionListLayer): selectionListLayer(selectionListLayer) {
       this->selectionCount = 0;
       this->selectionOffset = 0;
-      this->visibleSelectionCount = -1;
+      this->viewSelectionCount = -1;
       this->listStateChangedCallback = NULL;
     }
   public:
@@ -661,16 +662,11 @@ class SelectionListLayerHelper {
       return selectionCount;
     }
   public:
-    void setListStateChangedCallback(void (*listStateChangedCallback)(), int visibleSelectionCount = -1) {
+    /// set the "list state changed" callback; here "state" refers to "list add/remove text or change of offset"
+    void setListStateChangedCallback(void (*listStateChangedCallback)(), int viewSelectionCount = -1) {
       this->listStateChangedCallback = listStateChangedCallback;
-      this->visibleSelectionCount = visibleSelectionCount;
+      this->viewSelectionCount = viewSelectionCount;
     }
-    // void setScrollLayers(DDLayer* scrollUpLayer, DDLayer* scrollDownLayer, int visibleSelectionCount) {
-    //   this->scrollUpLayer = scrollUpLayer;
-    //   this->scrollDownLayer = scrollDownLayer;
-    //   this->visibleSelectionCount = visibleSelectionCount;
-    //   syncScollState();
-    // }
   public:
     /// @param selectionIdx -1 means append as the last selection
     /// @return -1 if selectionIdx is out of range
@@ -724,9 +720,9 @@ class SelectionListLayerHelper {
       if (selectionIdx < selectionOffset) {
         setOffset(selectionIdx);
       } else {
-        if (this->visibleSelectionCount != -1) {
-          if (selectionIdx >= (selectionOffset + this->visibleSelectionCount)) {
-            setOffset(selectionIdx - this->visibleSelectionCount + 1);
+        if (this->viewSelectionCount != -1) {
+          if (selectionIdx >= (selectionOffset + this->viewSelectionCount)) {
+            setOffset(selectionIdx - this->viewSelectionCount + 1);
           }
         }
       }  
@@ -749,13 +745,14 @@ class SelectionListLayerHelper {
     SelectionListDDLayer* selectionListLayer;
     int selectionCount;
     int selectionOffset;
-    int visibleSelectionCount;
+    int viewSelectionCount;
     void (*listStateChangedCallback)();
     //DDLayer* scrollUpLayer;
     //DDLayer* scrollDownLayer;
 };
 
 
+/// wrapper for using of SelectionListLayerWrapper
 class SelectionListLayerWrapper {
   public:
     SelectionListLayerWrapper(short bufferSizeInc = 2) {
@@ -765,11 +762,12 @@ class SelectionListLayerWrapper {
       this->textBufferSize = 0;
       this->trackedTextCount = 0;
     }
+    /// initialize a new SelectionListDDLayer (note that any old ones will not be deleted)
     SelectionListDDLayer* initializeLayer(DumbDisplay& dumbdisplay,
-                                         int colCount, int rowCount,
-                                         int horiSelectionCount, int vertSelectionCount,
-                                         int charHeight = 0, const String& fontName = "",
-                                         bool canDrawDots = true, float selectionBorderSizeCharHeightFactor = 0.3) {
+                                          int colCount, int rowCount,
+                                          int horiSelectionCount, int vertSelectionCount,
+                                          int charHeight = 0, const String& fontName = "",
+                                          bool canDrawDots = true, float selectionBorderSizeCharHeightFactor = 0.3) {
       if (this->helper != NULL) {
         delete this->helper;
         this->helper = NULL;
@@ -812,12 +810,12 @@ class SelectionListLayerWrapper {
       return -1;
     }
   public:   
+    /// set the "list state changed" callback; here "state" refers to "list add/remove text or change of offset"
     void setListStateChangedCallback(void (*listStateChangedCallback)()) {
       helper->setListStateChangedCallback(listStateChangedCallback, this->viewSelectionCount);
     }
-    // void setScrollLayers(DDLayer* scrollUpLayer, DDLayer* scrollDownLayer) {
-    //   this->helper->setScrollLayers(scrollUpLayer, scrollDownLayer, this->visibleSelectionCount);
-    // }
+    /// @param selectionIdx -1 means append as the last selection
+    /// @return -1 if selectionIdx is out of range
     int addSelection(int selectionIdx, const String& text, const String& align = "L") {
       int idx = helper->add(selectionIdx);
       if (idx != -1) {
@@ -838,6 +836,8 @@ class SelectionListLayerWrapper {
       }
       return idx;
     }
+    /// @param selectionIdx -1 means the last selection
+    /// @return -1 if selectionIdx is out of range
     int removeSelection(int selectionIdx) {
       selectionIdx = helper->remove(selectionIdx);
       if (selectionIdx != -1) {
