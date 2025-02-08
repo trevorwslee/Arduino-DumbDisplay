@@ -349,7 +349,7 @@ int readBackRegisteredNames() {
     dumbdisplay.writeComment("* reading from " + filePath + " ...");
     File file = fs.open(filePath);
     file.read(&nameCount, 1);
-    dumbdisplay.writeComment("* reading " + String(nameCount) + " names:");
+    dumbdisplay.writeComment("* reading " + String((uint8_t) nameCount) + " names:");
     for (int i = 0; i < nameCount; i++) {
       char name[NAME_WIDTH + 1] = {0};
       file.read(name, NAME_WIDTH + 1);
@@ -472,7 +472,7 @@ void initializeDD() {
       }
     }
   } else {
-    dumbdisplay.writeComment("FS not ready");
+    dumbdisplay.writeComment("!!! FS not ready !!!");
     saveButton->visible(false);
   }
 
