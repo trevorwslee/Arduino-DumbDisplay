@@ -2,11 +2,13 @@
 // This sketch is modified from the `Examples/AmebaNN/RTSPFaceRecognition` example of the Arduino IDE board
 // Realtek Ameba Boards (32-bit Arm v8M @ 500MHx) -- https://www.amebaiot.com/en/
 // The board tested the sketch with is the AMB82 MINI (Ameba RTL8735B) -- https://www.amebaiot.com/en/ameba-arduino-summary/
+// Notes:
+// . if SD card is installed, you will have the options to persist the registered names to the SD card
+// . nevertheless, only the registered names are persisted; the faces are persisted using the board's support
 // **********
 
 
 /**
- *
  * IMPORTANT: set the macros WIFI_SSID and WIFI_PASSWORD below
  *
  * to run and see the result of this sketch, you will need two addition things:
@@ -34,7 +36,10 @@
   #include "_secret.h"
 #endif
 
-#define AUTO_START_RTSP true
+#define AUTO_START_RTSP      true
+#define NAME_WIDTH           12
+
+#define REGISTERED_NAME_FILE "registered_names.dat"
 
 
 #include "dumbdisplay.h"
@@ -51,57 +56,34 @@ DDMasterResetPassiveConnectionHelper pdd(dumbdisplay);
 #include "AmebaFatFS.h"
 
 #define CHANNELVID 0   // Channel for RTSP streaming
-#define CHANNELJPEG 1  // Channel for taking snapshots
 #define CHANNELNN 3    // RGB format video for NN only available on channel 3
 
 // Customised resolution for NN
 #define NNWIDTH 576
 #define NNHEIGHT 320
 
-// Pin Definition
-#define RED_LED 3
-#define GREEN_LED 4
-#define BUTTON_PIN 5
-
-// Select the maximum number of snapshots to capture
-#define MAX_UNKNOWN_COUNT 5
-
 VideoSetting configVID(VIDEO_FHD, CAM_FPS, VIDEO_H264, 0);
-VideoSetting configJPEG(VIDEO_FHD, CAM_FPS, VIDEO_JPEG, 1);
 VideoSetting configNN(NNWIDTH, NNHEIGHT, 10, VIDEO_RGB, 0);
 NNFaceDetectionRecognition facerecog;
 RTSP rtsp;
 StreamIO videoStreamer(1, 1);
-StreamIO videoStreamerFDFR(1, 1);
 StreamIO videoStreamerRGBFD(1, 1);
 
 #include "_secret.h"
 char ssid[] = WIFI_SSID;       // your network SSID (name)
 char pass[] = WIFI_PASSWORD;   // your network password
-int status = WL_IDLE_STATUS;
-
-bool buttonState = false;
-uint32_t img_addr = 0;
-uint32_t img_len = 0;
-bool regFace = true;
-bool unknownDetected = false;
-bool roundBegan = false;
-int unknownCount = 0;
 
 // File Initialization
 AmebaFatFS fs;
 
 String ip;
+bool fsReady;
 long lastOSDMillis = 0;
 
 
 void setup() {
-  // GPIO Initialization
-  pinMode(RED_LED, OUTPUT);
-  pinMode(GREEN_LED, OUTPUT);
-  pinMode(BUTTON_PIN, INPUT);
-
   // Attempt to connect to Wifi network:
+  int status = WL_IDLE_STATUS;
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to WPA SSID: ");
     Serial.println(ssid);
@@ -111,11 +93,8 @@ void setup() {
     delay(2000);
   }
 
-  ip = WiFi.localIP().get_address();
-
   // Configure camera video channels with video format information
   Camera.configVideoChannel(CHANNELVID, configVID);
-  Camera.configVideoChannel(CHANNELJPEG, configJPEG);
   Camera.configVideoChannel(CHANNELNN, configNN);
   Camera.videoInit();
 
@@ -147,20 +126,21 @@ void setup() {
 
   // Start data stream from video channel
   Camera.channelBegin(CHANNELVID);
-  Camera.channelBegin(CHANNELJPEG);
+  //Camera.channelBegin(CHANNELJPEG);
   Camera.channelBegin(CHANNELNN);
 
   // Start OSD drawing on RTSP video channel
   OSD.configVideo(CHANNELVID, configVID);
-#if SUPPORT_DD
-  OSD.configTextSize(CHANNELVID, 32, 64);
-#endif  
   OSD.begin();
 
+  // Set up for DD UI logics
+  fsReady = fs.begin();
+  ip = WiFi.localIP().get_address();
   videoStreamer.pause();  
 }
 
 void loop() {
+  // Standard "master reset" DD loop
   pdd.loop(
     []() {
       initializeDD();
@@ -174,9 +154,15 @@ void loop() {
   );
 }
 
+// DD global variables
 SelectionListLayerWrapper nameListSelectionWrapper;
 bool rtspStarted;
+bool namesChanged;
 int selectedNameIndex;
+long blinkLastMillis;
+int blinkCounter = 0;
+
+
 
 // User callback function for post processing of face recognition results
 void FRPostProcess(std::vector<FaceRecognitionResult> results) {
@@ -184,7 +170,6 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
   uint16_t im_w = configVID.width();
 
   bool recognizedAny = false;
-  //printf("Total number of faces detected = %d\r\n", facerecog.getResultCount());
   OSD.createBitmap(CHANNELVID);
 
   if (facerecog.getResultCount() > 0) {
@@ -207,35 +192,17 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
           nameListSelectionWrapper.scrollToView(idx);
           recognizedAny = true;
         }
-    }
+      }
       
       // Ensure number of snapshots under MAX_UNKNOWN_COUNT
       uint32_t osd_color;
       if (String(item.name()) == String("unknown")) {
         osd_color = OSD_COLOR_RED;
-        if (regFace == false) {
-          unknownDetected = true;
-          unknownCount++;
-          if (unknownCount < (MAX_UNKNOWN_COUNT + 1)) {  
-            if (true) {
-              dumbdisplay.writeComment("* save Stranger" + String(unknownCount));
-            }               // Ensure number of snapshots under MAX_UNKNOWN_COUNT
-            facerecog.registerFace("Stranger" + String(unknownCount));  // Register under named Stranger <No.> to prevent recapture of same unrecognised person twice
-            fs.begin();
-            File file = fs.open(String(fs.getRootPath()) + "Stranger" + String(unknownCount) + ".jpg");  // Capture snapshot of stranger under name Stranger <No.>
-            delay(1000);
-            Camera.getImage(CHANNELJPEG, &img_addr, &img_len);
-            file.write((uint8_t *)img_addr, img_len);
-            file.close();
-            fs.end();
-          }
-        }
       } else {
         osd_color = OSD_COLOR_GREEN;
       }
 
       // Draw boundary box
-      //printf("Face %d name %s:\t%d %d %d %d\n\r", i, item.name(), xmin, xmax, ymin, ymax);
       OSD.drawRect(CHANNELVID, xmin, ymin, xmax, ymax, 3, osd_color);
 
       // Print identification text above boundary box
@@ -243,15 +210,6 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
       snprintf(text_str, sizeof(text_str), "Face:%s", item.name());
       OSD.drawText(CHANNELVID, xmin, ymin - OSD.getTextHeight(CHANNELVID), text_str, osd_color);
     }
-    if ((regFace == false) && (unknownDetected == true)) {
-      // RED LED remain lit up when unknown faces detected
-      digitalWrite(RED_LED, HIGH);
-      digitalWrite(GREEN_LED, LOW);
-    } else if ((regFace == false) && (unknownDetected == false)) {
-      digitalWrite(RED_LED, LOW);
-      digitalWrite(GREEN_LED, HIGH);
-    }
-    unknownDetected = false;
   }
   OSD.update(CHANNELVID);
   if (rtspStarted && !recognizedAny) {
@@ -260,17 +218,23 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
   lastOSDMillis = millis();
 }
 
+// DD global layer variables that will be initialized in initializeDD()
 RtspClientDDLayer *rtspClient;
 SelectionDDLayer *startStopSelection;
 LcdDDLayer *registerButton;
+LcdDDLayer *saveButton;
 LedGridDDLayer *led;
-
 SelectionListDDLayer *nameListSelection;
 LcdDDLayer *scrollUpButton;
 LcdDDLayer *scrollDownButton;
 
-long lastMillis;
-int counter = 0;
+void syncSaveButtonUI() {
+  if (namesChanged && fsReady) {
+    saveButton->disabled(false);
+  } else {
+    saveButton->disabled(true);
+  }
+}
 
 void syncRegisterButtonUI() {
   if (rtspStarted) {
@@ -293,6 +257,56 @@ void syncRegisterButtonUI() {
     selectedNameIndex = -1;
   }
 }
+
+bool saveRegisteredNames() {
+  if (!fsReady) {
+    return false;
+  }
+  char nameCount = nameListSelectionWrapper.getSelectionCount();
+  String filePath = String(fs.getRootPath()) + REGISTERED_NAME_FILE;
+  File file = fs.open(filePath);
+  dumbdisplay.writeComment("* save to " + filePath + " ...");
+  file.write(&nameCount, 1);
+  dumbdisplay.writeComment("* saving " + String((uint8_t) nameCount) + " names:");
+  for (int i = 0; i < nameCount; i++) {
+    String selectionText = nameListSelectionWrapper.getSelectionText(i);
+    char name[NAME_WIDTH + 1] = {0};
+    selectionText.toCharArray(name, NAME_WIDTH + 1);
+    file.write(name, NAME_WIDTH + 1);
+    dumbdisplay.writeComment("  . saved [" + String(name) + "]");
+  }
+  file.close();
+  namesChanged = false;
+  syncSaveButtonUI();
+  return true;
+}
+
+int readBackRegisteredNames() {
+  if (!fsReady) {
+    return 0;
+  }
+  nameListSelectionWrapper.removeAllSelections();
+  String filePath = String(fs.getRootPath()) + REGISTERED_NAME_FILE;
+  char nameCount = 0;
+  if (fs.exists(filePath)) {
+    dumbdisplay.writeComment("* reading from " + filePath + " ...");
+    File file = fs.open(filePath);
+    file.read(&nameCount, 1);
+    dumbdisplay.writeComment("* reading " + String((uint8_t) nameCount) + " names:");
+    for (int i = 0; i < nameCount; i++) {
+      char name[NAME_WIDTH + 1] = {0};
+      file.read(name, NAME_WIDTH + 1);
+      nameListSelectionWrapper.addSelection(-1, name);
+      dumbdisplay.writeComment("  . added [" + String(name) + "]");
+    }
+    file.close();
+  }
+  namesChanged = false;
+  syncSaveButtonUI();
+  return nameCount;
+}
+
+
 
 void startStopRtsp(bool start) {
   if (start) {
@@ -318,12 +332,11 @@ void onNameListStateChanged() {
   bool canScrollDown = selectionOffset < (selectionCount - visibleSelectionCount);
   scrollUpButton->disabled(!canScrollUp);
   scrollDownButton->disabled(!canScrollDown);
-  //removeLayer->disabled(selectionCount == 0);
 }
 
 
 void initializeDD() {
-  rtspClient = dumbdisplay.createRtspClient(160, 90);
+  rtspClient = dumbdisplay.createRtspClient(160, 90);  // 160x90 actually spells out the aspect-ratio
   rtspClient->border(2, "blue", "round");
   rtspClient->padding(2);
 
@@ -334,7 +347,12 @@ void initializeDD() {
 
   registerButton = dumbdisplay.createLcdLayer(10, 1);
 
-  nameListSelection = nameListSelectionWrapper.initializeLayer(dumbdisplay, 10, 1, 2, 2);
+  saveButton = dumbdisplay.createLcdLayer(2, 1);  
+  saveButton->border(1, DD_COLOR_red);
+  saveButton->writeCenteredLine("💾");
+  saveButton->enableFeedback("fl");
+
+  nameListSelection = nameListSelectionWrapper.initializeLayer(dumbdisplay, NAME_WIDTH, 1, 2, 2);
   nameListSelectionWrapper.setListStateChangedCallback(onNameListStateChanged);
   nameListSelection->border(1, DD_COLOR_black);
 
@@ -350,7 +368,7 @@ void initializeDD() {
 
   led = dumbdisplay.createLedGridLayer();
   const char *color = "darkblue";
-  switch (counter++ % 3) {
+  switch (blinkCounter++ % 3) {
     case 0:
       color = "darkred";
       break;
@@ -367,6 +385,7 @@ void initializeDD() {
     .beginGroup('H')
       .addLayer(startStopSelection)
       .addLayer(registerButton)
+      .addLayer(saveButton)
       .addLayer(led)
     .endGroup()
     .beginGroup('H')
@@ -376,12 +395,32 @@ void initializeDD() {
     .endGroup()
     .build());
 
-  // String url = "rtsp://" + ip;
-  // dumbdisplay.log("* RTSP: " + url);
-  // rtspClient->start(url);
-
   startStopRtsp(AUTO_START_RTSP);
-  lastMillis = 0;
+
+  int nameCount = 0;
+  if (fsReady) {
+    nameCount = readBackRegisteredNames();
+    dumbdisplay.writeComment("* read back " + String(nameCount) + " names");
+    if (nameCount > 0) {
+      for (int i = 0; i < nameCount; i++) {
+        String name = nameListSelectionWrapper.getSelectionText(i);
+        dumbdisplay.writeComment(" . [" + name + "]");
+      }
+    }
+  } else {
+    dumbdisplay.writeComment("!!! FS not ready !!!");
+    saveButton->visible(false);
+  }
+
+  if (nameCount == 0) {
+    facerecog.resetRegisteredFace();
+    dumbdisplay.writeComment("* reset faces");
+  } else {
+    facerecog.restoreRegisteredFace();
+    dumbdisplay.writeComment("* restored faces");
+  }
+
+  blinkLastMillis = 0;
 }
 
 void updateDD(bool isFirstUpdate) {
@@ -409,11 +448,21 @@ void updateDD(bool isFirstUpdate) {
     startStopRtsp(!rtspStarted);
   }
 
+  if (saveButton->getFeedback() != NULL) {
+    if (saveRegisteredNames()) {
+      facerecog.backupRegisteredFace();
+      dumbdisplay.writeComment("* backed up faces");
+    }
+  }
+
   const DDFeedback *regFB = registerButton->getFeedback();
   if (regFB != NULL) {
     if (rtspStarted) {
       if (regFB->text.length() > 0) {
         String name = regFB->text;
+        if (name.length() > NAME_WIDTH) {
+          name = name.substring(0, NAME_WIDTH);
+        }
         if (true) {
           dumbdisplay.writeComment("+ register: [" + name + "]");
         }
@@ -432,6 +481,8 @@ void updateDD(bool isFirstUpdate) {
         registerButton->disabled(true);
       }
     }  
+    namesChanged = true;
+    syncSaveButtonUI();
   }
 
   if (rtspStarted) {
@@ -449,9 +500,9 @@ void updateDD(bool isFirstUpdate) {
 
 
   bool blink = false;
-  if ((millis() - lastMillis) >= 1000) {
+  if ((millis() - blinkLastMillis) >= 1000) {
     blink = true;
-    lastMillis = millis();
+    blinkLastMillis = millis();
   }
   if (blink) {
     if (led != NULL) {

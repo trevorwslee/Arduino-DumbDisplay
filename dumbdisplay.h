@@ -644,6 +644,7 @@ class SelectionDDLayer: public SelectionBaseDDLayer {
 
 /// @brief
 /// Class for "selection list" layer, like SelectionDDLayer but "selections" can be added and removed dynamically; it can be created with DumbDisplay::createListSelectionLayer()
+/// Consider using SelectionListLayerHelper / SelectionListLayerWrapper for richer tracking of the "list"
 /// @note by default, it has "feedback" enabled to indicate which "selection" unit is clicked
 /// @since v0.9.9-r41
 class SelectionListDDLayer: public SelectionBaseDDLayer {

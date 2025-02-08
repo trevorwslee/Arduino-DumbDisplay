@@ -752,7 +752,7 @@ class SelectionListLayerHelper {
 };
 
 
-/// wrapper for using of SelectionListLayerWrapper
+/// wrapper for using of SelectionListLayerWrapper that help you to track the text added
 class SelectionListLayerWrapper {
   public:
     SelectionListLayerWrapper(short bufferSizeInc = 2) {
@@ -847,6 +847,12 @@ class SelectionListLayerWrapper {
         }
       }
       return selectionIdx;
+    }
+    void removeAllSelections() {
+      int nameCount = getSelectionCount();
+      for (int i = 0; i < nameCount; i++) {
+        removeSelection(0);
+      }
     }
     void setOffset(int offset) {
       helper->setOffset(offset);
