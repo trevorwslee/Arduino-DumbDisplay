@@ -2,7 +2,7 @@
 // This sketch is modified from the `Examples/AmebaNN/RTSPFaceRecognition` example of the Arduino IDE board
 // Realtek Ameba Boards (32-bit Arm v8M @ 500MHx) -- https://www.amebaiot.com/en/
 // The board tested the sketch with is the AMB82 MINI (Ameba RTL8735B) -- https://www.amebaiot.com/en/ameba-arduino-summary/
-// **********
+// **********i
 
 
 /**
@@ -35,6 +35,7 @@
 #endif
 
 #define AUTO_START_RTSP true
+#define NAME_WIDTH      12
 
 
 #include "dumbdisplay.h"
@@ -158,6 +159,9 @@ void setup() {
   OSD.begin();
 
   videoStreamer.pause();  
+  facerecog.resetRegisteredFace();
+  // facerecog.backupRegisteredFace();
+  // facerecog.restoreRegisteredFace();
 }
 
 void loop() {
@@ -219,7 +223,8 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
           if (unknownCount < (MAX_UNKNOWN_COUNT + 1)) {  
             if (true) {
               dumbdisplay.writeComment("* save Stranger" + String(unknownCount));
-            }               // Ensure number of snapshots under MAX_UNKNOWN_COUNT
+            }
+            // Ensure number of snapshots under MAX_UNKNOWN_COUNT
             facerecog.registerFace("Stranger" + String(unknownCount));  // Register under named Stranger <No.> to prevent recapture of same unrecognised person twice
             fs.begin();
             File file = fs.open(String(fs.getRootPath()) + "Stranger" + String(unknownCount) + ".jpg");  // Capture snapshot of stranger under name Stranger <No.>
@@ -323,7 +328,7 @@ void onNameListStateChanged() {
 
 
 void initializeDD() {
-  rtspClient = dumbdisplay.createRtspClient(160, 90);
+  rtspClient = dumbdisplay.createRtspClient(160, 90);  // 160x90 actually spells out the aspect-ratio
   rtspClient->border(2, "blue", "round");
   rtspClient->padding(2);
 
@@ -334,7 +339,7 @@ void initializeDD() {
 
   registerButton = dumbdisplay.createLcdLayer(10, 1);
 
-  nameListSelection = nameListSelectionWrapper.initializeLayer(dumbdisplay, 10, 1, 2, 2);
+  nameListSelection = nameListSelectionWrapper.initializeLayer(dumbdisplay, NAME_WIDTH, 1, 2, 2);
   nameListSelectionWrapper.setListStateChangedCallback(onNameListStateChanged);
   nameListSelection->border(1, DD_COLOR_black);
 
@@ -414,6 +419,9 @@ void updateDD(bool isFirstUpdate) {
     if (rtspStarted) {
       if (regFB->text.length() > 0) {
         String name = regFB->text;
+        if (name.length() > NAME_WIDTH) {
+          name = name.substring(0, NAME_WIDTH);
+        }
         if (true) {
           dumbdisplay.writeComment("+ register: [" + name + "]");
         }

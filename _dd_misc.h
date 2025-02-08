@@ -752,7 +752,7 @@ class SelectionListLayerHelper {
 };
 
 
-/// wrapper for using of SelectionListLayerWrapper
+/// wrapper for using of SelectionListLayerWrapper that help you to track the text added
 class SelectionListLayerWrapper {
   public:
     SelectionListLayerWrapper(short bufferSizeInc = 2) {
