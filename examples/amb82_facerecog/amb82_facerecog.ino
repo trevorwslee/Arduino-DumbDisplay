@@ -133,13 +133,14 @@ void setup() {
   OSD.configVideo(CHANNELVID, configVID);
   OSD.begin();
 
+  // Set up for DD UI logics
   fsReady = fs.begin();
   ip = WiFi.localIP().get_address();
-
   videoStreamer.pause();  
 }
 
 void loop() {
+  // Standard "master reset" DD loop
   pdd.loop(
     []() {
       initializeDD();
@@ -153,10 +154,15 @@ void loop() {
   );
 }
 
+// DD global variables
 SelectionListLayerWrapper nameListSelectionWrapper;
 bool rtspStarted;
 bool namesChanged;
 int selectedNameIndex;
+long blinkLastMillis;
+int blinkCounter = 0;
+
+
 
 // User callback function for post processing of face recognition results
 void FRPostProcess(std::vector<FaceRecognitionResult> results) {
@@ -186,7 +192,7 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
           nameListSelectionWrapper.scrollToView(idx);
           recognizedAny = true;
         }
-    }
+      }
       
       // Ensure number of snapshots under MAX_UNKNOWN_COUNT
       uint32_t osd_color;
@@ -197,7 +203,6 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
       }
 
       // Draw boundary box
-      //printf("Face %d name %s:\t%d %d %d %d\n\r", i, item.name(), xmin, xmax, ymin, ymax);
       OSD.drawRect(CHANNELVID, xmin, ymin, xmax, ymax, 3, osd_color);
 
       // Print identification text above boundary box
@@ -213,18 +218,15 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
   lastOSDMillis = millis();
 }
 
+// DD global layer variables that will be initialized in initializeDD()
 RtspClientDDLayer *rtspClient;
 SelectionDDLayer *startStopSelection;
 LcdDDLayer *registerButton;
 LcdDDLayer *saveButton;
 LedGridDDLayer *led;
-
 SelectionListDDLayer *nameListSelection;
 LcdDDLayer *scrollUpButton;
 LcdDDLayer *scrollDownButton;
-
-long lastMillis;
-int counter = 0;
 
 void syncSaveButtonUI() {
   if (namesChanged && fsReady) {
@@ -330,7 +332,6 @@ void onNameListStateChanged() {
   bool canScrollDown = selectionOffset < (selectionCount - visibleSelectionCount);
   scrollUpButton->disabled(!canScrollUp);
   scrollDownButton->disabled(!canScrollDown);
-  //removeLayer->disabled(selectionCount == 0);
 }
 
 
@@ -367,7 +368,7 @@ void initializeDD() {
 
   led = dumbdisplay.createLedGridLayer();
   const char *color = "darkblue";
-  switch (counter++ % 3) {
+  switch (blinkCounter++ % 3) {
     case 0:
       color = "darkred";
       break;
@@ -419,7 +420,7 @@ void initializeDD() {
     dumbdisplay.writeComment("* restored faces");
   }
 
-  lastMillis = 0;
+  blinkLastMillis = 0;
 }
 
 void updateDD(bool isFirstUpdate) {
@@ -499,9 +500,9 @@ void updateDD(bool isFirstUpdate) {
 
 
   bool blink = false;
-  if ((millis() - lastMillis) >= 1000) {
+  if ((millis() - blinkLastMillis) >= 1000) {
     blink = true;
-    lastMillis = millis();
+    blinkLastMillis = millis();
   }
   if (blink) {
     if (led != NULL) {
