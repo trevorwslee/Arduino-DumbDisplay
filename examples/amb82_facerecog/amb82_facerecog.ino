@@ -2,11 +2,13 @@
 // This sketch is modified from the `Examples/AmebaNN/RTSPFaceRecognition` example of the Arduino IDE board
 // Realtek Ameba Boards (32-bit Arm v8M @ 500MHx) -- https://www.amebaiot.com/en/
 // The board tested the sketch with is the AMB82 MINI (Ameba RTL8735B) -- https://www.amebaiot.com/en/ameba-arduino-summary/
-// **********i
+// Notes:
+// . if SD card is installed, you will have the options to persist the registered names to the SD card
+// . nevertheless, only the registered names are persisted; the faces are persisted using the board's support
+// **********
 
 
 /**
- *
  * IMPORTANT: set the macros WIFI_SSID and WIFI_PASSWORD below
  *
  * to run and see the result of this sketch, you will need two addition things:
@@ -34,10 +36,10 @@
   #include "_secret.h"
 #endif
 
-#define AUTO_START_RTSP true
-#define NAME_WIDTH      12
+#define AUTO_START_RTSP      true
+#define NAME_WIDTH           12
 
-#define REGISTERED_NAME_FILE "registered_names.txt"
+#define REGISTERED_NAME_FILE "registered_names.dat"
 
 
 #include "dumbdisplay.h"
@@ -54,42 +56,22 @@ DDMasterResetPassiveConnectionHelper pdd(dumbdisplay);
 #include "AmebaFatFS.h"
 
 #define CHANNELVID 0   // Channel for RTSP streaming
-#define CHANNELJPEG 1  // Channel for taking snapshots
 #define CHANNELNN 3    // RGB format video for NN only available on channel 3
 
 // Customised resolution for NN
 #define NNWIDTH 576
 #define NNHEIGHT 320
 
-// Pin Definition
-#define RED_LED 3
-#define GREEN_LED 4
-#define BUTTON_PIN 5
-
-// Select the maximum number of snapshots to capture
-#define MAX_UNKNOWN_COUNT 5
-
 VideoSetting configVID(VIDEO_FHD, CAM_FPS, VIDEO_H264, 0);
-VideoSetting configJPEG(VIDEO_FHD, CAM_FPS, VIDEO_JPEG, 1);
 VideoSetting configNN(NNWIDTH, NNHEIGHT, 10, VIDEO_RGB, 0);
 NNFaceDetectionRecognition facerecog;
 RTSP rtsp;
 StreamIO videoStreamer(1, 1);
-StreamIO videoStreamerFDFR(1, 1);
 StreamIO videoStreamerRGBFD(1, 1);
 
 #include "_secret.h"
 char ssid[] = WIFI_SSID;       // your network SSID (name)
 char pass[] = WIFI_PASSWORD;   // your network password
-int status = WL_IDLE_STATUS;
-
-bool buttonState = false;
-uint32_t img_addr = 0;
-uint32_t img_len = 0;
-bool regFace = true;
-bool unknownDetected = false;
-bool roundBegan = false;
-int unknownCount = 0;
 
 // File Initialization
 AmebaFatFS fs;
@@ -100,12 +82,8 @@ long lastOSDMillis = 0;
 
 
 void setup() {
-  // GPIO Initialization
-  pinMode(RED_LED, OUTPUT);
-  pinMode(GREEN_LED, OUTPUT);
-  pinMode(BUTTON_PIN, INPUT);
-
   // Attempt to connect to Wifi network:
+  int status = WL_IDLE_STATUS;
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to WPA SSID: ");
     Serial.println(ssid);
@@ -115,11 +93,8 @@ void setup() {
     delay(2000);
   }
 
-  // ip = WiFi.localIP().get_address();
-
   // Configure camera video channels with video format information
   Camera.configVideoChannel(CHANNELVID, configVID);
-  Camera.configVideoChannel(CHANNELJPEG, configJPEG);
   Camera.configVideoChannel(CHANNELNN, configNN);
   Camera.videoInit();
 
@@ -151,14 +126,11 @@ void setup() {
 
   // Start data stream from video channel
   Camera.channelBegin(CHANNELVID);
-  Camera.channelBegin(CHANNELJPEG);
+  //Camera.channelBegin(CHANNELJPEG);
   Camera.channelBegin(CHANNELNN);
 
   // Start OSD drawing on RTSP video channel
   OSD.configVideo(CHANNELVID, configVID);
-#if SUPPORT_DD
-  OSD.configTextSize(CHANNELVID, 32, 64);
-#endif  
   OSD.begin();
 
   fsReady = fs.begin();
@@ -192,7 +164,6 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
   uint16_t im_w = configVID.width();
 
   bool recognizedAny = false;
-  //printf("Total number of faces detected = %d\r\n", facerecog.getResultCount());
   OSD.createBitmap(CHANNELVID);
 
   if (facerecog.getResultCount() > 0) {
@@ -221,24 +192,6 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
       uint32_t osd_color;
       if (String(item.name()) == String("unknown")) {
         osd_color = OSD_COLOR_RED;
-        if (regFace == false) {
-          unknownDetected = true;
-          unknownCount++;
-          if (unknownCount < (MAX_UNKNOWN_COUNT + 1)) {  
-            if (true) {
-              dumbdisplay.writeComment("* save Stranger" + String(unknownCount));
-            }
-            // Ensure number of snapshots under MAX_UNKNOWN_COUNT
-            facerecog.registerFace("Stranger" + String(unknownCount));  // Register under named Stranger <No.> to prevent recapture of same unrecognised person twice
-            fs.begin();
-            File file = fs.open(String(fs.getRootPath()) + "Stranger" + String(unknownCount) + ".jpg");  // Capture snapshot of stranger under name Stranger <No.>
-            delay(1000);
-            Camera.getImage(CHANNELJPEG, &img_addr, &img_len);
-            file.write((uint8_t *)img_addr, img_len);
-            file.close();
-            fs.end();
-          }
-        }
       } else {
         osd_color = OSD_COLOR_GREEN;
       }
@@ -252,15 +205,6 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
       snprintf(text_str, sizeof(text_str), "Face:%s", item.name());
       OSD.drawText(CHANNELVID, xmin, ymin - OSD.getTextHeight(CHANNELVID), text_str, osd_color);
     }
-    if ((regFace == false) && (unknownDetected == true)) {
-      // RED LED remain lit up when unknown faces detected
-      digitalWrite(RED_LED, HIGH);
-      digitalWrite(GREEN_LED, LOW);
-    } else if ((regFace == false) && (unknownDetected == false)) {
-      digitalWrite(RED_LED, LOW);
-      digitalWrite(GREEN_LED, HIGH);
-    }
-    unknownDetected = false;
   }
   OSD.update(CHANNELVID);
   if (rtspStarted && !recognizedAny) {
@@ -317,7 +261,6 @@ bool saveRegisteredNames() {
     return false;
   }
   char nameCount = nameListSelectionWrapper.getSelectionCount();
-  //fs.begin();
   String filePath = String(fs.getRootPath()) + REGISTERED_NAME_FILE;
   File file = fs.open(filePath);
   dumbdisplay.writeComment("* save to " + filePath + " ...");
@@ -331,7 +274,6 @@ bool saveRegisteredNames() {
     dumbdisplay.writeComment("  . saved [" + String(name) + "]");
   }
   file.close();
-  //fs.end();
   namesChanged = false;
   syncSaveButtonUI();
   return true;
@@ -342,7 +284,6 @@ int readBackRegisteredNames() {
     return 0;
   }
   nameListSelectionWrapper.removeAllSelections();
-  //fs.begin();
   String filePath = String(fs.getRootPath()) + REGISTERED_NAME_FILE;
   char nameCount = 0;
   if (fs.exists(filePath)) {
@@ -353,13 +294,11 @@ int readBackRegisteredNames() {
     for (int i = 0; i < nameCount; i++) {
       char name[NAME_WIDTH + 1] = {0};
       file.read(name, NAME_WIDTH + 1);
-      //name[NAME_WIDTH] = 0;
       nameListSelectionWrapper.addSelection(-1, name);
       dumbdisplay.writeComment("  . added [" + String(name) + "]");
     }
     file.close();
   }
-  //fs.end();
   namesChanged = false;
   syncSaveButtonUI();
   return nameCount;
@@ -454,10 +393,6 @@ void initializeDD() {
       .addLayer(scrollDownButton)
     .endGroup()
     .build());
-
-  // String url = "rtsp://" + ip;
-  // dumbdisplay.log("* RTSP: " + url);
-  // rtspClient->start(url);
 
   startStopRtsp(AUTO_START_RTSP);
 
