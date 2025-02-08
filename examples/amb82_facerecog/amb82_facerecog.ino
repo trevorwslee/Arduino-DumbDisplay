@@ -37,6 +37,8 @@
 #define AUTO_START_RTSP true
 #define NAME_WIDTH      12
 
+#define REGISTERED_NAME_FILE "registered_names.txt"
+
 
 #include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput());
@@ -93,6 +95,7 @@ int unknownCount = 0;
 AmebaFatFS fs;
 
 String ip;
+bool fsReady;
 long lastOSDMillis = 0;
 
 
@@ -112,7 +115,7 @@ void setup() {
     delay(2000);
   }
 
-  ip = WiFi.localIP().get_address();
+  // ip = WiFi.localIP().get_address();
 
   // Configure camera video channels with video format information
   Camera.configVideoChannel(CHANNELVID, configVID);
@@ -158,10 +161,10 @@ void setup() {
 #endif  
   OSD.begin();
 
+  fsReady = fs.begin();
+  ip = WiFi.localIP().get_address();
+
   videoStreamer.pause();  
-  facerecog.resetRegisteredFace();
-  // facerecog.backupRegisteredFace();
-  // facerecog.restoreRegisteredFace();
 }
 
 void loop() {
@@ -180,6 +183,7 @@ void loop() {
 
 SelectionListLayerWrapper nameListSelectionWrapper;
 bool rtspStarted;
+bool namesChanged;
 int selectedNameIndex;
 
 // User callback function for post processing of face recognition results
@@ -268,6 +272,7 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
 RtspClientDDLayer *rtspClient;
 SelectionDDLayer *startStopSelection;
 LcdDDLayer *registerButton;
+LcdDDLayer *saveButton;
 LedGridDDLayer *led;
 
 SelectionListDDLayer *nameListSelection;
@@ -276,6 +281,14 @@ LcdDDLayer *scrollDownButton;
 
 long lastMillis;
 int counter = 0;
+
+void syncSaveButtonUI() {
+  if (namesChanged && fsReady) {
+    saveButton->disabled(false);
+  } else {
+    saveButton->disabled(true);
+  }
+}
 
 void syncRegisterButtonUI() {
   if (rtspStarted) {
@@ -298,6 +311,61 @@ void syncRegisterButtonUI() {
     selectedNameIndex = -1;
   }
 }
+
+bool saveRegisteredNames() {
+  if (!fsReady) {
+    return false;
+  }
+  char nameCount = nameListSelectionWrapper.getSelectionCount();
+  //fs.begin();
+  String filePath = String(fs.getRootPath()) + REGISTERED_NAME_FILE;
+  File file = fs.open(filePath);
+  dumbdisplay.writeComment("* save to " + filePath + " ...");
+  file.write(&nameCount, 1);
+  dumbdisplay.writeComment("* saving " + String((uint8_t) nameCount) + " names:");
+  for (int i = 0; i < nameCount; i++) {
+    String selectionText = nameListSelectionWrapper.getSelectionText(i);
+    char name[NAME_WIDTH + 1] = {0};
+    selectionText.toCharArray(name, NAME_WIDTH + 1);
+    file.write(name, NAME_WIDTH + 1);
+    dumbdisplay.writeComment("  . saved [" + String(name) + "]");
+  }
+  file.close();
+  //fs.end();
+  namesChanged = false;
+  syncSaveButtonUI();
+  return true;
+}
+
+int readBackRegisteredNames() {
+  if (!fsReady) {
+    return 0;
+  }
+  nameListSelectionWrapper.removeAllSelections();
+  //fs.begin();
+  String filePath = String(fs.getRootPath()) + REGISTERED_NAME_FILE;
+  char nameCount = 0;
+  if (fs.exists(filePath)) {
+    dumbdisplay.writeComment("* reading from " + filePath + " ...");
+    File file = fs.open(filePath);
+    file.read(&nameCount, 1);
+    dumbdisplay.writeComment("* reading " + String(nameCount) + " names:");
+    for (int i = 0; i < nameCount; i++) {
+      char name[NAME_WIDTH + 1] = {0};
+      file.read(name, NAME_WIDTH + 1);
+      //name[NAME_WIDTH] = 0;
+      nameListSelectionWrapper.addSelection(-1, name);
+      dumbdisplay.writeComment("  . added [" + String(name) + "]");
+    }
+    file.close();
+  }
+  //fs.end();
+  namesChanged = false;
+  syncSaveButtonUI();
+  return nameCount;
+}
+
+
 
 void startStopRtsp(bool start) {
   if (start) {
@@ -339,6 +407,11 @@ void initializeDD() {
 
   registerButton = dumbdisplay.createLcdLayer(10, 1);
 
+  saveButton = dumbdisplay.createLcdLayer(2, 1);  
+  saveButton->border(1, DD_COLOR_red);
+  saveButton->writeCenteredLine("💾");
+  saveButton->enableFeedback("fl");
+
   nameListSelection = nameListSelectionWrapper.initializeLayer(dumbdisplay, NAME_WIDTH, 1, 2, 2);
   nameListSelectionWrapper.setListStateChangedCallback(onNameListStateChanged);
   nameListSelection->border(1, DD_COLOR_black);
@@ -372,6 +445,7 @@ void initializeDD() {
     .beginGroup('H')
       .addLayer(startStopSelection)
       .addLayer(registerButton)
+      .addLayer(saveButton)
       .addLayer(led)
     .endGroup()
     .beginGroup('H')
@@ -386,6 +460,30 @@ void initializeDD() {
   // rtspClient->start(url);
 
   startStopRtsp(AUTO_START_RTSP);
+
+  int nameCount = 0;
+  if (fsReady) {
+    nameCount = readBackRegisteredNames();
+    dumbdisplay.writeComment("* read back " + String(nameCount) + " names");
+    if (nameCount > 0) {
+      for (int i = 0; i < nameCount; i++) {
+        String name = nameListSelectionWrapper.getSelectionText(i);
+        dumbdisplay.writeComment(" . [" + name + "]");
+      }
+    }
+  } else {
+    dumbdisplay.writeComment("FS not ready");
+    saveButton->visible(false);
+  }
+
+  if (nameCount == 0) {
+    facerecog.resetRegisteredFace();
+    dumbdisplay.writeComment("* reset faces");
+  } else {
+    facerecog.restoreRegisteredFace();
+    dumbdisplay.writeComment("* restored faces");
+  }
+
   lastMillis = 0;
 }
 
@@ -414,6 +512,13 @@ void updateDD(bool isFirstUpdate) {
     startStopRtsp(!rtspStarted);
   }
 
+  if (saveButton->getFeedback() != NULL) {
+    if (saveRegisteredNames()) {
+      facerecog.backupRegisteredFace();
+      dumbdisplay.writeComment("* backed up faces");
+    }
+  }
+
   const DDFeedback *regFB = registerButton->getFeedback();
   if (regFB != NULL) {
     if (rtspStarted) {
@@ -440,6 +545,8 @@ void updateDD(bool isFirstUpdate) {
         registerButton->disabled(true);
       }
     }  
+    namesChanged = true;
+    syncSaveButtonUI();
   }
 
   if (rtspStarted) {

@@ -848,6 +848,12 @@ class SelectionListLayerWrapper {
       }
       return selectionIdx;
     }
+    void removeAllSelections() {
+      int nameCount = getSelectionCount();
+      for (int i = 0; i < nameCount; i++) {
+        removeSelection(0);
+      }
+    }
     void setOffset(int offset) {
       helper->setOffset(offset);
     }
