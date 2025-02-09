@@ -5,6 +5,7 @@
 // Notes:
 // . if SD card is installed, you will have the options to persist the registered names to the SD card
 // . nevertheless, only the registered names are persisted; the faces are persisted using the board's support
+// . you may want to try out the faces @ https://trevorwslee.github.io/Misc/facerecog/
 // **********
 
 
@@ -36,16 +37,34 @@
   #include "_secret.h"
 #endif
 
+
+// DD (DumbDisplay) UI option macros 
 #define AUTO_START_RTSP      true
 #define NAME_WIDTH           12
-
 #define REGISTERED_NAME_FILE "registered_names.dat"
 
 
+// DD (DumbDisplay) global objects
 #include "dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDInputOutput());
 DDMasterResetPassiveConnectionHelper pdd(dumbdisplay);
 
+
+// DD global variables
+String ip;
+bool fsReady;
+long lastOSDMillis = 0;
+
+// 2nd batch of DD global variables
+SelectionListLayerWrapper nameListSelectionWrapper;
+bool rtspStarted;
+bool namesChanged;
+int selectedNameIndex;
+long blinkLastMillis;
+int blinkCounter = 0;
+
+
+// *** original AmebaNN/RTSPFaceRecognition code (modified to work with DD UI)
 
 #include "WiFi.h"
 #include "StreamIO.h"
@@ -75,11 +94,6 @@ char pass[] = WIFI_PASSWORD;   // your network password
 
 // File Initialization
 AmebaFatFS fs;
-
-String ip;
-bool fsReady;
-long lastOSDMillis = 0;
-
 
 void setup() {
   // Attempt to connect to Wifi network:
@@ -133,36 +147,11 @@ void setup() {
   OSD.configVideo(CHANNELVID, configVID);
   OSD.begin();
 
-  // Set up for DD UI logics
+  // Set up for DD UI
   fsReady = fs.begin();
   ip = WiFi.localIP().get_address();
   videoStreamer.pause();  
 }
-
-void loop() {
-  // Standard "master reset" DD loop
-  pdd.loop(
-    []() {
-      initializeDD();
-    },
-    []() {
-      updateDD(!pdd.firstUpdated());
-    },
-    []() {
-      deinitializeDD();
-    }
-  );
-}
-
-// DD global variables
-SelectionListLayerWrapper nameListSelectionWrapper;
-bool rtspStarted;
-bool namesChanged;
-int selectedNameIndex;
-long blinkLastMillis;
-int blinkCounter = 0;
-
-
 
 // User callback function for post processing of face recognition results
 void FRPostProcess(std::vector<FaceRecognitionResult> results) {
@@ -216,6 +205,18 @@ void FRPostProcess(std::vector<FaceRecognitionResult> results) {
     nameListSelectionWrapper.deselectAll();
   }
   lastOSDMillis = millis();
+}
+
+
+// *** DD UI code
+
+void loop() {
+  // Standard "passive master reset" DD UI loop
+  pdd.loop(
+    []() { initializeDD(); },
+    []() { updateDD(!pdd.firstUpdated()); },
+    []() { deinitializeDD(); }
+  );
 }
 
 // DD global layer variables that will be initialized in initializeDD()
@@ -305,8 +306,6 @@ int readBackRegisteredNames() {
   syncSaveButtonUI();
   return nameCount;
 }
-
-
 
 void startStopRtsp(bool start) {
   if (start) {
@@ -497,7 +496,6 @@ void updateDD(bool isFirstUpdate) {
       registerButton->disabled(false);
     }
   }
-
 
   bool blink = false;
   if ((millis() - blinkLastMillis) >= 1000) {
