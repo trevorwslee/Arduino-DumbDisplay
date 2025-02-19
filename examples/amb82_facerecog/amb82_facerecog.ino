@@ -88,7 +88,6 @@ RTSP rtsp;
 StreamIO videoStreamer(1, 1);
 StreamIO videoStreamerRGBFD(1, 1);
 
-#include "_secret.h"
 char ssid[] = WIFI_SSID;       // your network SSID (name)
 char pass[] = WIFI_PASSWORD;   // your network password
 
