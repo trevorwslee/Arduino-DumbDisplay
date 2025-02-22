@@ -238,7 +238,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
   #define VSYNC_GPIO_NUM     6      // vsync_pin
   #define HREF_GPIO_NUM      7      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
-#elif defined(FOR_VCC_S3EYE) || defined(FOR_VCC_S3EYE_2)
+#elif defined(FOR_VCC_S3EYE) || defined(FOR_VCC_S3EYE_2) || defined(FOR_ESPSPARKBOT)
   #define PWDN_GPIO_NUM     -1
   #define RESET_GPIO_NUM    -1      // -1 = not used
   #define XCLK_GPIO_NUM     15

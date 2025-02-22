@@ -46,7 +46,7 @@
   #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
   #define I2S_PORT             I2S_NUM_0
-#elif defined(FOR_VCC_S3EYE)
+#elif defined(FOR_VCC_S3EYE) || defined(FOR_VCC_S3EYE_2)
   #define I2S_WS               42 //0
   #define I2S_SD               2 //2
   #define I2S_SCK              41 //I2S_PIN_NO_CHANGE
@@ -54,6 +54,23 @@
   #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
   #define I2S_PORT             I2S_NUM_0
+#elif defined(FOR_XIAO_S3SENSE)
+  #define I2S_WS               42
+  #define I2S_SD               41
+  #define I2S_SCK              I2S_PIN_NO_CHANGE
+  #define I2S_SAMPLE_BIT_COUNT 16
+  #define SOUND_SAMPLE_RATE    16000
+  #define SOUND_CHANNEL_COUNT  1
+  #define I2S_PORT             I2S_NUM_0
+#elif defined(FOR_ESPSPARKBOT)
+  #define I2S_WS               41  // WS
+  #define I2S_SD               40  // DIN
+  #define I2S_SCK              39  // BCLK
+  #define I2S_SAMPLE_BIT_COUNT 16
+  #define SOUND_SAMPLE_RATE    16000
+  #define SOUND_CHANNEL_COUNT  1
+  #define I2S_PORT             I2S_NUM_1
+  #error not yet working
 #else
   #define I2S_WS               25
   #define I2S_SD               33
@@ -306,7 +323,11 @@ void loop() {
   // read I2S data and place in data buffer
   size_t bytesRead = 0;
   esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
- 
+
+  // if (false) {
+  //   Serial.println(String("* - ") + String(result) + " - " + String(bytesRead));
+  // }
+
   int samplesRead = 0;
 #if I2S_SAMPLE_BIT_COUNT == 32
   int16_t sampleStreamBuffer[StreamBufferLen];
@@ -404,16 +425,30 @@ esp_err_t i2s_install() {
     .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BIT_COUNT),
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
+#if defined(FOR_ESPSPARKBOT)  // IDF4???
+    .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2 | ESP_INTR_FLAG_IRAM,
+#else
     .intr_alloc_flags = 0,
+#endif  
+#if defined(FOR_ESPSPARKBOT)  // IDF4???
+    .dma_buf_count = 3,
+    .dma_buf_len = 1024,
+#else
     .dma_buf_count = I2S_DMA_BUF_COUNT/*8*/,
     .dma_buf_len = I2S_DMA_BUF_LEN/*1024*/,
+#endif
+#if defined(FOR_ESPSPARKBOT)
+    .use_apll = true
+#else  
     .use_apll = false
+#endif  
   };
   return i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
 }
  
 esp_err_t i2s_setpin() {
   const i2s_pin_config_t pin_config = {
+    .mck_io_num = I2S_PIN_NO_CHANGE,
     .bck_io_num = I2S_SCK,
     .ws_io_num = I2S_WS,   
     .data_out_num = I2S_PIN_NO_CHANGE/*-1*/,

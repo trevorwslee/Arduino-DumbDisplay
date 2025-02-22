@@ -66,6 +66,15 @@
   #define I2S_SAMPLE_BIT_COUNT       32
   #define I2S_SAMPLE_RATE            8000
   #define I2S_PORT                   I2S_NUM_0
+// #elif defined(FOR_ESPSPARKBOT)
+//   #define I2S_WS                     41  // WS
+//   #define I2S_SD                     40  // DIN
+//   #define I2S_SCK                    39  // BCLK
+//   #define SIMULTANEOUS_CAM_MIC_RATE  4
+//   #define ENABLE_FACE_DETECTION
+//   #define I2S_SAMPLE_BIT_COUNT       32
+//   #define I2S_SAMPLE_RATE            8000
+//   #define I2S_PORT                   I2S_NUM_0
 #elif defined(FOR_XIAO_S3SENSE)
   #define I2S_WS                     42     // for PDM, WS is the clock
   #define I2S_SD                     41
@@ -802,7 +811,7 @@ void loop() {
   #define VSYNC_GPIO_NUM    27      // vsync_pin
   #define HREF_GPIO_NUM     25      // href_pin
   #define PCLK_GPIO_NUM     19      // pixel_clock_pin
-#elif defined(FOR_VCC_S3EYE) ||  defined(FOR_VCC_S3EYE_2)
+#elif defined(FOR_VCC_S3EYE) ||  defined(FOR_VCC_S3EYE_2) || defined(FOR_ESPSPARKBOT)
   #define PWDN_GPIO_NUM     -1
   #define RESET_GPIO_NUM    -1      // -1 = not used
   #define XCLK_GPIO_NUM     15

@@ -18,13 +18,17 @@
 // INMP441 I2S pin assignment
 #if defined(FOR_LILYGO_TSIMCAM)
   // for the mic built-in to LiLyGO TSimCam
-  #define I2S_WS  42
-  #define I2S_SD   2
-  #define I2S_SCK 41
+  #define I2S_WS               42
+  #define I2S_SD               2
+  #define I2S_SCK              41
+#elif defined(FOR_VCC_S3EYE)
+  #define I2S_WS               42
+  #define I2S_SD               2
+  #define I2S_SCK              41
 #else
-  #define I2S_WS  25
-  #define I2S_SD  33
-  #define I2S_SCK 32
+  #define I2S_WS               25
+  #define I2S_SD               33
+  #define I2S_SCK              32
 #endif
 
 
@@ -364,8 +368,12 @@ bool cacheMicVoice(int amplifyFactor, bool playback) {
 
 
 void i2s_install() {
+  uint32_t mode = I2S_MODE_MASTER | I2S_MODE_RX;
+  #if I2S_SCK == I2S_PIN_NO_CHANGE
+      mode |= I2S_MODE_PDM;
+  #endif    
   const i2s_config_t i2s_config = {
-    .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
+    .mode = i2s_mode_t(mode),
     .sample_rate = SoundSampleRate,
     .bits_per_sample = i2s_bits_per_sample_t(16),
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
