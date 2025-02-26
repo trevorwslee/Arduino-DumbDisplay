@@ -66,11 +66,11 @@
   #define I2S_WS               41  // WS
   #define I2S_SD               40  // DIN
   #define I2S_SCK              39  // BCLK
-  #define I2S_SAMPLE_BIT_COUNT 16
+  #define I2S_SAMPLE_BIT_COUNT 32
   #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
   #define I2S_PORT             I2S_NUM_1
-  #error not yet working
+  //#error not yet working
 #else
   #define I2S_WS               25
   #define I2S_SD               33
