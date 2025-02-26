@@ -1,6 +1,6 @@
 # DumbDisplay Arduino Library (v0.9.9-r41)
 
-[DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments.
+[DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments, with [DumbDisplay Android App](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay)
 
 You may want to watch the video [**Introducing DumbDisplay -- the little helper for Arduino experiments**](https://www.youtube.com/watch?v=QZkhO6jTf0U) for a brief introduction.
 
@@ -176,7 +176,7 @@ void loop() {
 3) In the `setup` block, create the globally declared layer objects via the DumbDisplay object.
 4) Once created, the layer objects can be used in the `loop()` block. Like in this case, the `toggle()` method of the `led` layer object is called, effectively blinking the virtual LED every second. 
 
-Since the sketch assumes USB connectivity to your Android phone, hence, the final step is to attach your microcontroller board to your Android phone via a OTG adapter. 
+Since the sketch assumes USB connectivity to your Android phone, hence, the final step is to attach your microcontroller board to your Android phone via an OTG adapter. 
 
 You may want to refer to my post [Blink Test With Virtual Display, DumbDisplay](https://www.instructables.com/Blink-Test-With-Virtual-Display-DumbDisplay/) for more description on such connection.
 
@@ -1423,8 +1423,9 @@ void setup() {
 }
 
 ```
-
-For example usage of RTSP Client Layer, you may refer to the example [`amb82_facerecog`](https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/examples/amb82_facerecog/amb82_facerecog.ino)
+|  |  | 
+|--|--|
+|For example usage of RTSP Client Layer, you may refer to the example `amb82_facerecog` as mentioned by [Amb82 Mini Arduino Framework Face Recognization Demo GUI With DumbDisplay](https://www.instructables.com/Amb82-Mini-Arduino-Framework-Face-Recognization-De/)|![](screenshots/amb82-mini-facerecog.jpg)|
 
 
 ## Downloadable Font Support

@@ -1698,7 +1698,7 @@ void __SendByteArrayPortion(const char* bytesNature, const uint8_t *bytes, int b
         uint8_t *compressedBytes = new uint8_t[compressedByteCount];
         __FillZeroCompressedBytes(bytes, byteCount, compressedBytes, false);
         _DDIO->write(compressedBytes, compressedByteCount);
-        delete compressedBytes;
+        delete[] compressedBytes;  // was just delete compressedBytes 
       }
     } else {
       if (readFromProgramSpace) {

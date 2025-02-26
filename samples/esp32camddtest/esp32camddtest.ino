@@ -238,7 +238,7 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
   #define VSYNC_GPIO_NUM     6      // vsync_pin
   #define HREF_GPIO_NUM      7      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
-#elif defined(FOR_VCC_S3EYE) || defined(FOR_VCC_S3EYE_2)
+#elif defined(FOR_VCC_S3EYE) || defined(FOR_VCC_S3EYE_2) || defined(FOR_ESPSPARKBOT)
   #define PWDN_GPIO_NUM     -1
   #define RESET_GPIO_NUM    -1      // -1 = not used
   #define XCLK_GPIO_NUM     15
@@ -255,6 +255,24 @@ const int ledRresolution = 8;                        // resolution (8 = from 0 t
   #define VSYNC_GPIO_NUM     6      // vsync_pin
   #define HREF_GPIO_NUM      7      // href_pin
   #define PCLK_GPIO_NUM     13      // pixel_clock_pin
+  #define VFLIP
+#elif defined(FOR_CHD_S3BOX)
+  #define PWDN_GPIO_NUM     -1
+  #define RESET_GPIO_NUM    -1
+  #define XCLK_GPIO_NUM     39
+  #define SIOD_GPIO_NUM      8      // i2c sda
+  #define SIOC_GPIO_NUM     18      // i2c scl
+  #define Y9_GPIO_NUM       40
+  #define Y8_GPIO_NUM       38
+  #define Y7_GPIO_NUM       21
+  #define Y6_GPIO_NUM       13
+  #define Y5_GPIO_NUM       11
+  #define Y4_GPIO_NUM        9
+  #define Y3_GPIO_NUM       10
+  #define Y2_GPIO_NUM       12
+  #define VSYNC_GPIO_NUM    42      // vsync_pin
+  #define HREF_GPIO_NUM     41      // href_pin
+  #define PCLK_GPIO_NUM     14      // pixel_clock_pin
   #define VFLIP
 #elif defined(FOR_XIAO_S3SENSE)
   #define PWDN_GPIO_NUM     -1

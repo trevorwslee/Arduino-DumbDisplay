@@ -21,6 +21,8 @@
 // #error DDBLESerialIO is for ESP32
 // #else
 
+#include "sdkconfig.h"
+
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
@@ -171,7 +173,11 @@ class DDBLESerialIO: public DDInputOutput {
 #endif
         }
       public:
+#ifdef CONFIG_IDF_INIT_VERSION
+        void print(String s) {
+#else      
         void print(std::string s) {
+#endif
 #ifdef DD_SEND_BUFFER_SIZE
           int len = s.length();
           if ((len + sendBufferSize) > DD_SEND_BUFFER_SIZE) {
@@ -230,7 +236,11 @@ class DDBLESerialIO: public DDInputOutput {
           }
         }
 #endif
-        void _print(std::string s) {
+#ifdef CONFIG_IDF_INIT_VERSION
+      void _print(String s) {
+#else
+      void _print(std::string s) {
+#endif        
 #if defined(DD_DEBUG_BLE_SEND)
           if (pServerCallbacks->isConnected()) {
           } else if (pServerCallbacks->isConnecting()) {
@@ -253,13 +263,21 @@ class DDBLESerialIO: public DDInputOutput {
 #endif
               break;
             } else {
+#ifdef CONFIG_IDF_INIT_VERSION
+              pTx->setValue(s.substring(0, 20));
+#else
               pTx->setValue(s.substr(0, 20));
+#endif             
 #ifdef DD_BLE_NOTIFY          
               pTx->notify();
 #else          
               pTx->indicate();
 #endif
+#ifdef CONFIG_IDF_INIT_VERSION
+              s = s.substring(20);
+#else
               s = s.substr(20);
+#endif              
               len -= 20;
             }
           }
@@ -267,8 +285,13 @@ class DDBLESerialIO: public DDInputOutput {
       public:
         void onWrite(BLECharacteristic *pCharacteristic) {
           buffering = true;
+#ifdef CONFIG_IDF_INIT_VERSION
+          String rxValue = pCharacteristic->getValue();
+          int count = rxValue.length();
+#else
           std::string rxValue = pCharacteristic->getValue();
           int count = rxValue.size();
+#endif          
           for (int i = 0; i < count; i++) {
             int nextBufferEnd = bufferEnd + 1;
             if (nextBufferEnd >= DD_RECEIVE_BUFFER_SIZE) {
