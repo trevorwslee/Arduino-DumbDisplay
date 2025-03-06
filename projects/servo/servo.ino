@@ -271,7 +271,7 @@ void loop_DDPostProcess() {
 
 
 void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& feedback) {
-  if (type == DOUBLECLICK) {
+  if (type == DDFeedbackType::DOUBLECLICK) {
     // if click type is "double click" ... toggle "auto move servo" on/off
     if (autoInc == 1) {
       autoInc = -1;

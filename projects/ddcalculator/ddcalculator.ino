@@ -109,7 +109,7 @@ void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &fee
 {
   if (pLayer == displayLayer)
   {
-    // if (type == LONGPRESS)
+    // if (type == DDFeedbackType::LONGPRESS)
     // {
     //   displayLayer->flash();
     //   calculator.reset();
@@ -119,7 +119,7 @@ void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &fee
   }
   else
   {
-    if (type == CLICK)
+    if (type == DDFeedbackType::CLICK)
     {
       char key = pLayer->customData.charAt(0);
       if (false) {

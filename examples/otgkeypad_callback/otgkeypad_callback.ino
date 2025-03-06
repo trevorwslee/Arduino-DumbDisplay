@@ -59,7 +59,7 @@ void loop()
 // "feedback" handler
 void FeedbackHandler(DDLayer *pLayer, DDFeedbackType type, const DDFeedback &feedback)
 {
-  if (type == CLICK)
+  if (type == DDFeedbackType::CLICK)
   {
     char key = pLayer->customData.charAt(0);
     dumbdisplay.writeComment("key [" + String(key) + "]");

@@ -40,7 +40,7 @@ namespace DDTesterImpl {
       if (passiveConnect) if (!DDConnected()) return;
 
       pLayer->noBackgroundColor();
-      pLayer->showIcon(SmallDiamond);
+      pLayer->showIcon(MbIcon::SmallDiamond);
       DDDelay(1000);
       if (passiveConnect) if (!DDConnected()) return;
       pLayer->showNumber(8);

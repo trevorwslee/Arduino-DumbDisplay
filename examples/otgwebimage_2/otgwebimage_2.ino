@@ -68,7 +68,7 @@ void loop() {
   } else {
     // if all ready ... see if double clicked ... if so, refresh
     if (feedback != NULL) {
-      if (feedback->type == DOUBLECLICK) {
+      if (feedback->type == DDFeedbackType::DOUBLECLICK) {
         locked = !locked;
         refresh = true;
       }
