@@ -1,5 +1,6 @@
 #include "Arduino.h"
 #include "_dd_feedback.h"
+#include "__dd_cpp_include.h"
 
 DDFeedbackManager::DDFeedbackManager(/*int8_t bufferSize*/) {
   this->nextArrayIdx = 0;
