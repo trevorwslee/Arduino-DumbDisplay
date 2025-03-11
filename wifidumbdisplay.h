@@ -23,11 +23,11 @@
 class DDWiFiServerIO: public DDInputOutput {
   public:
     /* WiFI IO mechanism */
-    /* - ssid: WIFI name (pass to WiFi) */
-    /* - passphrase: WIFI password (pass to WiFi) */
-    /* - serverPort: server port (pass to WiFiServer) */
-    DDWiFiServerIO(const char* ssid, const char *passphrase, int serverPort = DD_WIFI_PORT): DDInputOutput(DD_SERIAL_BAUD, false, false),
-                   server(serverPort) {
+    /* - ssid: WIFI SSID / name; NULL if WiFi explicitly connected */
+    /* - passphrase: WIFI password; NULL if Wifi explicitly connected */
+    /* - serverPort: server port */
+    DDWiFiServerIO(const char* ssid = NULL, const char *passphrase = NULL, int serverPort = DD_WIFI_PORT):
+                   DDInputOutput(DD_SERIAL_BAUD, false, false), server(serverPort) {
       this->ssid = ssid;
       this->password = passphrase;
       this->port = serverPort;
@@ -89,60 +89,11 @@ class DDWiFiServerIO: public DDInputOutput {
         }
 #endif
       }
-      if (true) {  // since 2023-08-16
-        if (firstCall && !client.connected()) {
-          connectionState = '0';
-        }
-        checkConnection();
-        return connectionState == 'C';
-      } else if (true) {  // since 2023-08-15
-        if (firstCall && !client.connected()) {
-          Serial.println("setup WIFI");
-          WiFi.disconnect();
-          WiFi.begin(ssid, password);
-          connectionState = ' ';
-          stateMillis = 0;
-        }
-        checkConnection();
-        return connectionState == 'C';
-      } else if (true) {  // since 2023-06-05
-        if (firstCall) {
-          if (true) {
-            if (client.connected()) {
-              Serial.println("stop client for new setup");
-              client.stop();
-              delay(2000);  // wait a bit
-            }
-            WiFi.disconnect();
-          } else  if (true) {  // since 2023-06-03
-            client.stop();
-            WiFi.disconnect();
-          }
-          Serial.println("setup WIFI");
-          WiFi.begin(ssid, password);
-          connectionState = ' ';
-          stateMillis = 0;
-        }
-        //  delay(200);
-        checkConnection();
-        return connectionState == 'C';
-      } else {  
-        if (firstCall) {
-          // if (logToSerial)
-          //   Serial.begin(serialBaud);
-          if (true) {  // since 2023-06-03
-            client.stop();
-            WiFi.disconnect();
-          }
-          WiFi.begin(ssid, password);
-          connectionState = ' ';
-          stateMillis = 0;
-        } else {
-          checkConnection();
-          delay(200);
-        }
-        return connectionState == 'C';
+      if (firstCall && !client.connected()) {
+        connectionState = '0';
       }
+      checkConnection();
+      return connectionState == 'C';
     }
     void flush() {
       client.flush();
@@ -238,9 +189,13 @@ class DDWiFiServerIO: public DDInputOutput {
             Serial.println("lost WiFi ... try bind WiFi again ...");
             client.stop();
           }
-          WiFi.disconnect();
-          Serial.println("setup WIFI");
-          WiFi.begin(ssid, password);
+          if (ssid != NULL && WiFi.status() != WL_CONNECTED) {  // since 2025-03-10
+            WiFi.disconnect();
+            Serial.println("setup WIFI");
+            WiFi.begin(ssid, password);
+          } else {
+            Serial.println("assume explicitly connected WIFI");
+          }
           connectionState = ' ';
           stateMillis = 0;
         } else if (!client.connected()) {
