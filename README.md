@@ -1651,7 +1651,7 @@ to
 ```
     if (pLayer == pLcdLayer) {
         // clicked the "clear" button
-        if (type == DOUBLECLICK) {
+        if (type == DDFeedbackType::DOUBLECLICK) {
           pLayer->backgroundColor("white");
           Reset();
           delay(100);
@@ -1721,9 +1721,9 @@ void loop() {
   ...
   fb = pLayer->getFeedback();
   if (fb != NULL) {
-    if (fb->type == UP) {
+    if (fb->type == DDFeedbackType::UP) {
       dumbdisplay.writeComment("UP");
-    } else if (fb->type == DOWN) {
+    } else if (fb->type == DDFeedbackType::DOWN) {
       dumbdisplay.writeComment("DOWN");
     }
   }
@@ -2337,10 +2337,13 @@ MIT
 
 # Change History
 
+v0.9.9-r42
+  - bug fix
+
+
 v0.9.9-r41
   - added SelectionListDDLayer
   - bug fix
-
 
 v0.9.9-r40
   - added RtspClientDDLayer
@@ -2377,10 +2380,8 @@ v0.9.9-r10
   - added SelectionDDLayer
   - bug fix
 
-
 v0.9.9-r04
   - bug fix
-
 
 v0.9.9-r03
   - add ImageRetrieverDDTunnel
@@ -2436,7 +2437,6 @@ v0.9.7
   - enhanced graphical layer
   - added dragging "auto repeat" option
   - bug fix
-
 
 v0.9.6-r3
   - bug fix

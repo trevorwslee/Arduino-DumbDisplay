@@ -1879,7 +1879,7 @@ __SendComment("LT++++" + data + " - final:" + String(final));
       pFeedback->toCharArray(buf, bufLen);
       bool ok = false;
       int lid = -1;
-      DDFeedbackType type = CLICK;
+      DDFeedbackType type = DDFeedbackType::CLICK;
       int16_t x = 0;
       int16_t y = 0;
       char* pText = NULL;      
@@ -2120,31 +2120,31 @@ void _sendTunnelDisabledComment() {
 #endif
 
 
-DDFeedbackManager::DDFeedbackManager(/*int8_t bufferSize*/) {
-  this->nextArrayIdx = 0;
-  this->validArrayIdx = 0;
-}
-const DDFeedback* DDFeedbackManager::getFeedback() {
-#ifdef ENABLE_FEEDBACK
-  if (nextArrayIdx == validArrayIdx) return NULL;
-  const DDFeedback* pFeedback = &feedbackArray[validArrayIdx];
-  validArrayIdx = (validArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
-  return pFeedback;
-#else
-  return NULL;
-#endif    
-}
-void DDFeedbackManager::pushFeedback(DDFeedbackType type, int16_t x, int16_t y, const char* pText) {
-#ifdef ENABLE_FEEDBACK
-  feedbackArray[nextArrayIdx].type = type;
-  feedbackArray[nextArrayIdx].x = x;
-  feedbackArray[nextArrayIdx].y = y;
-  feedbackArray[nextArrayIdx].text = pText != NULL ? pText : "";
-  nextArrayIdx = (nextArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
-  if (nextArrayIdx == validArrayIdx)
-    validArrayIdx = (validArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
-#endif
-}
+// DDFeedbackManager::DDFeedbackManager(/*int8_t bufferSize*/) {
+//   this->nextArrayIdx = 0;
+//   this->validArrayIdx = 0;
+// }
+// const DDFeedback* DDFeedbackManager::getFeedback() {
+// #ifdef ENABLE_FEEDBACK
+//   if (nextArrayIdx == validArrayIdx) return NULL;
+//   const DDFeedback* pFeedback = &feedbackArray[validArrayIdx];
+//   validArrayIdx = (validArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
+//   return pFeedback;
+// #else
+//   return NULL;
+// #endif    
+// }
+// void DDFeedbackManager::pushFeedback(DDFeedbackType type, int16_t x, int16_t y, const char* pText) {
+// #ifdef ENABLE_FEEDBACK
+//   feedbackArray[nextArrayIdx].type = type;
+//   feedbackArray[nextArrayIdx].x = x;
+//   feedbackArray[nextArrayIdx].y = y;
+//   feedbackArray[nextArrayIdx].text = pText != NULL ? pText : "";
+//   nextArrayIdx = (nextArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
+//   if (nextArrayIdx == validArrayIdx)
+//     validArrayIdx = (validArrayIdx + 1) % DD_FEEDBACK_BUFFER_SIZE/*arraySize*/;
+// #endif
+// }
 
 
 DDLayer::DDLayer(int8_t layerId)/*: DDObject(DD_OBJECT_TYPE_LAYER)*/ {
@@ -2248,19 +2248,19 @@ void DDLayer::flashArea(int x, int y) {
 }
 void DDLayer::explicitFeedback(int16_t x, int16_t y, const String& text, DDFeedbackType type, const String& option) {
   String tp = "";
-  if (type == CLICK) {
+  if (type == DDFeedbackType::CLICK) {
     tp = "CLICK";
-  } else if (type == LONGPRESS) {
+  } else if (type == DDFeedbackType::LONGPRESS) {
     tp = "LONGPRESS";
-  } else if (type == DOUBLECLICK) {
+  } else if (type == DDFeedbackType::DOUBLECLICK) {
     tp = "DOUBLECLICK";
-  } else if (type == MOVE) {
+  } else if (type == DDFeedbackType::MOVE) {
     tp = "MOVE";
-  } else if (type == UP) {
+  } else if (type == DDFeedbackType::UP) {
     tp = "UP";
-  } else if (type == DOWN) {
+  } else if (type == DDFeedbackType::DOWN) {
     tp = "DOWN";
-  } else if (type == CUSTOM) {
+  } else if (type == DDFeedbackType::CUSTOM) {
     tp = "CUSTOM";
   }
   _sendCommand5(layerId, C_explicitfeedback, String(x), String(y), tp, option, text);

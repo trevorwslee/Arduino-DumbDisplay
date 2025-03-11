@@ -444,7 +444,7 @@ void updateDD(bool isFirstUpdate) {
     }
   } else {
     if (boardFeedback != NULL) {
-      if (boardFeedback->type == DOUBLECLICK) {
+      if (boardFeedback->type == DDFeedbackType::DOUBLECLICK) {
         // double click ==> randomize the board, even during play
         board->flash();
         board->disableFeedback();
@@ -453,7 +453,7 @@ void updateDD(bool isFirstUpdate) {
         waitingToRestartMillis = -1;
         startRandomizeBoard();
         return;
-      } else if (boardFeedback->type == MOVE) {
+      } else if (boardFeedback->type == DDFeedbackType::MOVE) {
         // dragging / moving a tile ... handle it in onBoardDragged
         if (onBoardDragged(boardFeedback->x, boardFeedback->y)) {
           // ended up moving a tile ... check if the board is solved

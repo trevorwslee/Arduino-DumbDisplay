@@ -186,7 +186,7 @@ void FeedbackHandler(DDLayer* pLayer, DDFeedbackType type, const DDFeedback& fee
         int gaugeAngle = XYToAngle(feedback.x, feedback.y);
         int angle = GaugeAngleToAngle(gaugeAngle);
         if (calibrating) {
-            if (type == DOUBLECLICK) {
+            if (type == DDFeedbackType::DOUBLECLICK) {
                 calibratedAngle = angle;
                 atAngle = angle;
                 toAngle = angle;

@@ -36,7 +36,7 @@ void debugMbTestStep(MbDDLayer *pLayer, int stepCount) {
       DDDelay(1000);
 
       pLayer->noBackgroundColor();
-      pLayer->showIcon(SmallDiamond);
+      pLayer->showIcon(MbIcon::SmallDiamond);
       DDDelay(1000);
       pLayer->showNumber(8);
       DDDelay(1000);

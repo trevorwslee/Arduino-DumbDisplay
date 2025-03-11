@@ -413,7 +413,7 @@ void loop() {
   } else {
     // if all ready ... see if double clicked ... if so, handle and refresh
     if (feedback != NULL) {
-      if (feedback->type == DOUBLECLICK) {
+      if (feedback->type == DDFeedbackType::DOUBLECLICK) {
         if (locked) {
           // if locked ... check if combo matches ... if so, unlock
           onTried((matchCombos(lockCombo, enteringCombo)), true);

@@ -238,7 +238,7 @@ class DDLayer: public DDObject {
     ///               - in case of "confirm", a confirmation dialog will be popped up with "text" as the message,
     ///                 and the "feedback" "text" will be "Yes" or "No";
     /// @note feedback must be enabled for this to work
-    void explicitFeedback(int16_t x = 0, int16_t y = 0, const String& text = "", DDFeedbackType type = CLICK, const String& option = "");
+    void explicitFeedback(int16_t x = 0, int16_t y = 0, const String& text = "", DDFeedbackType type = DDFeedbackType::CLICK, const String& option = "");
     inline const String& getLayerId() const { return layerId; }
     /// set explicit (and more responsive) "feedback" handler (and enable feedback)
     /// @param handler "feedback" handler; see DDFeedbackHandler
