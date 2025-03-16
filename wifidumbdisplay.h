@@ -237,7 +237,7 @@ class DDWiFiServerIO: public DDInputOutput {
           long diff = millis() - stateMillis;
           if (diff >= 1000) {
             IPAddress localIP = WiFi.localIP();
-            uint32_t localIPValue = localIP;
+            //uint32_t localIPValue = localIP;
 #ifdef LOG_DDWIFI_STATUS
             Serial.print("via WIFI ... ");
             Serial.print(WiFi.status());
