@@ -67,6 +67,11 @@
   #define SUPPORT_USE_WOIO
 #endif
 
+#define SUPPORT_CONTAINER
+#define CONTAINER_LAYER_ID     -9
+#define CONTAINER_LAYER_ID_STR "-9"
+
+
 
 #define TO_BOOL(val) (val ? "1" : "0")
 //#define TO_EDIAN() String(DDCheckEndian())  since 2024-09-14, use the following
@@ -165,7 +170,8 @@
 //#define DD_SID "Arduino-c10"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v30
 //#define DD_SID "Arduino-c11"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v31
 //#define DD_SID "Arduino-c12"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v34
-#define DD_SID "Arduino-c13"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v40
+//#define DD_SID "Arduino-c13"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v40
+#define DD_SID "Arduino-c14"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v50
 
 
 #include "_dd_commands.h"
@@ -536,6 +542,10 @@ DDInputOutput* /*volatile */_WODDIO = NULL;
 /*volatile */uint16_t _SendBufferSize = 0;//DD_DEF_SEND_BUFFER_SIZE;
 #else
 #define _WODDIO _DDIO
+#endif
+
+#ifdef SUPPORT_CONTAINER
+GraphicalDDLayer* __ContainerLayer = NULL;
 #endif
 
 
@@ -1406,10 +1416,21 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
 #ifdef DD_DEBUG_SEND_COMMAND          
   Serial.print("// *** sent");
 #endif        
+#ifdef SUPPORT_CONTAINER
+  if (layerId != "") {
+    if (layerId == CONTAINER_LAYER_ID_STR) {
+      _WODDIO->print("00");  // special TX layerId for container
+    } else {
+      _WODDIO->print(layerId);
+    }
+    _WODDIO->print(".");
+  }
+#else
   if (layerId != "") {
     _WODDIO->print(layerId/*.c_str()*/);
     _WODDIO->print(".");
   }
+#endif  
 #ifdef SUPPORT_ENCODE_OPER
   if (_DDCompatibility >= 3 && !_DDDisableParamEncoding && layerId != "" && command[0] == '#') {
     char encoded[3];
@@ -4230,6 +4251,17 @@ SelectionListDDLayer* DumbDisplay::createSelectionListLayer(int colCount, int ro
   _PostCreateLayer(pLayer);
   return pLayer;
 }
+#ifdef SUPPORT_CONTAINER
+GraphicalDDLayer* DumbDisplay::setContainerLayer(int width, int height, const String& containedAlignment) {
+  _Connect();
+  _sendCommand3("", "CNT", String(width), String(height), containedAlignment);
+  if (__ContainerLayer != NULL) {
+    delete __ContainerLayer;
+  }
+  __ContainerLayer = new GraphicalDDLayer(CONTAINER_LAYER_ID);
+  return __ContainerLayer;
+}
+#endif
 GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
   int lid = _AllocLid();
   String layerId = String(lid);
@@ -4884,6 +4916,12 @@ void DumbDisplay::masterReset() {
     }
 #endif
 
+#ifdef SUPPORT_CONTAINER
+  if (__ContainerLayer != NULL) {
+    delete __ContainerLayer;
+    __ContainerLayer = NULL;
+  }
+#endif
   if (_NextLid > 0) {
     if (canLogToSerial) Serial.println(". cleanup layers / tunnels");
     for (int i = 0; i < _NextLid; i++) {
