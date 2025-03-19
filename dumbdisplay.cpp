@@ -4358,6 +4358,9 @@ void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int
 void DumbDisplay::pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand6("", "PINAP", layoutSpec, String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }
+void DumbDisplay::resetPinLayers() {
+  _sendCommand0("", "RESETPIN");
+}
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
   delete pLayer;  // will call _PreDeleteLayer(pLayer)
