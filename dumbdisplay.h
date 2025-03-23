@@ -1525,8 +1525,8 @@ class DumbDisplay {
     /// - or nested, like H(0+V(1+2)+3);  where 0/1/2/3 are the layer ids
     /// - consider using the macros DD_AP_XXX
     /// @param layoutSpec the layout specification
-    /// @param autoShowHideLayers auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
-    void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoShowHideLayers = false);
+    /// @param autoControlLayerVisible auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
+    void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoControlLayerVisible = false);
     // /// in addition to DumbDisplay::configAutoPin(), also configure the remaining layout spec for the remaining layers not mentioned in the layoutSpec 
     // /// @see configAutoPin
     // /// @see addRemainingAutoPinConfig
@@ -1534,9 +1534,9 @@ class DumbDisplay {
     /// add the "auto pin" config for layers not included in "auto pin" set by configAutoPin()
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
     /// configure "pin frame" to be x-units by y-units (default 100x100)
-    /// @param autoShowHideLayers auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
+    /// @param autoControlLayerVisible auto set layer visible (visibility) according whether the layer is pinned or not; false by default
     /// @see pinLayer()
-    void configPinFrame(int xUnitCount = 100, int yUnitCount = 100, bool autoShowHideLayers = false);
+    void configPinFrame(int xUnitCount = 100, int yUnitCount = 100, bool autoControlLayerVisible = false);
     /// pin a layer @ some position of an imaginary grid of "pin grame"
     /// - the imaginary grid size can be configured when calling connect() -- default is 100x100  
     /// - the input align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align
@@ -1545,6 +1545,7 @@ class DumbDisplay {
     /// @param layoutSpec the "auto pin" layout specification to pin; see configAutoPin() for how spec is constructed
     /// @param align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
+    /// rest pinning of layers, as if they are not pinned
     void resetPinLayers();
     /// experimental support of a "container" layer (GraphicalDDLayer) that contain all other created layers;
     /// note that the "container" will always be placed as the container, and hence don't need be pined;

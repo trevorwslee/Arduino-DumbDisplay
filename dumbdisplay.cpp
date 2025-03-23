@@ -4148,15 +4148,15 @@ int DumbDisplay::getCompatibilityVersion() const {
 //   //return false;
 //   return _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
 // }
-void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount, bool autoShowHideLayers) {
+void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount, bool autoControlLayerVisible) {
   _Connect();
   if (_DDCompatibility >= 7) {
-      _sendCommand3("", "CFGPF", String(xUnitCount), String(yUnitCount), TO_BOOL(autoShowHideLayers));
+      _sendCommand3("", "CFGPF", String(xUnitCount), String(yUnitCount), TO_BOOL(autoControlLayerVisible));
   } else {
     _sendCommand2("", "CFGPF", String(xUnitCount), String(yUnitCount));
   }
 }
-void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoShowHideLayers) {
+void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoControlLayerVisible) {
   _Connect();
   if (true) {
     if (layoutSpec.c_str() == NULL) {
@@ -4165,7 +4165,7 @@ void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoShowHideLayer
     }
   }
   if (_DDCompatibility >= 7) {
-    _sendCommand2("", "CFGAP", layoutSpec, TO_BOOL(autoShowHideLayers));
+    _sendCommand2("", "CFGAP", layoutSpec, TO_BOOL(autoControlLayerVisible));
   } else {
     _sendCommand1("", "CFGAP", layoutSpec);
   }
