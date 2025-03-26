@@ -4217,6 +4217,11 @@ LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int 
   _PostCreateLayer(pLayer);
   return pLayer;
 }
+DDLayerHandle DumbDisplay::createLcdLayerHandle(int colCount, int rowCount, int charHeight, const String& fontName) {
+  int lid = _AllocLid();
+  _sendCommand5(String(lid), "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
+  return DDLayerHandle{lid};
+}
 LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeight, const String& fontName) {
   int lid = _AllocLid();
   String layerId = String(lid);

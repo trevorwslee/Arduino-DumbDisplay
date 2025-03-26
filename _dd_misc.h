@@ -344,6 +344,16 @@ class DDAutoPinConfig {
       }
       return *this;
     }
+    /// add a layer to the current level
+    DDAutoPinConfig& addLayer(DDLayer& layer) {
+      addConfig(layer.getLayerId());
+      return *this;
+    }
+    /// add a layer to the current level
+    DDAutoPinConfig& addLayer(DDLayerHandle layerHandle) {
+      addConfig(String(layerHandle.h));
+      return *this;
+    }
     /// add a layer, with specified padding
     /// @param left left padding (% of the contained area width)
     /// @param top top padding  (% of the contained area height) 

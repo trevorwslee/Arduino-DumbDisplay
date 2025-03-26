@@ -287,6 +287,10 @@ class DDLayer: public DDObject {
 #endif    
 };
 
+struct DDLayerHandle {
+  int h;
+};
+
 #define DD_DEF_LAYER_LEVEL_ID "_"
 
 /// Base class for a multi-level layer.
@@ -543,6 +547,11 @@ class LedGridDDLayer: public DDLayer {
 /// @note with "feedback" enabled, can be used as checkbox; consider using these emojis for checkbox --
 /// ☒☐✅❎🟩✔️ ☑️⬛✔✖
 class LcdDDLayer: public DDLayer {
+  public:
+    /// experimental: construct a "transient" LcdDDLayer from DDLayerHandle
+    /// created using DUmbDisplay::createLcdLayerHandle()
+    LcdDDLayer(DDLayerHandle layerHandle): DDLayer(layerHandle.h) {
+    }
   public:
     /// for internal use only
     LcdDDLayer(int8_t layerId): DDLayer(layerId) {
@@ -1644,6 +1653,9 @@ class DumbDisplay {
     /// @see ObjectDetectDemoServiceDDTunnel
     ObjectDetectDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 1);
     ImageRetrieverDDTunnel* createImageRetrieverTunnel();
+    /// experimental: create a LCD layer handle which you can use where the correct DDLayerHandle is used
+    /// @since v0.9.9-r50
+    DDLayerHandle createLcdLayerHandle(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
     /// set DD background color
@@ -1743,7 +1755,7 @@ class DumbDisplay {
     /// reorder the layer (by moving one layer in the z-order plane)
     /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
     void reorderLayer(DDLayer *pLayer, const String& how);
-    /// if layer is no longer used; delete it to release resources
+    /// if created layer is no longer used; delete it to release resources
     void deleteLayer(DDLayer *pLayer);
     /// loop through all the existing layers calling the function passed in
     void walkLayers(void (*walker)(DDLayer *));
