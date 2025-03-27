@@ -201,77 +201,6 @@ template <class T> class DDPendingValue {
 };
 
 
-// /// ***Deprecated! Please use DDAutoPinConfig instead!***
-// /// @deprecated
-// template<int MAX_DEPTH> class DDAutoPinConfigBuilder {  // MAX_DEPTH: depth of [nested] group
-//   public:
-//     // dir: 'H' / 'V' / 'S'
-//     DDAutoPinConfigBuilder(char dir) {
-//       config = String(dir) + "(";
-//       depth = 0;
-//       started[depth] = false;
-//     }
-//   public:
-//     // dir: 'H' / 'V' / 'S'
-//     DDAutoPinConfigBuilder& beginGroup(char dir) {
-//       addConfig(String(dir) + "(");
-//       depth += 1;
-//       started[depth] = false;
-//       return *this;
-//     }  
-//     // DDAutoPinConfigBuilder& beginPaddedGroup(int left, int top, int right, int bottom) {
-//     //   addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
-//     //   depth += 1;
-//     //   started[depth] = false;
-//     //   return *this;
-//     // }  
-//     DDAutoPinConfigBuilder& endGroup() {
-//       config.concat(')');
-//       depth -= 1;
-//       return *this;
-//     }
-//     DDAutoPinConfigBuilder& addLayer(DDLayer* layer) {
-//       addConfig(layer->getLayerId());
-//       return *this;
-//     }
-//     DDAutoPinConfigBuilder& beginPaddedGroup(int left, int top, int right, int bottom) {
-//       addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(");
-//       depth += 1;
-//       started[depth] = false;
-//       return *this;
-//     }  
-//     DDAutoPinConfigBuilder& endPaddedGroup() {
-//       return endGroup();
-//     }
-//     // // dir: 'H' / 'V' / 'S'
-//     // DDAutoPinConfigBuilder& addRemainingGroup(char dir) {
-//     //   addConfig(String(dir) + "(*)");
-//     //   return *this;
-//     // }
-//     const String& build() {
-//       if (config.length() == 2) {
-//         // just started
-//         config.concat('*');
-//       }
-//       config.concat(')');
-//       return config;
-//     }  
-//   private:  
-//     void addConfig(const String& conf) {
-//       if (started[depth]) {
-//         config.concat('+');
-//       } else {
-//         started[depth] = true;
-//       }
-//       config.concat(conf);
-//     }
-//   private:
-//     int depth;
-//     bool started[MAX_DEPTH + 1];
-//     String config;
-// };
-
-
 /// @brief
 /// Class for building "auto pin" config, to be passed to DumbDisplay::configAutoPin().
 /// @since v0.9.7-r2
@@ -361,6 +290,24 @@ class DDAutoPinConfig {
     /// @param bottom bottom padding (% of the contained area height)
     DDAutoPinConfig& addPaddedLayer(DDLayer* layer, int left, int top, int right, int bottom) {
       addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(" + String(layer->getLayerId()) + ")");
+      return *this;
+    }  
+    /// add a layer, with specified padding
+    /// @param left left padding (% of the contained area width)
+    /// @param top top padding  (% of the contained area height) 
+    /// @param right right padding (% of the contained area width)
+    /// @param bottom bottom padding (% of the contained area height)
+    DDAutoPinConfig& addPaddedLayer(DDLayer& layer, int left, int top, int right, int bottom) {
+      addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(" + String(layer.getLayerId()) + ")");
+      return *this;
+    }  
+    /// add a layer, with specified padding
+    /// @param left left padding (% of the contained area width)
+    /// @param top top padding  (% of the contained area height) 
+    /// @param right right padding (% of the contained area width)
+    /// @param bottom bottom padding (% of the contained area height)
+    DDAutoPinConfig& addPaddedLayer(DDLayerHandle layerHandle, int left, int top, int right, int bottom) {
+      addConfig(String("S/") + String(left) + "-" + String(top) + "-" + String(right) + "-" + String(bottom) + "(" + String(layerHandle._h) + ")");
       return *this;
     }  
     /// add spacer, which is a placeholder layer with the specified size
