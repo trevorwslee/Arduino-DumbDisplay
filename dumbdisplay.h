@@ -152,6 +152,12 @@ public:
 };
 
 
+/// experimental: _h is for internal use only
+struct DDLayerHandle {
+  int _h;
+};
+
+
 /// Base class for the different layers support by DumbDisplay; created with various layer creation methods of DumbDisplay, DumbDisplay::createLedGridLayer()
 class DDLayer: public DDObject {
   public:
@@ -285,10 +291,6 @@ class DDLayer: public DDObject {
     DDFeedbackManager *pFeedbackManager;
     DDFeedbackHandler feedbackHandler;
 #endif    
-};
-
-struct DDLayerHandle {
-  int h;
 };
 
 #define DD_DEF_LAYER_LEVEL_ID "_"
@@ -541,6 +543,9 @@ class LedGridDDLayer: public DDLayer {
     void noOffColor();
 };
 
+
+struct LcdDDLayerHandle: DDLayerHandle {};
+
 /// @brief
 /// Class for LCD layer; created with DumbDisplay::createLcdLayer()
 /// @note with "feedback" enabled, can be used as a button
@@ -548,9 +553,9 @@ class LedGridDDLayer: public DDLayer {
 /// ☒☐✅❎🟩✔️ ☑️⬛✔✖
 class LcdDDLayer: public DDLayer {
   public:
-    /// experimental: construct a "transient" LcdDDLayer from DDLayerHandle
+    /// experimental: construct a "transient" LcdDDLayer from LcdDDLayerHandle
     /// created using DUmbDisplay::createLcdLayerHandle()
-    LcdDDLayer(DDLayerHandle layerHandle): DDLayer(layerHandle.h) {
+    LcdDDLayer(LcdDDLayerHandle layerHandle): DDLayer(layerHandle._h) {
     }
   public:
     /// for internal use only
@@ -1653,9 +1658,9 @@ class DumbDisplay {
     /// @see ObjectDetectDemoServiceDDTunnel
     ObjectDetectDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 1);
     ImageRetrieverDDTunnel* createImageRetrieverTunnel();
-    /// experimental: create a LCD layer handle which you can use where the correct DDLayerHandle is used
+    /// experimental: create a LCD layer handle which you can use where the LcdDDLayerHandle is used;
     /// @since v0.9.9-r50
-    DDLayerHandle createLcdLayerHandle(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
+    LcdDDLayerHandle createLcdLayerHandle(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
     /// set DD background color
@@ -1755,8 +1760,10 @@ class DumbDisplay {
     /// reorder the layer (by moving one layer in the z-order plane)
     /// @param how  can be "T" for top; or "B" for bottom; "U" for up; or "D" for down
     void reorderLayer(DDLayer *pLayer, const String& how);
-    /// if created layer is no longer used; delete it to release resources
+    /// if layer is no longer used; delete it to release resources
     void deleteLayer(DDLayer *pLayer);
+    /// if layer is no longer used; delete it to release resources
+    void deleteLayer(DDLayerHandle layerHandle);
     /// loop through all the existing layers calling the function passed in
     void walkLayers(void (*walker)(DDLayer *));
  #ifndef DD_NO_IDLE_CALLBACK

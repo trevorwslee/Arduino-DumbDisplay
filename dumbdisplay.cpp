@@ -4217,10 +4217,12 @@ LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int 
   _PostCreateLayer(pLayer);
   return pLayer;
 }
-DDLayerHandle DumbDisplay::createLcdLayerHandle(int colCount, int rowCount, int charHeight, const String& fontName) {
+LcdDDLayerHandle DumbDisplay::createLcdLayerHandle(int colCount, int rowCount, int charHeight, const String& fontName) {
   int lid = _AllocLid();
   _sendCommand5(String(lid), "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
-  return DDLayerHandle{lid};
+  LcdDDLayerHandle handle;
+  handle._h = lid;
+  return handle;
 }
 LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeight, const String& fontName) {
   int lid = _AllocLid();
@@ -4369,6 +4371,9 @@ void DumbDisplay::resetPinLayers() {
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
   delete pLayer;  // will call _PreDeleteLayer(pLayer)
+}
+void DumbDisplay::deleteLayer(DDLayerHandle layerHandle) {
+  _sendCommand0(String(layerHandle._h), "DEL");
 }
 void DumbDisplay::reorderLayer(DDLayer *pLayer, const String& how) {
   _sendCommand1(pLayer->getLayerId(), "REORD", how);

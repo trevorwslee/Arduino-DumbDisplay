@@ -351,7 +351,7 @@ class DDAutoPinConfig {
     }
     /// add a layer to the current level
     DDAutoPinConfig& addLayer(DDLayerHandle layerHandle) {
-      addConfig(String(layerHandle.h));
+      addConfig(String(layerHandle._h));
       return *this;
     }
     /// add a layer, with specified padding
