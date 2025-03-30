@@ -217,7 +217,8 @@ extern DDAutoPinGroupHeader DDAutoPinStackedGroupHeader(int left, int top, int r
 extern DDAutoPinGroupHeader DDAutoPinGridGroupHeader(int columnCount, int rowCount, const String& align = "");
 
 /// For DDAutoPinConfig;
-/// explicitly specify a grid cell, when columnSpan or rowSpan not 1
+/// explicitly specify a grid cell, when columnSpan or rowSpan not 1;
+/// note that a grid cell must contain a single "auto pin item"
 /// @param columnSpan number of columns to span
 /// @param rowSpan number of rows to span
 /// @param align if not empty, the grid cell align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"
