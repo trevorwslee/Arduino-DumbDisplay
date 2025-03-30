@@ -201,6 +201,29 @@ template <class T> class DDPendingValue {
 };
 
 
+/// For DDAutoPinConfig;
+/// note that _h is for internal use only
+struct DDAutoPinGroupHeader {
+  String _h;
+};
+
+extern DDAutoPinGroupHeader DDAutoPinStackedGroupHeader(int left, int top, int right, int bottom);
+
+/// For DDAutoPinConfig;
+/// for auto pinning the contained in a grid form
+/// @param columnCount number of columns
+/// @param rowCount number of rows  
+/// @param align if not empty, the default grid cell align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"
+extern DDAutoPinGroupHeader DDAutoPinGridGroupHeader(int columnCount, int rowCount, const String& align = "");
+
+/// For DDAutoPinConfig;
+/// explicitly specify a grid cell, when columnSpan or rowSpan not 1
+/// @param columnSpan number of columns to span
+/// @param rowSpan number of rows to span
+/// @param align if not empty, the grid cell align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"
+extern DDAutoPinGroupHeader DDAutoPinGridCellHeader(int columnSpan, int rowSpan, const String& align = "");
+
+
 /// @brief
 /// Class for building "auto pin" config, to be passed to DumbDisplay::configAutoPin().
 /// @since v0.9.7-r2
@@ -209,8 +232,15 @@ class DDAutoPinConfig {
     /// @param dir directory of layers at the top level; can be 'H' for horizontal,  'V' for vertical and 'S' for stacked
     /// @param nestedDepth maximum depth of nesting; default is 5
     DDAutoPinConfig(char dir, int nestedDepth = 5) {
-      
       config = String(dir) + "(";
+      depth = 0;
+      started = new bool[nestedDepth + 1];
+      started[depth] = false;
+    }
+    /// @param header group header
+    /// @param nestedDepth maximum depth of nesting; default is 5
+    DDAutoPinConfig(DDAutoPinGroupHeader header, int nestedDepth = 5) {
+      config = header._h + "(";
       depth = 0;
       started = new bool[nestedDepth + 1];
       started[depth] = false;

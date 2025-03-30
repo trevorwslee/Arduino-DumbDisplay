@@ -1658,7 +1658,7 @@ class DumbDisplay {
     /// @see ObjectDetectDemoServiceDDTunnel
     ObjectDetectDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 1);
     ImageRetrieverDDTunnel* createImageRetrieverTunnel();
-    /// experimental: create a LCD layer handle which you can use where the LcdDDLayerHandle is used;
+    /// experimental: create a visual-only LCD layer handle which you can be used where LcdDDLayerHandle is accepted, like construction of LcdDDLayer;
     /// @since v0.9.9-r50
     LcdDDLayerHandle createLcdLayerHandle(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
     /// if finished using a "tunnel", delete it to release resource
