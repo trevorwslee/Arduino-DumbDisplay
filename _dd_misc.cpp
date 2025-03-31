@@ -17,10 +17,15 @@ DDAutoPinGroupHeader DDAutoPinGridGroupHeader(int columnCount, int rowCount, con
   return DDAutoPinGroupHeader{header};
 }
 DDAutoPinGroupHeader DDAutoPinGridCellHeader(int columnSpan, int rowSpan, const String& align) {
-  String header = String("C") + String(columnSpan) + "x" + String(rowSpan);
+  String header = String("C");
+  if (columnSpan > 1 || rowSpan > 1) {
+    header += String(columnSpan) + "x" + String(rowSpan);
+  }
   if (align.length() > 0) {
     header += ":" + align;
   }
   return DDAutoPinGroupHeader{header};
-
+}
+DDAutoPinGroupHeader DDAutoPinGridCellAlignHeader(const String& align, int columnSpan, int rowSpan) {
+  return DDAutoPinGridCellHeader(columnSpan, rowSpan, align);
 }

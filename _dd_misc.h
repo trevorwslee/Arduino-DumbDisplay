@@ -224,6 +224,9 @@ extern DDAutoPinGroupHeader DDAutoPinGridGroupHeader(int columnCount, int rowCou
 /// @param align if not empty, the grid cell align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"
 extern DDAutoPinGroupHeader DDAutoPinGridCellHeader(int columnSpan, int rowSpan, const String& align = "");
 
+/// The same purpose of DDAutoPinGridCellHeader
+extern DDAutoPinGroupHeader DDAutoPinGridCellAlignHeader(const String& align, int columnSpan = 1, int rowSpan = 1);
+
 
 /// @brief
 /// Class for building "auto pin" config, to be passed to DumbDisplay::configAutoPin().
@@ -263,6 +266,14 @@ class DDAutoPinConfig {
       started[depth] = false;
       return *this;
     }  
+    /// begin a layer group, creating a new level of nesting
+    /// @param dir directory of layers at the new level; can be 'H' for horizontal,  'V' for vertical and 'S' for stacked
+    DDAutoPinConfig& beginGroup(DDAutoPinGroupHeader header) {
+      addConfig(header._h + "(");
+      depth += 1;
+      started[depth] = false;
+      return *this;
+    }
     /// end a begun group, returning to the previous level of nesting
     DDAutoPinConfig& endGroup() {
       config.concat(')');
