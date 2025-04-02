@@ -695,8 +695,17 @@ class SelectionListDDLayer: public SelectionBaseDDLayer {
     void selected(int selectionIdx, bool selected, bool reverseTheOthers = false);
 };
 
+
+struct GraphicalDDLayerHandle: DDLayerHandle {};
+
+
 /// Class for graphical LCD layer; created with DumbDisplay::createGraphicalLayer()
 class GraphicalDDLayer: public MultiLevelDDLayer {
+  public:
+    /// experimental: construct a "transient" LcdDDLayer from LcdDDLayerHandle
+    /// created using DUmbDisplay::createGraphicalLayerHandle()
+    GraphicalDDLayer(GraphicalDDLayerHandle layerHandle): MultiLevelDDLayer(layerHandle._h) {
+    }
   public:
     /// for internal use only
     GraphicalDDLayer(int8_t layerId): MultiLevelDDLayer(layerId) {
@@ -1658,6 +1667,9 @@ class DumbDisplay {
     /// @see ObjectDetectDemoServiceDDTunnel
     ObjectDetectDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 1);
     ImageRetrieverDDTunnel* createImageRetrieverTunnel();
+    /// experimental: create a visual-only graphical LCD layer handle which you can be used where GraphicalDDLayerHandle is accepted, like construction of GraphicalDDLayer;
+    /// @since v0.9.9-r50
+    GraphicalDDLayerHandle createGraphicalLayerHandle(int width, int height);
     /// experimental: create a visual-only LCD layer handle which you can be used where LcdDDLayerHandle is accepted, like construction of LcdDDLayer;
     /// @since v0.9.9-r50
     LcdDDLayerHandle createLcdLayerHandle(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");

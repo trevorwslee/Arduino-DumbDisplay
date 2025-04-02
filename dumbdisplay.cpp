@@ -4269,6 +4269,13 @@ GraphicalDDLayer* DumbDisplay::setContainerLayer(int width, int height, const St
   return __ContainerLayer;
 }
 #endif
+GraphicalDDLayerHandle DumbDisplay::createGraphicalLayerHandle(int width, int height) {
+  int lid = _AllocLid();
+  _sendCommand3(String(lid), "SU", String("graphical"), String(width), String(height));
+  GraphicalDDLayerHandle handle;
+  handle._h = lid;
+  return handle;
+}
 GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
   int lid = _AllocLid();
   String layerId = String(lid);
