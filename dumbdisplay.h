@@ -1721,7 +1721,6 @@ class DumbDisplay {
     /// save the cached sound
     void saveCachedSound(const String& soundName);
     /// save the cached sound as C header file (.h)
-    /// @warn this is experimental
     void saveCachedSoundAsH(const String& soundName);
     /// stream sound 8-bit sample (for playing sound)
     int streamSound8(int sampleRate, int numChannels = 1); 

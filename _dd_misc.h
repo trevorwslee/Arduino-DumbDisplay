@@ -203,12 +203,16 @@ template <class T> class DDPendingValue {
 
 /// For DDAutoPinConfig;
 /// note that _h is for internal use only
+/// @since v0.9.9-r50
 struct DDAutoPinGroupHeader {
   String _h;
 };
 
+/// experimental:
+/// @since v0.9.9-r50
 extern DDAutoPinGroupHeader DDAutoPinStackedGroupHeader(int left, int top, int right, int bottom);
 
+/// experimental:
 /// For DDAutoPinConfig;
 /// for auto pinning the contained in a grid form
 /// @param columnCount number of columns
@@ -216,6 +220,7 @@ extern DDAutoPinGroupHeader DDAutoPinStackedGroupHeader(int left, int top, int r
 /// @param align if not empty, the default grid cell align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"
 extern DDAutoPinGroupHeader DDAutoPinGridGroupHeader(int columnCount, int rowCount, const String& align = "");
 
+/// experimental:
 /// For DDAutoPinConfig;
 /// explicitly specify a grid cell, when columnSpan or rowSpan not 1;
 /// note that a grid cell must contain a single "auto pin item"
@@ -224,6 +229,7 @@ extern DDAutoPinGroupHeader DDAutoPinGridGroupHeader(int columnCount, int rowCou
 /// @param align if not empty, the grid cell align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"
 extern DDAutoPinGroupHeader DDAutoPinGridCellHeader(int columnSpan, int rowSpan, const String& align = "");
 
+/// experimental:
 /// The same purpose of DDAutoPinGridCellHeader
 extern DDAutoPinGroupHeader DDAutoPinGridCellAlignHeader(const String& align, int columnSpan = 1, int rowSpan = 1);
 
