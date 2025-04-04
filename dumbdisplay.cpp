@@ -4259,9 +4259,9 @@ SelectionListDDLayer* DumbDisplay::createSelectionListLayer(int colCount, int ro
   return pLayer;
 }
 #ifdef SUPPORT_CONTAINER
-GraphicalDDLayer* DumbDisplay::setContainerLayer(int width, int height, const String& containedAlignment) {
+GraphicalDDLayer* DumbDisplay::setRootLayer(int width, int height, const String& containedAlignment) {
   _Connect();
-  _sendCommand3("", "CNT", String(width), String(height), containedAlignment);
+  _sendCommand3("", "ROOT", String(width), String(height), containedAlignment);
   if (__ContainerLayer != NULL) {
     delete __ContainerLayer;
   }

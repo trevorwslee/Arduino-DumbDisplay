@@ -2338,7 +2338,7 @@ MIT
 # Change History
 
 v0.9.9-r50
-  - experimental support of "container" layer 
+  - experimental support of "root" layer 
   - bug fix
 
 

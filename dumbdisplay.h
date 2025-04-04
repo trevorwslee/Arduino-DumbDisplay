@@ -1570,12 +1570,12 @@ class DumbDisplay {
     void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     /// rest pinning of layers, as if they are not pinned
     void resetPinLayers();
-    /// experimental support of a "container" layer (GraphicalDDLayer) that contain all other created layers;
-    /// note that the "container" will always be placed as the container, and hence don't need be pined;
+    /// experimental support of a "root" layer (GraphicalDDLayer) that contain all other created layers;
+    /// note that the "root" will always be placed as the container, and hence don't need be pined;
     /// @param containedAlignment the alignment of the contained layers; "L" / "T" / "LT"; "" means centered 
     /// currently, "container" layer does not support "feedback"
     /// @since v0.9.9-r50
-    GraphicalDDLayer* setContainerLayer(int width, int height, const String& containedAlignment = "");
+    GraphicalDDLayer* setRootLayer(int width, int height, const String& containedAlignment = "");
     /// create a Microbit-like layer
     MbDDLayer* createMicrobitLayer(int width = 5, int height = 5);
     /// create a Turtle-like layer
