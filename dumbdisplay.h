@@ -336,13 +336,18 @@ class MultiLevelDDLayer: public DDLayer {
     /// move the level anchor
     void moveLevelAnchorBy(float byX, float byY, long reachInMillis = 0);
     /// register an image for setting as level's background
-    /// @param backgroundId id to identify the background
-    /// @param backgroundImageName name of the image
+    /// @param backgroundId id to identify the background -- see setLevelBackground()
+    /// @param backgroundImageName name of the image; can be a series of images like dumbdisplay_##0-7##.png
     /// @param drawBackgroundOptions options for drawing the background; same means as the option param of GraphicalDDLayer::drawImageFiler()
     void registerLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions = "");
+    /// export the current level as a registered background image -- see exportLevelsAsImage() and registerLevelBackground()
+    /// @param backgroundId id to identify the background -- see setLevelBackground()
+    /// @param replace if true (default), replace the existing registered background image with the same id;
+    ///                if false, will add as an item of background image series  that can be used for animation with animateLevelBackground()
+    void exportLevelAsRegisteredBackground(const String& backgroundId, bool replace = true);
     /// set a registered background image as the current level's background
     /// @param backgroundId 
-    /// @param backgroundImageName if not registered, the name of the image to register
+    /// @param backgroundImageName if not registered, the name of the image to register; can be a series of images like dumbdisplay_##0-7##.png
     /// @param drawBackgroundOptions if not registered, the options for drawing the background
     void setLevelBackground(const String& backgroundId, const String& backgroundImageName = "", const String& drawBackgroundOptions = "");
     /// set that the current level uses no background image

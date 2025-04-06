@@ -2410,6 +2410,9 @@ void MultiLevelDDLayer::moveLevelAnchorBy(float byX, float byY, long reachInMill
 void MultiLevelDDLayer::registerLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions) {
   _sendCommand3(layerId, C_reglevelbg, backgroundId, backgroundImageName, drawBackgroundOptions);  
 }
+void MultiLevelDDLayer::exportLevelAsRegisteredBackground(const String& backgroundId, bool replace) {
+  _sendCommand2(layerId, C_explevelasregbg, backgroundId, TO_BOOL(replace));  
+}
 void MultiLevelDDLayer::setLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions) {
   if (backgroundImageName == "") {
     _sendCommand1(layerId, C_setlevelbg, backgroundId);  

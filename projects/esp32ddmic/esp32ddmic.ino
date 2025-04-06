@@ -61,7 +61,7 @@
   #define SOUND_SAMPLE_RATE    16000
   #define SOUND_CHANNEL_COUNT  1
   #define I2S_PORT             I2S_NUM_0
-#elif defined(FOR_ESPSPARKBOT)
+#elif defined(FOR_ESP_SPARKBOT)
   #define I2S_WS               41  // WS
   #define I2S_SD               40  // DIN
   #define I2S_SCK              39  // BCLK
@@ -424,19 +424,19 @@ esp_err_t i2s_install() {
     .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BIT_COUNT),
     .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
-#if defined(FOR_ESPSPARKBOT)  // IDF4???
+#if defined(FOR_ESP_SPARKBOT)  // IDF4???
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2 | ESP_INTR_FLAG_IRAM,
 #else
     .intr_alloc_flags = 0,
 #endif  
-#if defined(FOR_ESPSPARKBOT)  // IDF4???
+#if defined(FOR_ESP_SPARKBOT)  // IDF4???
     .dma_buf_count = 3,
     .dma_buf_len = 1024,
 #else
     .dma_buf_count = I2S_DMA_BUF_COUNT/*8*/,
     .dma_buf_len = I2S_DMA_BUF_LEN/*1024*/,
 #endif
-#if defined(FOR_ESPSPARKBOT)
+#if defined(FOR_ESP_SPARKBOT)
     .use_apll = true
 #else  
     .use_apll = false
