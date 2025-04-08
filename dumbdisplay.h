@@ -204,6 +204,30 @@ class DDLayer: public DDObject {
     /// set no layer background color
     /// @note layer property
     void noBackgroundColor();
+    /// set layer background image (on top of background color; follow opacity of background color)
+    /// @param backgroundImageName name of the image
+    ///                            can be a series of images like dumbdisplay_##0-7##.png (for dumbdisplay_0.png to dumbdisplay_7.png)
+    ///                            which can be used for animation with animateBackgroundImage()
+    /// @param drawBackgroundOptions options for drawing the background; same means as the option param of GraphicalDDLayer::drawImageFiler()
+    /// @param refImageWidth the reference width of the image to scale the image (while keeping the aspect ration); 0 means no scaling
+    void backgroundImage(const String& backgroundImageName, const String& drawBackgroundOptions, int refImageWidth = 0);
+    /// set no layer background image
+    void noBackgroundImage();
+    /// experimental:
+    /// export the layer as background image
+    /// @param replace replace any existing background image; for add as an item of background image series that can be used for animation with animateBackgroundImage()
+    /// @param noDrawBackground during export, do not draw background
+    /// @param exportAsWidth the width of the image; 0 means the default (should be good enough)
+    void exportAsBackgroundImage(bool replace = true, bool noDrawBackground = true, int exportAsWidth = 0);
+    /// experimental:
+    /// start animate background image series
+    /// @param fps frames per second which is used to calculate the interval between the series of images
+    /// @param reset reset to the first image in the series (before start animation)
+    /// @param options can be "r" to reverse the order of the series of images
+    void animateBackgroundImage(float fps, bool reset = true, const String& options = "");
+    /// stop animate background image
+    /// @param reset reset to the first image in the series
+    void stopAnimateBackgroundImage(bool reset = true);
     /// set whether layer visible (not visible means hidden)
     /// @note layer property
     void visible(bool visible);
@@ -337,26 +361,30 @@ class MultiLevelDDLayer: public DDLayer {
     void moveLevelAnchorBy(float byX, float byY, long reachInMillis = 0);
     /// register an image for setting as level's background
     /// @param backgroundId id to identify the background -- see setLevelBackground()
-    /// @param backgroundImageName name of the image; can be a series of images like dumbdisplay_##0-7##.png
+    /// @param backgroundImageName name of the image
+    ///                            can be a series of images like dumbdisplay_##0-7##.png (for dumbdisplay_0.png to dumbdisplay_7.png)
+    ///                            which can be used for animation with animateLevelBackground()
     /// @param drawBackgroundOptions options for drawing the background; same means as the option param of GraphicalDDLayer::drawImageFiler()
     void registerLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions = "");
     /// export the current level as a registered background image -- see exportLevelsAsImage() and registerLevelBackground()
     /// @param backgroundId id to identify the background -- see setLevelBackground()
     /// @param replace if true (default), replace the existing registered background image with the same id;
-    ///                if false, will add as an item of background image series  that can be used for animation with animateLevelBackground()
+    ///                if false, will add as an item of background image series that can be used for animation with animateLevelBackground()
     void exportLevelAsRegisteredBackground(const String& backgroundId, bool replace = true);
     /// set a registered background image as the current level's background
     /// @param backgroundId 
-    /// @param backgroundImageName if not registered, the name of the image to register; can be a series of images like dumbdisplay_##0-7##.png
+    /// @param backgroundImageName if not registered, the name of the image to register;
+    ///                            can be a series of images like dumbdisplay_##0-7##.png (for dumbdisplay_0.png to dumbdisplay_7.png)
+    ///                            which can be used for animation with animateLevelBackground()
     /// @param drawBackgroundOptions if not registered, the options for drawing the background
     void setLevelBackground(const String& backgroundId, const String& backgroundImageName = "", const String& drawBackgroundOptions = "");
     /// set that the current level uses no background image
     void setLevelNoBackground();
     /// start animate level background (if level background has a series of images)
     /// @param fps frames per second which is used to calculate the interval between the series of images
-    /// @param reset reset to the first image in the series
+    /// @param reset reset to the first image in the series (before start animation)
     /// @param options can be "r" to reverse the order of the series of images
-    void animateLevelBackground(int fps, bool reset = true, const String& options = "");
+    void animateLevelBackground(float fps, bool reset = true, const String& options = "");
     /// stop animate level background
     /// @param reset reset to the first image in the series
     void stopAnimateLevelBackground(bool reset = true);

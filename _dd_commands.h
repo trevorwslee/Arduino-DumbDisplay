@@ -183,6 +183,11 @@
 #define C_unloadimagefile      "#97"
 #define C_unloadallimagefiles  "#9a"
 
+#define C_bgimg            "#9b"
+#define C_nobgimg          "#9c"
+#define C_explayerasbgimg  "#9d"
+#define C_anibgimg         "#9e"
+#define C_stopanibgimg     "#9f"
 
 
 

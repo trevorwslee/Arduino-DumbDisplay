@@ -2259,9 +2259,26 @@ void DDLayer::backgroundColor(const String& color, int opacity) {
 void DDLayer::noBackgroundColor() {
   _sendCommand0(layerId, C_nobgcolor);
 }
-// void DDLayer::reorder(bool bringUp) {
-//   _sendCommand1(layerId, C_reorder);
-// }
+void DDLayer::backgroundImage(const String& backgroundImageName, const String& drawBackgroundOptions, int refImageWidth) {
+  if (refImageWidth > 0) {
+    _sendCommand3(layerId, C_bgimg, backgroundImageName, drawBackgroundOptions, String(refImageWidth));
+  } else {
+    _sendCommand2(layerId, C_bgimg, backgroundImageName, drawBackgroundOptions);
+  }
+}
+/// set no layer background image
+void DDLayer::noBackgroundImage() {
+  _sendCommand0(layerId, C_nobgimg);
+}
+void DDLayer::exportAsBackgroundImage(bool replace, bool noDrawBackground, int exportAsWidth) {
+  _sendCommand3(layerId, C_explayerasbgimg, TO_BOOL(replace), TO_BOOL(noDrawBackground), String(exportAsWidth));
+}
+void DDLayer::animateBackgroundImage(float fps, bool reset, const String& options) {
+  _sendCommand3(layerId, C_anibgimg, TO_NUM(fps), TO_BOOL(reset), options);  
+}
+void DDLayer::stopAnimateBackgroundImage(bool reset) {
+  _sendCommand1(layerId, C_stopanibgimg, TO_BOOL(reset));  
+}
 void DDLayer::flash() {
   _sendCommand0(layerId, C_flash);
 }
@@ -2423,8 +2440,8 @@ void MultiLevelDDLayer::setLevelBackground(const String& backgroundId, const Str
 void MultiLevelDDLayer::setLevelNoBackground() {
     _sendCommand0(layerId, C_setlevelnobg);  
 }
-void MultiLevelDDLayer::animateLevelBackground(int fps, bool reset, const String& options) {
-  _sendCommand3(layerId, C_anilevelbg, String(fps), TO_BOOL(reset), options);  
+void MultiLevelDDLayer::animateLevelBackground(float fps, bool reset, const String& options) {
+  _sendCommand3(layerId, C_anilevelbg, TO_NUM(fps), TO_BOOL(reset), options);  
 }
 void MultiLevelDDLayer::stopAnimateLevelBackground(bool reset) {
     _sendCommand1(layerId, C_stopanilevelbg, TO_BOOL(reset));  
