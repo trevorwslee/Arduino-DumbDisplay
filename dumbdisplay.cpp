@@ -2271,7 +2271,11 @@ void DDLayer::noBackgroundImage() {
   _sendCommand0(layerId, C_nobgimg);
 }
 void DDLayer::exportAsBackgroundImage(bool replace, bool noDrawBackground, int exportAsWidth) {
-  _sendCommand3(layerId, C_explayerasbgimg, TO_BOOL(replace), TO_BOOL(noDrawBackground), String(exportAsWidth));
+  if (exportAsWidth > 0) {
+    _sendCommand3(layerId, C_explayerasbgimg, TO_BOOL(replace), TO_BOOL(noDrawBackground), String(exportAsWidth));
+  } else {
+    _sendCommand2(layerId, C_explayerasbgimg, TO_BOOL(replace), TO_BOOL(noDrawBackground));
+  }
 }
 void DDLayer::animateBackgroundImage(float fps, bool reset, const String& options) {
   _sendCommand3(layerId, C_anibgimg, TO_NUM(fps), TO_BOOL(reset), options);  
