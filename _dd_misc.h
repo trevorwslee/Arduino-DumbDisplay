@@ -218,7 +218,7 @@ extern DDAutoPinGroupHeader DDAutoPinStackedGroupHeader(int left, int top, int r
 /// @param columnCount number of columns
 /// @param rowCount number of rows  
 /// @param align if not empty, the default grid cell align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"
-extern DDAutoPinGroupHeader DDAutoPinGridGroupHeader(int columnCount, int rowCount, const String& align = "");
+extern DDAutoPinGroupHeader DDAutoPinGridGroupHeader(int columnCount, int rowCount, const String& align = "", bool sameColumnWidth = false, bool sameRowHeight = false);
 
 /// experimental:
 /// For DDAutoPinConfig;
