@@ -641,6 +641,9 @@ class SelectionBaseDDLayer: public DDLayer {
     /// set pixel color
     /// @param color DD_RGB_COLOR(...) or common color name
     void pixelColor(const String &color);
+    /// set background pixel color
+    /// @param color DD_RGB_COLOR(...) or common color name
+    void bgPixelColor(const String &color);
     /// select all "selection" units
     void selectAll();
     /// deselect all "selection" units

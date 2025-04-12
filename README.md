@@ -2338,7 +2338,8 @@ MIT
 # Change History
 
 v0.9.9-r50
-  - experimental support of "root" layer 
+  - support of "root" layer 
+  - support to "grid" layout
   - bug fix
 
 

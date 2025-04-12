@@ -2713,6 +2713,9 @@ void LcdDDLayer::noBgPixelColor() {
 void SelectionBaseDDLayer::pixelColor(const String &color) {
   _sendCommand1(layerId, C_pixelcolor, color);
 }
+void SelectionBaseDDLayer::bgPixelColor(const String &color) {
+  _sendCommand1(layerId, C_bgpixelcolor, color);
+}
 void SelectionBaseDDLayer::selectAll() {
   _sendCommand0(layerId, C_select);
 }
