@@ -2928,7 +2928,11 @@ void GraphicalDDLayer::drawRoundRect(int x, int y, int w, int h, int r, const St
 //   _sendCommand7(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color, TO_BOOL(true));
 // }
 void GraphicalDDLayer::forward(int distance, bool withPen) {
-  _sendCommand2(layerId, C_fd, String(distance), TO_BOOL(!withPen));
+  if (_DDCompatibility >= 12) {
+    _sendCommand2(layerId, C_fd, String(distance), TO_BOOL(!withPen));
+  } else {
+    _sendCommand1(layerId, C_fd, String(distance));
+  }
 }
 void GraphicalDDLayer::backward(int distance, bool withPen) {
   _sendCommand2(layerId, C_bk, String(distance), TO_BOOL(!withPen));
