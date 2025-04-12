@@ -29,18 +29,5 @@ inline int DDCheckEndian() {
 #include "__dd_misc_connect.h"
 
 
-struct DDStateChangeCheckResult {
-  int nextState;
-  int nextStateInMillis;
-};
-
-class DDStateChangeTracker {
-  public:
-    void checkStateAndApplyAction(int currentState);
-  private:
-    int currentState;   
-    
-};
-
 #endif
 

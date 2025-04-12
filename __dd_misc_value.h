@@ -89,6 +89,31 @@ class DDConnectVersionTracker {
     int version;  
 };
 
+struct DDCheckStateResult {
+  int nextState;
+  long nextCheckInMillis;
+};
+
+class DDStatedActionTracker {
+  public:
+    DDStatedActionTracker(int initialState = -1, long nextCheckInMillis = 0) {
+      this->currentState = initialState;
+      this->nextCheckMillis = millis() + nextCheckInMillis;
+    }
+  public:
+    void checkStateAndApplyAction(DDCheckStateResult (*actionApplier)(int currentState)) {
+      long now = millis();
+      if (now >= nextCheckMillis) {
+        DDCheckStateResult result = actionApplier(currentState);
+        currentState = result.nextState;
+        nextCheckMillis = now + result.nextCheckInMillis;
+      }
+    }
+  private:
+    int currentState;   
+    long nextCheckMillis;
+};
+
 
 
 
