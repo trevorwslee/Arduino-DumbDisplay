@@ -2927,8 +2927,12 @@ void GraphicalDDLayer::drawRoundRect(int x, int y, int w, int h, int r, const St
 // void GraphicalDDLayer::fillRoundRect(int x, int y, int w, int h, int r, const String& color) {
 //   _sendCommand7(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color, TO_BOOL(true));
 // }
-void GraphicalDDLayer::forward(int distance) {
-  _sendCommand1(layerId, C_fd, String(distance));
+void GraphicalDDLayer::forward(int distance, bool withPen) {
+  _sendCommand2(layerId, C_fd, String(distance), TO_BOOL(!withPen));
+}
+void GraphicalDDLayer::backward(int distance, bool withPen) {
+  _sendCommand2(layerId, C_bk, String(distance), TO_BOOL(!withPen));
+  //_sendCommand1(layerId, C_fd, String(distance));
 }
 void GraphicalDDLayer::leftTurn(int angle) {
   _sendCommand1(layerId, C_lt, String(angle));

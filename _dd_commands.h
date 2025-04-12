@@ -176,6 +176,7 @@
 #define C_disconnect       "#be"
 
 #define C_fd               "fd"
+#define C_bk               "bk"
 #define C_lt               "lt"
 #define C_rt               "rt"
 

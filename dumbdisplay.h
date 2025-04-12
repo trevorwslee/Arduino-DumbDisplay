@@ -845,7 +845,9 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
       drawArc(x, y, w, h, startAngle, sweepAngle, useCenter, color, true);
     }
     /// move forward (relative to cursor)
-    void forward(int distance);
+    void forward(int distance, bool withPen = true);
+    /// move backward (relative to cursor)
+    void backward(int distance, bool withPen = true);
     /// turn left
     void leftTurn(int angle);
     /// turn right
