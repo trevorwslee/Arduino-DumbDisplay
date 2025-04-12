@@ -626,7 +626,7 @@ class LcdDDLayer: public DDLayer {
     void pixelColor(const String &color);
     /// set "background" (off) pixel color
     /// @param color DD_RGB_COLOR(...) or common color name
-    void bgPixelColor(const String &color);
+    void bgPixelColor(const String &color, bool sameForBackgroundColor = false, int backgroundOpacity = 100);
     /// set no "background" (off) pixel color
     void noBgPixelColor();
 };
@@ -643,7 +643,7 @@ class SelectionBaseDDLayer: public DDLayer {
     void pixelColor(const String &color);
     /// set background pixel color
     /// @param color DD_RGB_COLOR(...) or common color name
-    void bgPixelColor(const String &color);
+    void bgPixelColor(const String &color, bool sameForBackgroundColor = false, int backgroundOpacity = 100);
     /// select all "selection" units
     void selectAll();
     /// deselect all "selection" units
