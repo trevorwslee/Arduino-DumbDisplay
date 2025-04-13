@@ -89,28 +89,28 @@ class DDConnectVersionTracker {
     int version;  
 };
 
-/// newState: the next state when it is due time for next state change;
-/// stateChangeInMillis: the time delay (in millis) for the new state to be checked (and actions applied)
-struct DDCheckStateResult {
+/// newState: the next state when it is due time for next state;
+/// stateChangeInMillis: the time delay (in millis) for the new state to be effective (state changed)
+struct DDChangeStateInfo {
   int newState;
   long stateChangeInMillis;
 };
 
-/// helper class for tracking stage change for applying action;
-/// call initialize() to set the initial state and next check-in time;
-/// call checkStateAndApplyAction() to check if the new state became effective, if so, apply action when the actionApplier callback is called
-class DDStatChangeActionTracker {
+/// helper class for timing for changing stage;
+/// call initialize() to set the initial state and next "stage change" delay (in millis);
+/// call checkStateChange() to check if the new state became effective (changed), if so, stageChangedCallback is called to get back next "stage change" info
+class DDChangeStateTimer {
   public:
     void initialize(int initialState = -1, long stateChangeInMillis = 0) {
       this->currentState = initialState;
       this->nextStateChangeMillis = millis() + stateChangeInMillis;
     }
-    void checkStateAndApplyAction(DDCheckStateResult (*actionApplier)(int currentState)) {
+    void checkStatChange(DDChangeStateInfo (*stageChangedCallback)(int currentState)) {
       long now = millis();
       if (now >= nextStateChangeMillis) {
-        DDCheckStateResult result = actionApplier(currentState);
-        currentState = result.newState;
-        nextStateChangeMillis = now + result.stateChangeInMillis;
+        DDChangeStateInfo info = stageChangedCallback(currentState);
+        currentState = info.newState;
+        nextStateChangeMillis = now + info.stateChangeInMillis;
       }
     }
   private:
