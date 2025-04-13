@@ -96,11 +96,10 @@ struct DDCheckStateResult {
 
 class DDStatedActionTracker {
   public:
-    DDStatedActionTracker(int initialState = -1, long nextCheckInMillis = 0) {
+    void initialize(int initialState = -1, long nextCheckInMillis = 0) {
       this->currentState = initialState;
       this->nextCheckMillis = millis() + nextCheckInMillis;
     }
-  public:
     void checkStateAndApplyAction(DDCheckStateResult (*actionApplier)(int currentState)) {
       long now = millis();
       if (now >= nextCheckMillis) {
