@@ -89,28 +89,33 @@ class DDConnectVersionTracker {
     int version;  
 };
 
+/// newState: the next state when it is due time for next state change;
+/// stateChangeInMillis: the time delay (in millis) for the new state to be checked (and actions applied)
 struct DDCheckStateResult {
-  int nextState;
-  long nextCheckInMillis;
+  int newState;
+  long stateChangeInMillis;
 };
 
+/// helper class for tracking stage change for applying actions;
+/// call initialize() to set the initial state and next check-in time;
+/// call checkStateAndApplyAction() to check if the new state became effective, if so, apply actions when the actionApplier callback is called
 class DDStatedActionTracker {
   public:
-    void initialize(int initialState = -1, long nextCheckInMillis = 0) {
+    void initialize(int initialState = -1, long stateChangeInMillis = 0) {
       this->currentState = initialState;
-      this->nextCheckMillis = millis() + nextCheckInMillis;
+      this->nextStateChangeMillis = millis() + stateChangeInMillis;
     }
     void checkStateAndApplyAction(DDCheckStateResult (*actionApplier)(int currentState)) {
       long now = millis();
-      if (now >= nextCheckMillis) {
+      if (now >= nextStateChangeMillis) {
         DDCheckStateResult result = actionApplier(currentState);
-        currentState = result.nextState;
-        nextCheckMillis = now + result.nextCheckInMillis;
+        currentState = result.newState;
+        nextStateChangeMillis = now + result.stateChangeInMillis;
       }
     }
   private:
     int currentState;   
-    long nextCheckMillis;
+    long nextStateChangeMillis;
 };
 
 
