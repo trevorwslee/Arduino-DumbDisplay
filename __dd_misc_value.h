@@ -99,7 +99,7 @@ struct DDChangeStateInfo {
 /// helper class for timing for changing stage;
 /// call initialize() to set the initial state and next "stage change" delay (in millis);
 /// call checkStateChange() to check if the new state became effective (changed), if so, stageChangedCallback is called to get back next "stage change" info
-class DDChangeStateTimingHelper {
+class DDTimeChangeStateHelper {
   public:
     void initialize(int initialState = -1, long stateChangeInMillis = 0) {
       this->currentState = initialState;
