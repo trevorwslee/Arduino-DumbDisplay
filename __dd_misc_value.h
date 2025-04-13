@@ -96,10 +96,10 @@ struct DDCheckStateResult {
   long stateChangeInMillis;
 };
 
-/// helper class for tracking stage change for applying actions;
+/// helper class for tracking stage change for applying action;
 /// call initialize() to set the initial state and next check-in time;
-/// call checkStateAndApplyAction() to check if the new state became effective, if so, apply actions when the actionApplier callback is called
-class DDStatedActionTracker {
+/// call checkStateAndApplyAction() to check if the new state became effective, if so, apply action when the actionApplier callback is called
+class DDStatChangeActionTracker {
   public:
     void initialize(int initialState = -1, long stateChangeInMillis = 0) {
       this->currentState = initialState;
