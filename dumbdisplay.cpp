@@ -545,7 +545,7 @@ DDInputOutput* /*volatile */_WODDIO = NULL;
 #endif
 
 #ifdef SUPPORT_CONTAINER
-GraphicalDDLayer* __ContainerLayer = NULL;
+GraphicalDDLayer* __RootLayer = NULL;
 #endif
 
 
@@ -4303,11 +4303,11 @@ SelectionListDDLayer* DumbDisplay::createSelectionListLayer(int colCount, int ro
 GraphicalDDLayer* DumbDisplay::setRootLayer(int width, int height, const String& containedAlignment) {
   _Connect();
   _sendCommand3("", "ROOT", String(width), String(height), containedAlignment);
-  if (__ContainerLayer != NULL) {
-    delete __ContainerLayer;
+  if (__RootLayer != NULL) {
+    delete __RootLayer;
   }
-  __ContainerLayer = new GraphicalDDLayer(CONTAINER_LAYER_ID);
-  return __ContainerLayer;
+  __RootLayer = new GraphicalDDLayer(CONTAINER_LAYER_ID);
+  return __RootLayer;
 }
 #endif
 GraphicalDDLayerHandle DumbDisplay::createGraphicalLayerHandle(int width, int height) {
@@ -4978,9 +4978,9 @@ void DumbDisplay::masterReset() {
 #endif
 
 #ifdef SUPPORT_CONTAINER
-  if (__ContainerLayer != NULL) {
-    delete __ContainerLayer;
-    __ContainerLayer = NULL;
+  if (__RootLayer != NULL) {
+    //delete __RootLayer;  // TODO: seems deleting __RootLayer will cause hang for Pico ... ref: Arduino Clock
+    __RootLayer = NULL;
   }
 #endif
   if (_NextLid > 0) {
