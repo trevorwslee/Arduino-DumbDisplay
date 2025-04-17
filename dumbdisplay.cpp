@@ -2716,6 +2716,9 @@ void LcdDDLayer::noBgPixelColor() {
 void SelectionBaseDDLayer::pixelColor(const String &color) {
   _sendCommand1(layerId, C_pixelcolor, color);
 }
+void SelectionBaseDDLayer::pixelColor(const String &color, bool selected) {
+  _sendCommand2(layerId, C_pixelcolor, color, TO_BOOL(selected));
+}
 // void SelectionBaseDDLayer::bgPixelColor(const String &color, bool sameForBackgroundColor, int backgroundOpacity) {
 //   _sendCommand1(layerId, C_bgpixelcolor, color);
 //   if (sameForBackgroundColor) {
