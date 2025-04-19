@@ -3385,7 +3385,7 @@ _sendCommand0("", ("// EP -- " + endPoint).c_str());
     doneState = 0;
   }
 }
-void DDTunnel::reconnectTo(const String& endPoint) {
+void DDTunnel::_reconnectTo(const String& endPoint, const String& extraParams) {
   this->endPoint = endPoint;
 //Serial.print("//!! endPoint: ");
 //Serial.print(endPoint);
@@ -3396,7 +3396,7 @@ void DDTunnel::reconnectTo(const String& endPoint) {
       __SendErrorComment("failed to set endPoint");
     }
   }
-  _reconnect();
+  _reconnect(extraParams);
 }
 void DDTunnel::release() {
   if (doneState == 0/*!done*/) {
@@ -3729,9 +3729,9 @@ __SendComment("XXX EOF???");
   return this->result;
 }
 
-void ImageDownloadDDTunnel::reconnect(bool enableCropUI) {
+void ImageDownloadDDTunnel::reconnectTo(const String& endPoint, bool enableCropUI) {
   String extraParams = enableCropUI ? "CUI" : "";
-  _reconnect(extraParams);
+  _reconnectTo(endPoint, extraParams);
 }
 
 
@@ -4730,7 +4730,7 @@ JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, cons
   return NULL;
 #endif
 }
-SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName, bool redownload) {
+ImageDownloadDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName, bool redownload) {
 #ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
@@ -4742,7 +4742,7 @@ SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoin
 #ifdef DEBUG_MISSING_ENDPOINT_C  
 _sendCommand0("", ("// CreateEP -- " + endPoint).c_str());
 #endif
-  SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, params, endPoint/*, true*/, 1);
+   ImageDownloadDDTunnel* pTunnel = new ImageDownloadDDTunnel(tid, params, endPoint/*, true*/, 1);
   _PostCreateTunnel(pTunnel, true);
   return pTunnel;
 #else

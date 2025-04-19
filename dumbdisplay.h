@@ -1228,18 +1228,22 @@ class DDTunnel: public DDObject {
     virtual void release();
   protected:
     virtual void _reconnect(const String& extraParams = "");
+    void _reconnectTo(const String& endPoint, const String& extraParams = "");
   public:
     const String& getTunnelId() const { return tunnelId; }
-    void reconnectTo(const String& endPoint);
-  protected:
     /// reconnect to specified endpoint with parameters
     /// @param endPoint endpoint to connect to
-    /// @param params parameters to to end point; empty if none
-    void reconnectToSetParams(const String& endPoint, const String& params) {
-      this->endPoint = endPoint;
-      this->params = params;
-      _reconnect();
-    }
+  public:
+    inline void reconnectTo(const String& endPoint) { _reconnectTo(endPoint); }
+  protected:
+    // /// reconnect to specified endpoint with parameters
+    // /// @param endPoint endpoint to connect to
+    // /// @param params parameters to to end point; empty if none
+    // void reconnectToSetParams(const String& endPoint, const String& params) {
+    //   this->endPoint = endPoint;
+    //   this->params = params;
+    //   _reconnect();
+    // }
   public:
     /// reconnect to specified endpoint. See DDTunnelEndpoint.
     void reconnectToEndpoint(const DDTunnelEndpoint endpoint) {
@@ -1376,7 +1380,7 @@ class SimpleToolDDTunnel: public BasicDDTunnel {
   protected:
     virtual void _reconnect(const String& extraParams = "");
   public:
-    inline void reconnect() { _reconnect(); }
+    //inline void reconnect() { _reconnect(); }
     /// @return 0: not done; 1: done; -1: failed
     int checkResult(); 
   private:
@@ -1387,10 +1391,11 @@ class SimpleToolDDTunnel: public BasicDDTunnel {
 class ImageDownloadDDTunnel: public SimpleToolDDTunnel {
   public:
     /// @attention constructed via DumbDisplay object
-    ImageDownloadDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int bufferSize):
-      SimpleToolDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {}
+    ImageDownloadDDTunnel(int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int bufferSize):
+      SimpleToolDDTunnel("dddownloadimage", tunnelId, params, endPoint/*, connectNow*/, bufferSize) {}
   public:
-    void reconnect(bool enableCropUI = false);
+    void reconnectTo(const String& endPoint, bool enableCropUI = false);
+  //void reconnect(bool enableCropUI = false);
 };
 
 
@@ -1714,7 +1719,7 @@ class DumbDisplay {
     /// you will get result in JSON format: ```{"result":"ok"}``` or ```{"result":"failed"}```
     /// for simplicity, use SimpleToolDDTunnel.checkResult() to check the result
     /// @see SimpleToolDDTunnel
-    SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, bool redownload = true);
+    ImageDownloadDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, bool redownload = true);
     /// @deprecated use createGeneralServiceTunnel() instead
     BasicDDTunnel* createDateTimeServiceTunnel();
     /// create a general "service tunnel" for purposes like getting date-time info from phone;
