@@ -3279,7 +3279,7 @@ void DDTunnel::afterConstruct(bool connectNow) {
 // __SendComment("After!!!");
 // #endif
   if (connectNow) {
-    reconnect();
+    _reconnect();
   }
 }
 DDTunnel::~DDTunnel() {
@@ -3291,7 +3291,7 @@ DDTunnel::~DDTunnel() {
   //delete this->dataArray;
 #endif
 } 
-void DDTunnel::reconnect() {
+void DDTunnel::_reconnect(const String& extraParams) {
   if (true) {
     if (endPoint.c_str() == NULL) {
       //__SendComment("DDTunnel::reconnect() - invalid tunnel endpoint", true);
@@ -3310,7 +3310,29 @@ _sendCommand0("", ("// EP -- " + endPoint).c_str());
     //for (int i = 0; i < arraySize; i++) {
       //dataArray[i] = "";
     //}
-    if (_DDCompatibility >= 4) {
+    if (_DDCompatibility >= 11) {  // since 2025-04-19 for extraParams
+      String connectParams = params;
+      if (extraParams.length() > 0) {
+        if (connectParams.length() > 0) {
+          connectParams.concat(",");
+        }
+        connectParams.concat(extraParams);
+      }
+      _setLTBufferCommand(type);
+      if (connectParams.length() > 0) {
+        _setLTBufferCommand(":");
+        _setLTBufferCommand(connectParams);
+      }
+      _setLTBufferCommand("@");
+      if (headers.length() > 0 || attachmentId.length() > 0) {
+        _setLTBufferCommand(headers);
+        _setLTBufferCommand("~");
+        _setLTBufferCommand(attachmentId);
+        _setLTBufferCommand("@");
+      }
+      _setLTBufferCommand(endPoint);
+      _sendSpecialCommand("lt", tunnelId, "reconnect", "");
+    } else if (_DDCompatibility >= 4) {
       _setLTBufferCommand(type);
       if (params.length() > 0) {
         _setLTBufferCommand(":");
@@ -3374,7 +3396,7 @@ void DDTunnel::reconnectTo(const String& endPoint) {
       __SendErrorComment("failed to set endPoint");
     }
   }
-  reconnect();
+  _reconnect();
 }
 void DDTunnel::release() {
   if (doneState == 0/*!done*/) {
@@ -3486,7 +3508,7 @@ DDBufferedTunnel::~DDBufferedTunnel() {
   //delete dataArray;
   //delete fbByesArray;
 } 
-void DDBufferedTunnel::reconnect() {
+void DDBufferedTunnel::_reconnect(const String& extraParams) {
   nextArrayIdx = 0;
   validArrayIdx = 0;
   //done = false;
@@ -3502,7 +3524,7 @@ void DDBufferedTunnel::reconnect() {
   }
 #endif
   //_sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
-  this->DDTunnel::reconnect();
+  this->DDTunnel::_reconnect(extraParams);
 }
 void DDBufferedTunnel::release() {
   // if (!done) {
@@ -3671,9 +3693,9 @@ bool DDBufferedTunnel::read(String& fieldId, String& fieldValue) {
 //   // }
 //   // return true;
 // }
-void SimpleToolDDTunnel::reconnect() {
+void SimpleToolDDTunnel::_reconnect(const String& extraParams) {
   this->result = 0;
-  this->DDBufferedTunnel::reconnect();
+  this->DDBufferedTunnel::_reconnect(extraParams);
 }
 int SimpleToolDDTunnel::checkResult() {
   if (this->result == 0) {
@@ -3706,6 +3728,12 @@ __SendComment("XXX EOF???");
   }
   return this->result;
 }
+
+void ImageDownloadDDTunnel::reconnect(bool enableCropUI) {
+  String extraParams = enableCropUI ? "CUI" : "";
+  _reconnect(extraParams);
+}
+
 
 void GpsServiceDDTunnel::reconnectForLocation(int repeat) {
   if (repeat == -1) {
@@ -4708,7 +4736,8 @@ SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoin
   String tunnelId = String(tid);
   String params = imageName;
   if (!redownload) {
-    params = params + ",NRDL";
+    params.concat(",NRDL");
+    //params = params + ",NRDL";
   }
 #ifdef DEBUG_MISSING_ENDPOINT_C  
 _sendCommand0("", ("// CreateEP -- " + endPoint).c_str());

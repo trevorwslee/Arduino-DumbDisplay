@@ -1226,25 +1226,29 @@ class DDTunnel: public DDObject {
     const String& getEndpoint() { return endPoint; }   
   public:
     virtual void release();
-    virtual void reconnect();
+  protected:
+    virtual void _reconnect(const String& extraParams = "");
+  public:
+    const String& getTunnelId() const { return tunnelId; }
     void reconnectTo(const String& endPoint);
+  protected:
     /// reconnect to specified endpoint with parameters
     /// @param endPoint endpoint to connect to
     /// @param params parameters to to end point; empty if none
     void reconnectToSetParams(const String& endPoint, const String& params) {
       this->endPoint = endPoint;
       this->params = params;
-      reconnect();
+      _reconnect();
     }
+  public:
     /// reconnect to specified endpoint. See DDTunnelEndpoint.
     void reconnectToEndpoint(const DDTunnelEndpoint endpoint) {
       this->endPoint = endpoint.endPoint;
       this->headers = endpoint.headers;
       this->attachmentId = endpoint.attachmentId;
       this->params = endpoint.params;
-      reconnect();
+      _reconnect();
     }
-    const String& getTunnelId() const { return tunnelId; }
   protected:
     inline bool _pending() { return doneState == 0; }
     //int _count();
@@ -1282,9 +1286,13 @@ class DDBufferedTunnel: public DDTunnel {
     /// for internal use only
     DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize);
     virtual ~DDBufferedTunnel();
+  public:
     virtual void release();
-    virtual void reconnect();
+  protected:
+    virtual void _reconnect(const String& extraParams = "");
     //const String& getTunnelId() { return tunnelId; }
+  public:
+    inline void reconnect() { _reconnect(); }
   protected:
     int _count();
     virtual bool _eof(long timeoutMillis);
@@ -1365,13 +1373,26 @@ class SimpleToolDDTunnel: public BasicDDTunnel {
         BasicDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {
       this->result = 0;
     }
+  protected:
+    virtual void _reconnect(const String& extraParams = "");
   public:
-    virtual void reconnect();
+    inline void reconnect() { _reconnect(); }
     /// @return 0: not done; 1: done; -1: failed
     int checkResult(); 
   private:
     int result; 
 };
+
+/// Image download tool "tunnel" created with DumbDisplay::createImageDownloadTunnel()
+class ImageDownloadDDTunnel: public SimpleToolDDTunnel {
+  public:
+    /// @attention constructed via DumbDisplay object
+    ImageDownloadDDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int bufferSize):
+      SimpleToolDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {}
+  public:
+    void reconnect(bool enableCropUI = false);
+};
+
 
 /// Output struct of GpsServiceDDTunnel
 struct DDLocation {
