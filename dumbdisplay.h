@@ -1394,8 +1394,8 @@ class ImageDownloadDDTunnel: public SimpleToolDDTunnel {
     ImageDownloadDDTunnel(int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int bufferSize):
       SimpleToolDDTunnel("dddownloadimage", tunnelId, params, endPoint/*, connectNow*/, bufferSize) {}
   public:
-    void reconnectTo(const String& endPoint, int cropUIMaxWidth = 0, int cropUIMaxHeight = 0);
-  //void reconnect(bool enableCropUI = false);
+  /// @param cropUIConfig if not empty, enable crop UI after the download, and the config can be like "120x240"  
+  void reconnectTo(const String& endPoint, const String& cropUIConfig = "");
 };
 
 
