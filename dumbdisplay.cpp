@@ -3729,8 +3729,11 @@ __SendComment("XXX EOF???");
   return this->result;
 }
 
-void ImageDownloadDDTunnel::reconnectTo(const String& endPoint, bool enableCropUI) {
-  String extraParams = enableCropUI ? "CUI" : "";
+void ImageDownloadDDTunnel::reconnectTo(const String& endPoint, int cropUIMaxWidth, int cropUIMaxHeight) {
+  String extraParams = "";
+  if (cropUIMaxWidth > 0 and cropUIMaxHeight > 0) {
+    extraParams = "CUI:" + String(cropUIMaxWidth) + "x" + String(cropUIMaxHeight);
+  }
   _reconnectTo(endPoint, extraParams);
 }
 
