@@ -2339,7 +2339,7 @@ MIT
 
 v0.9.9-r50
   - support of "root" layer 
-  - support to "grid" layout
+  - support of "grid" layout
   - bug fix
 
 
