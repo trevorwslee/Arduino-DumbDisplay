@@ -83,6 +83,7 @@
 #define C_anilevelbg       "#4a"
 #define C_stopanilevelbg   "#4b"
 #define C_explevelsasimg   "#4c"
+#define C_explevelasregbg  "#4d"
 
 #define C_drawtextline     "#4f"
 
@@ -175,6 +176,7 @@
 #define C_disconnect       "#be"
 
 #define C_fd               "fd"
+#define C_bk               "bk"
 #define C_lt               "lt"
 #define C_rt               "rt"
 
@@ -182,6 +184,11 @@
 #define C_unloadimagefile      "#97"
 #define C_unloadallimagefiles  "#9a"
 
+#define C_bgimg            "#9b"
+#define C_nobgimg          "#9c"
+#define C_explayerasbgimg  "#9d"
+#define C_anibgimg         "#9e"
+#define C_stopanibgimg     "#9f"
 
 
 

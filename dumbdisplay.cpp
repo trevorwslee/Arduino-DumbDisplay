@@ -67,6 +67,11 @@
   #define SUPPORT_USE_WOIO
 #endif
 
+#define SUPPORT_CONTAINER
+#define CONTAINER_LAYER_ID     -9
+#define CONTAINER_LAYER_ID_STR "-9"
+
+
 
 #define TO_BOOL(val) (val ? "1" : "0")
 //#define TO_EDIAN() String(DDCheckEndian())  since 2024-09-14, use the following
@@ -165,7 +170,8 @@
 //#define DD_SID "Arduino-c10"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v30
 //#define DD_SID "Arduino-c11"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v31
 //#define DD_SID "Arduino-c12"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v34
-#define DD_SID "Arduino-c13"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v40
+//#define DD_SID "Arduino-c13"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v40
+#define DD_SID "Arduino-c14"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v50
 
 
 #include "_dd_commands.h"
@@ -536,6 +542,10 @@ DDInputOutput* /*volatile */_WODDIO = NULL;
 /*volatile */uint16_t _SendBufferSize = 0;//DD_DEF_SEND_BUFFER_SIZE;
 #else
 #define _WODDIO _DDIO
+#endif
+
+#ifdef SUPPORT_CONTAINER
+GraphicalDDLayer* __RootLayer = NULL;
 #endif
 
 
@@ -1406,10 +1416,21 @@ void __SendCommand(const String& layerId, const char* command, const String* pPa
 #ifdef DD_DEBUG_SEND_COMMAND          
   Serial.print("// *** sent");
 #endif        
+#ifdef SUPPORT_CONTAINER
+  if (layerId != "") {
+    if (layerId == CONTAINER_LAYER_ID_STR) {
+      _WODDIO->print("00");  // special TX layerId for container
+    } else {
+      _WODDIO->print(layerId);
+    }
+    _WODDIO->print(".");
+  }
+#else
   if (layerId != "") {
     _WODDIO->print(layerId/*.c_str()*/);
     _WODDIO->print(".");
   }
+#endif  
 #ifdef SUPPORT_ENCODE_OPER
   if (_DDCompatibility >= 3 && !_DDDisableParamEncoding && layerId != "" && command[0] == '#') {
     char encoded[3];
@@ -2238,9 +2259,30 @@ void DDLayer::backgroundColor(const String& color, int opacity) {
 void DDLayer::noBackgroundColor() {
   _sendCommand0(layerId, C_nobgcolor);
 }
-// void DDLayer::reorder(bool bringUp) {
-//   _sendCommand1(layerId, C_reorder);
-// }
+void DDLayer::backgroundImage(const String& backgroundImageName, const String& drawBackgroundOptions, int refImageWidth) {
+  if (refImageWidth > 0) {
+    _sendCommand3(layerId, C_bgimg, backgroundImageName, drawBackgroundOptions, String(refImageWidth));
+  } else {
+    _sendCommand2(layerId, C_bgimg, backgroundImageName, drawBackgroundOptions);
+  }
+}
+/// set no layer background image
+void DDLayer::noBackgroundImage() {
+  _sendCommand0(layerId, C_nobgimg);
+}
+void DDLayer::exportAsBackgroundImage(bool replace, bool noDrawBackground, int exportAsWidth) {
+  if (exportAsWidth > 0) {
+    _sendCommand3(layerId, C_explayerasbgimg, TO_BOOL(replace), TO_BOOL(noDrawBackground), String(exportAsWidth));
+  } else {
+    _sendCommand2(layerId, C_explayerasbgimg, TO_BOOL(replace), TO_BOOL(noDrawBackground));
+  }
+}
+void DDLayer::animateBackgroundImage(float fps, bool reset, const String& options) {
+  _sendCommand3(layerId, C_anibgimg, TO_NUM(fps), TO_BOOL(reset), options);  
+}
+void DDLayer::stopAnimateBackgroundImage(bool reset) {
+  _sendCommand1(layerId, C_stopanibgimg, TO_BOOL(reset));  
+}
 void DDLayer::flash() {
   _sendCommand0(layerId, C_flash);
 }
@@ -2389,6 +2431,9 @@ void MultiLevelDDLayer::moveLevelAnchorBy(float byX, float byY, long reachInMill
 void MultiLevelDDLayer::registerLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions) {
   _sendCommand3(layerId, C_reglevelbg, backgroundId, backgroundImageName, drawBackgroundOptions);  
 }
+void MultiLevelDDLayer::exportLevelAsRegisteredBackground(const String& backgroundId, bool replace) {
+  _sendCommand2(layerId, C_explevelasregbg, backgroundId, TO_BOOL(replace));  
+}
 void MultiLevelDDLayer::setLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions) {
   if (backgroundImageName == "") {
     _sendCommand1(layerId, C_setlevelbg, backgroundId);  
@@ -2399,8 +2444,8 @@ void MultiLevelDDLayer::setLevelBackground(const String& backgroundId, const Str
 void MultiLevelDDLayer::setLevelNoBackground() {
     _sendCommand0(layerId, C_setlevelnobg);  
 }
-void MultiLevelDDLayer::animateLevelBackground(int fps, bool reset, const String& options) {
-  _sendCommand3(layerId, C_anilevelbg, String(fps), TO_BOOL(reset), options);  
+void MultiLevelDDLayer::animateLevelBackground(float fps, bool reset, const String& options) {
+  _sendCommand3(layerId, C_anilevelbg, TO_NUM(fps), TO_BOOL(reset), options);  
 }
 void MultiLevelDDLayer::stopAnimateLevelBackground(bool reset) {
     _sendCommand1(layerId, C_stopanilevelbg, TO_BOOL(reset));  
@@ -2657,8 +2702,11 @@ void LcdDDLayer::writeCenteredLine(const String& text, int y) {
 void LcdDDLayer::pixelColor(const String &color) {
   _sendCommand1(layerId, C_pixelcolor, color);
 }
-void LcdDDLayer::bgPixelColor(const String &color) {
+void LcdDDLayer::bgPixelColor(const String &color, bool sameForBackgroundColor, int backgroundOpacity) {
   _sendCommand1(layerId, C_bgpixelcolor, color);
+  if (sameForBackgroundColor) {
+    backgroundColor(color, backgroundOpacity);
+  }
 }
 void LcdDDLayer::noBgPixelColor() {
   _sendCommand0(layerId, C_bgpixelcolor);
@@ -2668,6 +2716,15 @@ void LcdDDLayer::noBgPixelColor() {
 void SelectionBaseDDLayer::pixelColor(const String &color) {
   _sendCommand1(layerId, C_pixelcolor, color);
 }
+void SelectionBaseDDLayer::pixelColor(const String &color, bool selected) {
+  _sendCommand2(layerId, C_pixelcolor, color, TO_BOOL(selected));
+}
+// void SelectionBaseDDLayer::bgPixelColor(const String &color, bool sameForBackgroundColor, int backgroundOpacity) {
+//   _sendCommand1(layerId, C_bgpixelcolor, color);
+//   if (sameForBackgroundColor) {
+//     backgroundColor(color, backgroundOpacity);
+//   }
+// }
 void SelectionBaseDDLayer::selectAll() {
   _sendCommand0(layerId, C_select);
 }
@@ -2882,8 +2939,16 @@ void GraphicalDDLayer::drawRoundRect(int x, int y, int w, int h, int r, const St
 // void GraphicalDDLayer::fillRoundRect(int x, int y, int w, int h, int r, const String& color) {
 //   _sendCommand7(layerId, "drawroundrect", String(x), String(y), String(w), String(h), String(r), color, TO_BOOL(true));
 // }
-void GraphicalDDLayer::forward(int distance) {
-  _sendCommand1(layerId, C_fd, String(distance));
+void GraphicalDDLayer::forward(int distance, bool withPen) {
+  if (_DDCompatibility >= 12) {
+    _sendCommand2(layerId, C_fd, String(distance), TO_BOOL(!withPen));
+  } else {
+    _sendCommand1(layerId, C_fd, String(distance));
+  }
+}
+void GraphicalDDLayer::backward(int distance, bool withPen) {
+  _sendCommand2(layerId, C_bk, String(distance), TO_BOOL(!withPen));
+  //_sendCommand1(layerId, C_fd, String(distance));
 }
 void GraphicalDDLayer::leftTurn(int angle) {
   _sendCommand1(layerId, C_lt, String(angle));
@@ -3214,7 +3279,7 @@ void DDTunnel::afterConstruct(bool connectNow) {
 // __SendComment("After!!!");
 // #endif
   if (connectNow) {
-    reconnect();
+    _reconnect();
   }
 }
 DDTunnel::~DDTunnel() {
@@ -3226,7 +3291,7 @@ DDTunnel::~DDTunnel() {
   //delete this->dataArray;
 #endif
 } 
-void DDTunnel::reconnect() {
+void DDTunnel::_reconnect(const String& extraParams) {
   if (true) {
     if (endPoint.c_str() == NULL) {
       //__SendComment("DDTunnel::reconnect() - invalid tunnel endpoint", true);
@@ -3245,7 +3310,29 @@ _sendCommand0("", ("// EP -- " + endPoint).c_str());
     //for (int i = 0; i < arraySize; i++) {
       //dataArray[i] = "";
     //}
-    if (_DDCompatibility >= 4) {
+    if (_DDCompatibility >= 11) {  // since 2025-04-19 for extraParams
+      String connectParams = params;
+      if (extraParams.length() > 0) {
+        if (connectParams.length() > 0) {
+          connectParams.concat(",");
+        }
+        connectParams.concat(extraParams);
+      }
+      _setLTBufferCommand(type);
+      if (connectParams.length() > 0) {
+        _setLTBufferCommand(":");
+        _setLTBufferCommand(connectParams);
+      }
+      _setLTBufferCommand("@");
+      if (headers.length() > 0 || attachmentId.length() > 0) {
+        _setLTBufferCommand(headers);
+        _setLTBufferCommand("~");
+        _setLTBufferCommand(attachmentId);
+        _setLTBufferCommand("@");
+      }
+      _setLTBufferCommand(endPoint);
+      _sendSpecialCommand("lt", tunnelId, "reconnect", "");
+    } else if (_DDCompatibility >= 4) {
       _setLTBufferCommand(type);
       if (params.length() > 0) {
         _setLTBufferCommand(":");
@@ -3298,7 +3385,7 @@ _sendCommand0("", ("// EP -- " + endPoint).c_str());
     doneState = 0;
   }
 }
-void DDTunnel::reconnectTo(const String& endPoint) {
+void DDTunnel::_reconnectTo(const String& endPoint, const String& extraParams) {
   this->endPoint = endPoint;
 //Serial.print("//!! endPoint: ");
 //Serial.print(endPoint);
@@ -3309,7 +3396,7 @@ void DDTunnel::reconnectTo(const String& endPoint) {
       __SendErrorComment("failed to set endPoint");
     }
   }
-  reconnect();
+  _reconnect(extraParams);
 }
 void DDTunnel::release() {
   if (doneState == 0/*!done*/) {
@@ -3421,7 +3508,7 @@ DDBufferedTunnel::~DDBufferedTunnel() {
   //delete dataArray;
   //delete fbByesArray;
 } 
-void DDBufferedTunnel::reconnect() {
+void DDBufferedTunnel::_reconnect(const String& extraParams) {
   nextArrayIdx = 0;
   validArrayIdx = 0;
   //done = false;
@@ -3437,7 +3524,7 @@ void DDBufferedTunnel::reconnect() {
   }
 #endif
   //_sendSpecialCommand("lt", tunnelId, "reconnect", endPoint);
-  this->DDTunnel::reconnect();
+  this->DDTunnel::_reconnect(extraParams);
 }
 void DDBufferedTunnel::release() {
   // if (!done) {
@@ -3606,9 +3693,9 @@ bool DDBufferedTunnel::read(String& fieldId, String& fieldValue) {
 //   // }
 //   // return true;
 // }
-void SimpleToolDDTunnel::reconnect() {
+void SimpleToolDDTunnel::_reconnect(const String& extraParams) {
   this->result = 0;
-  this->DDBufferedTunnel::reconnect();
+  this->DDBufferedTunnel::_reconnect(extraParams);
 }
 int SimpleToolDDTunnel::checkResult() {
   if (this->result == 0) {
@@ -3641,6 +3728,15 @@ __SendComment("XXX EOF???");
   }
   return this->result;
 }
+
+void ImageDownloadDDTunnel::reconnectTo(const String& endPoint, const String& cropUIConfig) {
+  String extraParams = "";
+  if (cropUIConfig.length() > 0) {
+    extraParams = "CUI:" + cropUIConfig;
+  }
+  _reconnectTo(endPoint, extraParams);
+}
+
 
 void GpsServiceDDTunnel::reconnectForLocation(int repeat) {
   if (repeat == -1) {
@@ -4127,15 +4223,15 @@ int DumbDisplay::getCompatibilityVersion() const {
 //   //return false;
 //   return _ConnectedIOProxy != NULL &&_ConnectedIOProxy->isReconnecting();
 // }
-void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount, bool autoShowHideLayers) {
+void DumbDisplay::configPinFrame(int xUnitCount, int yUnitCount, bool autoControlLayerVisible) {
   _Connect();
   if (_DDCompatibility >= 7) {
-      _sendCommand3("", "CFGPF", String(xUnitCount), String(yUnitCount), TO_BOOL(autoShowHideLayers));
+      _sendCommand3("", "CFGPF", String(xUnitCount), String(yUnitCount), TO_BOOL(autoControlLayerVisible));
   } else {
     _sendCommand2("", "CFGPF", String(xUnitCount), String(yUnitCount));
   }
 }
-void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoShowHideLayers) {
+void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoControlLayerVisible) {
   _Connect();
   if (true) {
     if (layoutSpec.c_str() == NULL) {
@@ -4144,7 +4240,7 @@ void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoShowHideLayer
     }
   }
   if (_DDCompatibility >= 7) {
-    _sendCommand2("", "CFGAP", layoutSpec, TO_BOOL(autoShowHideLayers));
+    _sendCommand2("", "CFGAP", layoutSpec, TO_BOOL(autoControlLayerVisible));
   } else {
     _sendCommand1("", "CFGAP", layoutSpec);
   }
@@ -4196,6 +4292,13 @@ LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int 
   _PostCreateLayer(pLayer);
   return pLayer;
 }
+LcdDDLayerHandle DumbDisplay::createLcdLayerHandle(int colCount, int rowCount, int charHeight, const String& fontName) {
+  int lid = _AllocLid();
+  _sendCommand5(String(lid), "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
+  LcdDDLayerHandle handle;
+  handle._h = lid;
+  return handle;
+}
 LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeight, const String& fontName) {
   int lid = _AllocLid();
   String layerId = String(lid);
@@ -4229,6 +4332,24 @@ SelectionListDDLayer* DumbDisplay::createSelectionListLayer(int colCount, int ro
   SelectionListDDLayer* pLayer = new SelectionListDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
+}
+#ifdef SUPPORT_CONTAINER
+GraphicalDDLayer* DumbDisplay::setRootLayer(int width, int height, const String& containedAlignment) {
+  _Connect();
+  _sendCommand3("", "ROOT", String(width), String(height), containedAlignment);
+  if (__RootLayer != NULL) {
+    delete __RootLayer;
+  }
+  __RootLayer = new GraphicalDDLayer(CONTAINER_LAYER_ID);
+  return __RootLayer;
+}
+#endif
+GraphicalDDLayerHandle DumbDisplay::createGraphicalLayerHandle(int width, int height) {
+  int lid = _AllocLid();
+  _sendCommand3(String(lid), "SU", String("graphical"), String(width), String(height));
+  GraphicalDDLayerHandle handle;
+  handle._h = lid;
+  return handle;
 }
 GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
   int lid = _AllocLid();
@@ -4326,9 +4447,15 @@ void DumbDisplay::pinLayer(DDLayer *pLayer, int uLeft, int uTop, int uWidth, int
 void DumbDisplay::pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align) {
   _sendCommand6("", "PINAP", layoutSpec, String(uLeft), String(uTop), String(uWidth), String(uHeight), align);
 }
+void DumbDisplay::resetPinLayers() {
+  _sendCommand0("", "RESETPIN");
+}
 void DumbDisplay::deleteLayer(DDLayer *pLayer) {
   _sendCommand0(pLayer->getLayerId(), "DEL");
   delete pLayer;  // will call _PreDeleteLayer(pLayer)
+}
+void DumbDisplay::deleteLayer(DDLayerHandle layerHandle) {
+  _sendCommand0(String(layerHandle._h), "DEL");
 }
 void DumbDisplay::reorderLayer(DDLayer *pLayer, const String& how) {
   _sendCommand1(pLayer->getLayerId(), "REORD", how);
@@ -4606,18 +4733,19 @@ JsonDDTunnel* DumbDisplay::createFilteredJsonTunnel(const String& endPoint, cons
   return NULL;
 #endif
 }
-SimpleToolDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName, bool redownload) {
+ImageDownloadDDTunnel* DumbDisplay::createImageDownloadTunnel(const String& endPoint, const String& imageName, bool redownload) {
 #ifdef SUPPORT_TUNNEL	
   int tid = _AllocTid();
   String tunnelId = String(tid);
   String params = imageName;
   if (!redownload) {
-    params = params + ",NRDL";
+    params.concat(",NRDL");
+    //params = params + ",NRDL";
   }
 #ifdef DEBUG_MISSING_ENDPOINT_C  
 _sendCommand0("", ("// CreateEP -- " + endPoint).c_str());
 #endif
-  SimpleToolDDTunnel* pTunnel = new SimpleToolDDTunnel("dddownloadimage", tid, params, endPoint/*, true*/, 1);
+   ImageDownloadDDTunnel* pTunnel = new ImageDownloadDDTunnel(tid, params, endPoint/*, true*/, 1);
   _PostCreateTunnel(pTunnel, true);
   return pTunnel;
 #else
@@ -4884,6 +5012,12 @@ void DumbDisplay::masterReset() {
     }
 #endif
 
+#ifdef SUPPORT_CONTAINER
+  if (__RootLayer != NULL) {
+    //delete __RootLayer;  // TODO: seems deleting __RootLayer will cause hang for Pico ... ref: Arduino Clock
+    __RootLayer = NULL;
+  }
+#endif
   if (_NextLid > 0) {
     if (canLogToSerial) Serial.println(". cleanup layers / tunnels");
     for (int i = 0; i < _NextLid; i++) {

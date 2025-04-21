@@ -152,6 +152,12 @@ public:
 };
 
 
+/// experimental: _h is for internal use only
+struct DDLayerHandle {
+  int _h;
+};
+
+
 /// Base class for the different layers support by DumbDisplay; created with various layer creation methods of DumbDisplay, DumbDisplay::createLedGridLayer()
 class DDLayer: public DDObject {
   public:
@@ -198,6 +204,29 @@ class DDLayer: public DDObject {
     /// set no layer background color
     /// @note layer property
     void noBackgroundColor();
+    /// set layer background image (on top of background color; follow opacity of background color)
+    /// @param backgroundImageName name of the image
+    ///                            can be a series of images like dumbdisplay_##0-7##.png (for dumbdisplay_0.png to dumbdisplay_7.png)
+    ///                            which can be used for animation with animateBackgroundImage()
+    /// @param drawBackgroundOptions options for drawing the background; same means as the option param of GraphicalDDLayer::drawImageFiler()
+    /// @param refImageWidth the reference width of the image to scale the image (while keeping the aspect ration); 0 means no scaling
+    void backgroundImage(const String& backgroundImageName, const String& drawBackgroundOptions, int refImageWidth = 0);
+    /// set no layer background image
+    void noBackgroundImage();
+    /// export the layer as background image
+    /// @param replace replace any existing background image; for add as an item of background image series that can be used for animation with animateBackgroundImage()
+    /// @param noDrawBackground during export, do not draw background
+    /// @param exportAsWidth the width of the image; 0 means the default (should be good enough)
+    void exportAsBackgroundImage(bool replace = true, bool noDrawBackground = true, int exportAsWidth = 0);
+    /// experimental:
+    /// start animate background image series
+    /// @param fps frames per second which is used to calculate the interval between the series of images
+    /// @param reset reset to the first image in the series (before start animation)
+    /// @param options can be "r" to reverse the order of the series of images
+    void animateBackgroundImage(float fps, bool reset = true, const String& options = "");
+    /// stop animate background image
+    /// @param reset reset to the first image in the series
+    void stopAnimateBackgroundImage(bool reset = true);
     /// set whether layer visible (not visible means hidden)
     /// @note layer property
     void visible(bool visible);
@@ -330,22 +359,32 @@ class MultiLevelDDLayer: public DDLayer {
     /// move the level anchor
     void moveLevelAnchorBy(float byX, float byY, long reachInMillis = 0);
     /// register an image for setting as level's background
-    /// @param backgroundId id to identify the background
+    /// @param backgroundId id to identify the background -- see setLevelBackground()
     /// @param backgroundImageName name of the image
+    ///                            can be a series of images like dumbdisplay_##0-7##.png (for dumbdisplay_0.png to dumbdisplay_7.png)
+    ///                            which can be used for animation with animateLevelBackground()
     /// @param drawBackgroundOptions options for drawing the background; same means as the option param of GraphicalDDLayer::drawImageFiler()
     void registerLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions = "");
+    /// experimental:
+    /// export the current level as a registered background image -- see exportLevelsAsImage() and registerLevelBackground()
+    /// @param backgroundId id to identify the background -- see setLevelBackground()
+    /// @param replace if true (default), replace the existing registered background image with the same id;
+    ///                if false, will add as an item of background image series that can be used for animation with animateLevelBackground()
+    void exportLevelAsRegisteredBackground(const String& backgroundId, bool replace = true);
     /// set a registered background image as the current level's background
     /// @param backgroundId 
-    /// @param backgroundImageName if not registered, the name of the image to register
+    /// @param backgroundImageName if not registered, the name of the image to register;
+    ///                            can be a series of images like dumbdisplay_##0-7##.png (for dumbdisplay_0.png to dumbdisplay_7.png)
+    ///                            which can be used for animation with animateLevelBackground()
     /// @param drawBackgroundOptions if not registered, the options for drawing the background
     void setLevelBackground(const String& backgroundId, const String& backgroundImageName = "", const String& drawBackgroundOptions = "");
     /// set that the current level uses no background image
     void setLevelNoBackground();
     /// start animate level background (if level background has a series of images)
     /// @param fps frames per second which is used to calculate the interval between the series of images
-    /// @param reset reset to the first image in the series
+    /// @param reset reset to the first image in the series (before start animation)
     /// @param options can be "r" to reverse the order of the series of images
-    void animateLevelBackground(int fps, bool reset = true, const String& options = "");
+    void animateLevelBackground(float fps, bool reset = true, const String& options = "");
     /// stop animate level background
     /// @param reset reset to the first image in the series
     void stopAnimateLevelBackground(bool reset = true);
@@ -537,12 +576,20 @@ class LedGridDDLayer: public DDLayer {
     void noOffColor();
 };
 
+
+struct LcdDDLayerHandle: DDLayerHandle {};
+
 /// @brief
 /// Class for LCD layer; created with DumbDisplay::createLcdLayer()
 /// @note with "feedback" enabled, can be used as a button
 /// @note with "feedback" enabled, can be used as checkbox; consider using these emojis for checkbox --
 /// ☒☐✅❎🟩✔️ ☑️⬛✔✖
 class LcdDDLayer: public DDLayer {
+  public:
+    /// experimental: construct a "transient" LcdDDLayer from LcdDDLayerHandle
+    /// created using DUmbDisplay::createLcdLayerHandle()
+    LcdDDLayer(LcdDDLayerHandle layerHandle): DDLayer(layerHandle._h) {
+    }
   public:
     /// for internal use only
     LcdDDLayer(int8_t layerId): DDLayer(layerId) {
@@ -579,7 +626,7 @@ class LcdDDLayer: public DDLayer {
     void pixelColor(const String &color);
     /// set "background" (off) pixel color
     /// @param color DD_RGB_COLOR(...) or common color name
-    void bgPixelColor(const String &color);
+    void bgPixelColor(const String &color, bool sameForBackgroundColor = false, int backgroundOpacity = 100);
     /// set no "background" (off) pixel color
     void noBgPixelColor();
 };
@@ -591,9 +638,17 @@ class SelectionBaseDDLayer: public DDLayer {
     SelectionBaseDDLayer(int8_t layerId): DDLayer(layerId) {
       _enableFeedback();
     }
-    /// set pixel color
+    /// set pixel color (of bot selected and unselected "selection" units)
     /// @param color DD_RGB_COLOR(...) or common color name
+    /// please use the other version of pixelColor() to select different colors for selected and unselected
     void pixelColor(const String &color);
+    /// set pixel color (when whether selected or not have different colors)
+    /// @param color DD_RGB_COLOR(...) or common color name
+    /// please use the other version of pixelColor() to select a single color for both selected and unselected
+    void pixelColor(const String &color, bool selected);
+    // /// set background pixel color
+    // /// @param color DD_RGB_COLOR(...) or common color name
+    // void bgPixelColor(const String &color, bool sameForBackgroundColor = false, int backgroundOpacity = 100);
     /// select all "selection" units
     void selectAll();
     /// deselect all "selection" units
@@ -681,8 +736,17 @@ class SelectionListDDLayer: public SelectionBaseDDLayer {
     void selected(int selectionIdx, bool selected, bool reverseTheOthers = false);
 };
 
+
+struct GraphicalDDLayerHandle: DDLayerHandle {};
+
+
 /// Class for graphical LCD layer; created with DumbDisplay::createGraphicalLayer()
 class GraphicalDDLayer: public MultiLevelDDLayer {
+  public:
+    /// experimental: construct a "transient" LcdDDLayer from LcdDDLayerHandle
+    /// created using DUmbDisplay::createGraphicalLayerHandle()
+    GraphicalDDLayer(GraphicalDDLayerHandle layerHandle): MultiLevelDDLayer(layerHandle._h) {
+    }
   public:
     /// for internal use only
     GraphicalDDLayer(int8_t layerId): MultiLevelDDLayer(layerId) {
@@ -789,7 +853,9 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
       drawArc(x, y, w, h, startAngle, sweepAngle, useCenter, color, true);
     }
     /// move forward (relative to cursor)
-    void forward(int distance);
+    void forward(int distance, bool withPen = true);
+    /// move backward (relative to cursor)
+    void backward(int distance, bool withPen = true);
     /// turn left
     void leftTurn(int angle);
     /// turn right
@@ -1160,25 +1226,33 @@ class DDTunnel: public DDObject {
     const String& getEndpoint() { return endPoint; }   
   public:
     virtual void release();
-    virtual void reconnect();
-    void reconnectTo(const String& endPoint);
+  protected:
+    virtual void _reconnect(const String& extraParams = "");
+    void _reconnectTo(const String& endPoint, const String& extraParams = "");
+  public:
+    const String& getTunnelId() const { return tunnelId; }
     /// reconnect to specified endpoint with parameters
     /// @param endPoint endpoint to connect to
-    /// @param params parameters to to end point; empty if none
-    void reconnectToSetParams(const String& endPoint, const String& params) {
-      this->endPoint = endPoint;
-      this->params = params;
-      reconnect();
-    }
+  public:
+    inline void reconnectTo(const String& endPoint) { _reconnectTo(endPoint); }
+  protected:
+    // /// reconnect to specified endpoint with parameters
+    // /// @param endPoint endpoint to connect to
+    // /// @param params parameters to to end point; empty if none
+    // void reconnectToSetParams(const String& endPoint, const String& params) {
+    //   this->endPoint = endPoint;
+    //   this->params = params;
+    //   _reconnect();
+    // }
+  public:
     /// reconnect to specified endpoint. See DDTunnelEndpoint.
     void reconnectToEndpoint(const DDTunnelEndpoint endpoint) {
       this->endPoint = endpoint.endPoint;
       this->headers = endpoint.headers;
       this->attachmentId = endpoint.attachmentId;
       this->params = endpoint.params;
-      reconnect();
+      _reconnect();
     }
-    const String& getTunnelId() const { return tunnelId; }
   protected:
     inline bool _pending() { return doneState == 0; }
     //int _count();
@@ -1216,9 +1290,13 @@ class DDBufferedTunnel: public DDTunnel {
     /// for internal use only
     DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize);
     virtual ~DDBufferedTunnel();
+  public:
     virtual void release();
-    virtual void reconnect();
+  protected:
+    virtual void _reconnect(const String& extraParams = "");
     //const String& getTunnelId() { return tunnelId; }
+  public:
+    inline void reconnect() { _reconnect(); }
   protected:
     int _count();
     virtual bool _eof(long timeoutMillis);
@@ -1299,13 +1377,27 @@ class SimpleToolDDTunnel: public BasicDDTunnel {
         BasicDDTunnel(type, tunnelId, params, endPoint/*, connectNow*/, bufferSize) {
       this->result = 0;
     }
+  protected:
+    virtual void _reconnect(const String& extraParams = "");
   public:
-    virtual void reconnect();
+    //inline void reconnect() { _reconnect(); }
     /// @return 0: not done; 1: done; -1: failed
     int checkResult(); 
   private:
     int result; 
 };
+
+/// Image download tool "tunnel" created with DumbDisplay::createImageDownloadTunnel()
+class ImageDownloadDDTunnel: public SimpleToolDDTunnel {
+  public:
+    /// @attention constructed via DumbDisplay object
+    ImageDownloadDDTunnel(int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int bufferSize):
+      SimpleToolDDTunnel("dddownloadimage", tunnelId, params, endPoint/*, connectNow*/, bufferSize) {}
+  public:
+  /// @param cropUIConfig if not empty, enable crop UI after the download, and the config can be like "120x240"  
+  void reconnectTo(const String& endPoint, const String& cropUIConfig = "");
+};
+
 
 /// Output struct of GpsServiceDDTunnel
 struct DDLocation {
@@ -1525,8 +1617,8 @@ class DumbDisplay {
     /// - or nested, like H(0+V(1+2)+3);  where 0/1/2/3 are the layer ids
     /// - consider using the macros DD_AP_XXX
     /// @param layoutSpec the layout specification
-    /// @param autoShowHideLayers auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
-    void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoShowHideLayers = false);
+    /// @param autoControlLayerVisible auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
+    void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoControlLayerVisible = false);
     // /// in addition to DumbDisplay::configAutoPin(), also configure the remaining layout spec for the remaining layers not mentioned in the layoutSpec 
     // /// @see configAutoPin
     // /// @see addRemainingAutoPinConfig
@@ -1534,9 +1626,9 @@ class DumbDisplay {
     /// add the "auto pin" config for layers not included in "auto pin" set by configAutoPin()
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
     /// configure "pin frame" to be x-units by y-units (default 100x100)
-    /// @param autoShowHideLayers auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
+    /// @param autoControlLayerVisible auto set layer visible (visibility) according whether the layer is pinned or not; false by default
     /// @see pinLayer()
-    void configPinFrame(int xUnitCount = 100, int yUnitCount = 100, bool autoShowHideLayers = false);
+    void configPinFrame(int xUnitCount = 100, int yUnitCount = 100, bool autoControlLayerVisible = false);
     /// pin a layer @ some position of an imaginary grid of "pin grame"
     /// - the imaginary grid size can be configured when calling connect() -- default is 100x100  
     /// - the input align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align
@@ -1545,6 +1637,14 @@ class DumbDisplay {
     /// @param layoutSpec the "auto pin" layout specification to pin; see configAutoPin() for how spec is constructed
     /// @param align (e.g. "LB") -- left align "L"; right align "R"; top align "T"; bottom align "B"; default is center align */
     void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
+    /// rest pinning of layers, as if they are not pinned
+    void resetPinLayers();
+    /// experimental support of a "root" layer (GraphicalDDLayer) that contain all other created layers;
+    /// note that the "root" will always be placed as the container, and hence don't need be pined;
+    /// @param containedAlignment the alignment of the contained layers; "L" / "T" / "LT"; "" means centered 
+    /// currently, "container" layer does not support "feedback"
+    /// @since v0.9.9-r50
+    GraphicalDDLayer* setRootLayer(int width, int height, const String& containedAlignment = "");
     /// create a Microbit-like layer
     MbDDLayer* createMicrobitLayer(int width = 5, int height = 5);
     /// create a Turtle-like layer
@@ -1619,7 +1719,7 @@ class DumbDisplay {
     /// you will get result in JSON format: ```{"result":"ok"}``` or ```{"result":"failed"}```
     /// for simplicity, use SimpleToolDDTunnel.checkResult() to check the result
     /// @see SimpleToolDDTunnel
-    SimpleToolDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, bool redownload = true);
+    ImageDownloadDDTunnel* createImageDownloadTunnel(const String& endPoint, const String& imageName, bool redownload = true);
     /// @deprecated use createGeneralServiceTunnel() instead
     BasicDDTunnel* createDateTimeServiceTunnel();
     /// create a general "service tunnel" for purposes like getting date-time info from phone;
@@ -1636,6 +1736,12 @@ class DumbDisplay {
     /// @see ObjectDetectDemoServiceDDTunnel
     ObjectDetectDemoServiceDDTunnel* createObjectDetectDemoServiceTunnel(int scaleToWidth = 0, int scaleToHeight = 0, int maxNumObjs = 1);
     ImageRetrieverDDTunnel* createImageRetrieverTunnel();
+    /// experimental: create a visual-only graphical LCD layer handle which you can be used where GraphicalDDLayerHandle is accepted, like construction of GraphicalDDLayer;
+    /// @since v0.9.9-r50
+    GraphicalDDLayerHandle createGraphicalLayerHandle(int width, int height);
+    /// experimental: create a visual-only LCD layer handle which you can be used where LcdDDLayerHandle is accepted, like construction of LcdDDLayer;
+    /// @since v0.9.9-r50
+    LcdDDLayerHandle createLcdLayerHandle(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
     /// set DD background color
@@ -1696,7 +1802,6 @@ class DumbDisplay {
     /// save the cached sound
     void saveCachedSound(const String& soundName);
     /// save the cached sound as C header file (.h)
-    /// @warn this is experimental
     void saveCachedSoundAsH(const String& soundName);
     /// stream sound 8-bit sample (for playing sound)
     int streamSound8(int sampleRate, int numChannels = 1); 
@@ -1737,6 +1842,8 @@ class DumbDisplay {
     void reorderLayer(DDLayer *pLayer, const String& how);
     /// if layer is no longer used; delete it to release resources
     void deleteLayer(DDLayer *pLayer);
+    /// if layer is no longer used; delete it to release resources
+    void deleteLayer(DDLayerHandle layerHandle);
     /// loop through all the existing layers calling the function passed in
     void walkLayers(void (*walker)(DDLayer *));
  #ifndef DD_NO_IDLE_CALLBACK

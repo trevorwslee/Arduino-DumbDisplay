@@ -24,7 +24,7 @@ class DDWiFiServerIO: public DDInputOutput {
   public:
     /* WiFI IO mechanism */
     /* - ssid: WIFI SSID / name; NULL if WiFi explicitly connected */
-    /* - passphrase: WIFI password; NULL if Wifi explicitly connected */
+    /* - passphrase: WIFI password; can be NULL if Wifi explicitly connected */
     /* - serverPort: server port */
     DDWiFiServerIO(const char* ssid = NULL, const char *passphrase = NULL, int serverPort = DD_WIFI_PORT):
                    DDInputOutput(DD_SERIAL_BAUD, false, false), server(serverPort) {
@@ -237,7 +237,7 @@ class DDWiFiServerIO: public DDInputOutput {
           long diff = millis() - stateMillis;
           if (diff >= 1000) {
             IPAddress localIP = WiFi.localIP();
-            uint32_t localIPValue = localIP;
+            //uint32_t localIPValue = localIP;
 #ifdef LOG_DDWIFI_STATUS
             Serial.print("via WIFI ... ");
             Serial.print(WiFi.status());

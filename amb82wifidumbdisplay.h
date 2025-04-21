@@ -40,7 +40,7 @@ class DDAmb82WiFiServerIO: public DDInputOutput {
     const char* getWhat() {
       return "WIFI";
     }
-    // // experimental ... not quite working
+    // // experimental: ... not quite working
     // bool availableAdditionalClient(WiFiClient& additionalClient) {
     //   if (client.connected()) {
     //       WiFiClient cli = server.available();
