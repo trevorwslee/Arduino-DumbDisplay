@@ -4292,10 +4292,11 @@ LedGridDDLayer* DumbDisplay::createLedGridLayer(int colCount, int rowCount, int 
   _PostCreateLayer(pLayer);
   return pLayer;
 }
-LcdDDLayerHandle DumbDisplay::createLcdLayerHandle(int colCount, int rowCount, int charHeight, const String& fontName) {
+LedGridDDLayerHandle DumbDisplay::createLedGridLayerHandle(int colCount, int rowCount, int subColCount, int subRowCount) {
   int lid = _AllocLid();
-  _sendCommand5(String(lid), "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
-  LcdDDLayerHandle handle;
+  String layerId = String(lid);
+  _sendCommand5(layerId, "SU", String("ledgrid"), String(colCount), String(rowCount), String(subColCount), String(subRowCount));
+  LedGridDDLayerHandle handle;
   handle._h = lid;
   return handle;
 }
@@ -4306,6 +4307,13 @@ LcdDDLayer* DumbDisplay::createLcdLayer(int colCount, int rowCount, int charHeig
   LcdDDLayer* pLayer = new LcdDDLayer(lid);
   _PostCreateLayer(pLayer);
   return pLayer;
+}
+LcdDDLayerHandle DumbDisplay::createLcdLayerHandle(int colCount, int rowCount, int charHeight, const String& fontName) {
+  int lid = _AllocLid();
+  _sendCommand5(String(lid), "SU", String("lcd"), String(colCount), String(rowCount), String(charHeight), fontName);
+  LcdDDLayerHandle handle;
+  handle._h = lid;
+  return handle;
 }
 SelectionDDLayer* DumbDisplay::createSelectionLayer(int colCount, int rowCount,
                                                     int horiSelectionCount, int vertSelectionCount,
@@ -4344,13 +4352,6 @@ GraphicalDDLayer* DumbDisplay::setRootLayer(int width, int height, const String&
   return __RootLayer;
 }
 #endif
-GraphicalDDLayerHandle DumbDisplay::createGraphicalLayerHandle(int width, int height) {
-  int lid = _AllocLid();
-  _sendCommand3(String(lid), "SU", String("graphical"), String(width), String(height));
-  GraphicalDDLayerHandle handle;
-  handle._h = lid;
-  return handle;
-}
 GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
   int lid = _AllocLid();
   String layerId = String(lid);
@@ -4359,7 +4360,13 @@ GraphicalDDLayer* DumbDisplay::createGraphicalLayer(int width, int height) {
   _PostCreateLayer(pLayer);
   return pLayer;
 }
-SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
+GraphicalDDLayerHandle DumbDisplay::createGraphicalLayerHandle(int width, int height) {
+  int lid = _AllocLid();
+  _sendCommand3(String(lid), "SU", String("graphical"), String(width), String(height));
+  GraphicalDDLayerHandle handle;
+  handle._h = lid;
+  return handle;
+}SevenSegmentRowDDLayer* DumbDisplay::create7SegmentRowLayer(int digitCount) {
   int lid = _AllocLid();
   String layerId = String(lid);
   _sendCommand2(layerId, "SU", String("7segrow"), String(digitCount));
