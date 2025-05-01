@@ -2337,6 +2337,11 @@ MIT
 
 # Change History
 
+
+v0.9.9-r51
+   - added "take picture" for "download tunnel"
+
+
 v0.9.9-r50
   - support of "root" layer 
   - support of "grid" layout
