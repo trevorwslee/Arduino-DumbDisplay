@@ -239,7 +239,7 @@ class DDWiFiServerIO: public DDInputOutput {
           stateMillis = 0;
         } else {
           long diff = millis() - stateMillis;
-          if (diff >= DD_SHOW_IP_INTERVAL_MILLIS) {
+          if (stateMillis == 0 || diff >= DD_SHOW_IP_INTERVAL_MILLIS) {
             IPAddress localIP = WiFi.localIP();
             //uint32_t localIPValue = localIP;
 #ifdef LOG_DDWIFI_STATUS
