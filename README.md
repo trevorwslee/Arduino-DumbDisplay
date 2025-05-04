@@ -1815,6 +1815,26 @@ pLayer->drawImageFileFit("downloaded.png");
 For a complete sample, please refer to the sample sketch https://github.com/trevorwslee/Arduino-DumbDisplay/blob/master/samples/webimage/webimage.ino 
 
 
+In addition to download image from the Web, you can invoke UI to pick image from your phone:
+```
+void setup() {
+  ...
+  pTunnel = dumbdisplay.createImageDownloadTunnel("", "downloaded.jpg");
+  ...
+}
+void loop() {
+  ...
+  if (triggerUIToPickImage) {
+      pTunnel->reconnectTo("pick://);
+  }
+  ...
+}
+
+```
+Note that the URL is `pick://`. In such a case, your phone "pick image media UI" will be invoked to pick the image,
+rather then downloading from the Web, as `downloaded.jpg`.
+If the URL given is `take://`, your phone's camera app will be involed to take picture, as `downloaded.jpg`.
+
 
 ## Save Pictures to Phone Captured with ESP32 Cam
 
@@ -2341,17 +2361,14 @@ MIT
 v0.9.9-r51
    - added "take picture" for "download tunnel"
 
-
 v0.9.9-r50
   - support of "root" layer 
   - support of "grid" layout
   - bug fix
 
-
 v0.9.9-r42
   - bug fix
   - able to work with WiFiManager for ESP32
-
 
 v0.9.9-r41
   - added SelectionListDDLayer
@@ -2499,16 +2516,13 @@ v0.8.4
   - added layer margin support
   - big fixes
 
-
 v0.8.3
   - add more options for "JSON Tunnel"
   - bug fixes
 
-
 v0.8.2
   - add "save image" support, basically for ESP32-Cam board
   - bug fixes
-
 
 v0.8.1
   - aded "image download tunnel"
@@ -2516,12 +2530,10 @@ v0.8.1
   - added load/save/draw image to "graphical layer"
   - bug fixes
 
-
 v0.8.0
   - added more basic layer functions
   - added more LCD layer functions
   - bug fixes
-
 
 v0.7.9
   - added more "auto pin" functions
