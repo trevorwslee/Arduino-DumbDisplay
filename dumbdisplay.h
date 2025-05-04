@@ -521,8 +521,16 @@ class TurtleDDLayer: public MultiLevelDDLayer {
     void write(const String& text, bool draw = false);
 };
 
+struct LedGridDDLayerHandle: DDLayerHandle {};
+
+
 /// Class for LED grid layer; created with DumbDisplay::createLedGridLayer()
 class LedGridDDLayer: public DDLayer {
+  public:
+    /// experimental: construct a "transient" LedGridDDLayer from LedGridDDLayerHandle
+    /// created using DUmbDisplay::createLcdLayerHandle()
+    LedGridDDLayer(LedGridDDLayerHandle layerHandle): DDLayer(layerHandle._h) {
+    }
   public:
     /// for internal use only
     LedGridDDLayer(int8_t layerId): DDLayer(layerId) {
@@ -1714,7 +1722,7 @@ class DumbDisplay {
     /// @note if not connect now, need to connect via reconnect()
     /// @param fieldNames comma-delimited list of field names to accept; note that matching is "case-insensitive containment match" 
     /// @see JsonDDTunnel
-    JsonDDTunnel* createFilteredJsonTunnel(const String& endPoint, const String& fileNames, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
+    JsonDDTunnel* createFilteredJsonTunnel(const String& endPoint, const String& fieldNames, bool connectNow = true, int8_t bufferSize = DD_TUNNEL_DEF_BUFFER_SIZE);
     /// create a "tunnel" to download image from the web, and save the downloaded image to phone;
     /// you will get result in JSON format: ```{"result":"ok"}``` or ```{"result":"failed"}```
     /// for simplicity, use SimpleToolDDTunnel.checkResult() to check the result
@@ -1742,6 +1750,9 @@ class DumbDisplay {
     /// experimental: create a visual-only LCD layer handle which you can be used where LcdDDLayerHandle is accepted, like construction of LcdDDLayer;
     /// @since v0.9.9-r50
     LcdDDLayerHandle createLcdLayerHandle(int colCount = 16, int rowCount = 2, int charHeight = 0, const String& fontName = "");
+    /// experimental: create a visual-only LED-grid layer handle which you can be used where LedGridDDLayerHandle is accepted, like construction of LedGridDDLayer;
+    /// @since v0.9.9-r51
+    LedGridDDLayerHandle createLedGridLayerHandle(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
     /// set DD background color

@@ -15,6 +15,10 @@
 #endif
 
 
+#ifndef DD_SHOW_IP_INTERVAL_SECONDS
+  #define DD_SHOW_IP_INTERVAL_SECONDS 2
+#endif  
+
 
 //#define LOG_DDWIFI_STATUS
 
@@ -235,7 +239,7 @@ class DDWiFiServerIO: public DDInputOutput {
           stateMillis = 0;
         } else {
           long diff = millis() - stateMillis;
-          if (diff >= 1000) {
+          if (stateMillis == 0 || (DD_SHOW_IP_INTERVAL_SECONDS > 0 && diff >= (1000 * DD_SHOW_IP_INTERVAL_SECONDS))) {
             IPAddress localIP = WiFi.localIP();
             //uint32_t localIPValue = localIP;
 #ifdef LOG_DDWIFI_STATUS
