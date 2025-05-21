@@ -1229,7 +1229,7 @@ class DDTunnel: public DDObject {
     /// for internal use only
     DDTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/);
     void afterConstruct(bool connectNow);
-    virtual ~DDTunnel();
+    virtual ~DDTunnel() override;
   public:
     const String& getEndpoint() { return endPoint; }   
   public:
@@ -1297,22 +1297,22 @@ class DDBufferedTunnel: public DDTunnel {
   public:
     /// for internal use only
     DDBufferedTunnel(const String& type, int8_t tunnelId, const String& params, const String& endPoint/*, bool connectNow*/, int8_t bufferSize);
-    virtual ~DDBufferedTunnel();
+    virtual ~DDBufferedTunnel() override;
   public:
-    virtual void release();
+    virtual void release() override;
   protected:
-    virtual void _reconnect(const String& extraParams = "");
+    virtual void _reconnect(const String& extraParams = "") override;
     //const String& getTunnelId() { return tunnelId; }
   public:
     inline void reconnect() { _reconnect(); }
   protected:
     int _count();
-    virtual bool _eof(long timeoutMillis);
+    virtual bool _eof(long timeoutMillis) override;
     bool _readLine(String &buffer, uint8_t** pFBBytes = NULL);
     //void _writeLine(const String& data);
   public:
     /// @attention for internal use only
-    virtual void handleInput(const String& data, uint8_t* fbBytes, bool final);
+    virtual void handleInput(const String& data, uint8_t* fbBytes, bool final) override;
   private:
     // String endPoint;
     // String tunnelId;
@@ -1386,7 +1386,7 @@ class SimpleToolDDTunnel: public BasicDDTunnel {
       this->result = 0;
     }
   protected:
-    virtual void _reconnect(const String& extraParams = "");
+    virtual void _reconnect(const String& extraParams = "") override;
   public:
     //inline void reconnect() { _reconnect(); }
     /// @return 0: not done; 1: done; -1: failed
