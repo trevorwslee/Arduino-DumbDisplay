@@ -1008,6 +1008,10 @@ Please refer to the section [Using "Tunnel" to Download Images from the Web](#us
 
 Before talking about the various [DumbDisplay features](#features), here is a couple of selected demos that might interested you
 
+[Arduino Weather Clock](https://github.com/trevorwslee/AWeatherClock) -- Arduino Weather Clock is a weather digital clock (with alarms) for ESP32 / Raspberry Pi Pico W implemented with the Arduino framework
+|  |  |  |
+|--|--|--|
+|![](screenshots/dd_awc_tab_general.jpg)|![](screenshots/dd_awc_tab_alarms.jpg)|![](screenshots//dd_awc_tab_slids.jpg)|
 
 |[Turn ESP32-CAM into a Snapshot Taker, for Selfies and Time Lapse Pictures](https://www.instructables.com/Turn-ESP32-CAM-Into-a-Snapshot-Taker-for-Selfies-a/)|[Sliding Puzzle 'Next Move' Suggesting Simple DL Model With ESP32 TensorFlow Lite](https://www.instructables.com/Sliding-Puzzle-Next-Move-Suggesting-Simple-DL-Mode/)|[Simple Arduino Framework Raspberry Pi Pico / ESP32 TFT LCD Photo Frame Implementation With Photos Downloaded From the Internet Via DumbDisplay](https://www.instructables.com/Simple-Arduino-Framework-Raspberry-Pi-Pico-ESP32-T/)|
 |--|--|--|
