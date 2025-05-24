@@ -118,6 +118,11 @@ class DDAutoPinConfig {
       }
       return *this;
     }
+    /// add an "auto pin config" to the current level
+    DDAutoPinConfig& addAutoPinConfig(DDAutoPinConfig& config) {
+      addConfig(config.build());
+      return *this;
+    }
     /// add a layer to the current level
     DDAutoPinConfig& addLayer(DDLayer& layer) {
       addConfig(layer.getLayerId());
