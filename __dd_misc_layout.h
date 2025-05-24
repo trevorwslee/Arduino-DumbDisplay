@@ -123,6 +123,11 @@ class DDAutoPinConfig {
       addConfig(config.build());
       return *this;
     }
+    /// add an "auto pin config spec" to the current level
+    DDAutoPinConfig& addAutoPinConfig(const String& config) {
+      addConfig(config);
+      return *this;
+    }
     /// add a layer to the current level
     DDAutoPinConfig& addLayer(DDLayer& layer) {
       addConfig(layer.getLayerId());
