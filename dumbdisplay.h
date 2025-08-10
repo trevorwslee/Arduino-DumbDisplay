@@ -272,12 +272,12 @@ class DDLayer: public DDObject {
     /// set explicit (and more responsive) "feedback" handler (and enable feedback)
     /// @param handler "feedback" handler; see DDFeedbackHandler
     /// @param autoFeedbackMethod see DDLayer::enableFeedback()
-    /// @param allowedFeedbackType can be comma-delimited list of "CLICK", "LONGPRESS" and "DOUBLECLICK"
+    /// @param allowedFeedbackTypes can be comma-delimited list of "CLICK", "LONGPRESS" and "DOUBLECLICK"
     /// @note if you will not be making use of "feedback", you can disable it by defining DD_NO_FEEDBACK in order to reduce footprint 
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "", const String& allowFeedbackTypes = "");
     /// rely on getFeedback() being called
     /// @param autoFeedbackMethod
-    /// - "" -- no auto feedback flash (the default)
+    /// - "" -- no auto feedback flash (the default); need explicit call to DDLayer::flash() or DDLayer::FlashArea() once detected feedback
     /// - "f" -- flash the standard way (layer + border)
     /// - "fl" -- flash the layer
     /// - "fa" -- flash the area where the layer is clicked
@@ -687,8 +687,8 @@ class SelectionDDLayer: public SelectionBaseDDLayer {
     void unselectedText(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
     /// set a "selection" unit centered text (of y-th row) when unselected (it defaults to the same text as selected)
     void unselectedTextCentered(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
-     /// set a "selection" unit right-aligned text (of y-th row) when unselected (it defaults to the same text as selected)
-   void unselectedTextRightAligned(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
+    /// set a "selection" unit right-aligned text (of y-th row) when unselected (it defaults to the same text as selected)
+    void unselectedTextRightAligned(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
     /// select a "selection" unit
     void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
     /// deselect a "selection" unit

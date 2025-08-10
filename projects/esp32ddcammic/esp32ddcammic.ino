@@ -86,7 +86,8 @@
   #define I2S_PORT                   I2S_NUM_0
   #define I2S_IS_PDM
 #else
-  #error "Board not supported"
+  // no mic
+  //#error "Board not supported"
 #endif
 
 #if defined(NO_FACE_DETECTION)
