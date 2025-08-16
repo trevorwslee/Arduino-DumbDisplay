@@ -453,10 +453,10 @@ class MbDDLayer: public DDLayer {
 };
 
 /// Class for Turtle-like DD layer; created with DumbDisplay::createTurtleLayer()
-class TurtleDDLayer: public MultiLevelDDLayer {
+class TurtleDDLayer: public DDLayer/*MultiLevelDDLayer*/ {  // since 2025-08-11 changed back to DDLayer
   public:
     /// for internal use only
-    TurtleDDLayer(int8_t layerId): MultiLevelDDLayer(layerId) {
+    TurtleDDLayer(int8_t layerId): DDLayer/*MultiLevelDDLayer*/(layerId) {
     }
     /// forward; with pen or not
     void forward(int distance, bool withPen = true);

@@ -171,7 +171,8 @@
 //#define DD_SID "Arduino-c11"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v31
 //#define DD_SID "Arduino-c12"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v34
 //#define DD_SID "Arduino-c13"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v40
-#define DD_SID "Arduino-c14"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v50
+//#define DD_SID "Arduino-c14"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v50
+#define DD_SID "Arduino-c15"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v53
 
 
 #include "_dd_commands.h"
@@ -1939,10 +1940,12 @@ __SendComment("LT++++" + data + " - final:" + String(final));
       if (!ok) {
         // getting x and y
         if (token != NULL) {
+          // token will not be empty
           x = atoi(token);
           token = strtok(NULL, ",");
         }
         if (token != NULL) {
+          // token will not be empty
           y = atoi(token);
           ok = true;
           token = strtok(NULL, "");  // want the rest

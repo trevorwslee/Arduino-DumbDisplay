@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r52)
+# DumbDisplay Arduino Library (v0.9.9-r53) -- working on it
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments, with [DumbDisplay Android App](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay)
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r52)](#dumbdisplay-arduino-library-v099-r52)
+- [DumbDisplay Arduino Library (v0.9.9-r53) -- working on it](#dumbdisplay-arduino-library-v099-r53----working-on-it)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -2361,12 +2361,15 @@ MIT
 
 # Change History
 
+v0.9.9-r53
+  - bug fix
+
 v0.9.9-r52
-   - small enhancements to DDAutoPinConfig
+  - small enhancements to DDAutoPinConfig
 
 
 v0.9.9-r51
-   - added "take picture" for "download tunnel"
+  - added "take picture" for "download tunnel"
 
 v0.9.9-r50
   - support of "root" layer 
