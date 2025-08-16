@@ -485,10 +485,11 @@ class TurtleDDLayer: public MultiLevelDDLayer {
     /// set no fill color
     void noFillColor();
     /// set pen filled or not; if filled, shape drawn will be filled
-    void penFilled(bool filled);
+    void penFilled(bool filled = true);
     /// set text size
     void setTextSize(int size);
     /// set font
+    /// @param fontName: empty means default
     /// @param textSize: 0 means default
     void setTextFont(const String& fontName = "", int textSize = 0);
     /// pen up

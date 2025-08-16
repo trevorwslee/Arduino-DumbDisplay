@@ -2511,10 +2511,12 @@ void MbDDLayer::scrollImage(MbImage *pImage, int xOff, long interval) {
 }
 
 void TurtleDDLayer::forward(int distance, bool withPen) {
-  _sendCommand1(layerId, withPen ? "fd" : "dlfd", String(distance));
+  _sendCommand1(layerId, withPen ? "fd" : "jfd", String(distance));
+  //_sendCommand1(layerId, withPen ? "fd" : "dlfd", String(distance));
 }
 void TurtleDDLayer::backward(int distance, bool withPen) {
-  _sendCommand1(layerId, withPen ? "bk" : "dlbk", String(distance));
+  _sendCommand1(layerId, withPen ? "bk" : "jbk", String(distance));
+  //_sendCommand1(layerId, withPen ? "bk" : "dlbk", String(distance));
 }
 void TurtleDDLayer::leftTurn(int angle) {
   _sendCommand1(layerId, "lt", String(angle));
