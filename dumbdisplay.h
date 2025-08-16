@@ -1628,12 +1628,14 @@ class DumbDisplay {
     /// @param layoutSpec the layout specification
     /// @param autoControlLayerVisible auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
     void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoControlLayerVisible = false);
-    // /// in addition to DumbDisplay::configAutoPin(), also configure the remaining layout spec for the remaining layers not mentioned in the layoutSpec 
-    // /// @see configAutoPin
-    // /// @see addRemainingAutoPinConfig
-    // void configAutoPinEx(const String& layoutSpec = DD_AP_VERT, const String& remainingLayoutSpec);
-    /// add the "auto pin" config for layers not included in "auto pin" set by configAutoPin()
+    //x /// in addition to DumbDisplay::configAutoPin(), also configure the remaining layout spec for the remaining layers not mentioned in the layoutSpec 
+    //x /// @see configAutoPin
+    //x /// @see addRemainingAutoPinConfig
+    //x void configAutoPinEx(const String& layoutSpec = DD_AP_VERT, const String& remainingLayoutSpec);
+    /// add the "auto pin" config (REST "auto pin" config) for layers not included in "auto pin" set by configAutoPin()
     void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
+    /// delete all added REST "auto pin" configs
+    void delAllRemainingAutoPinConfigs();
     /// configure "pin frame" to be x-units by y-units (default 100x100)
     /// @param autoControlLayerVisible auto set layer visible (visibility) according whether the layer is pinned or not; false by default
     /// @see pinLayer()

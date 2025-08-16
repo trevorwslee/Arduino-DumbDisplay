@@ -4264,6 +4264,10 @@ void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
   _Connect();
   _sendCommand1("", "ADDRESTAP", remainingLayoutSpec);
 }
+void DumbDisplay::delAllRemainingAutoPinConfigs() {
+  _Connect();
+  _sendCommand1("", "DELALLRESTAP");
+}
 void DumbDisplay::setFeedbackSingleClickOnly(bool singleClickOnly) {
   _Connect();
   _sendCommand1("", "SETFBSCO", TO_BOOL(singleClickOnly));
