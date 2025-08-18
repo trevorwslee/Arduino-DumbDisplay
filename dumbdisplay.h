@@ -1628,14 +1628,10 @@ class DumbDisplay {
     /// @param layoutSpec the layout specification
     /// @param autoControlLayerVisible auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
     void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoControlLayerVisible = false);
-    //x /// in addition to DumbDisplay::configAutoPin(), also configure the remaining layout spec for the remaining layers not mentioned in the layoutSpec 
-    //x /// @see configAutoPin
-    //x /// @see addRemainingAutoPinConfig
-    //x void configAutoPinEx(const String& layoutSpec = DD_AP_VERT, const String& remainingLayoutSpec);
     /// add the "auto pin" config (REST "auto pin" config) for layers not included in "auto pin" set by configAutoPin()
-    void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
+    void addRemainingAutoPinConfig(const String& restLayoutSpec);
     /// delete all added REST "auto pin" configs
-    void delAllRemainingAutoPinConfigs();
+    void deleteAllRemainingAutoPinConfigs();
     /// configure "pin frame" to be x-units by y-units (default 100x100)
     /// @param autoControlLayerVisible auto set layer visible (visibility) according whether the layer is pinned or not; false by default
     /// @see pinLayer()
@@ -1650,7 +1646,6 @@ class DumbDisplay {
     void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     /// rest pinning of layers, as if they are not pinned
     void resetPinLayers();
-    /// experimental support of a "root" layer (GraphicalDDLayer) that contain all other created layers;
     /// note that the "root" will always be placed as the container, and hence don't need be pined;
     /// @param containedAlignment the alignment of the contained layers; "L" / "T" / "LT"; "" means centered 
     /// currently, "container" layer does not support "feedback"
@@ -1758,6 +1753,13 @@ class DumbDisplay {
     LedGridDDLayerHandle createLedGridLayerHandle(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
+    /// freeze draw (update) of the layers
+    /// @size v0.9.9-r53
+    void freezeDrawing();
+    /// unfreeze draw (update) of the layers
+    /// @param refreezeAfterward if true, will freeze again after [draw]
+    /// @size v0.9.9-r53
+    void unfreezeDrawing(bool refreezeAfterward = false);
     /// set DD background color
     /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void backgroundColor(const String& color);

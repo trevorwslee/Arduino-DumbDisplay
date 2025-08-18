@@ -4260,13 +4260,12 @@ void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoControlLayerV
 //   }
 //   _sendCommand2("", "CFGAP", layoutSpec, remainingLayoutSpec);
 // }
-void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
+void DumbDisplay::addRemainingAutoPinConfig(const String& restLayoutSpec) {
   _Connect();
-  _sendCommand1("", "ADDRESTAP", remainingLayoutSpec);
+  _sendCommand1("", "ADDRESTAP", restLayoutSpec);
 }
-void DumbDisplay::delAllRemainingAutoPinConfigs() {
-  _Connect();
-  _sendCommand1("", "DELALLRESTAP");
+void DumbDisplay::deleteAllRemainingAutoPinConfigs() {
+  _sendCommand0("", "DELALLRESTAP");
 }
 void DumbDisplay::setFeedbackSingleClickOnly(bool singleClickOnly) {
   _Connect();
@@ -4544,6 +4543,12 @@ void DumbDisplay::loadLayerCommands(const String& id) {
 }
 void DumbDisplay::capture(const String& imageFileName, int width, int height) {
   _sendCommand3("", C_CAPTURE, imageFileName, String(width), String (height));
+}
+void DumbDisplay::freezeDrawing() {
+  _sendCommand0("", C_FRZ);
+}
+void DumbDisplay::unfreezeDrawing(bool refreezeAfterward) {
+  _sendCommand1("", C_UNFRZ, TO_BOOL(refreezeAfterward));
 }
 void DumbDisplay::backgroundColor(const String& color) {
   _Connect();

@@ -23,6 +23,10 @@
 #define C_SAVECACHEDIMGS   "#f6"
 #define C_ALERT            "#f7"
 
+#define C_FRZ              "#f8" 
+#define C_UNFRZ            "#f9" 
+
+
 #define C_border           "#10"
 #define C_padding          "#11" 
 #define C_bgcolor          "#12"
