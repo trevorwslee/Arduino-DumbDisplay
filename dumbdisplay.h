@@ -453,10 +453,10 @@ class MbDDLayer: public DDLayer {
 };
 
 /// Class for Turtle-like DD layer; created with DumbDisplay::createTurtleLayer()
-class TurtleDDLayer: public DDLayer/*MultiLevelDDLayer*/ {  // since 2025-08-11 changed back to DDLayer
+class TurtleDDLayer: public MultiLevelDDLayer {
   public:
     /// for internal use only
-    TurtleDDLayer(int8_t layerId): DDLayer/*MultiLevelDDLayer*/(layerId) {
+    TurtleDDLayer(int8_t layerId): MultiLevelDDLayer(layerId) {
     }
     /// forward; with pen or not
     void forward(int distance, bool withPen = true);
@@ -518,8 +518,18 @@ class TurtleDDLayer: public DDLayer/*MultiLevelDDLayer*/ {  // since 2025-08-11 
     /// - given circle radius and vertex count
     /// - whether inside the imaginary circle or outside of it
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
-    /// write text; draw means draw the text (honor heading)
-    void write(const String& text, bool draw = false);
+    /// write text
+    void write(const String& text);  // TODO: add align param
+    /// draw text (honor heading)
+    void drawText(const String& text);
+    /// @deprecated
+    inline void write(const String& text, bool draw) {
+      if (draw) {
+        drawText(text);
+      } else {
+        write(text);
+      }
+    }
 };
 
 struct LedGridDDLayerHandle: DDLayerHandle {};
@@ -900,9 +910,18 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// @param vertexCount number of vertices
     /// @param inside whether inside the imaginary circle or outside of it
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
-    /// write text; will not auto wrap
-    /// @param draw means draw the text (in the heading direction)
-    void write(const String& text, bool draw = false);
+     /// write text (will not auto wrap)
+    void write(const String& text);
+    /// draw text (honor heading)
+    void drawText(const String& text);
+    /// @deprecated
+    inline void write(const String& text, bool draw) {
+      if (draw) {
+        drawText(text);
+      } else {
+        write(text);
+      }
+    }
     /// load image file to cache
     /// @param w,h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
     /// @param asImageFileName: better provide a different name for the scaled cached
@@ -1646,7 +1665,7 @@ class DumbDisplay {
     void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     /// rest pinning of layers, as if they are not pinned
     void resetPinLayers();
-    /// note that the "root" will always be placed as the container, and hence don't need be pined;
+    /// set the "root" layer, which is the foundation layer on which all other layers are contained;
     /// @param containedAlignment the alignment of the contained layers; "L" / "T" / "LT"; "" means centered 
     /// currently, "container" layer does not support "feedback"
     /// @since v0.9.9-r50
