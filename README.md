@@ -2362,6 +2362,7 @@ MIT
 # Change History
 
 v0.9.9-r53
+  - ported more the MicroPython
   - bug fix
 
 v0.9.9-r52
