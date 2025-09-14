@@ -87,6 +87,7 @@
 #define C_anilevelbg       "#4a"
 #define C_stopanilevelbg   "#4b"
 #define C_explevelsasimg   "#4c"
+#define C_setlevelrotate   "#4e"
 #define C_explevelasregbg  "#4d"
 
 #define C_drawtextline     "#4f"

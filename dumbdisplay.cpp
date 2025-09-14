@@ -2512,6 +2512,19 @@ void MultiLevelDDLayer::moveLevelAnchorBy(float byX, float byY, long reachInMill
     _sendCommand2(layerId, C_movelevelanchorby, TO_NUM(byX), TO_NUM(byY));
   }
 }
+void MultiLevelDDLayer::setLevelRotation(float angle, float pivotX, float pivotY, long reachInMillis) {
+  if (reachInMillis > 0) {
+    _sendCommand4(layerId, C_setlevelrotate, TO_NUM(angle), TO_NUM(pivotX), TO_NUM(pivotY), String(reachInMillis));
+  } else {
+    if (IS_FLOAT_ZERO(angle)) {
+      _sendCommand0(layerId, C_setlevelrotate);
+    } else if (IS_FLOAT_ZERO(pivotX) && IS_FLOAT_ZERO(pivotY)) {
+      _sendCommand1(layerId, C_setlevelrotate, TO_NUM(angle));
+    } else {
+      _sendCommand3(layerId, C_setlevelrotate, TO_NUM(angle), TO_NUM(pivotX), TO_NUM(pivotY));
+    }
+  }
+}
 void MultiLevelDDLayer::registerLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions) {
   _sendCommand3(layerId, C_reglevelbg, backgroundId, backgroundImageName, drawBackgroundOptions);  
 }

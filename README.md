@@ -1,4 +1,4 @@
-# DumbDisplay Arduino Library (v0.9.9-r53)
+# DumbDisplay Arduino Library (v0.9.9-r54)
 
 [DumbDisplay Arduino Library](https://github.com/trevorwslee/Arduino-DumbDisplay) enables you to utilize your Android phone as virtual display gadgets (as well as some simple inputting means) for your microcontroller experiments, with [DumbDisplay Android App](https://play.google.com/store/apps/details?id=nobody.trevorlee.dumbdisplay)
 
@@ -7,7 +7,7 @@ You may want to watch the video [**Introducing DumbDisplay -- the little helper 
 
 ## Enjoy
 
-- [DumbDisplay Arduino Library (v0.9.9-r53)](#dumbdisplay-arduino-library-v099-r53)
+- [DumbDisplay Arduino Library (v0.9.9-r54)](#dumbdisplay-arduino-library-v099-r54)
   - [Enjoy](#enjoy)
 - [Description](#description)
 - [Installation](#installation)
@@ -2361,8 +2361,14 @@ MIT
 
 # Change History
 
+
+v0.9.9-r54
+  - added "level rotate" option
+  - ported more to MicroPython
+  - bug fix
+
 v0.9.9-r53
-  - ported more the MicroPython
+  - ported more to MicroPython
   - bug fix
 
 v0.9.9-r52

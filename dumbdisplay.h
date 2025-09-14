@@ -358,6 +358,11 @@ class MultiLevelDDLayer: public DDLayer {
     void setLevelAnchor(float x, float y, long reachInMillis = 0);
     /// move the level anchor
     void moveLevelAnchorBy(float byX, float byY, long reachInMillis = 0);
+    /// set the rotation of the level
+    /// @param angle rotation angle in degree; positive is clockwise
+    /// @param pivotX x coordinate of the pivot point (relative to the level anchor)
+    /// @param pivotY y coordinate of the pivot point (relative to the level anchor)
+    void setLevelRotation(float angle, float pivotX = 0, float pivotY = 0, long reachInMillis = 0);
     /// register an image for setting as level's background
     /// @param backgroundId id to identify the background -- see setLevelBackground()
     /// @param backgroundImageName name of the image
@@ -961,22 +966,22 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
       drawImageFileFit(imageFileName, 0, 0, 0, 0, options);
     }
     /// cache image; not saved
-    /// @param imageName cachedImageName
+    /// @param imageName cached image name
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
     /// cache image with specified timestamp; not saved
-    /// @param imageName cachedImageName
+    /// @param imageName cached image name
     void cacheImageWithTS(const String& imageName, const uint8_t *bytes, int byteCount, long imageTimestamp, char compressionMethod = 0);
     /// cache single-bit "pixel" image (i.e. B&W image); not saved
-    /// @param imageName cachedImageName
+    /// @param imageName cached image name
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
     /// cache 16-bit "pixel" image (i.e. 565 RGB image); not saved
-    /// @param imageName cachedImageName
+    /// @param imageName cached image name
     void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// cache grayscale "pixel" image; not saved
-    /// @param imageName cachedImageName
+    /// @param imageName cached image name
     void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// saved cached image
-    /// @param imageName cachedImageName
+    /// @param imageName cached image name
     void saveCachedImageFile(const String& imageName, const String& asImageName = "");
 #ifdef ESP32
     /// saved cached image with timestamp
