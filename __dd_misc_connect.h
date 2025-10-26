@@ -52,12 +52,12 @@ class DDMasterResetPassiveConnectionHelper {
           this->initState = 1;
         }
         if (updateCallback != NULL) updateCallback();
-          if (this->initState == -3) {
-            // just masterReset
-            this->initState = 0;
-          } else {
-            this->initState = 2;
-          }
+        if (this->initState == -3) {
+          // just masterReset
+          this->initState = 0;
+        } else {
+          this->initState = 2;
+        }
         return true;
       } else {
         if (this->initState == -2) {

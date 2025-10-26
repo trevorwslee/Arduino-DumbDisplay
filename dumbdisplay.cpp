@@ -174,7 +174,8 @@
 //#define DD_SID "Arduino-c12"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v34
 //#define DD_SID "Arduino-c13"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v40
 //#define DD_SID "Arduino-c14"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v50
-#define DD_SID "Arduino-c15"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v53
+//#define DD_SID "Arduino-c15"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v53
+#define DD_SID "Arduino-c16"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v56 .. pin layers landscape feature not yet used
 
 
 #include "_dd_commands.h"

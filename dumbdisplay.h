@@ -980,7 +980,7 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// cache grayscale "pixel" image; not saved
     /// @param imageName cached image name
     void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
-    /// saved cached image
+    /// saved cached image (to file)
     /// @param imageName cached image name
     void saveCachedImageFile(const String& imageName, const String& asImageName = "");
 #ifdef ESP32
