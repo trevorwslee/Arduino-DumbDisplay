@@ -97,8 +97,11 @@
 //#define DEBUG_READ_FEEDBACK_BYTES
 //#define DEBUG_READ_PIXEL_IMAGE
 
+//#define DEBUG_SUPPORT_MY_STRTOK
+
 
 //#define SUPPORT_LONG_PRESS_FEEDBACK
+
 
 #ifdef DD_NO_IDLE_CALLBACK
   #warning ??? DD_NO_IDLE_CALLBACK set ???
@@ -1810,11 +1813,16 @@ char* _my_strtok(char* str, char c) {
     }
     _my_strtok_str++;
   }
+  // if (c == 0) {
+  //   _my_strtok_str = NULL;
+  //   return _my_strtok_str;
+  // }
+  // char* oriStr = _my_strtok_str;
+  char* oriStr = _my_strtok_str;
   if (c == 0) {
     _my_strtok_str = NULL;
-    return _my_strtok_str;
+    return oriStr;
   }
-  char* oriStr = _my_strtok_str;
   while (true) {
     if (*_my_strtok_str == 0) {
       return oriStr;
@@ -1940,14 +1948,20 @@ __SendComment("LT++++" + data + " - final:" + String(final));
       int16_t y = 0;
       char* pText = NULL;      
 #ifdef SUPPORT_MY_STRTOK
-//Serial.println(buf);
+  #ifdef DEBUG_SUPPORT_MY_STRTOK
+      Serial.println(buf);
+  #endif    
       char* token = _my_strtok(buf, '.');
-      // if (token != NULL) {
-      //   Serial.print("*** ");
-      //   Serial.println(token);
-      // } else {
-      //   Serial.print("xxx ");
-      // }
+  #ifdef DEBUG_SUPPORT_MY_STRTOK
+      if (token != NULL) {
+        Serial.print(". - ");
+        Serial.print(token);
+        Serial.print(" ... ");
+        Serial.println(_my_strtok_str + 1);
+        } else {
+        Serial.println(". <nothing>");
+      }
+  #endif    
 #else
       char* token = strtok(buf, ".");
 #endif      
@@ -1955,12 +1969,16 @@ __SendComment("LT++++" + data + " - final:" + String(final));
         lid = _LayerIdToLid(token);
 #ifdef SUPPORT_MY_STRTOK
         token = _my_strtok(NULL, ':');
-      // if (token != NULL) {
-      //   Serial.print("*** ");
-      //   Serial.println(token);
-      // } else {
-      //   Serial.print("xxx ");
-      // }
+  #ifdef DEBUG_SUPPORT_MY_STRTOK
+        if (token != NULL) {
+          Serial.print(": - ");
+          Serial.print(token);
+          Serial.print(" ... ");
+          Serial.println(_my_strtok_str + 1);
+        } else {
+          Serial.println(": <nothing>");
+        }
+  #endif     
 #else
         token = strtok(NULL, ":");
 #endif
@@ -1973,6 +1991,14 @@ __SendComment("LT++++" + data + " - final:" + String(final));
           ok = true;  // got x and y
 #ifdef SUPPORT_MY_STRTOK
           token = _my_strtok(NULL, 0);  // want the rest
+  #ifdef DEBUG_SUPPORT_MY_STRTOK
+          if (token != NULL) {
+            Serial.print("0 - ");
+            Serial.println(token);
+          } else {
+            Serial.println("NULL <nothing>");
+          }
+  #endif     
 #else
           token = strtok(NULL, "");  // want the rest
 #endif
