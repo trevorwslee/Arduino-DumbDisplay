@@ -113,6 +113,19 @@ void setup() {
   unlockedTunnel = dumbdisplay.createImageDownloadTunnel("https://raw.githubusercontent.com/trevorwslee/Arduino-DumbDisplay/master/screenshots/lock-unlocked.png", UnlockImageFileName);
 
   dumbdisplay.writeComment("... initialized");
+
+  if (false) {
+    LcdDDLayer* label = dumbdisplay.createLcdLayer(12, 1);
+    label->border(2, "green");
+    label->backgroundColor("blue");
+    label->pixelColor("white");
+    label->writeCenteredLine("commandTarget");
+    LedGridDDLayer* ledLayer = dumbdisplay.createLedGridLayer();
+    ledLayer->onColor("darkgreen");
+    ledLayer->offColor("lightgray");
+    dumbdisplay.addRemainingAutoPinConfig(DD_AP_VERT_2(label->getLayerId(), ledLayer->getLayerId()));
+
+  }
 }
 
 struct KnownCommandLayer {

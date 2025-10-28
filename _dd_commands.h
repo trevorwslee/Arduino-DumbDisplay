@@ -23,6 +23,10 @@
 #define C_SAVECACHEDIMGS   "#f6"
 #define C_ALERT            "#f7"
 
+#define C_FRZ              "#f8" 
+#define C_UNFRZ            "#f9" 
+
+
 #define C_border           "#10"
 #define C_padding          "#11" 
 #define C_bgcolor          "#12"
@@ -83,6 +87,7 @@
 #define C_anilevelbg       "#4a"
 #define C_stopanilevelbg   "#4b"
 #define C_explevelsasimg   "#4c"
+#define C_setlevelrotate   "#4e"
 #define C_explevelasregbg  "#4d"
 
 #define C_drawtextline     "#4f"

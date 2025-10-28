@@ -272,12 +272,12 @@ class DDLayer: public DDObject {
     /// set explicit (and more responsive) "feedback" handler (and enable feedback)
     /// @param handler "feedback" handler; see DDFeedbackHandler
     /// @param autoFeedbackMethod see DDLayer::enableFeedback()
-    /// @param allowedFeedbackType can be comma-delimited list of "CLICK", "LONGPRESS" and "DOUBLECLICK"
+    /// @param allowedFeedbackTypes can be comma-delimited list of "CLICK", "LONGPRESS" and "DOUBLECLICK"
     /// @note if you will not be making use of "feedback", you can disable it by defining DD_NO_FEEDBACK in order to reduce footprint 
     void setFeedbackHandler(DDFeedbackHandler handler, const String& autoFeedbackMethod = "", const String& allowFeedbackTypes = "");
     /// rely on getFeedback() being called
     /// @param autoFeedbackMethod
-    /// - "" -- no auto feedback flash (the default)
+    /// - "" -- no auto feedback flash (the default); need explicit call to DDLayer::flash() or DDLayer::FlashArea() once detected feedback
     /// - "f" -- flash the standard way (layer + border)
     /// - "fl" -- flash the layer
     /// - "fa" -- flash the area where the layer is clicked
@@ -358,6 +358,11 @@ class MultiLevelDDLayer: public DDLayer {
     void setLevelAnchor(float x, float y, long reachInMillis = 0);
     /// move the level anchor
     void moveLevelAnchorBy(float byX, float byY, long reachInMillis = 0);
+    /// set the rotation of the level
+    /// @param angle rotation angle in degree; positive is clockwise
+    /// @param pivotX x coordinate of the pivot point (relative to the level anchor)
+    /// @param pivotY y coordinate of the pivot point (relative to the level anchor)
+    void setLevelRotation(float angle, float pivotX = 0, float pivotY = 0, long reachInMillis = 0);
     /// register an image for setting as level's background
     /// @param backgroundId id to identify the background -- see setLevelBackground()
     /// @param backgroundImageName name of the image
@@ -485,10 +490,11 @@ class TurtleDDLayer: public MultiLevelDDLayer {
     /// set no fill color
     void noFillColor();
     /// set pen filled or not; if filled, shape drawn will be filled
-    void penFilled(bool filled);
+    void penFilled(bool filled = true);
     /// set text size
     void setTextSize(int size);
     /// set font
+    /// @param fontName: empty means default
     /// @param textSize: 0 means default
     void setTextFont(const String& fontName = "", int textSize = 0);
     /// pen up
@@ -517,8 +523,18 @@ class TurtleDDLayer: public MultiLevelDDLayer {
     /// - given circle radius and vertex count
     /// - whether inside the imaginary circle or outside of it
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
-    /// write text; draw means draw the text (honor heading)
-    void write(const String& text, bool draw = false);
+    /// write text
+    void write(const String& text);  // TODO: add align param
+    /// draw text (honor heading)
+    void drawText(const String& text);
+    /// @deprecated
+    inline void write(const String& text, bool draw) {
+      if (draw) {
+        drawText(text);
+      } else {
+        write(text);
+      }
+    }
 };
 
 struct LedGridDDLayerHandle: DDLayerHandle {};
@@ -687,8 +703,8 @@ class SelectionDDLayer: public SelectionBaseDDLayer {
     void unselectedText(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0, const String& align = "L");
     /// set a "selection" unit centered text (of y-th row) when unselected (it defaults to the same text as selected)
     void unselectedTextCentered(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
-     /// set a "selection" unit right-aligned text (of y-th row) when unselected (it defaults to the same text as selected)
-   void unselectedTextRightAligned(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
+    /// set a "selection" unit right-aligned text (of y-th row) when unselected (it defaults to the same text as selected)
+    void unselectedTextRightAligned(const String& text, int y = 0, int horiSelectionIdx = 0, int vertSelectionIdx = 0);
     /// select a "selection" unit
     void select(int horiSelectionIdx = 0, int vertSelectionIdx = 0, bool deselectTheOthers = true);
     /// deselect a "selection" unit
@@ -899,9 +915,18 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
     /// @param vertexCount number of vertices
     /// @param inside whether inside the imaginary circle or outside of it
     void centeredPolygon(int radius, int vertexCount, bool inside = false);
-    /// write text; will not auto wrap
-    /// @param draw means draw the text (in the heading direction)
-    void write(const String& text, bool draw = false);
+     /// write text (will not auto wrap)
+    void write(const String& text);
+    /// draw text (honor heading)
+    void drawText(const String& text);
+    /// @deprecated
+    inline void write(const String& text, bool draw) {
+      if (draw) {
+        drawText(text);
+      } else {
+        write(text);
+      }
+    }
     /// load image file to cache
     /// @param w,h: image size to scale to; if both 0, will not scale, if any 0, will scale keeping aspect ratio
     /// @param asImageFileName: better provide a different name for the scaled cached
@@ -941,22 +966,22 @@ class GraphicalDDLayer: public MultiLevelDDLayer {
       drawImageFileFit(imageFileName, 0, 0, 0, 0, options);
     }
     /// cache image; not saved
-    /// @param imageName cachedImageName
+    /// @param imageName cached image name
     void cacheImage(const String& imageName, const uint8_t *bytes, int byteCount, char compressionMethod = 0);
     /// cache image with specified timestamp; not saved
-    /// @param imageName cachedImageName
+    /// @param imageName cached image name
     void cacheImageWithTS(const String& imageName, const uint8_t *bytes, int byteCount, long imageTimestamp, char compressionMethod = 0);
     /// cache single-bit "pixel" image (i.e. B&W image); not saved
-    /// @param imageName cachedImageName
+    /// @param imageName cached image name
     void cachePixelImage(const String& imageName, const uint8_t *bytes, int width, int height, const String& color = "", char compressionMethod = 0);
     /// cache 16-bit "pixel" image (i.e. 565 RGB image); not saved
-    /// @param imageName cachedImageName
+    /// @param imageName cached image name
     void cachePixelImage16(const String& imageName, const uint16_t *data, int width, int height, const String& options = "", char compressMethod = 0);
     /// cache grayscale "pixel" image; not saved
-    /// @param imageName cachedImageName
+    /// @param imageName cached image name
     void cachePixelImageGS(const String& imageName, const uint8_t *data, int width, int height, const String& options = "", char compressMethod = 0);
-    /// saved cached image
-    /// @param imageName cachedImageName
+    /// saved cached image (to file)
+    /// @param imageName cached image name
     void saveCachedImageFile(const String& imageName, const String& asImageName = "");
 #ifdef ESP32
     /// saved cached image with timestamp
@@ -1627,12 +1652,10 @@ class DumbDisplay {
     /// @param layoutSpec the layout specification
     /// @param autoControlLayerVisible auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
     void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoControlLayerVisible = false);
-    // /// in addition to DumbDisplay::configAutoPin(), also configure the remaining layout spec for the remaining layers not mentioned in the layoutSpec 
-    // /// @see configAutoPin
-    // /// @see addRemainingAutoPinConfig
-    // void configAutoPinEx(const String& layoutSpec = DD_AP_VERT, const String& remainingLayoutSpec);
-    /// add the "auto pin" config for layers not included in "auto pin" set by configAutoPin()
-    void addRemainingAutoPinConfig(const String& remainingLayoutSpec);
+    /// add the "auto pin" config (REST "auto pin" config) for layers not included in "auto pin" set by configAutoPin()
+    void addRemainingAutoPinConfig(const String& restLayoutSpec);
+    /// delete all added REST "auto pin" configs
+    void deleteAllRemainingAutoPinConfigs();
     /// configure "pin frame" to be x-units by y-units (default 100x100)
     /// @param autoControlLayerVisible auto set layer visible (visibility) according whether the layer is pinned or not; false by default
     /// @see pinLayer()
@@ -1647,8 +1670,7 @@ class DumbDisplay {
     void pinAutoPinLayers(const String& layoutSpec, int uLeft, int uTop, int uWidth, int uHeight, const String& align = "");
     /// rest pinning of layers, as if they are not pinned
     void resetPinLayers();
-    /// experimental support of a "root" layer (GraphicalDDLayer) that contain all other created layers;
-    /// note that the "root" will always be placed as the container, and hence don't need be pined;
+    /// set the "root" layer, which is the foundation layer on which all other layers are contained;
     /// @param containedAlignment the alignment of the contained layers; "L" / "T" / "LT"; "" means centered 
     /// currently, "container" layer does not support "feedback"
     /// @since v0.9.9-r50
@@ -1755,6 +1777,13 @@ class DumbDisplay {
     LedGridDDLayerHandle createLedGridLayerHandle(int colCount = 1, int rowCount = 1, int subColCount = 1, int subRowCount = 1);
     /// if finished using a "tunnel", delete it to release resource
     void deleteTunnel(DDTunnel *pTunnel);
+    /// freeze draw (update) of the layers
+    /// @size v0.9.9-r53
+    void freezeDrawing();
+    /// unfreeze draw (update) of the layers
+    /// @param refreezeAfterward if true, will freeze again after [draw]
+    /// @size v0.9.9-r53
+    void unfreezeDrawing(bool refreezeAfterward = false);
     /// set DD background color
     /// @param color DD_COLOR_XXX; DD_RGB_COLOR(...); can also be common "color name"
     void backgroundColor(const String& color);

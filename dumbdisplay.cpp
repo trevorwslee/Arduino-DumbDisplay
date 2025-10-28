@@ -71,6 +71,8 @@
 #define CONTAINER_LAYER_ID     -9
 #define CONTAINER_LAYER_ID_STR "-9"
 
+#define SUPPORT_MY_STRTOK
+
 
 
 #define TO_BOOL(val) (val ? "1" : "0")
@@ -79,7 +81,7 @@
 
 
 //#define DD_DEBUG_BASIC
-//#define DD_DEBUG_HS   // TODO: disable DD_DEBUG_HS
+//#define DD_DEBUG_HS
 //#define DD_DEBUG_SEND_COMMAND
 //#define DEBUG_ECHO_COMMAND
 //#define DEBUG_VALIDATE_CONNECTION
@@ -95,8 +97,11 @@
 //#define DEBUG_READ_FEEDBACK_BYTES
 //#define DEBUG_READ_PIXEL_IMAGE
 
+//#define DEBUG_SUPPORT_MY_STRTOK
+
 
 //#define SUPPORT_LONG_PRESS_FEEDBACK
+
 
 #ifdef DD_NO_IDLE_CALLBACK
   #warning ??? DD_NO_IDLE_CALLBACK set ???
@@ -171,7 +176,9 @@
 //#define DD_SID "Arduino-c11"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v31
 //#define DD_SID "Arduino-c12"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v34
 //#define DD_SID "Arduino-c13"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v40
-#define DD_SID "Arduino-c14"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v50
+//#define DD_SID "Arduino-c14"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v50
+//#define DD_SID "Arduino-c15"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v53
+#define DD_SID "Arduino-c16"  // DD library version (EXPECTED_DD_LIB_COMPATIBILITY) ... since v0.9.9-v56 .. pin layers landscape feature not yet used
 
 
 #include "_dd_commands.h"
@@ -1794,6 +1801,41 @@ void _SendSpecialCommand(const char* specialType, const String& specialId, const
 // String _ReadFeedbackBuffer;
 // #endif
 
+#ifdef SUPPORT_MY_STRTOK
+
+char* _my_strtok_str = NULL;
+char* _my_strtok(char* str, char c) {
+  if (str != NULL) {
+    _my_strtok_str = str;
+  } else {
+    if (_my_strtok_str == NULL) {
+      return NULL;
+    }
+    _my_strtok_str++;
+  }
+  // if (c == 0) {
+  //   _my_strtok_str = NULL;
+  //   return _my_strtok_str;
+  // }
+  // char* oriStr = _my_strtok_str;
+  char* oriStr = _my_strtok_str;
+  if (c == 0) {
+    _my_strtok_str = NULL;
+    return oriStr;
+  }
+  while (true) {
+    if (*_my_strtok_str == 0) {
+      return oriStr;
+    }
+    if (*_my_strtok_str == c) {
+      *_my_strtok_str = 0;
+      return oriStr;
+    }
+    _my_strtok_str++;
+  }
+}
+#endif
+
 void _HandleFeedback() {
   if (!_HandlingFeedback) {
     _HandlingFeedback = true;
@@ -1905,10 +1947,41 @@ __SendComment("LT++++" + data + " - final:" + String(final));
       int16_t x = 0;
       int16_t y = 0;
       char* pText = NULL;      
+#ifdef SUPPORT_MY_STRTOK
+  #ifdef DEBUG_SUPPORT_MY_STRTOK
+      Serial.println(buf);
+  #endif    
+      char* token = _my_strtok(buf, '.');
+  #ifdef DEBUG_SUPPORT_MY_STRTOK
+      if (token != NULL) {
+        Serial.print(". - ");
+        Serial.print(token);
+        Serial.print(" ... ");
+        Serial.println(_my_strtok_str + 1);
+        } else {
+        Serial.println(". <nothing>");
+      }
+  #endif    
+#else
       char* token = strtok(buf, ".");
+#endif      
       if (token != NULL) {
         lid = _LayerIdToLid(token);
+#ifdef SUPPORT_MY_STRTOK
+        token = _my_strtok(NULL, ':');
+  #ifdef DEBUG_SUPPORT_MY_STRTOK
+        if (token != NULL) {
+          Serial.print(": - ");
+          Serial.print(token);
+          Serial.print(" ... ");
+          Serial.println(_my_strtok_str + 1);
+        } else {
+          Serial.println(": <nothing>");
+        }
+  #endif     
+#else
         token = strtok(NULL, ":");
+#endif
       }
       if (token != NULL) {
         //Serial.println("FBT:[" + String(token) + "]");
@@ -1916,7 +1989,19 @@ __SendComment("LT++++" + data + " - final:" + String(final));
           x = *token - '0';
           y = 0;
           ok = true;  // got x and y
+#ifdef SUPPORT_MY_STRTOK
+          token = _my_strtok(NULL, 0);  // want the rest
+  #ifdef DEBUG_SUPPORT_MY_STRTOK
+          if (token != NULL) {
+            Serial.print("0 - ");
+            Serial.println(token);
+          } else {
+            Serial.println("NULL <nothing>");
+          }
+  #endif     
+#else
           token = strtok(NULL, "");  // want the rest
+#endif
         } else {
           if (strcmp(token, "longpress") == 0 || strcmp(token, "L") == 0) {
             type = LONGPRESS;
@@ -1931,7 +2016,17 @@ __SendComment("LT++++" + data + " - final:" + String(final));
           } else if (strcmp(token, "custom") == 0 || strcmp(token, "c") == 0) {
             type = CUSTOM;
           } 
+#ifdef SUPPORT_MY_STRTOK
+          token = _my_strtok(NULL, ',');
+        // if (token != NULL) {
+        //   Serial.print("*** ");
+        //   Serial.println(token);
+        // } else {
+        //   Serial.print("xxx ");
+        // }
+#else
           token = strtok(NULL, ",");
+#endif
         }
       } else {
         ok = true;
@@ -1939,13 +2034,29 @@ __SendComment("LT++++" + data + " - final:" + String(final));
       if (!ok) {
         // getting x and y
         if (token != NULL) {
+          // token will not be empty
           x = atoi(token);
+#ifdef SUPPORT_MY_STRTOK
+          token = _my_strtok(NULL, ',');
+          // if (token != NULL) {
+          //   Serial.print("*** ");
+          //   Serial.println(token);
+          // } else {
+          //   Serial.println("xxx ");
+          // }
+#else
           token = strtok(NULL, ",");
+#endif
         }
         if (token != NULL) {
+          // token will not be empty
           y = atoi(token);
           ok = true;
+#ifdef SUPPORT_MY_STRTOK
+          token = _my_strtok(NULL, 0);  // want the rest
+#else
           token = strtok(NULL, "");  // want the rest
+#endif
         }
       }
       if (token != NULL) {
@@ -2428,6 +2539,19 @@ void MultiLevelDDLayer::moveLevelAnchorBy(float byX, float byY, long reachInMill
     _sendCommand2(layerId, C_movelevelanchorby, TO_NUM(byX), TO_NUM(byY));
   }
 }
+void MultiLevelDDLayer::setLevelRotation(float angle, float pivotX, float pivotY, long reachInMillis) {
+  if (reachInMillis > 0) {
+    _sendCommand4(layerId, C_setlevelrotate, TO_NUM(angle), TO_NUM(pivotX), TO_NUM(pivotY), String(reachInMillis));
+  } else {
+    if (IS_FLOAT_ZERO(angle)) {
+      _sendCommand0(layerId, C_setlevelrotate);
+    } else if (IS_FLOAT_ZERO(pivotX) && IS_FLOAT_ZERO(pivotY)) {
+      _sendCommand1(layerId, C_setlevelrotate, TO_NUM(angle));
+    } else {
+      _sendCommand3(layerId, C_setlevelrotate, TO_NUM(angle), TO_NUM(pivotX), TO_NUM(pivotY));
+    }
+  }
+}
 void MultiLevelDDLayer::registerLevelBackground(const String& backgroundId, const String& backgroundImageName, const String& drawBackgroundOptions) {
   _sendCommand3(layerId, C_reglevelbg, backgroundId, backgroundImageName, drawBackgroundOptions);  
 }
@@ -2511,10 +2635,12 @@ void MbDDLayer::scrollImage(MbImage *pImage, int xOff, long interval) {
 }
 
 void TurtleDDLayer::forward(int distance, bool withPen) {
-  _sendCommand1(layerId, withPen ? "fd" : "dlfd", String(distance));
+  _sendCommand1(layerId, withPen ? "fd" : "jfd", String(distance));
+  //_sendCommand1(layerId, withPen ? "fd" : "dlfd", String(distance));
 }
 void TurtleDDLayer::backward(int distance, bool withPen) {
-  _sendCommand1(layerId, withPen ? "bk" : "dlbk", String(distance));
+  _sendCommand1(layerId, withPen ? "bk" : "jbk", String(distance));
+  //_sendCommand1(layerId, withPen ? "bk" : "dlbk", String(distance));
 }
 void TurtleDDLayer::leftTurn(int angle) {
   _sendCommand1(layerId, "lt", String(angle));
@@ -2600,8 +2726,11 @@ void TurtleDDLayer::polygon(int side, int vertexCount) {
 void TurtleDDLayer::centeredPolygon(int radius, int vertexCount, bool inside) {
   _sendCommand2(layerId, inside ? C_cpolyin : C_cpoly, String(radius), String(vertexCount));
 }
-void TurtleDDLayer::write(const String& text, bool draw) {
-  _sendCommand1(layerId, draw ? C_drawtext : C_write, text);
+void TurtleDDLayer::write(const String& text) {
+  _sendCommand1(layerId, C_write, text);
+}
+void TurtleDDLayer::drawText(const String& text) {
+  _sendCommand1(layerId, C_drawtext, text);
 }
 
 void LedGridDDLayer::turnOn(int x, int y) {
@@ -3095,8 +3224,11 @@ void GraphicalDDLayer::drawImageFileFit(const String& imageFileName, int x, int 
     _sendCommand6(layerId, C_drawimagefilefit, imageFileName, String(x), String(y), String(w), String(h), options);
   }
 }
-void GraphicalDDLayer::write(const String& text, bool draw) {
-  _sendCommand1(layerId, draw ? C_drawtext : C_write, text);
+void GraphicalDDLayer::write(const String& text) {
+  _sendCommand1(layerId, C_write, text);
+}
+void GraphicalDDLayer::drawText(const String& text) {
+  _sendCommand1(layerId, C_drawtext, text);
 }
 
 
@@ -4255,9 +4387,12 @@ void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoControlLayerV
 //   }
 //   _sendCommand2("", "CFGAP", layoutSpec, remainingLayoutSpec);
 // }
-void DumbDisplay::addRemainingAutoPinConfig(const String& remainingLayoutSpec) {
+void DumbDisplay::addRemainingAutoPinConfig(const String& restLayoutSpec) {
   _Connect();
-  _sendCommand1("", "ADDRESTAP", remainingLayoutSpec);
+  _sendCommand1("", "ADDRESTAP", restLayoutSpec);
+}
+void DumbDisplay::deleteAllRemainingAutoPinConfigs() {
+  _sendCommand0("", "DELALLRESTAP");
 }
 void DumbDisplay::setFeedbackSingleClickOnly(bool singleClickOnly) {
   _Connect();
@@ -4535,6 +4670,12 @@ void DumbDisplay::loadLayerCommands(const String& id) {
 }
 void DumbDisplay::capture(const String& imageFileName, int width, int height) {
   _sendCommand3("", C_CAPTURE, imageFileName, String(width), String (height));
+}
+void DumbDisplay::freezeDrawing() {
+  _sendCommand0("", C_FRZ);
+}
+void DumbDisplay::unfreezeDrawing(bool refreezeAfterward) {
+  _sendCommand1("", C_UNFRZ, TO_BOOL(refreezeAfterward));
 }
 void DumbDisplay::backgroundColor(const String& color) {
   _Connect();

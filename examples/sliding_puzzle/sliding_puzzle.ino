@@ -45,7 +45,7 @@ const int BOARD_SIZE = 400;
 const int TILE_COUNT = 4;   // the the sliding puzzle is 4x4; i.e. 16 tiles
 const int TILE_SIZE = BOARD_SIZE / TILE_COUNT;
 
-// tells what tile Id (basically tile level id) is at what tile position
+// tells what tile id (basically tile level id) is at what tile position
 int boardTileIds[TILE_COUNT][TILE_COUNT];
 
 long waitingToRestartMillis = -1;  // -1 means not waiting
@@ -440,7 +440,7 @@ void updateDD(bool isFirstUpdate) {
     if (randomizeTilesStepCount == 0) {
       // randomization is done
       dumbdisplay.log("... done randomizing board");
-      board->enableFeedback(":drag");  // :drag to allow dragging that produces MOVE feedback type (and ended with -1, -1 MOVE feedbackv)
+      board->enableFeedback(":drag");  // :drag to allow dragging that produces MOVE feedback type (and ended with -1, -1 MOVE feedback)
     }
   } else {
     if (boardFeedback != NULL) {
