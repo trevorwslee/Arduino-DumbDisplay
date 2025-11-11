@@ -1652,6 +1652,7 @@ class DumbDisplay {
     /// @param layoutSpec the layout specification
     /// @param autoControlLayerVisible auto set layer visible (visibility) according whether the layer is specified in the layoutSpec or not; false by default
     void configAutoPin(const String& layoutSpec = DD_AP_VERT, bool autoControlLayerVisible = false);
+    void configAutoPinLandscape(const String& layoutSpec = DD_AP_VERT, bool autoControlLayerVisible = false);
     /// add the "auto pin" config (REST "auto pin" config) for layers not included in "auto pin" set by configAutoPin()
     void addRemainingAutoPinConfig(const String& restLayoutSpec);
     /// delete all added REST "auto pin" configs

@@ -4377,6 +4377,16 @@ void DumbDisplay::configAutoPin(const String& layoutSpec, bool autoControlLayerV
     _sendCommand1("", "CFGAP", layoutSpec);
   }
 }
+void DumbDisplay::configAutoPinLandscape(const String& layoutSpec, bool autoControlLayerVisible) {
+  _Connect();
+  if (true) {
+    if (layoutSpec.c_str() == NULL) {
+      __SendErrorComment("invalid autopin config");
+      return;
+    }
+  }
+  _sendCommand2("", "LCFGAP", layoutSpec, TO_BOOL(autoControlLayerVisible));
+}
 // void DumbDisplay::configAutoPinEx(const String& layoutSpec, const String& remainingLayoutSpec) {
 //   _Connect();
 //   if (true) {
