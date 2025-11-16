@@ -210,7 +210,7 @@ class DDLayer: public DDObject {
     ///                            which can be used for animation with animateBackgroundImage()
     /// @param drawBackgroundOptions options for drawing the background; same means as the option param of GraphicalDDLayer::drawImageFiler()
     /// @param refImageWidth the reference width of the image to scale the image (while keeping the aspect ration); 0 means no scaling
-    void backgroundImage(const String& backgroundImageName, const String& drawBackgroundOptions, int refImageWidth = 0);
+    void backgroundImage(const String& backgroundImageName, const String& drawBackgroundOptions = "", int refImageWidth = 0);
     /// set no layer background image
     void noBackgroundImage();
     /// export the layer as background image
@@ -218,7 +218,6 @@ class DDLayer: public DDObject {
     /// @param noDrawBackground during export, do not draw background
     /// @param exportAsWidth the width of the image; 0 means the default (should be good enough)
     void exportAsBackgroundImage(bool replace = true, bool noDrawBackground = true, int exportAsWidth = 0);
-    /// experimental:
     /// start animate background image series
     /// @param fps frames per second which is used to calculate the interval between the series of images
     /// @param reset reset to the first image in the series (before start animation)
@@ -377,7 +376,7 @@ class MultiLevelDDLayer: public DDLayer {
     ///                if false, will add as an item of background image series that can be used for animation with animateLevelBackground()
     void exportLevelAsRegisteredBackground(const String& backgroundId, bool replace = true);
     /// set a registered background image as the current level's background
-    /// @param backgroundId 
+    /// @param backgroundId can be the empty String ""
     /// @param backgroundImageName if not registered, the name of the image to register;
     ///                            can be a series of images like dumbdisplay_##0-7##.png (for dumbdisplay_0.png to dumbdisplay_7.png)
     ///                            which can be used for animation with animateLevelBackground()
